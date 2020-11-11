@@ -66,6 +66,19 @@ app.on('activate', () => {
 const srcUserDataFolder = path.join(__static, 'userfiles');
 const destUserDataFolder = path.join(app.getPath('userData'), 'userfiles')
 if (!fs.existsSync(destUserDataFolder)){
+  fs.mkdirSync(destUserDataFolder)
+  fs.mkdirSync(path.join(destUserDataFolder, 'backups'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'databases'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'ffmpeg'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/performers'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/previews'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/tags'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/temp'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/temp/merging'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/temp/parts'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/thumbs'))
+  fs.mkdirSync(path.join(destUserDataFolder, 'media/websites'))
   fs.copy(srcUserDataFolder, destUserDataFolder, function (err) {
     if (err) {
       console.error(err);
