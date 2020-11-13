@@ -13,6 +13,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
+let loading 
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
@@ -23,21 +24,50 @@ function createWindow () {
     width: 1400, 
     height: 800, 
     frame: false,
-    backgroundColor: '#FFF',
+    backgroundColor: '#333',
     icon: __static + `/icons/icon.png`,
     webPreferences: {
       nodeIntegration: true,
-      webSecurity: false
-    } 
+      webSecurity: false 
+    },
+    show: false
   })
+  loading = new BrowserWindow({
+    width: 320, 
+    height: 320, 
+    show: false, 
+    frame: false,
+    backgroundColor: '#333',
+    icon: __static + `/icons/icon.png`,
+  })
+  
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    // Load the url of the dev server if in development mode
-    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) win.webContents.openDevTools()
+    loading.once('show', () => {
+      win.webContents.on('did-finish-load', () => {
+        console.log('app loaded')
+        win.show() 
+        loading.hide()
+      })
+      win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+      // Load the url of the dev server if in development mode
+      if (!process.env.IS_TEST) win.webContents.openDevTools()
+    })
+    loading.loadURL(path.join(__static, 'loading.html'))
+    loading.show() 
   } else {
     createProtocol('app')
     // Load the index.html when not in development
-    win.loadURL('app://./index.html')
+    loading.once('show', () => {
+      win.webContents.on('did-finish-load', () => {
+        console.log('app loaded')
+        win.show()
+        loading.hide() 
+        loading.close()
+      })
+      win.loadURL('app://./index.html')
+    })
+    loading.loadURL(path.join(__static, 'loading.html'))
+    loading.show()
   }
 
   win.on('closed', () => {

@@ -35,10 +35,10 @@
           dense half-increments hover size="18" clearable
         ></v-rating>
         
-        <v-btn icon absolute small tile @click="toggleFavorite"
+        <v-btn @click="toggleFavorite" icon absolute small
           :color="isFavorite===false ? 'white' : 'pink'"
           class="fav-btn" :class="{hidden: isFavoriteHidden}"
-        ><v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
+        > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
         </v-btn>
         
         <div class="video-info-duration" :class="{hidden: isDurationHidden}">

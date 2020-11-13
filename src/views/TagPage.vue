@@ -325,13 +325,13 @@ export default {
   display: flex;
   align-items: flex-start;
   padding-bottom: 100px;
-  z-index: 5;
+  z-index: 2;
   &-wrapper {
     position: relative;
     overflow: hidden;
   }
   .tag-name {
-    z-index: 5;
+    z-index: 2;
     font-weight: bold;
   }
   .alternate-names {
@@ -342,7 +342,7 @@ export default {
   .chips-tag-wrapper,
   .chips-performers,
   .performers-title {
-    z-index: 5;
+    z-index: 2;
   }
   .tag-info {
     display: flex;
@@ -363,7 +363,7 @@ export default {
     bottom: 0;
     right: 0;
     left: 0;
-    z-index: 3;
+    z-index: 1;
     pointer-events: none;
   }
   .v-chip.active-chip {

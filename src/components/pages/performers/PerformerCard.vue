@@ -36,13 +36,10 @@
           ></v-rating>
         </div>
 
-        <v-btn
-          icon absolute tile
+        <v-btn @click="toggleFavorite" icon absolute 
           :color="isFavorite===false ? 'white' : 'pink'"
           class="fav-btn" :class="{hidden: isFavoriteHidden}"
-          @click="toggleFavorite"
-        >
-          <v-icon :color="isFavorite===false ? 'grey' : 'pink'"> mdi-heart-outline </v-icon>
+        > <v-icon :color="isFavorite===false ? 'grey' : 'pink'"> mdi-heart-outline </v-icon>
         </v-btn>
 
         <div class="custom1-img-wrapper" v-if="!isCustomImgExist(imgCustom1)">
@@ -294,7 +291,7 @@ export default {
       let tab = { 
         name: this.performer.name,
         link: `/performer/:${this.performer.id}`,
-        id: this.performer.id,
+        id: this.performer.id, // TODO: add unique postfix, cause two tabs with the same performer has the same id
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
