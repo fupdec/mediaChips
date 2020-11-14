@@ -1,7 +1,9 @@
 <template>
   <v-lazy>
-    <v-card class="website-card" outlined hover :data-id="website.id" @contextmenu="showContextMenu">
-      <v-img @click="openWebsitePage" @click.middle="addNewTab" class="website-card-img" :src="imgMain" :aspect-ratio="1">
+    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" 
+      :data-id="website.id" class="website-card" outlined hover >
+      <v-img @click="openWebsitePage" @click.middle="addNewTab" :title='`Open website "${websiteName}"`' 
+        class="website-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="website-color" :style="`border-color: ${website.color} transparent transparent transparent;`"/>
         <v-icon v-if="website.bookmark" class="bookmark" color="red" size="32">
           mdi-bookmark
@@ -53,6 +55,11 @@ export default {
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)
+    },
+    stopSmoothScroll(event) {
+      if(event.button != 1) return
+      event.preventDefault()
+      event.stopPropagation()
     },
     openWebsitePage() {
       this.$router.push(`/website/:${this.website.id}`)
@@ -106,6 +113,10 @@ export default {
 }
 .website-card {
   overflow: hidden;
+  cursor: default;
+  .v-image {
+    cursor: pointer;
+  }
   &:hover {
     .bookmark {
       opacity: 0.7;

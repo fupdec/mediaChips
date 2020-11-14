@@ -1,16 +1,15 @@
 <template>
   <v-lazy>
-    <v-card 
+    <v-card @mousedown="stopSmoothScroll($event)"
       :class="{favorite: isFavorite}" class="video-card" height="100%"
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
     >
       <v-img @click.middle="addNewTabVideo"
-        :aspect-ratio="16/9" class="video-preview-container"
         @mouseover="playPreview" @mouseleave="stopPlayingPreview"
+        :aspect-ratio="16/9" class="video-preview-container"
       >
-        <v-img 
+        <v-img @click="openVideoPage" title="Open video page"
           :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb"
-          @click="openVideoPage"
         />
         <v-btn
           icon x-large outlined
@@ -229,6 +228,11 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
+    stopSmoothScroll(event) {
+      if(event.button != 1) return
+      event.preventDefault()
+      event.stopPropagation()
+    },
     addNewTabPerformer(performerName) {
       let tab = { 
         name: performerName,
@@ -436,6 +440,10 @@ export default {
 <style lang="less">
 .video-card {
   box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.12);
+  cursor: default;
+  .v-image {
+    cursor: pointer;
+  }
   &:hover {
     .bookmark {
       opacity: 0.7;

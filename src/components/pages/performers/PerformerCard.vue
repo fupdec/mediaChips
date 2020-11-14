@@ -1,7 +1,8 @@
 <template>
   <v-lazy>
-    <v-card class="performer-card" :class="{favorite: isFavorite}" height="100%"
-      :data-id="performer.id" hover outlined @contextmenu="showContextMenu"
+    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
+      class="performer-card" :class="{favorite: isFavorite}"
+      :data-id="performer.id" hover outlined height="100%"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
         <div class="flag-icon" @click="filterByNationality" @click.middle="addNewTabWithNationality">
@@ -296,6 +297,11 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
+    stopSmoothScroll(event) {
+      if(event.button != 1) return
+      event.preventDefault()
+      event.stopPropagation()
+    },
     addNewTabTag(tagName) {
       let tab = { 
         name: tagName,
@@ -497,7 +503,10 @@ export default {
 .performer-card {
   box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.12);
   border: none !important;
-  // TODO: cursor default for all cards, pointer only on link hover
+  cursor: default;
+  .v-image {
+    cursor: pointer;
+  }
   &:hover {
     .btn-edit-images {
       opacity: 0.7;

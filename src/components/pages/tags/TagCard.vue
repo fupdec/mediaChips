@@ -1,7 +1,9 @@
 <template>
   <v-lazy>
-    <v-card class="tag-card" @click.middle="addNewTab" outlined hover :data-id="tag.id" @contextmenu="showContextMenu">
-      <v-img @click="openTagPage" class="tag-card-img" :src="imgMain" :aspect-ratio="1">
+    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" 
+      :data-id="tag.id" class="tag-card" outlined hover >
+      <v-img @click="openTagPage" @click.middle="addNewTab" :title='`Open tag "${tagName}"`'
+        class="tag-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>
         <v-icon v-if="tag.bookmark" class="bookmark" color="red" size="32">
           mdi-bookmark
@@ -60,6 +62,11 @@ export default {
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
+    },
+    stopSmoothScroll(event) {
+      if(event.button != 1) return
+      event.preventDefault()
+      event.stopPropagation()
     },
     openTagPage() {
       this.$router.push(`/tag/:${this.tag.id}`)
@@ -122,6 +129,10 @@ export default {
 }
 .tag-card {
   overflow: hidden;
+  cursor: default;
+  .v-image {
+    cursor: pointer;
+  }
   &:hover {
     .bookmark {
       opacity: 0.7;
