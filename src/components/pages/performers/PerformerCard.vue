@@ -627,8 +627,20 @@ export default {
   .flag-icon {
     position: absolute;
     top: 5px;
-    margin: -10px;
+    left: 5px;
     z-index: 1;
+    width: 24px;
+    height: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    .flag {
+      position: absolute;
+      margin: auto;
+      left: -100%;
+      right: -100%;
+      top: -100%;
+      bottom: -100%;
+    }
     &.hidden {
       display: none;
     }
