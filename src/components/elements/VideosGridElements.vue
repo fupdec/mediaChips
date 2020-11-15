@@ -1,29 +1,39 @@
 <template>
 	<div>
-		<v-dialog v-model="$store.state.Videos.dialogDeleteVideo" scrollable persistent max-width="600">
+		<v-dialog v-model="$store.state.Videos.dialogDeleteVideo" scrollable persistent max-width="800">
       <v-card>
-        <v-card-title class="title">Are you sure?</v-card-title>
+        <v-card-title class="title">
+          Are you sure?
+          <v-spacer></v-spacer>
+          <v-checkbox class="ma-0" v-model="$store.state.Videos.deleteFile" 
+            hide-details label="Also delete file" />
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete-alert</v-icon>
+        </v-card-title>
         <vuescroll>
-          <v-card-text>
-            You want to delete video<span v-if="selectedVideosLength>1">s</span>
-            <br>{{selectedVideos}}
+          <v-card-text style="white-space: pre-wrap;">
+            <div>
+              You want to delete video<span v-if="selectedVideosLength>1">s
+              ({{selectedVideosLength}})</span>
+            </div> {{selectedVideos(true)}}
           </v-card-text>
         </vuescroll>
         <v-card-actions>
-          <v-checkbox class="ma-4" v-model="$store.state.Videos.deleteFile" 
-            hide-details label="Also delete file" />
-          <v-spacer></v-spacer>
-          <v-btn text class="ma-4" 
-            @click="$store.state.Videos.dialogDeleteVideo = false">No, Keep it
+          <v-btn @click="$store.state.Videos.dialogDeleteVideo=false" class="ma-4">
+            No, Keep it
           </v-btn>
+          <v-spacer></v-spacer>
           <v-btn color="red" class="ma-4" dark @click="deleteVideos">Yes, delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="$store.state.Videos.dialogCreatePreview" scrollable persistent max-width="600">
+    <v-dialog v-model="$store.state.Videos.dialogCreatePreview" scrollable persistent max-width="800">
       <v-card :loading="createPreviewLoading" loader-height="6">
-        <v-card-title class="title">Create preview</v-card-title>
+        <v-card-title class="title">Create preview
+          <v-spacer></v-spacer>
+          <v-icon>mdi-filmstrip</v-icon>
+        </v-card-title>
         <v-card-actions v-if="createPreviewStarted">
           <v-progress-linear
             v-model="createPreviewProgress" height="20" rounded 
@@ -42,9 +52,11 @@
           </v-row>
         </v-card-actions>
         <vuescroll>
-          <v-card-text>
-            <span class="body-1">Video</span><span v-if="selectedVideosLength>1">s</span>:
-            <br>{{selectedVideos}}
+          <v-card-text style="white-space: pre-wrap;">
+            <div class="body-1">Video<span v-if="selectedVideosLength>1">s
+              ({{selectedVideosLength}})</span>
+            </div>
+            {{selectedVideos(true)}}
           </v-card-text>
         </vuescroll>
         <v-card-actions>
@@ -63,10 +75,10 @@
           </v-radio-group>
         </v-card-actions>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text class="ma-4" :disabled="createPreviewLoading"
-            @click="closeDialogCreatePreview">Close
+          <v-btn class="ma-4" :disabled="createPreviewLoading"
+            @click="closeDialogCreatePreview">Cancel
           </v-btn>
+          <v-spacer></v-spacer>
           <v-btn color="primary" class="ma-4" :disabled="createPreviewLoading"
             @click="createPreviewForVideo">Create
           </v-btn>
@@ -392,17 +404,6 @@ export default {
     selectedVideosLength() {
       return this.$store.getters.getSelectedVideos.length
 		},
-		selectedVideos() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        let paths = ids.map(i => {
-          let filename = vids.find({id:i}).value().path.split("\\").pop()
-          return filename.split('.').slice(0, -1).join('.')
-        })
-        return paths.join(', ')
-      } else return ''
-    },
     selectedVideosPaths() {
       let ids = this.$store.getters.getSelectedVideos
       let vids = this.$store.getters.videos
@@ -434,6 +435,21 @@ export default {
         icon: 'video-outline'
       }
       this.$store.dispatch('addNewTab', tab)
+    },
+		selectedVideos(list) {
+      let ids = this.$store.getters.getSelectedVideos
+      let vids = this.$store.getters.videos
+      if (ids.length!==0) {
+        let paths = ids.map(i => {
+          let filename = vids.find({id:i}).value().path.split("\\").pop()
+          return filename.split('.').slice(0, -1).join('.')
+        })
+        if (list) {
+          return paths.map((v,i) => (`${i+1}) ${v}`)).join('\r\n')
+        } else {
+          return paths.join(', ')
+        }
+      } else return ''
     },
     getSelectedVideos(selectedVideos){
       let ids = selectedVideos.map(item => (item.dataset.id))

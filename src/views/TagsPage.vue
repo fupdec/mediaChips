@@ -96,18 +96,21 @@
 
     <v-dialog v-model="$store.state.Tags.dialogDeleteTag" scrollable persistent max-width="600">
       <v-card>
-        <v-card-title class="title">Are you sure?</v-card-title>
+        <v-card-title class="title">Are you sure?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete-alert</v-icon>
+        </v-card-title>
         <vuescroll>
-          <v-card-text>
-            You want to delete tag<span v-if="selectedTagsLength>1">s</span>
-            <br>{{selectedTags}}
+          <v-card-text style="white-space: pre-wrap;">
+            <div>You want to delete tag<span v-if="selectedTagsLength>1">s</span></div>
+            {{selectedTags(true)}}
           </v-card-text>
         </vuescroll>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text class="ma-4" @click="$store.state.Tags.dialogDeleteTag = false">
+          <v-btn class="ma-4" @click="$store.state.Tags.dialogDeleteTag = false">
             No, Keep it
           </v-btn>
+          <v-spacer></v-spacer>
           <v-btn color="red" class="ma-4" dark @click="deleteTags">Yes, delete</v-btn>
         </v-card-actions>
       </v-card>
@@ -304,14 +307,6 @@ export default {
         this.$store.dispatch('changeTagsPageCurrent', quantity)
       },
     },
-    selectedTags() {
-      let ids = this.$store.getters.getSelectedTags
-      let tags = this.$store.getters.tags
-      if (ids.length!==0) {
-        let names = ids.map(i=>(tags.find({id:i}).value().name))
-        return names.join(', ')
-      }
-    },
     selectedTagsLength() {
       return this.$store.getters.getSelectedTags.length
     },
@@ -329,6 +324,18 @@ export default {
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
+    },
+    selectedTags(list) {
+      let ids = this.$store.getters.getSelectedTags
+      let tags = this.$store.getters.tags
+      if (ids.length!==0) {
+        let names = ids.map(i=>(tags.find({id:i}).value().name))
+        if (list) {
+          return names.map((n,i) => (`${i+1}) ${n}`)).join('\r\n')
+        } else {
+          return names.join(', ')
+        }
+      }
     },
     clearChars() {
       let key = 'firstChar'

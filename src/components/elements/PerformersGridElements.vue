@@ -2,18 +2,25 @@
 	<div>
     <v-dialog v-model="$store.state.Performers.dialogDeletePerformer" persistent scrollable max-width="600">
       <v-card>
-        <v-card-title class="title">Are you sure?</v-card-title>
+        <v-card-title class="title">
+          Are you sure?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete-alert</v-icon>
+        </v-card-title>
         <vuescroll>
-          <v-card-text>
-            You want to delete performer<span v-if="selectedPerformersLength>1">s</span>
-            <br>{{selectedPerformers}}
+          <v-card-text style="white-space: pre-wrap;">
+            <div>
+              You want to delete performer<span v-if="selectedPerformersLength>1">s
+              ({{selectedPerformersLength}}) </span>
+            </div>
+            {{selectedPerformers(true)}}
           </v-card-text>
         </vuescroll>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text class="ma-4" 
+          <v-btn class="ma-4" 
             @click="$store.state.Performers.dialogDeletePerformer = false">No, Keep it
           </v-btn>
+          <v-spacer></v-spacer>
           <v-btn color="red" dark class="ma-4" @click="deletePerformers">Yes, delete</v-btn>
         </v-card-actions>
       </v-card>
@@ -203,15 +210,6 @@ export default {
     previousSelection: [],
   }),
   computed: {
-    selectedPerformers() {
-      let ids = this.$store.getters.getSelectedPerformers
-      let ps = this.$store.getters.performers
-      if (ids.length!==0) {
-        // console.log('it shoudnt work')
-        let names = ids.map(i=>(ps.find({id:i}).value().name))
-        return names.join(', ')
-      }
-    },
     selectedPerformersLength() {
       return this.$store.getters.getSelectedPerformers.length
     },
@@ -229,6 +227,19 @@ export default {
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
+    },
+    selectedPerformers(list) {
+      let ids = this.$store.getters.getSelectedPerformers
+      let ps = this.$store.getters.performers
+      if (ids.length!==0) {
+        // console.log('it shoudnt work')
+        let names = ids.map(i=>(ps.find({id:i}).value().name))
+        if (list) {
+          return names.map((n,i) => (`${i+1}) ${n}`)).join('\r\n')
+        } else {
+          return names.join(', ')
+        }
+      }
     },
     getSelectedVideos(selectedVideos){
       let ids = selectedVideos.map(item => (item.dataset.id))
