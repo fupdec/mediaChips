@@ -128,7 +128,7 @@
                   border="left" text dense outlined :height="alertScanErrorHeight" 
                 > <v-row align="start">
                     <v-col class="grow">
-                      Video file read error: <br>{{errorScanVideos}}
+                      Video file read error: ({{errorVideos.length}}) <br>{{errorScanVideos}}
                     </v-col>
                     <v-col class="shrink">
                       <v-btn depressed fab outlined width="24" height="24" color="error"
@@ -143,7 +143,8 @@
                   border="left" text dense outlined :height="alertDuplicateVideosHeight" 
                 > <v-row align="start">
                     <v-col class="grow">
-                      Already in the database: <br>{{parsedDuplicateVideos}}
+                      Already in the database: ({{duplicateVideos.length}}) 
+                      <br>{{parsedDuplicateVideos}}
                     </v-col>
                     <v-col class="shrink">
                       <v-btn depressed fab outlined width="24" height="24" color="warning"
@@ -162,7 +163,8 @@
                   v-model="alertAddNewVideos" type="success" :icon="false"
                   border="left" text dense outlined :height="alertAddNewVideosHeight"
                 > <v-row align="start">
-                    <v-col class="grow"> Added: <br>{{parsedNewVideos}} </v-col>
+                    <v-col class="grow"> Added: ({{newVideos.length}})
+                      <br>{{parsedNewVideos}} </v-col>
                     <v-col class="shrink">
                       <v-btn depressed fab outlined width="24" height="24" color="success"
                         @click="alertAddNewVideosHeightChange"
@@ -307,15 +309,15 @@ export default {
           let fileProcResult = await fileScanProc(file)
           if (fileProcResult.errorVideo) {
             vm.alertScanError = true
-            vm.errorVideos.push(fileProcResult.errorVideo)
+            vm.errorVideos.unshift(fileProcResult.errorVideo)
           }
           if (fileProcResult.duplicate) {
             vm.alertDuplicateVideos = true
-            vm.duplicateVideos.push(fileProcResult.duplicate)
+            vm.duplicateVideos.unshift(fileProcResult.duplicate)
           }
           if (fileProcResult.success) {
             vm.alertAddNewVideos = true
-            vm.newVideos.push(fileProcResult.success.path)
+            vm.newVideos.unshift(fileProcResult.success.path)
           }
           ++vm.currentNumberOfScanVideos
           vm.videoScanProgressBar += percentsPerFile
