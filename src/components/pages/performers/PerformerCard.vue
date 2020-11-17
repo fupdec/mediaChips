@@ -292,7 +292,7 @@ export default {
       let tab = { 
         name: this.performer.name,
         link: `/performer/:${this.performer.id}`,
-        id: this.performer.id, // TODO: add unique postfix, cause two tabs with the same performer has the same id
+        id: this.performer.id + new Date().getTime(),
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -306,7 +306,7 @@ export default {
       let tab = { 
         name: tagName,
         link: this.tagLink(tagName),
-        id: this.getTagId(tagName),
+        id: this.getTagId(tagName) + new Date().getTime(),
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)

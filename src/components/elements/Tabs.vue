@@ -1,5 +1,5 @@
 <template>
-	<v-tabs v-model="active" optional>
+	<v-tabs v-model="active" optional fixed-tabs>
     <draggable  
       v-model="tabs" class="tabs-group" v-bind="dragOptions"
       @start="drag = true" @end="drag = false"

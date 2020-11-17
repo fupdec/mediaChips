@@ -321,7 +321,7 @@ export default {
       let tab = { 
         name: this.selectedTags(), 
         link: `/tag/:${tagId}`,
-        id: tagId,
+        id: tagId + new Date().getTime(),
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)

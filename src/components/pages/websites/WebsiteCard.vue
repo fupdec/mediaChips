@@ -51,7 +51,7 @@ export default {
       let tab = { 
         name: this.website.name,
         link: `/website/:${this.website.id}`,
-        id: this.website.id,
+        id: this.website.id + new Date().getTime(),
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)

@@ -58,7 +58,7 @@ export default {
       let tab = { 
         name: this.tag.name,
         link: `/tag/:${this.tag.id}`,
-        id: this.tag.id,
+        id: this.tag.id + new Date().getTime(),
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)

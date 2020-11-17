@@ -960,13 +960,15 @@ html {
         margin-left: 5px;
         align-self: center;
         transition: .3s all ease;
+        &:hover {
+          i {
+            color: #e43434;
+          }
+        }
         i {
           font-size: 20px !important;
           opacity: 0;
           transition: .3s all ease;
-          &:hover {
-            color: #e43434;
-          }
         }
       }
       &:hover {

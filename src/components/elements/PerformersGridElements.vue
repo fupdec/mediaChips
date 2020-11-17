@@ -223,7 +223,7 @@ export default {
       let tab = { 
         name: this.selectedPerformers(), 
         link: `/performer/:${performerId}`,
-        id: performerId,
+        id: performerId + new Date().getTime(),
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)

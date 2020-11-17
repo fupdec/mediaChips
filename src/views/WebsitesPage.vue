@@ -319,7 +319,7 @@ export default {
       let tab = { 
         name: this.selectedWebsites(), 
         link: `/website/:${websiteId}`,
-        id: websiteId,
+        id: websiteId + new Date().getTime(),
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)

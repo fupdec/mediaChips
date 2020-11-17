@@ -223,7 +223,7 @@ export default {
       let tab = { 
         name: this.fileName,
         link: `/video/:${this.video.id}`,
-        id: this.video.id,
+        id: this.video.id + new Date().getTime(),
         icon: 'video-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -237,7 +237,7 @@ export default {
       let tab = { 
         name: performerName,
         link: `/performer/:${this.getPerformerId(performerName)}`,
-        id: this.getPerformerId(performerName),
+        id: this.getPerformerId(performerName) + new Date().getTime(),
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -246,7 +246,7 @@ export default {
       let tab = { 
         name: tagName,
         link: `/tag/:${this.getTagId(tagName)}`,
-        id: this.getTagId(tagName),
+        id: this.getTagId(tagName) + new Date().getTime(),
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -255,7 +255,7 @@ export default {
       let tab = { 
         name: websiteName,
         link: `/website/:${this.getWebsiteId(websiteName)}`,
-        id: this.getWebsiteId(websiteName),
+        id: this.getWebsiteId(websiteName) + new Date().getTime(),
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)

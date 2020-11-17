@@ -431,7 +431,7 @@ export default {
       let tab = { 
         name: this.selectedVideos(), 
         link: `/video/:${videoId}`,
-        id: videoId,
+        id: videoId + new Date().getTime(),
         icon: 'video-outline'
       }
       this.$store.dispatch('addNewTab', tab)

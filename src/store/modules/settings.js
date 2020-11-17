@@ -295,7 +295,7 @@ const Settings = {
       commit('closeTab', tabId)
     },
     updateTabs({state, rootState, commit, dispatch, getters}, tabs) {
-      getters.bookmarks.set('tabs', _.cloneDeep(tabs)).write()
+      getters.settings.set('tabs', _.cloneDeep(tabs)).write()
       commit('updateTabs', tabs)
     },
     resetSettingsToDefault({state, rootState, commit, dispatch, getters}, tabs) {

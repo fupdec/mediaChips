@@ -443,7 +443,7 @@ export default {
       let tab = { 
         name: this.performer.name, 
         link: `/performer/:${this.performerId}`,
-        id: this.performerId,
+        id: this.performerId + new Date().getTime(),
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -452,7 +452,7 @@ export default {
       let tab = { 
         name: tagName,
         link: this.tagLink(tagName),
-        id: this.getTagId(tagName),
+        id: this.getTagId(tagName) + new Date().getTime(),
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
