@@ -288,7 +288,7 @@ export default {
         link: `/websites/:${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Websites.filters),
-        icon: 'web-outline'
+        icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)
     },

@@ -558,7 +558,11 @@ const Performers = {
         filters.push('Book.')
       }
       if (state.filters.firstChar.length) {
-        filters.push('Char.')
+        let chars = ['0-9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','#']
+        chars = state.filters.firstChar.map((c)=>(chars[c]))
+        let filterChars = 'Char.:'
+        filterChars += chars.join(';')
+        filters.push(filterChars)
       }
       if (state.filters.tags.length) {
         let filterTags = 'Tags:'

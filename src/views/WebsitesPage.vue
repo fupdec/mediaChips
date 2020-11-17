@@ -317,7 +317,7 @@ export default {
     addNewTab() {
       let websiteId = this.$store.getters.getSelectedWebsites[0]
       let tab = { 
-        name: this.selectedWebsites, 
+        name: this.selectedWebsites(), 
         link: `/website/:${websiteId}`,
         id: websiteId,
         icon: 'web'
@@ -364,7 +364,7 @@ export default {
       this.$store.commit('updateSelectedWebsites', ids)
     },
     copyWebsiteNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedWebsites)
+      navigator.clipboard.writeText(this.selectedWebsites())
     },
     deleteWebsites(){
       this.previousSelection = []

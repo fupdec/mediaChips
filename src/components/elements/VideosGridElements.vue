@@ -429,7 +429,7 @@ export default {
     addNewTab() {
       let videoId = this.$store.getters.getSelectedVideos[0]
       let tab = { 
-        name: this.selectedVideos, 
+        name: this.selectedVideos(), 
         link: `/video/:${videoId}`,
         id: videoId,
         icon: 'video-outline'
@@ -634,7 +634,7 @@ export default {
       navigator.clipboard.writeText(this.selectedVideosPaths)
     },
     copyVideoNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedVideos)
+      navigator.clipboard.writeText(this.selectedVideos())
     },
     deleteVideos() {
       this.previousSelection = []

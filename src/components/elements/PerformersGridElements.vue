@@ -221,7 +221,7 @@ export default {
     addNewTab() {
       let performerId = this.$store.getters.getSelectedPerformers[0]
       let tab = { 
-        name: this.selectedPerformers, 
+        name: this.selectedPerformers(), 
         link: `/performer/:${performerId}`,
         id: performerId,
         icon: 'account-outline'
@@ -290,7 +290,11 @@ export default {
       this.$store.commit('updatePerformers')
     },
     copyPerformerNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedPerformers)
+      navigator.clipboard.writeText(this.selectedPerformers()).then(function() {
+        console.log('Async: Copying to clipboard was successful!');
+      }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+      })
     },
     deletePerformers() {
       this.previousSelection = []

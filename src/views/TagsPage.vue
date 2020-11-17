@@ -105,6 +105,7 @@
             <div>You want to delete tag<span v-if="selectedTagsLength>1">s</span></div>
             {{selectedTags(true)}}
           </v-card-text>
+          <!-- TODO: fix too much notifications if delete more then 1 item -->
         </vuescroll>
         <v-card-actions>
           <v-btn class="ma-4" @click="$store.state.Tags.dialogDeleteTag = false">
@@ -318,7 +319,7 @@ export default {
     addNewTab() {
       let tagId = this.$store.getters.getSelectedTags[0]
       let tab = { 
-        name: this.selectedTags, 
+        name: this.selectedTags(), 
         link: `/tag/:${tagId}`,
         id: tagId,
         icon: 'tag-outline'
@@ -369,7 +370,7 @@ export default {
       this.$store.commit('updateSelectedTags', ids)
     },
     copyTagNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedTags)
+      navigator.clipboard.writeText(this.selectedTags())
     },
     deleteTags(){
       this.previousSelection = []
