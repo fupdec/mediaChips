@@ -286,13 +286,17 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
   },
   methods: {
     addNewTabPerformer() {
+      let tabId = this.performer.id + new Date().getTime()
       let tab = { 
         name: this.performer.name,
-        link: `/performer/:${this.performer.id}`,
-        id: this.performer.id + new Date().getTime(),
+        link: `/performer/:${this.performer.id}?tabId=${tabId}`,
+        id: tabId,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -303,10 +307,11 @@ export default {
       event.stopPropagation()
     },
     addNewTabTag(tagName) {
+      let tabId = this.getTagId(tagName) + new Date().getTime()
       let tab = { 
         name: tagName,
-        link: this.tagLink(tagName),
-        id: this.getTagId(tagName) + new Date().getTime(),
+        link: this.tagLink(tagName)+'?tabId='+tabId,
+        id: tabId,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -319,18 +324,31 @@ export default {
       let tabId = shortid.generate()
       let tab = { 
         name: this.performer.nation, 
-        link: `/performers/:${tabId}`,
+        link: `/performers/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Performers.filters),
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
     },
+    updateTabFilters() {
+      let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
+      if (this.tabId === 'default') {
+        this.$store.state.Performers.filtersReserved = newFilters
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.performersFilters,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
+      }
+    },
     filterByNationality() {
       let key = 'nation'
       let value = [this.performer.nation]
       this.$store.commit('updateFiltersOfPerformers', {key, value})
       this.$store.dispatch('filterPerformers')
+      this.updateTabFilters()
     },
     tagLink(tag) {
       return `/tag/:${this.getTagId(tag)}`
@@ -339,7 +357,7 @@ export default {
       return this.$store.getters.tags.find({name: itemName}).value().id
     },
     openPerformerPage() {
-      this.$router.push(`/performer/:${this.performer.id}`)
+      this.$router.push(`/performer/:${this.performer.id}?tabId=default`)
     },
     isCustomImgExist (imgPath) {
       return imgPath.includes('not_exist')
@@ -490,7 +508,7 @@ export default {
     },
     meterMultiplier (value) {
       this.updateMeter(value)
-    }, // TODO: FIX METER
+    },
     chipsSize(newSize, oldSize) {
       this.getChipsSize()
     }

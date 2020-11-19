@@ -149,36 +149,45 @@
         </v-btn>
       </template>
       <v-card>
-        <v-btn-toggle 
-          v-model="sortButtons" mandatory 
-          class="group-buttons-sort" color="primary"
-        >
+        <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByName()" :value="0" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
                 <v-icon size="20">mdi-alphabetical-variant</v-icon>
-                <v-icon right size="12" v-if="sortButtons==0 && isSortedByName==true">mdi-arrow-up-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==0 && isSortedByName==false">mdi-arrow-down-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='desc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='asc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by name</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByColor()" :value="1" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="color" v-on="on">
                 <v-icon size="20">mdi-palette</v-icon>
-                <v-icon right size="12" v-if="sortButtons==1 && isSortedByColor==true">mdi-arrow-down-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==1 && isSortedByColor==false">mdi-arrow-up-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='desc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='asc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by color</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByDate()" :value="4" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
                 <v-icon size="20">mdi-calendar-clock</v-icon>
-                <v-icon right size="12" v-if="sortButtons==4 && isSortedByDate==true">mdi-arrow-down-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==4 && isSortedByDate==false">mdi-arrow-up-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='desc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='asc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by date added</span>
@@ -230,10 +239,6 @@ export default {
     filtersMenu: false,
     filterCategoryLogicIcon: 'mdi-math-norm',
     categories: ['performer', 'video'],
-    sortButtons: 0,
-    isSortedByName: false,
-    isSortedByColor: false,
-    isSortedByDate: false,
   }),
   computed: {
     colorHeader() {
@@ -247,6 +252,20 @@ export default {
     },
     filteredTagsTotal() {
       return this.$store.getters.filteredTagsTotal
+    },
+    sortButtons: {
+      get() {
+        return this.$store.state.Tags.filters.sortBy
+      },
+      set(value) {
+        this.updateFiltersOfTags('sortBy', value)
+      },
+    },
+    sortDirection() {
+      return this.$store.state.Tags.filters.sortDirection
+    },
+    tabId() {
+      return this.$route.query.tabId
     },
   },
   methods: {
@@ -310,19 +329,34 @@ export default {
       let logic = this.$store.state.Tags.filters.categoryLogic
       this.filterCategoryLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
       this.$store.state.Tags.filters.categoryLogic = !logic
+      this.updateTabFilters()
     },
     updateFiltersOfTags(key, value){
       this.$store.commit('updateFiltersOfTags', {key, value})
+      this.updateTabFilters()
+    },
+    updateTabFilters() {
+      let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
+      if (this.tabId === 'default') {
+        this.$store.state.Tags.filtersReserved = newFilters
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.tagsFilters,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
+      }
     },
     resetAllFilters(event) {
       this.$store.commit('resetFilteredTags')
       this.$store.dispatch('filterTags')
+      this.updateTabFilters()
     },
     addNewTab() {
       let tabId = shortid.generate()
       let tab = { 
         name: this.$store.getters.tagsFilters, 
-        link: `/tags/:${tabId}`,
+        link: `/tags/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Tags.filters),
         icon: 'tag-outline'
@@ -331,31 +365,18 @@ export default {
     },
     applyAllFilters(event) {
       this.$store.dispatch('filterTags')
+      this.updateTabFilters()
     },
     toggleBookmarks() {
-      this.$store.state.Tags.filters.bookmark = !this.$store.state.Tags.filters.bookmark
+      this.updateFiltersOfTags('bookmark', !this.$store.state.Tags.filters.bookmark)
       this.$store.dispatch('filterTags')
     },
-    sortItemsByName() {
-      this.updateFiltersOfTags('sortBy', 'name')
-      this.isSortedByName = !this.isSortedByName
-      let dir = this.isSortedByName ? 'desc' : 'asc'
+    toggleSortDirection() {
+      let dir = this.sortDirection === 'asc' ? 'desc' : 'asc'
       this.updateFiltersOfTags('sortDirection', dir)
-      this.$store.dispatch('filterTags')
-    },
-    sortItemsByColor() {
-      this.updateFiltersOfTags('sortBy', 'color')
-      this.isSortedByColor = !this.isSortedByColor
-      let dir = this.isSortedByColor ? 'desc' : 'asc'
-      this.updateFiltersOfTags('sortDirection', dir)
-      this.$store.dispatch('filterTags')
-    },
-    sortItemsByDate() {
-      this.updateFiltersOfTags('sortBy', 'date')
-      this.isSortedByDate = !this.isSortedByDate
-      let dir = this.isSortedByDate ? 'desc' : 'asc'
-      this.updateFiltersOfTags('sortDirection', dir)
-      this.$store.dispatch('filterTags')
+      setTimeout(()=>{
+        this.$store.dispatch('filterTags')
+      },200)
     },
     selectAllTags() {
       this.$store.state.Tags.selection.clearSelection()

@@ -11,27 +11,36 @@ const dbs = low(adapterSettings)
 const dbv = low(adapterVideos)
 dbv.defaults({ videos: [] }).write()
 
+const defaultFilters = {
+  favorite: false,
+  bookmark: false,
+  quality: [],
+  performers: [],
+  performersLogic: false,
+  tags: [],
+  tagsLogic: false,
+  websites: [],
+  path: '',
+  durationActive: false,
+  duration: [0,1],
+  sizeActive: false,
+  size: [0,20000],
+  sortBy: 'name',
+  sortDirection: 'asc',
+}
+
 const Videos = {
   state: () => ({
     videosOnPageCount: 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
-    filters: {
-      favorite: false,
-      bookmark: false,
-      quality: [],
-      performers: [],
-      performersLogic: false,
-      tags: [],
-      tagsLogic: false,
-      websites: [],
-      path: '',
-      durationActive: false,
-      duration: [0,1],
-      sizeActive: false,
-      size: [0,20000],
-    },
+    defaultFilters: _.cloneDeep(defaultFilters),
+    filters: _.cloneDeep(defaultFilters),
+    filtersReserved: _.cloneDeep(defaultFilters),
+    filtersReservedForPerformer: _.cloneDeep(defaultFilters),
+    filtersReservedForTag: _.cloneDeep(defaultFilters),
+    // filtersReservedForWebsite: _.cloneDeep(defaultFilters),
     filteredVideos: [],
     filteredEmpty: false,
     selection: null,
@@ -75,19 +84,7 @@ const Videos = {
       state.filteredVideos = filteredVideos
     },
     resetFilteredVideos(state) {
-      state.filters = {
-        favorite: false,
-        bookmark: false,
-        quality: [],
-        performers: [],
-        tags: [],
-        websites: [],
-        path: '',
-        durationActive: false,
-        duration: [0,1],
-        sizeActive: false,
-        size: [0,20000],
-      }
+      state.filters = _.cloneDeep(defaultFilters)
     },
     updateSelectedVideos(state, ids) {
       state.selectedVideos = ids
@@ -111,7 +108,7 @@ const Videos = {
       let videos = getters.videos
       // console.log(videos)
       let filteredVideos = []
-      videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
+      // videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
       if (state.filters.performers) {
         let filteredPerformers = state.filters.performers
         if (filteredPerformers.length) {
@@ -389,7 +386,11 @@ const Videos = {
       if (state.filters.sizeActive) {
         filters.push(`Size:${state.filters.size[0]}-${state.filters.size[1]}GB`)
       }
-      return filters.join(', ')
+      if (filters.length) {
+        return filters.join(', ')
+      } else {
+        return 'Videos'
+      }
     },
     videosTotal: (state, store) => {
       return store.videos.value().length

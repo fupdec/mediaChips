@@ -8,6 +8,18 @@ const low = require('lowdb')
 const dbt = low(adapterTags)
 dbt.defaults({ tags: [] }).write()
 
+const defaultFilters = {
+  firstChar: [],
+  colors: [],
+  bookmark: false,
+  name: '',
+  alternate: false,
+  category: [],
+  categoryLogic: false,
+  sortBy: 'name',
+  sortDirection: 'asc',
+}
+
 const Tags = {
   state: () => ({
     tagsOnPageCount: 20,
@@ -20,15 +32,8 @@ const Tags = {
     selectedTags: [],
     updateInfo: {},
     updateImage: {},
-    filters: {
-      firstChar: [],
-      colors: [],
-      bookmark: false,
-      name: '',
-      alternate: false,
-      category: [],
-      categoryLogic: false,
-    },
+    filters: _.cloneDeep(defaultFilters),
+    filtersReserved: _.cloneDeep(defaultFilters),
     filteredTags: [],
     filteredEmpty: false,
     menuCard: false,
@@ -52,15 +57,7 @@ const Tags = {
       state.filteredTags = filteredTags
     },
     resetFilteredTags(state) {
-      state.filters = {
-        firstChar: [],
-        colors: [],
-        bookmark: false,
-        name: '',
-        alternate: false,
-        category: [],
-        categoryLogic: false,
-      }
+      state.filters = _.cloneDeep(defaultFilters)
     },
     updateFiltersOfTags(state, {key, value}) {
       state.filters[key] = value
@@ -115,7 +112,7 @@ const Tags = {
     async filterTags({ state, commit, getters}) {
       let tags = getters.tags
       let filteredTags = []
-      tags = tags.orderBy(tag=>(tag.name.toLowerCase()), ['asc'])
+      // tags = tags.orderBy(tag=>(tag.name.toLowerCase()), ['asc'])
       if (state.filters.colors) {
         let colors = state.filters.colors
         if (colors.length) {
@@ -252,7 +249,11 @@ const Tags = {
         filterCategory += state.filters.category.join(';')
         filters.push(filterCategory)
       }
-      return filters.join(', ')
+      if (filters.length) {
+        return filters.join(', ')
+      } else {
+        return 'Tags'
+      }
     },
     filteredTags(state, store) {
       let tags 

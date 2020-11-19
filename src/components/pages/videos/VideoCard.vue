@@ -220,10 +220,11 @@ export default {
   },
   methods: {
     addNewTabVideo() {
+      let tabId = this.video.id + new Date().getTime()
       let tab = { 
         name: this.fileName,
-        link: `/video/:${this.video.id}`,
-        id: this.video.id + new Date().getTime(),
+        link: `/video/:${this.video.id}?tabId=${tabId}`,
+        id: tabId,
         icon: 'video-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -234,28 +235,31 @@ export default {
       event.stopPropagation()
     },
     addNewTabPerformer(performerName) {
+      let tabId = this.getPerformerId(performerName) + new Date().getTime()
       let tab = { 
         name: performerName,
-        link: `/performer/:${this.getPerformerId(performerName)}`,
-        id: this.getPerformerId(performerName) + new Date().getTime(),
+        link: `/performer/:${this.getPerformerId(performerName)}?tabId=${tabId}`,
+        id: tabId,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
     },
     addNewTabTag(tagName) {
+      let tabId = this.getTagId(tagName) + new Date().getTime()
       let tab = { 
         name: tagName,
-        link: `/tag/:${this.getTagId(tagName)}`,
-        id: this.getTagId(tagName) + new Date().getTime(),
+        link: `/tag/:${this.getTagId(tagName)}?tabId=${tabId}`,
+        id: tabId,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
     },
     addNewTabWebsite(websiteName) {
+      let tabId = this.getWebsiteId(websiteName) + new Date().getTime()
       let tab = { 
         name: websiteName,
-        link: `/website/:${this.getWebsiteId(websiteName)}`,
-        id: this.getWebsiteId(websiteName) + new Date().getTime(),
+        link: `/website/:${this.getWebsiteId(websiteName)}?tabId=${tabId}`,
+        id: tabId,
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -270,7 +274,7 @@ export default {
       return this.$store.getters.websites.find({name: itemName}).value().id
     },
     openVideoPage() {
-      this.$router.push(`/video/:${this.video.id}`)
+      this.$router.push(`/video/:${this.video.id}?tabId=default`)
     },
     playPreview() {
       if (this.$refs.preview) {

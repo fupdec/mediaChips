@@ -344,7 +344,7 @@ export default {
       }
     },
     openPerformerPage(id) {
-      this.$router.push(`/performer/:${id}`)
+      this.$router.push(`/performer/:${id}?tabId=default`)
     },
   },
 }

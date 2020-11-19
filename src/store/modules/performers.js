@@ -11,6 +11,51 @@ const dbs = low(adapterSettings)
 const dbp = low(adapterPerformers)
 dbp.defaults({ performers: [] }).write()
 
+const defaultFilters = {
+  favorite: false,
+  bookmark: false,
+  firstChar: [],
+  tags: [],
+  tagsLogic: false,
+  name: '',
+  aliases: false,
+  category: [],
+  categoryLogic: false,
+  ratingActive: false,
+  rating: [0, 5],
+  ageActive: false,
+  age: [18, 99],
+  careerActive: false,
+  career: [1980, new Date().getFullYear()],
+  careerEnded: false,
+  heightActive: false,
+  height: [100, 220],
+  weightActive: false,
+  weight: [20, 220],
+  braActive: false,
+  bra: [20, 60],
+  waistActive: false,
+  waist: [20, 60],
+  hipActive: false,
+  hip: [20, 60],
+  nation: [],
+  ethnicity: [],
+  ethnicityLogic: false,
+  hair: [],
+  hairLogic: false,
+  eyes: [],
+  eyesLogic: false,
+  cup: [],
+  boobs: [],
+  body: [],
+  bodyLogic: false,
+  pussy: [],
+  pussyLips: [],
+  pussyHair: [],
+  pussyHairLogic: false,
+  sortBy: 'name',
+  sortDirection: 'asc',
+}
 
 const Performers = {
   state: () => ({
@@ -18,49 +63,9 @@ const Performers = {
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
-    filters: {
-      favorite: false,
-      bookmark: false,
-      firstChar: [],
-      tags: [],
-      tagsLogic: false,
-      name: '',
-      aliases: false,
-      category: [],
-      categoryLogic: false,
-      ratingActive: false,
-      rating: [0, 5],
-      ageActive: false,
-      age: [18, 99],
-      careerActive: false,
-      career: [1980, new Date().getFullYear()],
-      careerEnded: false,
-      heightActive: false,
-      height: [100, 220],
-      weightActive: false,
-      weight: [20, 220],
-      braActive: false,
-      bra: [20, 60],
-      waistActive: false,
-      waist: [20, 60],
-      hipActive: false,
-      hip: [20, 60],
-      nation: [],
-      ethnicity: [],
-      ethnicityLogic: false,
-      hair: [],
-      hairLogic: false,
-      eyes: [],
-      eyesLogic: false,
-      cup: [],
-      boobs: [],
-      body: [],
-      bodyLogic: false,
-      pussy: [],
-      pussyLips: [],
-      pussyHair: [],
-      pussyHairLogic: false,
-    },
+    defaultFilters: _.cloneDeep(defaultFilters),
+    filters: _.cloneDeep(defaultFilters),
+    filtersReserved: _.cloneDeep(defaultFilters),
     filteredPerformers: [],
     filteredEmpty: false,
     selection: null,
@@ -105,42 +110,7 @@ const Performers = {
       state.filteredPerformers = filteredPerformers
     },
     resetFilteredPerformers(state) {
-      state.filters = {
-        favorite: false,
-        bookmark: false,
-        firstChar: [],
-        tags: [],
-        name: '',
-        aliases: false,
-        category: [],
-        ratingActive: false,
-        rating: [0, 5],
-        ageActive: false,
-        age: [18, 99],
-        careerActive: false,
-        career: [1980, new Date().getFullYear()],
-        careerEnded: false,
-        heightActive: false,
-        height: [100, 220],
-        weightActive: false,
-        weight: [20, 220],
-        braActive: false,
-        bra: [20, 60],
-        waistActive: false,
-        waist: [20, 60],
-        hipActive: false,
-        hip: [20, 60],
-        nation: [],
-        ethnicity: [],
-        hair: [],
-        eyes: [],
-        cup: [],
-        boobs: [],
-        body: [],
-        pussy: [],
-        pussyLips: [],
-        pussyHair: [],
-      }
+      state.filters = _.cloneDeep(defaultFilters)
     },
     updateSelectedPerformers(state, ids) {
       state.selectedPerformers = ids
@@ -162,7 +132,7 @@ const Performers = {
     async filterPerformers({ state, commit, getters}) {
       let performers = getters.performers
       let filteredPerformers = []
-      performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
+      // performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
       if (state.filters.firstChar) {
         let firstChars = state.filters.firstChar
         let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
@@ -650,7 +620,11 @@ const Performers = {
         filterPussyHair += state.filters.pussyHair.join(';')
         filters.push(filterPussyHair)
       }
-      return filters.join(', ')
+      if (filters.length) {
+        return filters.join(', ')
+      } else {
+        return 'Performers'
+      }
     },
     filteredPerformers(state, store) {
       // console.log(state.filteredPerformers.length)

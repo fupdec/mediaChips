@@ -144,7 +144,7 @@
                 item-text="name" dense label="Websites" prepend-icon="mdi-web"
                 item-value="name" no-data-text="No more websites" 
                 multiple hide-selected hide-details clearable outlined
-                :menu-props="{contentClass:'list-with-preview'}"
+                :menu-props="{contentClass:'list-with-preview'}" disabled
               >
                 <template v-slot:selection="data">
                   <v-chip
@@ -283,56 +283,73 @@
         </v-btn>
       </template>
       <v-card>
-        <v-btn-toggle 
-          v-model="sortButtons" mandatory 
-          class="group-buttons-sort" color="primary"
-        >
+        <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByName()" :value="0" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
                 <v-icon size="20">mdi-alphabetical-variant</v-icon>
-                <v-icon right size="12" v-if="sortButtons==0 && isSortedByName==true">mdi-arrow-up-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==0 && isSortedByName==false">mdi-arrow-down-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='desc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='asc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by name</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByDuration()" :value="1" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="duration" v-on="on">
                 <v-icon size="20">mdi-clock-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==1 && isSortedByDuration==true">mdi-arrow-down-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==1 && isSortedByDuration==false">mdi-arrow-up-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='duration' && sortDirection==='desc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='duration' && sortDirection==='asc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by duration</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-            <v-btn outlined @click="sortItemsBySize()" :value="2" v-on="on">
+            <v-btn outlined @click="toggleSortDirection" value="size" v-on="on">
               <v-icon size="22">mdi-harddisk</v-icon>
-              <v-icon right size="12" v-if="sortButtons==2 && isSortedBySize==true">mdi-arrow-down-bold-outline</v-icon>
-              <v-icon right size="12" v-if="sortButtons==2 && isSortedBySize==false">mdi-arrow-up-bold-outline</v-icon>
+              <v-icon right size="12" v-if="sortButtons==='size' && sortDirection==='desc'">
+                mdi-arrow-down-bold-outline
+              </v-icon>
+              <v-icon right size="12" v-if="sortButtons==='size' && sortDirection==='asc'">
+                mdi-arrow-up-bold-outline
+              </v-icon>
             </v-btn>
             </template>
             <span>Sort by size</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByRating()" :value="3" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="rating" v-on="on">
                 <v-icon size="20">mdi-star-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==3 && isSortedByRating==true">mdi-arrow-down-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==3 && isSortedByRating==false">mdi-arrow-up-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='rating' && sortDirection==='desc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='rating' && sortDirection==='asc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by rating</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByDate()" :value="4" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
                 <v-icon size="20">mdi-calendar-clock</v-icon>
-                <v-icon right size="12" v-if="sortButtons==4 && isSortedByDate==true">mdi-arrow-down-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==4 && isSortedByDate==false">mdi-arrow-up-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='desc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='asc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by date added</span>
@@ -521,15 +538,15 @@ export default {
     filtersMenu: false,
     filterPerformersLogicIcon: 'mdi-math-norm',
     filterTagsLogicIcon: 'mdi-math-norm',
-    sortButtons: 0,
-    isSortedByName: false,
-    isSortedByDuration: false,
-    isSortedBySize: false,
-    isSortedByRating: false,
-    isSortedByDate: false,
     cardSizes: ['XS','S','M','L','XL'],
   }),
   computed: {
+    website() {
+      return this.$store.getters.websites.find({ id: this.websiteId }).value()    
+    },
+    websiteId() {
+      return this.$route.params.id.replace(/:/g, '')    
+    },
     colorHeader() {
       if (this.$vuetify.theme.isDark) {
         return this.$store.state.Settings.appColorDarkHeader
@@ -541,6 +558,17 @@ export default {
     },
     filteredVideosTotal() {
       return this.$store.getters.filteredVideosTotal
+    },
+    sortButtons: {
+      get() {
+        return this.$store.state.Videos.filters.sortBy
+      },
+      set(value) {
+        this.updateFiltersOfVideos('sortBy', value)
+      },
+    },
+    sortDirection() {
+      return this.$store.state.Videos.filters.sortDirection
     },
     isChipsColored: {
       get() {
@@ -622,6 +650,9 @@ export default {
         this.$store.dispatch('updateVideoWebsiteHidden', value)
       },
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
   },
   methods: {
     filterItemsPerformers(item, queryText, itemText) {
@@ -648,17 +679,19 @@ export default {
       let logic = this.$store.state.Videos.filters.performersLogic
       this.filterPerformersLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
       this.$store.state.Videos.filters.performersLogic = !logic
+      this.updateTabFilters()
     },
     changeFilterTagsLogic() {
       let logic = this.$store.state.Videos.filters.tagsLogic
       this.filterTagsLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
       this.$store.state.Videos.filters.tagsLogic = !logic
+      this.updateTabFilters()
     },
     addNewTab() {
       let tabId = shortid.generate()
       let tab = { 
         name: this.$store.getters.videosFilters, 
-        link: `/videos/:${tabId}`,
+        link: `/videos/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Videos.filters),
         icon: 'video-outline'
@@ -677,53 +710,33 @@ export default {
     },
     resetAllFilters(event) {
       this.$store.commit('resetFilteredVideos')
+      this.updateFiltersOfVideos('websites', [this.website.name])
       this.$store.dispatch('filterVideos')
+    },
+    updateTabFilters() {
+      if (this.tabId !== 'default') {
+        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
+        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters:newFilters}).write()
+      }
     },
     updateFiltersOfVideos(key, value){
       this.$store.commit('updateFiltersOfVideos', {key, value})
+      this.updateTabFilters()
     },
     toggleFavorites() {
-      this.$store.state.Videos.filters.favorite = !this.$store.state.Videos.filters.favorite
+      this.updateFiltersOfVideos('favorite', !this.$store.state.Videos.filters.favorite)
       this.$store.dispatch('filterVideos')
     },
     toggleBookmarks() {
-      this.$store.state.Videos.filters.bookmark = !this.$store.state.Videos.filters.bookmark
+      this.updateFiltersOfVideos('bookmark', !this.$store.state.Videos.filters.bookmark)
       this.$store.dispatch('filterVideos')
     },
-    sortItemsByName() {
-      this.updateFiltersOfVideos('sortBy', 'name')
-      this.isSortedByName = !this.isSortedByName
-      let dir = this.isSortedByName ? 'desc' : 'asc'
+    toggleSortDirection() {
+      let dir = this.sortDirection === 'asc' ? 'desc' : 'asc'
       this.updateFiltersOfVideos('sortDirection', dir)
-      this.$store.dispatch('filterVideos')
-    },
-    sortItemsByDuration() {
-      this.updateFiltersOfVideos('sortBy', 'duration')
-      this.isSortedByDuration = !this.isSortedByDuration
-      let dir = this.isSortedByDuration ? 'desc' : 'asc'
-      this.updateFiltersOfVideos('sortDirection', dir)
-      this.$store.dispatch('filterVideos')
-    },
-    sortItemsBySize() {
-      this.updateFiltersOfVideos('sortBy', 'size')
-      this.isSortedBySize = !this.isSortedBySize
-      let dir = this.isSortedBySize ? 'desc' : 'asc'
-      this.updateFiltersOfVideos('sortDirection', dir)
-      this.$store.dispatch('filterVideos')
-    },
-    sortItemsByRating() {
-      this.updateFiltersOfVideos('sortBy', 'rating')
-      this.isSortedByRating = !this.isSortedByRating
-      let dir = this.isSortedByRating ? 'desc' : 'asc'
-      this.updateFiltersOfVideos('sortDirection', dir)
-      this.$store.dispatch('filterVideos')
-    },
-    sortItemsByDate() {
-      this.updateFiltersOfVideos('sortBy', 'date')
-      this.isSortedByDate = !this.isSortedByDate
-      let dir = this.isSortedByDate ? 'desc' : 'asc'
-      this.updateFiltersOfVideos('sortDirection', dir)
-      this.$store.dispatch('filterVideos')
+      setTimeout(()=>{
+        this.$store.dispatch('filterVideos')
+      },200)
     },
     selectAllVideos() {
       this.$store.state.Videos.selection.clearSelection()

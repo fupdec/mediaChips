@@ -48,10 +48,11 @@ export default {
   },
   methods: {
     addNewTab() {
+      let tabId = this.website.id + new Date().getTime()
       let tab = { 
         name: this.website.name,
-        link: `/website/:${this.website.id}`,
-        id: this.website.id + new Date().getTime(),
+        link: `/website/:${this.website.id}?tabId=${tabId}`,
+        id: tabId,
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -62,7 +63,7 @@ export default {
       event.stopPropagation()
     },
     openWebsitePage() {
-      this.$router.push(`/website/:${this.website.id}`)
+      this.$router.push(`/website/:${this.website.id}?tabId=default`)
     },
     getImgUrl(websiteId) {
       let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)

@@ -30,6 +30,9 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
+    tabId() {
+      return this.$route.query.tabId  
+    },
   },
   methods: {
     getPerformerColorDependsRating(rating) { 
@@ -77,16 +80,31 @@ export default {
         return false
       }
     },
-    remove(item, array) { 
-      const index = this[array].indexOf(item);
-      if (index >= 0) this[array].splice(index, 1);
+    updateTabFilters() {
+      let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
+      if (this.tabId === 'default') {
+        this.$store.state.Videos.filtersReserved = newFilters
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.videosFilters,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
+      }
     },
     applyAllFilters() {
       this.$store.dispatch('filterVideos')
+      console.log(this.tabId)
+      this.updateTabFilters()
     },
     resetAllFilters() {
       this.$store.commit('resetFilteredVideos')
       this.$store.dispatch('filterVideos')
+      this.updateTabFilters()
+    },
+    remove(item, array) { 
+      const index = this[array].indexOf(item)
+      if (index >= 0) this[array].splice(index, 1)
     },
   },
 }

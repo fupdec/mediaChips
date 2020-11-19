@@ -78,7 +78,7 @@ export default {
   mixins: [VideosGrid],
   mounted() {
     this.$nextTick(function () {
-      this.$store.dispatch('filterVideos')
+      this.initFilters()
     })
   },
   data: () => ({
@@ -87,6 +87,16 @@ export default {
   computed: {
     cardSize() {
       return `card-size-${this.$store.state.Settings.videoCardSize}`
+    },
+    tabId() {
+      return this.$route.query.tabId
+    },
+    filtersTab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
+      }
     },
   },
   methods: {
@@ -98,14 +108,21 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
+    initFilters() {
+      let newFilters
+      if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
+        newFilters = _.cloneDeep(this.$store.state.Videos.filtersReserved)
+      } else {
+        newFilters = _.cloneDeep(this.filtersTab)
+      }
+      this.$store.state.Videos.filters = newFilters
+      this.$store.dispatch('filterVideos')
+    },
   },
   watch: {
     $route(newRoute) {
       if (!this.$route.path.includes('/videos/:')) return
-      let id = newRoute.params.id.replace(':', '')
-      let tab = this.$store.getters.tabsDb.find({id}).value()
-      this.$store.state.Videos.filters =  _.cloneDeep(tab.filters)
-      this.$store.dispatch('filterVideos')
+      this.initFilters()
     },
   }
 }

@@ -3,21 +3,21 @@
     <v-btn @click.stop="dialogConfirmClearAllFiles = true" class="ma-2" depressed dark color="red">
       <v-icon left>mdi-delete-alert</v-icon>{{nameDB}}
     </v-btn>
-    <v-dialog v-model="dialogConfirmClearAllFiles" max-width="360">
+    <v-dialog v-model="dialogConfirmClearAllFiles" max-width="520">
       <v-card>
         <v-card-title class="headline">Are you sure?</v-card-title>
         <v-card-text class="text-center">
           <v-icon size="60" color="red">mdi-alert</v-icon> 
         </v-card-text>
-        <v-card-text>
-          This will <span style="text-transform:uppercase">delete all {{nameDB}}</span> from the database!
-          Before deleting, make a backup and if you are ready then press 
-          the RED BUTTON. 
+        <v-card-text class="text-center">
+          This will <span class="text-uppercase">delete all {{nameDB}}</span> from the database!
+          <br>Before deleting, make a backup and if you are ready then press 
+          the <br><span class="text-uppercase">red button</span>. 
         </v-card-text>
         <v-card-actions>
+          <v-btn @click="dialogConfirmClearAllFiles=false" class="ma-4"> Cancel </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="grey" class="mr-4" text @click="dialogConfirmClearAllFiles = false">Cancel</v-btn>
-          <v-btn color="error" @click="clearDB(nameDB)">
+          <v-btn @click="clearDB(nameDB)" color="error" class="ma-4">
             <v-icon size="20" left>mdi-alert-circle-outline</v-icon>Delete</v-btn>
         </v-card-actions>
       </v-card>
@@ -27,7 +27,7 @@
         <p class="headline text-center pt-6">Database cleared</p>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="grey" class="mb-6" outlined @click="dialogDatabaseCleared = false">OK</v-btn>
+          <v-btn class="ma-4" outlined @click="dialogDatabaseCleared=false">OK</v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>

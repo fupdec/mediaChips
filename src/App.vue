@@ -7,9 +7,7 @@
     <SideBar />
 
     <v-main app>
-      <keep-alive include="Performers,Videos">
-        <router-view />
-      </keep-alive>
+      <router-view />
     </v-main>
 
     <BottomBar />

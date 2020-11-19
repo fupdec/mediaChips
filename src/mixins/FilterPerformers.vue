@@ -21,6 +21,9 @@ export default {
       let tags = this.$store.getters.tags.filter(t=>(t.category.includes('performer')))
       return tags.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
   },
   methods: {
     getImgTagsUrl(tagId) {
@@ -39,18 +42,26 @@ export default {
         return false
       }
     },
+    updateTabFilters() {
+      let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
+      if (this.tabId === 'default') {
+        this.$store.state.Performers.filtersReserved = newFilters
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.performersFilters,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
+      }
+    },
     resetAllFilters() {
-      this.$store.state.Performers.dialogFilterPerformers = false
       this.$store.commit('resetFilteredPerformers')
       this.$store.dispatch('filterPerformers')
-      this.isSortedByName = false
-      this.isSortedByRating = false
-      this.isSortedByDate = false
-      this.sortButtons = 0
+      this.updateTabFilters()
     },
     applyAllFilters() {
-      this.$store.state.Performers.dialogFilterPerformers = false
       this.$store.dispatch('filterPerformers')
+      this.updateTabFilters()
     },
     remove(item, array) { 
       const index = this[array].indexOf(item);

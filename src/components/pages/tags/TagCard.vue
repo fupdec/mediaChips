@@ -55,10 +55,11 @@ export default {
   },
   methods: {
     addNewTab() {
+      let tabId = this.tag.id + new Date().getTime()
       let tab = { 
         name: this.tag.name,
-        link: `/tag/:${this.tag.id}`,
-        id: this.tag.id + new Date().getTime(),
+        link: `/tag/:${this.tag.id}?tabId=${tabId}`,
+        id: tabId,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -69,7 +70,7 @@ export default {
       event.stopPropagation()
     },
     openTagPage() {
-      this.$router.push(`/tag/:${this.tag.id}`)
+      this.$router.push(`/tag/:${this.tag.id}?tabId=default`)
     },
     getImgUrl(tagId) {
       let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/tags/${tagId}_.jpg`)

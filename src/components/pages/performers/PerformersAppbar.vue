@@ -510,36 +510,45 @@
         </v-btn>
       </template>
       <v-card>
-        <v-btn-toggle
-          v-model="sortButtons" mandatory 
-          class="group-buttons-sort" color="primary"
-        >
+        <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByName()" :value="0" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
                 <v-icon size="20">mdi-alphabetical-variant</v-icon>
-                <v-icon right size="12" v-if="sortButtons==0 && isSortedByName==true">mdi-arrow-up-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==0 && isSortedByName==false">mdi-arrow-down-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='desc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='asc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by name</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByRating()" :value="1" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="rating" v-on="on">
                 <v-icon size="20">mdi-star-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==1 && isSortedByRating==true">mdi-arrow-down-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==1 && isSortedByRating==false">mdi-arrow-up-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='rating' && sortDirection==='desc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='rating' && sortDirection==='asc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by rating</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="sortItemsByDate()" :value="4" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
                 <v-icon size="20">mdi-calendar-clock</v-icon>
-                <v-icon right size="12" v-if="sortButtons==4 && isSortedByDate==true">mdi-arrow-down-bold-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==4 && isSortedByDate==false">mdi-arrow-up-bold-outline</v-icon>
+                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='desc'">
+                  mdi-arrow-down-bold-outline
+                </v-icon>
+                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='asc'">
+                  mdi-arrow-up-bold-outline
+                </v-icon>
               </v-btn>
             </template>
             <span>Sort by date added</span>
@@ -745,10 +754,6 @@ export default {
     filterEyesLogicIcon: 'mdi-math-norm',
     filterBodyLogicIcon: 'mdi-math-norm',
     filterPussyHairLogicIcon: 'mdi-math-norm',
-    sortButtons: 0,
-    isSortedByName: false,
-    isSortedByRating: false,
-    isSortedByDate: false,
     cardSizes: ['XS','S','M','L','XL'],
   }),
   computed: {
@@ -763,6 +768,17 @@ export default {
     },
     filteredPerformersTotal() {
       return this.$store.getters.filteredPerformersTotal
+    },
+    sortButtons: {
+      get() {
+        return this.$store.state.Performers.filters.sortBy
+      },
+      set(value) {
+        this.updateFiltersOfPerformers('sortBy', value)
+      },
+    },
+    sortDirection() {
+      return this.$store.state.Performers.filters.sortDirection
     },
     isChipsColored: {
       get() {
@@ -843,6 +859,9 @@ export default {
       set (value) {
         this.$store.dispatch('updatePerformerVideoTagsHidden', value)
       },
+    },
+    tabId() {
+      return this.$route.query.tabId
     },
   },
   methods: {
@@ -942,43 +961,43 @@ export default {
     changeFilterTagsLogic() {
       let logic = this.$store.state.Performers.filters.tagsLogic
       this.filterTagsLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Performers.filters.tagsLogic = !logic
+      this.updateFiltersOfPerformers('tagsLogic', !logic)
     },
     changeFilterCategoryLogic() {
       let logic = this.$store.state.Performers.filters.categoryLogic
       this.filterCategoryLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Performers.filters.categoryLogic = !logic
+      this.updateFiltersOfPerformers('categoryLogic', !logic)
     },
     changeFilterEthnicityLogic() {
       let logic = this.$store.state.Performers.filters.ethnicityLogic
       this.filterEthnicityLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Performers.filters.ethnicityLogic = !logic
+      this.updateFiltersOfPerformers('ethnicityLogic', !logic)
     },
     changeFilterHairLogic() {
       let logic = this.$store.state.Performers.filters.hairLogic
       this.filterHairLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Performers.filters.hairLogic = !logic
+      this.updateFiltersOfPerformers('hairLogic', !logic)
     },
     changeFilterEyesLogic() {
       let logic = this.$store.state.Performers.filters.eyesLogic
       this.filterEyesLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Performers.filters.eyesLogic = !logic
+      this.updateFiltersOfPerformers('eyesLogic', !logic)
     },
     changeFilterBodyLogic() {
       let logic = this.$store.state.Performers.filters.bodyLogic
       this.filterBodyLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Performers.filters.bodyLogic = !logic
+      this.updateFiltersOfPerformers('bodyLogic', !logic)
     },
     changeFilterPussyHairLogic() {
       let logic = this.$store.state.Performers.filters.pussyHairLogic
       this.filterPussyHairLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Performers.filters.pussyHairLogic = !logic
+      this.updateFiltersOfPerformers('pussyHairLogic', !logic)
     },
     addNewTab() {
       let tabId = shortid.generate()
       let tab = { 
         name: this.$store.getters.performersFilters, 
-        link: `/performers/:${tabId}`,
+        link: `/performers/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Performers.filters),
         icon: 'account-outline'
@@ -998,38 +1017,38 @@ export default {
     resetAllFilters(event) {
       this.$store.commit('resetFilteredPerformers')
       this.$store.dispatch('filterPerformers')
+      this.updateTabFilters()
     },
     toggleFavorites() {
-      this.$store.state.Performers.filters.favorite = !this.$store.state.Performers.filters.favorite
+      this.updateFiltersOfPerformers('favorite', !this.$store.state.Performers.filters.favorite)
       this.$store.dispatch('filterPerformers')
     },
     toggleBookmarks() {
-      this.$store.state.Performers.filters.bookmark = !this.$store.state.Performers.filters.bookmark
+      this.updateFiltersOfPerformers('bookmark', !this.$store.state.Performers.filters.bookmark)
       this.$store.dispatch('filterPerformers')
+    },
+    updateTabFilters() {
+      let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
+      if (this.tabId === 'default') {
+        this.$store.state.Performers.filtersReserved = newFilters
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.performersFilters,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
+      }
     },
     updateFiltersOfPerformers(key, value){
       this.$store.commit('updateFiltersOfPerformers', {key, value})
+      this.updateTabFilters()
     },
-    sortItemsByName() {
-      this.updateFiltersOfPerformers('sortBy', 'name')
-      this.isSortedByName = !this.isSortedByName
-      let dir = this.isSortedByName ? 'desc' : 'asc'
+    toggleSortDirection() {
+      let dir = this.sortDirection === 'asc' ? 'desc' : 'asc'
       this.updateFiltersOfPerformers('sortDirection', dir)
-      this.$store.dispatch('filterPerformers')
-    },
-    sortItemsByRating() {
-      this.updateFiltersOfPerformers('sortBy', 'rating')
-      this.isSortedByRating = !this.isSortedByRating
-      let dir = this.isSortedByRating ? 'desc' : 'asc'
-      this.updateFiltersOfPerformers('sortDirection', dir)
-      this.$store.dispatch('filterPerformers')
-    },
-    sortItemsByDate() {
-      this.updateFiltersOfPerformers('sortBy', 'date')
-      this.isSortedByDate = !this.isSortedByDate
-      let dir = this.isSortedByDate ? 'desc' : 'asc'
-      this.updateFiltersOfPerformers('sortDirection', dir)
-      this.$store.dispatch('filterPerformers')
+      setTimeout(()=>{
+        this.$store.dispatch('filterPerformers')
+      },200)
     },
     selectAllPerformers() {
       this.$store.state.Performers.selection.clearSelection()

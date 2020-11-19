@@ -104,8 +104,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.$store.commit('resetFilteredVideos')
-      this.filterVideosByWebsite()
+      this.initFilters()
     })
   },
   data: () => ({
@@ -167,6 +166,16 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
+    filtersTab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
+      }
+    },
   },
   methods: {
     scrollToTop() {
@@ -176,9 +185,6 @@ export default {
       if (vertical.scrollTop > 500) {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
-    },
-    filterVideosByWebsite() {
-      this.updateFiltersOfVideos('websites', [this.website.name])
     },
     showAllPerformers() {
       this.activePerformers = []
@@ -192,9 +198,25 @@ export default {
       }
       this.updateFiltersOfVideos('performers', filtered)
     },
+    initFilters() {
+      if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
+        this.$store.commit('resetFilteredVideos')
+        this.updateFiltersOfVideos('websites', [this.website.name])
+      } else {
+        this.$store.state.Videos.filters = _.cloneDeep(this.filtersTab)
+        this.$store.dispatch('filterVideos')
+      }
+    },
+    updateTabFilters() {
+      if (this.tabId !== 'default') {
+        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
+        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters:newFilters}).write()
+      }
+    },
     updateFiltersOfVideos(key, value){
       this.$store.commit('updateFiltersOfVideos', {key, value})
       this.$store.dispatch('filterVideos')
+      this.updateTabFilters()
     },
     getImgUrl(websiteId) {
       let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
@@ -212,8 +234,9 @@ export default {
     activePerformers() {
       this.filterPerformers()
     },
-    websiteId() {
-      this.filterVideosByWebsite()
+    $route(newRoute) {
+      if (!this.$route.path.includes('/website/:')) return
+      this.initFilters()
     },
   }
 }

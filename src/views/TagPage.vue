@@ -189,10 +189,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.$store.commit('resetFilteredVideos')
-      this.filterVideosByTag()
-      this.$store.commit('resetFilteredPerformers')
-      this.filterPerformersByTag()
+      this.initFilters()
     })
   },
   data: () => ({
@@ -256,10 +253,20 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
+    filtersTab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).get('filters').value()  
+      }
+    },
   },
   methods: {
     changeTab() {
-      console.log(this.$store.state.Tags.activeTab)
+      // console.log(this.$store.state.Tags.activeTab)
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
@@ -269,10 +276,21 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
-    filterVideosByTag() {
+    initFilters() {
+      this.$store.commit('resetFilteredVideos')
+      this.$store.commit('resetFilteredPerformers')
+      if (this.tabId !== 'default' && typeof this.filtersTab === 'undefined') {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          filters: {
+            videos: _.cloneDeep(this.$store.state.Videos.filters),
+            performers: _.cloneDeep(this.$store.state.Performers.filters),
+          }
+        }).write()
+      } else if (this.tabId !== 'default' && this.filtersTab) {
+        this.$store.state.Videos.filters = _.cloneDeep(this.filtersTab.videos)
+        this.$store.state.Performers.filters = _.cloneDeep(this.filtersTab.performers)
+      }
       this.updateFiltersOfVideos('tags', [this.tag.name])
-    },
-    filterPerformersByTag() {
       this.updateFiltersOfPerformers('tags', [this.tag.name])
     },
     showAllPerformers() {
@@ -287,13 +305,27 @@ export default {
       }
       this.updateFiltersOfVideos('performers', filtered)
     },
+    updateTabFiltersOfVideos() {
+      if (this.tabId !== 'default') {
+        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
+        this.$store.getters.tabsDb.find({id: this.tabId}).get('filters').assign({videos: newFilters}).write()
+      }
+    },
+    updateTabFiltersOfPerformers() {
+      if (this.tabId !== 'default') {
+        let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
+        this.$store.getters.tabsDb.find({id: this.tabId}).get('filters').assign({performers: newFilters}).write()
+      }
+    },
     updateFiltersOfVideos(key, value){
       this.$store.commit('updateFiltersOfVideos', {key, value})
       this.$store.dispatch('filterVideos')
+      this.updateTabFiltersOfVideos()
     },
     updateFiltersOfPerformers(key, value){
       this.$store.commit('updateFiltersOfPerformers', {key, value})
       this.$store.dispatch('filterPerformers')
+      this.updateTabFiltersOfPerformers()
     },
     getImgUrl(tagId) {
       let imgPath = path.join(this.pathToUserData, `/media/tags/${tagId}_.jpg`)
@@ -311,9 +343,9 @@ export default {
     activePerformers() {
       this.filterPerformers()
     },
-    tagId() {
-      this.filterVideosByTag()
-      this.filterPerformersByTag()
+    $route(newRoute) {
+      if (!this.$route.path.includes('/tag/:')) return
+      this.initFilters()
     },
   }
 }

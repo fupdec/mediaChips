@@ -231,8 +231,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.$store.commit('resetFilteredVideos')
-      this.filterVideosByPerformer()
+      this.initFilters()
     })
   },
   data: () => ({
@@ -437,22 +436,34 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
+    filtersTab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
+      }
+    },
   },
   methods: {
     addNewTabPerformer() {
+      let tabId = this.performerId + new Date().getTime()
       let tab = { 
         name: this.performer.name, 
-        link: `/performer/:${this.performerId}`,
-        id: this.performerId + new Date().getTime(),
+        link: `/performer/:${this.performerId}?tabId=${tabId}`,
+        id: tabId,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
     },
     addNewTabTag(tagName) {
+      let tabId = this.getTagId(tagName) + new Date().getTime()
       let tab = { 
         name: tagName,
-        link: this.tagLink(tagName),
-        id: this.getTagId(tagName) + new Date().getTime(),
+        link: this.tagLink(tagName)+'?tabId='+tabId,
+        id: tabId,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -484,12 +495,25 @@ export default {
     getTagId(itemName) {
       return this.$store.getters.tags.find({name: itemName}).value().id
     },
-    filterVideosByPerformer() {
-      this.updateFiltersOfVideos('performers', [this.performer.name])
+    initFilters() {
+      if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
+        this.$store.commit('resetFilteredVideos')
+        this.updateFiltersOfVideos('performers', [this.performer.name])
+      } else {
+        this.$store.state.Videos.filters = _.cloneDeep(this.filtersTab)
+        this.$store.dispatch('filterVideos')
+      }
+    },
+    updateTabFilters() {
+      if (this.tabId === 'default') {
+        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
+        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters: newFilters}).write()
+      }
     },
     updateFiltersOfVideos(key, value){
       this.$store.commit('updateFiltersOfVideos', {key, value})
       this.$store.dispatch('filterVideos')
+      this.updateTabFilters()
     },
     getImgUrl(performerId, imgType) {
       let imgPath = path.join(this.pathToUserData, `/media/performers/${performerId}_${imgType}.jpg`)
@@ -518,8 +542,9 @@ export default {
     },
   },
   watch: {
-    performerId() {
-      this.filterVideosByPerformer()
+    $route(newRoute) {
+      if (!this.$route.path.includes('/performer/:')) return
+      this.initFilters()
     },
   }
 }

@@ -16,6 +16,14 @@ dbw.defaults({
   },]
 }).write()
 
+const defaultFilters = {
+  firstChar: [],
+  colors: [],
+  bookmark: false,
+  name: '',
+  sortBy: 'name',
+  sortDirection: 'asc',
+}
 
 const Websites = {
   state: () => ({
@@ -29,12 +37,8 @@ const Websites = {
     selectedWebsites: [],
     updateInfo: {},
     updateImage: {},
-    filters: {
-      firstChar: [],
-      colors: [],
-      bookmark: false,
-      name: '',
-    },
+    filters: _.cloneDeep(defaultFilters),
+    filtersReserved: _.cloneDeep(defaultFilters),
     filteredWebsites: [],
     filteredEmpty: false,
     menuCard: false,
@@ -57,12 +61,7 @@ const Websites = {
       state.filteredWebsites = filteredWebsites
     },
     resetFilteredWebsites(state) {
-      state.filters = {
-        firstChar: [],
-        colors: [],
-        bookmark: false,
-        name: '',
-      }
+      state.filters = _.cloneDeep(defaultFilters)
     },
     updateFiltersOfWebsites(state, {key, value}) {
       state.filters[key] = value
@@ -111,7 +110,7 @@ const Websites = {
     async filterWebsites({ state, commit, getters}) {
       let websites = getters.websites
       let filteredWebsites = []
-      websites = websites.orderBy(website=>(website.name.toLowerCase()), ['asc'])
+      // websites = websites.orderBy(website=>(website.name.toLowerCase()), ['asc'])
       if (state.filters.colors) {
         let colors = state.filters.colors
         if (colors.length) {
@@ -201,7 +200,11 @@ const Websites = {
         filterChars += chars.join(';')
         filters.push(filterChars)
       }
-      return filters.join(', ')
+      if (filters.length) {
+        return filters.join(', ')
+      } else {
+        return 'Websites'
+      }
     },
     filteredWebsites(state, store) {
       let websites 

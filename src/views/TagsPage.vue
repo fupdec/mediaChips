@@ -252,9 +252,7 @@ export default {
         return this.$store.state.Tags.filters.firstChar
       },
       set (value) {
-        let key = 'firstChar'
-        this.$store.commit('updateFiltersOfTags', {key, value})
-        this.$store.dispatch('filterTags')
+        this.updateFiltersOfTags('firstChar', value)
       },
     },
     colors: {
@@ -262,9 +260,7 @@ export default {
         return this.$store.state.Tags.filters.colors
       },
       set (value) {
-        let key = 'colors'
-        this.$store.commit('updateFiltersOfTags', {key, value})
-        this.$store.dispatch('filterTags')
+        this.updateFiltersOfTags('colors', value)
       },
     },
     getNumberOfPagesLimit() {
@@ -314,14 +310,18 @@ export default {
     isSelectedSingleTag() {
       return this.$store.getters.getSelectedTags.length == 1
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
   },
   methods: {
     addNewTab() {
       let tagId = this.$store.getters.getSelectedTags[0]
+      let tabId = tagId + new Date().getTime()
       let tab = { 
         name: this.selectedTags(), 
-        link: `/tag/:${tagId}`,
-        id: tagId + new Date().getTime(),
+        link: `/tag/:${tagId}?tabId=${tabId}`,
+        id: tabId,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -339,16 +339,10 @@ export default {
       }
     },
     clearChars() {
-      let key = 'firstChar'
-      let value = []
-      this.$store.commit('updateFiltersOfTags', {key, value})
-      this.$store.dispatch('filterTags')
+      this.updateFiltersOfTags('firstChar', [])
     },
     clearColors() {
-      let key = 'colors'
-      let value = []
-      this.$store.commit('updateFiltersOfTags', {key, value})
-      this.$store.dispatch('filterTags')
+      this.updateFiltersOfTags('colors', [])
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
@@ -358,9 +352,22 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
+    updateTabFilters() {
+      let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
+      if (this.tabId === 'default') {
+        this.$store.state.Tags.filtersReserved = newFilters
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.tagsFilters,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
+      }
+    },
     updateFiltersOfTags(key, value){
       this.$store.commit('updateFiltersOfTags', {key, value})
       this.$store.dispatch('filterTags')
+      this.updateTabFilters()
     },
     changeItemsPerPage() {
       this.$store.dispatch('changeTagsPerPage', this.tagsPerPage)
@@ -382,8 +389,13 @@ export default {
     $route(newRoute) {
       if (!this.$route.path.includes('/tags/:')) return
       let id = newRoute.params.id.replace(':', '')
-      let tab = this.$store.getters.tabsDb.find({id}).value()
-      this.$store.state.Tags.filters =  _.cloneDeep(tab.filters)
+      let newFilters
+      if (id === 'default') {
+        newFilters = _.cloneDeep(this.$store.state.Tags.filtersReserved)
+      } else {
+        newFilters = _.cloneDeep(this.$store.getters.tabsDb.find({id}).value().filters)
+      }
+      this.$store.state.Tags.filters = newFilters
       this.$store.dispatch('filterTags')
     },
   }

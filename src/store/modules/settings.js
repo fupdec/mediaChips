@@ -172,6 +172,9 @@ const Settings = {
     closeTab(state, tabId) {
       state.tabs = _.filter(state.tabs, tab => tab.id !== tabId)
     },
+    getTabsFromDb(state, tabs) {
+      state.tabs = _.cloneDeep(dbs.get('tabs').value())
+    },
     updateTabs(state, tabs) {
       state.tabs = _.cloneDeep(tabs)
     },

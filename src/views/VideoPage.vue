@@ -625,7 +625,7 @@ export default {
       return this.$store.getters.performers.find({name:performerName}).value()
     },
     openPerformerPage(performerName) {
-      this.$router.push(`/performer/:${this.getPerformer(performerName).id}`)
+      this.$router.push(`/performer/:${this.getPerformer(performerName).id}?tabId=default`)
     },
     getTag(tagName) {
       return this.$store.getters.tags.find({name:tagName}).value()

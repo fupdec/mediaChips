@@ -220,10 +220,11 @@ export default {
   methods: {
     addNewTab() {
       let performerId = this.$store.getters.getSelectedPerformers[0]
+      let tabId = performerId + new Date().getTime()
       let tab = { 
         name: this.selectedPerformers(), 
-        link: `/performer/:${performerId}`,
-        id: performerId + new Date().getTime(),
+        link: `/performer/:${performerId}?tabId=${tabId}`,
+        id: tabId,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)

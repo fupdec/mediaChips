@@ -107,13 +107,23 @@ export default {
   mixins: [PerformersGrid],
   mounted () {
     this.$nextTick(function () {
-      this.$store.dispatch('filterPerformers')
+      this.initFilters()
     })
   },
   data: () => ({
     isScrollToTopVisible: false,
   }),
   computed: {
+    filtersTab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
+      }
+    },
+    tabId() {
+      return this.$route.query.tabId
+    },
   },
   methods: {
     scrollToTop() {
@@ -124,14 +134,21 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
+    initFilters() {
+      let newFilters
+      if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
+        newFilters = _.cloneDeep(this.$store.state.Performers.filtersReserved)
+      } else {
+        newFilters = _.cloneDeep(this.filtersTab)
+      }
+      this.$store.state.Performers.filters = newFilters
+      this.$store.dispatch('filterPerformers')
+    },
   },
   watch: {
     $route(newRoute) {
       if (!this.$route.path.includes('/performers/:')) return
-      let id = newRoute.params.id.replace(':', '')
-      let tab = this.$store.getters.tabsDb.find({id}).value()
-      this.$store.state.Performers.filters = _.cloneDeep(tab.filters)
-      this.$store.dispatch('filterPerformers')
+      this.initFilters()
     },
   }
 }

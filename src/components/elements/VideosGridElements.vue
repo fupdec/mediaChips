@@ -428,10 +428,11 @@ export default {
   methods: {
     addNewTab() {
       let videoId = this.$store.getters.getSelectedVideos[0]
+      let tabId = videoId + new Date().getTime()
       let tab = { 
         name: this.selectedVideos(), 
-        link: `/video/:${videoId}`,
-        id: videoId + new Date().getTime(),
+        link: `/video/:${videoId}?tabId=${tabId}`,
+        id: tabId,
         icon: 'video-outline'
       }
       this.$store.dispatch('addNewTab', tab)

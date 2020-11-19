@@ -250,9 +250,7 @@ export default {
         return this.$store.state.Websites.filters.firstChar
       },
       set (value) {
-        let key = 'firstChar'
-        this.$store.commit('updateFiltersOfWebsites', {key, value})
-        this.$store.dispatch('filterWebsites')
+        this.updateFiltersOfWebsites('firstChar', value)
       },
     },
     colors: {
@@ -260,9 +258,7 @@ export default {
         return this.$store.state.Websites.filters.colors
       },
       set (value) {
-        let key = 'colors'
-        this.$store.commit('updateFiltersOfWebsites', {key, value})
-        this.$store.dispatch('filterWebsites')
+        this.updateFiltersOfWebsites('colors', value)
       },
     },
     getNumberOfPagesLimit() {
@@ -312,14 +308,18 @@ export default {
     isSelectedSingleWebsite() {
       return this.$store.getters.getSelectedWebsites.length == 1
     },
+    tabId() {
+      return this.$route.query.tabId
+    },
   },
   methods: {
     addNewTab() {
       let websiteId = this.$store.getters.getSelectedWebsites[0]
+      let tabId = websiteId + new Date().getTime()
       let tab = { 
         name: this.selectedWebsites(), 
-        link: `/website/:${websiteId}`,
-        id: websiteId + new Date().getTime(),
+        link: `/website/:${websiteId}?tabId=${tabId}`,
+        id: tabId,
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -337,16 +337,10 @@ export default {
       }
     },
     clearChars() {
-      let key = 'firstChar'
-      let value = []
-      this.$store.commit('updateFiltersOfWebsites', {key, value})
-      this.$store.dispatch('filterWebsites')
+      this.updateFiltersOfWebsites('firstChar', [])
     },
     clearColors() {
-      let key = 'colors'
-      let value = []
-      this.$store.commit('updateFiltersOfWebsites', {key, value})
-      this.$store.dispatch('filterWebsites')
+      this.updateFiltersOfWebsites('colors', [])
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
@@ -355,6 +349,23 @@ export default {
       if (vertical.scrollTop > 150) {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
+    },
+    updateTabFilters() {
+      let newFilters = _.cloneDeep(this.$store.state.Websites.filters)
+      if (this.tabId === 'default') {
+        this.$store.state.Websites.filtersReserved = newFilters
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.websitesFilters,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
+      }
+    },
+    updateFiltersOfWebsites(key, value){
+      this.$store.commit('updateFiltersOfWebsites', {key, value})
+      this.$store.dispatch('filterWebsites')
+      this.updateTabFilters()
     },
     changeItemsPerPage() {
       this.$store.dispatch('changeWebsitesPerPage', this.websitesPerPage)
@@ -376,8 +387,13 @@ export default {
     $route(newRoute) {
       if (!this.$route.path.includes('/websites/:')) return
       let id = newRoute.params.id.replace(':', '')
-      let tab = this.$store.getters.tabsDb.find({id}).value()
-      this.$store.state.Websites.filters =  _.cloneDeep(tab.filters)
+      let newFilters
+      if (id === 'default') {
+        newFilters = _.cloneDeep(this.$store.state.Websites.filtersReserved)
+      } else {
+        newFilters = _.cloneDeep(this.$store.getters.tabsDb.find({id}).value().filters)
+      }
+      this.$store.state.Websites.filters = newFilters
       this.$store.dispatch('filterWebsites')
     },
   }
