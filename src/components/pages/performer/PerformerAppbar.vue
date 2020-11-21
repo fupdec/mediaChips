@@ -405,6 +405,18 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
+        <v-badge :value="isEditBtnHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+          <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
+            <v-icon>mdi-movie-edit</v-icon>
+          </v-btn>
+        </v-badge>
+      </template>
+      <span v-if="isEditBtnHidden">Show edit button</span>
+      <span v-else>Hide edit button</span>
+    </v-tooltip>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
         <v-badge :value="isQualityLabelHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleQualityLabelVisibilty()" v-on="on">
             <v-icon>mdi-video-box</v-icon>
@@ -576,6 +588,14 @@ export default {
         this.$store.dispatch('updateVideoChipsColored', value)
       },
     },
+    isEditBtnHidden: {
+      get() {
+        return this.$store.state.Videos.videoEditBtnHidden
+      },
+      set(value) {
+        this.$store.dispatch('updateVideoEditBtnHidden', value)
+      },
+    },
     isFileNameHidden: {
       get() {
         return this.$store.state.Videos.videoFileNameHidden
@@ -738,6 +758,9 @@ export default {
     },
     toggleChipsColored() {
       this.isChipsColored = !this.isChipsColored
+    },
+    toggleEditBtnVisibilty() {
+      this.isEditBtnHidden = !this.isEditBtnHidden
     },
     toggleFileNameVisibilty() {
       this.isFileNameHidden = !this.isFileNameHidden

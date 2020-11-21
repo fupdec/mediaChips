@@ -135,6 +135,11 @@
       <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28">
         mdi-bookmark
       </v-icon>
+
+      <v-btn @click="$store.state.Videos.dialogEditVideoInfo=true"
+        color="secondary" fab x-small class="btn-edit" :class="{hidden: isEditBtnHidden}">
+        <v-icon>mdi-movie-edit</v-icon>
+      </v-btn>
     </v-card>
   </v-lazy>
 </template>
@@ -171,6 +176,9 @@ export default {
   computed: {
     isChipsColored() {
       return this.$store.state.Videos.videoChipsColored
+    },
+    isEditBtnHidden() {
+      return this.$store.state.Videos.videoEditBtnHidden 
     },
     isFileNameHidden() {
       return this.$store.state.Videos.videoFileNameHidden 
@@ -454,6 +462,21 @@ export default {
       &:hover {
         opacity: 1;
       }
+    }
+    .btn-edit {
+      opacity: 0.5;
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+  .btn-edit {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    opacity: 0;
+    &.hidden {
+      display: none;
     }
   }
   &.favorite {

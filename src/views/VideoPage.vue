@@ -189,15 +189,14 @@
                 :stencil-props="{aspectRatio: 16/9}"
                 :min-height="20"
               />
-              <v-btn @click="pasteImageFromClipboard('thumb')"
-                class="ma-6" outlined :color="images.thumb.btnColor">
-                <v-icon size="16" class="mr-2">mdi-clipboard-outline</v-icon> Paste
+              <v-btn @click="pasteImageFromClipboard('thumb')" class="ma-4 mr-10" 
+                outlined :color="images.thumb.btnColor">
+                <v-icon left>mdi-clipboard-outline</v-icon> Paste from clipboard
               </v-btn>
               <v-btn v-if="images.thumb.display" 
                 @click="crop(getImagePath('thumb',''),'thumb'),loader='imgThumbLoading'"  
-                color="primary" large
-                :loading="imgThumbLoading" :disabled="imgThumbLoading" 
-              > <v-icon size="18" class="mr-2">mdi-crop</v-icon> Crop / Save
+                color="primary" large :loading="imgThumbLoading" :disabled="imgThumbLoading" 
+              > <v-icon left>mdi-crop</v-icon> Crop / Save
                 <template v-slot:loader>
                   <span class="custom-loader">
                     <v-icon>mdi-cached</v-icon>
@@ -207,7 +206,7 @@
               <file-pond
                 ref="pond" label-idle="Drop image here or click for upload"
                 :allow-multiple="false" :files="uploadedImage" @addfile="handleFile"
-                accepted-file-types="image/*" :dropValidation="true" class="mt-2"
+                accepted-file-types="image/*" :dropValidation="true" class="mt-4"
               />
             </v-col>
           </v-card-text>
@@ -222,7 +221,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="savePath" class="ma-6" color="primary">Save</v-btn>
+          <v-btn @click="savePath" class="ma-4" color="primary">Save</v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
@@ -282,21 +281,20 @@
         </vuescroll>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="addMarker" :disabled="!valid" class="ma-6" color="primary">
+          <v-btn @click="addMarker" :disabled="!valid" class="ma-4" color="primary">
             Add marker
           </v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogRemoveMarker" max-width="300">
+    <v-dialog v-model="dialogRemoveMarker" max-width="420">
       <v-card>
         <v-card-title>Remove marker?</v-card-title>
         <v-card-actions>
+          <v-btn @click="dialogRemoveMarker = false" class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogRemoveMarker = false" class="ma-6">No</v-btn>
-          <v-btn @click="removeMarker" class="ma-6" dark color="red">Remove</v-btn>
-          <v-spacer></v-spacer>
+          <v-btn @click="removeMarker" class="ma-4" dark color="red">Remove</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

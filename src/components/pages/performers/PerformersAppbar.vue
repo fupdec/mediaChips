@@ -604,6 +604,18 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
+        <v-badge :value="isEditBtnHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+          <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
+            <v-icon>mdi-account-edit</v-icon>
+          </v-btn>
+        </v-badge>
+      </template>
+      <span v-if="isEditBtnHidden">Show edit button</span>
+      <span v-else>Hide edit button</span>
+    </v-tooltip>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
         <v-badge :value="isRatingHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleRatingVisibilty()" v-on="on">
             <v-icon>mdi-star</v-icon>
@@ -786,6 +798,14 @@ export default {
       },
       set(value) {
         this.$store.dispatch('updatePerformerChipsColored', value)
+      },
+    },
+    isEditBtnHidden: {
+      get() {
+        return this.$store.state.Performers.performerEditBtnHidden
+      },
+      set(value) {
+        this.$store.dispatch('updatePerformerEditBtnHidden', value)
       },
     },
     isRatingHidden: {
@@ -1065,6 +1085,9 @@ export default {
     },
     toggleChipsColored() {
       this.isChipsColored = !this.isChipsColored
+    },
+    toggleEditBtnVisibilty() {
+      this.isEditBtnHidden = !this.isEditBtnHidden
     },
     toggleMeterVisibilty() {
       this.isMeterHidden = !this.isMeterHidden

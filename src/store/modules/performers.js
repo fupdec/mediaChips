@@ -77,6 +77,7 @@ const Performers = {
     updateInfo: {},
     rating: 0,
     performerChipsColored: dbs.get('performerChipsColored').value(),
+    performerEditBtnHidden: dbs.get('performerEditBtnHidden').value(),
     performerMeterHidden: dbs.get('performerMeterHidden').value(),
     performerNameHidden: dbs.get('performerNameHidden').value(),
     performerRatingHidden: dbs.get('performerRatingHidden').value(),
@@ -465,6 +466,10 @@ const Performers = {
     updatePerformerChipsColored({state, getters}, value) {
       getters.settings.set('performerChipsColored', value).write()
       state.performerChipsColored = value
+    },
+    updatePerformerEditBtnHidden({state, getters}, value) {
+      getters.settings.set('performerEditBtnHidden', value).write()
+      state.performerEditBtnHidden = value
     },
     updatePerformerMeterHidden({state, getters}, value) {
       getters.settings.set('performerMeterHidden', value).write()

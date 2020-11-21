@@ -5,10 +5,10 @@
       :data-id="performer.id" hover outlined height="100%"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
-        <div class="flag-icon" @click="filterByNationality" @click.middle="addNewTabWithNationality">
+        <div @click="filterByNationality" @click.middle="addNewTabWithNationality"
+          class="flag-icon" :class="{hidden: isNationalityHidden}">
           <country-flag :country='findCountryCode(performer.nation)' 
-            size='normal' :class="{hidden: isNationalityHidden}" 
-            :title="performer.nation" />
+            size='normal' :title="performer.nation" />
         </div>
 
         <v-img @click.middle="addNewTabPerformer"
@@ -116,6 +116,15 @@
         </v-chip-group>
       </v-card-text>
       <!-- TODO: add websites from videos -->
+      
+      <v-btn @click="$store.state.Performers.dialogEditPerformerImages=true"
+        color="secondary" fab x-small class="btn-edit-images" :class="{hidden: isEditBtnHidden}">
+        <v-icon>mdi-image-edit-outline</v-icon>
+      </v-btn>
+      <v-btn @click="$store.state.Performers.dialogEditPerformerInfo=true"
+        color="secondary" fab x-small class="btn-edit" :class="{hidden: isEditBtnHidden}">
+        <v-icon>mdi-square-edit-outline</v-icon>
+      </v-btn>
     </v-card>
   </v-lazy>
 </template>
@@ -180,6 +189,9 @@ export default {
   computed: {
     isChipsColored() {
       return this.$store.state.Performers.performerChipsColored
+    },
+    isEditBtnHidden() {
+      return this.$store.state.Performers.performerEditBtnHidden 
     },
     isRatingHidden() {
       return this.$store.state.Performers.performerRatingHidden
@@ -526,9 +538,9 @@ export default {
     cursor: pointer;
   }
   &:hover {
+    .btn-edit,
     .btn-edit-images {
-      opacity: 0.7;
-      transform: translateY(0);
+      opacity: 0.5;
       &:hover {
         opacity: 1;
       }
@@ -699,11 +711,23 @@ export default {
   }
   .btn-edit-images {
     position: absolute;
-    bottom: 8px;
-    left: 56px;
+    bottom: 45px;
+    right: 5px;
     opacity: 0;
-    transition: .7s all ease;
-    transform: translateY(50px);
+    z-index: 4;
+    &.hidden {
+      display: none;
+    }
+  }
+  .btn-edit {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    opacity: 0;
+    z-index: 4;
+    &.hidden {
+      display: none;
+    }
   }
   .tags-from-videos {
     font-size: 12px;
@@ -780,7 +804,7 @@ export default {
       border: 2px solid rgba(255, 255, 255, 0.4);
       border-radius: 50px;
       position: absolute;
-      right: 8px;
+      right: 5px;
       overflow: hidden;
       transition: .3s all ease;
       opacity: 0;
@@ -798,12 +822,12 @@ export default {
   }
   .custom1-img {
     &-wrapper {
-      bottom: 8px;
+      bottom: calc(50% - 18px);
     }
   }
   .custom2-img {
     &-wrapper {
-      bottom: 56px;
+      bottom: calc(50% - 62px);
     }
   }
 }

@@ -31,13 +31,12 @@
               </v-card-text>
             </vuescroll>
             <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn @click="$store.state.Settings.dialogScanVideos = false" 
-                text class="mb-2 mr-4">
+              <v-btn @click="$store.state.Settings.dialogScanVideos=false" class="ma-2">
                 Cancel
               </v-btn>
+              <v-spacer></v-spacer>
               <v-btn @click="scanVideosForm = 2" :disabled="folderPaths.length===0"
-                color="primary" class="mb-2 mr-2">
+                color="primary" class="ma-2">
                 Continue <v-icon large right>mdi-chevron-right</v-icon>
               </v-btn>
             </v-card-actions>
@@ -73,15 +72,14 @@
               </v-card-text>
             </vuescroll>
             <v-card-actions>
-              <v-btn @click="scanVideosForm = 1" text class="mb-2 ml-2">
-                <v-icon large left>mdi-chevron-left</v-icon> Back
-              </v-btn>
-              <v-spacer></v-spacer>
-              <v-btn @click="$store.state.Settings.dialogScanVideos = false" 
-                text class="mb-2 mr-4">
+              <v-btn @click="$store.state.Settings.dialogScanVideos = false" class="ma-2">
                 Cancel
               </v-btn>
-              <v-btn @click="startScanProcess" color="primary" class="mb-2 mr-2">
+              <v-spacer></v-spacer>
+              <v-btn @click="scanVideosForm = 1" class="ma-2">
+                <v-icon large left>mdi-chevron-left</v-icon> Back
+              </v-btn>
+              <v-btn @click="startScanProcess" color="primary" class="ma-2">
                 <v-icon left>mdi-movie-search</v-icon>
                 Start scanning process <v-icon large right>mdi-chevron-right</v-icon>
               </v-btn>
@@ -179,7 +177,7 @@
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn @click="endScanProcess" :disabled="$store.state.Settings.scanProcRun" 
-                color="primary" class="mb-2 mr-2"
+                color="primary" class="ma-2"
               > OK </v-btn>
             </v-card-actions>
           </v-card>

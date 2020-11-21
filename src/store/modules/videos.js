@@ -38,9 +38,6 @@ const Videos = {
     defaultFilters: _.cloneDeep(defaultFilters),
     filters: _.cloneDeep(defaultFilters),
     filtersReserved: _.cloneDeep(defaultFilters),
-    filtersReservedForPerformer: _.cloneDeep(defaultFilters),
-    filtersReservedForTag: _.cloneDeep(defaultFilters),
-    // filtersReservedForWebsite: _.cloneDeep(defaultFilters),
     filteredVideos: [],
     filteredEmpty: false,
     selection: null,
@@ -51,6 +48,7 @@ const Videos = {
     deleteFile: false,
     rating: 0,
     videoChipsColored: dbs.get('videoChipsColored').value(),
+    videoEditBtnHidden: dbs.get('videoEditBtnHidden').value(),
     videoFileNameHidden: dbs.get('videoFileNameHidden').value(),
     videoFileInfoHidden: dbs.get('videoFileInfoHidden').value(),
     videoRatingHidden: dbs.get('videoRatingHidden').value(),
@@ -226,6 +224,10 @@ const Videos = {
     updateVideoChipsColored({state, getters}, value) {
       getters.settings.set('videoChipsColored', value).write()
       state.videoChipsColored = value
+    },
+    updateVideoEditBtnHidden({state, getters}, value) {
+      getters.settings.set('videoEditBtnHidden', value).write()
+      state.videoEditBtnHidden = value
     },
     updateVideoFileNameHidden({state, getters}, value) {
       getters.settings.set('videoFileNameHidden', value).write()

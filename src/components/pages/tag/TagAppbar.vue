@@ -928,6 +928,18 @@
       <span v-else>Make labels colored</span>
     </v-tooltip>
 
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-badge :value="isEditBtnHiddenForVideos" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+          <v-btn icon tile @click="toggleEditBtnVisibiltyForVideos()" v-on="on">
+            <v-icon>mdi-movie-edit</v-icon>
+          </v-btn>
+        </v-badge>
+      </template>
+      <span v-if="isEditBtnHiddenForVideos">Show edit button</span>
+      <span v-else>Hide edit button</span>
+    </v-tooltip>
+
     <v-tooltip v-if="$store.state.Tags.activeTab===0" bottom>
       <template v-slot:activator="{ on }">
         <v-badge :value="isQualityLabelHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
@@ -1069,6 +1081,18 @@
       </template>
       <span v-if="isChipsColoredForPerformers">Make labels grey</span>
       <span v-else>Make labels colored</span>
+    </v-tooltip>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-badge :value="isEditBtnHiddenForPerformers" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+          <v-btn icon tile @click="toggleEditBtnVisibiltyForPerformers()" v-on="on">
+            <v-icon>mdi-account-edit</v-icon>
+          </v-btn>
+        </v-badge>
+      </template>
+      <span v-if="isEditBtnHiddenForPerformers">Show edit button</span>
+      <span v-else>Hide edit button</span>
     </v-tooltip>
 
     <v-tooltip v-if="$store.state.Tags.activeTab===1" bottom>
@@ -1256,6 +1280,14 @@ export default {
         this.$store.dispatch('updateVideoChipsColored', value)
       },
     },
+    isEditBtnHiddenForVideos: {
+      get() {
+        return this.$store.state.Videos.videoEditBtnHidden
+      },
+      set(value) {
+        this.$store.dispatch('updateVideoEditBtnHidden', value)
+      },
+    },
     isFileNameHidden: {
       get() {
         return this.$store.state.Videos.videoFileNameHidden
@@ -1352,6 +1384,14 @@ export default {
       },
       set(value) {
         this.$store.dispatch('updatePerformerChipsColored', value)
+      },
+    },
+    isEditBtnHiddenForPerformers: {
+      get() {
+        return this.$store.state.Performers.performerEditBtnHidden
+      },
+      set(value) {
+        this.$store.dispatch('updatePerformerEditBtnHidden', value)
       },
     },
     isRatingHiddenForPerformers: {
@@ -1537,6 +1577,9 @@ export default {
     toggleChipsColoredForVideos() {
       this.isChipsColoredForVideos = !this.isChipsColoredForVideos
     },
+    toggleEditBtnVisibiltyForVideos() {
+      this.isEditBtnHiddenForVideos = !this.isEditBtnHiddenForVideos
+    },
     toggleFileNameVisibilty() {
       this.isFileNameHidden = !this.isFileNameHidden
     },
@@ -1694,6 +1737,9 @@ export default {
     },
     toggleChipsColoredForPerformers() {
       this.isChipsColoredForPerformers = !this.isChipsColoredForPerformers
+    },
+    toggleEditBtnVisibiltyForPerformers() {
+      this.isEditBtnHiddenForPerformers = !this.isEditBtnHiddenForPerformers
     },
     toggleMeterVisibilty() {
       this.isMeterHidden = !this.isMeterHidden

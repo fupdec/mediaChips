@@ -421,12 +421,11 @@ html {
 .v-system-bar--fixed {
   z-index: 1000 !important;
 }
-// .v-app-bar--fixed {
-//   z-index: 500 !important;
-// }
-// .v-footer--fixed {
-//   z-index: 500 !important;
-// }
+.v-app-bar--fixed {
+  .v-badge__badge {
+    pointer-events: none;
+  }
+}
 .v-pagination {
   &__item--active {
     pointer-events: none;
@@ -438,17 +437,9 @@ html {
     outline: none;
   }
 }
-.v-navigation-drawer {
-  // z-index: 50 !important;
-}
 // DIALOG
 .v-dialog {
   &__content {
-    // top: 60px !important;
-    // bottom: 20px;
-    &--active {
-      // z-index: 505 !important;
-    }
     .__view {
       max-width: 100%;
     }

@@ -33,6 +33,7 @@ dbs.defaults({
   performerInfoPussyLips: ["Small","Medium","Big","Huge"],
   performerInfoPussyHair: ["Trimmed","Bald","Bush","Natural"],
   performerChipsColored: true,
+  performerEditBtnHidden: false,
   performerMeterHidden: false,
   performerNameHidden: false,
   performerRatingHidden: false,
@@ -44,6 +45,7 @@ dbs.defaults({
   performerVideoTagsHidden: false,
   performerProfile: '0',
   videoChipsColored: true,
+  videoEditBtnHidden: false,
   videoFileNameHidden: false,
   videoFileInfoHidden: false,
   videoRatingHidden: false,
@@ -196,6 +198,7 @@ const Settings = {
       state.videoCardSize = 3
       state.performerCardSize = 3
       state.performerChipsColored = true
+      state.performerEditBtnHidden = false
       state.performerMeterHidden = false
       state.performerNameHidden = false
       state.performerRatingHidden = false
@@ -207,6 +210,7 @@ const Settings = {
       state.performerVideoTagsHidden = false
       state.performerProfile = '0'
       state.videoChipsColored = true
+      state.videoEditBtnHidden = false
       state.videoFileNameHidden = false
       state.videoFileInfoHidden = false
       state.videoRatingHidden = false
@@ -320,6 +324,7 @@ const Settings = {
         videoCardSize: 3,
         performerCardSize: 3,
         performerChipsColored: true,
+        performerEditBtnHidden: false,
         performerMeterHidden: false,
         performerNameHidden: false,
         performerRatingHidden: false,
@@ -331,6 +336,7 @@ const Settings = {
         performerVideoTagsHidden: false,
         performerProfile: '0',
         videoChipsColored: true,
+        videoEditBtnHidden: false,
         videoFileNameHidden: false,
         videoFileInfoHidden: false,
         videoRatingHidden: false,

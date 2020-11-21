@@ -246,14 +246,14 @@
         <file-pond
           ref="pond" label-idle="Drop image here or click for upload" class="pa-4"
           :allow-multiple="false" :files="uploadedImage" @addfile="handleFile(addImageType)"
-          accepted-file-types="image/*" :dropValidation="true"
+          accepted-file-types="image/*" @error="handleFileError($event)"
         />
         <div class="text-center">OR</div>
         <v-card-actions>
           <v-spacer/>
-          <v-btn @click="pasteImageFromClipboard(addImageType)" class="ma-4" :color="images[addImageType].btnColor">
-            <v-icon left>mdi-clipboard-outline
-            </v-icon> Paste from clipboard
+          <v-btn @click="pasteImageFromClipboard(addImageType), hideDialogAddImage(addImageType)" 
+            class="ma-4" :color="images[addImageType].btnColor">
+            <v-icon left>mdi-clipboard-outline</v-icon> Paste from clipboard
           </v-btn>
           <v-spacer/>
         </v-card-actions>
@@ -326,6 +326,7 @@ export default {
     imgHeaderLoading: null,
     tooltipCopyName: false,
     tooltipCopyPerformerName: false,
+    uploadedImageError: null,
     uploadedImage: null,
     dialogAddImage: false,
     addImageType: 'main',
@@ -355,10 +356,25 @@ export default {
       this.addImageType = imgType
       this.dialogAddImage = true
     },
+    hideDialogAddImage(addImageType) {
+      setTimeout(()=>{ 
+        if (this.images[addImageType].btnColor !== 'error') {
+          setTimeout(()=>{ this.dialogAddImage = false }, 300)
+        }
+      }, 500)
+    },
+    handleFileError(error) {
+      this.uploadedImageError = error
+    },
     handleFile(imgType) {
+      if (this.uploadedImageError !== null) {
+        this.uploadedImageError = null
+        return
+      }
       let imgBase64 = this.$refs.pond.getFiles()[0].getFileEncodeDataURL()
       this.images[imgType].display = true
       this.images[imgType].file = imgBase64
+      setTimeout(()=>{ this.dialogAddImage = false }, 300)
     },
     getImg() {
       let imgAvaPath = this.getImgUrl(this.performer.id + '_avatar.jpg')

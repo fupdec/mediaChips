@@ -1048,6 +1048,7 @@ export default {
       if (typeof newAliases === 'string') {
         newAliases = this.parseStringToArray(newAliases)
         newAliases = newAliases.filter((x, i, a) => a.indexOf(x) === i)
+        newAliases = newAliases.sort((a, b) => a.localeCompare(b))
         // console.log(aliases)
         // console.log(`string:::${aliases}:::end`)
       } else { console.error('aliases has unsupported type') }

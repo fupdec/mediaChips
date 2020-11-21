@@ -47,11 +47,11 @@
           <v-icon size="72" color="green">mdi-database-plus</v-icon>
         </v-card-text>
         <v-card-actions>
-          <v-spacer/>
           <v-btn @click="dialogCreateBackup=false" :disabled="isCreatingBackupRun"
-            class="ma-2">Close</v-btn>
+            class="ma-4">Cancel</v-btn>
+          <v-spacer/>
           <v-btn @click="createBackup" :disabled="isCreatingBackupRun"
-            class="ma-2" color="green"> Create
+            class="ma-4" color="green"> Create
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -73,11 +73,11 @@
           An error occurred while restoring.
         </v-card-text>
         <v-card-actions v-if="!isBackupRestoredSuccessfully">
-          <v-spacer></v-spacer>
           <v-btn @click="dialogRestoreBackup = false" :disabled="isRestoringBackupRun" 
-            class="ma-2">Close</v-btn>
+            class="ma-4">Cancel</v-btn>
+          <v-spacer></v-spacer>
           <v-btn @click="restoreBackup" :disabled="isRestoringBackupRun" 
-            class="ma-2" depressed color="primary">Restore</v-btn>
+            class="ma-4" depressed color="primary">Restore</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -88,9 +88,9 @@
           <v-icon size="72" color="red">mdi-database-remove</v-icon>
         </v-card-text>
         <v-card-actions>
+          <v-btn @click="dialogDeleteBackup=false" class="ma-4">Cancel</v-btn>
           <v-spacer/>
-          <v-btn @click="dialogDeleteBackup=false" class="ma-2">Close</v-btn>
-          <v-btn @click="deleteBackup" class="ma-2" color="red">Delete
+          <v-btn @click="deleteBackup" class="ma-4" color="red">Delete
           </v-btn>
         </v-card-actions>
       </v-card>
