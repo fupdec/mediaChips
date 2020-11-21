@@ -428,6 +428,22 @@ html {
   .v-toolbar__content {
     padding: 0;
   }
+  .v-badge {
+    &.v-badge--icon .v-badge__badge {
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    &.colored {
+      .v-badge__badge {
+        background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red) !important;
+      }
+    }
+    .v-icon {
+      font-size: 16px;
+    }
+  }
 }
 .v-pagination {
   &__item--active {
@@ -1065,10 +1081,6 @@ html {
     text-align: center;
     font-size: 11px;
   }
-}
-.card-size-icon {
-  position: absolute !important;
-  transform: translate(10px, -10px);
 }
 .fav-btn {
   top: 0;

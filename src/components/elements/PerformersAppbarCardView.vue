@@ -2,10 +2,11 @@
 	<div>
     <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
       <template v-slot:activator="{ on, attrs }">
-        <v-btn v-bind="attrs"  v-on="on" icon tile>
-          <v-icon>mdi-magnify</v-icon>
-          <v-icon class="card-size-icon">mdi-size-{{getCardSizeIcon()}}</v-icon>
-        </v-btn>
+        <v-badge :content="getCardSizeIcon()" class="text-uppercase" color="secondary" overlap offset-x="25" offset-y="25">
+          <v-btn v-bind="attrs" v-on="on" icon tile>
+            <v-icon>mdi-magnify</v-icon>
+          </v-btn>
+        </v-badge>
       </template>
       <v-card width="300">
         <v-card-title class="py-1">
@@ -23,12 +24,11 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-btn icon tile @click="toggleChipsColored()" v-on="on">
-          <v-icon v-if="isChipsColored" color="white" class="colored">
-            mdi-label-variant
-          </v-icon>
-          <v-icon v-else>mdi-label-variant</v-icon>
-        </v-btn>
+				<v-badge :value="isChipsColored" class="colored" overlap offset-x="25" offset-y="25">
+          <v-btn @click="toggleChipsColored()" v-on="on" icon tile>
+            <v-icon>mdi-label-variant</v-icon>
+          </v-btn>
+        </v-badge>
       </template>
       <span v-if="isChipsColored">Make labels grey</span>
       <span v-else>Make labels colored</span>
@@ -36,7 +36,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isEditBtnHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isEditBtnHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
             <v-icon>mdi-account-edit</v-icon>
           </v-btn>
@@ -48,7 +48,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isRatingHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isRatingHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleRatingVisibilty()" v-on="on">
             <v-icon>mdi-star</v-icon>
           </v-btn>
@@ -60,7 +60,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isNationalityHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isNationalityHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleNationalityVisibilty()" v-on="on">
             <v-icon>mdi-flag</v-icon>
           </v-btn>
@@ -72,7 +72,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isFavoriteHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isFavoriteHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleFavoriteVisibilty()" v-on="on">
             <v-icon>mdi-heart</v-icon>
           </v-btn>
@@ -84,7 +84,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isNameHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isNameHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleNameVisibilty()" v-on="on">
             <v-icon>mdi-alphabetical-variant</v-icon>
           </v-btn>
@@ -96,7 +96,7 @@
     
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isAliasesHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isAliasesHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleAliasesVisibilty()" v-on="on">
             <v-icon>mdi-alphabetical</v-icon>
           </v-btn>
@@ -108,7 +108,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isMeterHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isMeterHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleMeterVisibilty()" v-on="on">
             <v-icon>mdi-gauge</v-icon>
           </v-btn>
@@ -120,7 +120,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isCareerStatusHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isCareerStatusHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleCareerStatusVisibilty()" v-on="on">
             <v-icon>mdi-list-status</v-icon>
           </v-btn>
@@ -132,7 +132,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isTagsHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isTagsHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleTagsVisibilty()" v-on="on">
             <v-icon>mdi-tag</v-icon>
           </v-btn>
@@ -144,7 +144,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-badge :value="isVideoTagsHidden" icon="mdi-eye-off" overlap offset-x="25" offset-y="25">
+        <v-badge :value="isVideoTagsHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleVideoTagsVisibilty()" v-on="on">
             <v-icon>mdi-tag-outline</v-icon>
           </v-btn>
@@ -311,11 +311,3 @@ export default {
   },
 }
 </script>
-
-
-<style lang="less" scoped>
-.colored {
-  border-radius: 3px;
-  background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red)
-}
-</style>

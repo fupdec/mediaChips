@@ -202,7 +202,7 @@
             </v-list-item>
             <v-list-item link @mouseup="removePerformers">
               <v-list-item-title>
-                <v-icon left size="18" color="red">mdi-account-remove</v-icon>Remove all performers
+                <v-icon left size="18">mdi-account-remove</v-icon>Remove all performers
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -261,7 +261,7 @@
                 <v-icon left size="18">mdi-content-paste</v-icon>Paste website 
               </v-list-item-title>
             </v-list-item>
-            <v-list-item link @mouseup="removeWebsite" :disabled="isWebsiteClipboardEmpty">
+            <v-list-item link @mouseup="removeWebsite">
               <v-list-item-title>
                 <v-icon left size="18">mdi-delete</v-icon>Remove website
               </v-list-item-title>
@@ -422,7 +422,7 @@ export default {
       return this.tagsClipboard.length == 0
     },
     isWebsiteClipboardEmpty() {
-      return this.websiteClipboard.length === ''
+      return this.websiteClipboard === ''
     },
   },
   methods: {
