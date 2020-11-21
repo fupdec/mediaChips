@@ -46,7 +46,7 @@
 
         <div label outlined class="video-info-resolution"
           :class="{hidden: isQualityLabelHidden}">
-          <div class="text">{{calcHeightTitle(video.height)}}</div>
+          <div class="text text-no-wrap">{{calcHeightTitle(video.height)}}</div>
           <div class="value">
             <span v-if="video.height==2160">4K</span>
             <span v-else>{{video.height}}p</span>
@@ -337,9 +337,9 @@ export default {
       } else if (height >= 720 && height < 1080) {
         title = 'HD'
       } else if (height >= 1080 && height < 1800) {
-        title = 'fullHD'
+        title = 'FHD'
       } else if (height >= 1800) {
-        title = 'ultraHD'
+        title = 'UHD'
       }
       return title
     },
@@ -660,7 +660,7 @@ export default {
   }
   &-resolution {
     position: absolute;
-    width: 32px;
+    min-width: 32px;
     left: 1px;
     top: 1px;
     font-weight: 300;

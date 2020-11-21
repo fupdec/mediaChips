@@ -17,6 +17,18 @@ export default {
     boobsItems: ['Real','Fake','Unknown'],
   }),
   computed: {
+    itemId() {
+      return this.$route.params.id.replace(/:/g, '')    
+    },
+    isPerformerPage() {
+      return this.$route.path.includes('/performer/:')  
+    },
+    isTagPage() {
+      return this.$route.path.includes('/tag/:')  
+    },
+    isWebsitePage() {
+      return this.$route.path.includes('/website/:')  
+    },
     tags() {
       let tags = this.$store.getters.tags.filter(t=>(t.category.includes('performer')))
       return tags.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
@@ -26,6 +38,9 @@ export default {
     },
   },
   methods: {
+    getItem(itemType) {
+      return this.$store.getters[itemType].find({ id: this.itemId }).value()    
+    },
     getImgTagsUrl(tagId) {
       let imgTag = path.join(this.$store.getters.getPathToUserData, `/media/tags/${tagId}_.jpg`)
       let imgChecked = this.checkImageExist(imgTag)
@@ -43,9 +58,16 @@ export default {
       }
     },
     updateTabFilters() {
+      const pages = ['/performer/:','/website/:']
       let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
       if (this.tabId === 'default') {
         this.$store.state.Performers.filtersReserved = newFilters
+      } else if (this.$route.path.includes('/tag/:')) {
+        let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
+        this.$store.getters.tabsDb.find({id: this.tabId}).get('filters').assign({performers: newFilters}).write()
+      } else if (pages.some(p => this.$route.path.includes(p))) {
+        let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
+        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters:newFilters}).write()
       } else {
         this.$store.getters.tabsDb.find({id: this.tabId}).assign({
           name: this.$store.getters.performersFilters,
@@ -54,10 +76,21 @@ export default {
         this.$store.commit('getTabsFromDb')
       }
     },
-    resetAllFilters() {
+    resetAllFilters(event) {
       this.$store.commit('resetFilteredPerformers')
+      if (this.isPerformerPage) {
+        let item = this.getItem('performers')
+        this.updateFiltersOfPerformers('performers', [item.name])
+      } else if (this.isTagPage) {
+        let item = this.getItem('tags')
+        this.updateFiltersOfPerformers('tags', [item.name])
+      } else if (this.isWebsitePage) {
+        let item = this.getItem('websites')
+        this.updateFiltersOfPerformers('websites', [item.name])
+      } else {
+        this.updateTabFilters()
+      }
       this.$store.dispatch('filterPerformers')
-      this.updateTabFilters()
     },
     applyAllFilters() {
       this.$store.dispatch('filterPerformers')

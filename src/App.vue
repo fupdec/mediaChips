@@ -13,6 +13,7 @@
     <BottomBar />
 
     <VideosGridElements />
+    <ScanVideos />
     <SnackBar />
 
     <img 
@@ -47,6 +48,7 @@ export default {
     SnackBar: () => import('@/components/app/SnackBar.vue'),
     BottomBar: () => import('@/components/app/BottomBar.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
+    ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
   },
   mixins: [FilterVideos],
   mounted() {

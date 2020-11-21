@@ -1,126 +1,143 @@
 <template>
 	<v-app-bar app dense clipped-left :color="colorHeader" extension-height="32">
-    <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
-      <template #activator="{ on: onMenu }">
-        <v-tooltip bottom>
-          <template #activator="{ on: onTooltip }">
-            <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
-              <v-icon>mdi-movie-edit</v-icon>
-            </v-btn>
-          </template>
-          <span>Edit video</span>
-        </v-tooltip>
-      </template>
-      <v-card width="500">
-        <v-autocomplete 
-          v-model="video.performers" :items="performersAll" label="Performers"
-          item-text="name" class="mx-4 py-3 hidden-close"
-          item-value="name" no-data-text="No more performers" clearable
-          multiple hide-selected hide-details dense outlined placeholder=" "
-          :menu-props="{contentClass:'list-with-preview'}"
-          @blur="sort('performers'), saveVideoInfo()" :filter="filterItemsPerformers"
-        >
-          <template v-slot:selection="data">
-            <v-chip
-              v-bind="data.attrs" close close-icon="mdi-close"
-              :input-value="data.selected"
-              @click="data.select" small
-              @click:close="removePerformer(data.item)"
-              @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-              @mouseleave.stop="$store.state.hoveredImage=false"
-              :color="getPerformerColorDependsRating(data.item)"
-              :class="{'tag-with-favorite-performer': data.item.favorite}"
-            > <span>{{ data.item.name }}</span>
-            </v-chip>
-          </template>
-          <template v-slot:item="data">
-            <div class="list-item"
-              @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-              @mouseleave.stop="$store.state.hoveredImage=false"
-            > 
-              <v-icon 
-                left size="14" 
-                :color="data.item.favorite===false ? 'grey' : 'pink'"
-              >
-                mdi-heart
-              </v-icon>
-              <v-rating 
-                class="rating-inline small mr-2"
-                v-model="data.item.rating"
-                color="yellow darken-3"
-                background-color="grey darken-1"
-                empty-icon="$ratingFull" 
-                half-icon="mdi-star-half-full"
-                dense half-increments readonly size="12"
-              />
-              <span>{{data.item.name}}</span>
-              <span v-if="data.item.aliases.length" class="aliases"> 
-                aka {{data.item.aliases.join(', ').slice(0,50)}}
-              </span>
-            </div>
-          </template>
-        </v-autocomplete>
-
-        <v-autocomplete 
-          v-model="video.tags" :items="tagsAll" item-text="name" item-value="name"
-          no-data-text="No more tags" multiple hide-selected hide-details
-          @blur="sort('tags'), saveVideoInfo()" class="mx-4 py-3 hidden-close"
-          dense outlined label="Tags" placeholder=" " clearable 
-          :menu-props="{contentClass:'list-with-preview'}" :filter="filterItemsTags"
-        >
-          <template v-slot:selection="data">
-            <v-chip
-              v-bind="data.attrs" outlined small
-              :input-value="data.selected" close close-icon="mdi-close"
-              @click="data.select" @click:close="removeTag(data.item)"
-              @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-              @mouseleave.stop="$store.state.hoveredImage=false"
-              :color="getTag(data.item.name).color" 
-            >{{ data.item.name }}
-            </v-chip>
-          </template>
-          <template v-slot:item="data">
-            <div class="list-item"
-              @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-              @mouseleave.stop="$store.state.hoveredImage=false"
-            > <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
-              <span>{{data.item.name}}</span>
-              <span v-if="data.item.altNames.length" class="aliases"> 
-                {{data.item.altNames.join(', ').slice(0,50)}}
-              </span>
-            </div>
-          </template>
-        </v-autocomplete>
-
-        <v-autocomplete
-          v-model="video.website" :items="websitesAll" outlined dense
-          item-text="name" class="mx-4 py-3" no-data-text="No more websites"
-          item-value="name" hide-details label="Website" placeholder=" "
-          @blur="saveVideoInfo()"
-          :menu-props="{contentClass:'list-with-preview'}"
-        >
-          <template v-slot:selection="data">
-            <v-chip
-              v-bind="data.attrs" label small outlined close close-icon="mdi-close"
-              @click="data.select" @click:close="removeWebsite()"
-              @mouseover.stop="showImage($event, data.item.id, 'website')" 
-              @mouseleave.stop="$store.state.hoveredImage=false"
-              :input-value="data.selected"
-              :color="data.item.color"
-            > <span>{{ data.item.name }}</span>
-            </v-chip>
-          </template>
-          <template v-slot:item="data">
-            <div class="list-item"
-              @mouseover.stop="showImage($event, data.item.id, 'website')" 
-              @mouseleave.stop="$store.state.hoveredImage=false"
-            > <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
-              {{data.item.name}}
-            </div>
-          </template>
-        </v-autocomplete>
-      </v-card>
-    </v-menu>
+    <div>
+      <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
+        <template #activator="{ on: onMenu }">
+          <v-tooltip bottom>
+            <template #activator="{ on: onTooltip }">
+              <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                <v-icon>mdi-movie-edit</v-icon>
+              </v-btn>
+            </template>
+            <span>Edit video</span>
+          </v-tooltip>
+        </template>
+        <v-card width="800">
+          <v-card-title class="py-1">
+            <span class="headline">Edit info of video</span>
+            <v-spacer></v-spacer>
+            <v-icon class="ml-2">mdi-pencil</v-icon>
+          </v-card-title>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-container fluid>
+              <v-row>
+                <v-col cols="6">
+                  <v-autocomplete 
+                    v-model="video.performers" :items="performersAll" label="Performers"
+                    item-text="name" class="hidden-close"
+                    item-value="name" no-data-text="No more performers" clearable
+                    multiple hide-selected hide-details outlined placeholder=" "
+                    :menu-props="{contentClass:'list-with-preview'}"
+                    @blur="sort('performers'), saveVideoInfo()" :filter="filterItemsPerformers"
+                  >
+                    <template v-slot:selection="data">
+                      <v-chip
+                        v-bind="data.attrs" close close-icon="mdi-close"
+                        :input-value="data.selected"
+                        @click="data.select" @click:close="removePerformer(data.item)"
+                        @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"
+                        :color="getPerformerColorDependsRating(data.item)"
+                        :class="{'tag-with-favorite-performer': data.item.favorite}"
+                      > <span>{{ data.item.name }}</span>
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <div class="list-item"
+                        @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"
+                      > 
+                        <v-icon 
+                          left size="14" 
+                          :color="data.item.favorite===false ? 'grey' : 'pink'"
+                        >
+                          mdi-heart
+                        </v-icon>
+                        <v-rating 
+                          class="rating-inline small mr-2"
+                          v-model="data.item.rating"
+                          color="yellow darken-3"
+                          background-color="grey darken-1"
+                          empty-icon="$ratingFull" 
+                          half-icon="mdi-star-half-full"
+                          dense half-increments readonly size="12"
+                        />
+                        <span>{{data.item.name}}</span>
+                        <span v-if="data.item.aliases.length" class="aliases"> 
+                          aka {{data.item.aliases.join(', ').slice(0,50)}}
+                        </span>
+                      </div>
+                    </template>
+                  </v-autocomplete>
+                </v-col>
+                <v-col cols="6">
+                  <v-autocomplete
+                    v-model="video.website" :items="websitesAll" outlined 
+                    item-text="name" no-data-text="No more websites"
+                    item-value="name" hide-details label="Website" placeholder=" "
+                    @blur="saveVideoInfo()"
+                    :menu-props="{contentClass:'list-with-preview'}"
+                  >
+                    <template v-slot:selection="data">
+                      <v-chip
+                        v-bind="data.attrs" label outlined close close-icon="mdi-close"
+                        @click="data.select" @click:close="removeWebsite()"
+                        @mouseover.stop="showImage($event, data.item.id, 'website')" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"
+                        :input-value="data.selected"
+                        :color="data.item.color"
+                      > <span>{{ data.item.name }}</span>
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <div class="list-item"
+                        @mouseover.stop="showImage($event, data.item.id, 'website')" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"
+                      > <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
+                        {{data.item.name}}
+                      </div>
+                    </template>
+                  </v-autocomplete>
+                </v-col>
+                <v-col cols="12">
+                  <v-autocomplete 
+                    v-model="video.tags" :items="tagsAll" item-text="name" item-value="name"
+                    no-data-text="No more tags" multiple hide-selected hide-details
+                    @blur="sort('tags'), saveVideoInfo()" class="hidden-close"
+                    outlined label="Tags" placeholder=" " clearable 
+                    :menu-props="{contentClass:'list-with-preview'}" :filter="filterItemsTags"
+                  >
+                    <template v-slot:selection="data">
+                      <v-chip
+                        v-bind="data.attrs" outlined 
+                        :input-value="data.selected" close close-icon="mdi-close"
+                        @click="data.select" @click:close="removeTag(data.item)"
+                        @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"
+                        :color="getTag(data.item.name).color" 
+                      >{{ data.item.name }}
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <div class="list-item"
+                        @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"
+                      > <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
+                        <span>{{data.item.name}}</span>
+                        <span v-if="data.item.altNames.length" class="aliases"> 
+                          {{data.item.altNames.join(', ').slice(0,50)}}
+                        </span>
+                      </div>
+                    </template>
+                  </v-autocomplete>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-actions>
+        </v-card>
+      </v-menu>
+    </div>
 
     <template v-slot:extension v-if="$store.getters.tabs.length">
       <Tabs />

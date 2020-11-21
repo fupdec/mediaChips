@@ -425,6 +425,9 @@ html {
   .v-badge__badge {
     pointer-events: none;
   }
+  .v-toolbar__content {
+    padding: 0;
+  }
 }
 .v-pagination {
   &__item--active {

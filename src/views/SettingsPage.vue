@@ -10,7 +10,6 @@
           <v-icon size="26" left>mdi-plus</v-icon> Add new videos
         </v-btn>
       </div>
-      <ScanVideos />
       
       <div class="subtitle mt-10 mb-1">Path to system player:</div>
       <div class="caption mb-2">
@@ -262,7 +261,6 @@
 
 
 <script>
-import ScanVideos from '@/components/pages/settings/ScanVideos.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
@@ -274,7 +272,6 @@ const { spawn } = require( 'child_process' )
 export default {
   name: 'SettingsPage',
   components: {
-    ScanVideos,
     ThemeColors,
     ManageBackups,
     ClearDatabases,

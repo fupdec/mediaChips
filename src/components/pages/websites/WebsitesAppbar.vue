@@ -1,184 +1,186 @@
 <template>
 	<v-app-bar app dense clipped-left :color="colorHeader" extension-height="32">
-		<v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
-      <template #activator="{ on: onMenu }">
-        <v-tooltip bottom>
-          <template #activator="{ on: onTooltip }">
-            <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
-              <v-icon>mdi-plus-circle</v-icon>
-            </v-btn>
-          </template>
-          <span>Add new website</span>
-        </v-tooltip>
-      </template>
-      <v-card width="500">
-        <v-card-title class="py-1">
-          <span class="headline">Add new website</span>
-          <v-spacer></v-spacer>
-          <v-icon>mdi-plus-circle</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-form ref="form" v-model="validWebsiteName">
-          <v-card-text class="pb-0">
-            <v-textarea
-              v-model="websiteName" label="Names" outlined required :rules="nameRules"
-              hint="Write a name on a new line to add several websites at once" no-resize
-            ></v-textarea>
-            <v-alert
-              v-model="alertDuplicateWebsites" border="left" text dismissible class="mt-6"
-              icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
-            > Already in the database: {{duplicateWebsites}} </v-alert>
-            <v-alert
-              v-model="alertAddNewWebsites" border="left" text icon="mdi-plus-circle"
-              close-text="Close" type="success" dismissible class="mt-6" 
-            > Added: {{newWebsites}} </v-alert>
-          </v-card-text>
-          <v-card-actions>
+		<div>
+      <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
+        <template #activator="{ on: onMenu }">
+          <v-tooltip bottom>
+            <template #activator="{ on: onTooltip }">
+              <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                <v-icon>mdi-plus-circle</v-icon>
+              </v-btn>
+            </template>
+            <span>Add new website</span>
+          </v-tooltip>
+        </template>
+        <v-card width="500">
+          <v-card-title class="py-1">
+            <span class="headline">Add new website</span>
             <v-spacer></v-spacer>
-            <v-btn 
-              @click="addNewWebsite" :disabled="!validWebsiteName" 
-              color="primary" class="mb-4 mr-4"
-            > <v-icon left>mdi-plus</v-icon> Add
+            <v-icon>mdi-plus-circle</v-icon>
+          </v-card-title>
+          <v-divider></v-divider>
+          <v-form ref="form" v-model="validWebsiteName">
+            <v-card-text class="pb-0">
+              <v-textarea
+                v-model="websiteName" label="Names" outlined required :rules="nameRules"
+                hint="Write a name on a new line to add several websites at once" no-resize
+              ></v-textarea>
+              <v-alert
+                v-model="alertDuplicateWebsites" border="left" text dismissible class="mt-6"
+                icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
+              > Already in the database: {{duplicateWebsites}} </v-alert>
+              <v-alert
+                v-model="alertAddNewWebsites" border="left" text icon="mdi-plus-circle"
+                close-text="Close" type="success" dismissible class="mt-6" 
+              > Added: {{newWebsites}} </v-alert>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn 
+                @click="addNewWebsite" :disabled="!validWebsiteName" 
+                color="primary" class="mb-4 mr-4"
+              > <v-icon left>mdi-plus</v-icon> Add
+              </v-btn>
+            </v-card-actions>
+          </v-form>
+        </v-card>
+      </v-menu>
+
+      <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
+        <template #activator="{ on: onMenu }">
+          <v-tooltip bottom>
+            <template #activator="{ on: onTooltip }">
+              <v-btn v-on="{ ...onMenu, ...onTooltip }" @click="filtersMenu=true" icon tile>
+                <v-badge 
+                  :value="filterBadge" :content="filteredTagsTotal" 
+                  overlap bottom :dot="filteredTagsTotal==0" style="z-index: 5;"
+                ><v-icon>mdi-filter</v-icon>
+                </v-badge>
+              </v-btn>
+            </template>
+            <span>Filter websites</span>
+          </v-tooltip>
+        </template>
+        <v-card width="620">
+          <v-card-title class="py-1">
+            <span class="headline">Filter websites</span>
+            <v-spacer></v-spacer>
+            <v-icon>mdi-filter</v-icon>
+          </v-card-title>
+          <v-divider></v-divider>
+          <v-container fluid class="py-0">
+            <v-row>
+              <v-col cols="12" sm="12">
+                <v-text-field 
+                  v-model="$store.state.Websites.filters.name"
+                  label="Name" hide-details clearable outlined dense
+                  prepend-icon="mdi-alphabetical-variant"
+                />
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-card-actions class="mt-4">
+            <v-spacer></v-spacer>
+
+            <v-btn small class="mr-4 mb-4" color="primary" outlined @click="resetAllFilters(), filtersMenu=false">
+              <v-icon left>mdi-filter-off</v-icon> Reset all filters
+            </v-btn>
+
+            <v-btn small class="mb-4 mr-4" color="primary" @click="addNewTab(), filtersMenu=false">
+              <v-icon left>mdi-tab-plus</v-icon> Open result in new tab
+            </v-btn>
+            
+            <v-btn small class="mr-4 mb-4" color="primary" @click="applyAllFilters(), filtersMenu=false">
+              <v-icon left>mdi-filter</v-icon> Apply filters
             </v-btn>
           </v-card-actions>
-        </v-form>
-      </v-card>
-    </v-menu>
-
-    <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
-      <template #activator="{ on: onMenu }">
-        <v-tooltip bottom>
-          <template #activator="{ on: onTooltip }">
-            <v-btn v-on="{ ...onMenu, ...onTooltip }" @click="filtersMenu=true" icon tile>
-              <v-badge 
-                :value="filterBadge" :content="filteredTagsTotal" 
-                overlap bottom :dot="filteredTagsTotal==0" style="z-index: 5;"
-              ><v-icon>mdi-filter</v-icon>
-              </v-badge>
-            </v-btn>
-          </template>
-          <span>Filter websites</span>
-        </v-tooltip>
-      </template>
-      <v-card width="620">
-        <v-card-title class="py-1">
-          <span class="headline">Filter websites</span>
-          <v-spacer></v-spacer>
-          <v-icon>mdi-filter</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-container fluid class="py-0">
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-text-field 
-                v-model="$store.state.Websites.filters.name"
-                label="Name" hide-details clearable outlined dense
-                prepend-icon="mdi-alphabetical-variant"
-              />
-            </v-col>
-          </v-row>
-        </v-container>
-        <v-card-actions class="mt-4">
-          <v-spacer></v-spacer>
-
-          <v-btn small class="mr-4 mb-4" color="primary" outlined @click="resetAllFilters(), filtersMenu=false">
-            <v-icon left>mdi-filter-off</v-icon> Reset all filters
+        </v-card>
+      </v-menu>
+      
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="resetAllFilters" icon tile v-on="on"> 
+            <v-icon>mdi-filter-off</v-icon>
           </v-btn>
+        </template>
+        <span>Reset all filters</span>
+      </v-tooltip>
 
-          <v-btn small class="mb-4 mr-4" color="primary" @click="addNewTab(), filtersMenu=false">
-            <v-icon left>mdi-tab-plus</v-icon> Open result in new tab
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
+            <v-icon v-if="$store.state.Websites.filters.bookmark">mdi-bookmark</v-icon>
+            <v-icon v-else>mdi-bookmark-outline</v-icon>
           </v-btn>
-          
-          <v-btn small class="mr-4 mb-4" color="primary" @click="applyAllFilters(), filtersMenu=false">
-            <v-icon left>mdi-filter</v-icon> Apply filters
+        </template>
+        <span v-if="$store.state.Websites.filters.bookmark">Show all</span>
+        <span v-else>Show bookmarks</span>
+      </v-tooltip>
+
+      
+      <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn v-bind="attrs"  v-on="on" icon tile>
+            <v-icon>mdi-sort</v-icon>
           </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-menu>
-    
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn @click="resetAllFilters" icon tile v-on="on"> 
-          <v-icon>mdi-filter-off</v-icon>
-        </v-btn>
-      </template>
-      <span>Reset all filters</span>
-    </v-tooltip>
+        </template>
+        <v-card>
+          <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
+                  <v-icon size="20">mdi-alphabetical-variant</v-icon>
+                  <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='desc'">
+                    mdi-arrow-up-bold-outline
+                  </v-icon>
+                  <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='asc'">
+                    mdi-arrow-down-bold-outline
+                  </v-icon>
+                </v-btn>
+              </template>
+              <span>Sort by name</span>
+            </v-tooltip>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn outlined @click="toggleSortDirection" value="color" v-on="on">
+                  <v-icon size="20">mdi-palette</v-icon>
+                  <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='desc'">
+                    mdi-arrow-down-bold-outline
+                  </v-icon>
+                  <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='asc'">
+                    mdi-arrow-up-bold-outline
+                  </v-icon>
+                </v-btn>
+              </template>
+              <span>Sort by color</span>
+            </v-tooltip>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
+                  <v-icon size="20">mdi-calendar-clock</v-icon>
+                  <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='desc'">
+                    mdi-arrow-down-bold-outline
+                  </v-icon>
+                  <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='asc'">
+                    mdi-arrow-up-bold-outline
+                  </v-icon>
+                </v-btn>
+              </template>
+              <span>Sort by date added</span>
+            </v-tooltip>
+          </v-btn-toggle>
+        </v-card>
+      </v-menu>
 
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Websites.filters.bookmark">mdi-bookmark</v-icon>
-          <v-icon v-else>mdi-bookmark-outline</v-icon>
-        </v-btn>
-      </template>
-      <span v-if="$store.state.Websites.filters.bookmark">Show all</span>
-      <span v-else>Show bookmarks</span>
-    </v-tooltip>
-
-    
-    <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn v-bind="attrs"  v-on="on" icon tile>
-          <v-icon>mdi-sort</v-icon>
-        </v-btn>
-      </template>
-      <v-card>
-        <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
-                <v-icon size="20">mdi-alphabetical-variant</v-icon>
-                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='desc'">
-                  mdi-arrow-up-bold-outline
-                </v-icon>
-                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='asc'">
-                  mdi-arrow-down-bold-outline
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by name</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="color" v-on="on">
-                <v-icon size="20">mdi-palette</v-icon>
-                <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='desc'">
-                  mdi-arrow-down-bold-outline
-                </v-icon>
-                <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='asc'">
-                  mdi-arrow-up-bold-outline
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by color</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
-                <v-icon size="20">mdi-calendar-clock</v-icon>
-                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='desc'">
-                  mdi-arrow-down-bold-outline
-                </v-icon>
-                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='asc'">
-                  mdi-arrow-up-bold-outline
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by date added</span>
-          </v-tooltip>
-        </v-btn-toggle>
-      </v-card>
-    </v-menu>
-
-		<v-tooltip bottom>
-			<template v-slot:activator="{ on }">
-				<v-btn icon tile @click="selectAllWebsites" v-on="on">
-					<v-icon>mdi-select-all</v-icon>
-				</v-btn>
-			</template>
-			<span>Select all websites</span>
-		</v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn icon tile @click="selectAllWebsites" v-on="on">
+            <v-icon>mdi-select-all</v-icon>
+          </v-btn>
+        </template>
+        <span>Select all websites</span>
+      </v-tooltip>
+    </div>
 
     <template v-slot:extension v-if="$store.getters.tabs.length">
       <Tabs />

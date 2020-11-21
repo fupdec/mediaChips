@@ -157,7 +157,6 @@ const fs = require("fs")
 const path = require("path")
 
 import TagCard from "@/components/pages/tags/TagCard.vue";
-import DialogEditTag from "@/components/pages/tags/DialogEditTag.vue";
 import Selection from "@simonwep/selection-js";
 import vuescroll from 'vuescroll'
 
@@ -165,7 +164,7 @@ export default {
   name: "TagsPage",
   components: {
     TagCard, 
-    DialogEditTag,
+    DialogEditTag: () => import('@/components/pages/tags/DialogEditTag.vue'),
     vuescroll,
   },
   mounted() {

@@ -200,9 +200,9 @@
                 <v-icon left size="18">mdi-account-multiple</v-icon>Replace performers 
               </v-list-item-title>
             </v-list-item>
-            <v-list-item link @mouseup="removePerformers" :disabled="isPerformersClipboardEmpty">
+            <v-list-item link @mouseup="removePerformers">
               <v-list-item-title>
-                <v-icon left size="18">mdi-account-remove</v-icon>Remove all performers
+                <v-icon left size="18" color="red">mdi-account-remove</v-icon>Remove all performers
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -233,7 +233,7 @@
                 <v-icon left size="18">mdi-tag-multiple</v-icon>Replace tags 
               </v-list-item-title>
             </v-list-item>
-            <v-list-item link @mouseup="removeTags" :disabled="isTagsClipboardEmpty">
+            <v-list-item link @mouseup="removeTags">
               <v-list-item-title>
                 <v-icon left size="18">mdi-tag-remove</v-icon>Remove all tags
               </v-list-item-title>
