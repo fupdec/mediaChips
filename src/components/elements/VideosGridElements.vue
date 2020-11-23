@@ -30,11 +30,13 @@
 
     <v-dialog v-model="$store.state.Videos.dialogCreatePreview" scrollable persistent max-width="800">
       <v-card :loading="createPreviewLoading" loader-height="6">
-        <v-card-title class="title">Create preview
+        <v-card-title>
+          <span class="headline"> Create preview </span>
           <v-spacer></v-spacer>
           <v-icon>mdi-filmstrip</v-icon>
         </v-card-title>
-        <v-card-actions v-if="createPreviewStarted">
+        <v-divider></v-divider>
+        <v-card-actions v-if="createPreviewStarted" class="py-0 px-4">
           <v-progress-linear
             v-model="createPreviewProgress" height="20" rounded 
             class="my-2 progress-striped" :class="{active: createPreviewLoading}"
@@ -42,6 +44,8 @@
               <strong class="process-percents">{{ Math.ceil(value) }}%</strong>
             </template>
           </v-progress-linear>
+        </v-card-actions>
+        <v-card-actions v-if="createPreviewStarted" class="py-0 px-6">
           <v-row>
             <v-col class="caption py-0">
             Current file: {{currentFileInProgress}}

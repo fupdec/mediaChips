@@ -1,5 +1,5 @@
 <template>
-	<v-tabs v-model="active" optional fixed-tabs>
+	<v-tabs v-model="active" optional centered>
     <draggable  
       v-model="tabs" class="tabs-group" v-bind="dragOptions"
       @start="drag = true" @end="drag = false"
@@ -11,11 +11,11 @@
           :to="tab.link" :ripple="false" class="tabs-group-item"
         >
           <div class="tab-name" :title="tab.name"> 
-            <v-icon small>{{`mdi-${tab.icon}`}}</v-icon> 
+            <v-icon size="13">{{`mdi-${tab.icon}`}}</v-icon> 
             {{ tab.name }} 
           </div>
           <v-btn @click="closeTab($event, tab.id)" class="close-btn" icon tile :ripple="false">
-            <v-icon small>mdi-close</v-icon>
+            <v-icon size="14">mdi-close</v-icon>
           </v-btn>
         </v-tab>
       </transition-group>
@@ -72,13 +72,13 @@ export default {
 
 <style lang="less" scoped>
 .flip-tabs-move {
-  transition: transform 0.5s;
+  transition: transform 0.2s;
 }
 .no-move {
   transition: transform 0s;
 }
 .ghost {
-  opacity: 0.5;
+  opacity: 0.2;
   background: #777;
 }
 .tabs-group-item {

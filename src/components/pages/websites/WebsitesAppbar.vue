@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left :color="colorHeader" extension-height="32">
+	<v-app-bar app dense clipped-left :color="colorHeader" extension-height="28">
 		<div>
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">

@@ -941,51 +941,43 @@ html {
 .v-app-bar {
   .v-tabs {
     .v-tab {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: normal;
       letter-spacing: 0;
       text-transform: none;
-      line-height: 30px;
+      line-height: 26px;
       padding-left: 5px;
       padding-right: 30px;
       min-width: 160px;
+      &:not(:last-child) {
+        border-right: 1px dashed rgba(155, 155, 155, 0.5);
+      }
       .tab-name {
-        align-items: flex-start;
+        display: flex;
+        align-items: center;
         justify-content: flex-start;
         white-space: nowrap;
         overflow: hidden;
         width: 100%;
         transition: .3s all ease;
         .v-icon {
-          margin-right: 4px;
-          padding-bottom: 3px;
+          margin-right: 5px;
         }
       }
       .close-btn {
         position: absolute;
-        right: 0;
-        opacity: 0;
-        height: 30px !important;
-        width: 30px !important;
-        margin-left: 5px;
+        right: 5px;
+        height: 18px !important;
+        width: 18px !important;
         align-self: center;
         transition: .3s all ease;
+        i, .v-btn__content {
+          height: 18px !important;
+          width: 18px !important;
+        }
         &:hover {
           i {
             color: #e43434;
-          }
-        }
-        i {
-          font-size: 20px !important;
-          opacity: 0;
-          transition: .3s all ease;
-        }
-      }
-      &:hover {
-        .close-btn {
-          opacity: 1;
-          i {
-            opacity: 1;
           }
         }
       }

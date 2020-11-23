@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left :color="colorHeader" extension-height="32">
+	<v-app-bar app dense clipped-left :color="colorHeader" extension-height="28">
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
