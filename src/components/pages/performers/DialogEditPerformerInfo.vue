@@ -943,7 +943,7 @@ export default {
     getNameRules(name) {
       let duplicate = this.$store.getters.performers.find({name:name}).value()
       if (name.length > 100) {
-        return 'Name must be less than 45 characters'
+        return 'Name must be less than 100 characters'
       } else if (name.length < 3 && name.length > 0) {
         return 'Name must be more than 2 characters'
       } else if (name.length===0) {
@@ -958,7 +958,7 @@ export default {
     },
     getAliasesRules(aliases) {
       if (aliases.length > 500) {
-        return 'Aliases must be less than 300 characters'
+        return 'Aliases must be less than 500 characters'
       } else if (/[\\\/\%"?<>{}\[\]]/g.test(aliases)) {
         return 'Aliases must not content \\/\%\"<>{}\[\]'
       } else if (this.parseStringToArray(aliases).filter((x,i,a)=>a.indexOf(x)===i).length

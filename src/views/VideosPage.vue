@@ -111,7 +111,16 @@ export default {
     initFilters() {
       let newFilters
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
-        newFilters = _.cloneDeep(this.$store.state.Videos.filtersReserved)
+        const presetDefault = this.$store.state.Settings.videosFiltersPresetDefault
+        const presetLoaded = this.$store.state.Bookmarks.videosDefaultPresetLoaded
+        if (presetDefault && !presetLoaded) {
+          const presets = this.$store.state.Bookmarks.filtersPresets.videos
+          const presetFilters = _.find(presets, {default: true}).filters
+          newFilters = _.cloneDeep(presetFilters)
+          this.$store.state.Bookmarks.videosDefaultPresetLoaded = true
+        } else {
+          newFilters = _.cloneDeep(this.$store.state.Videos.filtersReserved)
+        }
       } else {
         newFilters = _.cloneDeep(this.filtersTab)
       }

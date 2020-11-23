@@ -59,6 +59,10 @@ dbs.defaults({
   meterHeight: 5,
   meterMultiplier: 1,
   pathToSystemPlayer: '',
+  videosFiltersPresetDefault: false,
+  performersFiltersPresetDefault: false,
+  tagsFiltersPresetDefault: false,
+  websitesFiltersPresetDefault: false,
 }).write()
 
 import Vuetify from '@/plugins/vuetify'
@@ -102,6 +106,10 @@ const Settings = {
     meterHeight: dbs.get('meterHeight').value(),
     meterMultiplier: dbs.get('meterMultiplier').value(),
     pathToSystemPlayer: dbs.get('pathToSystemPlayer').value(),
+    videosFiltersPresetDefault: dbs.get('videosFiltersPresetDefault').value(),
+    performersFiltersPresetDefault: dbs.get('performersFiltersPresetDefault').value(),
+    tagsFiltersPresetDefault: dbs.get('tagsFiltersPresetDefault').value(),
+    websitesFiltersPresetDefault: dbs.get('websitesFiltersPresetDefault').value(),
   }),
   mutations: {
     updateSettings (state) {
@@ -179,6 +187,9 @@ const Settings = {
     },
     updateTabs(state, tabs) {
       state.tabs = _.cloneDeep(tabs)
+    },
+    updateFiltersPresetDefault(state, {type, value}) {
+      state[`${type}FiltersPresetDefault`] = value
     },
     resetSettingsToDefault(state, tabs) {
       state.disableRunApp = false

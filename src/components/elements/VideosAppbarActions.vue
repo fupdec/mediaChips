@@ -218,18 +218,22 @@
           </v-row>
         </v-container>
         <v-card-actions class="pt-0">
-          <v-spacer></v-spacer>
-
-          <v-btn small class="mr-4 mb-4" color="primary" outlined @click="resetAllFilters(), filtersMenu=false">
+          <v-btn @click="resetAllFilters(), filtersMenu=false" small class="ma-4 mt-0" color="primary" outlined>
             <v-icon left>mdi-filter-off</v-icon> Reset all filters
           </v-btn>
 
-          <v-btn small class="mb-4 mr-4" color="primary" @click="addNewTab(), filtersMenu=false">
-            <v-icon left>mdi-tab-plus</v-icon> Open result in new tab
+          <v-spacer></v-spacer>
+
+          <v-btn @click="$store.state.Bookmarks.dialogFiltersPresets=true" small class="mx-2 mb-4 mt-0" color="primary"> 
+            <v-icon left>mdi-content-save</v-icon> Presets
+          </v-btn>
+
+          <v-btn @click="addNewTab(), filtersMenu=false" small class="mx-2 mb-4 mt-0" color="primary"> 
+            <v-icon left>mdi-tab-plus</v-icon> New tab
           </v-btn>
           
-          <v-btn small class="mr-4 mb-4" color="primary" @click="applyAllFilters(), filtersMenu=false">
-            <v-icon left>mdi-filter</v-icon> Apply filters
+          <v-btn @click="applyAllFilters(), filtersMenu=false" small class="mr-4 mb-4 mt-0" color="primary">
+            <v-icon left>mdi-filter</v-icon> Apply
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -356,6 +360,10 @@
 			</template>
 			<span>Select all videos</span>
 		</v-tooltip>
+
+    <FiltersPresets v-if="$store.state.Bookmarks.dialogFiltersPresets" 
+      typeOfPresets="videos"
+    />
   </div>
 </template>
 
@@ -369,6 +377,7 @@ import ShowImageFunction from '@/mixins/ShowImageFunction'
 export default {
   name: 'VideosAppbarActions',
   components: {
+    FiltersPresets: () => import('@/components/elements/FiltersPresets.vue'),
   },
   mixins: [FilterVideos, ShowImageFunction], 
   mounted() {

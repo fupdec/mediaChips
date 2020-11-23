@@ -137,7 +137,16 @@ export default {
     initFilters() {
       let newFilters
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
-        newFilters = _.cloneDeep(this.$store.state.Performers.filtersReserved)
+        const presetDefault = this.$store.state.Settings.performersFiltersPresetDefault
+        const presetLoaded = this.$store.state.Bookmarks.performersDefaultPresetLoaded
+        if (presetDefault && !presetLoaded) {
+          const presets = this.$store.state.Bookmarks.filtersPresets.performers
+          const presetFilters = _.find(presets, {default: true}).filters
+          newFilters = _.cloneDeep(presetFilters)
+          this.$store.state.Bookmarks.performersDefaultPresetLoaded = true
+        } else {
+          newFilters = _.cloneDeep(this.$store.state.Performers.filtersReserved)
+        }
       } else {
         newFilters = _.cloneDeep(this.filtersTab)
       }
