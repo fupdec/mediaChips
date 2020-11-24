@@ -473,12 +473,12 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
-                <v-icon size="20">mdi-alphabetical-variant</v-icon>
-                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='desc'">
-                  mdi-arrow-up-bold-outline
+                <v-icon>mdi-alphabetical-variant</v-icon>
+                <v-icon right size="14" v-if="sortButtons==='name' && sortDirection==='desc'">
+                  mdi-arrow-up-thick
                 </v-icon>
-                <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='asc'">
-                  mdi-arrow-down-bold-outline
+                <v-icon right size="14" v-if="sortButtons==='name' && sortDirection==='asc'">
+                  mdi-arrow-down-thick
                 </v-icon>
               </v-btn>
             </template>
@@ -487,12 +487,12 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="rating" v-on="on">
-                <v-icon size="20">mdi-star-outline</v-icon>
-                <v-icon right size="12" v-if="sortButtons==='rating' && sortDirection==='desc'">
-                  mdi-arrow-down-bold-outline
+                <v-icon>mdi-star-outline</v-icon>
+                <v-icon right size="14" v-if="sortButtons==='rating' && sortDirection==='desc'">
+                  mdi-arrow-down-thick
                 </v-icon>
-                <v-icon right size="12" v-if="sortButtons==='rating' && sortDirection==='asc'">
-                  mdi-arrow-up-bold-outline
+                <v-icon right size="14" v-if="sortButtons==='rating' && sortDirection==='asc'">
+                  mdi-arrow-up-thick
                 </v-icon>
               </v-btn>
             </template>
@@ -501,16 +501,30 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
-                <v-icon size="20">mdi-calendar-clock</v-icon>
-                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='desc'">
-                  mdi-arrow-down-bold-outline
+                <v-icon>mdi-calendar-clock</v-icon>
+                <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='desc'">
+                  mdi-arrow-down-thick
                 </v-icon>
-                <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='asc'">
-                  mdi-arrow-up-bold-outline
+                <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='asc'">
+                  mdi-arrow-up-thick
                 </v-icon>
               </v-btn>
             </template>
             <span>Sort by date added</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn outlined @click="toggleSortDirection" value="video" v-on="on">
+                <v-icon>mdi-video-outline</v-icon>
+                <v-icon right size="14" v-if="sortButtons==='video' && sortDirection==='desc'">
+                  mdi-arrow-down-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons==='video' && sortDirection==='asc'">
+                  mdi-arrow-up-thick
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>Sort by number of videos</span>
           </v-tooltip>
         </v-btn-toggle>
       </v-card>

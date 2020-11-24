@@ -138,7 +138,7 @@
 
       <v-btn @click="$store.state.Videos.dialogEditVideoInfo=true"
         color="secondary" fab x-small class="btn-edit" :class="{hidden: isEditBtnHidden}">
-        <v-icon>mdi-movie-edit</v-icon>
+        <v-icon>mdi-pencil</v-icon>
       </v-btn>
     </v-card>
   </v-lazy>

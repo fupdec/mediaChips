@@ -154,12 +154,12 @@
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
                 <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
-                  <v-icon size="20">mdi-alphabetical-variant</v-icon>
-                  <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='desc'">
-                    mdi-arrow-up-bold-outline
+                  <v-icon>mdi-alphabetical-variant</v-icon>
+                  <v-icon right size="14" v-if="sortButtons==='name' && sortDirection==='desc'">
+                    mdi-arrow-up-thick
                   </v-icon>
-                  <v-icon right size="12" v-if="sortButtons==='name' && sortDirection==='asc'">
-                    mdi-arrow-down-bold-outline
+                  <v-icon right size="14" v-if="sortButtons==='name' && sortDirection==='asc'">
+                    mdi-arrow-down-thick
                   </v-icon>
                 </v-btn>
               </template>
@@ -168,12 +168,12 @@
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
                 <v-btn outlined @click="toggleSortDirection" value="color" v-on="on">
-                  <v-icon size="20">mdi-palette</v-icon>
-                  <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='desc'">
-                    mdi-arrow-down-bold-outline
+                  <v-icon>mdi-palette</v-icon>
+                  <v-icon right size="14" v-if="sortButtons==='color' && sortDirection==='desc'">
+                    mdi-arrow-down-thick
                   </v-icon>
-                  <v-icon right size="12" v-if="sortButtons==='color' && sortDirection==='asc'">
-                    mdi-arrow-up-bold-outline
+                  <v-icon right size="14" v-if="sortButtons==='color' && sortDirection==='asc'">
+                    mdi-arrow-up-thick
                   </v-icon>
                 </v-btn>
               </template>
@@ -182,12 +182,12 @@
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
                 <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
-                  <v-icon size="20">mdi-calendar-clock</v-icon>
-                  <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='desc'">
-                    mdi-arrow-down-bold-outline
+                  <v-icon>mdi-calendar-clock</v-icon>
+                  <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='desc'">
+                    mdi-arrow-down-thick
                   </v-icon>
-                  <v-icon right size="12" v-if="sortButtons==='date' && sortDirection==='asc'">
-                    mdi-arrow-up-bold-outline
+                  <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='asc'">
+                    mdi-arrow-up-thick
                   </v-icon>
                 </v-btn>
               </template>

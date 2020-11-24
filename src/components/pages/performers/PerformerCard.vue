@@ -123,7 +123,7 @@
       </v-btn>
       <v-btn @click="$store.state.Performers.dialogEditPerformerInfo=true"
         color="secondary" fab x-small class="btn-edit" :class="{hidden: isEditBtnHidden}">
-        <v-icon>mdi-square-edit-outline</v-icon>
+        <v-icon>mdi-pencil</v-icon>
       </v-btn>
     </v-card>
   </v-lazy>

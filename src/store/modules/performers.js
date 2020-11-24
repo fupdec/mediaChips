@@ -410,6 +410,10 @@ const Performers = {
         let direction = state.filters.sortDirection
         if (sort === 'name') {
           performers = performers.orderBy(p=>(p.name.toLowerCase()), [direction])
+        } else if (sort === 'video') {
+          performers = performers.orderBy(p=>(
+            getters.videos.filter({performers: [p.name]}).value().length
+          ), [direction])
         } else {
           performers = performers.orderBy(sort, [direction])
         }
