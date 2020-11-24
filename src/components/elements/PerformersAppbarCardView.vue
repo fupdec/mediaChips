@@ -4,7 +4,7 @@
       <template v-slot:activator="{ on, attrs }">
         <v-badge :content="getCardSizeIcon()" class="text-uppercase" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn v-bind="attrs" v-on="on" icon tile>
-            <v-icon>mdi-magnify</v-icon>
+            <v-icon>mdi-card-bulleted</v-icon>
           </v-btn>
         </v-badge>
       </template>

@@ -34,7 +34,7 @@
           dense half-increments hover size="18" clearable
         ></v-rating>
         
-        <v-btn @click="toggleFavorite" icon absolute small
+        <v-btn @click="isFavorite = !isFavorite" icon absolute small
           :color="isFavorite===false ? 'white' : 'pink'"
           class="fav-btn" :class="{hidden: isFavoriteHidden}"
         > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
@@ -160,7 +160,6 @@ export default {
   mixins: [ShowImageFunction],
   mounted() {
     this.$nextTick(function () {
-      this.isFavorite = this.video.favorite
     })
   },
   updated() {
@@ -169,7 +168,6 @@ export default {
   data: () => ({
     errorThumb: false,
     errorVideo: false,
-    isFavorite: false,
     isChipsXS: true,
     isChipsS: false,
   }),
@@ -218,6 +216,16 @@ export default {
     fileName() {
       let filename = this.video.path.split("\\").pop()
       return filename.split('.').slice(0, -1).join('.')
+    },
+    isFavorite: {
+      get() {
+        return this.video.favorite
+      },
+      set(value) {
+        this.video.favorite = value
+        this.$store.getters.videos.find({id: this.video.id}).assign({favorite: value}).write()
+        this.$store.commit('updateVideos')
+      },
     },
     chipsSize() {
       return this.$store.state.Settings.videoCardSize
@@ -296,21 +304,6 @@ export default {
         this.$refs.preview.pause()
         this.$refs.preview.currentTime = 0
       }
-    },
-    toggleFavorite() {
-      if (this.isFavorite) {
-        this.isFavorite = false
-        console.log('removed from favorite')
-      } else {
-        this.isFavorite = true
-        console.log('added to favorite')
-      }
-
-      this.$store.getters.videos
-        .find({ id: this.video.id })
-        .assign({ favorite: this.isFavorite })
-        .write();
-      this.$store.commit('updateVideos')
     },
     calcSize(size) {
       let totalSize
