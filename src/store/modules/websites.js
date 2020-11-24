@@ -19,6 +19,7 @@ dbw.defaults({
 const defaultFilters = {
   firstChar: [],
   colors: [],
+  favorite: false,
   bookmark: false,
   name: '',
   sortBy: 'name',
@@ -152,6 +153,10 @@ const Websites = {
         // console.log('websites sorted')
         // TODO: add correct sort for collors based on swatches array
       }
+      if (state.filters.favorite) {
+        websites = websites.filter(website=>(website.favorite))
+        // console.log('websites with favorite')
+      }
       if (state.filters.bookmark) {
         websites = websites.filter(website=>(website.bookmark))
         // console.log('websites with bookmark')
@@ -189,6 +194,9 @@ const Websites = {
       let filters = []
       if (state.filters.name) {
         filters.push('Name:' + state.filters.name)
+      }
+      if (state.filters.favorite) {
+        filters.push('Fav.')
       }
       if (state.filters.bookmark) {
         filters.push('Book.')

@@ -1,7 +1,7 @@
 <template>
   <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" 
-      :data-id="tag.id" class="tag-card" outlined hover >
+      :data-id="tag.id" class="tag-card" outlined hover :class="{favorite: isFavorite}">
       <v-img @click="openTagPage" @click.middle="addNewTab" :title='`Open tag "${tagName}"`'
         class="tag-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>
@@ -9,6 +9,10 @@
           mdi-bookmark
         </v-icon>
       </v-img>
+      <v-btn @click="isFavorite = !isFavorite" icon absolute large class="fav-btn"
+        :color="isFavorite===false ? 'white' : 'pink'"
+      > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
+      </v-btn>
       <v-card-title class="tag-card-name"> {{tagName}} ({{itemsWithTag}})</v-card-title>
       <v-btn @click="$store.state.Tags.dialogEditTag = true"
         class="tag-edit-btn" color="white" icon absolute >
@@ -19,8 +23,8 @@
 </template>
 
 <script>
-const fs = require("fs");
-const path = require("path");
+const fs = require("fs")
+const path = require("path")
 
 export default {
   name: "TagCard",
@@ -51,6 +55,16 @@ export default {
       let performers = this.$store.getters.performers.filter(v=>
         (v.tags.includes(this.tag.name)) ).value().length
       return videos + performers
+    },
+    isFavorite: {
+      get() {
+        return this.tag.favorite
+      },
+      set(value) {
+        this.tag.favorite = value
+        this.$store.getters.tags.find({id: this.tag.id}).assign({favorite: value}).write()
+        this.$store.commit('updateTags')
+      },
     },
   },
   methods: {
@@ -129,7 +143,6 @@ export default {
   background-color:rgba(0, 0, 0, 0.3)
 }
 .tag-card {
-  overflow: hidden;
   cursor: default;
   .v-image {
     cursor: pointer;
@@ -140,6 +153,22 @@ export default {
       &:hover {
         opacity: 1;
       }
+    }
+  }
+  &.favorite {
+    &:before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+      border-radius: 4px;
+      pointer-events: none;
+      box-shadow: 0px 2px 8px 3px rgba(255, 0, 75, 0.25), 0 0 0 1px rgba(255, 0, 75, 1);
+    }
+    .tag-card-img:before {
+      opacity: 1;
     }
   }
   .bookmark {
@@ -161,6 +190,19 @@ export default {
 }
 .tag-card-img {
   align-items: flex-end !important;
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    opacity: 0;
+    background-image: linear-gradient(225deg, rgba(255, 0, 75, 1) 0%, rgba(0, 0, 0, 0) 12%, rgba(0, 0, 0, 0));
+    transition: 1s all ease;
+    pointer-events: none;
+  }
   .v-image__image {
     background-position: center center;
   }

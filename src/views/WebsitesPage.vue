@@ -412,7 +412,7 @@ export default {
 .website-card.selected {
   position: relative;
   overflow: visible;
-  &:before {
+  &:after {
     content: '';
     position: absolute;
     width: calc(100% + 8px);

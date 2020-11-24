@@ -11,6 +11,7 @@ dbt.defaults({ tags: [] }).write()
 const defaultFilters = {
   firstChar: [],
   colors: [],
+  favorite: false,
   bookmark: false,
   name: '',
   alternate: false,
@@ -190,6 +191,10 @@ const Tags = {
         // console.log('tags sorted')
         // TODO: add correct sort for collors based on swatches array
       }
+      if (state.filters.favorite) {
+        tags = tags.filter(tag=>(tag.favorite))
+        // console.log('tags with favorite')
+      }
       if (state.filters.bookmark) {
         tags = tags.filter(tag=>(tag.bookmark))
         // console.log('tags with bookmark')
@@ -233,6 +238,9 @@ const Tags = {
       let filters = []
       if (state.filters.name) {
         filters.push('Name:' + state.filters.name)
+      }
+      if (state.filters.favorite) {
+        filters.push('Fav.')
       }
       if (state.filters.bookmark) {
         filters.push('Book.')

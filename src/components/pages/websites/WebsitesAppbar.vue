@@ -108,6 +108,17 @@
 
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
+          <v-btn @click="toggleFavorites" icon tile v-on="on"> 
+            <v-icon v-if="$store.state.Websites.filters.favorite">mdi-heart</v-icon>
+            <v-icon v-else>mdi-heart-outline</v-icon>
+          </v-btn>
+        </template>
+        <span v-if="$store.state.Websites.filters.favorite">Show all</span>
+        <span v-else>Show favorites</span>
+      </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
           <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
             <v-icon v-if="$store.state.Websites.filters.bookmark">mdi-bookmark</v-icon>
             <v-icon v-else>mdi-bookmark-outline</v-icon>
@@ -285,6 +296,7 @@ export default {
             network: false,
             childWebsites: [],
             date: Date.now(),
+            favorite: false,
           }
 
           // add websiteInfo to DB
@@ -343,6 +355,10 @@ export default {
       this.$store.commit('resetFilteredWebsites')
       this.$store.dispatch('filterWebsites')
       this.updateTabFilters()
+    },
+    toggleFavorites() {
+      this.updateFiltersOfWebsites('favorite', !this.$store.state.Websites.filters.favorite)
+      this.$store.dispatch('filterWebsites')
     },
     toggleBookmarks() {
       this.updateFiltersOfWebsites('bookmark', !this.$store.state.Websites.filters.bookmark)

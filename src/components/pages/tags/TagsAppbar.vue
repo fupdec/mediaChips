@@ -134,6 +134,17 @@
 
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
+          <v-btn @click="toggleFavorites" icon tile v-on="on"> 
+            <v-icon v-if="$store.state.Tags.filters.favorite">mdi-heart</v-icon>
+            <v-icon v-else>mdi-heart-outline</v-icon>
+          </v-btn>
+        </template>
+        <span v-if="$store.state.Tags.filters.favorite">Show all</span>
+        <span v-else>Show favorites</span>
+      </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
           <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
             <v-icon v-if="$store.state.Tags.filters.bookmark">mdi-bookmark</v-icon>
             <v-icon v-else>mdi-bookmark-outline</v-icon>
@@ -313,6 +324,7 @@ export default {
             color: "#9b9b9b",
             value: 0,
             date: Date.now(),
+            favorite: false,
           }
 
           // add tagInfo to DB
@@ -377,6 +389,10 @@ export default {
     applyAllFilters(event) {
       this.$store.dispatch('filterTags')
       this.updateTabFilters()
+    },
+    toggleFavorites() {
+      this.updateFiltersOfTags('favorite', !this.$store.state.Tags.filters.favorite)
+      this.$store.dispatch('filterTags')
     },
     toggleBookmarks() {
       this.updateFiltersOfTags('bookmark', !this.$store.state.Tags.filters.bookmark)
