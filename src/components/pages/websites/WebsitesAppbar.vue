@@ -180,6 +180,15 @@
         </template>
         <span>Select all websites</span>
       </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="openRandomWebsite" icon tile v-on="on"> 
+              <v-icon>mdi-dice-5</v-icon>
+          </v-btn>
+        </template>
+        <span>Open random website</span>
+      </v-tooltip>
     </div>
 
     <template v-slot:extension v-if="$store.getters.tabs.length">
@@ -358,6 +367,19 @@ export default {
     getSelectedWebsites(selectedWebsites){
       let ids = selectedWebsites.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedWebsites', ids)
+    },
+    openRandomWebsite() {
+      const rand = this.getRandomIntInclusive(1, this.$store.getters.websitesTotal)
+      const websiteId = this.$store.getters.websites.value()[rand].id
+      this.openWebsitePage(websiteId)
+    },
+    getRandomIntInclusive(min, max) {
+      min = Math.ceil(min)
+      max = Math.floor(max)
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    },
+    openWebsitePage(websiteId) {
+      this.$router.push(`/website/:${websiteId}?tabId=default`)
     },
   },
   watch: {

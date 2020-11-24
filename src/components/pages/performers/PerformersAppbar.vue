@@ -47,6 +47,15 @@
       </v-menu>
     </div>
     <PerformersAppbarActions />
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn @click="openRandomPerformer" icon tile v-on="on"> 
+            <v-icon>mdi-dice-5</v-icon>
+        </v-btn>
+      </template>
+      <span>Open random performer</span>
+    </v-tooltip>
     
     <v-spacer></v-spacer>
 
@@ -285,6 +294,19 @@ export default {
         this.performerName = ""
         this.$store.commit('updatePerformers')
       })
+    },
+    openRandomPerformer() {
+      const rand = this.getRandomIntInclusive(1, this.$store.getters.performersTotal)
+      const performerId = this.$store.getters.performers.value()[rand].id
+      this.openPerformerPage(performerId)
+    },
+    getRandomIntInclusive(min, max) {
+      min = Math.ceil(min)
+      max = Math.floor(max)
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    },
+    openPerformerPage(performerId) {
+      this.$router.push(`/performer/:${performerId}?tabId=default`)
     },
   },
   watch: {

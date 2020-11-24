@@ -205,6 +205,15 @@
         </template>
         <span>Select all tags</span>
       </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="openRandomTag" icon tile v-on="on"> 
+              <v-icon>mdi-dice-5</v-icon>
+          </v-btn>
+        </template>
+        <span>Open random tag</span>
+      </v-tooltip>
     </div>
 
     <template v-slot:extension v-if="$store.getters.tabs.length">
@@ -392,6 +401,19 @@ export default {
     getSelectedTags(selectedTags){
       let ids = selectedTags.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedTags', ids)
+    },
+    openRandomTag() {
+      const rand = this.getRandomIntInclusive(1, this.$store.getters.tagsTotal)
+      const tagId = this.$store.getters.tags.value()[rand].id
+      this.openTagPage(tagId)
+    },
+    getRandomIntInclusive(min, max) {
+      min = Math.ceil(min)
+      max = Math.floor(max)
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    },
+    openTagPage(tagId) {
+      this.$router.push(`/tag/:${tagId}?tabId=default`)
     },
   },
   watch: {
