@@ -58,6 +58,9 @@ const Videos = {
     videoPerformersHidden: dbs.get('videoPerformersHidden').value(),
     videoTagsHidden: dbs.get('videoTagsHidden').value(),
     videoWebsiteHidden: dbs.get('videoWebsiteHidden').value(),
+    videoEditPerformersSortBy: dbs.get('videoEditPerformersSortBy').value(),
+    videoEditTagsSortBy: dbs.get('videoEditTagsSortBy').value(),
+    videoEditWebsitesSortBy: dbs.get('videoEditWebsitesSortBy').value(),
     menuCard: false,
   }),
   mutations: {
@@ -106,7 +109,7 @@ const Videos = {
       let videos = getters.videos
       // console.log(videos)
       let filteredVideos = []
-      // videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
+      videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
       if (state.filters.performers) {
         let filteredPerformers = state.filters.performers
         if (filteredPerformers.length) {
@@ -264,6 +267,18 @@ const Videos = {
     updateVideoWebsiteHidden({state, getters}, value) {
       getters.settings.set('videoWebsiteHidden', value).write()
       state.videoWebsiteHidden = value
+    },
+    updateVideoEditPerformersSortBy({state, getters}, value) {
+      getters.settings.set('videoEditPerformersSortBy', value).write()
+      state.videoEditPerformersSortBy = value
+    },
+    updateVideoEditTagsSortBy({state, getters}, value) {
+      getters.settings.set('videoEditTagsSortBy', value).write()
+      state.videoEditTagsSortBy = value
+    },
+    updateVideoEditWebsitesSortBy({state, getters}, value) {
+      getters.settings.set('videoEditWebsitesSortBy', value).write()
+      state.videoEditWebsitesSortBy = value
     },
     deleteVideos({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedVideos.map(id => {

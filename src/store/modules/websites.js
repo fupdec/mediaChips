@@ -111,7 +111,7 @@ const Websites = {
     async filterWebsites({ state, commit, getters}) {
       let websites = getters.websites
       let filteredWebsites = []
-      // websites = websites.orderBy(website=>(website.name.toLowerCase()), ['asc'])
+      websites = websites.orderBy(website=>(website.name.toLowerCase()), ['asc'])
       if (state.filters.colors) {
         let colors = state.filters.colors
         if (colors.length) {

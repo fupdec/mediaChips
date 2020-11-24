@@ -133,7 +133,7 @@ const Performers = {
     async filterPerformers({ state, commit, getters}) {
       let performers = getters.performers
       let filteredPerformers = []
-      // performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
+      performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
       if (state.filters.firstChar) {
         let firstChars = state.filters.firstChar
         let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']

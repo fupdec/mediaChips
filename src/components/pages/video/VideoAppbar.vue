@@ -12,7 +12,7 @@
             <span>Edit video</span>
           </v-tooltip>
         </template>
-        <v-card width="800">
+        <v-card width="960">
           <v-card-title class="py-1">
             <span class="headline">Edit info of video</span>
             <v-spacer></v-spacer>
@@ -20,9 +20,47 @@
           </v-card-title>
           <v-divider></v-divider>
           <v-card-actions>
-            <v-container fluid>
+            <v-container fluid class="pt-0">
               <v-row>
-                <v-col cols="6">
+                <v-col cols="6" class="pt-0">
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <span class="caption mr-2">Sort list of performers by</span>
+                    <v-btn-toggle v-model="sortButtonsPerformers" mandatory color="primary">
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="name" v-on="on">
+                            <v-icon>mdi-alphabetical-variant</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>name</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="favorite" v-on="on">
+                            <v-icon>mdi-heart-outline</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>favorite</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="rating" v-on="on">
+                            <v-icon>mdi-star-outline</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>rating</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="date" v-on="on">
+                            <v-icon>mdi-calendar-clock</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>date added</span>
+                      </v-tooltip>
+                    </v-btn-toggle>
+                  </v-card-actions>
                   <v-autocomplete 
                     v-model="video.performers" :items="performersAll" label="Performers"
                     item-text="name" class="hidden-close"
@@ -71,7 +109,45 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="6">
+                <v-col cols="6" class="pt-0">
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <span class="caption mr-2">Sort list of websites by</span>
+                    <v-btn-toggle v-model="sortButtonsWebsites" mandatory color="primary">
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="name" v-on="on">
+                            <v-icon>mdi-alphabetical-variant</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>name</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="favorite" v-on="on">
+                            <v-icon>mdi-heart-outline</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>favorite</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="color" v-on="on">
+                            <v-icon>mdi-palette</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>color</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="date" v-on="on">
+                            <v-icon>mdi-calendar-clock</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>date added</span>
+                      </v-tooltip>
+                    </v-btn-toggle>
+                  </v-card-actions>
                   <v-autocomplete
                     v-model="video.website" :items="websitesAll" outlined 
                     item-text="name" no-data-text="No more websites"
@@ -94,13 +170,53 @@
                       <div class="list-item"
                         @mouseover.stop="showImage($event, data.item.id, 'website')" 
                         @mouseleave.stop="$store.state.hoveredImage=false"
-                      > <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
+                      > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
+                          left size="14"> mdi-heart </v-icon>
+                        <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
                         {{data.item.name}}
                       </div>
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="12">
+                <v-col cols="12" class="pt-0">
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <span class="caption mr-2">Sort list of tags by</span>
+                    <v-btn-toggle v-model="sortButtonsTags" mandatory color="primary">
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="name" v-on="on">
+                            <v-icon>mdi-alphabetical-variant</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>name</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="favorite" v-on="on">
+                            <v-icon>mdi-heart-outline</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>favorite</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="color" v-on="on">
+                            <v-icon>mdi-palette</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>color</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn small outlined value="date" v-on="on">
+                            <v-icon>mdi-calendar-clock</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>date added</span>
+                      </v-tooltip>
+                    </v-btn-toggle>
+                  </v-card-actions>
                   <v-autocomplete 
                     v-model="video.tags" :items="tagsAll" item-text="name" item-value="name"
                     no-data-text="No more tags" multiple hide-selected hide-details
@@ -123,7 +239,9 @@
                       <div class="list-item"
                         @mouseover.stop="showImage($event, data.item.id, 'tag')" 
                         @mouseleave.stop="$store.state.hoveredImage=false"
-                      > <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
+                      > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
+                          left size="14"> mdi-heart </v-icon>
+                        <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
                         <span>{{data.item.name}}</span>
                         <span v-if="data.item.altNames.length" class="aliases"> 
                           {{data.item.altNames.join(', ').slice(0,50)}}
@@ -183,20 +301,52 @@ export default {
       return this.video.path
     },
     performersAll() {
-      return this.$store.getters.performers.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
+      return this.sortItems(this.$store.getters.performers, 'Performers')
+    },
+    sortButtonsPerformers: {
+      get() {
+        return this.$store.state.Videos.videoEditPerformersSortBy
+      },
+      set(value) {
+        this.$store.dispatch('updateVideoEditPerformersSortBy', value)
+      },
     },
     tagsAll() {
       let tags = this.$store.getters.tags.filter(t=>(t.category.includes('video')))
-      return tags.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
+      return this.sortItems(tags, 'Tags')
+    },
+    sortButtonsTags: {
+      get() {
+        return this.$store.state.Videos.videoEditTagsSortBy
+      },
+      set(value) {
+        this.$store.dispatch('updateVideoEditTagsSortBy', value)
+      },
     },
     websitesAll() {
-      return this.$store.getters.websites.orderBy(w=>(w.name.toLowerCase()),['asc']).value()
+      return this.sortItems(this.$store.getters.websites, 'Websites')
+    },
+    sortButtonsWebsites: {
+      get() {
+        return this.$store.state.Videos.videoEditWebsitesSortBy
+      },
+      set(value) {
+        this.$store.dispatch('updateVideoEditWebsitesSortBy', value)
+      },
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
   },
   methods: {
+    sortItems(items, type) {
+      const sortBy = this[`sortButtons${type}`]
+      let itemsSorted = items.orderBy(i=>(i.name.toLowerCase()),['asc'])
+      if (sortBy !== 'name') {
+        itemsSorted = itemsSorted.orderBy(i=>(i[sortBy]),['desc']).value()
+        return itemsSorted
+      } else return itemsSorted.value()
+    },
     filterItemsPerformers(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const aliases = item.aliases

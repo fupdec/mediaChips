@@ -113,7 +113,7 @@ const Tags = {
     async filterTags({ state, commit, getters}) {
       let tags = getters.tags
       let filteredTags = []
-      // tags = tags.orderBy(tag=>(tag.name.toLowerCase()), ['asc'])
+      tags = tags.orderBy(tag=>(tag.name.toLowerCase()), ['asc'])
       if (state.filters.colors) {
         let colors = state.filters.colors
         if (colors.length) {
