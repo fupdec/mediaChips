@@ -104,7 +104,7 @@ const Videos = {
       // commit('updateVideos')
       commit('changeVideosPageCurrent', quantity)
     },
-    filterVideos({ state, commit, getters}) {
+    filterVideos({ state, commit, getters}, stayOnCurrentPage) {
       // console.log(state.filters.performers)
       let videos = getters.videos
       // console.log(videos)
@@ -210,7 +210,6 @@ const Videos = {
         videos = videos.filter(video=>(video.bookmark))
         // console.log('videos with bookmark')
       }
-      // console.log(videos.value())
       if (videos != getters.videos) {
         if (videos.value().length == 0) {
           state.filteredEmpty = true
@@ -222,7 +221,9 @@ const Videos = {
       }
       // console.log(filteredVideos)
       commit('filterVideos', filteredVideos)
-      commit('changeVideosPageCurrent', 1)
+      if (!stayOnCurrentPage) {
+        commit('changeVideosPageCurrent', 1)
+      }
     },
     updateVideoChipsColored({state, getters}, value) {
       getters.settings.set('videoChipsColored', value).write()
@@ -328,7 +329,7 @@ const Videos = {
         })
       })
       commit('updateSelectedVideos', [])
-      dispatch('filterVideos')
+      dispatch('filterVideos', true)
     },
   },
   getters: {
@@ -346,8 +347,7 @@ const Videos = {
       if (state.filteredVideos.length===0) {
         videos = store.videos
         // console.log('get videos from db')
-      }
-      if (state.filteredVideos.length!==0) {
+      } else {
         videos = state.filteredVideos
         // console.log('get filtered videos')
       }
@@ -445,8 +445,8 @@ const Videos = {
             videosCount = store.videosPerPage
       // console.log(videos)
       let l = videos.length,
-          c = videosCount;
-      state.pageTotal = Math.ceil(l/c);
+          c = videosCount
+      state.pageTotal = Math.ceil(l/c)
       // console.log(state.pageTotal)
       if(state.pageCurrent > state.pageTotal) {
         state.pageCurrent = state.pageTotal

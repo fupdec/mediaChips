@@ -130,7 +130,7 @@ const Performers = {
       commit('updatePerformers')
       commit('changePerformersPageCurrent', quantity)
     },
-    async filterPerformers({ state, commit, getters}) {
+    async filterPerformers({ state, commit, getters}, stayOnCurrentPage) {
       let performers = getters.performers
       let filteredPerformers = []
       performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
@@ -439,7 +439,9 @@ const Performers = {
       }
       // console.log(filteredPerformers)
       commit('filterPerformers', filteredPerformers)
-      commit('changePerformersPageCurrent', 1)
+      if (!stayOnCurrentPage) {
+        commit('changePerformersPageCurrent', 1)
+      }
     },
     deletePerformers({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedPerformers.map(id => {
@@ -457,15 +459,15 @@ const Performers = {
           let imgPath = path.join(getters.getPathToUserData, `/media/performers/${id}_${img}.jpg`)
           fs.unlink(imgPath, (err) => {
             if (err) {
-              console.log("failed to delete local image:"+err);
+              console.log("failed to delete local image:"+err)
             } else {
-              console.log('successfully deleted local image');                                
+              console.log('successfully deleted local image')
             }
           })
         })
       })
       commit('updateSelectedPerformers', [])
-      dispatch('filterPerformers')
+      dispatch('filterPerformers', true)
     },
     updatePerformerChipsColored({state, getters}, value) {
       getters.settings.set('performerChipsColored', value).write()

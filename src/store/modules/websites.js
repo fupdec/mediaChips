@@ -106,9 +106,9 @@ const Websites = {
       })
       state.selectedWebsites = []
       commit('updateWebsites')
-      dispatch('filterWebsites')
+      dispatch('filterWebsites', true)
     },
-    async filterWebsites({ state, commit, getters}) {
+    filterWebsites({ state, commit, getters}, stayOnCurrentPage) {
       let websites = getters.websites
       let filteredWebsites = []
       websites = websites.orderBy(website=>(website.name.toLowerCase()), ['asc'])
@@ -171,7 +171,9 @@ const Websites = {
         }
       }
       commit('filterWebsites', filteredWebsites)
-      commit('changeWebsitesPageCurrent', 1)
+      if (!stayOnCurrentPage) {
+        commit('changeWebsitesPageCurrent', 1)
+      }
     },
   },
   getters: {
@@ -218,8 +220,7 @@ const Websites = {
       let websites 
       if (state.filteredWebsites.length===0) {
         websites = store.websites
-      }
-      if (state.filteredWebsites.length!==0) {
+      } else {
         websites = state.filteredWebsites
       }
       return websites
@@ -232,20 +233,20 @@ const Websites = {
       }
     },
     websitesTotal: (state, store) => {
-      return store.websites.value().length;
+      return store.websites.value().length
     },
     websitesOnPage(state, store) {
       const websites = store.filteredWebsites.value(),
             websitesCount = store.websitesPerPage
       let l = store.websitesTotal,
-          c = websitesCount;
-      state.pageTotal = Math.ceil(l/c);
+          c = websitesCount
+      state.pageTotal = Math.ceil(l/c)
       if(state.pageCurrent > state.pageTotal) {
         state.pageCurrent = state.pageTotal
       }
       
       const end = state.pageCurrent * websitesCount,
-            start = end - websitesCount;
+            start = end - websitesCount
       return websites.slice(start, end)
     },
     websitesPerPage(state) {

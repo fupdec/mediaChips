@@ -108,9 +108,9 @@ const Tags = {
       })
       state.selectedTags = []
       commit('updateTags')
-      dispatch('filterTags')
+      dispatch('filterTags', true)
     },
-    async filterTags({ state, commit, getters}) {
+    async filterTags({ state, commit, getters}, stayOnCurrentPage) {
       let tags = getters.tags
       let filteredTags = []
       tags = tags.orderBy(tag=>(tag.name.toLowerCase()), ['asc'])
@@ -210,7 +210,9 @@ const Tags = {
       }
       // console.log(filteredTags)
       commit('filterTags', filteredTags)
-      commit('changeTagsPageCurrent', 1)
+      if (!stayOnCurrentPage) {
+        commit('changeTagsPageCurrent', 1)
+      }
     },
   },
   getters: {
