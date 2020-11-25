@@ -46,10 +46,9 @@
     <div class="headline text-h3 text-center my-6">Tags</div>
     
     <v-container fluid v-if="!$store.state.Tags.filteredEmpty" class="pagination-container my-6">
-      <v-overflow-btn class="items-per-page-dropdown"
-        :items="tagsPerPagePreset" dense height="36" solo
-        @change="changeItemsPerPage()" disable-lookup hide-no-data
-        v-model="tagsPerPage" hint="items per page" persistent-hint
+      <v-overflow-btn v-model="tagsPerPage" hint="items per page" persistent-hint
+        :items="tagsPerPagePreset" dense height="36" solo disable-lookup hide-no-data
+        class="items-per-page-dropdown"
       ></v-overflow-btn>
       <v-spacer></v-spacer>
       <v-pagination
@@ -367,9 +366,6 @@ export default {
       this.$store.commit('updateFiltersOfTags', {key, value})
       this.$store.dispatch('filterTags')
       this.updateTabFilters()
-    },
-    changeItemsPerPage() {
-      this.$store.dispatch('changeTagsPerPage', this.tagsPerPage)
     },
     getSelectedTags(selectedTags){
       let ids = selectedTags.map(item => (item.dataset.id))

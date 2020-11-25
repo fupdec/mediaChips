@@ -95,9 +95,6 @@ export default {
       this.$store.dispatch('filterPerformers')
       this.updateTabFilters()
     },
-    changeItemsPerPage(){
-      this.$store.dispatch('changePerformersPerPage', this.performersPerPage)
-    },
   },
 }
 </script>

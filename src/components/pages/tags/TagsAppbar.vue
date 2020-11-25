@@ -346,6 +346,7 @@ export default {
         } else { this.alertAddNewTags = false }
         this.tagName = '',
         this.$store.commit('updateTags')
+        this.$store.dispatch('filterTags', true)
       })
     },
     changeFilterCategoryLogic() {

@@ -293,6 +293,7 @@ export default {
         } else { this.alertAddNewPerformers = false }
         this.performerName = ""
         this.$store.commit('updatePerformers')
+        this.$store.dispatch('filterPerformers', true)
       })
     },
     openRandomPerformer() {

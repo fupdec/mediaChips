@@ -31,7 +31,7 @@ const defaultFilters = {
 
 const Videos = {
   state: () => ({
-    videosOnPageCount: 20,
+    videosPerPage: dbs.get('videosPerPage').value(),
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -69,7 +69,7 @@ const Videos = {
       state.lastChanged = Date.now()
     },
     changeVideosPerPage(state, quantity) {
-      state.videosOnPageCount = quantity
+      state.videosPerPage = quantity
     },
     changeVideosPageTotal(state, quantity) {
       state.pageTotal = quantity
@@ -92,9 +92,10 @@ const Videos = {
     },
   },
   actions: {
-    changeVideosPerPage({ state, commit}, quantity) {
+    changeVideosPerPage({ state, commit, getters}, quantity) {
       // commit('updateVideos')
       commit('changeVideosPerPage', quantity)
+      getters.settings.set('videosPerPage', quantity).write()
     },
     changeVideosPageTotal({ state, commit}, quantity) {
       // commit('updateVideos')
@@ -329,6 +330,7 @@ const Videos = {
         })
       })
       commit('updateSelectedVideos', [])
+      commit('updateVideos')
       dispatch('filterVideos', true)
     },
   },
@@ -457,7 +459,7 @@ const Videos = {
       return videos.slice(start, end)
     },
     videosPerPage(state) {
-      return state.videosOnPageCount
+      return state.videosPerPage
     },
     videosPagesSum(state) {
       return state.pageTotal

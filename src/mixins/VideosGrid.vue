@@ -48,9 +48,6 @@ export default {
     },
   },
   methods: {
-    changeItemsPerPage() {
-      this.$store.dispatch('changeVideosPerPage', this.videosPerPage)
-    },
   },
 }
 </script>

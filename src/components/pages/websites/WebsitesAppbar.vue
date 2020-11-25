@@ -318,6 +318,7 @@ export default {
         } else { this.alertAddNewWebsites = false }
         this.websiteName = '',
         this.$store.commit('updateWebsites')
+        this.$store.dispatch('filterWebsites', true)
       })
     },
     updateFiltersOfWebsites(key, value){

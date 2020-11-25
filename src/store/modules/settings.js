@@ -66,6 +66,10 @@ dbs.defaults({
   performersFiltersPresetDefault: false,
   tagsFiltersPresetDefault: false,
   websitesFiltersPresetDefault: false,
+  videosPerPage: 20,
+  performersPerPage: 20,
+  tagsPerPage: 20,
+  websitesPerPage: 20,
 }).write()
 
 import Vuetify from '@/plugins/vuetify'

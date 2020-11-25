@@ -2,9 +2,12 @@ const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
 const FileSync = require('lowdb/adapters/FileSync')
+const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbTags = path.join(app.getPath('userData'), 'userfiles/databases/dbt.json')
+const adapterSettings = new FileSync(pathToDbSettings)
 const adapterTags = new FileSync(pathToDbTags)
 const low = require('lowdb')
+const dbs = low(adapterSettings)
 const dbt = low(adapterTags)
 dbt.defaults({ tags: [] }).write()
 
@@ -23,7 +26,7 @@ const defaultFilters = {
 
 const Tags = {
   state: () => ({
-    tagsOnPageCount: 20,
+    tagsPerPage: dbs.get('tagsPerPage').value(),
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -46,7 +49,7 @@ const Tags = {
       state.lastChanged = Date.now()
     },
     changeTagsPerPage(state, quantity) {
-      state.tagsOnPageCount = quantity
+      state.tagsPerPage = quantity
     },
     changeTagsPageTotal(state, quantity) {
       state.pageTotal = quantity
@@ -69,9 +72,10 @@ const Tags = {
     },
   },
   actions: {
-    changeTagsPerPage({ state, commit}, quantity) {
+    changeTagsPerPage({ state, commit, getters}, quantity) {
       commit('updateTags')
       commit('changeTagsPerPage', quantity)
+      getters.settings.set('tagsPerPage', quantity).write()
     },
     changeTagsPageTotal({ state, commit}, quantity) {
       commit('updateTags')
@@ -304,7 +308,7 @@ const Tags = {
       return tags.slice(start, end)
     },
     tagsPerPage(state) {
-      return state.tagsOnPageCount
+      return state.tagsPerPage
     },
     tagsPagesSum(state) {
       return state.pageTotal

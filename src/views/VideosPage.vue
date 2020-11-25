@@ -5,10 +5,8 @@
 
     <!-- TODO: TREE VIEW (FOLDERS) FOR VIDEOS LIKE IT IN EAZYFLIXPIX -->
     <v-container fluid v-if="!$store.state.Videos.filteredEmpty" class="pagination-container my-6">
-      <v-overflow-btn 
-        :items="videosPerPagePreset" dense height="36" solo
-        @change="changeItemsPerPage()" disable-lookup hide-no-data
-        v-model="videosPerPage" hint="items per page" persistent-hint
+      <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
+        :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
         class="items-per-page-dropdown"
       ></v-overflow-btn>
       <v-spacer></v-spacer>

@@ -34,10 +34,9 @@
 
     <v-container fluid v-if="!$store.state.Performers.filteredEmpty" 
       class="pagination-container mb-6">
-      <v-overflow-btn class="items-per-page-dropdown"
-        :items="performersPerPagePreset" dense height="36" solo
-        @change="changeItemsPerPage()" disable-lookup hide-no-data
-        v-model="performersPerPage" hint="items per page" persistent-hint
+      <v-overflow-btn v-model="performersPerPage" hint="items per page" persistent-hint
+        :items="performersPerPagePreset" dense height="36" solo disable-lookup hide-no-data
+        class="items-per-page-dropdown"
       ></v-overflow-btn>
       <v-spacer></v-spacer>
       <v-pagination

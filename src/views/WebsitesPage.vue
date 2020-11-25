@@ -46,10 +46,9 @@
     <div class="headline text-h3 text-center my-6">Websites</div>
       
     <v-container fluid v-if="!$store.state.Websites.filteredEmpty" class="pagination-container my-6">
-      <v-overflow-btn class="items-per-page-dropdown"
-        :items="websitesPerPagePreset" dense height="36" solo
-        @change="changeItemsPerPage()" disable-lookup hide-no-data
-        v-model="websitesPerPage" hint="items per page" persistent-hint
+      <v-overflow-btn v-model="websitesPerPage" hint="items per page" persistent-hint
+        :items="websitesPerPagePreset" dense height="36" solo disable-lookup hide-no-data
+        class="items-per-page-dropdown" 
       ></v-overflow-btn>
       <v-spacer></v-spacer>
       <v-pagination
@@ -366,9 +365,6 @@ export default {
       this.$store.commit('updateFiltersOfWebsites', {key, value})
       this.$store.dispatch('filterWebsites')
       this.updateTabFilters()
-    },
-    changeItemsPerPage() {
-      this.$store.dispatch('changeWebsitesPerPage', this.websitesPerPage)
     },
     getSelectedWebsites(selectedWebsites){
       let ids = selectedWebsites.map(item => (item.dataset.id))

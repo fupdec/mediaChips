@@ -2,17 +2,20 @@ const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
 const FileSync = require('lowdb/adapters/FileSync')
+const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbWebsites = path.join(app.getPath('userData'), 'userfiles/databases/dbw.json')
+const adapterSettings = new FileSync(pathToDbSettings)
 const adapterWebsites = new FileSync(pathToDbWebsites)
 const low = require('lowdb')
+const dbs = low(adapterSettings)
 const dbw = low(adapterWebsites)
 dbw.defaults({
   websites: [{
-    "id": "defaultID",
-    "name": "Brazzers",
-    "color": "#ffc800",
-    "network": false,
-    "childWebsites": []
+    id: "defaultID",
+    name: "Brazzers",
+    color: "#ffc800",
+    network: false,
+    childWebsites: []
   },]
 }).write()
 
@@ -28,7 +31,7 @@ const defaultFilters = {
 
 const Websites = {
   state: () => ({
-    websitesOnPageCount: 20,
+    websitesPerPage: dbs.get('websitesPerPage').value(),
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -50,7 +53,7 @@ const Websites = {
       state.lastChanged = Date.now()
     },
     changeWebsitesPerPage(state, quantity) {
-      state.websitesOnPageCount = quantity
+      state.websitesPerPage = quantity
     },
     changeWebsitesPageTotal(state, quantity) {
       state.pageTotal = quantity
@@ -73,9 +76,10 @@ const Websites = {
     },
   },
   actions: {
-    changeWebsitesPerPage({ state, commit}, quantity) {
+    changeWebsitesPerPage({ state, commit, getters}, quantity) {
       commit('updateWebsites')
       commit('changeWebsitesPerPage', quantity)
+      getters.settings.set('websitesPerPage', quantity).write()
     },
     changeWebsitesPageTotal({ state, commit}, quantity) {
       commit('updateWebsites')
@@ -250,7 +254,7 @@ const Websites = {
       return websites.slice(start, end)
     },
     websitesPerPage(state) {
-      return state.websitesOnPageCount
+      return state.websitesPerPage
     },
     websitesPagesSum(state) {
       return state.pageTotal

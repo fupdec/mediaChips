@@ -59,7 +59,7 @@ const defaultFilters = {
 
 const Performers = {
   state: () => ({
-    performersOnPageCount: 20,
+    performersPerPage: dbs.get('performersPerPage').value(),
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -95,7 +95,7 @@ const Performers = {
       state.lastChanged = Date.now()
     },
     changePerformersPerPage(state, quantity) {
-      state.performersOnPageCount = quantity
+      state.performersPerPage = quantity
     },
     changePerformersPageTotal(state, quantity) {
       state.pageTotal = quantity
@@ -118,9 +118,10 @@ const Performers = {
     },
   },
   actions: {
-    changePerformersPerPage({ state, commit}, quantity) {
+    changePerformersPerPage({ state, commit, getters}, quantity) {
       commit('updatePerformers')
       commit('changePerformersPerPage', quantity)
+      getters.settings.set('performersPerPage', quantity).write()
     },
     changePerformersPageTotal({ state, commit}, quantity) {
       commit('updatePerformers')
@@ -467,6 +468,7 @@ const Performers = {
         })
       })
       commit('updateSelectedPerformers', [])
+      commit('updatePerformers')
       dispatch('filterPerformers', true)
     },
     updatePerformerChipsColored({state, getters}, value) {
@@ -683,7 +685,7 @@ const Performers = {
       return performers.slice(start, end)
     },
     performersPerPage(state) {
-      return state.performersOnPageCount
+      return state.performersPerPage
     },
     performersPagesSum(state) {
       return state.pageTotal
