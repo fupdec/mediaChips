@@ -5,7 +5,7 @@
       <v-img @click="openTagPage" @click.middle="addNewTab" :title='`Open tag "${tagName}"`'
         class="tag-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>
-        <v-icon v-if="tag.bookmark" class="bookmark" color="red" size="32">
+        <v-icon v-if="tag.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
           mdi-bookmark
         </v-icon>
       </v-img>
@@ -65,6 +65,9 @@ export default {
         this.$store.getters.tags.find({id: this.tag.id}).assign({favorite: value}).write()
         this.$store.commit('updateTags')
       },
+    },
+    bookmark() {
+      return this.$store.getters.bookmarks.get('tags').find({itemId:this.tag.id}).value().text
     },
   },
   methods: {
@@ -174,8 +177,7 @@ export default {
   .bookmark {
     position: absolute;
     top: -6px;
-    right: 20px;
-    margin: auto;
+    right: 25%;
     opacity: 0.4;
   }
   .tag-color {

@@ -67,7 +67,7 @@
           </div>
         </v-progress-circular>
         
-        <v-icon v-if="performer.bookmark" class="bookmark" color="red" size="28">
+        <v-icon v-if="performer.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
           mdi-bookmark
         </v-icon>
       </div>
@@ -372,6 +372,9 @@ export default {
       }
       if (progress > 100) progress = 100
       return Math.ceil(progress)
+    },
+    bookmark() {
+      return this.$store.getters.bookmarks.get('performers').find({itemId:this.performer.id}).value().text
     },
     tabId() {
       return this.$route.query.tabId

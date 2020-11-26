@@ -5,7 +5,7 @@
       <v-img @click="openWebsitePage" @click.middle="addNewTab" :title='`Open website "${websiteName}"`' 
         class="website-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="website-color" :style="`border-color: ${website.color} transparent transparent transparent;`"/>
-        <v-icon v-if="website.bookmark" class="bookmark" color="red" size="32">
+        <v-icon v-if="website.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
           mdi-bookmark
         </v-icon>
       </v-img>
@@ -58,6 +58,9 @@ export default {
         this.$store.getters.websites.find({id: this.website.id}).assign({favorite: value}).write()
         this.$store.commit('updateWebsites')
       },
+    },
+    bookmark() {
+      return this.$store.getters.bookmarks.get('websites').find({itemId:this.website.id}).value().text
     },
   },
   methods: {
@@ -158,7 +161,7 @@ export default {
   .bookmark {
     position: absolute;
     top: -6px;
-    right: 20px;
+    right: 25%;
     margin: auto;
     opacity: 0.4;
   }

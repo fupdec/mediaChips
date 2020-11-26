@@ -132,7 +132,7 @@
         > {{ video.website }} </v-chip>
       </v-card-actions>
       
-      <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28">
+      <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
         mdi-bookmark
       </v-icon>
 
@@ -232,6 +232,9 @@ export default {
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
+    },
+    bookmark() {
+      return this.$store.getters.bookmarks.get('videos').find({itemId:this.video.id}).value().text
     },
   },
   methods: {
@@ -538,11 +541,8 @@ export default {
   .bookmark {
     position: absolute;
     top: -6px;
-    right: 0;
-    left: 0;
-    margin: auto;
+    right: 25%;
     opacity: 0.4;
-    pointer-events: none;
   }
 }
 .error-load-thumb {
