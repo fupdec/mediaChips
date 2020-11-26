@@ -3,6 +3,17 @@
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
+          <v-btn icon tile @click="$store.state.Settings.dialogScanVideos=true" v-on="on">
+            <v-icon>mdi-video-plus</v-icon>
+          </v-btn>
+        </template>
+        <span>Add new videos</span>
+      </v-tooltip>
+    </div>
+    
+    <div>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
           <v-btn @click="$store.state.Performers.dialogEditPerformerInfo = true" 
             icon tile v-on="on"> 
             <v-icon>mdi-account-edit</v-icon>

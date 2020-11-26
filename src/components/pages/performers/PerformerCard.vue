@@ -56,6 +56,16 @@
             :src="isCustomImgExist(imgCustom2) ? '' : imgCustom2"
           /> 
         </div>
+
+        <v-progress-circular class="profile-complete-progress" :class="{hidden: isProfileProgressHidden}"
+          :value="profileCompleteProgress" size="28" rotate="270" title="Profile complete"
+          :color="profileCompleteProgress>=99?'green':'white'" width="2"
+        >
+          <v-icon v-if="profileCompleteProgress>=99" color="green">mdi-check</v-icon>
+          <div v-else class="caption">
+            {{profileCompleteProgress}}<span class="percent">%</span>
+          </div>
+        </v-progress-circular>
         
         <v-icon v-if="performer.bookmark" class="bookmark" color="red" size="28">
           mdi-bookmark
@@ -63,7 +73,7 @@
       </div>
 
       <v-progress-linear 
-        class="performer-card-meter" :class="{hidden: isMeterHidden}"
+        class="performer-meter" :class="{hidden: isMeterHidden}"
         :value="meter" :height="meterHeight" />
       
       <v-card-title 
@@ -100,11 +110,11 @@
         </v-chip-group>
       </v-card-text>
       
-      <v-card-text v-if="tagsFromFVideos.length>0" 
+      <v-card-text v-if="tagsFromVideos.length>0" 
         class="pa-1 py-0 performer-video-tags" :class="{hidden: isVideoTagsHidden}">
         <div class="caption px-1">Tags from videos</div>
         <v-chip-group column>
-          <v-chip v-for="tag in tagsFromFVideos" :key="tag" :to="tagLink(tag)"
+          <v-chip v-for="tag in tagsFromVideos" :key="tag" :to="tagLink(tag)"
             :x-small="isChipsXS" :small="isChipsS"
             outlined :color="getTagColor(tag)" 
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
@@ -157,10 +167,9 @@ export default {
       this.imgAlt = this.getImg(this.performer.id, 'alt')
       this.imgCustom1 = this.getImg(this.performer.id, 'custom1')
       this.imgCustom2 = this.getImg(this.performer.id, 'custom2')
-      if(this.tagsFromFVideos.length>0) {
-        console.log()
-        for (let i=0; i < this.tagsFromFVideos.length; i++) {
-          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromFVideos[i]))
+      if(this.tagsFromVideos.length>0) {
+        for (let i=0; i < this.tagsFromVideos.length; i++) {
+          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
         }
         this.meter = this.meter * (1 + this.meterMultiplier / 50)
       }
@@ -185,6 +194,7 @@ export default {
     videosQuantity: 0,
     isChipsXS: true,
     isChipsS: false,
+    percentValue: 5.263,
   }),
   computed: {
     isChipsColored() {
@@ -201,6 +211,9 @@ export default {
     },
     isFavoriteHidden() {
       return this.$store.state.Performers.performerFavoriteHidden
+    },
+    isProfileProgressHidden() {
+      return this.$store.state.Performers.performerProfileProgressHidden
     },
     isNameHidden() {
       return this.$store.state.Performers.performerNameHidden
@@ -251,7 +264,7 @@ export default {
     updateInfoData() {
       return this.$store.state.Performers.updateInfo
     },
-    tagsFromFVideos() {
+    tagsFromVideos() {
       let vids = this.$store.getters.videos
       vids = vids.filter(v=>v.performers.includes(this.performer.name)).map('tags').value()
       let tags = []
@@ -297,6 +310,68 @@ export default {
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
+    },
+    profileCompleteProgress() {
+      let progress = 0
+      if (this.performer.name.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.birthday.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.nation.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.ethnicity.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.hair.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.eyes.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.height.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.weight.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.bra.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.waist.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.hip.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.boobs.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.cup.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.category.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.body.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.pussy.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.pussyLips.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.pussyHair.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.start.length) {
+        progress += this.percentValue 
+      }
+      if (progress > 100) progress = 100
+      return Math.ceil(progress)
     },
     tabId() {
       return this.$route.query.tabId
@@ -413,10 +488,10 @@ export default {
       }, 3000)
     },
     updateMeter(value) {
-      if(this.tagsFromFVideos.length>0) {
+      if(this.tagsFromVideos.length>0) {
         this.meter = 0
-        for (let i=0; i < this.tagsFromFVideos.length; i++) {
-          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromFVideos[i]))
+        for (let i=0; i < this.tagsFromVideos.length; i++) {
+          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
         }
           console.log(this.meter)
         this.meter = this.meter * (1 + this.meterMultiplier / 50)
@@ -759,28 +834,6 @@ export default {
     opacity: 0.4;
     text-shadow: 0px 0px 1px #000;
   }
-  &-meter {
-    &.hidden{
-      display: none;
-    }
-    .v-progress-linear__buffer {
-      background: linear-gradient(90deg, #0f0, #ff0 50%, #f00) !important;
-    }
-    .v-progress-linear__background {
-      opacity: 1 !important;
-      z-index: 3;
-      &.primary {
-        background: #cecece !important;
-      }
-    }
-    &.theme--dark {
-      .v-progress-linear__background {
-        &.primary {
-          background: #363636 !important;
-        }
-      }
-    }
-  }
   .secondary-img {
     position: absolute;
     top: 0;
@@ -828,6 +881,44 @@ export default {
   .custom2-img {
     &-wrapper {
       bottom: calc(50% - 62px);
+    }
+  }
+  .profile-complete-progress {
+    position: absolute;
+    z-index: 1;
+    bottom: 5px;
+    right: 5px;
+    background-color: rgba(90, 90, 90, 0.5);
+    border-radius: 50%;
+    &.hidden {
+      display: none;
+    }
+    .percent {
+      font-size: 8px;
+    }
+  }
+}
+.performer {
+  &-meter {
+    &.hidden{
+      display: none;
+    }
+    .v-progress-linear__buffer {
+      background: linear-gradient(90deg, #0f0, #ff0 50%, #f00) !important;
+    }
+    .v-progress-linear__background {
+      opacity: 1 !important;
+      z-index: 3;
+      &.primary {
+        background: #cecece !important;
+      }
+    }
+    &.theme--dark {
+      .v-progress-linear__background {
+        &.primary {
+          background: #363636 !important;
+        }
+      }
     }
   }
 }

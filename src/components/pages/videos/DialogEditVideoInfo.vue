@@ -544,6 +544,7 @@ export default {
           path: newPath,
         }).write()
         this.$store.commit('updateVideos')
+        this.$store.dispatch('filterVideos', true)
       })
       this.$store.state.Bookmarks.bookmarkText = ''
     },

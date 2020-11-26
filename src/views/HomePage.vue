@@ -223,7 +223,7 @@ export default {
         labels: [], // push here name of tag
         colors: [], // push here colors of tag
         stroke: {
-          width: 0
+          width: 1
         },
         legend: {
           labels: {
@@ -272,7 +272,7 @@ export default {
         labels: [], // push here name of website
         colors: [], // push here colors of website
         stroke: {
-          width: 0
+          width: 1
         },
         legend: {
           labels: {

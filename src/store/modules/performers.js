@@ -83,6 +83,7 @@ const Performers = {
     performerRatingHidden: dbs.get('performerRatingHidden').value(),
     performerNationalityHidden: dbs.get('performerNationalityHidden').value(),
     performerFavoriteHidden: dbs.get('performerFavoriteHidden').value(),
+    performerProfileProgressHidden: dbs.get('performerProfileProgressHidden').value(),
     performerAliasesHidden: dbs.get('performerAliasesHidden').value(),
     performerCareerStatusHidden: dbs.get('performerCareerStatusHidden').value(),
     performerTagsHidden: dbs.get('performerTagsHidden').value(),
@@ -498,6 +499,10 @@ const Performers = {
     updatePerformerFavoriteHidden({state, getters}, value) {
       getters.settings.set('performerFavoriteHidden', value).write()
       state.performerFavoriteHidden = value
+    },
+    updateProfileProgressHidden({state, getters}, value) {
+      getters.settings.set('performerProfileProgressHidden', value).write()
+      state.performerProfileProgressHidden = value
     },
     updatePerformerAliasesHidden({state, getters}, value) {
       getters.settings.set('performerAliasesHidden', value).write()

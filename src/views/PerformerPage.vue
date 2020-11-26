@@ -32,6 +32,11 @@
             <div class="profile-name text-center">{{performer.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
+            <v-progress-linear :value="profileCompleteProgress" height="4" 
+              class="profile-complete-progress"/>
+            <div class="caption profile-complete-label">
+              profile complete {{profileCompleteProgress}}%
+            </div>
             <v-container>
               <v-row>
                 <v-col cols="12" sm="4">
@@ -131,9 +136,9 @@
                     @click.middle="addNewTabTag(tag)"
                     >{{tag}}</v-chip>
                 </v-col>
-                <v-col v-if="tagsFromFVideos.length" cols="12" class="text-center py-0">
+                <v-col v-if="tagsFromVideos.length" cols="12" class="text-center py-0">
                   <div class="my-2 font-weight-light">Tags from videos</div>
-                  <v-chip v-for="tag in tagsFromFVideos" :key="tag" :to="tagLink(tag)"
+                  <v-chip v-for="tag in tagsFromVideos" :key="tag" :to="tagLink(tag)"
                     outlined small class="mr-2 mb-1 px-2"
                     @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
                     @mouseleave.stop="$store.state.hoveredImage=false"
@@ -143,6 +148,8 @@
                 </v-col>
               </v-row>
             </v-container>
+            <v-progress-linear v-if="tagsFromVideos.length>0" :value="meter" 
+              :height="meterHeight" class="performer-meter"/>
           </v-expansion-panel-content>
           <div class="profile-hover-btn show">Show Profile</div>
           <div class="profile-hover-btn hide">Hide Profile</div>
@@ -250,6 +257,8 @@ export default {
       'December'
     ],
     isScrollToTopVisible: false,
+    percentValue: 5.263,
+    meter: 0,
   }),
   computed: {
     gradient() {
@@ -260,7 +269,7 @@ export default {
       let color = this.$vuetify.theme.isDark ? '30,30,30':'255,255,255'
       return `background-color: rgba(${color},.3)`
     },
-    tagsFromFVideos() {
+    tagsFromVideos() {
       let vids = this.$store.getters.videos
       vids = vids.filter(v=>v.performers.includes(this.performer.name)).map('tags').value()
       let tags = []
@@ -268,6 +277,74 @@ export default {
       tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
       tags = tags.filter(el => (el !== null && el !== undefined))
       return tags.sort((a, b) => a.localeCompare(b))
+    },
+    meterHeight() {
+      return this.$store.state.Settings.meterHeight
+    },
+    meterMultiplier() {
+      return this.$store.state.Settings.meterMultiplier
+    },
+    profileCompleteProgress() {
+      let progress = 0
+      if (this.performer.name.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.birthday.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.nation.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.ethnicity.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.hair.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.eyes.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.height.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.weight.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.bra.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.waist.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.hip.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.boobs.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.cup.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.category.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.body.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.pussy.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.pussyLips.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.pussyHair.length) {
+        progress += this.percentValue 
+      }
+      if (this.performer.start.length) {
+        progress += this.percentValue 
+      }
+      if (progress > 100) progress = 100
+      return Math.ceil(progress)
     },
     profile: {
       get() {
@@ -539,11 +616,32 @@ export default {
         return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
       }
     },
+    updateMeter(value) {
+      if(this.tagsFromVideos.length>0) {
+        this.meter = 0
+        for (let i=0; i < this.tagsFromVideos.length; i++) {
+          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
+        }
+        this.meter = this.meter * (1 + this.meterMultiplier / 50)
+      }
+    },
+    getTagValue(tagName) {
+      return this.$store.getters.tags.find({name:tagName}).value().value
+    },
+    tagInPercentsOfMeter(tagValue) {
+      if (tagValue != 0) {
+        return (tagValue / this.$store.getters.sumOfTagsValue) * 100
+      } else return 0
+    },
   },
   watch: {
     $route(newRoute) {
       if (!this.$route.path.includes('/performer/:')) return
       this.initFilters()
+      this.updateMeter()
+    },
+    meterMultiplier() {
+      this.updateMeter()
     },
   }
 }
@@ -596,7 +694,24 @@ export default {
     line-height: 2rem;
     text-transform: uppercase;
   }
+  .profile-complete-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+  .profile-complete-label {
+    position: absolute;
+    right: 0;
+  }
+  .performer-meter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 4px;
+  }
   .v-expansion-panel-header {
+    overflow: hidden;
     &--active {
       & + .v-expansion-panel-content {
         & + .profile-hover-btn {

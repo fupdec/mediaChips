@@ -39,6 +39,7 @@ dbs.defaults({
   performerRatingHidden: false,
   performerNationalityHidden: false,
   performerFavoriteHidden: false,
+  performerProfileProgressHidden: false,
   performerAliasesHidden: false,
   performerCareerStatusHidden: false,
   performerTagsHidden: false,
@@ -222,6 +223,7 @@ const Settings = {
       state.performerRatingHidden = false
       state.performerNationalityHidden = false
       state.performerFavoriteHidden = false
+      state.performerProfileProgressHidden = false
       state.performerAliasesHidden = false
       state.performerCareerStatusHidden = false
       state.performerTagsHidden = false
@@ -348,6 +350,7 @@ const Settings = {
         performerRatingHidden: false,
         performerNationalityHidden: false,
         performerFavoriteHidden: false,
+        performerProfileProgressHidden: false,
         performerAliasesHidden: false,
         performerCareerStatusHidden: false,
         performerTagsHidden: false,

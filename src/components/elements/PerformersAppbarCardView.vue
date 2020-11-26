@@ -84,6 +84,18 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
+        <v-badge :value="isProfileProgressHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+          <v-btn icon tile @click="toggleProfileProgressVisibilty()" v-on="on">
+            <v-icon>mdi-progress-check</v-icon>
+          </v-btn>
+        </v-badge>
+      </template>
+      <span v-if="isProfileProgressHidden">Show profile complete progress</span>
+      <span v-else>Hide profile complete progress</span>
+    </v-tooltip>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
         <v-badge :value="isNameHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleNameVisibilty()" v-on="on">
             <v-icon>mdi-alphabetical-variant</v-icon>
@@ -210,6 +222,14 @@ export default {
         this.$store.dispatch('updatePerformerFavoriteHidden', value)
       },
     },
+    isProfileProgressHidden: {
+      get () {
+        return this.$store.state.Performers.performerProfileProgressHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateProfileProgressHidden', value)
+      },
+    },
     isNameHidden: {
       get () {
         return this.$store.state.Performers.performerNameHidden
@@ -280,6 +300,9 @@ export default {
     },
     toggleFavoriteVisibilty() {
       this.isFavoriteHidden = !this.isFavoriteHidden
+    },
+    toggleProfileProgressVisibilty() {
+      this.isProfileProgressHidden = !this.isProfileProgressHidden
     },
     toggleAliasesVisibilty() {
       this.isAliasesHidden = !this.isAliasesHidden
