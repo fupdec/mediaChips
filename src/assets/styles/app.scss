@@ -818,6 +818,28 @@ html {
     border: 1.5px solid rgb(122, 122, 122);
   }
 }
+.performer-meter {
+  &.hidden{
+    display: none;
+  }
+  .v-progress-linear__buffer {
+    background: linear-gradient(90deg, #0f0, #ff0 50%, #f00) !important;
+  }
+  .v-progress-linear__background {
+    opacity: 1 !important;
+    z-index: 3;
+    &.primary {
+      background: #cecece !important;
+    }
+  }
+  &.theme--dark {
+    .v-progress-linear__background {
+      &.primary {
+        background: #363636 !important;
+      }
+    }
+  }
+}
 .performers-selectable {
   user-select: contain !important;
 }

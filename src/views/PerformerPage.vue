@@ -10,6 +10,10 @@
     <v-container class="profile-container">
       <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
         <v-img :src="getImgUrl(performerId, 'avatar')" position="top"></v-img>
+        <v-progress-circular :value="profileCompleteProgress" size="160" rotate="270" width="2"
+          class="profile-complete-progress"> 
+          <div class="value">{{profileCompleteProgress}}<span class="percent">%</span></div>
+        </v-progress-circular>
       </v-avatar>
       <!-- TODO: add progress card complete status. maybe line on top card -->
       <v-btn @click="addNewTabPerformer" icon class="new-tab-btn" 
@@ -32,11 +36,6 @@
             <div class="profile-name text-center">{{performer.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
-            <v-progress-linear :value="profileCompleteProgress" height="4" 
-              class="profile-complete-progress"/>
-            <div class="caption profile-complete-label">
-              profile complete {{profileCompleteProgress}}%
-            </div>
             <v-container>
               <v-row>
                 <v-col cols="12" sm="4">
@@ -238,6 +237,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
+      this.updateMeter()
     })
   },
   data: () => ({
@@ -696,8 +696,18 @@ export default {
   }
   .profile-complete-progress {
     position: absolute;
-    left: 0;
-    right: 0;
+    .value {
+      position: absolute;
+      bottom: 2px;
+      font-size: 12px;
+      padding: 0 3px;
+      background-color: rgba(133, 133, 133, 0.3);
+      border-radius: 10px;
+      .percent {
+        margin-left: 1px;
+        font-size: 0.7em;
+      }
+    }
   }
   .profile-complete-label {
     position: absolute;
