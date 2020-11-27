@@ -167,12 +167,7 @@ export default {
       this.imgAlt = this.getImg(this.performer.id, 'alt')
       this.imgCustom1 = this.getImg(this.performer.id, 'custom1')
       this.imgCustom2 = this.getImg(this.performer.id, 'custom2')
-      if(this.tagsFromVideos.length>0) {
-        for (let i=0; i < this.tagsFromVideos.length; i++) {
-          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
-        }
-        this.meter = this.meter * (1 + this.meterMultiplier / 50)
-      }
+      this.updateMeter()
       this.videosQuantity = this.$store.getters.videos.filter({
         'performers': [this.performer.name]
       }).value().length
@@ -496,7 +491,6 @@ export default {
         for (let i=0; i < this.tagsFromVideos.length; i++) {
           this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
         }
-          console.log(this.meter)
         this.meter = this.meter * (1 + this.meterMultiplier / 50)
       }
     },
@@ -898,30 +892,6 @@ export default {
     }
     .percent {
       font-size: 8px;
-    }
-  }
-}
-.performer {
-  &-meter {
-    &.hidden{
-      display: none;
-    }
-    .v-progress-linear__buffer {
-      background: linear-gradient(90deg, #0f0, #ff0 50%, #f00) !important;
-    }
-    .v-progress-linear__background {
-      opacity: 1 !important;
-      z-index: 3;
-      &.primary {
-        background: #cecece !important;
-      }
-    }
-    &.theme--dark {
-      .v-progress-linear__background {
-        &.primary {
-          background: #363636 !important;
-        }
-      }
     }
   }
 }

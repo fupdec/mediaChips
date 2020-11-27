@@ -19,8 +19,8 @@
             <v-icon>mdi-account-plus</v-icon>
           </v-card-title>
           <v-divider></v-divider>
-          <v-form ref="form" v-model="validPerformerName">
-            <v-card-text class="pb-0">
+          <v-card-text class="pb-0">
+            <v-form ref="form" v-model="validPerformerName">
               <v-textarea
                 v-model="performerName" required :rules="nameRules" outlined label="Names"
                 hint='Write a name on a new line to add several performers at once.' no-resize
@@ -33,16 +33,19 @@
                 v-model="alertAddNewPerformers" border="left" text dense close-text="Close"
                 icon="mdi-account-plus-outline" type="success" dismissible class="mt-6" 
               > Added: {{newPerformers}} </v-alert>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn 
-                @click="addNewPerformer" :disabled="!validPerformerName"
-                color="primary" class="mb-4 mr-4" 
-              > <v-icon left>mdi-account-plus-outline</v-icon> Add
-              </v-btn>
-            </v-card-actions>
-          </v-form>
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn @click="pasteText" color="primary" outlined class="mb-4 ml-4"> 
+              <v-icon left>mdi-clipboard-text-outline</v-icon> Paste text
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn 
+              @click="addNewPerformer" :disabled="!validPerformerName"
+              color="primary" class="mb-4 mr-4" 
+            > <v-icon left>mdi-account-plus-outline</v-icon> Add
+            </v-btn>
+          </v-card-actions>
         </v-card>
       </v-menu>
     </div>
@@ -106,6 +109,9 @@ export default {
     },
   },
   methods: {
+    async pasteText() {
+      this.performerName = await navigator.clipboard.readText()
+    },
     addNewPerformer() {
       // filter user entered data
       let performersArray  = this.performerName.trim()

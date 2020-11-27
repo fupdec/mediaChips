@@ -36,17 +36,13 @@
                       :stencil-props="{aspectRatio: 5/8}"
                       :min-height="20"
                     />
-                    <v-btn @click="addImage('main')" color="primary" class="mr-4" small>
-                      <v-icon left>mdi-plus</v-icon> Add image
+                    <v-btn @click="addImage('main')" color="green" icon small>
+                      <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
-                    <v-btn 
-                      v-if="images.main.display" 
+                    <v-btn v-if="images.main.display" 
                       @click="crop(getImagePath('performer','main'), 'main', null, performer.id), loader = 'imgMainLoading'" 
-                      color="primary" small
-                      :loading="imgMainLoading"
-                      :disabled="imgMainLoading"
-                    >
-                      <v-icon size="18" class="mr-2">mdi-crop</v-icon> Crop / Save
+                      color="primary" small class="ml-4" :loading="imgMainLoading" :disabled="imgMainLoading"
+                    > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
                           <v-icon>mdi-cached</v-icon>
@@ -71,17 +67,13 @@
                       :stencil-props="{aspectRatio: 5/8}"
                       :min-height="20"
                     />
-                    <v-btn @click="addImage('alt')" color="primary" class="mr-4" small>
-                      <v-icon left>mdi-plus</v-icon> Add image
+                    <v-btn @click="addImage('alt')" color="green" icon small>
+                      <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
-                    <v-btn 
-                      v-if="images.alt.display" 
+                    <v-btn v-if="images.alt.display" 
                       @click="crop(getImagePath('performer','alt'), 'alt', null, performer.id), loader = 'imgAltLoading'" 
-                      color="primary" small
-                      :loading="imgAltLoading"
-                      :disabled="imgAltLoading"  
-                    >
-                      <v-icon size="18" class="mr-2">mdi-crop</v-icon> Crop / Save
+                      color="primary" small class="ml-4" :loading="imgAltLoading" :disabled="imgAltLoading"  
+                    > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
                           <v-icon>mdi-cached</v-icon>
@@ -106,17 +98,13 @@
                       :stencil-props="{aspectRatio: 5/8}"
                       :min-height="20"
                     />
-                    <v-btn @click="addImage('custom1')" color="primary" class="mr-4" small>
-                      <v-icon left>mdi-plus</v-icon> Add image
+                    <v-btn @click="addImage('custom1')" color="green" icon small>
+                      <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
-                    <v-btn 
-                      v-if="images.custom1.display" 
+                    <v-btn v-if="images.custom1.display" 
                       @click="crop(getImagePath('performer','custom1'), 'custom1', null, performer.id), loader = 'imgCustom1Loading'" 
-                      color="primary" small
-                      :loading="imgCustom1Loading"
-                      :disabled="imgCustom1Loading"  
-                    >
-                      <v-icon size="18" class="mr-2">mdi-crop</v-icon> Crop / Save
+                      color="primary" small class="ml-4" :loading="imgCustom1Loading" :disabled="imgCustom1Loading"  
+                    > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
                           <v-icon>mdi-cached</v-icon>
@@ -141,17 +129,13 @@
                       :stencil-props="{aspectRatio: 5/8}"
                       :min-height="20"
                     />
-                    <v-btn @click="addImage('custom2')" color="primary" class="mr-4" small>
-                      <v-icon left>mdi-plus</v-icon> Add image
+                    <v-btn @click="addImage('custom2')" color="green" icon small>
+                      <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
-                    <v-btn 
-                      v-if="images.custom2.display" 
+                    <v-btn v-if="images.custom2.display" 
                       @click="crop(getImagePath('performer','custom2'), 'custom2', null, performer.id), loader = 'imgCustom2Loading'" 
-                      color="primary" small
-                      :loading="imgCustom2Loading"
-                      :disabled="imgCustom2Loading"  
-                    >
-                      <v-icon size="18" class="mr-2">mdi-crop</v-icon> Crop / Save
+                      color="primary" small class="ml-4" :loading="imgCustom2Loading" :disabled="imgCustom2Loading"  
+                    > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
                           <v-icon>mdi-cached</v-icon>
@@ -175,17 +159,13 @@
                       class="cropper"
                       :stencilComponent="$options.components.CircleStencil"
                     />
-                    <v-btn @click="addImage('avatar')" color="primary" class="mr-4" small>
-                      <v-icon left>mdi-plus</v-icon> Add image
+                    <v-btn @click="addImage('avatar')" color="green" icon small>
+                      <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
-                    <v-btn 
-                      v-if="images.avatar.display" 
+                    <v-btn v-if="images.avatar.display" 
                       @click="crop(getImagePath('performer','avatar'), 'avatar', null, performer.id), loader = 'imgAvatarLoading'" 
-                      color="primary" small
-                      :loading="imgAvatarLoading"
-                      :disabled="imgAvatarLoading"  
-                    >
-                      <v-icon size="18" class="mr-2">mdi-crop</v-icon> Crop / Save
+                      color="primary" small class="ml-4" :loading="imgAvatarLoading" :disabled="imgAvatarLoading"  
+                    > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
                           <v-icon>mdi-cached</v-icon>
@@ -210,17 +190,13 @@
                       :stencil-props="{aspectRatio: 2.3}"
                       :min-height="20"
                     />
-                    <v-btn @click="addImage('header')" color="primary" class="mr-4" small>
-                      <v-icon left>mdi-plus</v-icon> Add image
+                    <v-btn @click="addImage('header')" color="green" icon small>
+                      <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
-                    <v-btn 
-                      v-if="images.header.display" 
+                    <v-btn v-if="images.header.display" 
                       @click="crop(getImagePath('performer','header'), 'header', null, performer.id), loader = 'imgHeaderLoading'" 
-                      color="primary" small
-                      :loading="imgHeaderLoading"
-                      :disabled="imgHeaderLoading" 
-                    >
-                      <v-icon size="18" class="mr-2">mdi-crop</v-icon> Crop / Save
+                      color="primary" small class="ml-4" :loading="imgHeaderLoading" :disabled="imgHeaderLoading" 
+                    > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
                           <v-icon>mdi-cached</v-icon>

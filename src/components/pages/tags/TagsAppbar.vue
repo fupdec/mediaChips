@@ -19,28 +19,31 @@
             <v-icon>mdi-tag-plus</v-icon>
           </v-card-title>
           <v-divider></v-divider>
-          <v-form ref="form" v-model="validTagName">
             <v-card-text class="pb-0">
-              <v-textarea v-model="tagName" label="Names" required :rules="nameRules" outlined
-                hint="Write a name on a new line to add several tags at once" no-resize
-              ></v-textarea>
-              <v-alert
-                v-model="alertDuplicateTags" border="left" text icon="mdi-tag-multiple-outline"
-                close-text="Close" type="warning" dismissible class="mt-6" 
-              > Already in the database: {{duplicateTags}} </v-alert>
-              <v-alert
-                v-model="alertAddNewTags" border="left" text icon="mdi-tag-plus-outline"
-                close-text="Close" type="success" dismissible class="mt-6" 
-              > Added: {{newTags}} </v-alert>
+              <v-form ref="form" v-model="validTagName">
+                <v-textarea v-model="tagName" label="Names" required :rules="nameRules" outlined
+                  hint="Write a name on a new line to add several tags at once" no-resize
+                ></v-textarea>
+                <v-alert
+                  v-model="alertDuplicateTags" border="left" text icon="mdi-tag-multiple-outline"
+                  close-text="Close" type="warning" dismissible class="mt-6" 
+                > Already in the database: {{duplicateTags}} </v-alert>
+                <v-alert
+                  v-model="alertAddNewTags" border="left" text icon="mdi-tag-plus-outline"
+                  close-text="Close" type="success" dismissible class="mt-6" 
+                > Added: {{newTags}} </v-alert>
+              </v-form>
             </v-card-text>
             <v-card-actions>
+              <v-btn @click="pasteText" color="primary" outlined class="mb-4 ml-4"> 
+                <v-icon left>mdi-clipboard-text-outline</v-icon> Paste text
+              </v-btn>
               <v-spacer></v-spacer>
               <v-btn 
                 @click="addNewTag()" :disabled="!validTagName"
                 color="primary" class="mb-4 mr-4" 
               > <v-icon left>mdi-tag-plus-outline</v-icon> Add </v-btn>
             </v-card-actions>
-          </v-form>
         </v-card>
       </v-menu>
 
@@ -86,12 +89,17 @@
                   v-model="$store.state.Tags.filters.name"
                   label="Name" hide-details clearable outlined dense
                   prepend-icon="mdi-alphabetical-variant"
+                  @click:append-outer="pasteName" 
+                  append-outer-icon="mdi-clipboard-text-outline"
                 />
               </v-col>
               <v-col cols="12" sm="3" class="pt-2 pb-0">
                 <v-checkbox v-model="$store.state.Tags.filters.alternate" 
-                  dense hide-details class="ma-0" label="Include alt. names"
-                />
+                  dense hide-details class="ma-0"
+                > <template v-slot:label>
+                    <span class="caption">Include alternate names</span>
+                  </template>
+                </v-checkbox>
               </v-col>
               <v-col cols="12" sm="12" class="pb-0">
                 <v-select
@@ -291,6 +299,13 @@ export default {
     },
   },
   methods: {
+    async pasteText() {
+      this.tagName = await navigator.clipboard.readText()
+    },
+    async pasteName() {
+      let text = await navigator.clipboard.readText()
+      this.updateFiltersOfTags('name', text)
+    },
     addNewTag() {
       let tagsArray = this.tagName.trim()
       tagsArray = tagsArray.replace(/[\/\%"?<>{}\[\]]/g, '')

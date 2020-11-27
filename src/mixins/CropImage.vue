@@ -51,7 +51,7 @@ export default {
       }
       if (imgType == 'header') {
         sizes = 1400
-        imgQuality = 75
+        imgQuality = 85
       }
       if (imgType == 'avatar') {
         sizes = 164

@@ -42,6 +42,7 @@
                 v-model="$store.state.Videos.filters.path" 
                 clearable dense hide-details outlined
                 label="Path or filename include" prepend-icon="mdi-folder-text-outline"
+                @click:append-outer="pastePath" append-outer-icon="mdi-clipboard-text-outline"
               />
             </v-col>
             <v-col cols="12" sm="7">
@@ -54,6 +55,8 @@
                 :menu-props="{contentClass:'list-with-preview'}"
                 @click:prepend-inner="changeFilterPerformersLogic" 
                 :prepend-inner-icon="filterPerformersLogicIcon"
+                @click:append-outer="pastePerformers" 
+                append-outer-icon="mdi-clipboard-text-outline"
                 :filter="filterItemsPerformers" :disabled="isPerformerPage"
               >
                 <template v-slot:selection="data">
@@ -102,6 +105,8 @@
                 :menu-props="{contentClass:'list-with-preview'}"
                 @click:prepend-inner="changeFilterTagsLogic" 
                 :prepend-inner-icon="filterTagsLogicIcon"
+                @click:append-outer="pasteTags" 
+                append-outer-icon="mdi-clipboard-text-outline"
                 :filter="filterItemsTags" :disabled="isTagPage"
               >
                 <template v-slot:selection="data">
@@ -135,6 +140,8 @@
                 item-value="name" no-data-text="No more websites" 
                 multiple hide-selected hide-details clearable outlined
                 :menu-props="{contentClass:'list-with-preview'}" :disabled="isWebsitePage"
+                @click:append-outer="pasteWebsites" 
+                append-outer-icon="mdi-clipboard-text-outline"
               >
                 <template v-slot:selection="data">
                   <v-chip
@@ -418,6 +425,39 @@ export default {
     },
   },
   methods: {
+    async pastePath() {
+      let text = await navigator.clipboard.readText()
+      this.updateFiltersOfVideos('path', text)
+    },
+    async pastePerformers() {
+      let text = await navigator.clipboard.readText()
+      let perfs = text.split(', ')
+      perfs = this.$store.getters.performers.filter(p=>(perfs.includes(p.name))).value()
+      perfs = perfs.map(p=>{return p.name})
+      if (perfs.length) {
+        this.updateFiltersOfVideos('performers', perfs)
+      }
+    },
+    async pasteTags() {
+      let text = await navigator.clipboard.readText()
+      let tags = text.split(', ')
+      tags = this.$store.getters.tags.filter(t => (
+        t.category.includes('video') && tags.includes(t.name)
+      )).value()
+      tags = tags.map(t=>{return t.name})
+      if (tags.length) {
+        this.updateFiltersOfVideos('tags', tags)
+      }
+    },
+    async pasteWebsites() {
+      let text = await navigator.clipboard.readText()
+      let websites = text.split(', ')
+      websites = this.$store.getters.websites.filter(w=>(websites.includes(w.name))).value()
+      websites = websites.map(p=>{return p.name})
+      if (websites.length) {
+        this.updateFiltersOfVideos('websites', websites)
+      }
+    },
     filterItemsPerformers(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const aliases = item.aliases

@@ -19,22 +19,26 @@
             <v-icon>mdi-plus-circle</v-icon>
           </v-card-title>
           <v-divider></v-divider>
-          <v-form ref="form" v-model="validWebsiteName">
             <v-card-text class="pb-0">
-              <v-textarea
-                v-model="websiteName" label="Names" outlined required :rules="nameRules"
-                hint="Write a name on a new line to add several websites at once" no-resize
-              ></v-textarea>
-              <v-alert
-                v-model="alertDuplicateWebsites" border="left" text dismissible class="mt-6"
-                icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
-              > Already in the database: {{duplicateWebsites}} </v-alert>
-              <v-alert
-                v-model="alertAddNewWebsites" border="left" text icon="mdi-plus-circle"
-                close-text="Close" type="success" dismissible class="mt-6" 
-              > Added: {{newWebsites}} </v-alert>
+              <v-form ref="form" v-model="validWebsiteName">
+                <v-textarea
+                  v-model="websiteName" label="Names" outlined required :rules="nameRules"
+                  hint="Write a name on a new line to add several websites at once" no-resize
+                ></v-textarea>
+                <v-alert
+                  v-model="alertDuplicateWebsites" border="left" text dismissible class="mt-6"
+                  icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
+                > Already in the database: {{duplicateWebsites}} </v-alert>
+                <v-alert
+                  v-model="alertAddNewWebsites" border="left" text icon="mdi-plus-circle"
+                  close-text="Close" type="success" dismissible class="mt-6" 
+                > Added: {{newWebsites}} </v-alert>
+              </v-form>
             </v-card-text>
             <v-card-actions>
+              <v-btn @click="pasteText" color="primary" outlined class="mb-4 ml-4"> 
+                <v-icon left>mdi-clipboard-text-outline</v-icon> Paste text
+              </v-btn>
               <v-spacer></v-spacer>
               <v-btn 
                 @click="addNewWebsite" :disabled="!validWebsiteName" 
@@ -42,7 +46,6 @@
               > <v-icon left>mdi-plus</v-icon> Add
               </v-btn>
             </v-card-actions>
-          </v-form>
         </v-card>
       </v-menu>
 
@@ -75,6 +78,8 @@
                   v-model="$store.state.Websites.filters.name"
                   label="Name" hide-details clearable outlined dense
                   prepend-icon="mdi-alphabetical-variant"
+                  @click:append-outer="pasteName" 
+                  append-outer-icon="mdi-clipboard-text-outline"
                 />
               </v-col>
             </v-row>
@@ -264,6 +269,13 @@ export default {
     },
   },
   methods: {
+    async pasteText() {
+      this.websiteName = await navigator.clipboard.readText()
+    },
+    async pasteName() {
+      let text = await navigator.clipboard.readText()
+      this.updateFiltersOfWebsites('name', text)
+    },
     addNewWebsite() {
       let websitesArray = this.websiteName.trim()
       websitesArray = websitesArray.replace(/[\/\%"?<>{}\[\]]/g, '')

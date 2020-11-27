@@ -41,17 +41,22 @@
         <v-divider></v-divider>
         <v-container fluid class="py-0">
           <v-row>
-            <v-col cols="12" sm="4" class="pb-0 pr-0">
+            <v-col cols="12" sm="5" class="pb-0 pr-0">
               <v-text-field 
                 v-model="$store.state.Performers.filters.name"
                 label="Name" hide-details clearable outlined dense
                 prepend-icon="mdi-alphabetical-variant"
+                @click:append-outer="pasteName" 
+                append-outer-icon="mdi-clipboard-text-outline"
               />
             </v-col>
-            <v-col cols="12" sm="2">
+            <v-col cols="12" sm="1">
               <v-checkbox v-model="$store.state.Performers.filters.aliases" 
-                dense hide-details class="pt-2 ma-0" label="Include aliases"
-              />
+                dense hide-details class="pt-2 ma-0"
+              > <template v-slot:label>
+                  <span class="caption">Aliases</span>
+                </template>
+              </v-checkbox>
             </v-col>
             <v-col cols="12" sm="6" class="pb-0">
               <v-select
@@ -74,6 +79,8 @@
                 :menu-props="{contentClass:'list-with-preview'}"
                 @click:prepend-inner="changeFilterTagsLogic" 
                 :prepend-inner-icon="filterTagsLogicIcon" append-icon=""
+                @click:append-outer="pasteTags" 
+                append-outer-icon="mdi-clipboard-text-outline"
                 :filter="filterItemsTags" :disabled="isTagPage"
               >
                 <template v-slot:selection="data">
@@ -597,6 +604,21 @@ export default {
     },
   },
   methods: {
+    async pasteName() {
+      let text = await navigator.clipboard.readText()
+      this.updateFiltersOfPerformers('name', text)
+    },
+    async pasteTags() {
+      let text = await navigator.clipboard.readText()
+      let tags = text.split(', ')
+      tags = this.$store.getters.tags.filter(t => (
+        t.category.includes('performer') && tags.includes(t.name)
+      )).value()
+      tags = tags.map(t=>{return t.name})
+      if (tags.length) {
+        this.updateFiltersOfPerformers('tags', tags)
+      }
+    },
     filterItemsTags(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const alternateNames = item.altNames

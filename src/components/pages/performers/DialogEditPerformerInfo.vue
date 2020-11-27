@@ -83,6 +83,8 @@
                         hint='The name may include letters, numbers, symbols: !?#&+()$~*-_'
                         :rules="[getNameRules]" maxlength="100" counter
                         error-count="3" validate-on-blur
+                        @click:append-outer="pastePerformerName" 
+                        append-outer-icon="mdi-clipboard-text-outline"
                       ></v-text-field>
                     </div>
                   </v-col>
@@ -93,6 +95,8 @@
                       Aliases may include letters, numbers, symbols: !?#&+()$~*-_'
                       :rules="[getAliasesRules]" maxlength="500" counter
                       error-count="3" validate-on-blur
+                      @click:append-outer="pasteAliases" 
+                      append-outer-icon="mdi-clipboard-text-outline"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6" sm="3" >
@@ -451,7 +455,7 @@
                 <template v-slot:activator="{ click }">
                   <span v-on="click" style="cursor:pointer;" title="Copy name to clipboard"
                     @click="copyPerformerNameToClipboard('find')"
-                  > {{performerName}} 
+                  > {{performer.name}} 
                   </span>
                 </template>
                 <span>Name copied to clipboard!</span>
@@ -679,6 +683,12 @@ export default {
     },
   },
   methods: {
+    async pastePerformerName() {
+      this.performerName = await navigator.clipboard.readText()
+    },
+    async pasteAliases() {
+      this.aliases = await navigator.clipboard.readText()
+    },
     sortItems(items, type) {
       const sortBy = this[`sortButtons${type}`]
       let itemsSorted = items.orderBy(i=>(i.name.toLowerCase()),['asc'])
