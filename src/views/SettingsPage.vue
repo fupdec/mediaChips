@@ -159,11 +159,13 @@
       </v-btn>
       <v-dialog v-model="dialogUpdatePath" width="1200" scrollable persistent>
         <v-card>
-          <v-card-title>
+          <v-card-title class="edit-card-title pa-4 headline">
             <div>
             Update path in videos</div>
             <v-spacer></v-spacer>
-            <v-btn outlined @click="dialogUpdatePath=false">Close</v-btn>
+            <v-btn outlined @click="dialogUpdatePath=false" dark>
+              <v-icon left>mdi-close</v-icon>Close
+            </v-btn>
           </v-card-title>
           <v-card-actions class="text-center pb-2">
             <v-container>
@@ -229,21 +231,26 @@
       
 
       <div class="subtitle mt-10 mb-2">Reset to default settings:</div>
-      <v-btn color="primary" @click="dialogResetToDefaultSettings=true">
-        <v-icon left>mdi-restart</v-icon> Reset</v-btn>
+      <v-btn color="orange" @click="dialogResetToDefaultSettings=true">
+        <v-icon left>mdi-restore</v-icon> Reset</v-btn>
       <v-dialog v-model="dialogResetToDefaultSettings" width="600">
         <v-card>
-          <v-card-title>
+          <v-card-title class="headline">
             Reset to default settings
+            <v-spacer></v-spacer>
+            <v-icon color="orange">mdi-alert</v-icon>
           </v-card-title>
-          <v-card-text style="max-height: calc(100vh - 420px);">
+          <v-divider></v-divider>
+          <v-card-text class="pt-6 text-center">
             This will reset only visuals: colors, fonts, cards styles and etc. <br>
             <b>Are you sure?</b>
           </v-card-text>
           <v-card-actions>
             <v-btn class="ma-4" @click="dialogResetToDefaultSettings = false">No</v-btn>
             <v-spacer></v-spacer>
-            <v-btn class="ma-4" color="primary" @click="resetToDefaultSettings">Yes</v-btn>
+            <v-btn class="ma-4" color="orange" @click="resetToDefaultSettings">
+              <v-icon left>mdi-restore</v-icon> Yes
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>

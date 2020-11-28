@@ -2,14 +2,14 @@
 	<div>
 		<v-dialog v-model="$store.state.Videos.dialogDeleteVideo" scrollable persistent max-width="800">
       <v-card>
-        <v-card-title class="title">
+        <v-card-title class="headline py-2 red--text">
           Are you sure?
           <v-spacer></v-spacer>
-          <v-checkbox class="ma-0" v-model="$store.state.Videos.deleteFile" 
-            hide-details label="Also delete file" />
-          <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete-alert</v-icon>
+          <v-checkbox class="ma-0" v-model="$store.state.Videos.deleteFile" color="red" hide-details/>
+          <div class="subtitle-2 mr-3">Also delete file</div>
+          <v-icon left color="red">mdi-delete-alert</v-icon>
         </v-card-title>
+        <v-divider></v-divider>
         <vuescroll>
           <v-card-text style="white-space: pre-wrap;">
             <div>
@@ -23,15 +23,16 @@
             No, Keep it
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="red" class="ma-4" dark @click="deleteVideos">Yes, delete</v-btn>
+          <v-btn color="red" class="ma-4" dark @click="deleteVideos">
+            <v-icon left>mdi-delete-alert</v-icon> Yes, delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <v-dialog v-model="$store.state.Videos.dialogCreatePreview" scrollable persistent max-width="800">
       <v-card :loading="createPreviewLoading" loader-height="6">
-        <v-card-title>
-          <span class="headline"> Create preview </span>
+        <v-card-title class="headline"> Create preview 
           <v-spacer></v-spacer>
           <v-icon>mdi-filmstrip</v-icon>
         </v-card-title>
@@ -84,7 +85,8 @@
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn color="primary" class="ma-4" :disabled="createPreviewLoading"
-            @click="createPreviewForVideo">Create
+            @click="createPreviewForVideo"> 
+            <v-icon left>mdi-video-vintage</v-icon> Create
           </v-btn>
         </v-card-actions>
       </v-card>

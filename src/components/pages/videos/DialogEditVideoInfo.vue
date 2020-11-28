@@ -7,10 +7,10 @@
           gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
         />
         <div class="ml-6">
-          <div class="title font-weight-regular">
+          <div class="font-weight-regular headline body-1">
             Edit video{{isSelectedSingleVideo ? '':'s'}} info
           </div>
-          <div v-if="isSelectedSingleVideo" class="font-weight-light">
+          <div v-if="isSelectedSingleVideo" class="font-weight-light headline body-1">
             {{`"${fileName}"`}}
           </div>
         </div>

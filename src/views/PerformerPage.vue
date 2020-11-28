@@ -11,11 +11,10 @@
       <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
         <v-img :src="getImgUrl(performerId, 'avatar')" position="top"></v-img>
         <v-progress-circular :value="profileCompleteProgress" size="160" rotate="270" width="2"
-          class="profile-complete-progress"> 
+          class="profile-complete-progress" color="white"> 
           <div class="value">{{profileCompleteProgress}}<span class="percent">%</span></div>
         </v-progress-circular>
       </v-avatar>
-      <!-- TODO: add progress card complete status. maybe line on top card -->
       <v-btn @click="addNewTabPerformer" icon class="new-tab-btn" 
         title="Open performer in a new tab"><v-icon>mdi-tab-plus</v-icon>
       </v-btn>
@@ -65,7 +64,6 @@
                   <div class="overline text-center">Personal Information</div>
                   <div class="age-container">
                     <div class="age"><i>Age</i> <span>{{getAge}}</span>
-                    <!-- TODO:FIX LAST ACTIVE AGE. IF NO INFO ABOUT CAREER -->
                     <div class="last"><i>Last active age</i> <span>{{getLastActiveAge}}</span></div></div>
                     <div class="birth"><i>Date birth</i> <span>{{getBirthday}}</span></div>
                   </div>

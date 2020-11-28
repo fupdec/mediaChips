@@ -95,10 +95,11 @@
 
     <v-dialog v-model="$store.state.Websites.dialogDeleteWebsite" scrollable persistent max-width="600">
       <v-card>
-        <v-card-title class="title">Are you sure?
+        <v-card-title class="headline red--text">Are you sure?
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete-alert</v-icon>
+          <v-icon color="red">mdi-delete</v-icon>
         </v-card-title>
+        <v-divider></v-divider>
         <vuescroll>
           <v-card-text style="white-space: pre-wrap;">
             <div>You want to delete website<span v-if="selectedWebsitesLength>1">s</span></div>
@@ -110,7 +111,9 @@
             @click="$store.state.Websites.dialogDeleteWebsite = false">No, Keep it
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="red" class="ma-4"  dark @click="deleteWebsites">Yes, delete</v-btn>
+          <v-btn color="red" class="ma-4"  dark @click="deleteWebsites">
+            <v-icon left>mdi-delete-alert</v-icon> Yes, delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

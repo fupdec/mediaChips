@@ -3,7 +3,7 @@
     <v-dialog v-model="$store.state.Performers.dialogEditPerformerImages" 
       scrollable transition="dialog-bottom-transition" fullscreen persistent>
       <v-card>
-        <v-card-title class="edit-card-title">
+        <v-card-title class="edit-card-title headline">
           <div class="ml-4 mr-2">Edit images of </div>
           <div class="font-weight-bold" style="cursor:pointer;">
             <v-tooltip v-model="tooltipCopyName" bottom>
@@ -19,8 +19,8 @@
           
           <v-spacer></v-spacer>
 
-          <v-btn @click="$store.state.Performers.dialogEditPerformerImages=false"
-            class="ma-4" dark outlined > Close </v-btn>
+          <v-btn @click="$store.state.Performers.dialogEditPerformerImages=false" class="ma-4"
+            dark outlined> <v-icon left>mdi-close</v-icon> Close </v-btn>
         </v-card-title>
         <vuescroll>
           <v-card-text class="pt-0">
@@ -237,16 +237,16 @@
     </v-dialog>
     <v-dialog v-model="dialogDeleteImage" max-width="360px" persistent>
       <v-card>
-        <v-card-title>
-          Delete image?
+        <v-card-title class="headline red--text"> Delete image?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-database-remove</v-icon>
         </v-card-title>
+        <v-divider></v-divider>
         <v-card-actions>
           <v-btn @click="dialogDeleteImage = false" class="ma-4"> No </v-btn>
           <v-spacer/>
-          <v-btn 
-            @click="deleteImage(deleteImageType),dialogDeleteImage = false"
-            class="red ma-4"
-          > Yes </v-btn>
+          <v-btn @click="deleteImage(deleteImageType),dialogDeleteImage = false" 
+            class="red ma-4" dark> <v-icon left>mdi-delete-alert</v-icon> Yes </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

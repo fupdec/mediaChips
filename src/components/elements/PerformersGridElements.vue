@@ -2,11 +2,12 @@
 	<div>
     <v-dialog v-model="$store.state.Performers.dialogDeletePerformer" persistent scrollable max-width="600">
       <v-card>
-        <v-card-title class="title">
+        <v-card-title class="headline red--text">
           Are you sure?
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete-alert</v-icon>
+          <v-icon color="red">mdi-delete</v-icon>
         </v-card-title>
+        <v-divider></v-divider>
         <vuescroll>
           <v-card-text style="white-space: pre-wrap;">
             <div>
@@ -21,7 +22,9 @@
             @click="$store.state.Performers.dialogDeletePerformer = false">No, Keep it
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="red" dark class="ma-4" @click="deletePerformers">Yes, delete</v-btn>
+          <v-btn color="red" dark class="ma-4" @click="deletePerformers">
+            <v-icon left>mdi-delete-alert</v-icon> Yes, delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

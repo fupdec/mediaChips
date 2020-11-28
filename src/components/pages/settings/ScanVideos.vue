@@ -90,7 +90,7 @@
         <v-stepper-content step="3">
           <v-card class="file-scan-dialog">
             <!-- TODO: ADD TIMEOUT AFTER EVERY FILE IN SCANNING. CAUSE TOO MUCH DUPLICATES FREEZE APP -->
-            <v-card-title class="title">
+            <v-card-title class="headline">
               {{headerText}}
               <v-spacer></v-spacer>
               <span class="body-2">
@@ -178,7 +178,7 @@
               <v-spacer></v-spacer>
               <v-btn @click="endScanProcess" :disabled="$store.state.Settings.scanProcRun" 
                 color="primary" class="ma-2"
-              > OK </v-btn>
+              > <v-icon left>mdi-check-circle-outline</v-icon> OK </v-btn>
             </v-card-actions>
           </v-card>
         </v-stepper-content>

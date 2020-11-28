@@ -11,19 +11,16 @@
             min-width="84" max-width="84" height="84" class="mr-6"
             gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%"
           />
-          <div>
-            <div class="font-weight-light body-1">Edit info of</div>
-            <div class="font-weight-bold" style="cursor:pointer;">
-              <v-tooltip v-model="tooltipCopyName" bottom>
-                <template v-slot:activator="{ click }">
-                  <div v-on="click" @click="copyPerformerNameToClipboard" 
-                    title="Copy name to clipboard"
-                  > {{performerName}} 
-                  </div>
-                </template>
-                <span>Name copied to clipboard!</span>
-              </v-tooltip>
-            </div>
+          <div class="headline" style="cursor:pointer;">
+            <v-tooltip v-model="tooltipCopyName" bottom>
+              <template v-slot:activator="{ click }">
+                <div v-on="click" @click="copyPerformerNameToClipboard" 
+                  title="Copy name to clipboard"
+                > {{performerName}} 
+                </div>
+              </template>
+              <span>Name copied to clipboard!</span>
+            </v-tooltip>
           </div>
           
           <v-spacer></v-spacer>
@@ -449,25 +446,25 @@
       field from existing info in profile and new info from internet profile -->
     <v-dialog v-model="dialogFindPerformerInfo" scrollable max-width="1200px">
       <v-card :loading="searchInProgress">
-        <v-card-title class="edit-card-title pa-6">
-          <div class="font-weight-bold body-1">Find information for performer
-              <v-tooltip v-model="tooltipCopyPerformerName" bottom>
-                <template v-slot:activator="{ click }">
-                  <span v-on="click" style="cursor:pointer;" title="Copy name to clipboard"
-                    @click="copyPerformerNameToClipboard('find')"
-                  > {{performer.name}} 
-                  </span>
-                </template>
-                <span>Name copied to clipboard!</span>
-              </v-tooltip>
-          </div>
+        <v-card-title class="edit-card-title headline pa-4">Find information for
+          <v-tooltip v-model="tooltipCopyPerformerName" bottom>
+            <template v-slot:activator="{ click }">
+              <span v-on="click" style="cursor:pointer;" title="Copy name to clipboard"
+                @click="copyPerformerNameToClipboard('find')" class="ml-2"
+              > {{performer.name}} 
+              </span>
+            </template>
+            <span>Name copied to clipboard!</span>
+          </v-tooltip>
         </v-card-title>
         <v-card-actions>
           <v-container>
             <v-row>
               <v-col cols="12" md="6">
                 <v-text-field v-model="queryString" hide-details dense solo
-                  placeholder="Performer name or alias"/>
+                  placeholder="Performer name or alias" 
+                  @click:append-outer="pasteQueryString" 
+                  append-outer-icon="mdi-clipboard-text-outline"/>
               </v-col>
               <v-col cols="6" md="3">
                 <v-btn 
@@ -688,6 +685,9 @@ export default {
     },
     async pasteAliases() {
       this.aliases = await navigator.clipboard.readText()
+    },
+    async pasteQueryString() {
+      this.queryString = await navigator.clipboard.readText()
     },
     sortItems(items, type) {
       const sortBy = this[`sortButtons${type}`]

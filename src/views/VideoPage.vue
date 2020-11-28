@@ -151,7 +151,7 @@
           <v-subheader class="overline">File info</v-subheader>
           <div class="body-2">
             <div style="position:relative">
-              <v-btn icon x-small absolute style="left:-25px" @click="dialogEditPath=true">
+              <v-btn icon x-small absolute style="left:-25px" @click="openDialogEditPath">
                 <v-icon>mdi-pencil</v-icon>
               </v-btn>
               Path: <i>{{video.path}}</i> 
@@ -177,7 +177,11 @@
 
     <v-dialog v-model="dialogEditThumb" max-width="800" scrollable>
       <v-card>
-        <v-card-title>Edit thumb image</v-card-title>
+        <v-card-title class="headline py-1">Edit thumb image
+          <v-spacer></v-spacer>
+          <v-icon>mdi-pencil</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
         <vuescroll>
           <v-card-text>
             <v-col cols="12" align="center" justify="center" class="cropper-wrapper">
@@ -213,22 +217,33 @@
         </vuescroll>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogEditPath" max-width="1200">
+    <v-dialog v-model="dialogEditPath" max-width="1200" persistent>
       <v-card>
-        <v-card-title class="mb-6">Change file path</v-card-title>
-        <v-card-text class="pb-0">
-          <v-text-field v-model="video.path" outlined label="File path" hide-details=""/>
+        <v-card-title class="headline">Change file path
+          <v-spacer></v-spacer>
+          <v-icon>mdi-pencil</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="pt-6">
+          <v-text-field v-model="newPath" outlined label="File path" hide-details=""/>
         </v-card-text>
         <v-card-actions>
+          <v-btn @click="dialogEditPath=false" class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="savePath" class="ma-4" color="primary">Save</v-btn>
-          <v-spacer></v-spacer>
+          <v-btn @click="savePath" class="ma-4" color="primary" :disabled="newPath===''">
+            <v-icon left>mdi-content-save</v-icon> Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="dialogAddMarker" max-width="600" scrollable eager>
       <v-card>
-        <v-card-title>Add time marker on {{seektime}}</v-card-title>
+        <v-card-title class="headline">
+          Add time marker on {{seektime}}
+          <v-spacer></v-spacer>
+          <v-icon>mdi-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
         <vuescroll>
           <v-card-text class="pb-0">
             <v-form ref="form" v-model="valid">
@@ -290,11 +305,17 @@
     </v-dialog>
     <v-dialog v-model="dialogRemoveMarker" max-width="420">
       <v-card>
-        <v-card-title>Remove marker?</v-card-title>
+        <v-card-title class="headline red--text">Remove marker?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
         <v-card-actions>
           <v-btn @click="dialogRemoveMarker = false" class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="removeMarker" class="ma-4" dark color="red">Remove</v-btn>
+          <v-btn @click="removeMarker" class="ma-4" dark color="red">
+            <v-icon left>mdi-delete-alert</v-icon> Remove
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -342,6 +363,7 @@ export default {
       })
       this.getVideoMetadata()
       this.getMarkers()
+      this.newPath = this.video.path
     })
   },
   updated() {
@@ -364,6 +386,7 @@ export default {
     imgThumbLoading: null,
     dialogEditThumb: false,
     dialogEditPath: false,
+    newPath: '',
     dialogAddMarker: false,
     dialogRemoveMarker: false,
     markerForRemove: {},
@@ -645,8 +668,13 @@ export default {
     getWebsiteColor(websiteName) {
       return this.$store.getters.websites.find({name:websiteName}).value().color
     },
+    openDialogEditPath() {
+      this.newPath = this.video.path
+      this.dialogEditPath = true
+    },
     savePath() {
       this.dialogEditPath = false
+      this.video.path = this.newPath
       this.$store.getters.videos
         .find({ id: this.videoId })
         .assign({ path: this.video.path })

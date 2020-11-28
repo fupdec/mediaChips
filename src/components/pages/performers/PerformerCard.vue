@@ -76,10 +76,7 @@
         class="performer-meter" :class="{hidden: isMeterHidden}"
         :value="meter" :height="meterHeight" />
       
-      <v-card-title 
-        class="performer-card-title pa-2" 
-        :class="{hidden: isNameHidden}"
-      > 
+      <v-card-title class="performer-card-title pa-2" :class="{hidden: isNameHidden}"> 
         <div class="performer-name"> {{performerName}} </div>
         <span class="ml-1 font-weight-light">({{videosQuantity}})</span>
         <div v-show="performerAliases.length != 0" class="aliases mt-1" 

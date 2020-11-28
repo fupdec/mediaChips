@@ -7,8 +7,8 @@
           gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
         />
         <div>
-          <div class="font-weight-light body-1">Edit website</div>
-          <div class="font-weight-bold">{{website.name}} 
+          <div class="font-weight-light headline body-1">Edit website</div>
+          <div class="font-weight-bold headline">{{website.name}} 
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
                 <v-icon right @click="copyWebsiteNameToClipboard"

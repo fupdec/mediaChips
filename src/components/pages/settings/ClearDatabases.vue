@@ -5,11 +5,15 @@
     </v-btn>
     <v-dialog v-model="dialogConfirmClearAllFiles" max-width="520">
       <v-card>
-        <v-card-title class="headline">Are you sure?</v-card-title>
-        <v-card-text class="text-center">
+        <v-card-title class="headline red--text">Are you sure?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete-alert</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="text-center mt-6">
           <v-icon size="60" color="red">mdi-alert</v-icon> 
         </v-card-text>
-        <v-card-text class="text-center">
+        <v-card-text class="text-center red--text">
           This will <span class="text-uppercase">delete all {{nameDB}}</span> from the database!
           <br>Before deleting, make a backup and if you are ready then press 
           the <br><span class="text-uppercase">red button</span>. 

@@ -4,6 +4,8 @@
       <v-card>
         <v-card-title class="py-1 headline">
           Presets for filters of {{typeOfPresets}}
+          <v-spacer></v-spacer>
+          <v-icon>mdi-filter</v-icon>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-actions class="py-0">
@@ -64,12 +66,14 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog :value="dialogEditPresetName" width="400" persistent>
+    <v-dialog :value="dialogEditPresetName" width="600" persistent>
       <v-card>
-        <v-card-title>
-          Edit name of preset
+        <v-card-title class="py-1 headline"> Edit name of preset
+          <v-spacer></v-spacer>
+          <v-icon>mdi-pencil</v-icon>
         </v-card-title>
-        <v-card-text>
+        <v-divider></v-divider>
+        <v-card-text class="pt-6">
           <v-form ref="formNameNew" v-model="validNameNew">
             <v-text-field v-model="presetNameNew" :rules="[getNameRules]" validate-on-blur 
               dense outlined label="New name of preset"/>
@@ -87,14 +91,16 @@
 
     <v-dialog :value="dialogDeleteFilters" width="400" persistent>
       <v-card>
-        <v-card-title>
-          Delete preset?
+        <v-card-title class="py-1 headline red--text"> Delete preset?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete-alert</v-icon>
         </v-card-title>
+        <v-divider></v-divider>
         <v-card-actions>
           <v-btn @click="dialogDeleteFilters=false" class="ma-2">Cancel</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="deleteFiltersPreset" class="ma-2" color="red" dark> 
-            <v-icon left>mdi-delete</v-icon> Delete
+            <v-icon left>mdi-delete-alert</v-icon> Delete
           </v-btn>
         </v-card-actions>
       </v-card>
