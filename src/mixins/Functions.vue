@@ -12,35 +12,33 @@ export default {
       } else if (total > 1000000000) {
         total = (total/1024/1024/1024-0.01).toFixed(2) + ' GB'
       } else if (total > 1000000) {
-        total = (total/1024/1024-0.01).toFixed(2) + ' MB'
+        total = (total/1024/1024-0.01).toFixed(0) + ' MB'
       } else if (total > 1000) {
-        total = (total/1024-0.01).toFixed(2) + ' KB'
+        total = (total/1024-0.01).toFixed(0) + ' KB'
       } else {
         total += ' B'
       }
       return total
     },
-    calcSize(size, decimal) {
-      if (!decimal) decimal = 0
+    calcSize(size) {
       if (size > 1000000000000) {
-        size = (size/1024/1024/1024/1024-0.01).toFixed(decimal) + ' TB'
+        size = (size/1024/1024/1024/1024-0.01).toFixed(2) + ' TB'
       } else if (size > 1000000000) {
-        size = (size/1024/1024/1024-0.01).toFixed(decimal) + ' GB'
+        size = (size/1024/1024/1024-0.01).toFixed(2) + ' GB'
       } else if (size > 1000000) {
-        size = (size/1024/1024-0.01).toFixed(decimal) + ' MB'
+        size = (size/1024/1024-0.01).toFixed(0) + ' MB'
       } else if (size > 1000) {
-        size = (size/1024-0.01).toFixed(decimal) + ' KB'
+        size = (size/1024-0.01).toFixed(0) + ' KB'
       } else {
         size += ' B'
       }
       return size
     },
-    calcBitrate(value, decimal) {
-      if (!decimal) decimal = 0
+    calcBitrate(value) {
       if (value > 1000000) {
-        value = (value/1024/1024-0.01).toFixed(decimal) + ' Mbps'
+        value = (value/1024/1024-0.01).toFixed(0) + ' Mbps'
       } else if (value > 1000) {
-        value = (value/1024-0.01).toFixed(decimal) + ' Kbps'
+        value = (value/1024-0.01).toFixed(0) + ' Kbps'
       } else {
         value += ' bps'
       }
