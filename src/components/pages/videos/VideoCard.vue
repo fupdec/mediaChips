@@ -71,18 +71,16 @@
           <span class="value">Path</span>
         </div>
         <div label outlined class="video-info-prop">
+          <v-icon left class="mr-1" size="16">mdi-filmstrip-box</v-icon>
+          {{calcBitrate(video.bitrate)}}
+        </div>
+        <div label outlined class="video-info-prop">
           <v-icon left class="mr-1" size="16">mdi-file-video</v-icon>
           {{getFileExtension()}}
         </div>
         <div label outlined class="video-info-prop">
           <v-icon left class="mr-1" size="16">mdi-harddisk</v-icon>
           {{calcSize(video.size)}}
-          <span class="value">{{calcSizeValue(video.size)}}</span>
-        </div>
-        <div label outlined class="video-info-prop">
-          <v-icon left class="mr-1" size="16">mdi-filmstrip-box</v-icon>
-          {{Math.floor(video.bitrate/1000000)}}
-          <span class="value">Mbps</span>
         </div>
       </v-card-actions>
       
@@ -150,6 +148,7 @@ const shell = require('electron').shell
 const fs = require('fs')
 const path = require('path')
 
+import Functions from '@/mixins/Functions'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 
 export default {
@@ -157,7 +156,7 @@ export default {
   props: {
     video: Object,
   },
-  mixins: [ShowImageFunction],
+  mixins: [ShowImageFunction, Functions],
   mounted() {
     this.$nextTick(function () {
     })
@@ -308,24 +307,6 @@ export default {
         this.$refs.preview.currentTime = 0
       }
     },
-    calcSize(size) {
-      let totalSize
-      if (size > 1000000000) {
-        totalSize = (size/1024/1024/1024-0.01).toFixed(2)
-      } else {
-        totalSize = (size/1024/1024-0.01).toFixed(0)
-      }
-      return totalSize
-    },
-    calcSizeValue(size) {
-      let sizeValue = (size/1024/1024/1024-0.01).toFixed(2)
-      if (sizeValue < 1) {
-        sizeValue = 'Mb'
-      } else {
-        sizeValue = 'Gb'
-      }
-      return sizeValue
-    },
     calcHeightTitle(height) {
       let title = {}
       if (height < 720) {
@@ -392,13 +373,13 @@ export default {
       return this.$store.getters.performers.find({name:performer}).value()
     },
     performerLink(performer) {
-      return `/performer/:${this.getPerformerByName(performer).id}`
+      return `/performer/:${this.getPerformerByName(performer).id}?tabId=default`
     },
     tagLink(tag) {
-      return `/tag/:${this.getTagId(tag)}`
+      return `/tag/:${this.getTagId(tag)}?tabId=default`
     },
     websiteLink(website) {
-      return `/website/:${this.getWebsiteId(website)}`
+      return `/website/:${this.getWebsiteId(website)}?tabId=default`
     },
     colorDependsRating(performer) {
       let rating = this.getPerformerByName(performer).rating

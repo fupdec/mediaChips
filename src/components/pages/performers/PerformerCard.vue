@@ -395,7 +395,7 @@ export default {
       let tabId = this.getTagId(tagName) + new Date().getTime()
       let tab = { 
         name: tagName,
-        link: this.tagLink(tagName)+'?tabId='+tabId,
+        link: `/tag/:${this.getTagId(tag)}?tabId=${tabId}`,
         id: tabId,
         icon: 'tag-outline'
       }
@@ -436,7 +436,7 @@ export default {
       this.updateTabFilters()
     },
     tagLink(tag) {
-      return `/tag/:${this.getTagId(tag)}`
+      return `/tag/:${this.getTagId(tag)}?tabId=default`
     },
     getTagId(itemName) {
       return this.$store.getters.tags.find({name: itemName}).value().id

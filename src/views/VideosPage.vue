@@ -48,12 +48,6 @@
       :total-visible="getNumberOfPagesLimit"
     ></v-pagination>
     
-    <v-btn v-if="$store.getters.getSelectedVideos.length>1"
-      @click="$store.state.Videos.dialogEditVideoInfo=true"
-      fixed fab color="primary" class="add-tag-btn-floating" 
-    ><v-icon>mdi-movie-edit-outline</v-icon>
-    </v-btn>
-    
     <div v-show="$store.getters.navigationSide=='0'" class="py-6"></div>
 
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
