@@ -382,7 +382,7 @@ const Performers = {
         }
       }
       if (state.filters.name) {
-        let frase = state.filters.name.toLowerCase()
+        let frase = state.filters.name.toLowerCase().trim()
         if (frase.length) {
           if (state.filters.aliases === true) {
             let filteredByNames = await performers.filter(

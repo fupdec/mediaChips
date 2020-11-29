@@ -427,6 +427,7 @@ export default {
   methods: {
     async pastePath() {
       let text = await navigator.clipboard.readText()
+      text = this.$store.state.Videos.filters.path + text
       this.updateFiltersOfVideos('path', text)
     },
     async pastePerformers() {

@@ -159,7 +159,7 @@ const Tags = {
         }
       }
       if (state.filters.name) {
-        let frase = state.filters.name.toLowerCase()
+        let frase = state.filters.name.toLowerCase().trim()
         if (frase.length) {
           if (state.filters.alternate === true) {
             let filteredByNames = await tags.filter(

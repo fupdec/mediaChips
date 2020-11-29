@@ -128,13 +128,9 @@ export default {
         for (const performer of performersArray) {
           // check for duplicate name of performer
           // TODO: make case insensitive search
-          let duplicate = db
-            .find({ name: performer })
-            .value();
+          let duplicate = db.find(p=>(p.name.toLowerCase()===performer.toLowerCase())).value()
           if (duplicate) {
-            console.warn(
-              `performer ${JSON.stringify(duplicate.name)} already in DB`
-            );
+            console.warn(`performer ${JSON.stringify(duplicate.name)} already in DB`)
             dups.push(duplicate.name)
             continue;
           }

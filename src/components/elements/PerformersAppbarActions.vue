@@ -606,6 +606,7 @@ export default {
   methods: {
     async pasteName() {
       let text = await navigator.clipboard.readText()
+      text = this.$store.state.Performers.filters.name + text
       this.updateFiltersOfPerformers('name', text)
     },
     async pasteTags() {

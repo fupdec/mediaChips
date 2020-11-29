@@ -140,7 +140,7 @@ const Websites = {
         }
       }
       if (state.filters.name) {
-        let frase = state.filters.name.toLowerCase()
+        let frase = state.filters.name.toLowerCase().trim()
         if (frase.length) {
           websites = websites.filter(website => (website.name.toLowerCase().includes(frase)))
           // console.log(`websites filtered by frase "${frase}" in name`)

@@ -300,10 +300,12 @@ export default {
   },
   methods: {
     async pasteText() {
-      this.tagName = await navigator.clipboard.readText()
+      let text = await navigator.clipboard.readText()
+      this.tagName = this.tagName + text
     },
     async pasteName() {
       let text = await navigator.clipboard.readText()
+      text = this.$store.state.Tags.filters.name + text
       this.updateFiltersOfTags('name', text)
     },
     addNewTag() {
@@ -321,10 +323,9 @@ export default {
         for (const tag of tagsArray) {
 
           // check for duplicate name of tag
-          let duplicate = tagsDB.find({ name: tag }).value()
+          let duplicate = tagsDB.find(t=>(t.name.toLowerCase()===tag.toLowerCase())).value()
           if (duplicate) {
-            console.warn(
-              `tag ${JSON.stringify(duplicate.name)} already in DB`)
+            console.warn(`tag ${JSON.stringify(duplicate.name)} already in DB`)
             dups.push(duplicate.name)
             continue;
           }

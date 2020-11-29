@@ -158,7 +158,7 @@ const Videos = {
         }
       }
       if (state.filters.path) {
-        let frase = state.filters.path.toLowerCase()
+        let frase = state.filters.path.toLowerCase().trim()
         if (frase.length) {
           videos = videos.filter(
             video => (video.path.toLowerCase().includes(frase)))

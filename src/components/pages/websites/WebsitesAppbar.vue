@@ -270,10 +270,12 @@ export default {
   },
   methods: {
     async pasteText() {
-      this.websiteName = await navigator.clipboard.readText()
+      let text = await navigator.clipboard.readText()
+      this.websiteName = this.websiteName + text
     },
     async pasteName() {
       let text = await navigator.clipboard.readText()
+      text = this.$store.state.Websites.filters.name + text
       this.updateFiltersOfWebsites('name', text)
     },
     addNewWebsite() {
@@ -291,10 +293,9 @@ export default {
         for (const website of websitesArray) {
 
           // check for duplicate name of website
-          let duplicate = websitesDB.find({ name: website }).value()
+          let duplicate = websitesDB.find(w=>(w.name.toLowerCase()===website.toLowerCase())).value()
           if (duplicate) {
-            console.warn(
-              `website ${JSON.stringify(duplicate.name)} already in DB`)
+            console.warn(`website ${JSON.stringify(duplicate.name)} already in DB`)
             dups.push(duplicate.name)
             continue;
           }
