@@ -45,6 +45,8 @@ const Videos = {
     dialogDeleteVideo: false,
     dialogEditVideoInfo: false,
     dialogCreatePreview: false,
+    dialogErrorPlayVideo: false,
+    errorPlayVideoPath: '',
     deleteFile: false,
     rating: 0,
     videoChipsColored: dbs.get('videoChipsColored').value(),

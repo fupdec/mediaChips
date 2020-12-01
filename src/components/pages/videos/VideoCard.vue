@@ -361,6 +361,11 @@ export default {
       }
     },
     playVideo(pathToVideo) {
+      if (!fs.existsSync(pathToVideo)) {
+        this.$store.state.Videos.dialogErrorPlayVideo = true
+        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
+        return
+      }
       shell.openItem(pathToVideo)
     },
     changeRating(stars, videoID) {

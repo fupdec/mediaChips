@@ -29,6 +29,27 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    
+		<v-dialog v-model="$store.state.Videos.dialogErrorPlayVideo" scrollable persistent max-width="800">
+      <v-card>
+        <v-card-title class="headline py-2 red--text">Error play video
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-alert-circle</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text>
+            The file on this path does not exist
+            <br>{{$store.state.Videos.errorPlayVideoPath}}
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="$store.state.Videos.dialogErrorPlayVideo=false" class="ma-4">OK</v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <v-dialog v-model="$store.state.Videos.dialogCreatePreview" scrollable persistent max-width="800">
       <v-card :loading="createPreviewLoading" loader-height="6">

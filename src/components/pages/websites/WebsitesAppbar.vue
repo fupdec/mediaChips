@@ -271,11 +271,17 @@ export default {
   methods: {
     async pasteText() {
       let text = await navigator.clipboard.readText()
-      this.websiteName = this.websiteName + text
+      if (this.websiteName) {
+        text = this.websiteName + text
+      }
+      this.websiteName = text
     },
     async pasteName() {
       let text = await navigator.clipboard.readText()
-      text = this.$store.state.Websites.filters.name + text
+      let name = this.$store.state.Websites.filters.name
+      if (name) {
+        text = name + text
+      }
       this.updateFiltersOfWebsites('name', text)
     },
     addNewWebsite() {
