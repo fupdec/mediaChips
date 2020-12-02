@@ -1,15 +1,13 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-img 
-      :src="getImgUrl(performerId, 'header')" position="top" :aspect-ratio="2.3"
-      :gradient="gradient"
-    >
-      <!-- TODO: ADD PARALLAX EFFECT -->
-    </v-img>
+    <v-responsive :aspect-ratio="2.3">
+      <img :src="getImgUrl(performerId, 'header')" :style="header" class="header-image">
+      <div class="header-gradient" :style="gradient"></div>
+    </v-responsive>
 
     <v-container class="profile-container">
       <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
-        <v-img :src="getImgUrl(performerId, 'avatar')" position="top"></v-img>
+        <img :src="getImgUrl(performerId, 'avatar')">
         <v-progress-circular :value="profileCompleteProgress" size="160" rotate="270" width="2"
           class="profile-complete-progress" color="white"> 
           <div class="value">{{profileCompleteProgress}}<span class="percent">%</span></div>
@@ -257,11 +255,12 @@ export default {
     isScrollToTopVisible: false,
     percentValue: 5.263,
     meter: 0,
+    header: '',
   }),
   computed: {
     gradient() {
       let color = this.$vuetify.theme.isDark ? '#121212' : '#fff'
-      return `to top, ${color}, rgba(0,0,0,.0) 30%`
+      return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0) 30%)`
     },
     profileBackground() {
       let color = this.$vuetify.theme.isDark ? '30,30,30':'255,255,255'
@@ -562,6 +561,8 @@ export default {
       if (vertical.scrollTop > 500) {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
+      // parallax effect
+      this.header = `top:${vertical.scrollTop * 0.7}px`
     },
     tagLink(tag) {
       return `/tag/:${this.getTagId(tag)}`
@@ -647,6 +648,20 @@ export default {
 
 
 <style lang="less">
+.header-image {
+  position: absolute;
+  width: 100%;
+  &-wrapper {
+    .v-image__image {
+      z-index: 1;
+    }
+  }
+}
+.header-gradient {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
 .profile-container {
   position: relative;
   margin-top: -150px; 
@@ -680,9 +695,12 @@ export default {
     left: 0;
     right: 0;
     margin: auto;
-    z-index: 5;
-    .v-image__image {
-      border-radius: 50%;
+    z-index: 3;
+    img {
+      height: auto;
+      border-radius: 0;
+      position: absolute;
+      top: 0;
     }
   }
   .profile-name {
