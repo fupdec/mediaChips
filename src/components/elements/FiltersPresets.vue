@@ -48,10 +48,10 @@
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialogDeleteFilters=true" small class="ma-2" color="red" dark :disabled="isPresetsDisbaled"> 
-            <v-icon left>mdi-delete</v-icon> 
+            <v-icon>mdi-delete</v-icon> 
           </v-btn>
           <v-btn @click="openDialogEditPresetName" small class="ma-2" :disabled="isPresetsDisbaled"> 
-            <v-icon left>mdi-pencil</v-icon> 
+            <v-icon>mdi-pencil</v-icon> 
           </v-btn>
           <v-btn @click="removePresetsByDefault" small class="ma-2" color="primary" :disabled="isPresetDefault"> 
             <v-icon left>mdi-cancel</v-icon> Remove by default

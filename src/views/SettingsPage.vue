@@ -67,6 +67,9 @@
             hide-details :thumb-size="32" thumb-label="always" />
         </v-col>
       </v-row>
+
+      <div class="subtitle mt-8 mb-2">Edit performer info parameters:</div>
+      <EditPerformerInfoParameters/>
       
       <v-divider class="my-12"></v-divider>
 
@@ -271,6 +274,7 @@
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
+import EditPerformerInfoParameters from '@/components/pages/settings/EditPerformerInfoParameters.vue'
 import vuescroll from 'vuescroll'
 const fs = require('fs-extra')
 const path = require("path")
@@ -282,6 +286,7 @@ export default {
     ThemeColors,
     ManageBackups,
     ClearDatabases,
+    EditPerformerInfoParameters,
     vuescroll,
   },
   mounted () {

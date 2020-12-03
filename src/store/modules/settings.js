@@ -199,6 +199,14 @@ const Settings = {
     updateFiltersPresetDefault(state, {type, value}) {
       state[`${type}FiltersPresetDefault`] = value
     },
+    addItemToPerformerInfoParam(state, {param, value}) {
+      state[param].push(value)
+      state = state[param].sort((a,b)=>a.localeCompare(b))
+    },
+    updatePerformerInfoParam(state, {param, value}) {
+      state[param] = value
+      state = state[param].sort((a,b)=>a.localeCompare(b))
+    },
     resetSettingsToDefault(state, tabs) {
       state.disableRunApp = false
       state.appColorLightPrimary = '#ef0051'
@@ -368,6 +376,14 @@ const Settings = {
         videoTagsHidden: false,
       }).write()
       commit('resetSettingsToDefault')
+    },
+    addItemToPerformerInfoParam({state, commit, dispatch, getters}, {param, value}) {
+      commit('addItemToPerformerInfoParam', {param, value})
+      getters.settings.set(param, state[param]).write()
+    },
+    updatePerformerInfoParam({state, rootState, commit, dispatch, getters}, {param, value}) {
+      getters.settings.set(param, value).write()
+      commit('updatePerformerInfoParam', {param, value})
     },
   },
   getters: {
