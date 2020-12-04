@@ -176,15 +176,19 @@ const Performers = {
           if (state.filters.categoryLogic) {
             performers = performers.filter({'category': filteredCategory})
           } else {
-            performers = performers.filter(performer=>{
-              let include = false
-              for (let i=0; i<filteredCategory.length;i++) {
-                if (performer.category.includes(filteredCategory[i])) {
-                  include = true
+            if (filteredCategory.includes('None')) {
+              performers = performers.filter(performer=>(performer.category.length))
+            } else {
+              performers = performers.filter(performer=>{
+                let include = false
+                for (let i=0; i<filteredCategory.length;i++) {
+                  if (performer.category.includes(filteredCategory[i])) {
+                    include = true
+                  }
                 }
-              }
-              return include
-            })
+                return include
+              })
+            }
           }
           // console.log('performers filtered by category')
         }
@@ -255,15 +259,19 @@ const Performers = {
           if (state.filters.ethnicityLogic) {
             performers = performers.filter({'ethnicity': filteredEthnicity})
           } else {
-            performers = performers.filter(performer=>{
-              let include = false
-              for (let i=0; i<filteredEthnicity.length;i++) {
-                if (performer.ethnicity.includes(filteredEthnicity[i])) {
-                  include = true
+            if (filteredEthnicity.includes('None')) {
+              performers = performers.filter(performer=>(performer.ethnicity.length))
+            } else {
+              performers = performers.filter(performer=>{
+                let include = false
+                for (let i=0; i<filteredEthnicity.length;i++) {
+                  if (performer.ethnicity.includes(filteredEthnicity[i])) {
+                    include = true
+                  }
                 }
-              }
-              return include
-            })
+                return include
+              })
+            }
           }
           // console.log('performers filtered by ethnicity')
         }
@@ -274,15 +282,19 @@ const Performers = {
           if (state.filters.hairLogic) {
             performers = performers.filter({'hair': filteredHair})
           } else {
-            performers = performers.filter(performer=>{
-              let include = false
-              for (let i=0; i<filteredHair.length;i++) {
-                if (performer.hair.includes(filteredHair[i])) {
-                  include = true
+            if (filteredHair.includes('None')) {
+              performers = performers.filter(performer=>(performer.hair.length))
+            } else {
+              performers = performers.filter(performer=>{
+                let include = false
+                for (let i=0; i<filteredHair.length;i++) {
+                  if (performer.hair.includes(filteredHair[i])) {
+                    include = true
+                  }
                 }
-              }
-              return include
-            })
+                return include
+              })
+            }
           }
           // console.log('performers filtered by hair')
         }
@@ -293,33 +305,37 @@ const Performers = {
           if (state.filters.eyesLogic) {
             performers = performers.filter({'eyes': filteredEyes})
           } else {
-            performers = performers.filter(performer=>{
-              let include = false
-              for (let i=0; i<filteredEyes.length;i++) {
-                if (performer.eyes.includes(filteredEyes[i])) {
-                  include = true
+            if (filteredEyes.includes('None')) {
+              performers = performers.filter(performer=>(performer.eyes.length))
+            } else {
+              performers = performers.filter(performer=>{
+                let include = false
+                for (let i=0; i<filteredEyes.length;i++) {
+                  if (performer.eyes.includes(filteredEyes[i])) {
+                    include = true
+                  }
                 }
-              }
-              return include
-            })
+                return include
+              })
+            }
           }
           // console.log('performers filtered by eyes')
         }
       }
-      if (state.filters.cup) {
-        let filteredNation = state.filters.cup
-        if (filteredNation.length) {
-          performers = performers.filter(p=>(filteredNation.includes(p.cup)))
-          // console.log('performers filtered by cup')
+      if (state.filters.cup.length) {
+        if (state.filters.cup.includes('None')) {
+          performers = performers.filter(p=>(p.cup === ''))
+        } else {
+          performers = performers.filter(p=>(state.filters.cup.includes(p.cup)))
         }
+        // console.log('performers filtered by cup')
       }
       if (state.filters.boobs.length) {
-        performers = performers.filter(p => {
-          if (state.filters.boobs.includes('Unknown')) {
-            if (p.boobs === '') return true
-          }
-          return state.filters.boobs.includes(p.boobs.charAt(0).toUpperCase()+p.boobs.slice(1))
-        })
+        if (state.filters.boobs.includes('None')) {
+          performers = performers.filter(p=>(p.boobs === ''))
+        } else {
+          performers = performers.filter(p=>(state.filters.boobs.includes(p.boobs.charAt(0).toUpperCase()+p.boobs.slice(1))))
+        }
         // console.log('performers filtered by boobs')
       }
       if (state.filters.body) {
@@ -328,32 +344,38 @@ const Performers = {
           if (state.filters.bodyLogic) {
             performers = performers.filter({'body': filteredBody})
           } else {
-            performers = performers.filter(performer=>{
-              let include = false
-              for (let i=0; i<filteredBody.length;i++) {
-                if (performer.body.includes(filteredBody[i])) {
-                  include = true
+            if (filteredBody.includes('None')) {
+              performers = performers.filter(performer=>(performer.body.length))
+            } else {
+              performers = performers.filter(performer=>{
+                let include = false
+                for (let i=0; i<filteredBody.length;i++) {
+                  if (performer.body.includes(filteredBody[i])) {
+                    include = true
+                  }
                 }
-              }
-              return include
-            })
+                return include
+              })
+            }
           }
           // console.log('performers filtered by body')
         }
       }
-      if (state.filters.pussy) {
-        let filteredPussy = state.filters.pussy
-        if (filteredPussy.length) {
-          performers = performers.filter(p=>(filteredPussy.includes(p.pussy)))
-          // console.log('performers filtered by pussy')
+      if (state.filters.pussy.length) {
+        if (state.filters.pussy.includes('None')) {
+          performers = performers.filter(p=>(p.pussy === ''))
+        } else {
+          performers = performers.filter(p=>(state.filters.pussy.includes(p.pussy)))
         }
+        // console.log('performers filtered by pussy')
       }
-      if (state.filters.pussyLips) {
-        let filteredPussyLips = state.filters.pussyLips
-        if (filteredPussyLips.length) {
-          performers = performers.filter(p=>(filteredPussyLips.includes(p.pussyLips)))
-          // console.log('performers filtered by pussyLips')
+      if (state.filters.pussyLips.length) {
+        if (state.filters.pussyLips.includes('None')) {
+          performers = performers.filter(p=>(p.pussyLips === ''))
+        } else {
+          performers = performers.filter(p=>(state.filters.pussyLips.includes(p.pussyLips)))
         }
+        // console.log('performers filtered by pussyLips')
       }
       if (state.filters.pussyHair) {
         let filteredPussyHair = state.filters.pussyHair
@@ -361,25 +383,30 @@ const Performers = {
           if (state.filters.pussyHairLogic) {
             performers = performers.filter({'pussyHair': filteredPussyHair})
           } else {
-            performers = performers.filter(performer=>{
-              let include = false
-              for (let i=0; i<filteredPussyHair.length;i++) {
-                if (performer.pussyHair.includes(filteredPussyHair[i])) {
-                  include = true
+            if (filteredPussyHair.includes('None')) {
+              performers = performers.filter(performer=>(performer.pussyHair.length))
+            } else {
+              performers = performers.filter(performer=>{
+                let include = false
+                for (let i=0; i<filteredPussyHair.length;i++) {
+                  if (performer.pussyHair.includes(filteredPussyHair[i])) {
+                    include = true
+                  }
                 }
-              }
-              return include
-            })
+                return include
+              })
+            }
           }
           // console.log('performers filtered by pussyHair')
         }
       }
-      if (state.filters.nation) {
-        let filteredNation = state.filters.nation
-        if (filteredNation.length) {
-          performers = performers.filter(p=>(filteredNation.includes(p.nation)))
-          // console.log('performers filtered by nationality')
+      if (state.filters.nation.length) {
+        if (state.filters.nation.includes('None')) {
+          performers = performers.filter(p=>(p.nation === ''))
+        } else {
+          performers = performers.filter(p=>(state.filters.nation.includes(p.nation)))
         }
+        // console.log('performers filtered by nationality')
       }
       if (state.filters.name) {
         let frase = state.filters.name.toLowerCase().trim()

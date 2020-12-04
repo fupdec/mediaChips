@@ -14,7 +14,6 @@ export default {
     })
   },
   data: () => ({
-    boobsItems: ['Real','Fake','Unknown'],
   }),
   computed: {
     itemId() {

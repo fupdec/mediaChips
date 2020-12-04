@@ -61,7 +61,7 @@
             <v-col cols="12" sm="6" class="pb-0">
               <v-select
                 v-model="$store.state.Performers.filters.category"
-                :items="$store.state.Settings.performerInfoCategory"
+                :items="categoriesList"
                 label="Category" multiple hide-details outlined dense
                 prepend-icon="mdi-account-group-outline"
                 @click:prepend-inner="changeFilterCategoryLogic" 
@@ -109,7 +109,7 @@
             </v-col>
             <v-col cols="12" sm="6">
               <v-autocomplete
-                v-model="$store.state.Performers.filters.nation" :items="countries" 
+                v-model="$store.state.Performers.filters.nation" :items="countriesList" 
                 item-text="name" item-value="name" prepend-icon="mdi-flag"
                 label="Nationality" small-chips multiple hide-details hide-selected clearable
                 class="select-small-chips nation-chips hidden-close" append-icon=""
@@ -326,8 +326,7 @@
             </v-col>
             <v-col cols="12" sm="4" class="py-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.ethnicity" 
-                :items="$store.state.Settings.performerInfoEthnicity"
+                v-model="$store.state.Performers.filters.ethnicity" :items="ethnicList"
                 label="Ethnicity" multiple hide-details outlined dense
                 prepend-icon="mdi-account-group" append-icon=""
                 @click:prepend-inner="changeFilterEthnicityLogic" 
@@ -337,8 +336,7 @@
             </v-col>
             <v-col cols="12" sm="4" class="py-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.hair"
-                :items="$store.state.Settings.performerInfoHair"
+                v-model="$store.state.Performers.filters.hair" :items="hairList"
                 label="Hair" multiple hide-details outlined dense
                 prepend-icon="mdi-face-woman" append-icon=""
                 @click:prepend-inner="changeFilterHairLogic" 
@@ -348,8 +346,7 @@
             </v-col>
             <v-col cols="12" sm="4" class="py-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.eyes"
-                :items="$store.state.Settings.performerInfoEyes"
+                v-model="$store.state.Performers.filters.eyes" :items="eyesList"
                 label="Eyes" multiple hide-details outlined dense
                 prepend-icon="mdi-eye" append-icon=""
                 @click:prepend-inner="changeFilterEyesLogic" 
@@ -359,8 +356,7 @@
             </v-col>
             <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.cup"
-                :items="$store.state.Settings.performerInfoCups"
+                v-model="$store.state.Performers.filters.cup" :items="cupsList"
                 label="Cup" multiple hide-details outlined dense
                 prepend-icon="mdi-coffee" append-icon=""
                 :menu-props="{contentClass:'select-dense-checkbox'}"
@@ -369,15 +365,14 @@
             <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
               <v-select
                 v-model="$store.state.Performers.filters.boobs" 
-                :items="boobsItems" label="Boobs" multiple hide-details outlined dense
+                :items="boobsList" label="Boobs" multiple hide-details outlined dense
                 prepend-icon="mdi-vector-circle-variant" append-icon=""
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
             <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.body" 
-                :items="$store.state.Settings.performerInfoBody" 
+                v-model="$store.state.Performers.filters.body" :items="bodyList" 
                 label="Body" multiple hide-details outlined dense
                 prepend-icon="mdi-human-child" append-icon=""
                 @click:prepend-inner="changeFilterBodyLogic" 
@@ -387,8 +382,7 @@
             </v-col>
             <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.pussy" 
-                :items="$store.state.Settings.performerInfoPussy" 
+                v-model="$store.state.Performers.filters.pussy" :items="pussyList" 
                 label="Pussy" multiple hide-details outlined dense
                 prepend-icon="mdi-cat" append-icon=""
                 :menu-props="{contentClass:'select-dense-checkbox'}"
@@ -396,8 +390,7 @@
             </v-col>
             <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.pussyLips" 
-                :items="$store.state.Settings.performerInfoPussyLips" 
+                v-model="$store.state.Performers.filters.pussyLips" :items="pussyLipsList" 
                 label="Pussy lips" multiple hide-details  outlined dense
                 prepend-icon="mdi-cat" append-icon=""
                 :menu-props="{contentClass:'select-dense-checkbox'}"
@@ -405,8 +398,7 @@
             </v-col>
             <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
               <v-select
-                v-model="$store.state.Performers.filters.pussyHair" 
-                :items="$store.state.Settings.performerInfoPussyHair" 
+                v-model="$store.state.Performers.filters.pussyHair" :items="pussyHairList" 
                 label="Pussy hair" multiple hide-details outlined dense
                 prepend-icon="mdi-cat" append-icon=""
                 @click:prepend-inner="changeFilterPussyHairLogic" 
@@ -587,6 +579,61 @@ export default {
     },
     filteredPerformersTotal() {
       return this.$store.getters.filteredPerformersTotal
+    },
+    categoriesList() {
+      let cats = this.$store.state.Settings.performerInfoCategory
+      cats.push('None')
+      return cats
+    },
+    countriesList() {
+      let countries = this.countries
+      countries.unshift({name: 'None', code: ''})
+      return countries
+    },
+    ethnicList() {
+      let ethnic = this.$store.state.Settings.performerInfoEthnicity
+      ethnic.push('None')
+      return ethnic
+    },
+    hairList() {
+      let hair = this.$store.state.Settings.performerInfoHair
+      hair.push('None')
+      return hair
+    },
+    eyesList() {
+      let eyes = this.$store.state.Settings.performerInfoEyes
+      eyes.push('None')
+      return eyes
+    },
+    cupsList() {
+      let cups = this.$store.state.Settings.performerInfoCups
+      cups.push('None')
+      return cups
+    },
+    boobsList() {
+      let boobs = this.$store.state.Settings.performerInfoBoobs
+      boobs.push('None')
+      return boobs
+    },
+    bodyList() {
+      let body = this.$store.state.Settings.performerInfoBody
+      body.push('None')
+      return body
+    },
+    pussyList() {
+      let pussy = this.$store.state.Settings.performerInfoPussy
+      pussy.push('None')
+      return pussy
+    },
+    pussyLipsList() {
+      let lips = this.$store.state.Settings.performerInfoPussyLips
+      lips.push('None')
+      return lips
+    },
+    pussyHairList() {
+      let hair = this.$store.state.Settings.performerInfoPussyHair
+      hair.push('None')
+      return hair
     },
     sortButtons: {
       get() {
