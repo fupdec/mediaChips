@@ -1,14 +1,16 @@
 {
   "name": "avdb",
-  "productName": "AdultVideoDataBase",
-  "version": "0.5.1",
-  "author": "anonymous",
+  "productName": "AVDB",
+  "version": "0.5.2",
+  "author": "fupdec",
   "description": "Manage your ever-growing video collection - add tags, performers, websites and have fun!",
   "private": false,
+  "license": "GPLv3",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "electron:build": "vue-cli-service electron:build",
+    "electron:build_portable": "vue-cli-service electron:build --win portable",
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"

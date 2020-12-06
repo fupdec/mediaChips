@@ -257,6 +257,24 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+
+      
+      <v-divider class="mt-16"></v-divider>
+      <v-row>
+        <v-col cols="4">
+          <div>Adult Video Database 0.5.2</div>
+          <p class="text--secondary">by fupdec</p>
+          <v-btn color="#eee" light small @click="openGithub">
+            <v-icon left>mdi-github</v-icon> Github
+          </v-btn>
+        </v-col>
+        <v-col cols="4" class="text-center">
+          <div>2020</div>
+        </v-col>
+        <v-col cols="4" class="text-right">
+          <img src="/icons/icon.png" alt="avdb" width="82" height="82" class="mt-2">
+        </v-col>
+      </v-row>
     </v-container>
 
 
@@ -279,6 +297,7 @@ import vuescroll from 'vuescroll'
 const fs = require('fs-extra')
 const path = require("path")
 const { spawn } = require( 'child_process' )
+const shell = require('electron').shell
 
 export default {
   name: 'SettingsPage',
@@ -388,6 +407,9 @@ export default {
     },
   },
   methods: {
+    openGithub() {
+      shell.openExternal('https://github.com/fupdec/AdultVideoDataBase')
+    },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
     },

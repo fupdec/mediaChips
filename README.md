@@ -1,4 +1,4 @@
-# AdultVideoDataBase
+# Adult Video Database
 Manage your ever-growing video collection - add tags, performers, websites and have fun!
 
 ## Install application (Windows)
@@ -6,8 +6,10 @@ To install, run the executable file. After the first launch, go to your "AppData
 Find the folder with the name of this application. The folder "userfiles" should appear in it.
 Then you should download files ffmpeg.exe and ffprobe.exe. Maybe from here (https://github.com/FFmpeg/FFmpeg)
 And then place this files into folder "ffmpeg" in "userfiles". 
-Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AdultVideoDataBase\userfiles\ffmpeg\"
+Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\"
 And now you can scan folders from application! It's all.
+
+- In portable version after the first launch, a folder "userdata" will be created in the folder with the executable file. Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
 
 ### Support on other OS
 Only Windows is supported. But if you are a developer, it may not be difficult for you to adapt the application for other operating systems. 
@@ -38,15 +40,15 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 #### App
 - Customizing colors, fonts
 - Dark theme
-- Making backups
+- Backup management
 
 #### Videos
 - Scanning for videos in multiple folders, all known video formats are added.
 - Information is automatically added to the video: performers, tags, websites.
 - A thumb for the video is created. You can create a small video preview.
-- Sorting and filtering by tags, websites, performers, etc.
-- Play video in a browser (if supported) or in a standard video player.
-- Add markers to videos that are supported by the browser.
+- Sorting and filtering by tags, websites, performers, filesize, quality, etc.
+- Play video in app (if supported) or in a standard video player.
+- Add markers to videos that are supported by the app.
 - Change path to video.
 - Custom thumb image.
 - ... and more

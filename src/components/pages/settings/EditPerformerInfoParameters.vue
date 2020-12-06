@@ -58,7 +58,7 @@
           <v-btn @click="openDialogEditItemName" small class="ma-2" color="orange" :disabled="isBtnsDisbaled"> 
             <v-icon>mdi-pencil</v-icon> 
           </v-btn>
-          <v-btn @click="dialogAddItem=true" small class="ma-2" color="green"> 
+          <v-btn @click="dialogAddItem=true" small dark class="ma-2" color="green"> 
             <v-icon>mdi-plus</v-icon> 
           </v-btn>
         </v-card-actions>

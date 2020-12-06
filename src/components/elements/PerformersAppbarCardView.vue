@@ -26,7 +26,7 @@
       <template v-slot:activator="{ on }">
 				<v-badge :value="isChipsColored" class="colored" overlap offset-x="25" offset-y="25">
           <v-btn @click="toggleChipsColored()" v-on="on" icon tile>
-            <v-icon>mdi-label-variant</v-icon>
+            <v-icon>mdi-label</v-icon>
           </v-btn>
         </v-badge>
       </template>

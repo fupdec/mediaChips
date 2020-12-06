@@ -92,30 +92,13 @@ app.on('activate', () => {
   }
 })
 
-// create folder for user's files
-const srcUserDataFolder = path.join(__static, 'userfiles');
-const destUserDataFolder = path.join(app.getPath('userData'), 'userfiles')
-if (!fs.existsSync(destUserDataFolder)){
-  fs.mkdirSync(destUserDataFolder)
-  fs.mkdirSync(path.join(destUserDataFolder, 'backups'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'databases'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'ffmpeg'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/performers'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/previews'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/tags'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/temp'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/temp/merging'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/temp/parts'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/thumbs'))
-  fs.mkdirSync(path.join(destUserDataFolder, 'media/websites'))
-  fs.copy(srcUserDataFolder, destUserDataFolder, function (err) {
-    if (err) {
-      console.error(err);
-    } else {
-      console.log("user data folder created successfully!\nDon't forget to copy ffmpeg files");
-    } 
-  }) 
+// create userdata folder if runs portable version
+if (process.env.PORTABLE_EXECUTABLE_DIR) {
+  const userData = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'userdata')
+  if (!fs.existsSync(userData)){
+    fs.mkdirSync(userData)
+  }
+  app.setPath ('userData', userData)
 }
 
 // This method will be called when Electron has finished
@@ -135,6 +118,32 @@ app.on('ready', async () => {
     //   console.error('Vue Devtools failed to install:', e.toString())
     // }
 
+  }
+  
+  // create folder for user's files
+  const srcUserDataFolder = path.join(__static, 'userfiles')
+  const destUserDataFolder = path.join(app.getPath('userData'), 'userfiles')
+  if (!fs.existsSync(destUserDataFolder)){
+    fs.mkdirSync(destUserDataFolder)
+    fs.mkdirSync(path.join(destUserDataFolder, 'backups'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'databases'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'ffmpeg'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/performers'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/previews'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/tags'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/temp'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/temp/merging'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/temp/parts'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/thumbs'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/websites'))
+    fs.copy(srcUserDataFolder, destUserDataFolder, function (err) {
+      if (err) {
+        console.error(err);
+      } else {
+        console.log("user data folder created successfully!\nDon't forget to copy ffmpeg files");
+      } 
+    }) 
   }
   createWindow()
 })
