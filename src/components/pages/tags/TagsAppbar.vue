@@ -165,7 +165,9 @@
       <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
         <template v-slot:activator="{ on, attrs }">
           <v-btn v-bind="attrs"  v-on="on" icon tile>
-            <v-icon>mdi-sort</v-icon>
+            <v-badge :content="tagsSort" overlap bottom class="badge-sort">
+              <v-icon>mdi-sort-variant</v-icon>
+            </v-badge>
           </v-btn>
         </template>
         <v-card>
@@ -282,6 +284,10 @@ export default {
     },
     filteredTagsTotal() {
       return this.$store.getters.filteredTagsTotal
+    },
+    tagsSort() {
+      let sort = this.$store.state.Tags.filters.sortBy
+      return sort.charAt(0) + sort.charAt(1) + sort.charAt(2) + '.'
     },
     sortButtons: {
       get() {

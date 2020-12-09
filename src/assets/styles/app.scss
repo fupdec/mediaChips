@@ -444,6 +444,10 @@ html {
       font-size: 16px;
     }
   }
+  .badge-sort {
+    z-index: 5; 
+    text-transform: capitalize;
+  }
 }
 .v-pagination {
   &__item--active {
