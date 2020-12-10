@@ -1,5 +1,7 @@
+<img align="left" width="100" height="100" src="./public/icons/icon.png">
+
 # Adult Video Database
-Manage your ever-growing video collection - add tags, performers, websites and have fun!
+Manage your porn video collection - add performers, tags, websites and have fun!
 
 ## Install application (Windows)
 To install, run the executable file. After the first launch, go to your "AppData" directory (just write %appdata% in address bar).
