@@ -4,8 +4,8 @@
       :class="{favorite: isFavorite}" class="video-card" height="100%"
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
     >
-      <v-img @click.middle="addNewTabVideo"
-        @mouseover="playPreview" @mouseleave="stopPlayingPreview"
+      <v-responsive @click.middle="addNewTabVideo"
+        @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
         <v-img @click="openVideoPage" title="Open video page"
@@ -26,7 +26,7 @@
         <v-rating
           v-model="video.rating"
           @input="changeRating($event, video.id)"
-          class="video-rating" :class="{hidden: isRatingHidden}"
+          class="rating" :class="{hidden: isRatingHidden}"
           color="yellow darken-2"
           background-color="rgba(255,255,255,0.2)"
           empty-icon="mdi-star-outline"
@@ -40,11 +40,11 @@
         > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
         </v-btn>
         
-        <div class="video-info-duration" :class="{hidden: isDurationHidden}">
+        <div class="duration" :class="{hidden: isDurationHidden}">
           {{calcDur(video.duration)}}
         </div>
 
-        <div label outlined class="video-info-resolution"
+        <div label outlined class="resolution"
           :class="{hidden: isQualityLabelHidden}">
           <div class="text text-no-wrap">{{calcHeightTitle(video.height)}}</div>
           <div class="value">
@@ -52,12 +52,10 @@
             <span v-else>{{video.height}}p</span>
           </div>
         </div>
-        <div class="preview-mp4" v-if="!errorVideo" @click="openVideoPage">
-          <video ref="preview">
-            <source :src="getVideoUrl(video.id)" type="video/mp4">
-          </video>
+        <div class="preview" @click="openVideoPage">
+          <video ref="video" autoplay muted loop />
         </div>
-      </v-img>
+      </v-responsive>
       <v-card-text class="pa-2 video-card-title" :class="{hidden: isFileNameHidden}">
         <span :title="fileName">{{ fileName }}</span> 
       </v-card-text>
@@ -65,20 +63,20 @@
       <v-divider></v-divider>
 
       <!-- Video meta -->
-      <v-card-actions class="video-info-props pa-1" :class="{hidden: isFileInfoHidden}">
-        <div label outlined class="video-info-prop" :title="videoPath">
+      <v-card-actions class="props pa-1" :class="{hidden: isFileInfoHidden}">
+        <div label outlined class="prop" :title="videoPath">
           <v-icon size="16">mdi-file-search</v-icon>
           <span class="value">Path</span>
         </div>
-        <div label outlined class="video-info-prop">
+        <div label outlined class="prop">
           <v-icon left class="mr-1" size="16">mdi-filmstrip-box</v-icon>
           {{calcBitrate(video.bitrate)}}
         </div>
-        <div label outlined class="video-info-prop">
+        <div label outlined class="prop">
           <v-icon left class="mr-1" size="16">mdi-file-video</v-icon>
           {{getFileExtension()}}
         </div>
-        <div label outlined class="video-info-prop">
+        <div label outlined class="prop">
           <v-icon left class="mr-1" size="16">mdi-harddisk</v-icon>
           {{calcSize(video.size)}}
         </div>
@@ -164,13 +162,29 @@ export default {
   updated() {
     this.getChipsSize()
   },
+  beforeDestroy() {
+    try {
+      this.$refs.video.src = ''
+    } catch (error) {}
+  },
+  destroyed() {
+    for (const timeout in this.timeouts) {
+      clearTimeout(this.timeouts[timeout])
+    }
+  },
   data: () => ({
     errorThumb: false,
-    errorVideo: false,
+    errorPreview: false,
+    isVideoHovered: false,
+    timeouts: {},
     isChipsXS: true,
     isChipsS: false,
   }),
   computed: {
+    getVideoPath() {
+      console.log('check video')
+      return this.video.path
+    },
     isChipsColored() {
       return this.$store.state.Videos.videoChipsColored
     },
@@ -294,18 +308,41 @@ export default {
     openVideoPage() {
       this.$router.push(`/video/:${this.video.id}?tabId=default`)
     },
+    setVideoProgress(percent) {
+      this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
+    },
     playPreview() {
-      if (this.$refs.preview) {
-        this.$refs.preview.loop = true
-        this.$refs.preview.play()
-      } 
+      this.timeouts.z = setTimeout(()=>{
+        if (this.isVideoHovered) return
+        this.isVideoHovered = true
+        
+        if (!this.errorPreview) {
+          // play preview
+          let videoPath = path.join(this.pathToUserData, `/media/previews/${this.video.id}.mp4`)
+          if (fs.existsSync(videoPath)) {
+            this.$refs.video.src = videoPath
+            return
+          } else {
+            this.errorPreview = true
+          }
+        }
+
+        // play original video
+        if (!fs.existsSync(this.video.path)) return
+        this.$refs.video.src = this.video.path
+        this.setVideoProgress(0.2)
+        this.timeouts.a = setTimeout(this.setVideoProgress, 3000, 0.4)
+        this.timeouts.b = setTimeout(this.setVideoProgress, 6000, 0.6)
+        this.timeouts.c = setTimeout(this.setVideoProgress, 9000, 0.8)
+        this.timeouts.d = setTimeout(this.setVideoProgress, 12000, 0.2)
+      }, 500)
     },
     stopPlayingPreview() {
-      if (this.$refs.preview) {
-        // console.log(this.$refs.preview)
-        this.$refs.preview.pause()
-        this.$refs.preview.currentTime = 0
+      this.isVideoHovered = false
+      for (const timeout in this.timeouts) {
+        clearTimeout(this.timeouts[timeout])
       }
+      this.$refs.video.src = ''
     },
     calcHeightTitle(height) {
       let title = {}
@@ -321,15 +358,15 @@ export default {
       return title
     },
     calcDur(duration) {
-      var sec = Math.floor(duration);
-      var h = sec/3600 ^ 0 ;
-      var m = (sec-h*3600)/60 ^ 0 ;
-      var s = sec-h*3600-m*60 ;
-      h = h<10?"0"+h+":":h
+      let sec = Math.floor(duration);
+      let h = sec / 3600 ^ 0 
+      let m = (sec - h * 3600) / 60 ^ 0 
+      let s = sec - h * 3600 - m * 60 
+      h = h < 10 ? "0" + h + ":" : h
       if (h === "00:") h = ""
-      m = m<10?"0"+m:m
-      s = s<10?"0"+s:s
-      var total = h+m+":"+s
+      m = m < 10 ? "0" + m : m
+      s = s < 10 ? "0" + s : s
+      let total = h + m + ":" + s
       return total
     },
     getFileExtension() {
@@ -340,24 +377,12 @@ export default {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
       return this.checkImageExist(imgPath)+'?lastmod='+Date.now()
     },
-    getVideoUrl(videoId) {
-      let videoPath = path.join(this.pathToUserData, `/media/previews/${videoId}.mp4`)
-      return this.checkVideoExist(videoPath)+'?lastmod='+Date.now()
-    },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
         return imgPath
       } else {
         this.errorThumb = true
         return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
-      }
-    },
-    checkVideoExist(videoPath) {
-      if (fs.existsSync(videoPath)) {
-        return videoPath
-      } else {
-        this.errorVideo = true
-        return path.join(this.pathToUserData, '/img/templates/preview.mp4')
       }
     },
     playVideo(pathToVideo) {
@@ -489,6 +514,78 @@ export default {
     margin: 1px 2px !important;
     padding: 0 5px;
   }
+  .duration {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-weight: 300;
+    font-size: 12px;
+    border-radius: 3px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
+    user-select: none;
+    &.hidden {
+      display: none;
+    }
+  }
+  .resolution {
+    position: absolute;
+    min-width: 32px;
+    left: 1px;
+    top: 1px;
+    font-weight: 300;
+    color: #fff !important;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: stretch;
+    text-align: center;
+    border-radius: 2px;
+    overflow: hidden;
+    opacity: .7;
+    &.hidden {
+      display: none;
+    }
+    .text {
+      font-size: 9px;
+      font-weight: 600;
+      width: 100%;
+      background-color: rgb(236, 197, 22);
+      color: #000;
+      line-height: 1;
+    }
+    .value {
+      font-size: 10px;
+      width: 100%;
+      background-color: #000;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+  }
+  .prop {
+    display: flex;
+    align-items: center;
+    font-weight: 300;
+    font-size: 10px;
+    user-select: none;
+    .v-icon {
+      opacity: 0.65;
+    }
+    .value {
+      margin-left: 2px;
+    }
+    &s {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      &.hidden {
+        display: none;
+      }
+    }
+  }
   .performers {
     padding-left: 20px;
     .caption {
@@ -561,12 +658,11 @@ export default {
     width: 100%;
     position: absolute;
   }
-  .preview-mp4 {
+  .preview {
     opacity: 0;
     width: 100%;
     height: 100%;
     display: flex;
-    transition: .35s all ease;
     overflow: hidden;
     position: absolute;
     video {
@@ -575,19 +671,22 @@ export default {
       object-fit: cover;
     }
   }
-  .video-rating,
-  .video-info-duration,
-  .video-info-resolution,
+  .rating,
+  .duration,
+  .resolution,
   .btn-play {
-    z-index: 5;
+    z-index: 1;
   }
-  .video-info-duration,
-  .video-info-resolution {
+  .duration,
+  .resolution {
     pointer-events: none;
   }
   &:hover {
-    .preview-mp4 {
-      opacity: 1;
+    .preview {
+      animation-fill-mode: both;
+      animation-name: preview;
+      animation-duration: 0.5s;
+      animation-delay: 0.7s;
     }
     .btn-play {
       opacity: 0.2;
@@ -600,7 +699,7 @@ export default {
     }
   }
 }
-.video-rating {
+.rating {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -620,80 +719,6 @@ export default {
   bottom: 0;
   margin: auto;
 }
-.video-info {
-  &-duration {
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    padding-right: 5px;
-    font-weight: 300;
-    font-size: 12px;
-    border-radius: 3px;
-    padding-left: 5px;
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
-    user-select: none;
-    &.hidden {
-      display: none;
-    }
-  }
-  &-resolution {
-    position: absolute;
-    min-width: 32px;
-    left: 1px;
-    top: 1px;
-    font-weight: 300;
-    color: #fff !important;
-    user-select: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: stretch;
-    text-align: center;
-    border-radius: 2px;
-    overflow: hidden;
-    opacity: .7;
-    &.hidden {
-      display: none;
-    }
-    .text {
-      font-size: 9px;
-      font-weight: 600;
-      width: 100%;
-      background-color: rgb(236, 197, 22);
-      color: #000;
-      line-height: 1;
-    }
-    .value {
-      font-size: 10px;
-      width: 100%;
-      background-color: #000;
-      color: #ffffff;
-      line-height: 1.1;
-    }
-  }
-  &-prop {
-    display: flex;
-    align-items: center;
-    font-weight: 300;
-    font-size: 10px;
-    user-select: none;
-    .v-icon {
-      opacity: 0.65;
-    }
-    .value {
-      margin-left: 2px;
-    }
-    &s {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      &.hidden {
-        display: none;
-      }
-    }
-  }
-}
 .video-card-title {
   font-size: 12px;
   letter-spacing: -0.2px !important;
@@ -710,6 +735,14 @@ export default {
   }
   &.hidden {
     display: none;
+  }
+}
+@keyframes preview {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 .video-tags {
