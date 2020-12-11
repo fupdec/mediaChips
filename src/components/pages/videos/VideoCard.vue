@@ -87,7 +87,7 @@
 
       <v-card-actions class="px-1 py-0 performers" :class="{hidden: isPerformersHidden}">
         <v-chip-group column >
-          <span class="caption text--secondary mr-2">Performers</span>
+          <v-icon left :size="iconSize">mdi-account-outline</v-icon>
           <v-chip v-for="performer in video.performers" :key="performer"
             :x-small="isChipsXS" :small="isChipsS"
             :color="colorDependsRating(performer)" :to="performerLink(performer)"
@@ -105,7 +105,7 @@
 
       <v-card-actions class="px-1 py-0 video-tags" :class="{hidden: isTagsHidden}">
         <v-chip-group column>
-          <span class="caption text--secondary mr-2">Tags</span>
+          <v-icon left :size="iconSize">mdi-tag-outline</v-icon>
           <v-chip v-for="tag in video.tags" :key="tag" :to="tagLink(tag)"
             :x-small="isChipsXS" :small="isChipsS" outlined :color="colorTag(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
@@ -118,7 +118,7 @@
       </v-card-actions>
 
       <v-card-actions class="px-1 py-0 website" :class="{hidden: isWebsiteHidden}">
-        <span class="caption text--secondary mr-2">Website</span>
+        <v-icon left :size="iconSize">mdi-web</v-icon>
         <v-chip v-if="video.website" :x-small="isChipsXS" :small="isChipsS"
           label outlined :color="colorWebsite" :to="websiteLink(video.website)"
           @mouseover.stop="showImage($event, getWebsiteId(video.website), 'website')" 
@@ -177,6 +177,7 @@ export default {
     errorPreview: false,
     isVideoHovered: false,
     timeouts: {},
+    iconSize: 14,
     isChipsXS: true,
     isChipsS: false,
   }),
@@ -440,11 +441,11 @@ export default {
     },
     getChipsSize() {
       switch(this.chipsSize) {
-        case 1: this.isChipsXS = true; this.isChipsS = false; break;
-        case 2: this.isChipsXS = true; this.isChipsS = false; break;
-        case 3: this.isChipsXS = false; this.isChipsS = true; break;
-        case 4: this.isChipsXS = false; this.isChipsS = true; break;
-        case 5: this.isChipsXS = false; this.isChipsS = false; break;
+        case 1: this.isChipsXS = true; this.isChipsS = false; this.iconSize = 12; break;
+        case 2: this.isChipsXS = true; this.isChipsS = false; this.iconSize = 14; break;
+        case 3: this.isChipsXS = false; this.isChipsS = true; this.iconSize = 18; break;
+        case 4: this.isChipsXS = false; this.isChipsS = true; this.iconSize = 20; break;
+        case 5: this.isChipsXS = false; this.isChipsS = false; this.iconSize = 24; break;
       }
     },
   },
