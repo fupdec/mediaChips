@@ -131,7 +131,11 @@
                 </template>
               </v-autocomplete>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+          </v-row>
+        </v-container>
+        <v-container fluid class="py-0" v-if="showMoreFilters">
+          <v-row>
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.ratingActive" dense hide-details 
@@ -153,7 +157,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.ageActive" dense hide-details 
@@ -176,7 +180,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.careerActive" dense hide-details 
@@ -204,7 +208,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.heightActive" dense hide-details 
@@ -228,7 +232,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.weightActive" dense hide-details 
@@ -252,7 +256,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.braActive" dense hide-details 
@@ -276,7 +280,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.waistActive" dense hide-details 
@@ -300,7 +304,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="3" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper fieldset">
                 <v-checkbox 
                   v-model="$store.state.Performers.filters.hipActive" dense hide-details 
@@ -324,7 +328,7 @@
                 />
               </div>
             </v-col>
-            <v-col cols="12" sm="4" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="py-0">
               <v-select
                 v-model="$store.state.Performers.filters.ethnicity" :items="ethnicList"
                 label="Ethnicity" multiple hide-details outlined dense
@@ -334,7 +338,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="py-0">
               <v-select
                 v-model="$store.state.Performers.filters.hair" :items="hairList"
                 label="Hair" multiple hide-details outlined dense
@@ -344,7 +348,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="py-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="py-0">
               <v-select
                 v-model="$store.state.Performers.filters.eyes" :items="eyesList"
                 label="Eyes" multiple hide-details outlined dense
@@ -354,7 +358,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="pb-0">
               <v-select
                 v-model="$store.state.Performers.filters.cup" :items="cupsList"
                 label="Cup" multiple hide-details outlined dense
@@ -362,7 +366,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="pb-0">
               <v-select
                 v-model="$store.state.Performers.filters.boobs" 
                 :items="boobsList" label="Boobs" multiple hide-details outlined dense
@@ -370,7 +374,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="pb-0">
               <v-select
                 v-model="$store.state.Performers.filters.body" :items="bodyList" 
                 label="Body" multiple hide-details outlined dense
@@ -380,7 +384,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="pb-0">
               <v-select
                 v-model="$store.state.Performers.filters.pussy" :items="pussyList" 
                 label="Pussy" multiple hide-details outlined dense
@@ -388,7 +392,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="pb-0">
               <v-select
                 v-model="$store.state.Performers.filters.pussyLips" :items="pussyLipsList" 
                 label="Pussy lips" multiple hide-details  outlined dense
@@ -396,7 +400,7 @@
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
             </v-col>
-            <v-col cols="12" sm="4" class="pb-0" v-if="showMoreFilters">
+            <v-col cols="12" sm="4" class="pb-0">
               <v-select
                 v-model="$store.state.Performers.filters.pussyHair" :items="pussyHairList" 
                 label="Pussy hair" multiple hide-details outlined dense
@@ -565,7 +569,6 @@ export default {
   },
   data: () => ({
     filtersMenu: false,
-    showMoreFilters: false,
     filterCategoryLogicIcon: 'mdi-math-norm',
     filterTagsLogicIcon: 'mdi-math-norm',
     filterEthnicityLogicIcon: 'mdi-math-norm',
@@ -581,6 +584,14 @@ export default {
     },
     filteredPerformersTotal() {
       return this.$store.getters.filteredPerformersTotal
+    },
+    showMoreFilters: {
+      get() {
+        return this.$store.state.Performers.showMoreFilters
+      },
+      set(value) {
+        this.$store.state.Performers.showMoreFilters = value
+      },
     },
     performersSort() {
       let sort = this.$store.state.Performers.filters.sortBy

@@ -63,6 +63,7 @@ const Performers = {
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
+    showMoreFilters: false,
     defaultFilters: _.cloneDeep(defaultFilters),
     filters: _.cloneDeep(defaultFilters),
     filtersReserved: _.cloneDeep(defaultFilters),
