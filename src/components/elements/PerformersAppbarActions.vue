@@ -587,7 +587,7 @@ export default {
       return sort.charAt(0) + sort.charAt(1) + sort.charAt(2) + '.'
     },
     categoriesList() {
-      let cats = this.$store.state.Settings.performerInfoCategory
+      let cats = _.cloneDeep(this.$store.state.Settings.performerInfoCategory)
       cats.push('None')
       return cats
     },
@@ -597,47 +597,47 @@ export default {
       return countries
     },
     ethnicList() {
-      let ethnic = this.$store.state.Settings.performerInfoEthnicity
+      let ethnic = _.cloneDeep(this.$store.state.Settings.performerInfoEthnicity)
       ethnic.push('None')
       return ethnic
     },
     hairList() {
-      let hair = this.$store.state.Settings.performerInfoHair
+      let hair = _.cloneDeep(this.$store.state.Settings.performerInfoHair)
       hair.push('None')
       return hair
     },
     eyesList() {
-      let eyes = this.$store.state.Settings.performerInfoEyes
+      let eyes = _.cloneDeep(this.$store.state.Settings.performerInfoEyes)
       eyes.push('None')
       return eyes
     },
     cupsList() {
-      let cups = this.$store.state.Settings.performerInfoCups
+      let cups = _.cloneDeep(this.$store.state.Settings.performerInfoCups)
       cups.push('None')
       return cups
     },
     boobsList() {
-      let boobs = this.$store.state.Settings.performerInfoBoobs
+      let boobs = _.cloneDeep(this.$store.state.Settings.performerInfoBoobs)
       boobs.push('None')
       return boobs
     },
     bodyList() {
-      let body = this.$store.state.Settings.performerInfoBody
+      let body = _.cloneDeep(this.$store.state.Settings.performerInfoBody)
       body.push('None')
       return body
     },
     pussyList() {
-      let pussy = this.$store.state.Settings.performerInfoPussy
+      let pussy = _.cloneDeep(this.$store.state.Settings.performerInfoPussy)
       pussy.push('None')
       return pussy
     },
     pussyLipsList() {
-      let lips = this.$store.state.Settings.performerInfoPussyLips
+      let lips = _.cloneDeep(this.$store.state.Settings.performerInfoPussyLips)
       lips.push('None')
       return lips
     },
     pussyHairList() {
-      let hair = this.$store.state.Settings.performerInfoPussyHair
+      let hair = _.cloneDeep(this.$store.state.Settings.performerInfoPussyHair)
       hair.push('None')
       return hair
     },

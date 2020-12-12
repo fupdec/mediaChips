@@ -177,7 +177,8 @@ const Performers = {
             performers = performers.filter({'category': filteredCategory})
           } else {
             if (filteredCategory.includes('None')) {
-              performers = performers.filter(performer=>(performer.category.length))
+              console.log('performers filtered by category')
+              performers = performers.filter(performer=>(!performer.category.length))
             } else {
               performers = performers.filter(performer=>{
                 let include = false
@@ -260,7 +261,7 @@ const Performers = {
             performers = performers.filter({'ethnicity': filteredEthnicity})
           } else {
             if (filteredEthnicity.includes('None')) {
-              performers = performers.filter(performer=>(performer.ethnicity.length))
+              performers = performers.filter(performer=>(!performer.ethnicity.length))
             } else {
               performers = performers.filter(performer=>{
                 let include = false
@@ -283,7 +284,7 @@ const Performers = {
             performers = performers.filter({'hair': filteredHair})
           } else {
             if (filteredHair.includes('None')) {
-              performers = performers.filter(performer=>(performer.hair.length))
+              performers = performers.filter(performer=>(!performer.hair.length))
             } else {
               performers = performers.filter(performer=>{
                 let include = false
@@ -306,7 +307,7 @@ const Performers = {
             performers = performers.filter({'eyes': filteredEyes})
           } else {
             if (filteredEyes.includes('None')) {
-              performers = performers.filter(performer=>(performer.eyes.length))
+              performers = performers.filter(performer=>(!performer.eyes.length))
             } else {
               performers = performers.filter(performer=>{
                 let include = false
@@ -345,7 +346,7 @@ const Performers = {
             performers = performers.filter({'body': filteredBody})
           } else {
             if (filteredBody.includes('None')) {
-              performers = performers.filter(performer=>(performer.body.length))
+              performers = performers.filter(performer=>(!performer.body.length))
             } else {
               performers = performers.filter(performer=>{
                 let include = false
@@ -384,7 +385,7 @@ const Performers = {
             performers = performers.filter({'pussyHair': filteredPussyHair})
           } else {
             if (filteredPussyHair.includes('None')) {
-              performers = performers.filter(performer=>(performer.pussyHair.length))
+              performers = performers.filter(performer=>(!performer.pussyHair.length))
             } else {
               performers = performers.filter(performer=>{
                 let include = false
