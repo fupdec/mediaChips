@@ -141,6 +141,7 @@ export default {
             id: performerID,
             name: performer,
             date: Date.now(),
+            edit: Date.now(),
             aliases: [],
             tags: [],
             favorite: false,

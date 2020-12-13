@@ -519,6 +519,20 @@
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
+              <v-btn outlined @click="toggleSortDirection" value="edit" v-on="on">
+                <v-icon>mdi-history</v-icon>
+                <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='desc'">
+                  mdi-arrow-down-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='asc'">
+                  mdi-arrow-up-thick
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>Sort by date of editing</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="video" v-on="on">
                 <v-icon>mdi-video-outline</v-icon>
                 <v-icon right size="14" v-if="sortButtons==='video' && sortDirection==='desc'">

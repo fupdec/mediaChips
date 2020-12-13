@@ -49,7 +49,7 @@
             <v-form ref="form" v-model="valid">
               <v-container>
                 <v-row>
-                  <v-col cols="12" class="pt-0">
+                  <v-col cols="8" class="pt-0">
                     <v-btn @click="getInfoFreeonce(performerNameForSearch)" 
                       :loading="findInfoRun" color="secondary" class="mr-8">
                       <v-icon left>mdi-auto-fix</v-icon> Autosearch info by name
@@ -57,6 +57,9 @@
                     <v-btn @click="dialogFindPerformerInfo=true" color="secondary"> 
                       <v-icon left>mdi-magnify</v-icon> Find info 
                     </v-btn>
+                  </v-col>
+                  <v-col cols="4" class="pt-0">
+                    <div class="text-right">last edit {{editDate}}</div>
                   </v-col>
                   <v-col cols="12" class="pb-0">
                     <div class="editable-text-field">
@@ -678,6 +681,12 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
+    editDate() {
+      let date = new Date(this.performer.edit)
+      let dateFormated = date.toLocaleDateString()
+      dateFormated += ' ' + date.toLocaleTimeString() 
+      return dateFormated
+    },
   },
   methods: {
     async pastePerformerName() {
@@ -1174,6 +1183,7 @@ export default {
           cup: this.cup,
           tags: this.tags,
           bookmark: newBookmark,
+          edit: Date.now(),
         })
         .write();
 
