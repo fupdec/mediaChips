@@ -52,7 +52,8 @@
             <span v-else>{{video.height}}p</span>
           </div>
         </div>
-        <div class="preview" @click="openVideoPage">
+        <div @click="openVideoPage" class="preview"
+          :style="`animation-delay: ${delayVideoPreview}.7s`">
           <video ref="video" autoplay muted loop />
         </div>
       </v-responsive>
@@ -250,6 +251,12 @@ export default {
     bookmark() {
       return this.$store.getters.bookmarks.get('videos').find({itemId:this.video.id}).value().text
     },
+    videoPreviewEnabled() {
+      return this.$store.state.Settings.videoPreviewEnabled
+    },
+    delayVideoPreview() {
+      return this.$store.state.Settings.delayVideoPreview
+    },
   },
   methods: {
     addNewTabVideo() {
@@ -313,10 +320,9 @@ export default {
       this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
     },
     playPreview() {
+      if (this.isVideoHovered || !this.videoPreviewEnabled) return
+      this.isVideoHovered = true
       this.timeouts.z = setTimeout(()=>{
-        if (this.isVideoHovered) return
-        this.isVideoHovered = true
-        
         if (!this.errorPreview) {
           // play preview
           let videoPath = path.join(this.pathToUserData, `/media/previews/${this.video.id}.mp4`)
@@ -336,9 +342,10 @@ export default {
         this.timeouts.b = setTimeout(this.setVideoProgress, 6000, 0.6)
         this.timeouts.c = setTimeout(this.setVideoProgress, 9000, 0.8)
         this.timeouts.d = setTimeout(this.setVideoProgress, 12000, 0.2)
-      }, 500)
+      }, this.delayVideoPreview * 1000 + 500)
     },
     stopPlayingPreview() {
+      if (!this.videoPreviewEnabled) return
       this.isVideoHovered = false
       for (const timeout in this.timeouts) {
         clearTimeout(this.timeouts[timeout])
@@ -666,6 +673,9 @@ export default {
     display: flex;
     overflow: hidden;
     position: absolute;
+    animation-fill-mode: both;
+    animation-duration: 0.5s;
+    animation-delay: 0.7s;
     video {
       min-width: 100%;
       min-height: 100%;
@@ -684,10 +694,7 @@ export default {
   }
   &:hover {
     .preview {
-      animation-fill-mode: both;
       animation-name: preview;
-      animation-duration: 0.5s;
-      animation-delay: 0.7s;
     }
     .btn-play {
       opacity: 0.2;

@@ -27,6 +27,33 @@
         </v-col>
       </v-row>
 
+      <div class="headline text-h5 text-center mt-6 mb-4"> Video preview
+        <v-tooltip right>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-bind="attrs" v-on="on" class="mx-2" small>
+              mdi-help-circle-outline
+            </v-icon>
+          </template>
+          <span>Plays on hover</span>
+        </v-tooltip>
+      </div>
+      <v-row>
+        <v-col cols="12" sm="6">
+          <div class="subtitle">Video preview enabled:</div>
+          <v-switch v-model="videoPreview" inset style="display:inline-block;">
+            <template v-slot:label>
+              <span v-if="videoPreview">Yes</span>
+              <span v-else>No</span>
+            </template>
+          </v-switch>
+        </v-col>
+        <v-col cols="12" sm="6">
+          <div class="subtitle mb-8">Delay before starting playback (in seconds):</div>
+          <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
+            hide-details :thumb-size="24" thumb-label="always" />
+        </v-col>
+      </v-row>
+
       <v-divider class="my-12"></v-divider>
 
 
@@ -334,6 +361,25 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
+    videoPreview: {
+      get() {
+        return this.$store.state.Settings.videoPreviewEnabled
+      },
+      set(value) {
+        this.$store.dispatch('updateVideoPreviewEnabled', value)
+      },
+    },
+    delayVideoPreview: {
+      get() {
+        return this.$store.state.Settings.delayVideoPreview
+      },
+      set(value) {
+        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
+        window.LIT = setTimeout(() => {
+          this.$store.dispatch('changeDelayVideoPreview', value)
+        }, 1000)
+      },
+    },
     numberOfPagesLimit: {
       get() {
         return this.$store.getters.getNumberOfPagesLimit

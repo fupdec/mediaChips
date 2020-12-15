@@ -7,6 +7,8 @@ const low = require('lowdb')
 const dbs = low(adapterSettings)
 dbs.defaults({
   disableRunApp: false,
+  videoPreviewEnabled: true,
+  delayVideoPreview: 0,
   appColorLightPrimary: '#ef0051',
   appColorLightSecondary: '#d80155',
   appColorLightAccent: '#14db00',
@@ -78,6 +80,8 @@ import Vuetify from '@/plugins/vuetify'
 const Settings = {
   state: () => ({
     disableRunApp: dbs.get('disableRunApp').value(),
+    videoPreviewEnabled: dbs.get('videoPreviewEnabled').value(),
+    delayVideoPreview: dbs.get('delayVideoPreview').value(),
     darkMode: Boolean(+dbs.get('darkMode').value()),
     navigationSide: dbs.get('navigationSide').value(),
     appColorLightPrimary: dbs.get('appColorLightPrimary').value(),
@@ -207,7 +211,7 @@ const Settings = {
       state[param] = value
       state = state[param].sort((a,b)=>a.localeCompare(b))
     },
-    resetSettingsToDefault(state, tabs) {
+    resetSettingsToDefault(state) {
       state.disableRunApp = false
       state.appColorLightPrimary = '#ef0051'
       state.appColorLightSecondary = '#d80155'
@@ -247,6 +251,13 @@ const Settings = {
       state.videoDurationHidden = false
       state.videoPerformersHidden = false
       state.videoTagsHidden = false
+      state.videoPreviewEnabled = true
+    },
+    updateVideoPreviewEnabled(state, value) {
+      state.videoPreviewEnabled = value
+    },
+    changeDelayVideoPreview(state, value) {
+      state.delayVideoPreview = value
     },
   },
   actions: {
@@ -333,7 +344,7 @@ const Settings = {
       getters.settings.set('tabs', _.cloneDeep(tabs)).write()
       commit('updateTabs', tabs)
     },
-    resetSettingsToDefault({state, rootState, commit, dispatch, getters}, tabs) {
+    resetSettingsToDefault({state, rootState, commit, dispatch, getters}) {
       getters.settings.assign({
         disableRunApp: false,
         appColorLightPrimary: '#ef0051',
@@ -374,8 +385,17 @@ const Settings = {
         videoDurationHidden: false,
         videoPerformersHidden: false,
         videoTagsHidden: false,
+        videoPreviewEnabled: true,
       }).write()
       commit('resetSettingsToDefault')
+    },
+    updateVideoPreviewEnabled({state, rootState, commit, dispatch, getters}, value) {
+      getters.settings.assign({ videoPreviewEnabled: value }).write()
+      commit('updateVideoPreviewEnabled', value)
+    },
+    changeDelayVideoPreview ({ state, commit, getters}, value) {
+      getters.settings.set("delayVideoPreview", value).write()
+      commit('changeDelayVideoPreview', value)
     },
     addItemToPerformerInfoParam({state, commit, dispatch, getters}, {param, value}) {
       commit('addItemToPerformerInfoParam', {param, value})
