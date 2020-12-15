@@ -479,8 +479,8 @@ const Performers = {
         let performerName = getters.performers.find({id:id}).value().name
         // remove performer from videos
         getters.videos.each(video=>{
-          let index = video.performers.indexOf(performerName);
-          if (index !== -1) video.performers.splice(index, 1);
+          let index = video.performers.indexOf(performerName)
+          if (index !== -1) video.performers.splice(index, 1)
         }).write()
         // remove perfromer from database
         getters.performers.remove({ 'id': id }).write()

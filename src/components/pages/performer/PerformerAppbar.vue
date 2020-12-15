@@ -11,6 +11,8 @@
       </v-tooltip>
     </div>
     
+    <VideosAppbarActions />
+
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -21,9 +23,15 @@
         </template>
         <span>Edit performer</span>
       </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn icon tile @click="dialogDeletePerformer=true" v-on="on">
+            <v-icon>mdi-delete-forever</v-icon>
+          </v-btn>
+        </template>
+        <span>Delete performer</span>
+      </v-tooltip>
     </div>
-    
-    <VideosAppbarActions />
     
     <v-spacer></v-spacer>
 
@@ -33,23 +41,63 @@
     <template v-slot:extension v-if="$store.getters.tabs.length">
       <Tabs />
     </template>
+
+    
+    <v-dialog v-model="dialogDeletePerformer" persistent scrollable max-width="800">
+      <v-card>
+        <v-card-title class="headline red--text">
+          Delete performer {{performer.name}}?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions class="mx-4">
+          <v-checkbox v-model="deleteVideos" color="red" hide-details class="mr-6"> 
+            <template v-slot:label>
+              <span class="red--text">Delete videos with this performer from database</span>
+            </template>
+          </v-checkbox>
+          <v-spacer></v-spacer>
+          <v-checkbox v-model="$store.state.Videos.deleteFile" color="red" hide-details 
+            :disabled="!deleteVideos"> 
+            <template v-slot:label>
+              <span class="red--text">Also delete files</span>
+            </template>
+          </v-checkbox>
+        </v-card-actions>
+        <v-card-actions>
+          <v-btn class="ma-4" 
+            @click="dialogDeletePerformer = false">No, Keep it
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="red" dark class="ma-4" @click="deletePerformer">
+            <v-icon left>mdi-delete-alert</v-icon> Yes, delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 	</v-app-bar>
 </template>
 
 
 <script>
+import vuescroll from 'vuescroll'
+
 export default {
   name: 'PerformerAppbar',
   components: {
     VideosAppbarActions: () => import('@/components/elements/VideosAppbarActions.vue'),
     VideosAppbarCardView: () => import('@/components/elements/VideosAppbarCardView.vue'),
     Tabs: () => import('@/components/elements/Tabs.vue'),
+    vuescroll,
   },
   mounted() {
     this.$nextTick(function () {
     })
   },
   data: () => ({
+    dialogDeletePerformer: false,
+    deleteVideos: false,
   }),
   computed: {
     colorHeader() {
@@ -57,8 +105,38 @@ export default {
         return this.$store.state.Settings.appColorDarkHeader
       } else return this.$store.state.Settings.appColorLightHeader
     },
+    performerId() {
+      return this.$route.params.id.replace(/:/g, '')    
+    },
+    performer() {
+      return this.$store.getters.performers.find({ id: this.performerId }).value()    
+    },
+    tabId() {
+      return this.$route.query.tabId
+    },
   },
   methods: {
+    deletePerformer() {
+      if (this.deleteVideos) {
+        console.log(this.performer.name)
+        let vids = this.$store.getters.videos.filter(v=>(
+          v.performers.includes(this.performer.name))
+        ).map('id').value()
+        this.$store.commit('updateSelectedVideos', vids)
+        console.log(this.$store.getters.getSelectedVideos)
+        this.$store.dispatch('deleteVideos')
+      }
+      this.$store.commit('updateSelectedPerformers', [this.performerId])
+      console.log(this.$store.getters.getSelectedPerformers)
+      this.$store.dispatch('deletePerformers')
+      this.dialogDeletePerformer = false
+      if (this.tabId !== 'default') {
+        this.$store.dispatch('closeTab', this.tabId)
+      }
+      this.$router.push('/home')
+    },
+    // TODO: make unique tabs for performer, tag, video, website
+    // TODO: if deletable video opened in tab then close tab with this video
   },
   watch: {
   },

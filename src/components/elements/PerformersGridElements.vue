@@ -302,7 +302,7 @@ export default {
     },
     deletePerformers() {
       this.previousSelection = []
-      this.$store.dispatch('deletePerformers'), 
+      this.$store.dispatch('deletePerformers')
       this.$store.state.Performers.dialogDeletePerformer = false
     },
   },
