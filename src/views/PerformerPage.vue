@@ -1,13 +1,20 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-responsive :aspect-ratio="2.3">
-      <img :src="getImgUrl(performerId, 'header')" :style="header" class="header-image">
+    <v-responsive :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
+      <img v-if="isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
+      <div v-else class="images">
+        <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
+        <v-responsive :aspect-ratio="5/9" />
+        <v-responsive :aspect-ratio="5/9" />
+        <v-img :src="getImgUrl('alt')" :gradient="gradientImage" :aspect-ratio="9/5"/>
+      </div>
       <div class="header-gradient" :style="gradient"></div>
     </v-responsive>
 
-    <v-container class="profile-container">
+    <div v-if="!isHeaderImageExists" class="spacer"></div>
+    <v-container class="profile-container" :class="{images: isHeaderImageExists}">
       <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
-        <img :src="getImgUrl(performerId, 'avatar')">
+        <img :src="getImgUrl('avatar')">
         <v-progress-circular :value="profileCompleteProgress" size="160" rotate="270" width="2"
           class="profile-complete-progress" color="white"> 
           <div class="value">{{profileCompleteProgress}}<span class="percent">%</span></div>
@@ -169,7 +176,7 @@
 
     <v-container fluid
       v-if="!$store.state.Videos.filteredEmpty" 
-      class="pagination-container pt-16 mb-6" 
+      class="pagination-container" 
     >
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
         :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
@@ -271,12 +278,17 @@ export default {
     percentValue: 5.263,
     meter: 0,
     header: '',
+    isHeaderImageExists: true,
     activeTags: [],
   }),
   computed: {
     gradient() {
       let color = this.$vuetify.theme.isDark ? '#121212' : '#fff'
       return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0) 30%)`
+    },
+    gradientImage() {
+      let color = this.$vuetify.theme.isDark ? '#121212' : '#fff'
+      return `90deg, ${color}, rgba(0,0,0,.0), ${color}`
     },
     profileBackground() {
       let color = this.$vuetify.theme.isDark ? '30,30,30':'255,255,255'
@@ -614,8 +626,8 @@ export default {
       this.$store.dispatch('filterVideos')
       this.updateTabFilters()
     },
-    getImgUrl(performerId, imgType) {
-      let imgPath = path.join(this.pathToUserData, `/media/performers/${performerId}_${imgType}.jpg`)
+    getImgUrl(imgType) {
+      let imgPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_${imgType}.jpg`)
       return this.checkHeaderImageExist(imgPath, imgType)+'?lastmod='+Date.now()
     },
     checkHeaderImageExist(imgPath, imgType) {
@@ -629,12 +641,17 @@ export default {
           return path.join(this.pathToUserData, '/img/templates/avatar.png')
         }
       } else if (imgType === "header") {
+        this.isHeaderImageExists = false
         let imgMainPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_main.jpg`)
         if (fs.existsSync(imgMainPath)) {
           return imgMainPath
         } else {
           return path.join(this.pathToUserData, '/img/templates/header.png')
         }
+      } else if (imgType === "main") {
+        return path.join(this.pathToUserData, '/img/templates/performer.png')
+      } else if (imgType === "alt") {
+        return path.join(this.pathToUserData, '/img/templates/performer_back.png')
       } else {
         return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
       }
@@ -684,6 +701,19 @@ export default {
 
 
 <style lang="less">
+.header-images {
+  &.header {
+    position: absolute;
+    width: 100%;
+  }
+  .images {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    width: 100%;
+    overflow: hidden;
+  }
+}
 .header-image {
   position: absolute;
   width: 100%;
@@ -699,8 +729,10 @@ export default {
   height: 100%;
 }
 .profile-container {
-  position: relative;
-  margin-top: -150px; 
+  position: relative; 
+  &.header {
+    margin-top: -150px;
+  }
   .copy-name-btn {
     position: absolute;
     top: 25px;
@@ -978,5 +1010,8 @@ export default {
     align-items: center;
     justify-content: center;
   }
+}
+.spacer {
+  height: 150px;
 }
 </style>

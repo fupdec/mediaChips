@@ -7,7 +7,7 @@
     <SideBar />
 
     <v-main app>
-      <router-view />
+      <router-view :key="$route.name + ($route.params.id || '')" />
     </v-main>
 
     <BottomBar />
