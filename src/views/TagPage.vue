@@ -30,7 +30,12 @@
             <v-chip-group v-model="activePerformers" active-class="active-chip" 
               multiple column class="px-4 pt-2 chips-performers">
               <v-chip v-for="performer in performersWithTagInVideos" :key="performer"
-                outlined small class="mr-2 mb-1"> {{ performer }} </v-chip>
+                outlined small class="mr-2 mb-1"
+                @mouseover.stop="showImage($event, getPerformerId(performer), 'performer')" 
+                @mouseleave.stop="$store.state.hoveredImage=false"
+                @click="$store.state.hoveredImage=false"
+                @click.middle="addNewTabPerformer(performer)"
+              > {{ performer }} </v-chip>
             </v-chip-group>
           </div>
         </div>
@@ -176,10 +181,11 @@ import PerformersGrid from '@/mixins/PerformersGrid'
 import PerformersGridElements from '@/components/elements/PerformersGridElements.vue'
 import CropImage from '@/mixins/CropImage'
 import vuescroll from 'vuescroll'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
 
 export default {
   name: 'TagPage',
-  mixins: [VideosGrid, PerformersGrid],
+  mixins: [VideosGrid, PerformersGrid, ShowImageFunction],
   components: {
     DialogEditTag: () => import("@/components/pages/tags/DialogEditTag.vue"),
     PerformersGridElements,
@@ -335,6 +341,19 @@ export default {
       } else {
         return path.join(this.pathToUserData, '/img/templates/tag.png')
       }
+    },
+    addNewTabPerformer(performerName) {
+      let tabId = this.getPerformerId(performerName) + new Date().getTime()
+      let tab = { 
+        name: performerName,
+        link: `/performer/:${this.getPerformerId(performerName)}?tabId=${tabId}`,
+        id: tabId,
+        icon: 'account-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+    },
+    getPerformerId(itemName) {
+      return this.$store.getters.performers.find({name: itemName}).value().id
     },
   },
   watch: {

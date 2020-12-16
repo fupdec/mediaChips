@@ -21,7 +21,12 @@
           <v-chip-group v-model="activePerformers" active-class="active-chip" 
             multiple column class="px-4 pt-2 chips-performers">
             <v-chip v-for="performer in performersOfWebsite" :key="performer"
-              outlined small class="mr-1 mb-1 px-2"> {{ performer }} </v-chip>
+              outlined small class="mr-1 mb-1 px-2"
+              @mouseover.stop="showImage($event, getPerformerId(performer), 'performer')" 
+              @mouseleave.stop="$store.state.hoveredImage=false"
+              @click="$store.state.hoveredImage=false"
+              @click.middle="addNewTabPerformer(performer)"
+            > {{ performer }} </v-chip>
           </v-chip-group>
         </div>
       </div>
@@ -92,11 +97,11 @@ const path = require("path")
 import VideosGrid from '@/mixins/VideosGrid'
 import CropImage from '@/mixins/CropImage'
 import vuescroll from 'vuescroll'
-import { performance } from 'perf_hooks'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
 
 export default {
   name: 'WebsitePage',
-  mixins: [VideosGrid],
+  mixins: [VideosGrid, ShowImageFunction],
   components: {
     vuescroll,
     DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue")
@@ -227,6 +232,19 @@ export default {
       } else {
         return path.join(this.pathToUserData, '/img/templates/website.png')
       }
+    },
+    addNewTabPerformer(performerName) {
+      let tabId = this.getPerformerId(performerName) + new Date().getTime()
+      let tab = { 
+        name: performerName,
+        link: `/performer/:${this.getPerformerId(performerName)}?tabId=${tabId}`,
+        id: tabId,
+        icon: 'account-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+    },
+    getPerformerId(itemName) {
+      return this.$store.getters.performers.find({name: itemName}).value().id
     },
   },
   watch: {
