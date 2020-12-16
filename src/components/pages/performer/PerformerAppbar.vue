@@ -132,8 +132,6 @@ export default {
       }
       this.$router.push('/home')
     },
-    // TODO: make unique tabs for performer, tag, video, website
-    // TODO: if deletable video opened in tab then close tab with this video
   },
   watch: {
   },

@@ -5,9 +5,7 @@
         <v-card-title class="headline py-2 red--text">
           Are you sure?
           <v-spacer></v-spacer>
-          <v-checkbox class="ma-0" v-model="$store.state.Videos.deleteFile" color="red" hide-details/>
-          <div class="subtitle-2 mr-3">Also delete file</div>
-          <v-icon left color="red">mdi-delete-alert</v-icon>
+          <v-icon color="red" class="ml-6">mdi-delete</v-icon>
         </v-card-title>
         <v-divider></v-divider>
         <vuescroll>
@@ -23,6 +21,12 @@
             No, Keep it
           </v-btn>
           <v-spacer></v-spacer>
+          <v-checkbox v-model="$store.state.Videos.deleteFile" 
+            class="mt-0 mr-6 mb-2" color="red" hide-details>
+            <template v-slot:label>
+              <span class="red--text">Also delete files</span>
+            </template>
+          </v-checkbox>
           <v-btn color="red" class="ma-4" dark @click="deleteVideos">
             <v-icon left>mdi-delete-alert</v-icon> Yes, delete
           </v-btn>

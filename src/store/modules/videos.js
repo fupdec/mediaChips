@@ -286,6 +286,9 @@ const Videos = {
     },
     deleteVideos({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedVideos.map(id => {
+        if (getters.tabsDb.find({id: id}).value()) {
+          dispatch('closeTab', id)
+        }
         let videoName = getters.videos.find({'id':id}).value().path.split("\\").pop()
         // remove video file
         if (state.deleteFile) {
