@@ -75,6 +75,7 @@ dbs.defaults({
   websitesPerPage: 20,
 }).write()
 
+import router from '@/router'
 import Vuetify from '@/plugins/vuetify'
 
 const Settings = {
@@ -337,6 +338,10 @@ const Settings = {
       commit('addNewTab', tab)
     },
     closeTab({state, rootState, commit, dispatch, getters}, tabId) {
+      // checking if this tab is open
+      if (getters.tabsDb.find({link: router.currentRoute.fullPath}).value()) {
+        router.push('/home')
+      }
       getters.tabsDb.remove({id: tabId}).write()
       commit('closeTab', tabId)
     },
