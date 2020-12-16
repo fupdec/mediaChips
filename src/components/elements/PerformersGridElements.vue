@@ -17,6 +17,20 @@
             {{selectedPerformers(true)}}
           </v-card-text>
         </vuescroll>
+        <v-card-actions class="mx-4">
+          <v-checkbox v-model="deleteVideos" color="red" hide-details class="mr-6"> 
+            <template v-slot:label>
+              <span class="red--text">Delete videos with this performer from database</span>
+            </template>
+          </v-checkbox>
+          <v-spacer></v-spacer>
+          <v-checkbox v-model="$store.state.Videos.deleteFile" color="red" hide-details 
+            :disabled="!deleteVideos"> 
+            <template v-slot:label>
+              <span class="red--text">Also delete files</span>
+            </template>
+          </v-checkbox>
+        </v-card-actions>
         <v-card-actions>
           <v-btn class="ma-4" 
             @click="$store.state.Performers.dialogDeletePerformer = false">No, Keep it
@@ -211,6 +225,7 @@ export default {
   },
   data: () => ({
     previousSelection: [],
+    deleteVideos: false,
   }),
   computed: {
     selectedPerformersLength() {
@@ -301,6 +316,22 @@ export default {
       })
     },
     deletePerformers() {
+      if (this.deleteVideos) {
+        let perfs = this.$store.getters.getSelectedPerformers
+        let ps = this.$store.getters.performers
+        let names = perfs.map(i=>(ps.find({id:i}).value().name))
+        let vids = []
+        for (let i = 0; i < names.length; i++) {
+          let ids = this.$store.getters.videos.filter(v=>(
+            v.performers.includes(names[i]))
+          ).map('id').value()
+          vids = vids.concat(ids)
+        }
+        // remove duplicates
+        vids = vids.filter((value, index, self) => (self.indexOf(value) === index))
+        this.$store.commit('updateSelectedVideos', vids)
+        this.$store.dispatch('deleteVideos')
+      }
       this.previousSelection = []
       this.$store.dispatch('deletePerformers')
       this.$store.state.Performers.dialogDeletePerformer = false

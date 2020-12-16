@@ -118,16 +118,13 @@ export default {
   methods: {
     deletePerformer() {
       if (this.deleteVideos) {
-        console.log(this.performer.name)
         let vids = this.$store.getters.videos.filter(v=>(
           v.performers.includes(this.performer.name))
         ).map('id').value()
         this.$store.commit('updateSelectedVideos', vids)
-        console.log(this.$store.getters.getSelectedVideos)
         this.$store.dispatch('deleteVideos')
       }
       this.$store.commit('updateSelectedPerformers', [this.performerId])
-      console.log(this.$store.getters.getSelectedPerformers)
       this.$store.dispatch('deletePerformers')
       this.dialogDeletePerformer = false
       if (this.tabId !== 'default') {
