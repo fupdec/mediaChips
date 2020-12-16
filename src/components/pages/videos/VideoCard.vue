@@ -260,10 +260,17 @@ export default {
   },
   methods: {
     addNewTabVideo() {
-      let tabId = this.video.id + new Date().getTime()
+      let tabId = this.video.id
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with video ${this.fileName} already exists`
+        })
+        return
+      }
       let tab = { 
         name: this.fileName,
-        link: `/video/:${this.video.id}?tabId=${tabId}`,
+        link: `/video/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'video-outline'
       }
@@ -275,30 +282,51 @@ export default {
       event.stopPropagation()
     },
     addNewTabPerformer(performerName) {
-      let tabId = this.getPerformerId(performerName) + new Date().getTime()
+      let tabId = this.getPerformerId(performerName)
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with performer "${performerName}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: performerName,
-        link: `/performer/:${this.getPerformerId(performerName)}?tabId=${tabId}`,
+        link: `/performer/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
     },
     addNewTabTag(tagName) {
-      let tabId = this.getTagId(tagName) + new Date().getTime()
+      let tabId = this.getTagId(tagName)
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with tag "${tagName}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: tagName,
-        link: `/tag/:${this.getTagId(tagName)}?tabId=${tabId}`,
+        link: `/tag/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
     },
     addNewTabWebsite(websiteName) {
-      let tabId = this.getWebsiteId(websiteName) + new Date().getTime()
+      let tabId = this.getWebsiteId(websiteName)
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with website "${websiteName}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: websiteName,
-        link: `/website/:${this.getWebsiteId(websiteName)}?tabId=${tabId}`,
+        link: `/website/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'web'
       }

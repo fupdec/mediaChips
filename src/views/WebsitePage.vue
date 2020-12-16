@@ -234,10 +234,17 @@ export default {
       }
     },
     addNewTabPerformer(performerName) {
-      let tabId = this.getPerformerId(performerName) + new Date().getTime()
+      let tabId = this.getPerformerId(performerName)
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with performer "${performerName}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: performerName,
-        link: `/performer/:${this.getPerformerId(performerName)}?tabId=${tabId}`,
+        link: `/performer/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'account-outline'
       }

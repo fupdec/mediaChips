@@ -454,11 +454,17 @@ export default {
   },
   methods: {
     addNewTab() {
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      let tabId = videoId + new Date().getTime()
+      let tabId = this.$store.getters.getSelectedVideos[0]
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with video "${this.selectedVideos()}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: this.selectedVideos(), 
-        link: `/video/:${videoId}?tabId=${tabId}`,
+        link: `/video/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'video-outline'
       }

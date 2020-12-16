@@ -13,11 +13,11 @@
           <div class="value">{{profileCompleteProgress}}<span class="percent">%</span></div>
         </v-progress-circular>
       </v-avatar>
-      <v-btn @click="addNewTabPerformer" icon class="new-tab-btn" 
-        title="Open performer in a new tab"><v-icon>mdi-tab-plus</v-icon>
-      </v-btn>
       <v-btn @click="copyPerformerNameToClipboard" icon class="copy-name-btn" 
         title="Copy performer name to clipboard"><v-icon>mdi-content-copy</v-icon>
+      </v-btn>
+      <v-btn v-if="tabId==='default'" @click="addNewTabPerformer" icon class="new-tab-btn" 
+        title="Open performer in a new tab"><v-icon>mdi-tab-plus</v-icon>
       </v-btn>
       <v-btn @click="$store.state.Performers.dialogEditPerformerInfo = true"
         icon class="profile-edit-btn" title="Edit info of performer">
@@ -123,7 +123,7 @@
                   <div class="param">Pussy hair <b>{{pussyHair}}</b></div>
                 </v-col>
                 <v-col cols="12" class="text-center pb-0">
-                  <v-chip v-for="tag in performer.tags" :key="tag" :to="tagLink(tag)"
+                  <v-chip v-for="tag in performer.tags" :key="tag" :to="`/tag/:${getTagId(tag)}`"
                     outlined class="mr-2 mb-1 px-2"
                     @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
                     @mouseleave.stop="$store.state.hoveredImage=false"
@@ -538,27 +538,38 @@ export default {
   },
   methods: {
     addNewTabPerformer() {
-      let tabId = this.performerId + new Date().getTime()
+      let tabId = this.performerId
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with performer "${this.performer.name}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: this.performer.name, 
-        link: `/performer/:${this.performerId}?tabId=${tabId}`,
+        link: `/performer/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
     },
     addNewTabTag(tagName) {
-      let tabId = this.getTagId(tagName) + new Date().getTime()
+      let tabId = this.getTagId(tagName)
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with tag "${tagName}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: tagName,
-        link: this.tagLink(tagName)+'?tabId='+tabId,
+        link: `/tag/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)
-    },
-    tagLink(tag) {
-      return `/tag/:${this.getTagId(tag)}`
     },
     getTagId(itemName) {
       return this.$store.getters.tags.find({name: itemName}).value().id
@@ -579,9 +590,6 @@ export default {
       } else this.isScrollToTopVisible = false
       // parallax effect
       this.header = `top:${vertical.scrollTop * 0.7}px`
-    },
-    tagLink(tag) {
-      return `/tag/:${this.getTagId(tag)}`
     },
     getTagId(itemName) {
       return this.$store.getters.tags.find({name: itemName}).value().id
@@ -693,13 +701,13 @@ export default {
 .profile-container {
   position: relative;
   margin-top: -150px; 
-  .new-tab-btn {
+  .copy-name-btn {
     position: absolute;
     top: 25px;
     left: 25px;
     z-index: 2;
   }
-  .copy-name-btn {
+  .new-tab-btn {
     position: absolute;
     top: 25px;
     left: 70px;

@@ -72,10 +72,17 @@ export default {
   },
   methods: {
     addNewTab() {
-      let tabId = this.tag.id + new Date().getTime()
+      let tabId = this.tag.id
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with tag "${this.tag.name}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: this.tag.name,
-        link: `/tag/:${this.tag.id}?tabId=${tabId}`,
+        link: `/tag/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'tag-outline'
       }

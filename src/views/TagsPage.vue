@@ -317,11 +317,17 @@ export default {
   },
   methods: {
     addNewTab() {
-      let tagId = this.$store.getters.getSelectedTags[0]
-      let tabId = tagId + new Date().getTime()
+      let tabId = this.$store.getters.getSelectedTags[0]
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with tag "${this.selectedTags()}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: this.selectedTags(), 
-        link: `/tag/:${tagId}?tabId=${tabId}`,
+        link: `/tag/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'tag-outline'
       }

@@ -316,11 +316,17 @@ export default {
   },
   methods: {
     addNewTab() {
-      let websiteId = this.$store.getters.getSelectedWebsites[0]
-      let tabId = websiteId + new Date().getTime()
+      let tabId = this.$store.getters.getSelectedWebsites[0]
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with website "${this.selectedWebsites()}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: this.selectedWebsites(), 
-        link: `/website/:${websiteId}?tabId=${tabId}`,
+        link: `/website/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'web'
       }

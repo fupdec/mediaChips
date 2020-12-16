@@ -374,10 +374,17 @@ export default {
   },
   methods: {
     addNewTabPerformer() {
-      let tabId = this.performer.id + new Date().getTime()
+      let tabId = this.performer.id
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with performer "${this.performer.name}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: this.performer.name,
-        link: `/performer/:${this.performer.id}?tabId=${tabId}`,
+        link: `/performer/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'account-outline'
       }
@@ -389,10 +396,17 @@ export default {
       event.stopPropagation()
     },
     addNewTabTag(tagName) {
-      let tabId = this.getTagId(tagName) + new Date().getTime()
+      let tabId = this.getTagId(tagName)
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with tag "${tagName}" already exists`
+        })
+        return
+      }
       let tab = { 
         name: tagName,
-        link: `/tag/:${this.getTagId(tag)}?tabId=${tabId}`,
+        link: `/tag/:${tabId}?tabId=${tabId}`,
         id: tabId,
         icon: 'tag-outline'
       }
