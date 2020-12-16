@@ -132,14 +132,29 @@
                     >{{tag}}</v-chip>
                 </v-col>
                 <v-col v-if="tagsFromVideos.length" cols="12" class="text-center py-0">
-                  <div class="my-2 font-weight-light">Tags from videos</div>
-                  <v-chip v-for="tag in tagsFromVideos" :key="tag" :to="tagLink(tag)"
-                    outlined small class="mr-2 mb-1 px-2"
-                    @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
-                    @mouseleave.stop="$store.state.hoveredImage=false"
-                    @click="$store.state.hoveredImage=false"
-                    @click.middle="addNewTabTag(tag)"
-                  >{{tag}}</v-chip>
+                  <div class="my-2 font-weight-light"> 
+                    <v-tooltip left>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+                      </template>
+                      <span>Click on tag for filter videos</span>
+                    </v-tooltip>
+                    <span>Tags from videos</span>
+                    <v-btn v-if="activeTags.length" @click="activeTags=[]" 
+                      x-small rounded class="ml-4">
+                      <v-icon left>mdi-cancel</v-icon> Unselect all
+                    </v-btn>
+                  </div>
+                  <v-chip-group v-model="activeTags" active-class="active-chip"
+                    multiple column class="tags-from-videos">
+                    <v-chip v-for="tag in tagsFromVideos" :key="tag"
+                      outlined small class="mr-2 mb-1 px-2"
+                      @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                      @click="$store.state.hoveredImage=false"
+                      @click.middle="addNewTabTag(tag)"
+                    >{{tag}}</v-chip>
+                  </v-chip-group>
                 </v-col>
               </v-row>
             </v-container>
@@ -256,6 +271,7 @@ export default {
     percentValue: 5.263,
     meter: 0,
     header: '',
+    activeTags: [],
   }),
   computed: {
     gradient() {
@@ -632,8 +648,20 @@ export default {
         return (tagValue / this.$store.getters.sumOfTagsValue) * 100
       } else return 0
     },
+    filterTags() {
+      let active = this.activeTags
+      let all = this.tagsFromVideos
+      let filtered = [] 
+      for (let i=0; i<active.length; i++) {
+        filtered.push(all[active[i]])
+      }
+      this.updateFiltersOfVideos('tags', filtered)
+    },
   },
   watch: {
+    activeTags() {
+      this.filterTags()
+    },
     $route(newRoute) {
       if (!this.$route.path.includes('/performer/:')) return
       this.initFilters()
@@ -790,6 +818,15 @@ export default {
     transition: .2s all ease;
     opacity: 0;
     z-index: -5;
+  }
+  .tags-from-videos {
+    .v-slide-group__content {
+      justify-content: center;
+      .active-chip {
+        background: #777 !important;
+        color: #fff;
+      }
+    }
   }
 }
 .age-container {
