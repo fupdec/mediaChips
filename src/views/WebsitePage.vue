@@ -67,6 +67,8 @@
       There are no matching videos for the selected filters.
     </div>
 
+    <Loading />
+
     <v-container fluid class="videos-grid" :class="cardSize">
       <!-- Video Blocks parsing -->
       <VideoCard v-for="(video) in videosFromWebsite" :key="video.id" :video="video"/>
@@ -104,7 +106,8 @@ export default {
   mixins: [VideosGrid, ShowImageFunction],
   components: {
     vuescroll,
-    DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue")
+    DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue"),
+    Loading: () => import('@/components/elements/Loading.vue'),
   },
   mounted() {
     this.$nextTick(function () {

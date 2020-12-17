@@ -13,6 +13,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: () => ({
+    itemsLoading: true,
     log: '',
     isLogVisible: false,
     notifications: [],
@@ -53,6 +54,12 @@ export default new Vuex.Store({
     },
     changeQuantityRecentVideos(state, value) {
       state.quantityRecentVideos = value
+    },
+    stopLoading(state) {
+      state.itemsLoading = false
+    },
+    resetLoading(state) {
+      state.itemsLoading = true
     },
   },
   actions: {

@@ -65,6 +65,8 @@
       There are no matching performers for the selected filters.
     </div>
 
+    <Loading />
+
     <v-container fluid class="performers-grid" :class="cardSize">
       <PerformerCard v-for="(performer) in performersOnPage" 
         :key="performer.id"
@@ -102,6 +104,7 @@ export default {
     DialogEditPerformerInfo: () => import('@/components/pages/performers/DialogEditPerformerInfo.vue'),
     PerformersGridElements,
     vuescroll,
+    Loading: () => import('@/components/elements/Loading.vue'),
   },
   mixins: [PerformersGrid],
   mounted () {

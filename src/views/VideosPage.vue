@@ -36,6 +36,8 @@
       There are no matching videos for the selected filters.
     </div>
 
+    <Loading />
+
     <v-container fluid class="videos-grid" :class="cardSize">
       <!-- Video Blocks parsing -->
       <VideoCard v-for="(video) in videosOnPage" :key="video.id" :video="video"/>
@@ -66,6 +68,7 @@ export default {
   name: 'Videos',
   components: {
     vuescroll,
+    Loading: () => import('@/components/elements/Loading.vue'),
   },
   mixins: [VideosGrid],
   mounted() {

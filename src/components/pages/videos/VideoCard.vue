@@ -57,7 +57,7 @@
           <video ref="video" autoplay muted loop />
         </div>
       </v-responsive>
-      <v-card-text class="pa-2 video-card-title" :class="{hidden: isFileNameHidden}">
+      <v-card-text class="px-2 py-1 video-card-title" :class="{hidden: isFileNameHidden}">
         <span :title="fileName">{{ fileName }}</span> 
       </v-card-text>
 
@@ -154,6 +154,7 @@ export default {
   name: 'VideoCard',
   props: {
     video: Object,
+    i: Number,
   },
   mixins: [ShowImageFunction, Functions],
   mounted() {

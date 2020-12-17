@@ -83,6 +83,8 @@
           <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
           There are no matching videos for the selected filters.
         </div>
+        
+        <Loading />
 
         <v-container fluid class="videos-grid" :class="cardSize">
           <!-- Video Blocks parsing -->
@@ -144,6 +146,8 @@
           There are no matching performers for the selected filters.
         </div>
 
+        <Loading />
+
         <v-container fluid class="performers-grid" :class="cardSize">
           <PerformerCard v-for="(performer) in performersOnPage" 
             :key="performer.id"
@@ -190,6 +194,7 @@ export default {
     DialogEditTag: () => import("@/components/pages/tags/DialogEditTag.vue"),
     PerformersGridElements,
     vuescroll,
+    Loading: () => import('@/components/elements/Loading.vue'),
   },
   mounted() {
     this.$nextTick(function () {

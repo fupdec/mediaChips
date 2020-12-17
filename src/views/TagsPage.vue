@@ -77,6 +77,8 @@
       There are no matching tags for the selected filters.
     </div>
 
+    <Loading/>
+
     <v-container fluid class="tags-grid">
       <TagCard :tag=tag v-for="(tag) in tagsOnPage" :key="tag.id"/>
     </v-container>
@@ -168,6 +170,7 @@ export default {
     TagCard, 
     DialogEditTag: () => import('@/components/pages/tags/DialogEditTag.vue'),
     vuescroll,
+    Loading: () => import('@/components/elements/Loading.vue'),
   },
   mounted() {
     this.$nextTick(function () {

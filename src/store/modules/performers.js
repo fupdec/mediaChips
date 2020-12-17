@@ -122,6 +122,7 @@ const Performers = {
   actions: {
     changePerformersPerPage({ state, commit, getters}, quantity) {
       commit('updatePerformers')
+      commit('resetLoading')
       commit('changePerformersPerPage', quantity)
       getters.settings.set('performersPerPage', quantity).write()
     },
@@ -131,6 +132,7 @@ const Performers = {
     },
     changePerformersPageCurrent({ state, commit}, quantity) {
       commit('updatePerformers')
+      commit('resetLoading')
       commit('changePerformersPageCurrent', quantity)
     },
     async filterPerformers({ state, commit, getters}, stayOnCurrentPage) {
@@ -469,6 +471,7 @@ const Performers = {
         }
       }
       // console.log(filteredPerformers)
+      commit('resetLoading')
       commit('filterPerformers', filteredPerformers)
       if (!stayOnCurrentPage) {
         commit('changePerformersPageCurrent', 1)

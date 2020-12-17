@@ -74,6 +74,7 @@ const Tags = {
   actions: {
     changeTagsPerPage({ state, commit, getters}, quantity) {
       commit('updateTags')
+      commit('resetLoading')
       commit('changeTagsPerPage', quantity)
       getters.settings.set('tagsPerPage', quantity).write()
     },
@@ -83,6 +84,7 @@ const Tags = {
     },
     changeTagsPageCurrent({ state, commit}, quantity) {
       commit('updateTags')
+      commit('resetLoading')
       commit('changeTagsPageCurrent', quantity)
     },
     deleteTags({state, rootState, commit, dispatch, getters}) {
@@ -213,6 +215,7 @@ const Tags = {
         }
       }
       // console.log(filteredTags)
+      commit('resetLoading')
       commit('filterTags', filteredTags)
       if (!stayOnCurrentPage) {
         commit('changeTagsPageCurrent', 1)

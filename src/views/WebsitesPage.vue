@@ -76,6 +76,8 @@
       <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
       There are no matching websites for the selected filters.
     </div>
+    
+    <Loading />
 
     <v-container fluid class="websites-grid">
       <WebsiteCard v-for="(website) in websitesOnPage" :key="website.id" :website="website"/>
@@ -167,6 +169,7 @@ export default {
     WebsiteCard, 
     DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue"),
     vuescroll,
+    Loading: () => import('@/components/elements/Loading.vue'),
   },
   mounted() {
     this.$nextTick(function () {

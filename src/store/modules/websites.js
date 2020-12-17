@@ -78,6 +78,7 @@ const Websites = {
   actions: {
     changeWebsitesPerPage({ state, commit, getters}, quantity) {
       commit('updateWebsites')
+      commit('resetLoading')
       commit('changeWebsitesPerPage', quantity)
       getters.settings.set('websitesPerPage', quantity).write()
     },
@@ -87,6 +88,7 @@ const Websites = {
     },
     changeWebsitesPageCurrent({ state, commit}, quantity) {
       commit('updateWebsites')
+      commit('resetLoading')
       commit('changeWebsitesPageCurrent', quantity)
     },
     deleteWebsites({state, rootState, commit, dispatch, getters}) {
@@ -174,6 +176,7 @@ const Websites = {
           filteredWebsites = websites
         }
       }
+      commit('resetLoading')
       commit('filterWebsites', filteredWebsites)
       if (!stayOnCurrentPage) {
         commit('changeWebsitesPageCurrent', 1)

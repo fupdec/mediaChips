@@ -96,6 +96,7 @@ const Videos = {
   actions: {
     changeVideosPerPage({ state, commit, getters}, quantity) {
       // commit('updateVideos')
+      commit('resetLoading')
       commit('changeVideosPerPage', quantity)
       getters.settings.set('videosPerPage', quantity).write()
     },
@@ -105,6 +106,7 @@ const Videos = {
     },
     changeVideosPageCurrent({ state, commit}, quantity) {
       // commit('updateVideos')
+      commit('resetLoading')
       commit('changeVideosPageCurrent', quantity)
     },
     filterVideos({ state, commit, getters}, stayOnCurrentPage) {
@@ -223,6 +225,7 @@ const Videos = {
         }
       }
       // console.log(filteredVideos)
+      commit('resetLoading')
       commit('filterVideos', filteredVideos)
       if (!stayOnCurrentPage) {
         commit('changeVideosPageCurrent', 1)
