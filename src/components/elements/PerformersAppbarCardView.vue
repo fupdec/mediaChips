@@ -118,7 +118,7 @@
       <span v-else>Hide Aliases</span>
     </v-tooltip>
 
-    <v-tooltip bottom>
+    <!-- <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-badge :value="isMeterHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleMeterVisibilty()" v-on="on">
@@ -128,7 +128,7 @@
       </template>
       <span v-if="isMeterHidden">Show Tags Meter</span>
       <span v-else>Hide Tags Meter</span>
-    </v-tooltip>
+    </v-tooltip> -->
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
@@ -154,7 +154,7 @@
       <span v-else>Hide Tags</span>
     </v-tooltip>
 
-    <v-tooltip bottom>
+    <!-- <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-badge :value="isVideoTagsHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleVideoTagsVisibilty()" v-on="on">
@@ -164,7 +164,7 @@
       </template>
       <span v-if="isVideoTagsHidden">Show Video Tags</span>
       <span v-else>Hide Video Tags</span>
-    </v-tooltip>
+    </v-tooltip> -->
   </div>
 </template>
 

@@ -13,7 +13,9 @@
         :color="isFavorite===false ? 'white' : 'pink'"
       > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
       </v-btn>
-      <v-card-title class="website-card-name">{{websiteName}} ({{videosOfWebsite}})</v-card-title>
+      <v-card-title class="website-card-name">{{websiteName}} 
+        <!-- <span>({{videosOfWebsite}})</span> -->
+      </v-card-title>
       <v-btn @click="$store.state.Websites.dialogEditWebsite = true"
         class="website-edit-btn" color="white" icon absolute >
         <v-icon>mdi-pencil</v-icon>
@@ -43,9 +45,9 @@ export default {
     imgMainKey: Date.now(),
   }),
   computed: {
-    videosOfWebsite() {
-      return this.$store.getters.videos.filter({website:this.website.name}).value().length
-    },
+    // videosOfWebsite() {
+    //   return this.$store.getters.videos.filter({website:this.website.name}).value().length
+    // },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },

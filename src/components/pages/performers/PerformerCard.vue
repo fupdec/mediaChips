@@ -72,13 +72,13 @@
         </v-icon>
       </div>
 
-      <v-progress-linear 
+      <!-- <v-progress-linear 
         class="performer-meter" :class="{hidden: isMeterHidden}"
-        :value="meter" :height="meterHeight" />
+        :value="meter" :height="meterHeight" /> -->
       
       <v-card-title class="performer-card-title pa-2" :class="{hidden: isNameHidden}"> 
         <div class="performer-name"> {{performerName}} </div>
-        <span class="ml-1 font-weight-light">({{videosQuantity}})</span>
+        <!-- <span class="ml-1 font-weight-light">({{videosQuantity}})</span> -->
         <div v-show="performerAliases.length != 0" class="aliases mt-1" 
           :class="{hidden: isAliasesHidden}">
           <span class="aka">aka</span>{{performerAliases}}
@@ -107,7 +107,8 @@
         </v-chip-group>
       </v-card-text>
       
-      <v-card-text v-if="tagsFromVideos.length>0" 
+      <!-- TODO: remake tags from videos. add manual scan for tags, websites in settings -->
+      <!-- <v-card-text v-if="tagsFromVideos.length>0" 
         class="pa-1 py-0 performer-video-tags" :class="{hidden: isVideoTagsHidden}">
         <div class="caption px-1">Tags from videos</div>
         <v-chip-group column>
@@ -121,7 +122,7 @@
           > {{ tag }}
           </v-chip>
         </v-chip-group>
-      </v-card-text>
+      </v-card-text> -->
       <!-- TODO: add websites from videos -->
       
       <v-btn @click="$store.state.Performers.dialogEditPerformerImages=true"
@@ -164,10 +165,10 @@ export default {
       this.imgAlt = this.getImg(this.performer.id, 'alt')
       this.imgCustom1 = this.getImg(this.performer.id, 'custom1')
       this.imgCustom2 = this.getImg(this.performer.id, 'custom2')
-      this.updateMeter()
-      this.videosQuantity = this.$store.getters.videos.filter({
-        'performers': [this.performer.name]
-      }).value().length
+      // this.updateMeter()
+      // this.videosQuantity = this.$store.getters.videos.filter({
+      //   'performers': [this.performer.name]
+      // }).value().length
     })
   },
   data: () => ({
@@ -182,8 +183,8 @@ export default {
     imgCustom2: '',
     imgCustom2Key: Date.now()+3,
     isFavorite: false,
-    meter: 0,
-    videosQuantity: 0,
+    // meter: 0,
+    // videosQuantity: 0,
     isChipsXS: true,
     isChipsS: false,
     percentValue: 5.263,
@@ -256,21 +257,21 @@ export default {
     updateInfoData() {
       return this.$store.state.Performers.updateInfo
     },
-    tagsFromVideos() {
-      let vids = this.$store.getters.videos
-      vids = vids.filter(v=>v.performers.includes(this.performer.name)).map('tags').value()
-      let tags = []
-      vids.map(video=>{ if (video.length>0) video.map(tag=>tags.push(tag)) })
-      tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-      tags = tags.filter(el => (el !== null && el !== undefined))
-      return tags.sort((a, b) => a.localeCompare(b))
-    },
-    meterHeight() {
-      return this.$store.state.Settings.meterHeight
-    },
-    meterMultiplier() {
-      return this.$store.state.Settings.meterMultiplier
-    },
+    // tagsFromVideos() {
+    //   let vids = this.$store.getters.videos
+    //   vids = vids.filter(v=>v.performers.includes(this.performer.name)).map('tags').value()
+    //   let tags = []
+    //   vids.map(video=>{ if (video.length>0) video.map(tag=>tags.push(tag)) })
+    //   tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
+    //   tags = tags.filter(el => (el !== null && el !== undefined))
+    //   return tags.sort((a, b) => a.localeCompare(b))
+    // },
+    // meterHeight() {
+    //   return this.$store.state.Settings.meterHeight
+    // },
+    // meterMultiplier() {
+    //   return this.$store.state.Settings.meterMultiplier
+    // },
     careerStatus() {
       let status
       if (this.performer.start !== "" && this.performer.end === "") {
@@ -496,15 +497,15 @@ export default {
         }
       }, 3000)
     },
-    updateMeter(value) {
-      if(this.tagsFromVideos.length>0) {
-        this.meter = 0
-        for (let i=0; i < this.tagsFromVideos.length; i++) {
-          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
-        }
-        this.meter = this.meter * (1 + this.meterMultiplier / 50)
-      }
-    },
+    // updateMeter(value) {
+    //   if(this.tagsFromVideos.length>0) {
+    //     this.meter = 0
+    //     for (let i=0; i < this.tagsFromVideos.length; i++) {
+    //       this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
+    //     }
+    //     this.meter = this.meter * (1 + this.meterMultiplier / 50)
+    //   }
+    // },
     getImg(performerId, imageType) {
       let imgMainPath = this.getImgUrl(performerId) + `_${imageType}.jpg`
       return this.checkImageExist(imgMainPath, imageType)+'?lastmod='+Date.now()
@@ -601,9 +602,9 @@ export default {
     updateInfoData (info) {
       this.updateInfo(info)
     },
-    meterMultiplier (value) {
-      this.updateMeter(value)
-    },
+    // meterMultiplier (value) {
+    //   this.updateMeter(value)
+    // },
     chipsSize(newSize, oldSize) {
       this.getChipsSize()
     }

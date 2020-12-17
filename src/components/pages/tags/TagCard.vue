@@ -13,7 +13,9 @@
         :color="isFavorite===false ? 'white' : 'pink'"
       > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
       </v-btn>
-      <v-card-title class="tag-card-name"> {{tagName}} ({{itemsWithTag}})</v-card-title>
+      <v-card-title class="tag-card-name"> {{tagName}} 
+        <!-- ({{itemsWithTag}}) -->
+      </v-card-title>
       <v-btn @click="$store.state.Tags.dialogEditTag = true"
         class="tag-edit-btn" color="white" icon absolute >
         <v-icon>mdi-pencil</v-icon>
@@ -49,13 +51,13 @@ export default {
     updateImageData() {
       return this.$store.state.Tags.updateImage
     },
-    itemsWithTag() {
-      let videos = this.$store.getters.videos.filter(v=>
-        (v.tags.includes(this.tag.name)) ).value().length
-      let performers = this.$store.getters.performers.filter(v=>
-        (v.tags.includes(this.tag.name)) ).value().length
-      return videos + performers
-    },
+    // itemsWithTag() {
+    //   let videos = this.$store.getters.videos.filter(v=>
+    //     (v.tags.includes(this.tag.name)) ).value().length
+    //   let performers = this.$store.getters.performers.filter(v=>
+    //     (v.tags.includes(this.tag.name)) ).value().length
+    //   return videos + performers
+    // },
     isFavorite: {
       get() {
         return this.tag.favorite
