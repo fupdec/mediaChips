@@ -44,18 +44,15 @@ export default {
     },
     compressImage(inputImage, outputImagePath, imgType, outputWidth) {
       let sizes = outputWidth ? outputWidth : 400
-      let imgQuality = 60
-      if (imgType == 'main') {
+      let imgQuality = 85
+      if (['main','alt','custom1','custom2'].includes(imgType)) {
         sizes = 500
-        imgQuality = 65
       }
       if (imgType == 'header') {
         sizes = 1400
-        imgQuality = 85
       }
       if (imgType == 'avatar') {
         sizes = 164
-        imgQuality = 75
       }
       if (imgType == 'thumb') {
         sizes = { height: 320 }
