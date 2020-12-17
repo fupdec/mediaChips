@@ -40,6 +40,14 @@
     <v-spacer></v-spacer>
     <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.3</span>
     <v-spacer></v-spacer>
+    <div class="nav-buttons">
+      <v-btn @click="back" text tile small width="46" height="28">
+        <v-icon size="18" class="ma-0">mdi-arrow-left</v-icon>
+      </v-btn>
+      <v-btn @click="forward" text tile small width="46" height="28">
+        <v-icon size="18" class="ma-0">mdi-arrow-right</v-icon>
+      </v-btn>
+    </div>
     <div class="window-controls">
       <v-btn text tile small width="46" height="28" @click="minimize">
         <v-icon size="16">mdi-minus</v-icon>
@@ -117,6 +125,12 @@ export default {
       this.$vuetify.theme.dark = darkModeValue
       this.$store.dispatch('toggleDarkMode', darkModeValue)
     },
+    back() {
+      this.$router.go(-1)
+    },
+    forward() {
+      this.$router.go(1)
+    },
   },
 }
 </script>
@@ -174,6 +188,16 @@ export default {
   }
   &.maximized:before {
     top: 0;
+  }
+}
+.nav-buttons {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  top: 0;
+  right: 200px;
+  height: 100%;
+  .v-btn:not(.v-btn--round).v-size--small {
+    min-width: 0;
   }
 }
 .window-controls {

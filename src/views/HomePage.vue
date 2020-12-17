@@ -1,6 +1,5 @@
 <template>
-  <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    
+  <vuescroll>
     <div class="headline text-h3 text-center my-6">Home</div>
 
     <v-container class="text-center">
@@ -154,12 +153,8 @@
         <v-btn class="ma-2" color="primary" to="/settings">Open settings</v-btn>
       </div>
     </v-container>
+
     <div v-show="$store.getters.navigationSide=='0'" class="py-6"></div>
-    
-    <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
-      class="scroll-to-top" fixed fab color="primary">
-      <v-icon>mdi-chevron-up</v-icon>
-    </v-btn>
   </vuescroll>
 </template>
 
@@ -300,14 +295,6 @@ export default {
     },
   },
   methods: {
-    scrollToTop() {
-      this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
-    },
-    handleScroll(vertical) {
-      if (vertical.scrollTop > 150) {
-        this.isScrollToTopVisible = true
-      } else this.isScrollToTopVisible = false
-    },
     getVideoThumbUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
       return this.checkVideoImageExist(imgPath)+'?lastmod='+Date.now()
