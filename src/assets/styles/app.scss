@@ -303,12 +303,15 @@
 	font-weight: 700;
 	font-style: italic;
 }
-
 html {
   overflow-y: hidden !important;
+  -webkit-font-smoothing: subpixel-antialiased !important;
 }
 // FONTS
 .v-application {
+  &--wrap {
+    backface-visibility: unset !important;
+  }
   &.text-font-lato {
     font-family: "Lato", sans-serif !important;
   }
