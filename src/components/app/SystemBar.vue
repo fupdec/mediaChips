@@ -8,7 +8,7 @@
             Application
           </v-btn>
         </template>
-        <v-list dense class="context-menu" :color="colorHeader">
+        <v-list dense class="context-menu">
           <v-list-item link @click="restart">
             <v-list-item-title>
               <v-icon left size="18">mdi-restart</v-icon> Restart
@@ -28,7 +28,7 @@
             View
           </v-btn>
         </template>
-        <v-list dense class="context-menu" :color="colorHeader">
+        <v-list dense class="context-menu">
           <v-list-item link @click="toggleDarkMode">
             <v-list-item-title>
               <v-icon left size="18">mdi-theme-light-dark</v-icon> Toggle Dark Mode
@@ -36,18 +36,17 @@
           </v-list-item>
         </v-list>
       </v-menu>
-    </div>
-    <v-spacer></v-spacer>
-    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.3</span>
-    <v-spacer></v-spacer>
-    <div class="nav-buttons">
-      <v-btn @click="back" text tile small width="46" height="28">
+
+      <v-btn @click="back" text tile small width="46" height="28" class="ml-6">
         <v-icon size="18" class="ma-0">mdi-arrow-left</v-icon>
       </v-btn>
       <v-btn @click="forward" text tile small width="46" height="28">
         <v-icon size="18" class="ma-0">mdi-arrow-right</v-icon>
       </v-btn>
     </div>
+    <v-spacer></v-spacer>
+    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.3</span>
+    <v-spacer></v-spacer>
     <div class="window-controls">
       <v-btn text tile small width="46" height="28" @click="minimize">
         <v-icon size="16">mdi-minus</v-icon>
@@ -148,6 +147,9 @@ export default {
     letter-spacing: normal;
     padding: 0 8px !important;
     min-width: 0 !important;
+    &__content {
+      line-height: 1;
+    }
   }
 }
 // .app-menu {
@@ -188,16 +190,6 @@ export default {
   }
   &.maximized:before {
     top: 0;
-  }
-}
-.nav-buttons {
-  -webkit-app-region: no-drag;
-  position: absolute;
-  top: 0;
-  right: 200px;
-  height: 100%;
-  .v-btn:not(.v-btn--round).v-size--small {
-    min-width: 0;
   }
 }
 .window-controls {
