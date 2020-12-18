@@ -13,9 +13,10 @@ dbw.defaults({
   websites: [{
     id: "defaultID",
     name: "Brazzers",
-    color: "#ffc800",
+    color: "#FF9800",
     network: false,
-    childWebsites: []
+    childWebsites: [],
+    date: Date.now(),
   },]
 }).write()
 
@@ -31,7 +32,7 @@ const defaultFilters = {
 
 const Websites = {
   state: () => ({
-    websitesPerPage: dbs.get('websitesPerPage').value(),
+    websitesPerPage: dbs.get('websitesPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),

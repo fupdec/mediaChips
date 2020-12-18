@@ -11,11 +11,98 @@ And then place this files into folder "ffmpeg" in "userfiles".
 Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\"
 And now you can scan folders from application! It's all.
 
-- In portable version after the first launch, a folder "userdata" will be created in the folder with the executable file. Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
+### Portable version
+After the first launch, a folder "userdata" will be created in the folder with the executable file. Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
 
-### Support on other OS
-Only Windows is supported. But if you are a developer, it may not be difficult for you to adapt the application for other operating systems. 
+### Linux and macOS support
+If you are a developer, it may not be difficult for you to adapt the application for other operating systems. 
 The application is made on electron. Paths should be responsive to the operating system. It remains to correctly add ffmpeg files that are needed to create a preview. 
+Perhaps if there are a lot of people willing, I will port it for these systems.
+
+## Features
+
+#### App
+- Tabs for easy browsing
+- Backup management
+- Customizing colors, fonts
+- Dark theme
+- Statistics about tags, websites (later video statistics will be added)
+- Hover card label preview
+- Optimized for one-handed use :)
+
+#### Videos
+- Adding performers, tags, websites, rating, favorite, bookmark
+- Sorting and filtering by performers, tags, websites, filesize, quality, etc.
+- Save filters and sorting to a preset that can be loaded at any time or set as default
+- Play video in app (supported format only*) or in the system player selected by default
+- Scanning for videos in multiple folders. Information is automatically added to the video: performers, tags, websites
+- Video preview on hover (supported format only*)
+- Detailed video information: filesize, duration, dimension, quality, filename, format, date added
+- Creating video preview manually
+- Replacing thumb for a video 
+- Add markers to the video (supported format only*): tag, favorite, bookmark
+- Play video from a marker in the system player (Media Player Classic only)
+- Change paths of the videos
+- Filesize of selected and all videos in the status bar
+- ... and more
+
+#### Performers
+- Adding tags, rating, favorite, bookmark
+- Detailed profile: aliases, category, career, age, country and many appearance parameters
+- Autosearch for information on the Internet and import data (Freeones, IAFD)
+- Sorting and filtering by all profile parameters
+- Save filters and sorting to a preset that can be loaded at any time or set as default
+- Ability to set 4 images for each (main, alternate, 2 custom), avatar, header image on the performer page
+- Beautiful performer page with descriptive profile information. Filtration of videos with a performer by tags from the video. A meter that is determined by the values of tags from the video.
+- Adding several at a time
+- Profile completion progress
+- Edit performer info parameters in settings (the ability to add new parameters will be added later) 
+- ... and something else
+
+#### Tags
+- Adding alternate names (for easy search), color, value (for a meter), favorite, bookmark
+- Sorting and filtering
+- Adding several at a time
+- Of course the tag image
+
+#### Websites
+- Adding color, favorite, bookmark
+- Sorting and filtering
+- Adding several at a time
+- Website image
+- Networking several (not yet implemented)
+
+### View of app
+
+#### Home 
+![alt text](https://i.ibb.co/n7YvpBb/home.jpg)
+
+#### Videos
+![alt text](https://i.ibb.co/svb12st/videos.jpg)
+
+#### Edit video and hovered label
+![alt text](https://i.ibb.co/3sXK9ms/edit.jpg)
+
+#### Video details
+![alt text](https://i.ibb.co/t2T7tP7/video.jpg)
+
+#### Performers
+![alt text](https://i.ibb.co/s6wvvTf/performers.jpg)
+
+#### Performer profile
+![alt text](https://i.ibb.co/0GxRgWr/profile.jpg)
+
+#### Find performer info
+![alt text](https://i.ibb.co/x22DLWD/find.jpg)
+
+#### Edit images of performer
+![alt text](https://i.ibb.co/d24KFxM/images.jpg)
+
+#### Performer details
+![alt text](https://i.ibb.co/bLXfqhr/performer.jpg)
+
+#### Performer details in dark mode with header image, context menu 
+![alt text](https://i.ibb.co/MVskQpr/dark.jpg)
 
 ## Development
 
@@ -36,62 +123,3 @@ npm run electron:build
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
-
-## Features
-
-#### App
-- Customizing colors, fonts
-- Dark theme
-- Backup management
-
-#### Videos
-- Scanning for videos in multiple folders, all known video formats are added.
-- Information is automatically added to the video: performers, tags, websites.
-- A thumb for the video is created. You can create a small video preview.
-- Sorting and filtering by tags, websites, performers, filesize, quality, etc.
-- Play video in app (if supported) or in a standard video player.
-- Add markers to videos that are supported by the app.
-- Change path to video.
-- Custom thumb image.
-- ... and more
-
-#### Performers
-- Adding several at a time
-- Detailed profile
-- Autosearch for information on the Internet.
-- Ability to set 4 images for each, avatar, header
-- Adding tags
-- Sorting and filtering by all profile parameters
-- ... and something else
-
-#### Tags
-- Adding several at a time
-- Tag color
-- Alternate names for better search
-- Of course the tag image
-- Sorting and filtering
-
-#### Websites
-- Adding several at a time
-- Site color
-- Networking several
-- Site image
-- Sorting and filtering
-
-#### Bookmarks
-- For all: tags, videos, performers, websites
-- Filter by bookmarks
-
-### View of app
-
-#### Home 
-![alt text](https://i.ibb.co/N66Hf6R/avdb-home.jpg)
-
-#### Videos
-![alt text](https://i.ibb.co/TvgcVLd/avdb-videos.jpg)
-
-#### Performers
-![alt text](https://i.ibb.co/0KLmFVf/avdb-performers.jpg)
-
-#### Performer profile
-![alt text](https://i.ibb.co/dgjQvPB/avdb-profile.jpg)

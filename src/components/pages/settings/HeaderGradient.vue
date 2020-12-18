@@ -141,6 +141,7 @@ export default {
         themeDark: this.themeDark,
       } 
       this.$store.dispatch('saveHeaderGradient', values)
+      this.$store.state.Settings.dialogHeaderGradient = false
     },
   },
 }

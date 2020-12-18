@@ -9,7 +9,21 @@ const adapterTags = new FileSync(pathToDbTags)
 const low = require('lowdb')
 const dbs = low(adapterSettings)
 const dbt = low(adapterTags)
-dbt.defaults({ tags: [] }).write()
+dbt.defaults({ 
+  tags: [{
+    id: "2222222222222222",
+    name: "Anal",
+    category: [
+      "video"
+    ],
+    color: "#FF9800",
+    value: 5,
+    bookmark: false,
+    altNames: [],
+    date: Date.now(),
+    favorite: true
+  },] 
+}).write()
 
 const defaultFilters = {
   firstChar: [],
@@ -26,7 +40,7 @@ const defaultFilters = {
 
 const Tags = {
   state: () => ({
-    tagsPerPage: dbs.get('tagsPerPage').value(),
+    tagsPerPage: dbs.get('tagsPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),

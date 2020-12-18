@@ -9,7 +9,53 @@ const adapterPerformers = new FileSync(pathToDbPerformers)
 const low = require('lowdb')
 const dbs = low(adapterSettings)
 const dbp = low(adapterPerformers)
-dbp.defaults({ performers: [] }).write()
+dbp.defaults({ 
+  performers: [{
+    id: "1111111111111111",
+    name: "Angela White",
+    date: Date.now(),
+    aliases: [
+      "Angela Gabrielle White",
+      "Angie"
+    ],
+    tags: [],
+    favorite: true,
+    rating: 5,
+    nation: "Australia",
+    birthday: "04031985",
+    start: "2003",
+    end: "",
+    ethnicity: [
+      "Caucasian"
+    ],
+    hair: [
+      "Brown"
+    ],
+    eyes: [
+      "Blue"
+    ],
+    height: "160",
+    weight: "55",
+    boobs: "Real",
+    cup: "G",
+    bookmark: false,
+    category: [
+      "Pornstar"
+    ],
+    bra: "42",
+    waist: "27",
+    hip: "41",
+    body: [
+      "Chubby"
+    ],
+    pussy: "Universal",
+    pussyLips: "Medium",
+    pussyHair: [
+      "Bald"
+    ],
+    edit: Date.now()
+  }]
+}).write()
 
 const defaultFilters = {
   favorite: false,
@@ -59,7 +105,7 @@ const defaultFilters = {
 
 const Performers = {
   state: () => ({
-    performersPerPage: dbs.get('performersPerPage').value(),
+    performersPerPage: dbs.get('performersPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -77,18 +123,18 @@ const Performers = {
     updateImages: {},
     updateInfo: {},
     rating: 0,
-    performerChipsColored: dbs.get('performerChipsColored').value(),
-    performerEditBtnHidden: dbs.get('performerEditBtnHidden').value(),
-    performerMeterHidden: dbs.get('performerMeterHidden').value(),
-    performerNameHidden: dbs.get('performerNameHidden').value(),
-    performerRatingHidden: dbs.get('performerRatingHidden').value(),
-    performerNationalityHidden: dbs.get('performerNationalityHidden').value(),
-    performerFavoriteHidden: dbs.get('performerFavoriteHidden').value(),
-    performerProfileProgressHidden: dbs.get('performerProfileProgressHidden').value(),
-    performerAliasesHidden: dbs.get('performerAliasesHidden').value(),
-    performerCareerStatusHidden: dbs.get('performerCareerStatusHidden').value(),
-    performerTagsHidden: dbs.get('performerTagsHidden').value(),
-    performerVideoTagsHidden: dbs.get('performerVideoTagsHidden').value(),
+    performerChipsColored: dbs.get('performerChipsColored').value() || true,
+    performerEditBtnHidden: dbs.get('performerEditBtnHidden').value() || false,
+    performerMeterHidden: dbs.get('performerMeterHidden').value() || false,
+    performerNameHidden: dbs.get('performerNameHidden').value() || false,
+    performerRatingHidden: dbs.get('performerRatingHidden').value() || false,
+    performerNationalityHidden: dbs.get('performerNationalityHidden').value() || false,
+    performerFavoriteHidden: dbs.get('performerFavoriteHidden').value() || false,
+    performerProfileProgressHidden: dbs.get('performerProfileProgressHidden').value() || false,
+    performerAliasesHidden: dbs.get('performerAliasesHidden').value() || false,
+    performerCareerStatusHidden: dbs.get('performerCareerStatusHidden').value() || false,
+    performerTagsHidden: dbs.get('performerTagsHidden').value() || false,
+    performerVideoTagsHidden: dbs.get('performerVideoTagsHidden').value() || false,
     menuCard: false,
   }),
   mutations: {

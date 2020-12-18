@@ -17,7 +17,7 @@
 
       <v-stepper-items>
         <v-stepper-content step="1">
-          <v-card>
+          <v-card v-if="ffmpeg">
             <vuescroll>
               <v-card-text class="text-center">
                 <v-textarea v-model="folderPaths" outlined 
@@ -39,6 +39,19 @@
                 color="primary" class="ma-2">
                 Continue <v-icon large right>mdi-chevron-right</v-icon>
               </v-btn>
+            </v-card-actions>
+          </v-card>
+          <v-card v-else>
+            <v-card-text class="text-center">
+              <v-icon color="red" size="100" class="ma-4">mdi-alert-outline</v-icon>
+              <div>ERROR: ffmpeg.exe or ffprobe.exe not found on path:<br>{{ffmpegDirectory}}</div>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn @click="$store.state.Settings.dialogScanVideos=false" class="ma-4">
+                OK
+              </v-btn>
+              <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
         </v-stepper-content>
@@ -202,7 +215,11 @@ export default {
 	},
   mounted() {
     this.$nextTick(function () {
+      this.ffmpegExists()
     })
+  },
+  updated() {
+    this.ffmpegExists()
   },
   data: () => ({
     scanVideosForm: 1,
@@ -224,6 +241,7 @@ export default {
     newVideos: [],
     noNewVideosAdded: false,
     textNoVideosAdded: '',
+    ffmpeg: true,
   }),
   computed: {
     errorScanVideos() {
@@ -238,8 +256,21 @@ export default {
     isProcessRun() {
       return this.$store.state.Settings.scanProcRun
     },
+    pathToUserData() {
+      return this.$store.getters.getPathToUserData
+    },
+    ffmpegDirectory() {
+      return path.join(this.pathToUserData, `/ffmpeg`)
+    },
   },
   methods: {
+    ffmpegExists() {
+      let ffmpegPath = path.join(this.pathToUserData, `/ffmpeg/ffmpeg.exe`)
+      let ffprobePath = path.join(this.pathToUserData, `/ffmpeg/ffprobe.exe`)
+      if (fs.existsSync(ffmpegPath) || fs.existsSync(ffprobePath)) {
+        this.ffmpeg = true
+      } else this.ffmpeg = false
+    },
     alertScanErrorHeightChange() {
       if (this.alertScanErrorHeight == 100) {
         this.alertScanErrorHeight = undefined
@@ -334,7 +365,7 @@ export default {
         vm.currentVideoScanName = ''
         if (vm.newVideos.length===0 && vm.totalNumberOfScanVideos!==0) {
           vm.noNewVideosAdded = true
-          vm.textNoVideosAdded = 'No videos have been added. All videos are already in the database.'
+          vm.textNoVideosAdded = 'No videos have been added.'
         }
         if (vm.newVideos.length===0 && vm.totalNumberOfScanVideos===0) {
           vm.noNewVideosAdded = true

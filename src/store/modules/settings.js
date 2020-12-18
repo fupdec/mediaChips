@@ -18,9 +18,9 @@ dbs.defaults({
   appColorDarkAccent: '#84329e',
   appColorDarkHeader: '#2b6c90',
   darkMode: "0",
-  headerGradient: false,
-  headerGradientLight: 'linear-gradient(45deg,#01a0d8,#0d30eb)',
-  headerGradientDark: 'linear-gradient(45deg,#a0708a,#255f2a)',
+  headerGradient: true,
+  headerGradientLight: 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)',
+  headerGradientDark: 'linear-gradient(to right, #0033a5, #c30059, #C5A401)',
   textFont: 'Roboto',
   headerFont: 'Roboto',
   navigationSide: "1",
@@ -233,9 +233,9 @@ const Settings = {
       state.appColorDarkAccent = '#84329e'
       state.appColorDarkHeader = '#2b6c90'
       state.darkMode = "0"
-      state.headerGradient = false
-      state.headerGradientLight = 'linear-gradient(45deg,#01a0d8,#0d30eb)'
-      state.headerGradientDark = 'linear-gradient(45deg,#a0708a,#255f2a)'
+      state.headerGradient = true
+      state.headerGradientLight = 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)'
+      state.headerGradientDark = 'linear-gradient(to right, #0033a5, #c30059, #C5A401)'
       state.textFont = 'Roboto'
       state.headerFont = 'Roboto'
       state.navigationSide = "1"
@@ -388,9 +388,9 @@ const Settings = {
         appColorDarkAccent: '#84329e',
         appColorDarkHeader: '#2b6c90',
         darkMode: "0",
-        headerGradient: false,
-        headerGradientLight: 'linear-gradient(45deg,#01a0d8,#0d30eb)',
-        headerGradientDark: 'linear-gradient(45deg,#a0708a,#255f2a)',
+        headerGradient: true,
+        headerGradientLight: 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)',
+        headerGradientDark: 'linear-gradient(to right, #0033a5, #c30059, #C5A401)',
         textFont: 'Roboto',
         headerFont: 'Roboto',
         navigationSide: "1",
