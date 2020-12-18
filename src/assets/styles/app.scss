@@ -421,6 +421,9 @@ html {
 .v-main__wrap {
   overflow-y: auto;
 }
+.v-system-bar {
+  border-bottom: none !important;
+}
 .v-system-bar--fixed {
   z-index: 1000 !important;
 }
@@ -1201,6 +1204,9 @@ html {
       opacity: 0.25;
     }
   }
+}
+.theme--dark.v-color-picker .v-color-picker__input input {
+  color: #fff;
 }
 .group-radios-small {
   .v-input--radio-group__input {

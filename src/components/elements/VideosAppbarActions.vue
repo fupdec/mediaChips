@@ -399,11 +399,6 @@ export default {
     filterTagsLogicIcon: 'mdi-math-norm',
   }),
   computed: {
-    colorHeader() {
-      if (this.$vuetify.theme.isDark) {
-        return this.$store.state.Settings.appColorDarkHeader
-      } else return this.$store.state.Settings.appColorLightHeader
-    },
     filterBadge() {
       let total = this.$store.getters.filteredVideosTotal
       return total !== this.$store.getters.videosTotal

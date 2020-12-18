@@ -18,6 +18,9 @@ dbs.defaults({
   appColorDarkAccent: '#84329e',
   appColorDarkHeader: '#2b6c90',
   darkMode: "0",
+  headerGradient: false,
+  headerGradientLight: 'linear-gradient(45deg,#01a0d8,#0d30eb)',
+  headerGradientDark: 'linear-gradient(45deg,#a0708a,#255f2a)',
   textFont: 'Roboto',
   headerFont: 'Roboto',
   navigationSide: "1",
@@ -84,6 +87,9 @@ const Settings = {
     videoPreviewEnabled: dbs.get('videoPreviewEnabled').value(),
     delayVideoPreview: dbs.get('delayVideoPreview').value(),
     darkMode: Boolean(+dbs.get('darkMode').value()),
+    headerGradient: dbs.get('headerGradient').value(),
+    headerGradientLight: dbs.get('headerGradientLight').value(),
+    headerGradientDark: dbs.get('headerGradientDark').value(),
     navigationSide: dbs.get('navigationSide').value(),
     appColorLightPrimary: dbs.get('appColorLightPrimary').value(),
     appColorLightSecondary: dbs.get('appColorLightSecondary').value(),
@@ -123,6 +129,7 @@ const Settings = {
     performersFiltersPresetDefault: dbs.get('performersFiltersPresetDefault').value(),
     tagsFiltersPresetDefault: dbs.get('tagsFiltersPresetDefault').value(),
     websitesFiltersPresetDefault: dbs.get('websitesFiltersPresetDefault').value(),
+    dialogHeaderGradient: false,
   }),
   mutations: {
     updateSettings (state) {
@@ -132,11 +139,14 @@ const Settings = {
     changePerformerProfile(state, profile) {
       state.performerProfile = profile
     },
-    toggleDarkMode(state, darkModeValue) {
-      state.darkMode = darkModeValue
+    toggleDarkMode(state, value) {
+      state.darkMode = value
     },
-    toggleNavigationSide(state, navigationSideValue) {
-      state.navigationSide = navigationSideValue
+    toggleHeaderGradient(state, value) {
+      state.headerGradient = value
+    },
+    toggleNavigationSide(state, value) {
+      state.navigationSide = value
     },
     changeAppColorLightPrimary(state, color) {
       state.appColorLightPrimary = color
@@ -223,6 +233,9 @@ const Settings = {
       state.appColorDarkAccent = '#84329e'
       state.appColorDarkHeader = '#2b6c90'
       state.darkMode = "0"
+      state.headerGradient = false
+      state.headerGradientLight = 'linear-gradient(45deg,#01a0d8,#0d30eb)'
+      state.headerGradientDark = 'linear-gradient(45deg,#a0708a,#255f2a)'
       state.textFont = 'Roboto'
       state.headerFont = 'Roboto'
       state.navigationSide = "1"
@@ -266,68 +279,82 @@ const Settings = {
       getters.settings.set("performerProfile", profile).write()
       commit('changePerformerProfile', profile)
     },
-    toggleDarkMode({ state, commit, getters}, darkModeValue) {
-      getters.settings.set("darkMode", (+darkModeValue).toString()).write()
-      commit('toggleDarkMode', darkModeValue)
+    toggleDarkMode({ state, commit, getters}, value) {
+      getters.settings.set('darkMode', (+value).toString()).write()
+      commit('toggleDarkMode', value)
     },
-    toggleNavigationSide({ state, commit, getters}, navigationSideValue) {
-      getters.settings.set("navigationSide", navigationSideValue).write()
-      commit('toggleNavigationSide', navigationSideValue)
+    toggleHeaderGradient({ state, commit, getters}, value) {
+      getters.settings.set('headerGradient', value).write()
+      commit('toggleHeaderGradient', value)
+    },
+    saveHeaderGradient({ state, commit, getters}, {gradient, themeDark}) {
+      console.log(themeDark)
+      if (themeDark) {
+        getters.settings.set('headerGradientDark', gradient).write()
+        state.headerGradientDark = gradient
+      } else {
+        getters.settings.set('headerGradientLight', gradient).write()
+        state.headerGradientLight = gradient
+      }
+    },
+    toggleNavigationSide({ state, commit, getters}, value) {
+      getters.settings.set('navigationSide', value).write()
+      commit('toggleNavigationSide', value)
     },
     changeAppColorLightPrimary({ state, commit, getters}, color) {
-      getters.settings.set("appColorLightPrimary", color).write()
+      getters.settings.set('appColorLightPrimary', color).write()
       commit('changeAppColorLightPrimary', color)
     },
     changeAppColorLightSecondary({ state, commit, getters}, color) {
-      getters.settings.set("appColorLightSecondary", color).write()
+      getters.settings.set('appColorLightSecondary', color).write()
       commit('changeAppColorLightSecondary', color)
     },
     changeAppColorLightAccent({ state, commit, getters}, color) {
-      getters.settings.set("appColorLightAccent", color).write()
+      getters.settings.set('appColorLightAccent', color).write()
       commit('changeAppColorLightAccent', color)
     },
     changeAppColorLightHeader({ state, commit, getters}, color) {
-      getters.settings.set("appColorLightHeader", color).write()
+      getters.settings.set('appColorLightHeader', color).write()
       commit('changeAppColorLightHeader', color)
     },
     changeAppColorDarkPrimary({ state, commit, getters}, color) {
-      getters.settings.set("appColorDarkPrimary", color).write()
+      getters.settings.set('appColorDarkPrimary', color).write()
       commit('changeAppColorDarkPrimary', color)
     },
     changeAppColorDarkSecondary({ state, commit, getters}, color) {
-      getters.settings.set("appColorDarkSecondary", color).write()
+      getters.settings.set('appColorDarkSecondary', color).write()
       commit('changeAppColorDarkSecondary', color)
     },
     changeAppColorDarkAccent({ state, commit, getters}, color) {
-      getters.settings.set("appColorDarkAccent", color).write()
+      getters.settings.set('appColorDarkAccent', color).write()
       commit('changeAppColorDarkAccent', color)
     },
     changeAppColorDarkHeader({ state, commit, getters}, color) {
-      getters.settings.set("appColorDarkHeader", color).write()
+      getters.settings.set('appColorDarkHeader', color).write()
       commit('changeAppColorDarkHeader', color)
     },
     changeTextFont({ state, commit, getters}, font) {
-      getters.settings.set("textFont", font).write()
+      getters.settings.set('textFont', font).write()
       commit('changeTextFont', font)
     },
     changeHeaderFont({ state, commit, getters}, font) {
-      getters.settings.set("headerFont", font).write()
+      getters.settings.set('headerFont', font).write()
       commit('changeHeaderFont', font)
     },
     changeNumberOfPagesLimit({ state, commit, getters}, number) {
-      getters.settings.set("numberOfPagesLimit", number).write()
+      getters.settings.set('numberOfPagesLimit', number).write()
       commit('changeNumberOfPagesLimit', number)
     },
     changeMeterHeight ({ state, commit, getters}, value) {
-      getters.settings.set("meterHeight", value).write()
+      getters.settings.set('meterHeight', value).write()
       commit('changeMeterHeight', value)
     },
     changeMeterMultiplier ({ state, commit, getters}, value) {
-      getters.settings.set("meterMultiplier", value).write()
+      getters.settings.set('meterMultiplier', value).write()
       commit('changeMeterMultiplier', value)
     },
     changePathToSystemPlayer ({ state, commit, getters}, value) {
-      getters.settings.set("pathToSystemPlayer", value).write()
+      getters.settings.set('pathToSystemPlayer', value).write()
       commit('changePathToSystemPlayer', value)
     },
     updateBackups ({ state, commit, getters}, value) {
@@ -361,6 +388,9 @@ const Settings = {
         appColorDarkAccent: '#84329e',
         appColorDarkHeader: '#2b6c90',
         darkMode: "0",
+        headerGradient: false,
+        headerGradientLight: 'linear-gradient(45deg,#01a0d8,#0d30eb)',
+        headerGradientDark: 'linear-gradient(45deg,#a0708a,#255f2a)',
         textFont: 'Roboto',
         headerFont: 'Roboto',
         navigationSide: "1",
@@ -423,6 +453,9 @@ const Settings = {
     },
     darkMode(state) {
       return state.darkMode
+    },
+    headerGradient(state) {
+      return state.headerGradient
     },
     navigationSide(state) {
       return state.navigationSide

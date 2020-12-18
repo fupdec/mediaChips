@@ -132,13 +132,42 @@
       </v-btn-toggle>
     
       <div class="headline text-h5 text-center mt-10">Theme</div>
-      <div class="subtitle mt-8">Dark mode:</div>
-      <v-switch v-model="darkMode" inset style="display:inline-block;">
-        <template v-slot:label>
-          <span v-if="darkMode">Yes</span>
-          <span v-else>No</span>
-        </template>
-      </v-switch>
+      <v-container class="px-0">
+        <v-row>
+          <v-col cols="12" sm="6">
+            <div class="subtitle mt-8">Dark mode:</div>
+            <v-switch v-model="darkMode" inset style="display:inline-block;">
+              <template v-slot:label>
+                <span v-if="darkMode">Yes</span>
+                <span v-else>No</span>
+              </template>
+            </v-switch>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <div class="subtitle mt-8">Use header gradient:</div>
+            <v-switch v-model="headerGradient" inset style="display:inline-block;">
+              <template v-slot:label>
+                <span v-if="headerGradient">Yes</span>
+                <span v-else>No</span>
+              </template>
+            </v-switch>
+          </v-col>
+          <v-col cols="12" sm="6" v-if="headerGradient">
+            <div class="subtitle mb-2">Colors for header gradient (light theme):</div>
+            <v-btn @click="openDialogHeaderGradientLight" color="primary">
+              <v-icon left>mdi-palette</v-icon> Change
+            </v-btn>
+          </v-col>
+          <v-col cols="12" sm="6" v-if="headerGradient">
+            <div class="subtitle mb-2">Colors for header gradient (dark theme):</div>
+            <v-btn @click="openDialogHeaderGradientDark" color="primary">
+              <v-icon left>mdi-palette</v-icon> Change
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-container>
+
+      <HeaderGradient :themeDark="gradientThemeDark"/>
 
       <ThemeColors />
 
@@ -316,6 +345,7 @@
 
 
 <script>
+import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
@@ -329,6 +359,7 @@ const shell = require('electron').shell
 export default {
   name: 'SettingsPage',
   components: {
+    HeaderGradient,
     ThemeColors,
     ManageBackups,
     ClearDatabases,
@@ -353,12 +384,15 @@ export default {
       'Roboto',
       'RobotoCondensed'
     ],
+    dialogChangeHeaderGradientLight: false,
+    dialogChangeHeaderGradientDark: false,
     dialogUpdatePath: false,
     pathForSearch: '',
     pathForUpdate: '',
     videosWithSamePath: [],
     dialogResetToDefaultSettings: false,
     isScrollToTopVisible: false,
+    gradientThemeDark: null,
   }),
   computed: {
     videoPreview: {
@@ -392,17 +426,25 @@ export default {
       get() {
         return this.$store.getters.navigationSide
       },
-      set(navigationSideValue) {
-        this.$store.dispatch('toggleNavigationSide', navigationSideValue)
+      set(value) {
+        this.$store.dispatch('toggleNavigationSide', value)
       },
     },
     darkMode: {
       get() {
         return this.$store.getters.darkMode
       },
-      set(darkModeValue) {
-        this.$vuetify.theme.dark = darkModeValue
-        this.$store.dispatch('toggleDarkMode', darkModeValue)
+      set(value) {
+        this.$vuetify.theme.dark = value
+        this.$store.dispatch('toggleDarkMode', value)
+      },
+    },
+    headerGradient: {
+      get() {
+        return this.$store.getters.headerGradient
+      },
+      set(value) {
+        this.$store.dispatch('toggleHeaderGradient', value)
       },
     },
     textFont: {
@@ -453,6 +495,14 @@ export default {
     },
   },
   methods: {
+    openDialogHeaderGradientLight() {
+      this.gradientThemeDark = false
+      this.$store.state.Settings.dialogHeaderGradient = true
+    },
+    openDialogHeaderGradientDark() {
+      this.gradientThemeDark = true
+      this.$store.state.Settings.dialogHeaderGradient = true
+    },
     openGithub() {
       shell.openExternal('https://github.com/fupdec/AdultVideoDataBase')
     },

@@ -1,5 +1,5 @@
 <template>   
-  <v-system-bar window app :class="{maximized:maximized}" :color="colorHeader">
+  <v-system-bar window app :class="{maximized:maximized}" :style="{background: headerColor}">
     <img src="/icons/icon.png" alt="avdb" width="16" height="16">
     <div class="app-menu-container">
       <v-menu bottom offset-y min-width="160">
@@ -94,10 +94,19 @@ export default {
     maximized: win.isMaximized(),
   }),
   computed: {
-    colorHeader() {
-      if (this.$vuetify.theme.isDark) {
-        return this.$store.state.Settings.appColorDarkHeader
-      } else return this.$store.state.Settings.appColorLightHeader
+    headerColor() {
+      if (this.$store.state.Settings.headerGradient) {
+        if (this.$vuetify.theme.isDark) {
+          return this.$store.state.Settings.headerGradientDark
+        } else return this.$store.state.Settings.headerGradientLight
+      } else {
+        if (this.$vuetify.theme.isDark) {
+          return this.$store.state.Settings.appColorDarkHeader
+        } else return this.$store.state.Settings.appColorLightHeader
+      }
+    },
+    gradient() {
+      
     },
   },
   methods: {

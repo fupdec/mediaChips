@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left :color="colorHeader" extension-height="28">
+	<v-app-bar app dense clipped-left extension-height="28" :style="{background: headerColor}">
     <div>
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
@@ -273,10 +273,16 @@ export default {
     categories: ['performer', 'video'],
   }),
   computed: {
-    colorHeader() {
-      if (this.$vuetify.theme.isDark) {
-        return this.$store.state.Settings.appColorDarkHeader
-      } else return this.$store.state.Settings.appColorLightHeader
+    headerColor() {
+      if (this.$store.state.Settings.headerGradient) {
+        if (this.$vuetify.theme.isDark) {
+          return this.$store.state.Settings.headerGradientDark
+        } else return this.$store.state.Settings.headerGradientLight
+      } else {
+        if (this.$vuetify.theme.isDark) {
+          return this.$store.state.Settings.appColorDarkHeader
+        } else return this.$store.state.Settings.appColorLightHeader
+      }
     },
     filterBadge() {
       let total = this.$store.getters.filteredTagsTotal
