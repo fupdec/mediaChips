@@ -49,7 +49,10 @@ dbs.defaults({
   performerCareerStatusHidden: false,
   performerTagsHidden: false,
   performerVideoTagsHidden: false,
+  performerWebsitesHidden: false,
   performerProfile: '0',
+  performerProfileTags: true,
+  performerProfileWebsites: true,
   videoChipsColored: true,
   videoEditBtnHidden: false,
   videoFileNameHidden: false,
@@ -63,6 +66,12 @@ dbs.defaults({
   videoEditPerformersSortBy: 'name',
   videoEditTagsSortBy: 'name',
   videoEditWebsitesSortBy: 'name',
+  tagAltNamesHidden: false,
+  tagPerformersHidden: false,
+  tagEditBtnHidden: false,
+  websiteVideoTagsHidden: false,
+  websitePerformersHidden: false,
+  websiteEditBtnHidden: false,
   backups: [],
   tabs: [],
   meterHeight: 5,
@@ -119,6 +128,8 @@ const Settings = {
     performerInfoPussyLips: dbs.get('performerInfoPussyLips').value(),
     performerInfoPussyHair: dbs.get('performerInfoPussyHair').value().sort((a,b)=>a.localeCompare(b)),
     performerProfile: dbs.get('performerProfile').value(),
+    performerProfileTags: dbs.get('performerProfileTags').value(),
+    performerProfileWebsites: dbs.get('performerProfileWebsites').value(),
     backups: dbs.get('backups').value(),
     tab: null,
     tabs: _.cloneDeep(dbs.get('tabs').value()),
@@ -138,6 +149,12 @@ const Settings = {
     },
     changePerformerProfile(state, profile) {
       state.performerProfile = profile
+    },
+    changePerformerProfileTags(state, value) {
+      state.performerProfileTags = value
+    },
+    changePerformerProfileWebsites(state, value) {
+      state.performerProfileWebsites = value
     },
     toggleDarkMode(state, value) {
       state.darkMode = value
@@ -254,7 +271,10 @@ const Settings = {
       state.performerCareerStatusHidden = false
       state.performerTagsHidden = false
       state.performerVideoTagsHidden = false
+      state.performerWebsitesHidden = false
       state.performerProfile = '0'
+      state.performerProfileTags = true
+      state.performerProfileWebsites = true
       state.videoChipsColored = true
       state.videoEditBtnHidden = false
       state.videoFileNameHidden = false
@@ -266,6 +286,12 @@ const Settings = {
       state.videoPerformersHidden = false
       state.videoTagsHidden = false
       state.videoPreviewEnabled = true
+      state.tagAltNamesHidden = false
+      state.tagPerformersHidden = false
+      state.tagEditBtnHidden = false
+      state.websiteVideoTagsHidden = false
+      state.websitePerformersHidden = false
+      state.websiteEditBtnHidden = false
     },
     updateVideoPreviewEnabled(state, value) {
       state.videoPreviewEnabled = value
@@ -278,6 +304,14 @@ const Settings = {
     changePerformerProfile({ state, commit, getters}, profile) {
       getters.settings.set("performerProfile", profile).write()
       commit('changePerformerProfile', profile)
+    },
+    changePerformerProfileWebsites({ state, commit, getters}, value) {
+      getters.settings.set("performerProfileWebsites", value).write()
+      commit('changePerformerProfileWebsites', value)
+    },
+    changePerformerProfileTags({ state, commit, getters}, value) {
+      getters.settings.set("performerProfileTags", value).write()
+      commit('changePerformerProfileTags', value)
     },
     toggleDarkMode({ state, commit, getters}, value) {
       getters.settings.set('darkMode', (+value).toString()).write()
@@ -367,7 +401,10 @@ const Settings = {
     closeTab({state, rootState, commit, dispatch, getters}, tabId) {
       // checking if this tab is open
       if (getters.tabsDb.find({link: router.currentRoute.fullPath}).value()) {
-        router.push('/home')
+        if (getters.tabsDb.value().length > 1) {
+          const tab = getters.tabsDb.find(t=>(t.link!==router.currentRoute.fullPath)).value()
+          router.push(tab.link)
+        } else router.push('/home')
       }
       getters.tabsDb.remove({id: tabId}).write()
       commit('closeTab', tabId)
@@ -409,7 +446,10 @@ const Settings = {
         performerCareerStatusHidden: false,
         performerTagsHidden: false,
         performerVideoTagsHidden: false,
+        performerWebsitesHidden: false,
         performerProfile: '0',
+        performerProfileTags: true,
+        performerProfileWebsites: true,
         videoChipsColored: true,
         videoEditBtnHidden: false,
         videoFileNameHidden: false,
@@ -421,6 +461,12 @@ const Settings = {
         videoPerformersHidden: false,
         videoTagsHidden: false,
         videoPreviewEnabled: true,
+        tagAltNamesHidden: false,
+        tagPerformersHidden: false,
+        tagEditBtnHidden: false,
+        websiteVideoTagsHidden: false,
+        websitePerformersHidden: false,
+        websiteEditBtnHidden: false,
       }).write()
       commit('resetSettingsToDefault')
     },
@@ -450,6 +496,12 @@ const Settings = {
     },
     performerProfile(state) {
       return state.performerProfile
+    },
+    performerProfileTags(state) {
+      return state.performerProfileTags
+    },
+    performerProfileWebsites(state) {
+      return state.performerProfileWebsites
     },
     darkMode(state) {
       return state.darkMode

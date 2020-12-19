@@ -172,15 +172,15 @@ export default {
             pussy: "",
             pussyLips: "",
             pussyHair: [],
+            videos: 0,
+            tags: [],
+            videoTags: [],
+            websites: [],
           }
 
           // add performerInfo to DB
-          await db
-            .push(performerInfo)
-            .write()
-            
+          await db.push(performerInfo).write()
           newPerformers.push(performer)
-
           console.log(`added performer "${performerInfo.name}": ${JSON.stringify(performerInfo)}`);
         }
       }

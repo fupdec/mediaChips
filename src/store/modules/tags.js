@@ -56,6 +56,9 @@ const Tags = {
     filteredEmpty: false,
     menuCard: false,
     activeTab: null,
+    tagAltNamesHidden: dbs.get('tagAltNamesHidden').value() || false,
+    tagPerformersHidden: dbs.get('tagPerformersHidden').value() || false,
+    tagEditBtnHidden: dbs.get('tagEditBtnHidden').value() || false,
   }),
   mutations: {
     updateTags (state) {
@@ -234,6 +237,18 @@ const Tags = {
       if (!stayOnCurrentPage) {
         commit('changeTagsPageCurrent', 1)
       }
+    },
+    updateTagAltNamesHidden({state, getters}, value) {
+      getters.settings.set('tagAltNamesHidden', value).write()
+      state.tagAltNamesHidden = value
+    },
+    updateTagPerformersHidden({state, getters}, value) {
+      getters.settings.set('tagPerformersHidden', value).write()
+      state.tagPerformersHidden = value
+    },
+    updateTagEditBtnHidden({state, getters}, value) {
+      getters.settings.set('tagEditBtnHidden', value).write()
+      state.tagEditBtnHidden = value
     },
   },
   getters: {

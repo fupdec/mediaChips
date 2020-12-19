@@ -20,20 +20,30 @@
           <div class="value">{{profileCompleteProgress}}<span class="percent">%</span></div>
         </v-progress-circular>
       </v-avatar>
-      <v-btn @click="copyPerformerNameToClipboard" icon class="copy-name-btn" 
-        title="Copy performer name to clipboard"><v-icon>mdi-content-copy</v-icon>
-      </v-btn>
-      <v-btn v-if="tabId==='default'" @click="addNewTabPerformer" icon class="new-tab-btn" 
-        title="Open performer in a new tab"><v-icon>mdi-tab-plus</v-icon>
-      </v-btn>
-      <v-btn @click="$store.state.Performers.dialogEditPerformerInfo = true"
-        icon class="profile-edit-btn" title="Edit info of performer">
-        <v-icon>mdi-square-edit-outline</v-icon>
-      </v-btn>
-      <v-btn @click="$store.state.Performers.dialogEditPerformerImages = true"
-        icon class="images-edit-btn" title="Edit images of performer">
-        <v-icon>mdi-image-edit-outline</v-icon>
-      </v-btn>
+      <div class="buttons-left">
+        <v-btn @click="copyPerformerNameToClipboard" icon
+          title="Copy performer name to clipboard"><v-icon>mdi-content-copy</v-icon>
+        </v-btn>
+        <v-btn @click="showTags = !showTags" icon
+          title="Toggle tags from videos visibilty"><v-icon>mdi-tag-outline</v-icon>
+        </v-btn>
+        <v-btn @click="showWebsites = !showWebsites" icon
+          title="Toggle websites visibilty"><v-icon>mdi-web</v-icon>
+        </v-btn>
+        <v-btn v-if="tabId==='default'" @click="addNewTabPerformer" icon
+          title="Open performer in a new tab"><v-icon>mdi-tab-plus</v-icon>
+        </v-btn>
+      </div>
+      <div class="buttons-right">
+        <v-btn @click="$store.state.Performers.dialogEditPerformerInfo = true"
+          icon title="Edit info of performer">
+          <v-icon>mdi-square-edit-outline</v-icon>
+        </v-btn>
+        <v-btn @click="$store.state.Performers.dialogEditPerformerImages = true"
+          icon title="Edit images of performer">
+          <v-icon>mdi-image-edit-outline</v-icon>
+        </v-btn>
+      </div>
       <v-expansion-panels v-model="profile" focusable>
         <v-expansion-panel :style="profileBackground">
           <v-expansion-panel-header class="pa-6" ripple hide-actions>
@@ -138,7 +148,7 @@
                     @click.middle="addNewTabTag(tag)"
                     >{{tag}}</v-chip>
                 </v-col>
-                <v-col v-if="tagsFromVideos.length" cols="12" class="text-center py-0">
+                <v-col v-if="tagsFromVideos.length && showTags" cols="12" class="text-center py-0">
                   <div class="my-2 font-weight-light"> 
                     <v-tooltip left>
                       <template v-slot:activator="{ on, attrs }">
@@ -161,6 +171,31 @@
                       @click="$store.state.hoveredImage=false"
                       @click.middle="addNewTabTag(tag)"
                     >{{tag}}</v-chip>
+                  </v-chip-group>
+                </v-col>
+                <v-col v-if="performer.websites.length && showWebsites" cols="12" class="text-center py-0">
+                  <div class="my-2 font-weight-light"> 
+                    <v-tooltip left>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+                      </template>
+                      <span>Click on website for filter videos</span>
+                    </v-tooltip>
+                    <span>Websites from videos</span>
+                    <v-btn v-if="activeWebsites.length" @click="activeWebsites=[]" 
+                      x-small rounded class="ml-4">
+                      <v-icon left>mdi-cancel</v-icon> Unselect all
+                    </v-btn>
+                  </div>
+                  <v-chip-group v-model="activeWebsites" active-class="active-chip"
+                    multiple column class="tags-from-videos">
+                    <v-chip v-for="website in performer.websites" :key="website"
+                      outlined small class="mr-2 mb-1 px-2"
+                      @mouseover.stop="showImage($event, getWebsiteId(website), 'website')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                      @click="$store.state.hoveredImage=false"
+                      @click.middle="addNewTabWebsite(website)"
+                    >{{website}}</v-chip>
                   </v-chip-group>
                 </v-col>
               </v-row>
@@ -283,6 +318,7 @@ export default {
     header: '',
     isHeaderImageExists: true,
     activeTags: [],
+    activeWebsites: [],
   }),
   computed: {
     gradient() {
@@ -298,13 +334,7 @@ export default {
       return `background-color: rgba(${color},.3)`
     },
     tagsFromVideos() {
-      let vids = this.$store.getters.videos
-      vids = vids.filter(v=>v.performers.includes(this.performer.name)).map('tags').value()
-      let tags = []
-      vids.map(video=>{ if (video.length>0) video.map(tag=>tags.push(tag)) })
-      tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-      tags = tags.filter(el => (el !== null && el !== undefined))
-      return tags.sort((a, b) => a.localeCompare(b))
+      return this.performer.videoTags
     },
     meterHeight() {
       return this.$store.state.Settings.meterHeight
@@ -380,6 +410,22 @@ export default {
       },
       set(profile) {
         this.$store.dispatch('changePerformerProfile', String(profile))
+      },
+    },
+    showTags: {
+      get() {
+        return this.$store.getters.performerProfileTags
+      },
+      set(value) {
+        this.$store.dispatch('changePerformerProfileTags', value)
+      },
+    },
+    showWebsites: {
+      get() {
+        return this.$store.getters.performerProfileWebsites
+      },
+      set(value) {
+        this.$store.dispatch('changePerformerProfileWebsites', value)
       },
     },
     aliases() {      
@@ -589,6 +635,26 @@ export default {
     getTagId(itemName) {
       return this.$store.getters.tags.find({name: itemName}).value().id
     },
+    addNewTabWebsite(websiteName) {
+      let tabId = this.getWebsiteId(websiteName)
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with website "${websiteName}" already exists`
+        })
+        return
+      }
+      let tab = { 
+        name: websiteName,
+        link: `/website/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        icon: 'web'
+      }
+      this.$store.dispatch('addNewTab', tab)
+    },
+    getWebsiteId(itemName) {
+      return this.$store.getters.websites.find({name: itemName}).value().id
+    },
     copyPerformerNameToClipboard() {
       navigator.clipboard.writeText(this.performer.name).then(function() {
         console.log('Async: Copying to clipboard was successful!');
@@ -685,10 +751,22 @@ export default {
       }
       this.updateFiltersOfVideos('tags', filtered)
     },
+    filterWebsites() {
+      let active = this.activeWebsites
+      let all = this.performer.websites
+      let filtered = [] 
+      for (let i=0; i<active.length; i++) {
+        filtered.push(all[active[i]])
+      }
+      this.updateFiltersOfVideos('websites', filtered)
+    },
   },
   watch: {
     activeTags() {
       this.filterTags()
+    },
+    activeWebsites() {
+      this.filterWebsites()
     },
     $route(newRoute) {
       if (!this.$route.path.includes('/performer/:')) return
@@ -736,29 +814,17 @@ export default {
   &.header {
     margin-top: -150px;
   }
-  .copy-name-btn {
+  .buttons-left,
+  .buttons-right {
     position: absolute;
     top: 25px;
+    z-index: 2;
+  }
+  .buttons-left {
     left: 25px;
-    z-index: 2;
   }
-  .new-tab-btn {
-    position: absolute;
-    top: 25px;
-    left: 70px;
-    z-index: 2;
-  }
-  .profile-edit-btn {
-    position: absolute;
-    top: 25px;
+  .buttons-right {
     right: 25px;
-    z-index: 2;
-  }
-  .images-edit-btn {
-    position: absolute;
-    top: 25px;
-    right: 70px;
-    z-index: 2;
   }
   .profile-avatar {
     position: absolute;

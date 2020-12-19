@@ -1,8 +1,8 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" 
+    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
       :data-id="tag.id" class="tag-card" outlined hover :class="{favorite: isFavorite}">
-      <v-img @click="openTagPage" @click.middle="addNewTab" :title='`Open tag "${tagName}"`'
+      <v-img @click="openTagPage" @click.middle="addNewTabTag()" :title='`Open tag "${tagName}"`'
         class="tag-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>
         <v-icon v-if="tag.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
@@ -13,11 +13,28 @@
         :color="isFavorite===false ? 'white' : 'pink'"
       > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
       </v-btn>
-      <v-card-title class="tag-card-name"> {{tagName}} 
-        <!-- ({{itemsWithTag}}) -->
+      <v-card-title class="py-1 px-2"> 
+        <div> {{tagName}} ({{tag.videos}}) </div>
+        <div v-if="tag.altNames.length>0 && !isAltNamesHidden" class="mt-1 body-2">
+          <span class="ml-2">Alternate: </span> {{tag.altNames.join(', ')}}
+        </div>
       </v-card-title>
-      <v-btn @click="$store.state.Tags.dialogEditTag = true"
-        class="tag-edit-btn" color="white" icon absolute >
+      <v-card-text v-if="tag.performers.length>0 && !isPerformersHidden" class="pa-1 py-0">
+        <div class="caption px-1">Performers ({{tag.performers.length}})</div>
+        <v-chip-group column>
+          <v-chip v-for="performer in tag.performers" :key="performer" :to="performerLink(performer)"
+            outlined label x-small
+            @mouseover.stop="showImage($event, getPerformerId(performer), 'performer')" 
+            @mouseleave.stop="$store.state.hoveredImage=false"
+            @click="$store.state.hoveredImage=false"
+            @click.middle="addNewTabPerformer(performer)"
+          > {{ performer }}
+          </v-chip>
+        </v-chip-group>
+      </v-card-text>
+
+      <v-btn v-if="!isEditBtnHidden" @click="$store.state.Tags.dialogEditTag=true"
+        color="secondary" fab x-small class="btn-edit">
         <v-icon>mdi-pencil</v-icon>
       </v-btn>
     </v-card>
@@ -28,11 +45,15 @@
 const fs = require("fs")
 const path = require("path")
 
+import ShowImageFunction from '@/mixins/ShowImageFunction'
+import LabelFunctions from '@/mixins/LabelFunctions'
+
 export default {
   name: "TagCard",
   props: {
     tag: Object,
   },
+  mixins: [ShowImageFunction, LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
       this.imgMain = this.getImgUrl(this.tag.id)
@@ -51,13 +72,6 @@ export default {
     updateImageData() {
       return this.$store.state.Tags.updateImage
     },
-    // itemsWithTag() {
-    //   let videos = this.$store.getters.videos.filter(v=>
-    //     (v.tags.includes(this.tag.name)) ).value().length
-    //   let performers = this.$store.getters.performers.filter(v=>
-    //     (v.tags.includes(this.tag.name)) ).value().length
-    //   return videos + performers
-    // },
     isFavorite: {
       get() {
         return this.tag.favorite
@@ -71,25 +85,17 @@ export default {
     bookmark() {
       return this.$store.getters.bookmarks.get('tags').find({itemId:this.tag.id}).value().text
     },
+    isAltNamesHidden() {
+      return this.$store.state.Tags.tagAltNamesHidden 
+    },
+    isEditBtnHidden() {
+      return this.$store.state.Tags.tagEditBtnHidden 
+    },
+    isPerformersHidden() {
+      return this.$store.state.Tags.tagPerformersHidden
+    },
   },
   methods: {
-    addNewTab() {
-      let tabId = this.tag.id
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with tag "${this.tag.name}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.tag.name,
-        link: `/tag/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
@@ -146,14 +152,6 @@ export default {
 </script>
 
 <style lang="less">
-.tag-card-name {
-  padding: 3px 35px 3px 5px;
-  font-weight: 300;
-  color: #fff;
-  font-size: 18px;
-  border-radius: 0 0 4px 4px;
-  background-color:rgba(0, 0, 0, 0.3)
-}
 .tag-card {
   cursor: default;
   .v-image {
@@ -162,6 +160,12 @@ export default {
   &:hover {
     .bookmark {
       opacity: 0.7;
+      &:hover {
+        opacity: 1;
+      }
+    }
+    .btn-edit {
+      opacity: 0.5;
       &:hover {
         opacity: 1;
       }
@@ -198,6 +202,17 @@ export default {
     border-style: solid;
     border-width: 50px 50px 0 0;
   }
+  .v-chip {
+    margin: 0 2px 2px !important;
+    padding: 0 4px;
+  }
+  .btn-edit {
+    position: absolute;
+    right: 5px;
+    opacity: 0;
+    z-index: 4;
+    bottom: 5px;
+  }
 }
 .tag-card-img {
   align-items: flex-end !important;
@@ -216,13 +231,6 @@ export default {
   }
   .v-image__image {
     background-position: center center;
-  }
-}
-.tag-edit-btn {
-  bottom: 0px !important;
-  right: 0px !important;
-  .v-icon {
-    text-shadow: 0 0 3px #000;
   }
 }
 </style>

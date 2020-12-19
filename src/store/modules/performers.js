@@ -135,6 +135,7 @@ const Performers = {
     performerCareerStatusHidden: dbs.get('performerCareerStatusHidden').value() || false,
     performerTagsHidden: dbs.get('performerTagsHidden').value() || false,
     performerVideoTagsHidden: dbs.get('performerVideoTagsHidden').value() || false,
+    performerWebsitesHidden: dbs.get('performerWebsitesHidden').value() || false,
     menuCard: false,
   }),
   mutations: {
@@ -489,10 +490,6 @@ const Performers = {
         let direction = state.filters.sortDirection
         if (sort === 'name') {
           performers = performers.orderBy(p=>(p.name.toLowerCase()), [direction])
-        } else if (sort === 'video') {
-          performers = performers.orderBy(p=>(
-            getters.videos.filter({performers: [p.name]}).value().length
-          ), [direction])
         } else {
           performers = performers.orderBy(sort, [direction])
         }
@@ -597,6 +594,10 @@ const Performers = {
     updatePerformerVideoTagsHidden({state, getters}, value) {
       getters.settings.set('performerVideoTagsHidden', value).write()
       state.performerVideoTagsHidden = value
+    },
+    updatePerformerWebsitesHidden({state, getters}, value) {
+      getters.settings.set('performerWebsitesHidden', value).write()
+      state.performerWebsitesHidden = value
     },
   },
   getters: {

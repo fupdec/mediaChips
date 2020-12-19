@@ -103,7 +103,7 @@
         </v-badge>
       </template>
       <span v-if="isNameHidden">Show Name</span>
-      <span v-else>Hide Name</span>
+      <span v-else>Hide Name & aliases</span>
     </v-tooltip>
     
     <v-tooltip bottom>
@@ -118,7 +118,7 @@
       <span v-else>Hide Aliases</span>
     </v-tooltip>
 
-    <!-- <v-tooltip bottom>
+    <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-badge :value="isMeterHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleMeterVisibilty()" v-on="on">
@@ -128,7 +128,7 @@
       </template>
       <span v-if="isMeterHidden">Show Tags Meter</span>
       <span v-else>Hide Tags Meter</span>
-    </v-tooltip> -->
+    </v-tooltip>
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
@@ -154,7 +154,7 @@
       <span v-else>Hide Tags</span>
     </v-tooltip>
 
-    <!-- <v-tooltip bottom>
+    <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-badge :value="isVideoTagsHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleVideoTagsVisibilty()" v-on="on">
@@ -164,7 +164,19 @@
       </template>
       <span v-if="isVideoTagsHidden">Show Video Tags</span>
       <span v-else>Hide Video Tags</span>
-    </v-tooltip> -->
+    </v-tooltip>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-badge :value="isWebsitesHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+          <v-btn icon tile @click="toggleWebsitesVisibilty()" v-on="on">
+            <v-icon>mdi-web</v-icon>
+          </v-btn>
+        </v-badge>
+      </template>
+      <span v-if="isWebsitesHidden">Show Websites</span>
+      <span v-else>Hide Websites</span>
+    </v-tooltip>
   </div>
 </template>
 
@@ -278,6 +290,14 @@ export default {
         this.$store.dispatch('updatePerformerVideoTagsHidden', value)
       },
     },
+    isWebsitesHidden: {
+      get () {
+        return this.$store.state.Performers.performerWebsitesHidden
+      },
+      set (value) {
+        this.$store.dispatch('updatePerformerWebsitesHidden', value)
+      },
+    },
   },
   methods: {
     toggleChipsColored() {
@@ -315,6 +335,9 @@ export default {
     },
     toggleVideoTagsVisibilty() {
       this.isVideoTagsHidden = !this.isVideoTagsHidden
+    },
+    toggleWebsitesVisibilty() {
+      this.isWebsitesHidden = !this.isWebsitesHidden
     },
     changeCardSize(event) {
       this.getCardSizeIcon()

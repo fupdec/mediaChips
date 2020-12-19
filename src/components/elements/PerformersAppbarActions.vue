@@ -531,20 +531,20 @@
             </template>
             <span>Sort by date of editing</span>
           </v-tooltip>
-          <!-- <v-tooltip bottom>
+          <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="video" v-on="on">
+              <v-btn outlined @click="toggleSortDirection" value="videos" v-on="on">
                 <v-icon>mdi-video-outline</v-icon>
-                <v-icon right size="14" v-if="sortButtons==='video' && sortDirection==='desc'">
+                <v-icon right size="14" v-if="sortButtons==='videos' && sortDirection==='desc'">
                   mdi-arrow-down-thick
                 </v-icon>
-                <v-icon right size="14" v-if="sortButtons==='video' && sortDirection==='asc'">
+                <v-icon right size="14" v-if="sortButtons==='videos' && sortDirection==='asc'">
                   mdi-arrow-up-thick
                 </v-icon>
               </v-btn>
             </template>
             <span>Sort by number of videos</span>
-          </v-tooltip> -->
+          </v-tooltip>
         </v-btn-toggle>
       </v-card>
     </v-menu>

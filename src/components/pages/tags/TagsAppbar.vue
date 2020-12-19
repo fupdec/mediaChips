@@ -237,6 +237,44 @@
       </v-tooltip>
     </div>
 
+    <v-spacer></v-spacer>
+
+    <div>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-badge :value="isAltNamesHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+            <v-btn icon tile @click="toggleAltNamesVisibilty()" v-on="on">
+              <v-icon>mdi-alphabetical</v-icon>
+            </v-btn>
+          </v-badge>
+        </template>
+        <span v-if="isAltNamesHidden">Show alternate names</span>
+        <span v-else>Hide alternate names</span>
+      </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-badge :value="isEditBtnHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+            <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
+              <v-icon>mdi-circle-edit-outline</v-icon>
+            </v-btn>
+          </v-badge>
+        </template>
+        <span v-if="isEditBtnHidden">Show edit button</span>
+        <span v-else>Hide edit button</span>
+      </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-badge :value="isPerformersHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+            <v-btn icon tile @click="togglePerformersVisibilty()" v-on="on">
+              <v-icon>mdi-account</v-icon>
+            </v-btn>
+          </v-badge>
+        </template>
+        <span v-if="isPerformersHidden">Show Tags</span>
+        <span v-else>Hide Tags</span>
+      </v-tooltip>
+    </div>
+
     <template v-slot:extension v-if="$store.getters.tabs.length">
       <Tabs />
     </template>
@@ -309,8 +347,41 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
+    isAltNamesHidden: {
+      get () {
+        return this.$store.state.Tags.tagAltNamesHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateTagAltNamesHidden', value)
+      },
+    },
+    isPerformersHidden: {
+      get () {
+        return this.$store.state.Tags.tagPerformersHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateTagPerformersHidden', value)
+      },
+    },
+    isEditBtnHidden: {
+      get () {
+        return this.$store.state.Tags.tagEditBtnHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateTagEditBtnHidden', value)
+      },
+    },
   },
   methods: {
+    toggleAltNamesVisibilty() {
+      this.isAltNamesHidden = !this.isAltNamesHidden
+    },
+    togglePerformersVisibilty() {
+      this.isPerformersHidden = !this.isPerformersHidden
+    },
+    toggleEditBtnVisibilty() {
+      this.isEditBtnHidden = !this.isEditBtnHidden
+    },
     async pasteText() {
       let text = await navigator.clipboard.readText()
       if (this.tagName) {
@@ -359,6 +430,9 @@ export default {
             value: 0,
             date: Date.now(),
             favorite: false,
+            videos: 0,
+            performers: [],
+            websites: [],
           }
 
           // add tagInfo to DB

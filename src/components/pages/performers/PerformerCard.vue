@@ -5,27 +5,27 @@
       :data-id="performer.id" hover outlined height="100%"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
-        <div @click="filterByNationality" @click.middle="addNewTabWithNationality"
-          class="flag-icon" :class="{hidden: isNationalityHidden}">
+        <div v-if="!isNationalityHidden" @click="filterByNationality"
+          @click.middle="addNewTabWithNationality" class="flag-icon">
           <country-flag :country='findCountryCode(performer.nation)' 
             size='normal' :title="performer.nation" />
         </div>
 
-        <v-img @click.middle="addNewTabPerformer"
+        <v-img @click.middle="addNewTabPerformer()"
           class="performer-card-img" :src="imgMain" :key="imgMainKey"
           @click="openPerformerPage" :aspect-ratio="5/8" position="top"
         >
           <span class="template-text" v-if="imgMain.includes('performer.png')">Main image</span>
         </v-img>
         
-        <v-img @click.middle="addNewTabPerformer"
+        <v-img @click.middle="addNewTabPerformer()"
           class="secondary-img" :src="imgAlt" :aspect-ratio="5/8" position="top"
           @click="openPerformerPage" :key="imgAltKey" :title="`Open ${performer.name} page`"
         >
           <span class="template-text" v-if="imgAlt.includes('performer_back.png')">Alternate image</span>
         </v-img>
 
-        <div class="rating-wrapper" :class="{hidden: isRatingHidden}">
+        <div v-if="!isRatingHidden" class="rating-wrapper">
           <v-rating
             v-model="performer.rating"
             color="yellow darken-3"
@@ -37,27 +37,26 @@
           ></v-rating>
         </div>
 
-        <v-btn @click="toggleFavorite" icon absolute 
-          :color="isFavorite===false ? 'white' : 'pink'"
-          class="fav-btn" :class="{hidden: isFavoriteHidden}"
+        <v-btn v-if="!isFavoriteHidden" @click="toggleFavorite" icon absolute 
+          :color="isFavorite===false ? 'white' : 'pink'" class="fav-btn"
         > <v-icon :color="isFavorite===false ? 'grey' : 'pink'"> mdi-heart-outline </v-icon>
         </v-btn>
 
         <div class="custom1-img-wrapper" v-if="!isCustomImgExist(imgCustom1)">
-          <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer"
+          <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
             class="custom1-img" :key="imgCustom1Key"
             :src="isCustomImgExist(imgCustom1) ? '' : imgCustom1"
           />
         </div>
 
         <div class="custom2-img-wrapper" v-if="!isCustomImgExist(imgCustom2)">
-          <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer"
+          <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
             class="custom2-img" :key="imgCustom2Key"
             :src="isCustomImgExist(imgCustom2) ? '' : imgCustom2"
           /> 
         </div>
 
-        <v-progress-circular class="profile-complete-progress" :class="{hidden: isProfileProgressHidden}"
+        <v-progress-circular v-if="!isProfileProgressHidden" class="profile-complete-progress"
           :value="profileCompleteProgress" size="28" rotate="270" title="Profile complete"
           :color="profileCompleteProgress>=99?'green':'white'" width="2"
         >
@@ -72,28 +71,23 @@
         </v-icon>
       </div>
 
-      <!-- <v-progress-linear 
-        class="performer-meter" :class="{hidden: isMeterHidden}"
-        :value="meter" :height="meterHeight" /> -->
+      <v-progress-linear v-if="!isMeterHidden" class="performer-meter" :value="meter" :height="meterHeight"/>
       
-      <v-card-title class="performer-card-title pa-2" :class="{hidden: isNameHidden}"> 
-        <div class="performer-name"> {{performerName}} </div>
-        <!-- <span class="ml-1 font-weight-light">({{videosQuantity}})</span> -->
-        <div v-show="performerAliases.length != 0" class="aliases mt-1" 
-          :class="{hidden: isAliasesHidden}">
+      <v-card-title v-if="!isNameHidden" class="performer-card-title pa-2"> 
+        <div> {{performerName}} ({{performer.videos}})</div>
+        <div v-if="performerAliases.length != 0 && !isAliasesHidden" class="aliases mt-1">
           <span class="aka">aka</span>{{performerAliases}}
         </div>
       </v-card-title>
 
-      <v-card-text class="pa-2 performer-career-status" :class="{hidden: isCareerStatusHidden}">
+      <v-card-text v-if="!isCareerStatusHidden" class="pa-2 performer-career-status">
         <span class="caption">Career status</span> 
         <v-chip class="px-4" label small dark :color="careerStatusColor">
           {{careerStatus}}
         </v-chip>
       </v-card-text>
 
-      <v-card-text class="px-1 py-0 performer-tags" :class="{hidden: isTagsHidden}" 
-        v-if="performer.tags.length>0">
+      <v-card-text v-if="performer.tags.length>0 && !isTagsHidden" class="px-1 py-0">
         <v-chip-group column>
           <v-chip v-for="tag in performer.tags" :key="tag" :to="tagLink(tag)"
             :x-small="isChipsXS" :small="isChipsS"
@@ -107,9 +101,7 @@
         </v-chip-group>
       </v-card-text>
       
-      <!-- TODO: remake tags from videos. add manual scan for tags, websites in settings -->
-      <!-- <v-card-text v-if="tagsFromVideos.length>0" 
-        class="pa-1 py-0 performer-video-tags" :class="{hidden: isVideoTagsHidden}">
+      <v-card-text v-if="tagsFromVideos.length>0 && !isVideoTagsHidden" class="pa-1 py-0">
         <div class="caption px-1">Tags from videos</div>
         <v-chip-group column>
           <v-chip v-for="tag in tagsFromVideos" :key="tag" :to="tagLink(tag)"
@@ -122,15 +114,29 @@
           > {{ tag }}
           </v-chip>
         </v-chip-group>
-      </v-card-text> -->
-      <!-- TODO: add websites from videos -->
+      </v-card-text>
       
-      <v-btn @click="$store.state.Performers.dialogEditPerformerImages=true"
-        color="secondary" fab x-small class="btn-edit-images" :class="{hidden: isEditBtnHidden}">
+      <v-card-text v-if="performer.websites.length>0 && !isWebsitesHidden" class="pa-1 py-0">
+        <div class="caption px-1">Websites</div>
+        <v-chip-group column>
+          <v-chip v-for="website in performer.websites" :key="website" :to="websiteLink(website)"
+            :x-small="isChipsXS" :small="isChipsS"
+            outlined label :color="getWebsiteColor(website)" 
+            @mouseover.stop="showImage($event, getWebsiteId(website), 'website')" 
+            @mouseleave.stop="$store.state.hoveredImage=false"
+            @click="$store.state.hoveredImage=false"
+            @click.middle="addNewTabWebsite(website)"
+          > {{ website }}
+          </v-chip>
+        </v-chip-group>
+      </v-card-text>
+      
+      <v-btn v-if="!isEditBtnHidden" @click="$store.state.Performers.dialogEditPerformerImages=true"
+        color="secondary" fab x-small class="btn-edit-images">
         <v-icon>mdi-image-edit-outline</v-icon>
       </v-btn>
-      <v-btn @click="$store.state.Performers.dialogEditPerformerInfo=true"
-        color="secondary" fab x-small class="btn-edit" :class="{hidden: isEditBtnHidden}">
+      <v-btn v-if="!isEditBtnHidden" @click="$store.state.Performers.dialogEditPerformerInfo=true"
+        color="secondary" fab x-small class="btn-edit">
         <v-icon>mdi-pencil</v-icon>
       </v-btn>
     </v-card>
@@ -146,6 +152,7 @@ const shortid = require("shortid")
 import CountryFlag from 'vue-country-flag'
 import Countries from '@/mixins/Countries'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
+import LabelFunctions from '@/mixins/LabelFunctions'
 
 export default {
   name: "PerformerCard",
@@ -155,7 +162,7 @@ export default {
   components: {
     CountryFlag,
 	},
-  mixins: [Countries, ShowImageFunction], 
+  mixins: [Countries, ShowImageFunction, LabelFunctions], 
   mounted () {
     this.$nextTick(function () {
       this.performerAliases = this.performer.aliases.join(", ")
@@ -165,10 +172,7 @@ export default {
       this.imgAlt = this.getImg(this.performer.id, 'alt')
       this.imgCustom1 = this.getImg(this.performer.id, 'custom1')
       this.imgCustom2 = this.getImg(this.performer.id, 'custom2')
-      // this.updateMeter()
-      // this.videosQuantity = this.$store.getters.videos.filter({
-      //   'performers': [this.performer.name]
-      // }).value().length
+      this.updateMeter()
     })
   },
   data: () => ({
@@ -183,8 +187,7 @@ export default {
     imgCustom2: '',
     imgCustom2Key: Date.now()+3,
     isFavorite: false,
-    // meter: 0,
-    // videosQuantity: 0,
+    meter: 0,
     isChipsXS: true,
     isChipsS: false,
     percentValue: 5.263,
@@ -226,6 +229,9 @@ export default {
     isVideoTagsHidden() {
       return this.$store.state.Performers.performerVideoTagsHidden
     },
+    isWebsitesHidden() {
+      return this.$store.state.Performers.performerWebsitesHidden
+    },
     aliases: {
       get() {
         let filteredAliases = JSON.parse(JSON.stringify(this.performer.aliases))
@@ -257,21 +263,15 @@ export default {
     updateInfoData() {
       return this.$store.state.Performers.updateInfo
     },
-    // tagsFromVideos() {
-    //   let vids = this.$store.getters.videos
-    //   vids = vids.filter(v=>v.performers.includes(this.performer.name)).map('tags').value()
-    //   let tags = []
-    //   vids.map(video=>{ if (video.length>0) video.map(tag=>tags.push(tag)) })
-    //   tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-    //   tags = tags.filter(el => (el !== null && el !== undefined))
-    //   return tags.sort((a, b) => a.localeCompare(b))
-    // },
-    // meterHeight() {
-    //   return this.$store.state.Settings.meterHeight
-    // },
-    // meterMultiplier() {
-    //   return this.$store.state.Settings.meterMultiplier
-    // },
+    tagsFromVideos() {
+      return this.performer.videoTags
+    },
+    meterHeight() {
+      return this.$store.state.Settings.meterHeight
+    },
+    meterMultiplier() {
+      return this.$store.state.Settings.meterMultiplier
+    },
     careerStatus() {
       let status
       if (this.performer.start !== "" && this.performer.end === "") {
@@ -374,44 +374,10 @@ export default {
     },
   },
   methods: {
-    addNewTabPerformer() {
-      let tabId = this.performer.id
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with performer "${this.performer.name}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.performer.name,
-        link: `/performer/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
-    },
-    addNewTabTag(tagName) {
-      let tabId = this.getTagId(tagName)
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with tag "${tagName}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: tagName,
-        link: `/tag/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
     },
     addNewTabWithNationality() {
       let key = 'nation'
@@ -446,12 +412,6 @@ export default {
       this.$store.commit('updateFiltersOfPerformers', {key, value})
       this.$store.dispatch('filterPerformers')
       this.updateTabFilters()
-    },
-    tagLink(tag) {
-      return `/tag/:${this.getTagId(tag)}?tabId=default`
-    },
-    getTagId(itemName) {
-      return this.$store.getters.tags.find({name: itemName}).value().id
     },
     openPerformerPage() {
       this.$router.push(`/performer/:${this.performer.id}?tabId=default`)
@@ -497,15 +457,15 @@ export default {
         }
       }, 3000)
     },
-    // updateMeter(value) {
-    //   if(this.tagsFromVideos.length>0) {
-    //     this.meter = 0
-    //     for (let i=0; i < this.tagsFromVideos.length; i++) {
-    //       this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
-    //     }
-    //     this.meter = this.meter * (1 + this.meterMultiplier / 50)
-    //   }
-    // },
+    updateMeter() {
+      if (this.tagsFromVideos.length>0 && !this.isMeterHidden) {
+        this.meter = 0
+        for (let i=0; i < this.tagsFromVideos.length; i++) {
+          this.meter += this.tagInPercentsOfMeter(this.getTagValue(this.tagsFromVideos[i]))
+        }
+        this.meter = this.meter * (1 + this.meterMultiplier / 50)
+      }
+    },
     getImg(performerId, imageType) {
       let imgMainPath = this.getImgUrl(performerId) + `_${imageType}.jpg`
       return this.checkImageExist(imgMainPath, imageType)+'?lastmod='+Date.now()
@@ -550,13 +510,18 @@ export default {
         .write();
       this.$store.commit('updatePerformers')
     },
-    getTagColor(tagName) {
+    getTagColor(itemName) {
       if (this.isChipsColored) {
-        return this.$store.getters.tags.find({name:tagName}).value().color
+        return this.$store.getters.tags.find({name:itemName}).value().color
       } else return ''
     },
-    getTagValue(tagName) {
-      return this.$store.getters.tags.find({name:tagName}).value().value
+    getTagValue(itemName) {
+      return this.$store.getters.tags.find({name:itemName}).value().value
+    },
+    getWebsiteColor(itemName) {
+      if (this.isChipsColored) {
+        return this.$store.getters.websites.find({name:itemName}).value().color
+      } else return ''
     },
     tagInPercentsOfMeter(tagValue) {
       if (tagValue != 0) {
@@ -594,17 +559,20 @@ export default {
     },
   },
   watch: {
-    updateImagesData (imgData) {
+    updateImagesData(imgData) {
       if (this.performer.id == imgData.id) {
         this.updateImages(imgData)
       }
     },
-    updateInfoData (info) {
+    updateInfoData(info) {
       this.updateInfo(info)
     },
-    // meterMultiplier (value) {
-    //   this.updateMeter(value)
-    // },
+    isMeterHidden() {
+      this.updateMeter()
+    },
+    meterMultiplier() {
+      this.updateMeter()
+    },
     chipsSize(newSize, oldSize) {
       this.getChipsSize()
     }
@@ -648,9 +616,6 @@ export default {
     font-weight: 400;
     font-size: 16px;
     line-height: 1.2;
-    &.hidden{
-      display: none;
-    }
   }
   &-img {
     transition: .3s opacity ease-out, 0.3s height ease;
@@ -688,9 +653,6 @@ export default {
     z-index: 1;
     background-color: rgba(0, 0, 0, 0.15);
     border-top-right-radius: 8px;
-    &.hidden {
-      display: none;
-    }
   }
   .img-container {
     position: relative;
@@ -734,10 +696,6 @@ export default {
     margin: 0 2px 2px !important;
     padding: 0 4px;
   }
-  .performer-name {
-    font-weight: 300;
-    cursor: pointer;
-  }
   .flag-icon {
     position: absolute;
     top: 5px;
@@ -755,9 +713,6 @@ export default {
       top: -100%;
       bottom: -100%;
     }
-    &.hidden {
-      display: none;
-    }
   }
   .aka {
     font-size: 12px;
@@ -768,12 +723,8 @@ export default {
   .aliases {
     width: 100%;
     font-size: 12px;
-    font-weight: 300;
     line-height: 1.2;
     word-break: keep-all;
-    &.hidden {
-      display: none;
-    }
   }
   .template-text {
     pointer-events: none;
@@ -793,25 +744,18 @@ export default {
     align-items: center;
     justify-content: center;
   }
-  .btn-edit-images {
-    position: absolute;
-    bottom: 45px;
-    right: 5px;
-    opacity: 0;
-    z-index: 4;
-    &.hidden {
-      display: none;
-    }
-  }
+  .btn-edit-images,
   .btn-edit {
     position: absolute;
     right: 5px;
-    bottom: 5px;
     opacity: 0;
     z-index: 4;
-    &.hidden {
-      display: none;
-    }
+  }
+  .btn-edit-images  {
+    bottom: 45px;
+  }
+  .btn-edit {
+    bottom: 5px;
   }
   .tags-from-videos {
     font-size: 12px;
@@ -819,22 +763,9 @@ export default {
     margin-bottom: 0;
     padding-left: 3px;
   }
-  .performer-tags {
-    &.hidden {
-      display: none;
-    }
-  }
-  .performer-video-tags {
-    &.hidden {
-      display: none;
-    }
-  }
   .performer-career-status {
     display: flex;
     justify-content: space-between;
-    &.hidden {
-      display: none;
-    }
   }
   .bookmark {
     position: absolute;
@@ -899,9 +830,6 @@ export default {
     right: 5px;
     background-color: rgba(90, 90, 90, 0.5);
     border-radius: 50%;
-    &.hidden {
-      display: none;
-    }
     .percent {
       font-size: 8px;
     }

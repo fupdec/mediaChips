@@ -47,6 +47,9 @@ const Websites = {
     filteredWebsites: [],
     filteredEmpty: false,
     menuCard: false,
+    websiteVideoTagsHidden: dbs.get('websiteVideoTagsHidden').value() || false,
+    websitePerformersHidden: dbs.get('websitePerformersHidden').value() || false,
+    websiteEditBtnHidden: dbs.get('websiteEditBtnHidden').value() || false,
   }),
   mutations: {
     updateWebsites (state) {
@@ -182,6 +185,18 @@ const Websites = {
       if (!stayOnCurrentPage) {
         commit('changeWebsitesPageCurrent', 1)
       }
+    },
+    updateWebsiteVideoTagsHidden({state, getters}, value) {
+      getters.settings.set('websiteVideoTagsHidden', value).write()
+      state.websiteVideoTagsHidden = value
+    },
+    updateWebsitePerformersHidden({state, getters}, value) {
+      getters.settings.set('websitePerformersHidden', value).write()
+      state.websitePerformersHidden = value
+    },
+    updateWebsiteEditBtnHidden({state, getters}, value) {
+      getters.settings.set('websiteEditBtnHidden', value).write()
+      state.websiteEditBtnHidden = value
     },
   },
   getters: {

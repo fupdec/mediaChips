@@ -1121,6 +1121,14 @@ export default {
           let index = video.performers.indexOf(this.performer.name)
           if (index !== -1) video.performers.splice(index, 1, this.performerName)
         }).write()
+        this.$store.getters.tags.filter({'performers': [this.performer.name]}).each(video=>{
+          let index = video.performers.indexOf(this.performer.name)
+          if (index !== -1) video.performers.splice(index, 1, this.performerName)
+        }).write()
+        this.$store.getters.websites.filter({'performers': [this.performer.name]}).each(video=>{
+          let index = video.performers.indexOf(this.performer.name)
+          if (index !== -1) video.performers.splice(index, 1, this.performerName)
+        }).write()
       }
       if (typeof newAliases === 'string') {
         newAliases = this.parseStringToArray(newAliases)

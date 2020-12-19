@@ -293,9 +293,15 @@ export default {
       }
       if (this.isWebsiteNameEditEnabled) {
         // rename website in videos
-        this.$store.getters.videos.filter({'website': this.website.name}).each(video=>{
+        this.$store.getters.videos.filter({website: this.website.name}).each(video=>{
           video.website = this.websiteName
         }).write()
+        // rename website in performers
+        this.$store.getters.performers.filter({websites: [this.website.name]})
+          .each(performer=>{
+            let index = performer.websites.indexOf(this.website.name)
+            if (index !== -1) performer.websites.splice(index, 1, this.websiteName)
+          }).write()
         // rename website in child websites 
         this.$store.getters.websites.filter(website => {
           return website.childWebsites.includes(this.website.name)
@@ -304,7 +310,6 @@ export default {
           if (index !== -1) website.childWebsites.splice(index, 1, this.websiteName)
         }).write()
       }
-
       let isNetwork = this.isNetwork
       let childWebsites
       if (isNetwork) {
@@ -352,7 +357,6 @@ export default {
       info.network = isNetwork
       info.childWebsites = childWebsites
       info.bookmark = newBookmark
-      console.log(info)
       this.$store.state.Websites.updateInfo = info
       this.$store.state.Websites.dialogEditWebsite = false
       this.$store.state.Bookmarks.bookmarkText = ''

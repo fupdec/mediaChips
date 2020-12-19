@@ -1,8 +1,8 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" 
+    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
       :data-id="website.id" class="website-card" outlined hover :class="{favorite: isFavorite}">
-      <v-img @click="openWebsitePage" @click.middle="addNewTab" :title='`Open website "${websiteName}"`' 
+      <v-img @click="openWebsitePage" @click.middle="addNewTabWebsite()" :title='`Open website "${websiteName}"`' 
         class="website-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="website-color" :style="`border-color: ${website.color} transparent transparent transparent;`"/>
         <v-icon v-if="website.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
@@ -13,11 +13,37 @@
         :color="isFavorite===false ? 'white' : 'pink'"
       > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
       </v-btn>
-      <v-card-title class="website-card-name">{{websiteName}} 
-        <!-- <span>({{videosOfWebsite}})</span> -->
+      <v-card-title class="py-1 px-2">{{websiteName}} ({{website.videos}})
       </v-card-title>
-      <v-btn @click="$store.state.Websites.dialogEditWebsite = true"
-        class="website-edit-btn" color="white" icon absolute >
+      <v-card-text v-if="website.performers.length>0 && !isPerformersHidden" class="pa-1 py-0">
+        <div class="caption px-1">Performers ({{website.performers.length}})</div>
+        <v-chip-group column>
+          <v-chip v-for="performer in website.performers" :key="performer" :to="performerLink(performer)"
+            outlined label x-small
+            @mouseover.stop="showImage($event, getPerformerId(performer), 'performer')" 
+            @mouseleave.stop="$store.state.hoveredImage=false"
+            @click="$store.state.hoveredImage=false"
+            @click.middle="addNewTabPerformer(performer)"
+          > {{ performer }}
+          </v-chip>
+        </v-chip-group>
+      </v-card-text>
+      <v-card-text v-if="website.videoTags.length>0 && !isVideoTagsHidden" class="pa-1 py-0">
+        <div class="caption px-1">Tags from videos</div>
+        <v-chip-group column>
+          <v-chip v-for="tag in website.videoTags" :key="tag" :to="tagLink(tag)"
+            outlined x-small
+            @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
+            @mouseleave.stop="$store.state.hoveredImage=false"
+            @click="$store.state.hoveredImage=false"
+            @click.middle="addNewTabTag(tag)"
+          > {{ tag }}
+          </v-chip>
+        </v-chip-group>
+      </v-card-text>
+
+      <v-btn v-if="!isEditBtnHidden" @click="$store.state.Websites.dialogEditWebsite=true"
+        color="secondary" fab x-small class="btn-edit">
         <v-icon>mdi-pencil</v-icon>
       </v-btn>
     </v-card>
@@ -28,11 +54,15 @@
 const fs = require("fs")
 const path = require("path")
 
+import ShowImageFunction from '@/mixins/ShowImageFunction'
+import LabelFunctions from '@/mixins/LabelFunctions'
+
 export default {
   name: "WebsiteCard",
   props: {
     website: Object,
   },
+  mixins: [ShowImageFunction, LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
       this.imgMain = this.getImgUrl(this.website.id)
@@ -45,9 +75,6 @@ export default {
     imgMainKey: Date.now(),
   }),
   computed: {
-    // videosOfWebsite() {
-    //   return this.$store.getters.videos.filter({website:this.website.name}).value().length
-    // },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
@@ -64,25 +91,17 @@ export default {
     bookmark() {
       return this.$store.getters.bookmarks.get('websites').find({itemId:this.website.id}).value().text
     },
+    isEditBtnHidden() {
+      return this.$store.state.Websites.websiteEditBtnHidden 
+    },
+    isVideoTagsHidden() {
+      return this.$store.state.Websites.websiteVideoTagsHidden 
+    },
+    isPerformersHidden() {
+      return this.$store.state.Websites.websitePerformersHidden
+    },
   },
   methods: {
-    addNewTab() {
-      let tabId = this.website.id
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with website "${this.website.name}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.website.name,
-        link: `/website/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'web'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
@@ -130,14 +149,6 @@ export default {
 </script>
 
 <style lang="less">
-.website-card-name {
-  padding: 3px 35px 3px 5px;
-  font-weight: 300;
-  color: #fff;
-  font-size: 18px;
-  border-radius: 0 0 4px 4px;
-  background-color:rgba(0, 0, 0, 0.3)
-}
 .website-card {
   cursor: default;
   .v-image {
@@ -146,6 +157,12 @@ export default {
   &:hover {
     .bookmark {
       opacity: 0.7;
+      &:hover {
+        opacity: 1;
+      }
+    }
+    .btn-edit {
+      opacity: 0.5;
       &:hover {
         opacity: 1;
       }
@@ -183,6 +200,17 @@ export default {
     border-style: solid;
     border-width: 50px 50px 0 0;
   }
+  .v-chip {
+    margin: 0 2px 2px !important;
+    padding: 0 4px;
+  }
+  .btn-edit {
+    position: absolute;
+    right: 5px;
+    opacity: 0;
+    z-index: 4;
+    bottom: 5px;
+  }
 }
 .website-card-img {
   align-items: flex-end !important;
@@ -201,13 +229,6 @@ export default {
   }
   .v-image__image {
     background-position: center center;
-  }
-}
-.website-edit-btn {
-  bottom: 0px !important;
-  right: 0px !important;
-  .v-icon {
-    text-shadow: 0 0 3px #000;
   }
 }
 </style>

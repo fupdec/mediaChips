@@ -200,18 +200,7 @@ export default {
         .value()
     },
     topTags() {
-      let tagUsage = this.$store.getters.tags.map(tag=>{
-        let videos = this.$store.getters.videos.filter(video=>(video.tags.includes(tag.name))).value()
-        return {
-          tagId: tag.id,
-          tagColor: tag.color,
-          tagName: tag.name,
-          videos: videos.length
-        }
-      }).value()
-      tagUsage = _.orderBy(tagUsage, ['videos'], ['desc'])
-      tagUsage = tagUsage.slice(0,9)
-      return tagUsage
+      return this.$store.getters.tags.orderBy(['videos'], ['desc']).value().slice(0,9)
     },
     chartOptionsTags(){
       let chartOptions = {
@@ -234,33 +223,15 @@ export default {
       }
       for (const tag of this.topTags) {
         this.seriesTags.push(tag.videos)
-        chartOptions.labels.push(tag.tagName)
-        if (tag.tagColor) {
-          chartOptions.colors.push(tag.tagColor)
+        chartOptions.labels.push(tag.name)
+        if (tag.color) {
+          chartOptions.colors.push(tag.color)
         } else chartOptions.colors.push('#9b9b9b')
       }
       return chartOptions
     },
     topWebsites() {
-      let websiteUsage = this.$store.getters.websites.map(website=>{
-        let videos = this.$store.getters.videos.filter(video=>(video.website===website.name)).value()
-        return {
-          websiteId: website.id,
-          websiteColor: website.color,
-          websiteName: website.name,
-          videos: videos.length
-        }
-      }).value()
-      let unknown = this.$store.getters.videos.filter(video=>(video.website==='')).value()
-      websiteUsage.push({
-        websiteId: null,
-        websiteColor: null,
-        websiteName: 'Unknown',
-        videos: unknown.length
-      })
-      websiteUsage = _.orderBy(websiteUsage, ['videos'], ['desc'])
-      websiteUsage = websiteUsage.slice(0,9)
-      return websiteUsage
+      return this.$store.getters.websites.orderBy(['videos'], ['desc']).value().slice(0,9)
     },
     chartOptionsWebsites(){
       let chartOptions = {
@@ -283,9 +254,9 @@ export default {
       }
       for (const website of this.topWebsites) {
         this.seriesWebsites.push(website.videos)
-        chartOptions.labels.push(website.websiteName)
-        if (website.websiteColor) {
-          chartOptions.colors.push(website.websiteColor)
+        chartOptions.labels.push(website.name)
+        if (website.color) {
+          chartOptions.colors.push(website.color)
         } else chartOptions.colors.push('#9b9b9b')
       }
       return chartOptions

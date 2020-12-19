@@ -303,14 +303,22 @@ export default {
         this.tagName = this.tagName.replace(/[\\\/\%"<>{}\[\]]/g, '')
       }
       if (this.isTagNameEditEnabled) {
+        // rename tag in videos
         this.$store.getters.videos.filter({'tags': [this.tag.name]}).each(video=>{
           let index = video.tags.indexOf(this.tag.name)
           if (index !== -1) video.tags.splice(index, 1, this.tagName)
         }).write()
+        // rename tag in performers
         this.$store.getters.performers.filter({'tags': [this.tag.name]}).each(performer=>{
           let index = performer.tags.indexOf(this.tag.name)
           if (index !== -1) performer.tags.splice(index, 1, this.tagName)
         }).write()
+        // rename tag in performer tags from videos
+        this.$store.getters.performers.filter({'videoTags': [this.tag.name]}).each(performer=>{
+          let index = performer.videoTags.indexOf(this.tag.name)
+          if (index !== -1) performer.videoTags.splice(index, 1, this.tagName)
+        }).write()
+        // rename tag in markers
         this.$store.getters.bookmarks.get('markers')
           .filter(marker => (marker.type=='Tag' && marker.name==this.tag.name))
           .each(marker => {marker.name = this.tagName}).write()

@@ -23,14 +23,52 @@
             hint="e.g. C:\Program Files\MPC-HC64\mpc-hc64.exe" />
         </v-col>
         <v-col cols="2">
-          <v-btn outlined color="primary" @click="testPathToSystemPlayer" block>Test</v-btn>
+          <v-btn color="primary" @click="testPathToSystemPlayer" block>Test</v-btn>
         </v-col>
       </v-row>
 
-      <div class="headline text-h5 text-center mt-6 mb-4"> Video preview
+      <div class="subtitle mt-4 mb-2">
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-bind="attrs" v-on="on" left small>
+              mdi-help-circle-outline
+            </v-icon>
+          </template>
+          <span>Number of videos, performers, tags and websites</span>
+        </v-tooltip>
+        Update data from videos:
+      </div>
+      <v-btn @click="updateNumberOfVideos" color="primary"> Start updating </v-btn>
+      <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
+        <v-card>
+          <v-card-title>
+            <div>Updating data from video</div>
+            <v-spacer></v-spacer>
+            <v-icon>mdi-video-outline</v-icon>
+          </v-card-title>
+          <v-divider></v-divider>
+          <v-card-text class="pt-10">
+            <div v-if="updatingNumberOfVideos" class="text-center">
+              <h3 class="mb-2">Update in progress...</h3>
+              <v-icon x-large class="loading-animation">mdi-loading</v-icon>
+            </div>
+            <div v-else class="text-center">
+              <h3 class="mb-2">Data updated!</h3>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer/>
+            <v-btn @click="dialogUpdateNumberOfVideos=false" :disabled="updatingNumberOfVideos"
+              color="primary" class="ma-4">OK</v-btn>
+            <v-spacer/>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <div class="headline text-h5 text-center mt-10 mb-4"> Video preview
         <v-tooltip right>
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-bind="attrs" v-on="on" class="mx-2" small>
+            <v-icon v-bind="attrs" v-on="on" right small>
               mdi-help-circle-outline
             </v-icon>
           </template>
@@ -61,7 +99,7 @@
       <div class="headline text-h5 text-center mt-10 mb-4"> Meter
         <v-tooltip right>
           <template v-slot:activator="{ on, attrs }">
-            <v-icon v-bind="attrs" v-on="on" class="mx-2" small>
+            <v-icon v-bind="attrs" v-on="on" right small>
               mdi-help-circle-outline
             </v-icon>
           </template>
@@ -80,9 +118,9 @@
         </v-col>
         <v-col cols="12" sm="6">
           <div class="subtitle mb-10">
-            <v-tooltip bottom>
+            <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" class="mx-2" small>
+                <v-icon v-bind="attrs" v-on="on" left small>
                   mdi-help-circle-outline
                 </v-icon>
               </template>
@@ -371,6 +409,8 @@ export default {
     })
   },
   data: ()=>({
+    dialogUpdateNumberOfVideos: false,
+    updatingNumberOfVideos: false,
     fonts: [
       'Lato',
       'Lobster',
@@ -495,6 +535,60 @@ export default {
     },
   },
   methods: {
+    updateNumberOfVideos() {
+      this.dialogUpdateNumberOfVideos = true
+      this.updatingNumberOfVideos = true
+      const videos = this.$store.getters.videos
+      setTimeout(()=>{
+        // update performer data
+        this.$store.getters.performers.each(p=>{
+          const vids = videos.filter(v=>(v.performers.includes(p.name)))
+          p.videos = vids.value().length // write number of videos
+          // get tags of videos
+          let tagsAllVideos = vids.map('tags').value()
+          let tags = []
+          tagsAllVideos.map(vTags=>{ if (vTags.length>0) vTags.map(tag=>tags.push(tag)) })
+          tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
+          tags = tags.filter(el => (el !== null && el !== undefined))
+          p.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
+          // get websites of videos
+          let websites = vids.map('website').value()
+          websites = websites.filter((x, i, a) => a.indexOf(x) === i) // get unique values
+          websites = websites.filter(el => (el !== null && el !== undefined && el !== ""))
+          p.websites = websites.sort((a, b) => a.localeCompare(b)) // write websites of videos
+        }).write()
+
+        // update tag data
+        this.$store.getters.tags.each(t=>{
+          const vids = videos.filter(v=>(v.tags.includes(t.name)))
+          t.videos = vids.value().length // write number of videos
+          // get performers of tag
+          let performers = this.$store.getters.performers.filter({tags:[t.name]}).map('name').value()
+          t.performers = performers.sort((a, b) => a.localeCompare(b)) // write performers of tag
+        }).write()
+
+        // update website data
+        this.$store.getters.websites.each(w=>{
+          const vids = videos.filter({website: w.name})
+          w.videos = vids.value().length // write number of videos
+          // get performers of videos
+          let performersAllVideos = vids.map('performers').value()
+          let performers = []
+          performersAllVideos.map(perfs=>{ if (perfs.length>0) perfs.map(p=>performers.push(p)) })
+          performers = performers.filter((x, i, a) => a.indexOf(x) === i) // get unique values
+          performers = performers.filter(el => (el !== null && el !== undefined))
+          w.performers = performers.sort((a, b) => a.localeCompare(b)) // write performers of videos
+          // get tags of videos
+          let tagsAllVideos = vids.map('tags').value()
+          let tags = []
+          tagsAllVideos.map(vTags=>{ if (vTags.length>0) vTags.map(tag=>tags.push(tag)) })
+          tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
+          tags = tags.filter(el => (el !== null && el !== undefined))
+          w.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
+        }).write()
+        this.updatingNumberOfVideos = false
+      }, 100)
+    },
     openDialogHeaderGradientLight() {
       this.gradientThemeDark = false
       this.$store.state.Settings.dialogHeaderGradient = true
@@ -544,3 +638,18 @@ export default {
   },
 }
 </script>
+
+
+<style lang="less" scoped>
+.loading-animation {
+  animation: rotate 0.5s infinite linear;
+}
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

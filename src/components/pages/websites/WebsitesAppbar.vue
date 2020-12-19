@@ -209,6 +209,44 @@
       </v-tooltip>
     </div>
 
+    <v-spacer></v-spacer>
+
+    <div>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-badge :value="isEditBtnHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+            <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
+              <v-icon>mdi-circle-edit-outline</v-icon>
+            </v-btn>
+          </v-badge>
+        </template>
+        <span v-if="isEditBtnHidden">Show edit button</span>
+        <span v-else>Hide edit button</span>
+      </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-badge :value="isVideoTagsHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+            <v-btn icon tile @click="toggleVideoTagsVisibilty()" v-on="on">
+              <v-icon>mdi-tag-outline</v-icon>
+            </v-btn>
+          </v-badge>
+        </template>
+        <span v-if="isVideoTagsHidden">Show Video Tags</span>
+        <span v-else>Hide Video Tags</span>
+      </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-badge :value="isPerformersHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
+            <v-btn icon tile @click="togglePerformersVisibilty()" v-on="on">
+              <v-icon>mdi-account</v-icon>
+            </v-btn>
+          </v-badge>
+        </template>
+        <span v-if="isPerformersHidden">Show Tags</span>
+        <span v-else>Hide Tags</span>
+      </v-tooltip>
+    </div>
+
     <template v-slot:extension v-if="$store.getters.tabs.length">
       <Tabs />
     </template>
@@ -279,8 +317,41 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
+    isPerformersHidden: {
+      get () {
+        return this.$store.state.Websites.websitePerformersHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateWebsitePerformersHidden', value)
+      },
+    },
+    isVideoTagsHidden: {
+      get () {
+        return this.$store.state.Websites.websiteVideoTagsHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateWebsiteVideoTagsHidden', value)
+      },
+    },
+    isEditBtnHidden: {
+      get () {
+        return this.$store.state.Websites.websiteEditBtnHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateWebsiteEditBtnHidden', value)
+      },
+    },
   },
   methods: {
+    togglePerformersVisibilty() {
+      this.isPerformersHidden = !this.isPerformersHidden
+    },
+    toggleVideoTagsVisibilty() {
+      this.isVideoTagsHidden = !this.isVideoTagsHidden
+    },
+    toggleEditBtnVisibilty() {
+      this.isEditBtnHidden = !this.isEditBtnHidden
+    },
     async pasteText() {
       let text = await navigator.clipboard.readText()
       if (this.websiteName) {
@@ -328,6 +399,10 @@ export default {
             childWebsites: [],
             date: Date.now(),
             favorite: false,
+            videos: 0,
+            performers: [],
+            tags: [],
+            videoTags: [],
           }
 
           // add websiteInfo to DB
