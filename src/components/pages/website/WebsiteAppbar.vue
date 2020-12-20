@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left extension-height="28" :style="{background: headerColor}">
+	<div class="app-bar-container">
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -18,12 +18,7 @@
     <v-spacer></v-spacer>
 
     <VideosAppbarCardView />
-    
-
-    <template v-slot:extension v-if="$store.getters.tabs.length">
-      <Tabs />
-    </template>
-	</v-app-bar>
+	</div>
 </template>
 
 
@@ -34,7 +29,6 @@ export default {
     DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue"),
     VideosAppbarActions: () => import('@/components/elements/VideosAppbarActions.vue'),
     VideosAppbarCardView: () => import('@/components/elements/VideosAppbarCardView.vue'),
-    Tabs: () => import('@/components/elements/Tabs.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -48,17 +42,6 @@ export default {
     },
     websiteId() {
       return this.$route.params.id.replace(/:/g, '')    
-    },
-    headerColor() {
-      if (this.$store.state.Settings.headerGradient) {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.headerGradientDark
-        } else return this.$store.state.Settings.headerGradientLight
-      } else {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.appColorDarkHeader
-        } else return this.$store.state.Settings.appColorLightHeader
-      }
     },
   },
   methods: {

@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left extension-height="28" :style="{background: headerColor}">
+	<div class="app-bar-container">
     <div>
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
@@ -63,11 +63,7 @@
     <v-spacer></v-spacer>
 
     <PerformersAppbarCardView />
-
-    <template v-slot:extension v-if="$store.getters.tabs.length">
-      <Tabs />
-    </template>
-	</v-app-bar>
+	</div>
 </template>
 
 
@@ -79,7 +75,6 @@ export default {
   components: {
     PerformersAppbarActions: () => import('@/components/elements/PerformersAppbarActions.vue'),
     PerformersAppbarCardView: () => import('@/components/elements/PerformersAppbarCardView.vue'),
-    Tabs: () => import('@/components/elements/Tabs.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -99,17 +94,6 @@ export default {
     ],
   }),
   computed: {
-    headerColor() {
-      if (this.$store.state.Settings.headerGradient) {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.headerGradientDark
-        } else return this.$store.state.Settings.headerGradientLight
-      } else {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.appColorDarkHeader
-        } else return this.$store.state.Settings.appColorLightHeader
-      }
-    },
     tabId() {
       return this.$route.query.tabId
     },

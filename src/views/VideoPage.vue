@@ -47,74 +47,80 @@
           <v-btn block outlined class="mb-4" @click="dialogEditThumb = true">
             <v-icon left>mdi-image-edit</v-icon> Edit thumb
           </v-btn>
-          <div v-if="isVideoAvailable">
-            <v-btn block outlined class="mb-4" @click="setThumb">
-              <v-icon left>mdi-camera</v-icon> Set as thumb
-            </v-btn>
-            
-            <v-card class="mt-8" elevation="3">
-              <v-card-actions>
-                <span>Markers</span>
-                <v-spacer></v-spacer>
-                <v-tooltip v-if="markers.length>0" top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn outlined class="ml-2" v-on="on"
-                      height="32" width="32" min-width="10" :color="markerPlayableActive"
-                      @click="toggleMarkerPlayable"
-                    > <v-icon size="20">mdi-television-play</v-icon>
-                    </v-btn>  
-                  </template>
-                  <span>Open markers in system player</span>
-                </v-tooltip>
-                <v-tooltip v-if="markers.length>0" top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn outlined class="ml-2" v-on="on"
-                      height="32" width="32" min-width="10" :color="markerNameActive"
-                      @click="toggleMarkerNameVisibility"
-                    > <v-icon size="20">mdi-card-text</v-icon>
-                    </v-btn>  
-                  </template>
-                  <span>Show names</span>
-                </v-tooltip>
-                <v-tooltip v-if="markers.length>0" top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn outlined class="ml-2" v-on="on"
-                      height="32" width="32" min-width="10" :color="markerEditActive"
-                      @click="toggleMarkerEditable" 
-                    > <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>         
-                  </template>
-                  <span>Edit markers</span>
-                </v-tooltip> 
-                <v-tooltip top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn outlined class="ml-2" v-on="on"
-                      height="32" width="32" min-width="10" 
-                      @click="openDialogAddMarker">
-                      <v-icon>mdi-plus</v-icon>
-                    </v-btn>      
-                  </template>
-                  <span>Add new</span>
-                </v-tooltip>     
-              </v-card-actions>
-              <v-card-actions style="flex-wrap: wrap;">
-                <v-chip v-for="marker in markers" :key="marker.id"
-                  @click="jumpTo(marker.time)" @click:close="openDialogRemoveMarker(marker)"
-                  close-icon="mdi-close" :close="markersEditable"
-                  :title="marker.name" outlined small class="mr-1 mb-1"
-                > 
-                  <v-icon v-if="marker.type=='Favorite'" left small color="pink">mdi-heart</v-icon>
-                  <v-icon v-if="marker.type=='Bookmark'" left small color="red">mdi-bookmark</v-icon>
-                  <v-icon v-if="marker.type=='Tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
-                  {{convertVideoTime(marker.time)}} 
-                  <span :class="markerNameClass">{{marker.name}}</span>
-                </v-chip>
-              </v-card-actions>
-            </v-card>
+          <div v-if="isVideoExists">
+            <div v-if="isVideoAvailable">
+              <v-btn block outlined class="mb-4" @click="setThumb">
+                <v-icon left>mdi-camera</v-icon> Set as thumb
+              </v-btn>
+              
+              <v-card class="mt-8" elevation="3">
+                <v-card-actions>
+                  <span>Markers</span>
+                  <v-spacer></v-spacer>
+                  <v-tooltip v-if="markers.length>0" top>
+                    <template v-slot:activator="{ on }">
+                      <v-btn outlined class="ml-2" v-on="on"
+                        height="32" width="32" min-width="10" :color="markerPlayableActive"
+                        @click="toggleMarkerPlayable"
+                      > <v-icon size="20">mdi-television-play</v-icon>
+                      </v-btn>  
+                    </template>
+                    <span>Open markers in system player</span>
+                  </v-tooltip>
+                  <v-tooltip v-if="markers.length>0" top>
+                    <template v-slot:activator="{ on }">
+                      <v-btn outlined class="ml-2" v-on="on"
+                        height="32" width="32" min-width="10" :color="markerNameActive"
+                        @click="toggleMarkerNameVisibility"
+                      > <v-icon size="20">mdi-card-text</v-icon>
+                      </v-btn>  
+                    </template>
+                    <span>Show names</span>
+                  </v-tooltip>
+                  <v-tooltip v-if="markers.length>0" top>
+                    <template v-slot:activator="{ on }">
+                      <v-btn outlined class="ml-2" v-on="on"
+                        height="32" width="32" min-width="10" :color="markerEditActive"
+                        @click="toggleMarkerEditable" 
+                      > <v-icon size="20">mdi-pencil</v-icon>
+                      </v-btn>         
+                    </template>
+                    <span>Edit markers</span>
+                  </v-tooltip> 
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on }">
+                      <v-btn outlined class="ml-2" v-on="on"
+                        height="32" width="32" min-width="10" 
+                        @click="openDialogAddMarker">
+                        <v-icon>mdi-plus</v-icon>
+                      </v-btn>      
+                    </template>
+                    <span>Add new</span>
+                  </v-tooltip>     
+                </v-card-actions>
+                <v-card-actions style="flex-wrap: wrap;">
+                  <v-chip v-for="marker in markers" :key="marker.id"
+                    @click="jumpTo(marker.time)" @click:close="openDialogRemoveMarker(marker)"
+                    close-icon="mdi-close" :close="markersEditable"
+                    :title="marker.name" outlined small class="mr-1 mb-1"
+                  > 
+                    <v-icon v-if="marker.type=='Favorite'" left small color="pink">mdi-heart</v-icon>
+                    <v-icon v-if="marker.type=='Bookmark'" left small color="red">mdi-bookmark</v-icon>
+                    <v-icon v-if="marker.type=='Tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
+                    {{convertVideoTime(marker.time)}} 
+                    <span :class="markerNameClass">{{marker.name}}</span>
+                  </v-chip>
+                </v-card-actions>
+              </v-card>
+            </div>
+            <div v-else class="text-center">
+              <v-icon size="64" color="red" class="ma-4">mdi-alert</v-icon>
+              <h4>Video format is not supported!</h4>
+            </div>
           </div>
           <div v-else class="text-center">
             <v-icon size="64" color="red" class="ma-4">mdi-alert</v-icon>
-            <h4>This format video is not supported!</h4>
+            <h4>Video file not found!</h4>
           </div>
         </v-col>
         <v-col cols="12">
@@ -357,12 +363,15 @@ export default {
       ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
       this.checkImageExist(this.getImagePath('thumb',''), 'thumb')
       this.$refs.video.src = this.getVideoPath
-      let vm = this
-      this.$refs.video.addEventListener("error", function (e) {
-        vm.isVideoAvailable = false
-      })
-      this.getVideoMetadata()
-      this.getMarkers()
+      if (fs.existsSync(this.getVideoPath)) {
+        this.isVideoExists = true
+        let vm = this
+        this.$refs.video.addEventListener("error", function (e) {
+          vm.isVideoAvailable = false
+        })
+        this.getVideoMetadata()
+        this.getMarkers()
+      } else this.isVideoExists = false
       this.newPath = this.video.path
     })
   },
@@ -382,6 +391,7 @@ export default {
     markerTypes: ['Tag','Bookmark','Favorite'],
     markerTag: '',
     markerBookmarkText: '',
+    isVideoExists: null,
     isVideoAvailable: true,
     imgThumbLoading: null,
     dialogEditThumb: false,

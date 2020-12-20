@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left extension-height="28" :style="{background: headerColor}">
+  <div class="app-bar-container">
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -37,11 +37,6 @@
 
     <VideosAppbarCardView />
 
-
-    <template v-slot:extension v-if="$store.getters.tabs.length">
-      <Tabs />
-    </template>
-
     
     <v-dialog v-model="dialogDeletePerformer" persistent scrollable max-width="800">
       <v-card>
@@ -76,7 +71,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-	</v-app-bar>
+  </div>
 </template>
 
 
@@ -88,7 +83,6 @@ export default {
   components: {
     VideosAppbarActions: () => import('@/components/elements/VideosAppbarActions.vue'),
     VideosAppbarCardView: () => import('@/components/elements/VideosAppbarCardView.vue'),
-    Tabs: () => import('@/components/elements/Tabs.vue'),
     vuescroll,
   },
   mounted() {
@@ -100,17 +94,6 @@ export default {
     deleteVideos: false,
   }),
   computed: {
-    headerColor() {
-      if (this.$store.state.Settings.headerGradient) {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.headerGradientDark
-        } else return this.$store.state.Settings.headerGradientLight
-      } else {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.appColorDarkHeader
-        } else return this.$store.state.Settings.appColorLightHeader
-      }
-    },
     performerId() {
       return this.$route.params.id.replace(/:/g, '')    
     },

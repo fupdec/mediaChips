@@ -11,11 +11,7 @@
         <v-img @click="openVideoPage" title="Open video page"
           :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb"
         />
-        <v-btn
-          icon x-large outlined
-          class="btn-play" color="white"
-          @click="playVideo(video.path)"
-        >
+        <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
           <v-icon size="40">mdi-play</v-icon>
         </v-btn>
 
@@ -284,6 +280,12 @@ export default {
       event.stopPropagation()
     },
     openVideoPage() {
+      const pathToVideo = this.video.path
+      if (!fs.existsSync(pathToVideo)) {
+        this.$store.state.Videos.dialogErrorPlayVideo = true
+        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
+        return
+      }
       this.$router.push(`/video/:${this.video.id}?tabId=default`)
     },
     setVideoProgress(percent) {
@@ -363,7 +365,8 @@ export default {
         return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
       }
     },
-    playVideo(pathToVideo) {
+    playVideo() {
+      const pathToVideo = this.video.path
       if (!fs.existsSync(pathToVideo)) {
         this.$store.state.Videos.dialogErrorPlayVideo = true
         this.$store.state.Videos.errorPlayVideoPath = pathToVideo

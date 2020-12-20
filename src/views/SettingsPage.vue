@@ -587,7 +587,7 @@ export default {
           w.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
         }).write()
         this.updatingNumberOfVideos = false
-      }, 100)
+      }, 500)
     },
     openDialogHeaderGradientLight() {
       this.gradientThemeDark = false

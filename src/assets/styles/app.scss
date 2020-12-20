@@ -455,6 +455,10 @@ html {
     text-transform: capitalize;
   }
 }
+.app-bar-container {
+  display: flex;
+  width: 100%;
+}
 .v-pagination {
   &__item--active {
     pointer-events: none;

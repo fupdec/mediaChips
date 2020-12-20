@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left extension-height="28" :style="{background: headerColor}">
+	<div class="app-bar-container">
     <div>
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
@@ -274,11 +274,7 @@
         <span v-else>Hide Tags</span>
       </v-tooltip>
     </div>
-
-    <template v-slot:extension v-if="$store.getters.tabs.length">
-      <Tabs />
-    </template>
-	</v-app-bar>
+	</div>
 </template>
 
 
@@ -288,7 +284,6 @@ const shortid = require('shortid')
 export default {
   name: 'TagsAppbar',
   components: {
-    Tabs: () => import('@/components/elements/Tabs.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -311,17 +306,6 @@ export default {
     categories: ['performer', 'video'],
   }),
   computed: {
-    headerColor() {
-      if (this.$store.state.Settings.headerGradient) {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.headerGradientDark
-        } else return this.$store.state.Settings.headerGradientLight
-      } else {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.appColorDarkHeader
-        } else return this.$store.state.Settings.appColorLightHeader
-      }
-    },
     filterBadge() {
       let total = this.$store.getters.filteredTagsTotal
       return total !== this.$store.getters.tagsTotal
