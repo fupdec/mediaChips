@@ -1,14 +1,48 @@
 <template>
-  <v-app v-if="!$store.state.Settings.disableRunApp" :class="[textFont, headerFont]">
+  <v-app :class="[textFont, headerFont]">
     <SystemBar />
 
     <AppBar />
 
     <SideBar />
 
-    <v-main app>
+    <v-main app v-if="!disableRunApp">
       <router-view :key="$route.name + ($route.params.id || '')" />
     </v-main>
+
+    <v-dialog v-model="disableRunApp" scrollable persistent width="400" overlay-opacity="1">
+      <v-form ref="pass" v-model="validPass" lazy-validation>
+        <v-card>
+          <v-card-title primary-title class="headline">
+            <div>Log in to the application</div>
+            <v-spacer></v-spacer>
+            <v-icon>mdi-account-box</v-icon>
+          </v-card-title>
+          <v-divider></v-divider>
+          <v-card-text>
+            <div class="mt-6 mb-4">Password required to enter the application</div>
+            <v-text-field
+              v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+              :rules="[getPasswordRules]" :type="showPassword ? 'text' : 'password'" 
+              label="Password" :hint="passwordHint" validate-on-blur
+              @click:append="showPassword = !showPassword"
+            />
+            <v-alert v-model="errorPass" text dense type="error" icon="mdi-alert" class="mt-6">
+              Wrong password
+            </v-alert>
+          </v-card-text>
+          <v-card-actions class="pt-0">
+            <v-btn @click="close" class="ma-4">
+              <v-icon left>mdi-logout</v-icon>Exit
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn @click="logIn" color="primary" class="ma-4">
+              <v-icon left>mdi-login</v-icon> Log in
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
 
     <BottomBar />
 
@@ -35,6 +69,8 @@
 <script>
 console.clear()
 const {app} = require('electron').remote
+const remote = require('electron').remote
+const win = remote.getCurrentWindow()
 
 import FilterVideos from '@/mixins/FilterVideos'
 
@@ -62,15 +98,32 @@ export default {
       this.$vuetify.theme.themes.dark.primary = this.$store.getters.appColorDarkPrimary
       this.$vuetify.theme.themes.dark.secondary = this.$store.getters.appColorDarkSecondary
       this.$vuetify.theme.themes.dark.accent = this.$store.getters.appColorDarkAccent
+      if(this.passwordProtection && this.phrase!=='') {
+        this.disableRunApp = this.phrase !== this.password 
+      }
     })
   },
   data: () => ({
+    password: '',
+    showPassword: false,
+    disableRunApp: false,
     isShowVideoBtn: false,
+    validPass: false,
+    errorPass: false,
     isShowPerformerBtn: false,
     videoPage: '/',
     performerPage: '/',
   }),
   computed: {
+    passwordProtection() {
+      return this.$store.state.Settings.passwordProtection
+    },
+    phrase() {
+      return this.$store.state.Settings.phrase
+    },
+    passwordHint() {
+      return this.$store.state.Settings.passwordHint
+    },
     textFont() {
       return 'text-font-' + this.$store.getters.getTextFont.toLowerCase()
     },
@@ -106,6 +159,23 @@ export default {
     },
   },
   methods: {
+    close() {
+      win.close()
+    },
+    getPasswordRules(pass) {
+      if (pass.length > 100) {
+        return 'Password must be less than 100 characters'
+      } else if (pass.length===0) {
+        return 'Password is required'
+      } else {
+        return true
+      }
+    },
+    logIn() {
+      this.$refs.pass.validate()
+      this.errorPass = this.phrase !== this.password 
+      this.disableRunApp = this.phrase !== this.password 
+    },
   },
   watch: {
     $route() {

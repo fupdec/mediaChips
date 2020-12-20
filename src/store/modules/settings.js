@@ -6,7 +6,9 @@ const adapterSettings = new FileSync(pathToDbSettings)
 const low = require('lowdb')
 const dbs = low(adapterSettings)
 dbs.defaults({
-  disableRunApp: false,
+  passwordProtection: false,
+  phrase: '',
+  passwordHint: '',
   videoPreviewEnabled: true,
   delayVideoPreview: 0,
   appColorLightPrimary: '#ef0051',
@@ -92,7 +94,10 @@ import Vuetify from '@/plugins/vuetify'
 
 const Settings = {
   state: () => ({
-    disableRunApp: dbs.get('disableRunApp').value(),
+    passwordProtection: dbs.get('passwordProtection').value(),
+    phrase: dbs.get('phrase').value(),
+    passwordConfirmed: false,
+    passwordHint: dbs.get('passwordHint').value(),
     videoPreviewEnabled: dbs.get('videoPreviewEnabled').value(),
     delayVideoPreview: dbs.get('delayVideoPreview').value(),
     darkMode: Boolean(+dbs.get('darkMode').value()),
@@ -240,7 +245,7 @@ const Settings = {
       state = state[param].sort((a,b)=>a.localeCompare(b))
     },
     resetSettingsToDefault(state) {
-      state.disableRunApp = false
+      state.passwordProtection = false
       state.appColorLightPrimary = '#ef0051'
       state.appColorLightSecondary = '#d80155'
       state.appColorLightAccent = '#14db00'
@@ -301,6 +306,18 @@ const Settings = {
     },
   },
   actions: {
+    changePasswordProtection({ state, commit, getters}, value) {
+      getters.settings.set('passwordProtection', value).write()
+      state.passwordProtection = value
+    },
+    changePhrase({ state, commit, getters}, value) {
+      getters.settings.set('phrase', value).write()
+      state.phrase = value
+    },
+    changePasswordHint({ state, commit, getters}, value) {
+      getters.settings.set('passwordHint', value).write()
+      state.passwordHint = value
+    },
     changePerformerProfile({ state, commit, getters}, profile) {
       getters.settings.set("performerProfile", profile).write()
       commit('changePerformerProfile', profile)
@@ -415,7 +432,7 @@ const Settings = {
     },
     resetSettingsToDefault({state, rootState, commit, dispatch, getters}) {
       getters.settings.assign({
-        disableRunApp: false,
+        passwordProtection: false,
         appColorLightPrimary: '#ef0051',
         appColorLightSecondary: '#d80155',
         appColorLightAccent: '#14db00',
@@ -493,6 +510,15 @@ const Settings = {
     },
     settings(state, store) {
       return store.dbs
+    },
+    phrase(state) {
+      return state.phrase
+    },
+    passwordProtection(state) {
+      return state.passwordProtection
+    },
+    passwordHint(state) {
+      return state.passwordHint
     },
     performerProfile(state) {
       return state.performerProfile

@@ -38,7 +38,15 @@
 					<v-icon>mdi-application</v-icon>
 				</v-btn>
 			</template>
-			<span>Go to appearance</span>
+			<span>Go to Appearance</span>
+		</v-tooltip>
+		<v-tooltip bottom>
+			<template v-slot:activator="{ on }">
+				<v-btn href="#login" icon tile v-on="on">
+					<v-icon>mdi-login</v-icon>
+				</v-btn>
+			</template>
+			<span>Go to Login</span>
 		</v-tooltip>
 		<v-tooltip bottom>
 			<template v-slot:activator="{ on }">

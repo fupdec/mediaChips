@@ -245,6 +245,49 @@
       <v-divider class="my-12"></v-divider>
       
 
+      <div class="headline text-h4 text-center mt-6" id="login">Login</div>
+      <v-container class="px-0">
+        <v-row>
+          <v-col cols="12" sm="3">
+            <div class="subtitle mt-8">Password protect entry:</div>
+            <v-switch v-model="passwordProtection" inset style="display:inline-block;">
+              <template v-slot:label>
+                <span v-if="passwordProtection">Yes</span>
+                <span v-else>No</span>
+              </template>
+            </v-switch>
+          </v-col>
+          <v-col cols="12" sm="4">
+            <div class="subtitle mt-8 mb-2">Password:</div>
+            <v-form ref="pass" v-model="validPass">
+              <v-text-field :disabled="!passwordProtection"
+                v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                :rules="[getPasswordRules]" :type="showPassword ? 'text' : 'password'" solo  
+                @click:append="showPassword = !showPassword" validate-on-blur counter dense
+              />
+              <v-btn v-if="passwordProtection" @click="savePass" color="primary" small :disabled="!validPass">
+                <v-icon left>mdi-content-save</v-icon> Save
+              </v-btn>
+            </v-form>
+          </v-col>
+          <v-col cols="12" sm="5">
+            <div class="subtitle mt-8 mb-2">Hint for password:</div>
+            <v-form ref="hint" v-model="validHint">
+              <v-text-field :disabled="!passwordProtection"
+                v-model="hint" :rules="[getHintRules]" solo counter dense
+                @click:append="showPassword = !showPassword" validate-on-blur
+              />
+              <v-btn v-if="passwordProtection" @click="saveHint" color="primary" small :disabled="!validHint">
+                <v-icon left>mdi-content-save</v-icon> Save
+              </v-btn>
+            </v-form>
+          </v-col>
+        </v-row>
+      </v-container>
+
+      <v-divider class="my-12"></v-divider>
+
+
       <div class="headline text-h4 text-center mt-6" id="database">Database</div>
       <div class="subtitle mt-10">Manage backups:</div>
       <ManageBackups />
@@ -406,9 +449,16 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
+      this.password = this.$store.getters.phrase
+      this.hint = this.$store.getters.passwordHint
     })
   },
   data: ()=>({
+    password: '',
+    showPassword: false,
+    validPass: false,
+    hint: '',
+    validHint: false,
     dialogUpdateNumberOfVideos: false,
     updatingNumberOfVideos: false,
     fonts: [
@@ -533,6 +583,14 @@ export default {
         this.$store.dispatch('changePathToSystemPlayer', value)
       },
     },
+    passwordProtection: {
+      get() {
+        return this.$store.state.Settings.passwordProtection
+      },
+      set(value) {
+        this.$store.dispatch('changePasswordProtection', value)
+      },
+    },
   },
   methods: {
     updateNumberOfVideos() {
@@ -598,7 +656,7 @@ export default {
       this.$store.state.Settings.dialogHeaderGradient = true
     },
     openGithub() {
-      shell.openExternal('https://github.com/fupdec/AdultVideoDataBase')
+      shell.openExternal('https://github.com/fupdec/Adult-Video-Database')
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
@@ -634,6 +692,32 @@ export default {
     resetToDefaultSettings() {
       this.$store.dispatch('resetSettingsToDefault')
       this.dialogResetToDefaultSettings = false
+    },
+    savePass() {
+      this.$store.dispatch('changePhrase', this.password)
+    },
+    saveHint() {
+      this.$store.dispatch('changePasswordHint', this.hint)
+    },
+    getPasswordRules(pass) {
+      if (pass.length > 100) {
+        return 'Password must be less than 100 characters'
+      } else if (pass.length===0) {
+        return 'Password is required'
+      } else if (pass.length<4) {
+        return 'Password must be more than 3 characters'
+      } else {
+        return true
+      }
+    },
+    getHintRules(pass) {
+      if (pass.length > 100) {
+        return 'Hint must be less than 100 characters'
+      } else if (pass.length<4) {
+        return 'Hint must be more than 3 characters'
+      } else {
+        return true
+      }
     },
   },
 }

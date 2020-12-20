@@ -459,6 +459,10 @@
             </template>
             <span>Name copied to clipboard!</span>
           </v-tooltip>
+          
+          <v-spacer></v-spacer>
+
+          <v-btn class="mx-2" dark outlined @click="dialogFindPerformerInfo=false"> Cancel </v-btn>
         </v-card-title>
         <v-card-actions>
           <v-container>
