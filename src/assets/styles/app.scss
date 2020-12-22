@@ -307,6 +307,9 @@ html {
   overflow-y: hidden !important;
   -webkit-font-smoothing: subpixel-antialiased !important;
 }
+::selection{
+  background: var(--v-secondary-base);
+}
 // FONTS
 .v-application {
   &--wrap {

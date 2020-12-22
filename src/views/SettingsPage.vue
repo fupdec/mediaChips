@@ -23,22 +23,43 @@
             hint="e.g. C:\Program Files\MPC-HC64\mpc-hc64.exe" />
         </v-col>
         <v-col cols="2">
-          <v-btn color="primary" @click="testPathToSystemPlayer" block>Test</v-btn>
+          <v-btn color="primary" @click="testPathToSystemPlayer" block height="calc(100% - 26px)">Test</v-btn>
         </v-col>
       </v-row>
 
-      <div class="subtitle mt-4 mb-2">
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon v-bind="attrs" v-on="on" left small>
-              mdi-help-circle-outline
-            </v-icon>
-          </template>
-          <span>Number of videos, performers, tags and websites</span>
-        </v-tooltip>
-        Update data from videos:
-      </div>
-      <v-btn @click="updateNumberOfVideos" color="primary"> Start updating </v-btn>
+      <v-row>
+        <v-col cols="12" sm="6">
+          <div class="subtitle mb-2">
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-bind="attrs" v-on="on" left small>
+                  mdi-help-circle-outline
+                </v-icon>
+              </template>
+              <span>Number of videos, performers, tags and websites</span>
+            </v-tooltip>
+            Update data from videos:
+          </div>
+          <v-btn @click="updateNumberOfVideos" color="primary"> Start updating </v-btn>
+        </v-col>
+        <v-col cols="12" sm="6">
+          <div class="subtitle mb-2">
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-bind="attrs" v-on="on" left small>
+                  mdi-help-circle-outline
+                </v-icon>
+              </template>
+              <span>If you have moved the video, you can change the path manually</span>
+            </v-tooltip>
+            Update path in videos:
+          </div>
+          <v-btn color="primary" @click="dialogUpdatePath=true">
+            <v-icon left>mdi-dots-vertical</v-icon> Show details
+          </v-btn>
+        </v-col>
+      </v-row>
+
       <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
         <v-card>
           <v-card-title>
@@ -62,6 +83,61 @@
               color="primary" class="ma-4">OK</v-btn>
             <v-spacer/>
           </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-dialog v-model="dialogUpdatePath" scrollable persistent>
+        <v-card>
+          <v-card-title class="edit-card-title pa-4 headline">
+            <div>
+            Update path in videos</div>
+            <v-spacer></v-spacer>
+            <v-btn outlined @click="dialogUpdatePath=false" dark>
+              <v-icon left>mdi-close</v-icon>Close
+            </v-btn>
+          </v-card-title>
+          <v-card-actions class="text-center pb-2">
+            <v-container>
+              <v-row>
+                <v-col cols="6">
+                  <v-text-field 
+                    v-model="pathForSearch" dense outlined clearable
+                    placeholder="Write file path here" label="Search videos with path"
+                    append-outer-icon="mdi-clipboard-arrow-right-outline" 
+                    @click:append-outer="copyPathToUpload"
+                  />
+                  <v-btn @click="searchInVideosPath" :disabled="pathForSearch==''" 
+                    color="primary">Search</v-btn>
+                </v-col>
+                <v-col cols="6">
+                  <v-text-field v-model="pathForUpdate" dense outlined clearable
+                    placeholder="Write file path here" label="Update videos with path"/>
+                  <v-btn @click="updatePath" depressed color="primary"
+                    :disabled="videosWithSamePath.length===0"> Update </v-btn>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-actions>
+          <vuescroll>
+            <v-card-text>
+              <v-simple-table dense class="update-path-table">
+                <template v-slot:default>
+                  <thead>
+                    <tr>
+                      <th class="text-left">Old path</th>
+                      <th class="text-left">New path</th>
+                    </tr>
+                  </thead>
+                  <tbody class="highlight">
+                    <tr v-for="(video, i) in videosWithSamePath" :key="i">
+                      <td class="caption" v-html="getOldPath(video.path)"></td>
+                      <td class="caption" v-html="getNewPath(video.path)"></td>
+                    </tr>
+                  </tbody>
+                </template>
+              </v-simple-table>
+            </v-card-text>
+          </vuescroll>
         </v-card>
       </v-dialog>
 
@@ -292,70 +368,6 @@
       <div class="subtitle mt-10">Manage backups:</div>
       <ManageBackups />
 
-
-      <div class="subtitle mt-8">Update path in videos:</div>
-      <v-btn color="primary" @click="dialogUpdatePath=true" class="mt-2">
-        <v-icon left>mdi-dots-vertical</v-icon> Show details
-      </v-btn>
-      <v-dialog v-model="dialogUpdatePath" width="1200" scrollable persistent>
-        <v-card>
-          <v-card-title class="edit-card-title pa-4 headline">
-            <div>
-            Update path in videos</div>
-            <v-spacer></v-spacer>
-            <v-btn outlined @click="dialogUpdatePath=false" dark>
-              <v-icon left>mdi-close</v-icon>Close
-            </v-btn>
-          </v-card-title>
-          <v-card-actions class="text-center pb-2">
-            <v-container>
-              <v-row>
-                <v-col cols="6">
-                  <v-text-field 
-                    v-model="pathForSearch" dense outlined clearable
-                    placeholder="Write file path here" label="Search videos with path"
-                    append-outer-icon="mdi-clipboard-arrow-right-outline" 
-                    @click:append-outer="copyPathToUpload"
-                  />
-                  <v-btn 
-                    @click="searchInVideosPath" :disabled="pathForSearch==''" outlined 
-                  >Search
-                  </v-btn>
-                </v-col>
-                <v-col cols="6">
-                  <v-text-field 
-                    v-model="pathForUpdate" dense outlined clearable
-                    placeholder="Write file path here" label="Update videos with path"
-                  />
-                  <v-btn @click="updatePath" depressed color="primary">Update</v-btn>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-actions>
-          <vuescroll>
-            <v-card-text>
-              <v-simple-table dense>
-                <template v-slot:default>
-                  <thead>
-                    <tr>
-                      <th class="text-left">Old path</th>
-                      <th class="text-left">New path</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(video, i) in videosWithSamePath" :key="i">
-                      <td class="caption">{{video.path}}</td>
-                      <td class="caption">{{video.path.replace(pathForSearch,pathForUpdate)}}</td>
-                    </tr>
-                  </tbody>
-                  <!-- TODO: highlight changeble part of string -->
-                </template>
-              </v-simple-table>
-            </v-card-text>
-          </vuescroll>
-        </v-card>
-      </v-dialog>
-
       <div class="subtitle mt-10 red--text">Clear data:</div>
       <div class="caption mb-2 red--text">
         <v-icon size="18" color="red" left>mdi-alert-outline</v-icon>
@@ -478,6 +490,7 @@ export default {
     dialogChangeHeaderGradientDark: false,
     dialogUpdatePath: false,
     pathForSearch: '',
+    foundedPath: '',
     pathForUpdate: '',
     videosWithSamePath: [],
     dialogResetToDefaultSettings: false,
@@ -670,18 +683,25 @@ export default {
       this.$store.dispatch('changeNumberOfPagesLimit', number)
     },
     searchInVideosPath() {
-      if (this.$store.getters.videos.value().length>1) {
-        this.videosWithSamePath = this.$store.getters.videos.filter(v=>(
-          v.path.includes(this.pathForSearch)
-        )).value()
-      }
+      this.videosWithSamePath = _.cloneDeep( this.$store.getters.videos
+        .filter(v => ( v.path.includes(this.pathForSearch) )).value() )
+      if (this.videosWithSamePath) this.foundedPath = this.pathForSearch
     },
-    updatePath () {
+    getOldPath(videoPath) {
+      let pathParts = videoPath.split(this.foundedPath)
+      return pathParts.join(`<b>${this.foundedPath}</b>`)
+    },
+    getNewPath(videoPath) {
+      let pathParts = videoPath.split(this.foundedPath)
+      return pathParts.join(`<b>${this.pathForUpdate}</b>`)
+    },
+    updatePath() {
       this.$store.getters.videos.filter(video => (
-        video.path.includes(this.pathForSearch)
+        video.path.includes(this.foundedPath)
       )).each(video => {
-        video.path = video.path.replace(this.pathForSearch, this.pathForUpdate)
+        video.path = video.path.split(this.foundedPath).join(this.pathForUpdate)
       }).write()
+      this.videosWithSamePath = []
     },
     copyPathToUpload () {
       this.pathForUpdate = this.pathForSearch
@@ -724,9 +744,36 @@ export default {
 </script>
 
 
+<style lang="less">
+.update-path-table {
+  table {
+    width:100%;
+    table-layout:fixed;
+  }
+}
+.highlight {
+  td {
+    word-break: break-all;
+    &:nth-child(odd) {
+      b {
+        color: red;
+      }
+    }
+    &:nth-child(even) {
+      b {
+        color: green;
+      }
+    }
+  }
+}
+</style>
+
 <style lang="less" scoped>
 .loading-animation {
   animation: rotate 0.5s infinite linear;
+}
+.highlight td b {
+  color: red;
 }
 @keyframes rotate {
   from {

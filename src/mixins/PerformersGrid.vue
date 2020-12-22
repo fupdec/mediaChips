@@ -24,14 +24,7 @@ export default {
         let key = 'firstChar'
         this.$store.commit('updateFiltersOfPerformers', {key, value})
         this.$store.dispatch('filterPerformers')
-        if (this.tabId) {
-          let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
-          this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-            name: this.$store.getters.performersFilters,
-            filters: newFilters,
-          }).write()
-          this.$store.commit('getTabsFromDb')
-        }
+        this.updateTabFilters()
       },
     },
     pages: {
