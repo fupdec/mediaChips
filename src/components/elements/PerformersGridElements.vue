@@ -57,6 +57,32 @@
 
         <v-divider class="ma-1"></v-divider>
 
+        <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+          <template v-slot:activator="{ on, attrs }">
+            <v-list-item class="pr-1" link v-bind="attrs" v-on="on" :disabled="!isSelectedSinglePerformer">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-filter</v-icon> Filter by tag 
+              </v-list-item-title>
+              <v-icon size="22">mdi-menu-right</v-icon>
+            </v-list-item>
+          </template>
+          
+          <v-list dense class="context-menu">
+            <v-list-item v-if="performerTags.length===0" class="pr-1" link>
+              <v-list-item-title>
+                <v-icon left size="18">mdi-cancel</v-icon> No tags
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item v-for="tag in performerTags" :key="tag" @click="filterByTag(tag)" class="pr-1" link>
+              <v-list-item-title>
+                <v-icon left size="18" :color="getTagColor(tag)">mdi-tag</v-icon> {{tag}}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <v-divider class="ma-1"></v-divider>
+
         <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer"
           @mouseup="$store.state.Performers.dialogEditPerformerInfo = true">
           <v-list-item-title>
@@ -234,6 +260,13 @@ export default {
     isSelectedSinglePerformer() {
       return this.$store.getters.getSelectedPerformers.length == 1
     },
+    performerTags() {
+      if (this.$store.getters.getSelectedPerformers.length>0) {
+        let id = this.$store.getters.getSelectedPerformers[0]
+        let ps = this.$store.getters.performers
+        return ps.find({id}).value().tags
+      } else return []
+    },
   },
   methods: {
     addNewTab() {
@@ -286,6 +319,17 @@ export default {
         this.$store.state.Performers.rating = 0
       },1000)
       this.$store.commit('updatePerformers')
+    },
+    filterByTag(tag) {
+      let values = {
+        key: 'tags',
+        value: [tag],
+      }
+      this.$store.commit('updateFiltersOfPerformers', values)
+      this.$store.dispatch('filterPerformers')
+    },
+    getTagColor(tag) {
+      return this.$store.getters.tags.find({name: tag}).value().color
     },
     clearRating() {
       this.$store.state.Performers.selectedPerformers.map(performerId => {
