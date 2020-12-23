@@ -23,7 +23,7 @@
             hint="e.g. C:\Program Files\MPC-HC64\mpc-hc64.exe" />
         </v-col>
         <v-col cols="2">
-          <v-btn color="primary" @click="testPathToSystemPlayer" block height="calc(100% - 26px)">Test</v-btn>
+          <v-btn color="secondary" @click="testPathToSystemPlayer" block height="calc(100% - 26px)">Test</v-btn>
         </v-col>
       </v-row>
 
@@ -40,7 +40,8 @@
             </v-tooltip>
             Update data from videos:
           </div>
-          <v-btn @click="updateNumberOfVideos" color="primary"> Start updating </v-btn>
+          <v-btn @click="updateNumberOfVideos" color="secondary"> 
+            <v-icon left>mdi-update</v-icon> Start updating </v-btn>
         </v-col>
         <v-col cols="12" sm="6">
           <div class="subtitle mb-2">
@@ -54,7 +55,7 @@
             </v-tooltip>
             Update path in videos:
           </div>
-          <v-btn color="primary" @click="dialogUpdatePath=true">
+          <v-btn color="secondary" @click="dialogUpdatePath=true">
             <v-icon left>mdi-dots-vertical</v-icon> Show details
           </v-btn>
         </v-col>
@@ -234,7 +235,7 @@
       
       <div class="subtitle mb-2 mt-8">Limit of pages in pagination:</div>
       <v-btn-toggle 
-        dense mandatory color="primary"
+        dense mandatory color="secondary"
         v-model="numberOfPagesLimit"
       >
         <v-btn outlined @click="changeNumberOfPagesLimit(5)" :value="5">5</v-btn>
@@ -268,13 +269,13 @@
           </v-col>
           <v-col cols="12" sm="6" v-if="headerGradient">
             <div class="subtitle mb-2">Colors for header gradient (light theme):</div>
-            <v-btn @click="openDialogHeaderGradientLight" color="primary">
+            <v-btn @click="openDialogHeaderGradientLight" color="secondary">
               <v-icon left>mdi-palette</v-icon> Change
             </v-btn>
           </v-col>
           <v-col cols="12" sm="6" v-if="headerGradient">
             <div class="subtitle mb-2">Colors for header gradient (dark theme):</div>
-            <v-btn @click="openDialogHeaderGradientDark" color="primary">
+            <v-btn @click="openDialogHeaderGradientDark" color="secondary">
               <v-icon left>mdi-palette</v-icon> Change
             </v-btn>
           </v-col>

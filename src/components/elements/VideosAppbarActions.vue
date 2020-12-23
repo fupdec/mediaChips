@@ -225,21 +225,21 @@
           </v-row>
         </v-container>
         <v-card-actions class="pt-0">
-          <v-btn @click="resetAllFilters(), filtersMenu=false" small class="ma-4 mt-0" color="primary">
+          <v-btn @click="resetAllFilters(), filtersMenu=false" small class="ml-2 mb-2 mt-0" color="secondary">
             <v-icon left>mdi-filter-off</v-icon> Reset all filters
           </v-btn>
 
           <v-spacer></v-spacer>
 
-          <v-btn @click="$store.state.Bookmarks.dialogFiltersPresets=true" small class="mx-2 mb-4 mt-0" color="primary"> 
+          <v-btn @click="$store.state.Bookmarks.dialogFiltersPresets=true" small class="mx-2 mb-2 mt-0" color="secondary"> 
             <v-icon left>mdi-content-save</v-icon> Presets
           </v-btn>
 
-          <v-btn @click="addNewTab(), filtersMenu=false" small class="mx-2 mb-4 mt-0" color="primary"> 
+          <v-btn @click="addNewTab(), filtersMenu=false" small class="mx-2 mb-2 mt-0" color="secondary"> 
             <v-icon left>mdi-tab-plus</v-icon> New tab
           </v-btn>
           
-          <v-btn @click="applyAllFilters(), filtersMenu=false" small class="mr-4 mb-4 mt-0" color="primary">
+          <v-btn @click="applyAllFilters(), filtersMenu=false" small class="mr-2 mb-2 mt-0" color="primary">
             <v-icon left>mdi-filter</v-icon> Apply
           </v-btn>
         </v-card-actions>

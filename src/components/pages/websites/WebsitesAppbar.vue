@@ -36,13 +36,13 @@
               </v-form>
             </v-card-text>
             <v-card-actions>
-              <v-btn @click="pasteText" color="primary" outlined class="mb-4 ml-4"> 
+              <v-btn @click="pasteText" color="secondary" class="mb-2 ml-2" small> 
                 <v-icon left>mdi-clipboard-text-outline</v-icon> Paste text
               </v-btn>
               <v-spacer></v-spacer>
               <v-btn 
                 @click="addNewWebsite" :disabled="!validWebsiteName" 
-                color="primary" class="mb-4 mr-4"
+                color="primary" class="mb-2 mr-2" small
               > <v-icon left>mdi-plus</v-icon> Add
               </v-btn>
             </v-card-actions>
@@ -85,17 +85,17 @@
             </v-row>
           </v-container>
           <v-card-actions class="mt-4">
-            <v-btn small class="mx-4 mb-4" color="primary" @click="resetAllFilters(), filtersMenu=false">
+            <v-btn small class="mx-2 mb-2" color="secondary" @click="resetAllFilters(), filtersMenu=false">
               <v-icon left>mdi-filter-off</v-icon> Reset all filters
             </v-btn>
 
             <v-spacer></v-spacer>
 
-            <v-btn small class="mb-4 mr-4" color="primary" @click="addNewTab(), filtersMenu=false">
+            <v-btn small class="mb-2 mr-2" color="secondary" @click="addNewTab(), filtersMenu=false">
               <v-icon left>mdi-tab-plus</v-icon> New tab
             </v-btn>
             
-            <v-btn small class="mr-4 mb-4" color="primary" @click="applyAllFilters(), filtersMenu=false">
+            <v-btn small class="mr-2 mb-2" color="primary" @click="applyAllFilters(), filtersMenu=false">
               <v-icon left>mdi-filter</v-icon> Apply
             </v-btn>
           </v-card-actions>

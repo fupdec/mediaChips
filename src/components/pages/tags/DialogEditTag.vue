@@ -136,7 +136,7 @@
                       :min-height="20"
                     />
                     <v-btn @click="pasteImageFromClipboard('main')" 
-                      class="ma-2" outlined :color="images.main.btnColor">
+                      class="ma-2" :color="images.main.btnColor">
                       <v-icon left>mdi-clipboard-outline</v-icon> Paste 
                     </v-btn>
                     <v-btn v-if="images.main.display" 

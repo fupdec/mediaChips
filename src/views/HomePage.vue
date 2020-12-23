@@ -28,7 +28,7 @@
                     @click="playVideo(video.path)" aspect-ratio="1"
                   >
                     <v-fade-transition>
-                      <v-overlay v-if="hover" absolute color="primary">
+                      <v-overlay v-if="hover" absolute color="secondary">
                         <v-btn icon x-large outlined>
                           <v-icon>mdi-play</v-icon>
                         </v-btn>
@@ -40,7 +40,7 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="primary" to="/videos/:default?tabId=default">Open Videos</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/videos/:default?tabId=default">Open Videos</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -64,7 +64,7 @@
                     @click="openPerformerPage(perf.id)" position="top"
                   >
                     <v-fade-transition>
-                      <v-overlay v-if="hover" absolute color="primary">
+                      <v-overlay v-if="hover" absolute color="secondary">
                         <v-btn x-small height="auto" width="auto" class="pa-1" outlined>
                           {{perf.name}}
                         </v-btn>
@@ -76,7 +76,7 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="primary" to="/performers/:default?tabId=default">Open Performers</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/performers/:default?tabId=default">Open Performers</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -100,7 +100,7 @@
             
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="primary" to="/tags/:default?tabId=default">Open tags</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/tags/:default?tabId=default">Open tags</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -124,7 +124,7 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="primary" to="/websites/:default?tabId=default">Open websites</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/websites/:default?tabId=default">Open websites</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -141,7 +141,7 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="primary" to="/settings">Open settings</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/settings">Open settings</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -150,7 +150,7 @@
 
       <div v-if="$store.getters.videosTotal==0">
         <h2>First of all add videos in settings</h2>
-        <v-btn class="ma-2" color="primary" to="/settings">Open settings</v-btn>
+        <v-btn class="ma-2" color="secondary" to="/settings">Open settings</v-btn>
       </div>
     </v-container>
 

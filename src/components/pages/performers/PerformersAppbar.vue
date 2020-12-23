@@ -36,13 +36,13 @@
             </v-form>
           </v-card-text>
           <v-card-actions>
-            <v-btn @click="pasteText" color="primary" outlined class="mb-4 ml-4"> 
+            <v-btn @click="pasteText" color="secondary" class="mb-2 ml-2" small> 
               <v-icon left>mdi-clipboard-text-outline</v-icon> Paste text
             </v-btn>
             <v-spacer></v-spacer>
             <v-btn 
               @click="addNewPerformer" :disabled="!validPerformerName"
-              color="primary" class="mb-4 mr-4" 
+              color="primary" class="mb-2 mr-2" small
             > <v-icon left>mdi-account-plus-outline</v-icon> Add
             </v-btn>
           </v-card-actions>

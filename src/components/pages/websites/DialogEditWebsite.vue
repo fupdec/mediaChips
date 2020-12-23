@@ -7,7 +7,7 @@
           gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
         />
         <div>
-          <div class="font-weight-light headline body-1">Edit website</div>
+          <div class="font-weight-light headline body-1">Editing the website</div>
           <div class="font-weight-bold headline">{{website.name}} 
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
@@ -128,7 +128,7 @@
                     :min-height="20" class="cropper cropper-website"
                   />
                   <v-btn @click="pasteImageFromClipboard('main')"
-                    class="ma-2" outlined :color="images.main.btnColor">
+                    class="ma-2" :color="images.main.btnColor">
                     <v-icon left>mdi-clipboard-outline</v-icon> Paste
                   </v-btn>
                   <v-btn v-if="images.main.display" 

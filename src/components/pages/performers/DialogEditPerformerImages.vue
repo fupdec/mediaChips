@@ -3,9 +3,9 @@
     <v-dialog v-model="$store.state.Performers.dialogEditPerformerImages" 
       scrollable transition="dialog-bottom-transition" fullscreen persistent>
       <v-card>
-        <v-card-title class="edit-card-title headline">
-          <div class="ml-4 mr-2">Edit images of </div>
-          <div class="font-weight-bold" style="cursor:pointer;">
+        <v-card-title class="edit-card-title">
+          <div class="ml-4 mr-2 headline">Edit images of </div>
+          <div class="font-weight-bold headline" style="cursor:pointer;">
             <v-tooltip v-model="tooltipCopyName" bottom>
               <template v-slot:activator="{ click }">
                 <div v-on="click" @click="copyPerformerNameToClipboard" 

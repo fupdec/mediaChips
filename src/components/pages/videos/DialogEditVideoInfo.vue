@@ -15,8 +15,8 @@
           </div>
         </div>
         <v-spacer></v-spacer>
-        <v-btn class="ma-4" dark @click="close" outlined>Cancel</v-btn>
-        <v-btn color="primary ma-4" @click="saveVideoInfo" :disabled="!valid"
+        <v-btn class="ma-2" dark @click="close" outlined>Cancel</v-btn>
+        <v-btn color="primary ma-2" @click="saveVideoInfo" :disabled="!valid"
         ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
       </v-card-title>
       <vuescroll>
@@ -261,7 +261,7 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="12" sm="6" class="rating-favorite">
+                <v-col cols="12" sm="6" class="rating-favorite mt-6">
                   <v-rating style="display:inline-flex;"
                     v-model="rating" clearable :disabled="clearFavorite"
                     color="yellow darken-2"

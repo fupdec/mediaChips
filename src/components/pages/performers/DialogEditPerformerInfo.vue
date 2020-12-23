@@ -38,9 +38,9 @@
 
           <v-spacer></v-spacer>
 
-          <v-btn class="ma-4" dark outlined @click="close"> Cancel </v-btn>
+          <v-btn class="ma-2" dark outlined @click="close"> Cancel </v-btn>
           <v-btn @click="savePerformerInfo(performer.id)" :disabled="!valid"
-            class="ma-4" color="primary"> 
+            class="ma-2" color="primary"> 
             <v-icon left>mdi-content-save-outline</v-icon> Save 
           </v-btn>
         </v-card-title>
@@ -449,16 +449,18 @@
       field from existing info in profile and new info from internet profile -->
     <v-dialog v-model="dialogFindPerformerInfo" scrollable max-width="1200px">
       <v-card :loading="searchInProgress">
-        <v-card-title class="edit-card-title headline pa-4">Find information for
-          <v-tooltip v-model="tooltipCopyPerformerName" bottom>
-            <template v-slot:activator="{ click }">
-              <span v-on="click" style="cursor:pointer;" title="Copy name to clipboard"
-                @click="copyPerformerNameToClipboard('find')" class="ml-2"
-              > {{performer.name}} 
-              </span>
-            </template>
-            <span>Name copied to clipboard!</span>
-          </v-tooltip>
+        <v-card-title class="edit-card-title pa-4">
+          <div class="headline">
+            Find information for
+            <v-tooltip v-model="tooltipCopyPerformerName" bottom>
+              <template v-slot:activator="{ click }">
+                <span v-on="click" @click="copyPerformerNameToClipboard('find')" class="font-weight-bold "
+                  style="cursor:pointer;" title="Copy name to clipboard"> {{performer.name}} 
+                </span>
+              </template>
+              <span>Name copied to clipboard!</span>
+            </v-tooltip>
+          </div>
           
           <v-spacer></v-spacer>
 
