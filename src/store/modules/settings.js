@@ -416,12 +416,15 @@ const Settings = {
       commit('addNewTab', tab)
     },
     closeTab({state, rootState, commit, dispatch, getters}, tabId) {
-      // checking if this tab is open
-      if (getters.tabsDb.find({link: router.currentRoute.fullPath}).value()) {
-        if (getters.tabsDb.value().length > 1) {
-          const tab = getters.tabsDb.find(t=>(t.link!==router.currentRoute.fullPath)).value()
-          router.push(tab.link)
-        } else router.push('/home')
+      let currentTab = getters.tabsDb.find({id: tabId}).value()
+      if (currentTab) { // if tab is open
+        if (currentTab.link === router.currentRoute.fullPath) {
+          console.log(currentTab)
+          if (getters.tabsDb.value().length > 1) {
+            const tab = getters.tabsDb.find(t=>(t.link!==router.currentRoute.fullPath)).value()
+            router.push(tab.link)
+          } else router.push('/home')
+        }
       }
       getters.tabsDb.remove({id: tabId}).write()
       commit('closeTab', tabId)

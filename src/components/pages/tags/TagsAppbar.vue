@@ -114,18 +114,18 @@
             </v-row>
           </v-container>
           <v-card-actions class="mt-4">
-            <v-spacer></v-spacer>
-
-            <v-btn small class="mr-4 mb-4" color="primary" outlined @click="resetAllFilters(), filtersMenu=false">
+            <v-btn small class="mx-4 mb-4" color="primary" @click="resetAllFilters(), filtersMenu=false">
               <v-icon left>mdi-filter-off</v-icon> Reset all filters
             </v-btn>
 
+            <v-spacer></v-spacer>
+
             <v-btn small class="mb-4 mr-4" color="primary" @click="addNewTab(), filtersMenu=false">
-              <v-icon left>mdi-tab-plus</v-icon> Open result in new tab
+              <v-icon left>mdi-tab-plus</v-icon> New tab
             </v-btn>
             
             <v-btn small class="mr-4 mb-4" color="primary" @click="applyAllFilters(), filtersMenu=false">
-              <v-icon left>mdi-filter</v-icon> Apply filters
+              <v-icon left>mdi-filter</v-icon> Apply
             </v-btn>
           </v-card-actions>
         </v-card>

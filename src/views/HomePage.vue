@@ -40,7 +40,7 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn outlined class="ma-2" color="primary" to="/videos">Open Videos</v-btn>
+              <v-btn class="ma-2" color="primary" to="/videos/:default?tabId=default">Open Videos</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -76,7 +76,7 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn outlined class="ma-2" color="primary" to="/performers">Open Performers</v-btn>
+              <v-btn class="ma-2" color="primary" to="/performers/:default?tabId=default">Open Performers</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -100,7 +100,7 @@
             
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn outlined class="ma-2" color="primary" to="/tags">Open tags</v-btn>
+              <v-btn class="ma-2" color="primary" to="/tags/:default?tabId=default">Open tags</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -124,7 +124,7 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn outlined class="ma-2" color="primary" to="/websites">Open websites</v-btn>
+              <v-btn class="ma-2" color="primary" to="/websites/:default?tabId=default">Open websites</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -141,7 +141,7 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn outlined class="ma-2" color="primary" to="/settings">Open settings</v-btn>
+              <v-btn class="ma-2" color="primary" to="/settings">Open settings</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>

@@ -128,7 +128,7 @@
                       <th class="text-left">New path</th>
                     </tr>
                   </thead>
-                  <tbody class="highlight">
+                  <tbody>
                     <tr v-for="(video, i) in videosWithSamePath" :key="i">
                       <td class="caption" v-html="getOldPath(video.path)"></td>
                       <td class="caption" v-html="getNewPath(video.path)"></td>
@@ -749,19 +749,17 @@ export default {
   table {
     width:100%;
     table-layout:fixed;
-  }
-}
-.highlight {
-  td {
-    word-break: break-all;
-    &:nth-child(odd) {
-      b {
-        color: red;
+    td {
+      word-break: break-all;
+      &:nth-child(odd) {
+        b {
+          color: red;
+        }
       }
-    }
-    &:nth-child(even) {
-      b {
-        color: green;
+      &:nth-child(even) {
+        b {
+          color: green;
+        }
       }
     }
   }
@@ -771,9 +769,6 @@ export default {
 <style lang="less" scoped>
 .loading-animation {
   animation: rotate 0.5s infinite linear;
-}
-.highlight td b {
-  color: red;
 }
 @keyframes rotate {
   from {

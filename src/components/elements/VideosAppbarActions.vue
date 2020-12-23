@@ -225,7 +225,7 @@
           </v-row>
         </v-container>
         <v-card-actions class="pt-0">
-          <v-btn @click="resetAllFilters(), filtersMenu=false" small class="ma-4 mt-0" color="primary" outlined>
+          <v-btn @click="resetAllFilters(), filtersMenu=false" small class="ma-4 mt-0" color="primary">
             <v-icon left>mdi-filter-off</v-icon> Reset all filters
           </v-btn>
 

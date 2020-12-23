@@ -605,6 +605,11 @@ html {
     top: -8px;
   }
 }
+.v-item-group.v-bottom-navigation {
+  box-shadow: 0px -3px 5px 0px rgba(0, 0, 0, 0.3) !important;
+}
+
+
 // VIDEOS
 .grouped-buttons {
   .v-btn {

@@ -6,7 +6,7 @@
     >
       <transition-group type="transition" :name="!drag ? 'flip-tabs' : null" style="display:flex">
         <v-tab 
-          @click.middle="closeTab($event, tab.id)" 
+          @click.middle.prevent.stop="closeTab($event, tab.id)" 
           v-for="(tab, i) in tabs" :key="i" :id="tab.id" exact
           :to="tab.link" :ripple="false" class="tabs-group-item"
         >
@@ -60,7 +60,6 @@ export default {
   },
   methods: {
     closeTab(e, tabId) {
-      e.preventDefault()
       this.$store.dispatch('closeTab', tabId)
     },
   },
