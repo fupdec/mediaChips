@@ -210,15 +210,16 @@
                 />
               </div>
               <div class="quality-container mb-2">
-                <div><v-icon left>mdi-video-switch-outline</v-icon>Video quality</div>
+                <div><v-icon left>mdi-monitor-screenshot</v-icon>Resol.</div>
                 <v-btn-toggle
                   v-model="$store.state.Videos.filters.quality"
                   class="grouped-buttons" dense multiple color="primary"
                 >
-                  <v-btn outlined :value="2160">4K</v-btn>
-                  <v-btn outlined :value="1080">1080p</v-btn>
-                  <v-btn outlined :value="720">720p</v-btn>
-                  <v-btn outlined :value="480">480p</v-btn>
+                  <v-btn outlined value="4K">4K</v-btn>
+                  <v-btn outlined value="1080">1080p</v-btn>
+                  <v-btn outlined value="720">720p</v-btn>
+                  <v-btn outlined value="480">480p</v-btn>
+                  <v-btn outlined value="vert"><v-icon size="18">mdi-cellphone</v-icon></v-btn>
                 </v-btn-toggle>
               </div>
             </v-col>

@@ -89,9 +89,8 @@
 
       <v-dialog v-model="dialogUpdatePath" scrollable persistent>
         <v-card>
-          <v-card-title class="edit-card-title pa-4 headline">
-            <div>
-            Update path in videos</div>
+          <v-card-title class="edit-card-title pa-4">
+            <div class="headline">Update path in videos</div>
             <v-spacer></v-spacer>
             <v-btn outlined @click="dialogUpdatePath=false" dark>
               <v-icon left>mdi-close</v-icon>Close

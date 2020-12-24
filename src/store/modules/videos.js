@@ -193,7 +193,25 @@ const Videos = {
       if (state.filters.quality) {
         let quality = state.filters.quality
         if (quality.length) {
-          videos = videos.filter(video=>(quality.includes(video.height)))
+          videos = videos.filter(video=>{
+            let width = +video.resolution.match(/\d*/)[0]
+            let height = +video.resolution.match(/\x(.*)/)[1]
+            if (quality.includes('4K')) {
+              return width>height && height>1800
+            }
+            if (quality.includes('1080')) {
+              return width>height && height>720 && height<=1080
+            }
+            if (quality.includes('720')) {
+              return width>height && height>480 && height<=720
+            }
+            if (quality.includes('480')) {
+              return width>height && height<=480
+            }
+            if (quality.includes('vert')) {
+              return width<height
+            }
+          })
           // console.log('videos filtered by quality')
         }
       }

@@ -29,10 +29,10 @@ function createInfoForDb() {
 	return new Promise ((resolve, reject) => {
     let duration = Math.floor(fileInfo.meta.format.duration)
     
-    let heightMeta
+    let resolution
     for(let i = 0; i < fileInfo.meta.streams.length; i++) {
-      if (fileInfo.meta.streams[i].height !== undefined) {
-        heightMeta = fileInfo.meta.streams[i].height
+      if (fileInfo.meta.streams[i].codec_type === 'video') {
+        resolution = fileInfo.meta.streams[i].width + 'x' + fileInfo.meta.streams[i].height
       } 
     }
 
@@ -54,8 +54,7 @@ function createInfoForDb() {
       path: pathToFile,
       duration: duration,
       size: fileInfo.meta.format.size,
-      bitrate: fileInfo.meta.format.bit_rate,
-      height: heightMeta,
+      resolution: resolution,
       tags: names.tags,
       performers: performers,
       website: website,

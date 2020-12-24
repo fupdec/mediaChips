@@ -44,6 +44,42 @@ export default {
       }
       return value
     },
+    calcHeightTitle(resolution) {
+      let height = resolution.match(/\x(.*)/)[1]
+      let title = {}
+      if (height < 720) {
+        title = 'SD'
+      } else if (height >= 720 && height < 1080) {
+        title = 'HD'
+      } else if (height >= 1080 && height < 1800) {
+        title = 'FHD'
+      } else if (height >= 1800) {
+        title = 'UHD'
+      }
+      return title
+    },
+    calcHeightValue(resolution) {
+      let height = resolution.match(/\x(.*)/)[1]
+      let title = {}
+      if (height > 1800) {
+        title = '4K'
+      } else {
+        title = height + 'p'
+      }
+      return title
+    },
+    calcDur(duration) {
+      let sec = Math.floor(duration);
+      let h = sec / 3600 ^ 0 
+      let m = (sec - h * 3600) / 60 ^ 0 
+      let s = sec - h * 3600 - m * 60 
+      h = h < 10 ? "0" + h + ":" : h
+      if (h === "00:") h = ""
+      m = m < 10 ? "0" + m : m
+      s = s < 10 ? "0" + s : s
+      let total = h + m + ":" + s
+      return total
+    },
   },
 }
 </script>

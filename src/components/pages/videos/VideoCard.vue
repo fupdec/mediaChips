@@ -42,10 +42,9 @@
 
         <div label outlined class="resolution"
           :class="{hidden: isQualityLabelHidden}">
-          <div class="text text-no-wrap">{{calcHeightTitle(video.height)}}</div>
+          <div class="text text-no-wrap">{{calcHeightTitle(video.resolution)}}</div>
           <div class="value">
-            <span v-if="video.height==2160">4K</span>
-            <span v-else>{{video.height}}p</span>
+            <span>{{calcHeightValue(video.resolution)}}</span>
           </div>
         </div>
         <div @click="openVideoPage" class="preview"
@@ -66,8 +65,8 @@
           <span class="value">Path</span>
         </div>
         <div label outlined class="prop">
-          <v-icon left class="mr-1" size="16">mdi-filmstrip-box</v-icon>
-          {{calcBitrate(video.bitrate)}}
+          <v-icon left class="mr-1" size="16">mdi-monitor-screenshot</v-icon>
+          {{video.resolution}}
         </div>
         <div label outlined class="prop">
           <v-icon left class="mr-1" size="16">mdi-file-video</v-icon>
@@ -323,31 +322,6 @@ export default {
         clearTimeout(this.timeouts[timeout])
       }
       this.$refs.video.src = ''
-    },
-    calcHeightTitle(height) {
-      let title = {}
-      if (height < 720) {
-        title = 'SD'
-      } else if (height >= 720 && height < 1080) {
-        title = 'HD'
-      } else if (height >= 1080 && height < 1800) {
-        title = 'FHD'
-      } else if (height >= 1800) {
-        title = 'UHD'
-      }
-      return title
-    },
-    calcDur(duration) {
-      let sec = Math.floor(duration);
-      let h = sec / 3600 ^ 0 
-      let m = (sec - h * 3600) / 60 ^ 0 
-      let s = sec - h * 3600 - m * 60 
-      h = h < 10 ? "0" + h + ":" : h
-      if (h === "00:") h = ""
-      m = m < 10 ? "0" + m : m
-      s = s < 10 ? "0" + s : s
-      let total = h + m + ":" + s
-      return total
     },
     getFileExtension() {
       let filename = this.video.path.split("\\").pop()
