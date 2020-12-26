@@ -1,5 +1,5 @@
 <template>
-	<v-app-bar app dense clipped-left extension-height="28" :style="{background: headerColor}">
+	<div class="app-bar-container">
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -20,12 +20,7 @@
 
     <VideosAppbarCardView v-if="$store.state.Tags.activeTab===0"/>
     <PerformersAppbarCardView v-if="$store.state.Tags.activeTab===1"/>
-
-
-    <template v-slot:extension v-if="$store.getters.tabs.length">
-      <Tabs />
-    </template>
-	</v-app-bar>
+	</div>
 </template>
 
 
@@ -38,7 +33,6 @@ export default {
     VideosAppbarCardView: () => import('@/components/elements/VideosAppbarCardView.vue'),
     PerformersAppbarActions: () => import('@/components/elements/PerformersAppbarActions.vue'),
     PerformersAppbarCardView: () => import('@/components/elements/PerformersAppbarCardView.vue'),
-    Tabs: () => import('@/components/elements/Tabs.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -52,17 +46,6 @@ export default {
     },
     tagId() {
       return this.$route.params.id.replace(/:/g, '')    
-    },
-    headerColor() {
-      if (this.$store.state.Settings.headerGradient) {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.headerGradientDark
-        } else return this.$store.state.Settings.headerGradientLight
-      } else {
-        if (this.$vuetify.theme.isDark) {
-          return this.$store.state.Settings.appColorDarkHeader
-        } else return this.$store.state.Settings.appColorLightHeader
-      }
     },
   },
   methods: {

@@ -419,10 +419,14 @@ const Settings = {
       let currentTab = getters.tabsDb.find({id: tabId}).value()
       if (currentTab) { // if tab is open
         if (currentTab.link === router.currentRoute.fullPath) {
-          console.log(currentTab)
-          if (getters.tabsDb.value().length > 1) {
-            const tab = getters.tabsDb.find(t=>(t.link!==router.currentRoute.fullPath)).value()
-            router.push(tab.link)
+          const numberTabs = getters.tabsDb.value().length
+          if (numberTabs > 1) {
+            const tabIndex = getters.tabsDb.findIndex({id: tabId}).value()
+            if (numberTabs === tabIndex + 1) {
+              router.push(getters.tabsDb.value()[tabIndex-1].link)
+            } else {
+              router.push(getters.tabsDb.value()[tabIndex+1].link)
+            } 
           } else router.push('/home')
         }
       }
