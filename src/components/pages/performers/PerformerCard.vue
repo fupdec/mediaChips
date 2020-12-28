@@ -541,6 +541,7 @@ export default {
     },
     showContextMenu(e) {
       e.preventDefault()
+      this.$store.state.menuTabs = false
       this.$store.state.Performers.menuCard = false
       this.$store.state.x = e.clientX
       this.$store.state.y = e.clientY
