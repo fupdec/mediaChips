@@ -34,7 +34,7 @@
               <v-col cols="12" md="5" class="col-edit-website">
                 <v-form ref="form" v-model="valid">
                   <v-row>
-                    <v-col cols="12" md="12">
+                    <v-col cols="12" sm="9">
                       <div class="editable-text-field">
                         <v-tooltip bottom v-if="isWebsiteNameEditEnabled">
                           <template v-slot:activator="{ on }">
@@ -55,6 +55,13 @@
                           hint='The name may include letters, numbers, symbols: \/%"<>{}[]'
                         ></v-text-field>
                       </div>
+                    </v-col>
+                    <v-col cols="12" sm="3" align="center" justify="center">
+                      <div>Favorite</div>
+                      <v-btn @click="favorite=!favorite" x-large icon class="mt-4">
+                        <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
+                        <v-icon v-else color="grey">mdi-heart-outline</v-icon>
+                      </v-btn>
                     </v-col>
                     <v-col cols="12" sm="6">
                       <v-switch
@@ -94,11 +101,6 @@
                         </template>
                       </v-autocomplete>
                     </v-col>
-                    <v-col cols="12" class="py-0">
-                      <div class="text-center mb-2">Bookmark</div>
-                      <v-textarea clearable auto-grow outlined placeholder="Write text here" 
-                        v-model="$store.state.Bookmarks.bookmarkText" />
-                    </v-col>
                     <v-col cols="12" align="center" justify="center">
                       <span>Website color</span> 
                       <v-chip class="ml-2" small label outlined :color="website.color">{{website.name}}</v-chip>
@@ -108,6 +110,11 @@
                         hide-canvas hide-inputs
                         v-model="website.color"
                       ></v-color-picker>
+                    </v-col>
+                    <v-col cols="12" class="py-0">
+                      <div class="text-center mb-2">Bookmark</div>
+                      <v-textarea clearable auto-grow outlined placeholder="Write text here" 
+                        v-model="$store.state.Bookmarks.bookmarkText" />
                     </v-col>
                   </v-row>
                 </v-form>
@@ -183,6 +190,7 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
+      this.favorite = this.website.favorite
       this.checkImageExist(this.getImagePath('website',''), 'main')
       this.websiteName = this.website.name
       if (this.website.network !== undefined) {
@@ -202,6 +210,7 @@ export default {
     isWebsiteNameEditEnabled: false,
     imgMainLoading: null,
     websiteName: '',
+    favorite: null,
     valid: false,
     swatches: [
       ["#cc0e00"],
@@ -344,6 +353,7 @@ export default {
         .find({ id: this.website.id })
         .assign({
           name: this.websiteName,
+          favorite: this.favorite,
           category: this.website.category,
           color: this.website.color,
           network: isNetwork,

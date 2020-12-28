@@ -388,7 +388,7 @@ export default {
     },
     deleteTags(){
       this.previousSelection = []
-      this.$store.dispatch('deleteTags'), 
+      this.$store.dispatch('deleteTags')
       this.$store.state.Tags.dialogDeleteTag = false
     },
   },

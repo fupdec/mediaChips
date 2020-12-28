@@ -33,7 +33,7 @@
               <v-col cols="12" md="5" class="col-edit-tag">
                 <v-form ref="form" v-model="valid">
                   <v-row>
-                    <v-col cols="12" align="center" justify="center">
+                    <v-col cols="12" sm="9" align="center" justify="center">
                       <div>Tag name</div>
                       <div class="editable-text-field">
                         <v-tooltip bottom v-if="isTagNameEditEnabled">
@@ -55,6 +55,13 @@
                           hint='The name may include letters, numbers, symbols: \/%"<>{}[]'
                         ></v-text-field>
                       </div>
+                    </v-col>
+                    <v-col cols="12" sm="3" align="center" justify="center">
+                      <div>Favorite</div>
+                      <v-btn @click="favorite=!favorite" x-large icon class="mt-4">
+                        <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
+                        <v-icon v-else color="grey">mdi-heart-outline</v-icon>
+                      </v-btn>
                     </v-col>
                     <v-col cols="12" align="center" justify="center">
                       <div>
@@ -83,28 +90,18 @@
                     <v-col cols="12" sm="6" align="center" justify="center">
                       <div class="mb-6">Tag value</div>
                       <v-slider
-                        v-model="tag.value"
-                        step="1" max="10"
-                        ticks tick-size="2"
-                        :thumb-size="24"
-                        thumb-label="always"
-                      ></v-slider>
+                        v-model="tag.value" step="1" max="10" hide-details
+                        ticks tick-size="2" :thumb-size="24" thumb-label="always"
+                      />
                     </v-col>
                     <v-col cols="12" sm="6" align="center" justify="center">
                       <div class="mb-4">Tag category</div>
                       <v-select
-                        :items="categories"
-                        v-model="tag.category"
-                        label="Categories"
-                        solo multiple
+                        v-model="tag.category" :items="categories" label="Categories"
+                        solo multiple hide-details
                       ></v-select>
                     </v-col>
-                    <v-col cols="12" class="py-0">
-                      <div class="text-center mb-2">Bookmark</div>
-                      <v-textarea clearable auto-grow outlined placeholder="Write text here" 
-                        v-model="$store.state.Bookmarks.bookmarkText" />
-                    </v-col>
-                    <v-col cols="12" class="mb-10" align="center" justify="center">
+                    <v-col cols="12" align="center" justify="center">
                       <span>Tag color</span> 
                       <v-chip class="ml-2" small outlined :color="tag.color">{{tag.name}}</v-chip>
                       <v-color-picker 
@@ -113,6 +110,11 @@
                         hide-canvas hide-inputs
                         v-model="tag.color"
                       ></v-color-picker>
+                    </v-col>
+                    <v-col cols="12" class="py-0">
+                      <div class="text-center mb-2">Bookmark</div>
+                      <v-textarea clearable auto-grow outlined placeholder="Write text here" 
+                        v-model="$store.state.Bookmarks.bookmarkText" />
                     </v-col>
                   </v-row>
                 </v-form>
@@ -192,6 +194,7 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
+      this.favorite = this.tag.favorite
       this.tagAlternateNames = this.tag.altNames.join(', ')
       this.checkImageExist(this.getImagePath('tag',''), 'main')
       this.tagName = this.tag.name
@@ -209,6 +212,7 @@ export default {
     isTagNameEditEnabled: false,
     imgMainLoading: null,
     tagName: "",
+    favorite: null,
     tagAlternateNames: "",
     valid: false,
     categories: ['performer', 'video'],
@@ -359,6 +363,7 @@ export default {
           category: this.tag.category,
           color: this.tag.color,
           value: this.tag.value,
+          favorite: this.favorite,
           bookmark: newBookmark,
           altNames: altNames,
         }).write()
