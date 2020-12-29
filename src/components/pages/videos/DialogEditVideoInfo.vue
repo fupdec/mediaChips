@@ -2,10 +2,14 @@
   <v-dialog v-model="$store.state.Videos.dialogEditVideoInfo" scrollable persistent max-width="1600">
     <v-card>
       <v-card-title class="edit-card-title">
-        <v-img v-if="isSelectedSingleVideo"
+        <v-img v-if="isSelectedSingleVideo" class="image-video"
           :src="getImg()" :aspect-ratio="16/9" max-width="160" max-height="84"
           gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
-        />
+        >
+          <v-btn @click="playVideo" class="button-play" outlined :disabled="!videoExists">
+            <v-icon>mdi-play</v-icon>
+          </v-btn>
+        </v-img>
         <div class="ml-6">
           <div class="font-weight-regular headline body-1">
             Edit video{{isSelectedSingleVideo ? '':'s'}} info
@@ -314,6 +318,7 @@
 const fs = require("fs")
 const path = require("path")
 const shortid = require('shortid')
+const shell = require('electron').shell
 
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
@@ -363,6 +368,7 @@ export default {
     clearFavorite: false,
     pathToFile: '',
     pathEditable: false,
+    videoExists: true,
   }),
   computed: {
     isSelectedSingleVideo() {
@@ -584,6 +590,14 @@ export default {
     sort(items) {
       this[items] = this[items].sort((a, b) => a.localeCompare(b))
     },
+    playVideo() {
+      const pathToVideo = this.video.path
+      if (fs.existsSync(pathToVideo)) {
+        this.videoExists = false
+        shell.openItem(pathToVideo)
+        setTimeout(() => { this.videoExists = true }, 1500)
+      } else {this.videoExists = false}
+    },
   },
   watch: {
     clearRating(newValue) {
@@ -606,5 +620,21 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.image-video {
+  .v-responsive__content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .button-play {
+    opacity: 0;
+  }
+  &:hover {
+    .button-play {
+      opacity: 1;
+    }
+  }
 }
 </style> 
