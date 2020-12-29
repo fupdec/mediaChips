@@ -27,6 +27,7 @@ const defaultFilters = {
   size: [0,20000],
   sortBy: 'name',
   sortDirection: 'asc',
+  tree: [],
 }
 
 const Videos = {
@@ -46,6 +47,8 @@ const Videos = {
     dialogEditVideoInfo: false,
     dialogCreatePreview: false,
     dialogErrorPlayVideo: false,
+    dialogFolderTree: false,
+    selectedDisk: dbs.get('selectedDisk').value() || '',
     errorPlayVideoPath: '',
     deleteFile: false,
     rating: 0,
@@ -91,6 +94,9 @@ const Videos = {
     },
     updateSelectedVideos(state, ids) {
       state.selectedVideos = ids
+    },
+    changeSelectedDisk(state, value) {
+      state.selectedDisk = value
     },
   },
   actions: {
@@ -167,6 +173,20 @@ const Videos = {
           videos = videos.filter(
             video => (video.path.toLowerCase().includes(frase)))
           // console.log(`videos filtered by frase "${frase}" in path`)
+        }
+      }
+      if (state.filters.tree) {
+        let tree = state.filters.tree
+        if (tree.length) {
+          videos = videos.filter(video => {
+            let include = false
+            for (let i=0; i<tree.length; i++) {
+              if (video.path.includes(tree[i])) {
+                include = true
+              }
+            }
+            return include
+          })
         }
       }
       if (state.filters.durationActive) {
@@ -358,6 +378,10 @@ const Videos = {
       commit('updateSelectedVideos', [])
       commit('updateVideos')
       dispatch('filterVideos', true)
+    },
+    changeSelectedDisk({state, rootState, commit, dispatch, getters}, value) {
+      getters.settings.assign({ selectedDisk: value }).write()
+      commit('changeSelectedDisk', value)
     },
   },
   getters: {

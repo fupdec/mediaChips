@@ -55,6 +55,7 @@ dbs.defaults({
   performerProfile: '0',
   performerProfileTags: true,
   performerProfileWebsites: true,
+  selectedDisk: '',
   videoChipsColored: true,
   videoEditBtnHidden: false,
   videoFileNameHidden: false,
@@ -280,6 +281,7 @@ const Settings = {
       state.performerProfile = '0'
       state.performerProfileTags = true
       state.performerProfileWebsites = true
+      state.selectedDisk = ''
       state.videoChipsColored = true
       state.videoEditBtnHidden = false
       state.videoFileNameHidden = false
@@ -474,6 +476,7 @@ const Settings = {
         performerProfile: '0',
         performerProfileTags: true,
         performerProfileWebsites: true,
+        selectedDisk: '',
         videoChipsColored: true,
         videoEditBtnHidden: false,
         videoFileNameHidden: false,
