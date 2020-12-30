@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="$store.state.Tags.dialogEditTag" scrollable persistent>
+  <v-dialog v-model="$store.state.Tags.dialogEditTag" scrollable persistent width="1200">
     <v-card>
       <v-card-title class="edit-card-title">
         <v-img 
@@ -19,6 +19,8 @@
           </div> 
         </div>
         <v-spacer></v-spacer>
+        <div class="caption">last edit {{editDate}}</div>
+        <v-spacer></v-spacer>
         <div>
           <v-btn outlined dark class="mr-6" @click="close">Cancel</v-btn>
           <v-btn 
@@ -28,9 +30,9 @@
       </v-card-title>
       <vuescroll>
         <v-card-text>
-          <v-container fluid class="px-10">
+          <v-container fluid class="py-0">
             <v-row>
-              <v-col cols="12" md="5" class="col-edit-tag">
+              <v-col cols="12" md="8" class="pt-0">
                 <v-form ref="form" v-model="valid">
                   <v-row>
                     <v-col cols="12" sm="9" align="center" justify="center">
@@ -48,17 +50,14 @@
                           </template>
                           <span>Edit tag name</span>
                         </v-tooltip>
-                        <v-text-field
+                        <v-text-field v-model="tagName" :disabled="!isTagNameEditEnabled"
                           :rules="[getNameRules]" validate-on-blur
-                          :disabled="!isTagNameEditEnabled"
-                          v-model="tagName"
-                          hint='The name may include letters, numbers, symbols: \/%"<>{}[]'
-                        ></v-text-field>
+                          hint='The name may include letters, numbers, symbols: \/%"<>{}[]' />
                       </div>
                     </v-col>
                     <v-col cols="12" sm="3" align="center" justify="center">
                       <div>Favorite</div>
-                      <v-btn @click="favorite=!favorite" x-large icon class="mt-4">
+                      <v-btn @click="favorite=!favorite" x-large icon class="mt-3">
                         <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
                         <v-icon v-else color="grey">mdi-heart-outline</v-icon>
                       </v-btn>
@@ -113,52 +112,38 @@
                     </v-col>
                     <v-col cols="12" class="py-0">
                       <div class="text-center mb-2">Bookmark</div>
-                      <v-textarea clearable auto-grow outlined placeholder="Write text here" 
-                        v-model="$store.state.Bookmarks.bookmarkText" />
+                      <v-textarea v-model="$store.state.Bookmarks.bookmarkText" hide-details
+                        clearable auto-grow outlined placeholder="Write text here" />
                     </v-col>
                   </v-row>
                 </v-form>
               </v-col>
-              <v-spacer></v-spacer>
-              <v-divider vertical></v-divider>
-              <v-spacer></v-spacer>
-              <v-col cols="12" md="5" class="col-edit-tag">
-                <v-row>
-                  <v-col cols="12" class="mb-10 cropper-wrapper" align="center" justify="center">
-                    <div>Tag image</div>
-                    <div class="caption text-center font-italic mb-8">
-                      (saves separate)
-                    </div>
-                    <img id="clipboard" class="img-clipboard-temporary">
-                    <Cropper
-                      :src="images.main.file"
-                      ref="main"
-                      class="cropper cropper-tag"
-                      :stencil-props="{minAspectRatio: 2/2, maxAspectRatio: 3/3 }"
-                      :min-height="20"
-                    />
-                    <v-btn @click="pasteImageFromClipboard('main')" 
-                      class="ma-2" :color="images.main.btnColor">
-                      <v-icon left>mdi-clipboard-outline</v-icon> Paste 
-                    </v-btn>
-                    <v-btn v-if="images.main.display" 
-                      @click="crop(getImagePath('tag',''),'main',600),loader='imgMainLoading'" 
-                      class="mr-2" color="primary" large
-                      :loading="imgMainLoading" :disabled="imgMainLoading"
-                    > <v-icon left>mdi-crop</v-icon> Crop / save
-                      <template v-slot:loader>
-                        <span class="custom-loader">
-                          <v-icon>mdi-cached</v-icon>
-                        </span>
-                      </template>
-                    </v-btn>
-                    <file-pond
-                      ref="pond" label-idle="Drop image here or click for upload"
-                      :allow-multiple="false" :files="uploadedImage" @addfile="handleFile"
-                      accepted-file-types="image/*" :dropValidation="true" class="mt-2"
-                    />
-                  </v-col>
-                </v-row>
+              <v-col cols="12" md="4" class="py-0">
+                <v-col cols="12" class="cropper-wrapper" align="center" justify="center">
+                  <div>Tag image</div>
+                  <div class="caption text-center font-italic"> (saves separate) </div>
+                  <img id="clipboard" class="img-clipboard-temporary">
+                  <Cropper :src="images.main.file" ref="main" class="cropper cropper-tag"
+                    :stencil-props="{minAspectRatio: 2/2, maxAspectRatio: 3/3 }" :min-height="20"/>
+                  <v-btn @click="pasteImageFromClipboard('main')" small
+                    class="ma-2" :color="images.main.btnColor"> 
+                    <v-icon left>mdi-clipboard-outline</v-icon> Paste 
+                  </v-btn>
+                  <v-btn v-if="images.main.display" 
+                    @click="crop(getImagePath('tag',''),'main',600),loader='imgMainLoading'" 
+                    class="mr-2" color="primary" small
+                    :loading="imgMainLoading" :disabled="imgMainLoading"
+                  > <v-icon left>mdi-crop</v-icon> Crop / save
+                    <template v-slot:loader>
+                      <span class="custom-loader">
+                        <v-icon>mdi-cached</v-icon>
+                      </span>
+                    </template>
+                  </v-btn>
+                  <file-pond ref="pond" label-idle="Drop image here or click for upload"
+                    :allow-multiple="false" :files="uploadedImage" @addfile="handleFile"
+                    accepted-file-types="image/*" :dropValidation="true" class="mt-2"/>
+                </v-col>
               </v-col>
             </v-row>
           </v-container>
@@ -246,6 +231,12 @@ export default {
       } else {
         return tags.find('id').value()
       }
+    },
+    editDate() {
+      let date = new Date(this.tag.edit)
+      let dateFormated = date.toLocaleDateString()
+      dateFormated += ' ' + date.toLocaleTimeString() 
+      return dateFormated
     },
   },
   methods: {
@@ -366,6 +357,7 @@ export default {
           favorite: this.favorite,
           bookmark: newBookmark,
           altNames: altNames,
+          edit: Date.now(),
         }).write()
       let info = {}
       info.id = this.tag.id
@@ -437,12 +429,6 @@ export default {
   .v-alert__wrapper {
     width: 100%;
     font-size: 14px;
-  }
-}
-@media (min-width: 960px) {
-  .col-md-5.col-edit-tag {
-    flex: 0 0 47%;
-    max-width: 47%;
   }
 }
 </style>

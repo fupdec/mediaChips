@@ -152,10 +152,28 @@ export default {
 </script>
 
 <style lang="less">
+.theme--light {
+  .cropper-wrapper {
+    border-color: rgba(0, 0, 0, 0.38); 
+    &:hover {
+      border-color: rgb(0, 0, 0); 
+    }
+  }
+}
+.theme--dark {
+  .cropper-wrapper {
+    border-color: rgba(255, 255, 255, 0.38); 
+    &:hover {
+      border-color: rgb(255, 255, 255); 
+    }
+  }
+}
 .cropper-wrapper {
-  border: 1px solid #8080802e; 
+  border-width: 1px; 
+  border-style: solid;
   border-radius: 5px;
   padding: 15px;
+  transition: .3s border;
   .cropper {
     min-height: 200px;
     max-height: 400px;

@@ -1,16 +1,11 @@
 <template>
   <div>
-    <v-dialog 
-      v-model="$store.state.Performers.dialogEditPerformerInfo"
-      persistent max-width="1000" scrollable
-    >
+    <v-dialog v-model="$store.state.Performers.dialogEditPerformerInfo" persistent scrollable width="1000">
       <v-card>
         <v-card-title class="edit-card-title">
-          <v-img 
-            :src="getImg()" :aspect-ratio="1" position="top"
+          <v-img :src="getImg()" :aspect-ratio="1" position="top"
             min-width="84" max-width="84" height="84" class="mr-6"
-            gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%"
-          />
+            gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%"/>
           <div class="headline" style="cursor:pointer;">
             <v-tooltip v-model="tooltipCopyName" bottom>
               <template v-slot:activator="{ click }">
@@ -426,8 +421,8 @@
                   </v-col>
                   <v-col cols="12">
                     <div class="overline text-center my-4">Bookmark</div>
-                    <v-textarea clearable auto-grow outlined placeholder="Write text here" 
-                      v-model="$store.state.Bookmarks.bookmarkText" />
+                    <v-textarea v-model="$store.state.Bookmarks.bookmarkText" hide-details
+                      clearable auto-grow outlined placeholder="Write text here" />
                   </v-col>
                 </v-row>
               </v-container>

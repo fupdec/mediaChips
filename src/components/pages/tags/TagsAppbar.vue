@@ -417,6 +417,7 @@ export default {
             videos: 0,
             performers: [],
             websites: [],
+            edit: Date.now(),
           }
 
           // add tagInfo to DB

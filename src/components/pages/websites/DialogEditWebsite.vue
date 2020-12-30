@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="$store.state.Websites.dialogEditWebsite" scrollable persistent>
+  <v-dialog v-model="$store.state.Websites.dialogEditWebsite" scrollable persistent width="1200">
     <v-card>
       <v-card-title class="edit-card-title">
         <v-img 
@@ -19,6 +19,8 @@
           </div> 
         </div>
         <v-spacer></v-spacer>
+        <div class="caption">last edit {{editDate}}</div>
+        <v-spacer></v-spacer>
         <div>
           <v-btn outlined dark class="mr-6" @click="close">Cancel</v-btn>
           <v-btn 
@@ -29,58 +31,66 @@
 
       <vuescroll>
         <v-card-text>
-          <v-container fluid class="px-10">
+          <v-container fluid class="py-0">
             <v-row>
-              <v-col cols="12" md="5" class="col-edit-website">
+              <v-col cols="12" md="8" class="pt-0">
                 <v-form ref="form" v-model="valid">
                   <v-row>
-                    <v-col cols="12" sm="9">
+                    <v-col cols="12" sm="9" align="center" justify="center">
+                      <div>Website name</div>
                       <div class="editable-text-field">
                         <v-tooltip bottom v-if="isWebsiteNameEditEnabled">
                           <template v-slot:activator="{ on }">
-                            <v-icon left @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" v-on="on">mdi-close</v-icon>
+                            <v-icon left @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" 
+                              v-on="on">mdi-close</v-icon>
                           </template>
                           <span>Keep the old name</span>
                         </v-tooltip>
                         <v-tooltip bottom v-else>
                           <template v-slot:activator="{ on }">
-                            <v-icon left @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" v-on="on">mdi-pencil</v-icon>
+                            <v-icon left @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" 
+                              v-on="on">mdi-pencil</v-icon>
                           </template>
                           <span>Edit name</span>
                         </v-tooltip>
-                        <v-text-field
-                          :disabled="!isWebsiteNameEditEnabled"
-                          :rules="[getNameRules]" validate-on-blur
-                          v-model="websiteName" class="rename-website-field" label="Website name"
-                          hint='The name may include letters, numbers, symbols: \/%"<>{}[]'
-                        ></v-text-field>
+                        <v-text-field v-model="websiteName" :disabled="!isWebsiteNameEditEnabled"
+                          :rules="[getNameRules]" validate-on-blur class="rename-website-field" 
+                          hint='The name may include letters, numbers, symbols: \/%"<>{}[]'/>
                       </div>
                     </v-col>
                     <v-col cols="12" sm="3" align="center" justify="center">
                       <div>Favorite</div>
-                      <v-btn @click="favorite=!favorite" x-large icon class="mt-4">
+                      <v-btn @click="favorite=!favorite" x-large icon class="mt-3">
                         <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
                         <v-icon v-else color="grey">mdi-heart-outline</v-icon>
                       </v-btn>
                     </v-col>
-                    <v-col cols="12" sm="6">
-                      <v-switch
-                        v-model="isNetwork" inset
-                        :label="`This website is network - ${isNetwork?'Yes':'No'}`"
-                      ></v-switch>
+                    <v-col cols="12" align="center" justify="center">
+                      <span>Website color</span> 
+                      <v-chip class="ml-2" small label outlined :color="website.color">
+                        {{website.name}}
+                      </v-chip>
+                      <v-color-picker v-model="website.color" :swatches="swatches"
+                        class="color-picker-websites" show-swatches hide-canvas hide-inputs />
                     </v-col>
-                    <v-col cols="12" sm="6">
+                    <v-col cols="12" align="center" justify="center">
+                      <span>Network</span> 
+                    </v-col>
+                    <v-col cols="12" sm="3">
+                      <v-switch v-model="isNetwork" inset :label="`${isNetwork?'Yes':'No'}`"/>
+                    </v-col>
+                    <v-col cols="12" sm="9">
                       <v-autocomplete
                         v-model="childWebsites" :disabled="!isNetwork"
                         :items="childWebsitesList" label="Websites in network"
-                        item-text="name" class="mt-0 hidden-close"
+                        item-text="name" class="mt-0 hidden-close" outlined
                         item-value="name" no-data-text="No more child websites"
                         multiple hide-selected hide-details @blur="sort('childWebsites')"
                       >
                         <template v-slot:selection="data">
                           <v-chip
                             v-bind="data.attrs" small class="mb-1" close
-                            :input-value="data.selected" 
+                            :input-value="data.selected" label
                             @click="data.select" outlined
                             @click:close="remove(data.item)"
                             :color="getWebsite(data.item.name).color" 
@@ -101,46 +111,28 @@
                         </template>
                       </v-autocomplete>
                     </v-col>
-                    <v-col cols="12" align="center" justify="center">
-                      <span>Website color</span> 
-                      <v-chip class="ml-2" small label outlined :color="website.color">{{website.name}}</v-chip>
-                      <v-color-picker 
-                        class="color-picker-websites"
-                        :swatches="swatches" show-swatches
-                        hide-canvas hide-inputs
-                        v-model="website.color"
-                      ></v-color-picker>
-                    </v-col>
                     <v-col cols="12" class="py-0">
                       <div class="text-center mb-2">Bookmark</div>
-                      <v-textarea clearable auto-grow outlined placeholder="Write text here" 
-                        v-model="$store.state.Bookmarks.bookmarkText" />
+                      <v-textarea v-model="$store.state.Bookmarks.bookmarkText" hide-details
+                        clearable auto-grow outlined placeholder="Write text here" />
                     </v-col>
                   </v-row>
                 </v-form>
               </v-col>
-              <v-spacer></v-spacer>
-              <v-divider vertical></v-divider>
-              <v-spacer></v-spacer>
-              <v-col cols="12" md="5" class="col-edit-website">
+              <v-col cols="12" md="4" class="py-0">
                 <v-col cols="12" class="mb-6 cropper-wrapper" align="center" justify="center">
                   <div>Website image</div>
-                  <div class="caption text-center font-italic mb-8">
-                    (saves separate)
-                  </div>
+                  <div class="caption text-center font-italic"> (saves separate) </div>
                   <img id="clipboard" class="img-clipboard-temporary">
-                  <Cropper
-                    :src="images.main.file" ref="main"
-                    :stencil-props="{minAspectRatio: 2/2, maxAspectRatio: 3/3 }"
-                    :min-height="20" class="cropper cropper-website"
-                  />
-                  <v-btn @click="pasteImageFromClipboard('main')"
+                  <Cropper :src="images.main.file" ref="main" class="cropper cropper-website"
+                    :stencil-props="{minAspectRatio: 2/2, maxAspectRatio: 3/3 }" :min-height="20"/>
+                  <v-btn @click="pasteImageFromClipboard('main')" small
                     class="ma-2" :color="images.main.btnColor">
                     <v-icon left>mdi-clipboard-outline</v-icon> Paste
                   </v-btn>
                   <v-btn v-if="images.main.display" 
                     @click="crop(getImagePath('website',''),'main',600),loader='imgMainLoading'" 
-                    class="ma-2" color="primary" large
+                    class="ma-2" color="primary" small
                     :loading="imgMainLoading" :disabled="imgMainLoading"
                   > <v-icon left>mdi-crop</v-icon> Crop / save
                     <template v-slot:loader>
@@ -149,11 +141,9 @@
                       </span>
                     </template>
                   </v-btn>
-                  <file-pond
-                    ref="pond" label-idle="Drop image here or click for upload"
+                  <file-pond ref="pond" label-idle="Drop image here or click for upload"
                     :allow-multiple="false" :files="uploadedImage" @addfile="handleFile"
-                    accepted-file-types="image/*" :dropValidation="true" class="mt-2"
-                  />
+                    accepted-file-types="image/*" :dropValidation="true" class="mt-2"/>
                 </v-col>
               </v-col>
             </v-row>
@@ -261,6 +251,12 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
+    editDate() {
+      let date = new Date(this.website.edit)
+      let dateFormated = date.toLocaleDateString()
+      dateFormated += ' ' + date.toLocaleTimeString() 
+      return dateFormated
+    },
   },
   methods: {
     handleFile(imgType) {
@@ -359,6 +355,7 @@ export default {
           network: isNetwork,
           childWebsites: childWebsites,
           bookmark: newBookmark,
+          edit: Date.now(),
         }).write()
       let info = {}
       info.info = true
@@ -440,12 +437,6 @@ export default {
   .v-alert__wrapper {
     width: 100%;
     font-size: 14px;
-  }
-}
-@media (min-width: 960px) {
-  .col-md-5.col-edit-website {
-    flex: 0 0 47%;
-    max-width: 47%;
   }
 }
 </style>

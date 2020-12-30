@@ -6,7 +6,7 @@
           :src="getImg()" :aspect-ratio="16/9" max-width="160" max-height="84"
           gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
         >
-          <v-btn @click="playVideo" class="button-play" outlined :disabled="!videoExists">
+          <v-btn @click="playVideo" class="button-play" dark outlined :disabled="!videoExists">
             <v-icon>mdi-play</v-icon>
           </v-btn>
         </v-img>

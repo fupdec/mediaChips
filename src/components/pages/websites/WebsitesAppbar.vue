@@ -387,6 +387,7 @@ export default {
             performers: [],
             tags: [],
             videoTags: [],
+            edit: Date.now(),
           }
 
           // add websiteInfo to DB
