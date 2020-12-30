@@ -3,9 +3,8 @@
     <v-card>
       <v-card-title class="edit-card-title">
         <v-img v-if="isSelectedSingleVideo" class="image-video"
-          :src="getImg()" :aspect-ratio="16/9" max-width="160" max-height="84"
-          gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
-        >
+          :src="getImg()" height="100%" max-width="160" max-height="84"
+          gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top">
           <v-btn @click="playVideo" class="button-play" dark outlined :disabled="!videoExists">
             <v-icon>mdi-play</v-icon>
           </v-btn>
@@ -15,12 +14,12 @@
             Edit video{{isSelectedSingleVideo ? '':'s'}} info
           </div>
           <div v-if="isSelectedSingleVideo" class="font-weight-light headline body-1">
-            {{`"${fileName}"`}}
+            {{fileName}}
           </div>
         </div>
         <v-spacer></v-spacer>
-        <v-btn class="ma-2" dark @click="close" outlined>Cancel</v-btn>
-        <v-btn color="primary ma-2" @click="saveVideoInfo" :disabled="!valid"
+        <v-btn class="mx-2 my-4" dark @click="close" outlined>Cancel</v-btn>
+        <v-btn color="primary mx-2 my-4" @click="saveVideoInfo" :disabled="!valid"
         ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
       </v-card-title>
       <vuescroll>

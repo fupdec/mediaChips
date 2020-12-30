@@ -464,15 +464,15 @@ export default {
     },
     bra() {
       if (!this.performer.bra) return '??'
-      return this.performer.bra
+      return Math.floor(this.performer.bra*2.54)
     },
     waist() {
       if (!this.performer.waist) return '??'
-      return this.performer.waist
+      return Math.floor(this.performer.waist*2.54)
     },
     hip() {
       if (!this.performer.hip) return '??'
-      return this.performer.hip
+      return Math.floor(this.performer.hip*2.54)
     },
     cup() {
       if (!this.performer.cup) return '??'

@@ -1321,9 +1321,11 @@ html {
 .edit-card-title {
   position: relative;
   overflow: hidden;
+  max-height: 84px;
   padding: 0 20px 0 0 !important;
   background-color: #3d3d3d;
   color: #fff;
+  flex-wrap: nowrap !important;
   .title {
     z-index: 5;
   }
