@@ -59,7 +59,7 @@
       <v-menu
         v-model="notificationsMenu" top offset-y 
         :close-on-content-click="false" nudge-top="5"
-        min-width="400" max-width="400" fixed z-index="10"
+        min-width="400" max-width="400" fixed z-index="1000"
       >
         <template v-slot:activator="{ on, attrs }">
           <v-badge :value="isNotificationsEmpty"

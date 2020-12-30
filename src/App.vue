@@ -187,7 +187,6 @@ export default {
     }
   },
 }
-// TODO: Posibility to save filters. maybe need new DB for filters
 </script>
 
 

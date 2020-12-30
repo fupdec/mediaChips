@@ -47,11 +47,11 @@
         <vuescroll>
           <v-card-text>
             <v-form ref="form" v-model="valid">
-              <v-container>
+              <v-container fluid>
                 <v-row>
                   <v-col cols="8" class="pt-0">
                     <v-btn @click="getInfoFreeonce(performerNameForSearch)" 
-                      :loading="findInfoRun" color="secondary" class="mr-8">
+                      :loading="searchInProgress" color="secondary" class="mr-8">
                       <v-icon left>mdi-auto-fix</v-icon> Autosearch info by name
                     </v-btn>
                     <v-btn @click="dialogFindPerformerInfo=true" color="secondary"> 
@@ -99,41 +99,41 @@
                       append-outer-icon="mdi-clipboard-text-outline"
                     ></v-text-field>
                   </v-col>
-                  <v-col cols="6" sm="3" >
+                  <v-col cols="6" sm="3">
                     <div class="masked-block">
                       <v-text-field 
                         label="Career start year" persistent-hint
                         hint='YYYY' class="masked-input" placeholder=" "
-                        :rules="[getCareerStartRules]" v-model="careerStart"
+                        :rules="[getCareerStartRules]" v-model="start"
                       ></v-text-field>
                       <the-mask 
-                        mask="####" v-model="careerStart"
+                        mask="####" v-model="start"
                         type="text" class="masked-mask"
                       >
                       </the-mask>
                     </div>
                   </v-col>
-                  <v-col cols="6" sm="3" >
+                  <v-col cols="6" sm="3">
                     <div class="masked-block">
                       <v-text-field 
                         label="Career end year" persistent-hint
                         hint='YYYY' class="masked-input" placeholder=" "
-                        :rules="[getCareerEndRules]" v-model="careerEnd"
+                        :rules="[getCareerEndRules]" v-model="end"
                       ></v-text-field>
                       <the-mask 
-                        mask="####" v-model="careerEnd"
+                        mask="####" v-model="end"
                         type="text" class="masked-mask"
                       >
                       </the-mask>
                     </div>
                   </v-col>
-                  <v-col cols="12" sm="6" >
+                  <v-col cols="12" sm="6">
                     <v-select
                       :items="$store.state.Settings.performerInfoCategory" multiple
                       label="Category" placeholder=" " v-model="category"
                     ></v-select>
                   </v-col>
-                  <v-col cols="12" sm="3" >
+                  <v-col cols="12" sm="3">
                     <div class="masked-block">
                       <v-text-field 
                         label="Birthday"
@@ -149,7 +149,7 @@
                       </the-mask>
                     </div>
                   </v-col>
-                  <v-col cols="12" sm="9" >
+                  <v-col cols="12" sm="9">
                     <v-autocomplete
                       v-model="nation"
                       :items="countries"
@@ -178,31 +178,22 @@
                   <v-col cols="12">
                     <div class="overline text-center">Appearance</div>
                   </v-col>
-                  <v-col cols="12" sm="4" >
-                    <v-autocomplete
-                      v-model="ethnicity" @blur="sort('ethnicity')"
+                  <v-col cols="12" sm="4">
+                    <v-autocomplete v-model="ethnicity" @blur="sort('ethnicity')"
                       :items="$store.state.Settings.performerInfoEthnicity"
-                      label="Ethnicity" multiple placeholder=" "
-                    >
-                    </v-autocomplete>
+                      label="Ethnicity" multiple placeholder=" " />
                   </v-col>
-                  <v-col cols="12" sm="4" >
-                    <v-autocomplete
-                      v-model="eyes" @blur="sort('eyes')"
+                  <v-col cols="12" sm="4">
+                    <v-autocomplete v-model="eyes" @blur="sort('eyes')"
                       :items="$store.state.Settings.performerInfoEyes"
-                      label="Eyes color" multiple placeholder=" "
-                    >
-                    </v-autocomplete>
+                      label="Eyes color" multiple placeholder=" " />
                   </v-col>
-                  <v-col cols="12" sm="4" >
-                    <v-autocomplete
-                      v-model="hair" @blur="sort('hair')"
+                  <v-col cols="12" sm="4">
+                    <v-autocomplete v-model="hair" @blur="sort('hair')"
                       :items="$store.state.Settings.performerInfoHair"
-                      label="Hair color" multiple placeholder=" "
-                    >
-                    </v-autocomplete>
+                      label="Hair color" multiple placeholder=" " />
                   </v-col>
-                  <v-col cols="6" sm="2" >
+                  <v-col cols="6" sm="2">
                     <div class="masked-block">
                       <v-text-field 
                         label="Height" 
@@ -219,7 +210,7 @@
                       />
                     </div>
                   </v-col>
-                  <v-col cols="6" sm="2" >
+                  <v-col cols="6" sm="2">
                     <div class="masked-block">
                       <v-text-field 
                         label="Weight"
@@ -237,7 +228,7 @@
                       </the-mask>
                     </div>
                   </v-col>
-                  <v-col cols="3" sm="1" >
+                  <v-col cols="3" sm="1">
                     <div class="masked-block">
                       <v-text-field 
                         label="Bra"
@@ -254,13 +245,13 @@
                       />
                     </div>
                   </v-col>
-                  <v-col cols="3" sm="2" >
+                  <v-col cols="3" sm="2">
                     <v-select
                       :items="$store.state.Settings.performerInfoCups"
                       label="Cup size" v-model="cup"
                     />
                   </v-col>
-                  <v-col cols="3" sm="1" >
+                  <v-col cols="3" sm="1">
                     <div class="masked-block">
                       <v-text-field 
                         label="Waist"
@@ -278,7 +269,7 @@
                       </the-mask>
                     </div>
                   </v-col>
-                  <v-col cols="3" sm="1" >
+                  <v-col cols="3" sm="1">
                     <div class="masked-block">
                       <v-text-field 
                         label="Hip"
@@ -296,13 +287,13 @@
                       </the-mask>
                     </div>
                   </v-col>
-                  <v-col cols="8" sm="3" >
+                  <v-col cols="8" sm="3">
                     <v-select
                       :items="$store.state.Settings.performerInfoBoobs"
                       label="Boobs" v-model="boobs" placeholder=" " clearable
                     />
                   </v-col>
-                  <v-col cols="6" sm="3" >
+                  <v-col cols="6" sm="3">
                     <v-autocomplete
                       v-model="body" @blur="sort('body')"
                       :items="$store.state.Settings.performerInfoBody"
@@ -310,7 +301,7 @@
                     >
                     </v-autocomplete>
                   </v-col>
-                  <v-col cols="6" sm="3" >
+                  <v-col cols="6" sm="3">
                     <v-autocomplete
                       v-model="pussy" clearable
                       :items="$store.state.Settings.performerInfoPussy"
@@ -318,7 +309,7 @@
                     >
                     </v-autocomplete>
                   </v-col>
-                  <v-col cols="6" sm="3" >
+                  <v-col cols="6" sm="3">
                     <v-autocomplete
                       v-model="pussyLips" clearable
                       :items="$store.state.Settings.performerInfoPussyLips"
@@ -326,7 +317,7 @@
                     >
                     </v-autocomplete>
                   </v-col>
-                  <v-col cols="6" sm="3" >
+                  <v-col cols="6" sm="3">
                     <v-autocomplete
                       v-model="pussyHair" @blur="sort('pussyHair')"
                       :items="$store.state.Settings.performerInfoPussyHair"
@@ -445,10 +436,8 @@
         </vuescroll>
       </v-card>
     </v-dialog>
-    <!-- TODO: when import info from founded performers should be good view compare 
-      field from existing info in profile and new info from internet profile -->
     <v-dialog v-model="dialogFindPerformerInfo" scrollable max-width="1200px">
-      <v-card :loading="searchInProgress">
+      <v-card :loading="searchInProgress" class="pb-4">
         <v-card-title class="edit-card-title pa-4">
           <div class="headline">
             Find information for
@@ -476,27 +465,21 @@
                   append-outer-icon="mdi-clipboard-text-outline"/>
               </v-col>
               <v-col cols="6" md="3">
-                <v-btn 
-                  @click="findPerformersIafd" :loading="findIafdRun"
-                  color="secondary" block :disabled="findFreeonceRun"
-                >
-                  <v-icon left>mdi-magnify</v-icon> iafd.com
-                </v-btn>
+                <v-btn @click="findPerformersIafd" :loading="searchInProgress"
+                  color="secondary" block :disabled="searchInProgress"
+                > <v-icon left>mdi-magnify</v-icon> iafd.com </v-btn>
               </v-col>
               <v-col cols="6" md="3">
-                <v-btn 
-                  @click="findPerformersFreeonce" :loading="findFreeonceRun"
-                  color="secondary" block :disabled="findIafdRun"
-                >
-                  <v-icon left>mdi-magnify</v-icon> freeones.com
-                </v-btn>
+                <v-btn @click="findPerformersFreeonce" :loading="searchInProgress"
+                  color="secondary" block :disabled="searchInProgress"
+                > <v-icon left>mdi-magnify</v-icon> freeones.com </v-btn>
               </v-col>
             </v-row>
           </v-container>
         </v-card-actions>
         <vuescroll>
-          <v-card-text>
-            <v-container>
+          <v-card-text class="py-0">
+            <v-container fluid class="py-0">
               <v-row>
                 <v-col cols="12" class="text-center" v-once v-if="showFindError">
                   <h2>Nothing found</h2>
@@ -518,10 +501,11 @@
                             </v-card-text>
                             <v-fade-transition>
                               <v-overlay v-if="hover" absolute color="secondary">
-                                <v-btn v-if="resultFromFreeones" @click="getInfoFreeonce(fp.link)" color="primary">
+                                <v-btn v-if="resultFromFreeones" @click="getInfoFreeonce(fp.link)" color="primary" 
+                                  :loading="searchInProgress">
                                   <v-icon left>mdi-information-variant</v-icon> Get info
                                 </v-btn>
-                                <v-btn v-else @click="getInfoIafd(fp.link)" color="primary">
+                                <v-btn v-else @click="getInfoIafd(fp.link)" color="primary" :loading="searchInProgress">
                                   <v-icon left>mdi-information-variant</v-icon> Get info
                                 </v-btn>
                               </v-overlay>
@@ -534,6 +518,62 @@
                 </v-col>
               </v-row>
             </v-container>
+          </v-card-text>
+        </vuescroll>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogTransferInfo" scrollable max-width="860">
+      <v-card>
+        <v-card-title class="edit-card-title pa-4">
+          <div class="headline">
+            Transfer information
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogTransferInfo=false" class="mx-2" dark outlined>Cancel</v-btn>
+          <v-btn @click="applyTransfered" class="mx-2" color="primary"> 
+            <v-icon left>mdi-transfer</v-icon> Apply transfered</v-btn>
+          <v-btn @click="applyFounded" class="mx-2" color="primary"> 
+            <v-icon left>mdi-magnify</v-icon> Apply found </v-btn>
+        </v-card-title>
+        <v-card-actions>
+          <v-btn @click="restoreAll" small color="secondary" class="mx-4 mt-4">
+            <v-icon left>mdi-restore</v-icon> Restore all
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="transferAll" small color="secondary" class="mx-4 mt-4">
+            <v-icon left>mdi-transfer-left</v-icon> Transfer all
+          </v-btn>
+        </v-card-actions>
+        <vuescroll>
+          <v-card-text>
+            <v-simple-table dense class="transfer-table">
+              <template v-slot:default>
+                <thead>
+                  <tr>
+                    <th class="text-right" style="width:20%">Parameter</th>
+                    <th class="text-center" style="width:40%">Current</th>
+                    <th class="text-center" style="width:40%">Found</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(param, name, index) in transfer.found" :key="index">
+                    <td v-if="param.length" class="text-right val-name">
+                      <v-btn @click="transfer.current[name]=$data[name]" 
+                        icon small class="transfer-btn" color="primary">
+                        <v-icon>mdi-restore</v-icon>
+                      </v-btn> {{ name }}: 
+                    </td>
+                    <td v-if="param.length" class="text-center"> {{ transfer.current[name] }} </td>
+                    <td v-if="param.length" class="text-center val-found">
+                      <v-btn @click="transfer.current[name]=param" 
+                        icon small class="transfer-btn" color="primary">
+                        <v-icon>mdi-transfer-left</v-icon>
+                      </v-btn> {{ param }} 
+                    </td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
           </v-card-text>
         </vuescroll>
       </v-card>
@@ -571,8 +611,8 @@ export default {
       this.favorite = this.performer.favorite
       this.rating = this.performer.rating
       this.aliases = filteredAliases
-      this.careerStart = this.performer.start
-      this.careerEnd = this.performer.end
+      this.start = this.performer.start
+      this.end = this.performer.end
       this.nation = this.performer.nation
       this.birthday = this.performer.birthday
       this.ethnicity = this.performer.ethnicity
@@ -608,9 +648,6 @@ export default {
     dialogFindPerformerInfo: false,
     queryString: "",
     searchInProgress: false,
-    findFreeonceRun: false,
-    findIafdRun: false,
-    findInfoRun: false,
     showFindError: false,
     resultFromFreeones: false,
     foundPerformers: [],
@@ -618,25 +655,25 @@ export default {
     favorite: false,
     rating: 0,
     aliases: '',
+    start: '',
+    end: '',
+    category: [],
     birthday: '',
     nation: '',
-    careerStart: '',
-    careerEnd: '',
     ethnicity: [],
-    hair: [],
     eyes: [],
+    hair: [],
     height: '',
     weight: '',
     bra: '',
     waist: '',
     hip: '',
     boobs: '',
+    cup: '',
     body: [],
     pussy: '',
     pussyLips: '',
     pussyHair: [],
-    cup: '',
-    category: [],
     currentYear: new Date().getFullYear(),
     percentCompleteProgress: 0,
     percentValue: 5.263,
@@ -645,6 +682,29 @@ export default {
     tooltipCopyPerformerName: false,
     months: ['january','february','march','april','may','june','july',
       'august','september','october','november','december'],
+    dialogTransferInfo: false,
+    transfer: {
+      current: {},
+      found: {},
+    },
+    defaultParamsForInfo: {
+      aliases: '',
+      start: '',
+      end: '',
+      category: [],
+      birthday: '',
+      nation: '',
+      ethnicity: [],
+      eyes: [],
+      hair: [],
+      height: '',
+      weight: '',
+      bra: '',
+      waist: '',
+      hip: '',
+      boobs: '',
+      cup: '',
+    },
   }),
   computed: {
     performer() {
@@ -738,14 +798,12 @@ export default {
       } else return ""
     },
     findPerformersFreeonce() {
-      this.findFreeonceRun = true
       this.searchInProgress = true
       this.showFindError = false
       this.resultFromFreeones = true
       axios.get(`https://www.freeones.ru/babes?q=${this.queryString}&s=rank.currentRank&o=asc&l=96&p=1`)
       .then((response)=>{
         if(response.status === 200) {
-          this.findFreeonceRun = false
           this.searchInProgress = false
           this.foundPerformers = []
           console.log('result')
@@ -774,24 +832,21 @@ export default {
           }
         }
       }, (error) => {
-        this.findFreeonceRun = false
         this.searchInProgress = false
         this.showFindError = true
         this.$store.dispatch('setNotification', {
           type: 'error',
-          text: 'Cant find this performer'
+          text: `Can't find info for ${this.performer.name}`
         })
       })
     },
     findPerformersIafd() {
-      this.findIafdRun = true
       this.showFindError = false
       this.searchInProgress = true
       this.resultFromFreeones = false
       let url = 'http://www.iafd.com/results.asp?searchtype=comprehensive&searchstring='
       axios.get(url + this.queryString).then((response)=>{
         if(response.status === 200) {
-          this.findIafdRun = false
           this.searchInProgress = false
           this.foundPerformers = []
           const html = response.data;
@@ -813,204 +868,251 @@ export default {
           }
         }
       }, (error) => {
-        this.findIafdRun = false
+        this.searchInProgress = false
         this.$store.dispatch('setNotification', {
           type: 'error',
-          text: 'Cant find this performer'
+          text: `Can't find info for ${this.performer.name}`
         })
       })
     },
     getInfoFreeonce(performer) {
-      this.findInfoRun = true
-      setTimeout(()=>{
-        this.dialogFindPerformerInfo = false
-        this.foundPerformers = []
-      }, 500)
+      this.searchInProgress = true
+      this.foundPerformers = []
       axios.get(`https://www.freeones.com/${performer}/profile`).then((response)=>{
         if(response.status === 200) {
-        this.findInfoRun = false
-        this.$store.dispatch('setNotification', {
-          type: 'success',
-          text: 'Got info from www.freeones.com'
-        })
+          this.searchInProgress = false
+          this.clearPreviouslyFound()
 
-        const html = response.data;
-        const $ = cheerio.load(html)
-        let profile = {}
+          const html = response.data;
+          const $ = cheerio.load(html)
+          let profile = {}
 
-        profile.aliases = $('[data-test="p_aliases"]').text().trim()
-        let yearsActive = []
-        $('.timeline-horizontal .m-0').each((i, elem)=>{
-          yearsActive[i] = $(elem).text().trim()
-        }) 
-        profile.start = yearsActive[0]
-        profile.end = yearsActive[1]
-        profile.nation = $('[data-test="link-country"] span').text().trim()
-        profile.birth = $('[href*="dateOfBirth"]').attr('href')
-        if (profile.birth) {
-          profile.birth = profile.birth.match(/\d{4}-\d{2}-\d{2}/)[0]
-          profile.birth = profile.birth.split('-')
-          profile.birth = profile.birth[2]+profile.birth[1]+profile.birth[0]
-        }
-        profile.ethnicity = []
-        profile.ethnicity.push($('[data-test="link_span_ethnicity"]').text().trim())
-        profile.eyes = []
-        profile.eyes.push($('[data-test="link_span_eye_color"]').text().trim())
-        profile.hair = []
-        profile.hair.push($('[data-test="link_span_hair_color"]').text().trim())
-        profile.height = $('[data-test="link_span_height"]').text().trim()
-        if(profile.height) {
-          profile.height = profile.height.match(/\d{3}/)[0]
-        }
-        profile.weight = $('[data-test="link_span_weight"]').text().trim()
-        if(profile.weight) {
-          profile.weight = profile.weight.match(/\d{2}/)[0]
-        }
-        let sizes = []
-        $('[data-test="p-measurements"] span').each((i, elem)=>{
-          sizes[i] = $(elem).text().trim()
-        }) 
-        if (sizes.length>0) {
-          if (sizes[0].match(/\D{1,}/)) {
-            profile.cup = sizes[0].match(/\D{1,}/)[0]
+          profile.aliases = $('[data-test="p_aliases"]').text().trim()
+          let yearsActive = []
+          $('.timeline-horizontal .m-0').each((i, elem)=>{
+            yearsActive[i] = $(elem).text().trim()
+          }) 
+          profile.start = yearsActive[0]
+          profile.end = yearsActive[1]
+          profile.nation = $('[data-test="link-country"] span').text().trim()
+          profile.birth = $('[href*="dateOfBirth"]').attr('href')
+          if (profile.birth) {
+            profile.birth = profile.birth.match(/\d{4}-\d{2}-\d{2}/)[0]
+            profile.birth = profile.birth.split('-')
+            profile.birth = profile.birth[2]+profile.birth[1]+profile.birth[0]
           }
-          sizes[0] = sizes[0].match(/\d{2}/)[0]
-        }
-        profile.bra = sizes[0]
-        profile.waist = sizes[1]
-        profile.hip = sizes[2]
-        profile.boobs = $('[data-test="link_span_boobs"]').text().trim()
-        profile.profession = $('.sidebar-right .heading').next().find('.text-center')[0].children[0].data
-        if (profile.aliases != undefined) { this.aliases = profile.aliases }
-        if (profile.start != undefined) { this.careerStart = profile.start }
-        if (profile.end != undefined) { this.careerEnd = profile.end }
-        if (profile.profession != undefined) { 
-          if (profile.profession === 'Adult Models') {
-            profile.profession = 'Erotic model'
+          profile.ethnicity = []
+          profile.ethnicity.push($('[data-test="link_span_ethnicity"]').text().trim())
+          profile.eyes = []
+          profile.eyes.push($('[data-test="link_span_eye_color"]').text().trim())
+          profile.hair = []
+          profile.hair.push($('[data-test="link_span_hair_color"]').text().trim())
+          profile.height = $('[data-test="link_span_height"]').text().trim()
+          if(profile.height) {
+            profile.height = profile.height.match(/\d{3}/)[0]
           }
-          if (profile.profession === 'Porn Stars') {
-            profile.profession = 'Pornstar'
+          profile.weight = $('[data-test="link_span_weight"]').text().trim()
+          if(profile.weight) {
+            profile.weight = profile.weight.match(/\d{2}/)[0]
           }
-          if (profile.profession === 'Porn Stars') {
-            profile.profession = 'Pornstar'
+          let sizes = []
+          $('[data-test="p-measurements"] span').each((i, elem)=>{
+            sizes[i] = $(elem).text().trim()
+          }) 
+          if (sizes.length>0) {
+            if (sizes[0].match(/\D{1,}/)) {
+              profile.cup = sizes[0].match(/\D{1,}/)[0]
+            }
+            sizes[0] = sizes[0].match(/\d{2}/)[0]
           }
-          this.category = [profile.profession]
-        }
-        if (profile.nation != undefined) { this.nation = profile.nation }
-        if (profile.birth != undefined) { this.birthday = profile.birth }
-        if (profile.ethnicity != undefined) { this.ethnicity = profile.ethnicity }
-        if (profile.hair != undefined) { this.hair = profile.hair }
-        if (profile.eyes != undefined) { this.eyes = profile.eyes }
-        if (profile.height != undefined) { this.height = profile.height }
-        if (profile.weight != undefined) { this.weight = profile.weight }
-        if (profile.bra != undefined) { this.bra = profile.bra }
-        if (profile.waist != undefined) { this.waist = profile.waist }
-        if (profile.hip != undefined) { this.hip = profile.hip }
-        if (profile.boobs != undefined) { 
-          if (profile.boobs === "Natural") {
-            profile.boobs = "Real"
+          profile.bra = sizes[0]
+          profile.waist = sizes[1]
+          profile.hip = sizes[2]
+          profile.boobs = $('[data-test="link_span_boobs"]').text().trim()
+          profile.profession = $('.sidebar-right .heading').next().find('.text-center')[0].children[0].data
+          if (profile.aliases != undefined) { this.transfer.found.aliases = profile.aliases }
+          if (profile.start != undefined) { this.transfer.found.start = profile.start }
+          if (profile.end != undefined) { this.transfer.found.end = profile.end }
+          if (profile.profession != undefined) { 
+            if (profile.profession === 'Adult Models') {
+              profile.profession = 'Erotic model'
+            }
+            if (profile.profession === 'Porn Stars') {
+              profile.profession = 'Pornstar'
+            }
+            this.transfer.found.category = [profile.profession]
           }
-          this.boobs = profile.boobs
+          if (profile.nation != undefined) { this.transfer.found.nation = profile.nation }
+          if (profile.birth != undefined) { this.transfer.found.birthday = profile.birth }
+          if (profile.ethnicity != undefined) { this.transfer.found.ethnicity = profile.ethnicity }
+          if (profile.hair != undefined) { this.transfer.found.hair = profile.hair }
+          if (profile.eyes != undefined) { this.transfer.found.eyes = profile.eyes }
+          if (profile.height != undefined) { this.transfer.found.height = profile.height }
+          if (profile.weight != undefined) { this.transfer.found.weight = profile.weight }
+          if (profile.bra != undefined) { this.transfer.found.bra = profile.bra }
+          if (profile.waist != undefined) { this.transfer.found.waist = profile.waist }
+          if (profile.hip != undefined) { this.transfer.found.hip = profile.hip }
+          if (profile.boobs != undefined) { 
+            if (profile.boobs === "Natural") {
+              profile.boobs = "Real"
+            }
+            this.transfer.found.boobs = profile.boobs
+          }
+          if (profile.cup != undefined) { this.transfer.found.cup = profile.cup }
         }
-        if (profile.cup != undefined) { this.cup = profile.cup }
-        }
+        this.getTransferCurrent()
+        this.dialogTransferInfo = true
+        this.dialogFindPerformerInfo = false
       }, (error) => {
         console.log(error)
-        this.findInfoRun = false
+        this.searchInProgress = false
+        this.dialogFindPerformerInfo = false
         this.$store.dispatch('setNotification', {
           type: 'error',
-          text: 'Cant find this performer'
+          text: `Can't find info for ${this.performer.name}`
         })
       })
     },
     getInfoIafd(performer) {
-      this.findIafdRun = true
-      setTimeout(()=>{
-        this.dialogFindPerformerInfo = false
-        this.foundPerformers = []
-      }, 500)
+      this.searchInProgress = true
+      this.foundPerformers = []
       axios.get(`http://www.iafd.com${performer}`).then((response) => {
         if(response.status === 200) {
-        this.findIafdRun = false
-        this.$store.dispatch('setNotification', {
-          type: 'success',
-          text: 'Got info from www.iafd.com'
-        })
+          this.searchInProgress = false
+          this.clearPreviouslyFound()
 
-        const html = response.data;
-        const $ = cheerio.load(html)
-        let bio = []
-        $('.bioheading').each((i,heading) => {
-          bio.push({
-            heading: $(heading).text().trim(),
-            biodata: $('.bioheading + .biodata').eq(i).text().trim()
+          const html = response.data;
+          const $ = cheerio.load(html)
+          let bio = []
+          $('.bioheading').each((i,heading) => {
+            bio.push({
+              heading: $(heading).text().trim(),
+              biodata: $('.bioheading + .biodata').eq(i).text().trim()
+            })
           })
-        })
-        if (this.getBioString('performer', bio)) {
-          this.aliases = this.getBioString('performer', bio)
-        }
-        if (this.getBioString('ethnicity', bio)) {
-          let ethnicity = []
-          ethnicity.push(this.getBioString('ethnicity', bio))
-          this.ethnicity = ethnicity
-        }
-        if (this.getBioString('hair', bio)) {
-          let hair = [] 
-          hair.push(this.getBioString('hair', bio))
-          this.hair = hair
-        }
-        let years
-        if (this.getBioString('years', bio)) {
-          years = this.getBioString('years', bio)
-          this.careerStart = years.match(/\d{4}/)[0]  
-          if ( years.match(/\d{4}/)[1] != undefined ) {
-            this.careerEnd = years.match(/\d{4}/)[1]
+          if (this.getBioString('performer', bio)) {
+            this.transfer.found.aliases = this.getBioString('performer', bio)
           }
-        }
-        let birth
-        if (this.getBioString('birthday', bio)) {
-          let year = this.getBioString('birthday', bio).match(/\d{4}/)[0]
-          let day = this.getBioString('birthday', bio).match(/\d{2}/)[0]
-          let month = this.getBioString('birthday', bio).split(' ')[0]
-          month = this.months.indexOf(month.toLowerCase())+1
-          if (+month < 10) month = "0"+month.toString()
-          birth = day.toString()+month.toString()+year.toString()
-          this.birthday = birth
-        }
-        if (this.getBioString('height', bio)) {
-          this.height = this.getBioString('height', bio).match(/\d{3}/)[0]
-        }
-        if (this.getBioString('weight', bio)) {
-          this.weight = this.getBioString('weight', bio).match(/\d{2}/g)[1]
-        }
-        if (this.getBioString('measurements', bio)) {
-          let sizes
-          this.getBioString('measurements', bio).match(/\d{2}/g).map(el=>{
-            sizes += el
-          }) 
-          let cup = this.getBioString('measurements', bio).split('-')[0]
-          this.cup = cup.match(/\D{1,}/)[0]
-          this.sizes = sizes
-        }
-        if (this.getBioString('birthplace', bio)) {
-          this.nation = this.getBioString('birthplace', bio)
-          if (this.getBioString('nationality', bio)) {
-            if (this.getBioString('nationality', bio)
-              .toLowerCase().includes('america')) {
-              this.nation = 'United States'
+          if (this.getBioString('ethnicity', bio)) {
+            let ethnicity = []
+            ethnicity.push(this.getBioString('ethnicity', bio))
+            this.transfer.found.ethnicity = ethnicity
+          }
+          if (this.getBioString('hair', bio)) {
+            let hair = [] 
+            hair.push(this.getBioString('hair', bio))
+            this.transfer.found.hair = hair
+          }
+          let years
+          if (this.getBioString('years', bio)) {
+            years = this.getBioString('years', bio)
+            this.transfer.found.start = years.match(/\d{4}/)[0]  
+            if ( years.match(/\d{4}/)[1] != undefined ) {
+              this.transfer.found.end = years.match(/\d{4}/)[1]
             }
           }
-        }
-        this.category = ['Pornstar']
+          let birth
+          if (this.getBioString('birthday', bio)) {
+            let year = this.getBioString('birthday', bio).match(/\d{4}/)[0]
+            let day = this.getBioString('birthday', bio).match(/\d{2}/)[0]
+            let month = this.getBioString('birthday', bio).split(' ')[0]
+            month = this.months.indexOf(month.toLowerCase())+1
+            if (+month < 10) month = "0"+month.toString()
+            birth = day.toString()+month.toString()+year.toString()
+            this.transfer.found.birthday = birth
+          }
+          if (this.getBioString('height', bio)) {
+            this.transfer.found.height = this.getBioString('height', bio).match(/\d{3}/)[0]
+          }
+          if (this.getBioString('weight', bio)) {
+            this.transfer.found.weight = this.getBioString('weight', bio).match(/\d{2}/g)[1]
+          }
+          if (this.getBioString('measurements', bio)) {
+            let sizes = this.getBioString('measurements', bio).match(/\d{2}/g)
+            let cup = this.getBioString('measurements', bio).split('-')[0]
+            this.transfer.found.cup = cup.match(/\D{1,}/)[0]
+            this.transfer.found.bra = sizes[0]
+            this.transfer.found.waist = sizes[1]
+            this.transfer.found.hip = sizes[2]
+          }
+          if (this.getBioString('birthplace', bio)) {
+            this.transfer.found.nation = this.getBioString('birthplace', bio)
+            if (this.getBioString('nationality', bio)) {
+              if (this.getBioString('nationality', bio)
+                .toLowerCase().includes('america')) {
+                this.transfer.found.nation = 'United States'
+              }
+            }
+          }
+          this.transfer.found.category = ['Pornstar']
+            
+          this.getTransferCurrent()
+          this.dialogTransferInfo = true
+          this.dialogFindPerformerInfo = false
         }
       }, (error) => {
+        this.searchInProgress = false
+        this.dialogFindPerformerInfo = false
         console.log(error)
-        this.findIafdRun = false
         this.$store.dispatch('setNotification', {
           type: 'error',
-          text: 'Cant find this performer'
+          text: `Can't find info for ${this.performer.name}`
         })
       })
+    },
+    clearPreviouslyFound() {
+      this.transfer.current = _.cloneDeep(this.defaultParamsForInfo)
+      this.transfer.found = _.cloneDeep(this.defaultParamsForInfo)
+    },
+    getTransferCurrent() {
+      this.transfer.current.aliases = this.aliases
+      this.transfer.current.start = this.start
+      this.transfer.current.end = this.end
+      this.transfer.current.category = this.category
+      this.transfer.current.birthday = this.birthday
+      this.transfer.current.nation = this.nation
+      this.transfer.current.ethnicity = this.ethnicity
+      this.transfer.current.eyes = this.eyes
+      this.transfer.current.hair = this.hair
+      this.transfer.current.height = this.height
+      this.transfer.current.weight = this.weight
+      this.transfer.current.bra = this.bra
+      this.transfer.current.waist = this.waist
+      this.transfer.current.hip = this.hip
+      this.transfer.current.boobs = this.boobs
+      this.transfer.current.cup = this.cup
+    },
+    restoreAll() {
+      for (const param in this.transfer.current) {
+        this.transfer.current[param] = this[param]
+      }
+    },
+    transferAll() {
+      for (const param in this.transfer.found) {
+        if (this.transfer.found[param].length) {
+          this.transfer.current[param] = this.transfer.found[param]
+        }
+      }
+    },
+    applyTransfered() {
+      this.dialogTransferInfo = false
+      setTimeout(()=>{
+        for (const param in this.transfer.current) {
+          if (this.transfer.current[param].length) {
+            this[param] = this.transfer.current[param]
+          }
+        }
+      }, 1000)
+    },
+    applyFounded() {
+      this.dialogTransferInfo = false
+      setTimeout(()=>{
+        for (const param in this.transfer.found) {
+          if (this.transfer.found[param].length) {
+            this[param] = this.transfer.found[param]
+          }
+        }
+      }, 1000)
     },
     getBioString(string, bio) {
       let val = _.filter(bio, (param) => (
@@ -1058,7 +1160,7 @@ export default {
         return 'Start year should be from 1950'
       } else if (+year > this.currentYear && year.length>0) {
         return `End year should be up to ${this.currentYear}`
-      } else if (+year > this.careerEnd && this.careerEnd.length>0) {
+      } else if (+year > this.end && this.end.length>0) {
         return 'Start year must be less than end year'
       } else {
         return true
@@ -1069,7 +1171,7 @@ export default {
         return 'End year should be from 1950'
       } else if (+year > this.currentYear && year.length>0) {
         return `End year should be up to ${this.currentYear}`
-      } else if (+year < this.careerStart && this.careerEnd.length>0) {
+      } else if (+year < this.start && this.end.length>0) {
         return 'End year must be greater than start year'
       } else {
         return true
@@ -1179,8 +1281,8 @@ export default {
           category: this.category,
           nation: this.nation,
           birthday: this.birthday,
-          start: this.careerStart,
-          end: this.careerEnd,
+          start: this.start,
+          end: this.end,
           ethnicity: this.ethnicity,
           hair: this.hair,
           eyes: this.eyes,
@@ -1216,8 +1318,8 @@ export default {
       info.category = this.category
       info.nation = this.nation
       info.birthday = this.birthday
-      info.start = this.careerStart
-      info.end = this.careerEnd
+      info.start = this.start
+      info.end = this.end
       info.ethnicity = this.ethnicity
       info.hair = this.hair
       info.eyes = this.eyes
@@ -1364,12 +1466,12 @@ export default {
     pussyHair(newValue, oldValue) {
       this.getPercentComleted(newValue, oldValue)
     },
-    async careerStart(newValue, oldValue) {
+    async start(newValue, oldValue) {
       await this.$nextTick();
       this.getPercentComleted(newValue, oldValue)
       this.validate();
     },
-    async careerEnd(newValue, oldValue) {
+    async end(newValue, oldValue) {
       await this.$nextTick();
       this.validate();
     }
@@ -1424,6 +1526,20 @@ export default {
   }
   .v-progress-circular__underlay {
     stroke: rgba(255, 255, 255, 0.2);
+  }
+}
+.transfer-table {
+  .val-name,
+  .val-found {
+    position: relative;
+    padding-left: 30px !important;
+  }
+  .transfer-btn {
+    position: absolute; 
+    left: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
   }
 }
 </style> 

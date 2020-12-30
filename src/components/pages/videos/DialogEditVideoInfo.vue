@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="$store.state.Videos.dialogEditVideoInfo" scrollable persistent max-width="1600">
+  <v-dialog v-model="$store.state.Videos.dialogEditVideoInfo" scrollable persistent max-width="1200">
     <v-card>
       <v-card-title class="edit-card-title">
         <v-img v-if="isSelectedSingleVideo" class="image-video"
@@ -24,14 +24,11 @@
         ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
       </v-card-title>
       <vuescroll>
-        <v-card-text>
+        <v-card-text class="py-0">
           <v-form ref="form" v-model="valid">
-            <v-container>
+            <v-container fluid>
               <v-row>
-                <v-col cols="12" class="pa-0">
-                  <div class="overline text-center">Add Information</div>
-                </v-col>
-                <v-col cols="12" sm="6">
+                <v-col cols="12" md="6">
                   <v-card-actions>
                     <v-spacer></v-spacer>
                     <span class="caption mr-2">Sort list of performers by</span>
@@ -76,7 +73,7 @@
                     item-text="name" class="hidden-close"
                     item-value="name" no-data-text="No more performers"
                     multiple hide-selected hide-details
-                    @blur="sort('performers')" 
+                    @blur="sort('performers')" prepend-icon="mdi-account-outline"
                     :menu-props="{contentClass:'list-with-preview'}"
                     :filter="filterItemsPerformers"
                   >
@@ -120,7 +117,7 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="12" sm="6">
+                <v-col cols="12" md="6">
                   <v-card-actions>
                     <v-spacer></v-spacer>
                     <span class="caption mr-2">Sort list of tags by</span>
@@ -165,7 +162,7 @@
                     item-text="name" class="hidden-close"
                     item-value="name" no-data-text="No more tags"
                     multiple hide-selected hide-details
-                    @blur="sort('tags')"
+                    @blur="sort('tags')" prepend-icon="mdi-tag-outline"
                     :menu-props="{contentClass:'list-with-preview'}"
                     :filter="filterItemsTags"
                   >
@@ -196,7 +193,7 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="12" sm="6">
+                <v-col cols="12" md="6">
                   <v-card-actions>
                     <v-spacer></v-spacer>
                     <span class="caption mr-2">Sort list of websites by</span>
@@ -237,7 +234,7 @@
                   </v-card-actions>
                   <v-autocomplete :disabled="clearWebsite"
                     v-model="website" label="Website"
-                    :items="websitesAll" outlined
+                    :items="websitesAll" outlined prepend-icon="mdi-web"
                     item-text="name" class="mt-0 hidden-close" 
                     item-value="name" hide-details no-data-text="No more websites"
                     :menu-props="{contentClass:'list-with-preview'}"
@@ -265,7 +262,8 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="12" sm="6" class="rating-favorite mt-6">
+                <v-col cols="8" md="4" align="center" justify="center">
+                  <div class="overline mb-3">Rating</div>
                   <v-rating style="display:inline-flex;"
                     v-model="rating" clearable :disabled="clearFavorite"
                     color="yellow darken-2"
@@ -274,12 +272,13 @@
                     half-icon="mdi-star-half-full"
                     half-increments hover size="36"
                   ></v-rating>
-                  <v-btn icon x-large :disabled="clearFavorite"
-                    :color="favorite===false ? 'white' : 'pink'"
-                    @click="favorite=!favorite"
-                  >
-                  <v-icon size="36" v-if="favorite===false" color="grey">mdi-heart-outline</v-icon>
-                  <v-icon size="36" v-else color="pink">mdi-heart</v-icon>
+                </v-col>
+                <v-col cols="4" md="2" align="center" justify="center">
+                  <div class="overline mb-3">Favorite</div>
+                  <v-btn @click="favorite=!favorite" :disabled="clearFavorite"
+                    :color="favorite===false ? 'white' : 'pink'" icon x-large 
+                  > <v-icon size="36" v-if="favorite===false" color="grey">mdi-heart-outline</v-icon>
+                    <v-icon size="36" v-else color="pink">mdi-heart</v-icon>
                   </v-btn>
                 </v-col>
                 <v-col cols="12" class="mt-6 py-0" v-if="!isSelectedSingleVideo">
@@ -298,8 +297,11 @@
                     v-model="$store.state.Bookmarks.bookmarkText" hide-details />
                 </v-col>
                 <v-col cols="12" v-if="isSelectedSingleVideo">
-                  <div class="overline text-center mb-4">Path to video</div>
-                  <v-checkbox v-model="pathEditable" label="Change path"/>
+                  <div class="overline mb-4 edit-path-title">
+                    <span>Path</span>
+                    <v-checkbox v-model="pathEditable" hide-details class="edit-path-chkbx"
+                    off-icon="mdi-pencil-off" on-icon="mdi-pencil"/>
+                  </div>
                   <v-text-field 
                     v-model="pathToFile" :rules="[getPathRules]" :disabled="!pathEditable"
                     outlined placeholder="Write file path here" label="File path" />
@@ -620,6 +622,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.edit-path-title {
+  display: flex;
+  justify-content: center;
+}
+.edit-path-chkbx {
+  display: inline-flex;
+  margin-top: 0;
+  margin-left: 20px;
 }
 .image-video {
   .v-responsive__content {
