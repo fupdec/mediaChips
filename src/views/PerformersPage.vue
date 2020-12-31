@@ -89,6 +89,44 @@
     </v-btn>
     
     <PerformersGridElements />
+
+    <v-bottom-sheet 
+      v-if="$store.getters.getSelectedPerformers.length==1" 
+      v-model="$store.state.Performers.bottomSheet" 
+      hide-overlay inset no-click-animation persistent
+    >
+      <v-sheet class="bottom-profle">
+        <v-container fluid class="py-0">
+          <v-row>
+            <v-col cols="12" md="3">
+              <div>Category: <i>{{performer.category.join(', ')}}</i></div>
+              <div>Career: <i>{{performer.start}} - {{performer.end}}</i></div>
+              <div>Birth (age): <i>{{getAge(performer.birthday)}}</i></div>
+            </v-col>
+            <v-col cols="12" md="3">
+              <div>Ethnicity: <i>{{performer.ethnicity.join(', ')}}</i></div>
+              <div>Hair color: <i>{{performer.hair.join(', ')}}</i></div>
+              <div>Eyes color: <i>{{performer.eyes.join(', ')}}</i></div>
+            </v-col>
+            <v-col cols="12" md="3">
+              <span class="mr-2">Height: <i>{{performer.height}}</i></span>
+              <span>Weight: <i>{{performer.weight}}</i></span><br>
+              <span class="mr-2">Bra: <i>{{performer.bra}}</i></span>
+              <span class="mr-2">Waist: <i>{{performer.waist}}</i></span>
+              <span>Hip: <i>{{performer.hip}}</i></span><br>
+              <span class="mr-2">Cup size: <i>{{performer.cup}}</i></span>
+              <span>Boobs: <i>{{performer.boobs}}</i></span>
+            </v-col>
+            <v-col cols="12" md="3">
+              <div>Body: <i>{{performer.body.join(', ')}}</i></div>
+              <span class="mr-2">Pussy: <i>{{performer.pussy}}</i></span>
+              <span class="mr-2">Lips: <i>{{performer.pussyLips}}</i></span><br>
+              <span>Pussy hair: <i>{{performer.pussyHair.join(', ')}}</i></span>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-sheet>
+    </v-bottom-sheet>
   </vuescroll>
 </template>
 
@@ -126,6 +164,10 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
+    performer() {
+      const id = this.$store.getters.getSelectedPerformers[0]
+      return this.$store.getters.performers.find({id: id}).value()
+    },
   },
   methods: {
     scrollToTop() {
@@ -155,6 +197,14 @@ export default {
       this.$store.state.Performers.filters = newFilters
       this.$store.dispatch('filterPerformers')
     },
+    getAge(birthday) {
+      let age
+      if(birthday) {
+        age = birthday.match(/\d{4}$/)[0]
+        age = `${age} (${new Date().getFullYear() - age})`
+      } else { age = '' }
+      return age
+    },
   },
   watch: {
     $route(newRoute) {
@@ -164,3 +214,11 @@ export default {
   }
 }
 </script>
+
+
+<style lang="less">
+.bottom-profle {
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+</style>

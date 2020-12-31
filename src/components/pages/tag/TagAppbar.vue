@@ -3,6 +3,20 @@
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
+          <v-btn icon tile @click="$store.state.Settings.dialogScanVideos=true" v-on="on">
+            <v-icon>mdi-video-plus</v-icon>
+          </v-btn>
+        </template>
+        <span>Add new videos</span>
+      </v-tooltip>
+    </div>
+
+    <VideosAppbarActions v-if="$store.state.Tags.activeTab===0"/>
+    <PerformersAppbarActions v-if="$store.state.Tags.activeTab===1"/>
+
+    <div>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
           <v-btn @click="$store.state.Tags.dialogEditTag = true" 
             icon tile v-on="on"> 
             <v-icon>mdi-pencil</v-icon>
@@ -11,12 +25,7 @@
         <span>Edit tag</span>
       </v-tooltip>
       <DialogEditTag v-if="$store.state.Tags.dialogEditTag"/>
-    </div>
-
-    <VideosAppbarActions v-if="$store.state.Tags.activeTab===0"/>
-    <PerformersAppbarActions v-if="$store.state.Tags.activeTab===1"/>
-
-    <div>
+      
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn icon tile @click="dialogDeleteTag=true" v-on="on">

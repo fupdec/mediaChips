@@ -1,6 +1,7 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
+    <v-card @click="$store.state.Performers.bottomSheet = true" 
+      @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       class="performer-card" :class="{favorite: isFavorite}"
       :data-id="performer.id" hover outlined height="100%"
     >

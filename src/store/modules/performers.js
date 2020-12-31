@@ -105,6 +105,7 @@ const defaultFilters = {
 
 const Performers = {
   state: () => ({
+    bottomSheet: true,
     performersPerPage: dbs.get('performersPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
