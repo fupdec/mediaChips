@@ -5,13 +5,27 @@
         <v-img v-for="(imgUrl, i) in videoThumbImgUrls" :key="i" 
           :src="imgUrl" :aspect-ratio="16/9" width="20%" />
       </div>
-      <!-- TODO: add child websites of network -->
       <div class="website-header" >
         <div class="gradient" :style="gradient"></div>
         <div class="background" :style="headerColor"></div>
-        <v-img :src="getImgUrl(websiteId)" max-width="300" class="ma-3 logo"/>
+        <div class="website-logo">
+          <v-img :src="getImgUrl(websiteId)" max-width="300" class="ma-3 logo"/>
+        </div>
         <div class="website-info">
-          <div class="text-h2 pa-4 website-name"> {{website.name}} </div>
+          <div class="text-h2 pa-4 website-name"> {{website.name}} 
+            <span class="text-h4">{{website.network?'(network)':''}}</span>
+          </div>
+          
+          <div v-if="website.network && website.childWebsites.length" class="child-websites px-4">
+            <div class="mb-2">Child websites</div>
+            <div class="grid mb-4">
+              <v-card v-for="child in website.childWebsites" :key="child" class="child-card" hover 
+                :to="websiteLink(child)" @click.middle="addNewTabWebsite(child)">
+                <v-img :src="getImgUrl(getWebsiteId(child))" aspect-ratio="1.5"/>
+                <v-card-title>{{ child }}</v-card-title>
+              </v-card>
+            </div>
+          </div>
           <div class="px-4 performers-title"> Performers of website 
             <v-btn v-if="activePerformers.length" @click="showAllPerformers" 
               x-small rounded class="mx-4">
@@ -100,15 +114,16 @@ import VideosGrid from '@/mixins/VideosGrid'
 import CropImage from '@/mixins/CropImage'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
+import LabelFunctions from '@/mixins/LabelFunctions'
 
 export default {
   name: 'WebsitePage',
-  mixins: [VideosGrid, ShowImageFunction],
   components: {
     vuescroll,
     DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue"),
     Loading: () => import('@/components/elements/Loading.vue'),
   },
+  mixins: [VideosGrid, ShowImageFunction, LabelFunctions],
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
@@ -162,7 +177,7 @@ export default {
       )
     },
     videoThumbImgUrls() {
-      let imgUrls = this.videosOfWebsite.orderBy('rating',['desc']).take(20).value().map(v=>{
+      let imgUrls = this.videosOfWebsite.orderBy('rating',['desc']).take(40).value().map(v=>{
         let imgPath = path.join(this.pathToUserData, `/media/thumbs/${v.id}.jpg`)
         if (fs.existsSync(imgPath)) {
           return imgPath
@@ -236,25 +251,8 @@ export default {
         return path.join(this.pathToUserData, '/img/templates/website.png')
       }
     },
-    addNewTabPerformer(performerName) {
-      let tabId = this.getPerformerId(performerName)
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with performer "${performerName}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: performerName,
-        link: `/performer/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
-    getPerformerId(itemName) {
-      return this.$store.getters.performers.find({name: itemName}).value().id
+    getWebsite(itemName) {
+      return this.$store.getters.websites.find({name: itemName}).value()
     },
   },
   watch: {
@@ -271,6 +269,20 @@ export default {
 
 
 <style lang="less" scoped>
+.child-websites {
+  .child-card {
+    .v-card__title {
+      padding: 0 5px;
+      font-size: 10px;
+      line-height: 2;
+    }
+  }
+  .grid {
+    display: grid;
+    grid-gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
 .website-header {
   display: flex;
   align-items: flex-start;
@@ -292,6 +304,7 @@ export default {
   .website-info {
     display: flex;
     flex-direction: column;
+    z-index: 2;
   }
   .background {
     position: absolute;

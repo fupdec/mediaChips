@@ -4,12 +4,7 @@
     :timeout="getNotificationTimeout"
     color="error" right
   > {{$store.getters.getNotificationText}}
-    <v-btn
-      text
-      @click="$store.commit('closeNotification')"
-    >
-      Close
-    </v-btn>
+    <v-btn @click="$store.commit('closeNotification')" text>Close</v-btn>
   </v-snackbar>
 </template>
 

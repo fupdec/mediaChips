@@ -23,6 +23,7 @@ dbw.defaults({
 const defaultFilters = {
   firstChar: [],
   colors: [],
+  network: false,
   favorite: false,
   bookmark: false,
   name: '',
@@ -170,6 +171,10 @@ const Websites = {
       if (state.filters.bookmark) {
         websites = websites.filter(website=>(website.bookmark))
         // console.log('websites with bookmark')
+      }
+      if (state.filters.network) {
+        websites = websites.filter(website=>(website.network))
+        // console.log('websites with network')
       }
       if (websites != getters.websites) {
         if (websites.value().length == 0) {

@@ -71,20 +71,18 @@
             <v-icon>mdi-filter</v-icon>
           </v-card-title>
           <v-divider></v-divider>
-          <v-container fluid class="py-0">
-            <v-row>
-              <v-col cols="12" sm="12">
-                <v-text-field 
-                  v-model="$store.state.Websites.filters.name"
-                  label="Name" hide-details clearable outlined dense
-                  prepend-icon="mdi-alphabetical-variant"
-                  @click:append-outer="pasteName" 
-                  append-outer-icon="mdi-clipboard-text-outline"
-                />
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-card-actions class="mt-4">
+          <v-card-text>
+            <v-text-field 
+              v-model="$store.state.Websites.filters.name"
+              label="Name" hide-details clearable outlined dense
+              prepend-icon="mdi-alphabetical-variant"
+              @click:append-outer="pasteName" 
+              append-outer-icon="mdi-clipboard-text-outline"
+            />
+            <v-checkbox label="Only networks" v-model="$store.state.Websites.filters.network" 
+              prepend-icon="mdi-family-tree" hide-details/>
+          </v-card-text>
+          <v-card-actions>
             <v-btn small class="mx-2 mb-2" color="secondary" @click="resetAllFilters(), filtersMenu=false">
               <v-icon left>mdi-filter-off</v-icon> Reset all filters
             </v-btn>

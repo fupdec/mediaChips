@@ -29,6 +29,7 @@ export default new Vuex.Store({
     y: 0,
     pathToUserData: '',
     menuTabs: false,
+    contextTab: '',
   }),
   getters: {
     getNotifications(state) {

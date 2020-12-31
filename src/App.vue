@@ -48,7 +48,7 @@
 
     <VideosGridElements />
     <ScanVideos />
-    <SnackBar />
+    <!-- <SnackBar /> -->
 
     <img 
       v-show="$store.state.hoveredImage" class="list-img-preview"
@@ -81,7 +81,7 @@ export default {
     AppBar: () => import('@/components/app/AppBar.vue'),
     SideBar: () => import('@/components/app/SideBar.vue'),
     StatusBar: () => import('@/components/app/StatusBar.vue'),
-    SnackBar: () => import('@/components/app/SnackBar.vue'),
+    // SnackBar: () => import('@/components/app/SnackBar.vue'), TODO: delete 
     BottomBar: () => import('@/components/app/BottomBar.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),

@@ -242,7 +242,7 @@ export default {
       return this.$store.getters.videos.filter(v=>(v.tags.includes(this.tag.name)))
     },
     videoThumbImgUrls() {
-      let imgUrls = this.videosWithTag.orderBy('rating',['desc']).take(20).value().map(v=>{
+      let imgUrls = this.videosWithTag.orderBy('rating',['desc']).take(40).value().map(v=>{
         let imgPath = path.join(this.pathToUserData, `/media/thumbs/${v.id}.jpg`)
         if (fs.existsSync(imgPath)) {
           return imgPath
