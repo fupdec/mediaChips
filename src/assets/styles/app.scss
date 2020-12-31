@@ -638,6 +638,23 @@ html {
   display: grid;
   grid-gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  &.gap-size {
+    &-xs {
+      grid-gap: 10px;
+    }
+    &-s {
+      grid-gap: 15px;
+    }
+    &-m {
+      grid-gap: 20px;
+    }
+    &-l {
+      grid-gap: 25px;
+    }
+    &-xl {
+      grid-gap: 30px;
+    }
+  }
   &.card-size {
     &-1 {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -867,6 +884,23 @@ html {
   display: grid;
   grid-gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  &.gap-size {
+    &-xs {
+      grid-gap: 10px;
+    }
+    &-s {
+      grid-gap: 15px;
+    }
+    &-m {
+      grid-gap: 20px;
+    }
+    &-l {
+      grid-gap: 25px;
+    }
+    &-xl {
+      grid-gap: 30px;
+    }
+  }
   &.card-size {
     &-1 {
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

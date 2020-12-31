@@ -29,10 +29,49 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
-          <v-list-item link @click="toggleDarkMode">
+          <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+            <template v-slot:activator="{ on, attrs }">
+              <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
+                <v-list-item-title> 
+                  <v-icon left size="18">mdi-arrow-expand-horizontal</v-icon> Gap in card grid
+                </v-list-item-title>
+                <v-icon size="22">mdi-menu-right</v-icon>
+              </v-list-item>
+            </template>
+            
+            <v-list dense class="context-menu">
+              <v-list-item @click="updateGutterSize('xs')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-size-xs</v-icon> Extra small
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="updateGutterSize('s')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-size-s</v-icon> Small
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="updateGutterSize('m')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-size-m</v-icon> Medium
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="updateGutterSize('l')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-size-l</v-icon> Large
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="updateGutterSize('xl')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-size-xl</v-icon> Extra large
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+          <v-list-item class="pr-1" link @click="toggleDarkMode">
             <v-list-item-title>
               <v-icon left size="18">mdi-theme-light-dark</v-icon> Toggle Dark Mode
             </v-list-item-title>
+            <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -138,6 +177,9 @@ export default {
     },
     forward() {
       this.$router.go(1)
+    },
+    updateGutterSize(size) {
+      this.$store.dispatch('updateSettingsState', {key: 'gapSize', value: size})
     },
   },
 }

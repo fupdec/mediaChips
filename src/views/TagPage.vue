@@ -86,7 +86,7 @@
         
         <Loading />
 
-        <v-container fluid class="videos-grid" :class="cardSize">
+        <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
           <!-- Video Blocks parsing -->
           <VideoCard 
             v-for="(video) in videosOnPage" 
@@ -271,6 +271,9 @@ export default {
       } else {
         return this.$store.getters.tabsDb.find({id:this.tabId}).get('filters').value()  
       }
+    },
+    gapSize() {
+      return `gap-size-${this.$store.state.Settings.gapSize}`
     },
   },
   methods: {

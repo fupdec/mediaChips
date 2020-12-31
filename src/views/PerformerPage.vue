@@ -246,7 +246,7 @@
 
     <Loading />
 
-    <v-container fluid class="videos-grid" :class="cardSize">
+    <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
       <VideoCard v-for="(video) in videosOfPerformer" :key="video.id" :video="video"/>
     </v-container>
@@ -596,6 +596,9 @@ export default {
         return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
       }
     },
+    gapSize() {
+      return `gap-size-${this.$store.state.Settings.gapSize}`
+    },
   },
   methods: {
     addNewTabPerformer() {
@@ -841,7 +844,7 @@ export default {
     }
   }
   .profile-name {
-    padding-top: 84px;
+    padding-top: 80px;
     font-size: 2rem;
     letter-spacing: 0.1666666667em !important;
     line-height: 2rem;

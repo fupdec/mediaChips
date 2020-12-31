@@ -88,6 +88,7 @@ dbs.defaults({
   performersPerPage: 20,
   tagsPerPage: 20,
   websitesPerPage: 20,
+  gapSize: 's',
 }).write()
 
 import router from '@/router'
@@ -147,6 +148,7 @@ const Settings = {
     tagsFiltersPresetDefault: dbs.get('tagsFiltersPresetDefault').value(),
     websitesFiltersPresetDefault: dbs.get('websitesFiltersPresetDefault').value(),
     dialogHeaderGradient: false,
+    gapSize: dbs.get('gapSize').value(),
   }),
   mutations: {
     updateSettings (state) {
@@ -299,6 +301,7 @@ const Settings = {
       state.websiteVideoTagsHidden = false
       state.websitePerformersHidden = false
       state.websiteEditBtnHidden = false
+      state.gapSize = 's'
     },
     updateVideoPreviewEnabled(state, value) {
       state.videoPreviewEnabled = value
@@ -494,6 +497,7 @@ const Settings = {
         websiteVideoTagsHidden: false,
         websitePerformersHidden: false,
         websiteEditBtnHidden: false,
+        gapSize: 's',
       }).write()
       commit('resetSettingsToDefault')
     },
@@ -512,6 +516,10 @@ const Settings = {
     updatePerformerInfoParam({state, rootState, commit, dispatch, getters}, {param, value}) {
       getters.settings.set(param, value).write()
       commit('updatePerformerInfoParam', {param, value})
+    },
+    updateSettingsState({state, rootState, commit, dispatch, getters}, {key, value}) {
+      getters.settings.set(key, value).write()
+      state[key] = value
     },
   },
   getters: {

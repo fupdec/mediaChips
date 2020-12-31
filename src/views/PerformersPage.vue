@@ -67,7 +67,7 @@
 
     <Loading />
 
-    <v-container fluid class="performers-grid" :class="cardSize">
+    <v-container fluid class="performers-grid" :class="[cardSize, gapSize]">
       <PerformerCard v-for="(performer) in performersOnPage" 
         :key="performer.id"
         :performer="performer" 
@@ -167,6 +167,9 @@ export default {
     performer() {
       const id = this.$store.getters.getSelectedPerformers[0]
       return this.$store.getters.performers.find({id: id}).value()
+    },
+    gapSize() {
+      return `gap-size-${this.$store.state.Settings.gapSize}`
     },
   },
   methods: {

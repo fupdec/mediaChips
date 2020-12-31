@@ -79,7 +79,7 @@
 
     <Loading/>
 
-    <v-container fluid class="tags-grid">
+    <v-container fluid class="tags-grid" :class="gapSize">
       <TagCard :tag=tag v-for="(tag) in tagsOnPage" :key="tag.id"/>
     </v-container>
 
@@ -317,6 +317,9 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
+    gapSize() {
+      return `gap-size-${this.$store.state.Settings.gapSize}`
+    },
   },
   methods: {
     addNewTab() {
@@ -417,6 +420,23 @@ export default {
   grid-gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   grid-auto-rows: minmax(260px, auto);
+  &.gap-size {
+    &-xs {
+      grid-gap: 10px;
+    }
+    &-s {
+      grid-gap: 15px;
+    }
+    &-m {
+      grid-gap: 20px;
+    }
+    &-l {
+      grid-gap: 25px;
+    }
+    &-xl {
+      grid-gap: 30px;
+    }
+  }
 }
 .tag-card.selected {
   position: relative;

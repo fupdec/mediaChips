@@ -38,7 +38,7 @@
 
     <Loading />
 
-    <v-container fluid class="videos-grid" :class="cardSize">
+    <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
       <VideoCard v-for="(video) in videosOnPage" :key="video.id" :video="video"/>
     </v-container>
@@ -82,6 +82,9 @@ export default {
   computed: {
     cardSize() {
       return `card-size-${this.$store.state.Settings.videoCardSize}`
+    },
+    gapSize() {
+      return `gap-size-${this.$store.state.Settings.gapSize}`
     },
     tabId() {
       return this.$route.query.tabId

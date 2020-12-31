@@ -79,7 +79,7 @@
     
     <Loading />
 
-    <v-container fluid class="websites-grid">
+    <v-container fluid class="websites-grid" :class="gapSize">
       <WebsiteCard v-for="(website) in websitesOnPage" :key="website.id" :website="website"/>
     </v-container>
 
@@ -316,6 +316,9 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
+    gapSize() {
+      return `gap-size-${this.$store.state.Settings.gapSize}`
+    },
   },
   methods: {
     addNewTab() {
@@ -416,6 +419,23 @@ export default {
   grid-gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   grid-auto-rows: minmax(260px, auto);
+  &.gap-size {
+    &-xs {
+      grid-gap: 10px;
+    }
+    &-s {
+      grid-gap: 15px;
+    }
+    &-m {
+      grid-gap: 20px;
+    }
+    &-l {
+      grid-gap: 25px;
+    }
+    &-xl {
+      grid-gap: 30px;
+    }
+  }
 }
 .website-card.selected {
   position: relative;
