@@ -14,6 +14,11 @@
         <div class="website-info">
           <div class="text-h2 pa-4 website-name"> {{website.name}} 
             <span class="text-h4">{{website.network?'(network)':''}}</span>
+            <span v-if="isChildWebsite" class="body-2">is a child of
+              <span @click="$router.push(websiteLink(isChildWebsite))" 
+                @click.middle="addNewTabWebsite(isChildWebsite)" class="network-title">
+                {{isChildWebsite}}</span> network
+            </span>
           </div>
           
           <div v-if="website.network && website.childWebsites.length" class="child-websites px-4">
@@ -201,6 +206,14 @@ export default {
     gapSize() {
       return `gap-size-${this.$store.state.Settings.gapSize}`
     },
+    isChildWebsite() {
+      let network = this.$store.getters.websites.filter(web=>
+          (web.network&&web.childWebsites.includes(this.website.name))).value()
+      if (network.length) {
+        network = network[0].name
+      } else network = ''
+      return network
+    },
   },
   methods: {
     scrollToTop() {
@@ -341,5 +354,10 @@ export default {
   left: 0;
   width: 100%;
   pointer-events: none;
+}
+.network-title {
+  font-weight: bold;
+  font-size: 2rem;
+  cursor: pointer;
 }
 </style>

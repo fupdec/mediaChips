@@ -82,7 +82,7 @@
                     <v-col cols="12" sm="9">
                       <v-autocomplete
                         v-model="childWebsites" :disabled="!isNetwork"
-                        :items="childWebsitesList" label="Websites in network"
+                        :items="childWebsitesList" label="Child websites"
                         item-text="name" class="mt-0 hidden-close" outlined
                         item-value="name" no-data-text="No more child websites"
                         multiple hide-selected hide-details @blur="sort('childWebsites')"

@@ -83,9 +83,8 @@
 
       <v-card-actions class="px-1 py-0 performers" :class="{hidden: isPerformersHidden}">
         <v-chip-group column >
-          <v-icon left :size="iconSize">mdi-account-outline</v-icon>
+          <v-icon left>mdi-account-outline</v-icon>
           <v-chip v-for="performer in video.performers" :key="performer"
-            :x-small="isChipsXS" :small="isChipsS"
             :color="colorDependsRating(performer)" :to="performerLink(performer)"
             @mouseover.stop="showImage($event, getPerformerId(performer), 'performer')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
@@ -101,9 +100,9 @@
 
       <v-card-actions class="px-1 py-0 video-tags" :class="{hidden: isTagsHidden}">
         <v-chip-group column>
-          <v-icon left :size="iconSize">mdi-tag-outline</v-icon>
+          <v-icon left>mdi-tag-outline</v-icon>
           <v-chip v-for="tag in video.tags" :key="tag" :to="tagLink(tag)"
-            :x-small="isChipsXS" :small="isChipsS" outlined :color="colorTag(tag)"
+            outlined :color="colorTag(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
             @click="$store.state.hoveredImage=false"
@@ -114,9 +113,8 @@
       </v-card-actions>
 
       <v-card-actions class="px-1 py-0 website" :class="{hidden: isWebsiteHidden}">
-        <v-icon left :size="iconSize">mdi-web</v-icon>
-        <v-chip v-if="video.website" :x-small="isChipsXS" :small="isChipsS"
-          label outlined :color="colorWebsite" :to="websiteLink(video.website)"
+        <v-icon left>mdi-web</v-icon>
+        <v-chip v-if="video.website" label outlined :color="colorWebsite" :to="websiteLink(video.website)"
           @mouseover.stop="showImage($event, getWebsiteId(video.website), 'website')" 
           @mouseleave.stop="$store.state.hoveredImage=false"
           @click="$store.state.hoveredImage=false"
@@ -175,9 +173,6 @@ export default {
     errorPreview: false,
     isVideoHovered: false,
     timeouts: {},
-    iconSize: 14,
-    isChipsXS: true,
-    isChipsS: false,
   }),
   computed: {
     getVideoPath() {
@@ -238,9 +233,6 @@ export default {
         this.$store.getters.videos.find({id: this.video.id}).assign({favorite: value}).write()
         this.$store.commit('updateVideos')
       },
-    },
-    chipsSize() {
-      return this.$store.state.Settings.videoCardSize
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
@@ -388,20 +380,8 @@ export default {
         this.$store.state.Videos.menuCard = true
       })
     },
-    getChipsSize() {
-      switch(this.chipsSize) {
-        case 1: this.isChipsXS = true; this.isChipsS = false; this.iconSize = 12; break;
-        case 2: this.isChipsXS = true; this.isChipsS = false; this.iconSize = 14; break;
-        case 3: this.isChipsXS = false; this.isChipsS = true; this.iconSize = 18; break;
-        case 4: this.isChipsXS = false; this.isChipsS = true; this.iconSize = 20; break;
-        case 5: this.isChipsXS = false; this.isChipsS = false; this.iconSize = 24; break;
-      }
-    },
   },
   watch: {
-    chipsSize(newSize, oldSize) {
-      this.getChipsSize()
-    }
   }
 }
 </script>
@@ -462,7 +442,9 @@ export default {
   }
   .v-chip {
     margin: 1px 2px !important;
-    padding: 0 5px;
+    padding: 3px 4px;
+    height: auto;
+    line-height: 1;
   }
   .duration {
     position: absolute;

@@ -404,9 +404,21 @@ html {
     }
   }
 }
-.v-application .v-application--wrap .overline,
-.v-application .v-application--wrap .caption {
-  font-family: inherit !important;
+.v-application .v-application--wrap,
+.v-application .v-dialog__content {
+  .apexcharts-legend-text,
+  .text-h1,
+  .text-h2,
+  .text-h3,
+  .text-h4,
+  .text-h5,
+  .text-h6,
+  .body-1,
+  .body-2,
+  .overline,
+  .caption {
+    font-family: inherit !important;
+  }
 }
 // END FONTS
 .user-select {
@@ -660,20 +672,29 @@ html {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       .video-card {
         .v-chip {
-          .v-icon {
-            font-size: 8px !important;
-          }
+          font-size: 10px;
         }
         &-title {
           font-size: 11px;
         }
-        .caption {
-          font-size: 11px !important;
+      }
+      .resolution {
+        width: auto;
+        .text {
+          font-size: 9px;
+        }
+        .value {
+          font-size: 8px;
         }
       }
       .prop {
         font-size: 9px;
-        font-weight: normal;
+      }
+      .duration {
+        font-size: 10px;
+      }
+      .prop,
+      .v-card__actions {
         .v-icon {
           font-size: 14px !important; 
         }
@@ -681,16 +702,21 @@ html {
     }
     &-2 {
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      .v-chip {
+        font-size: 12px;
+      }
+      .prop,
+      .v-card__actions {
+        .v-icon {
+          font-size: 16px !important; 
+        }
+      }
     }
     &-3 {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       .video-card {
         .v-chip {
-          padding-left: 8px;
-          padding-right: 8px;
-          .v-icon {
-            font-size: 12px !important;
-          }
+          padding: 4px 6px;
         }
         &-title {
           font-size: 14px;
@@ -714,12 +740,18 @@ html {
             font-size: 50px !important; 
           }
         }
+        .prop,
+        .v-card__actions {
+          .v-icon {
+            font-size: 18px !important; 
+          }
+        }
       }
       .prop {
         font-size: 12px;
       }
       .duration {
-        font-size: 16px;
+        font-size: 14px;
       }
       .resolution {
         width: auto;
@@ -735,11 +767,9 @@ html {
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       .video-card {
         .v-chip {
-          padding-left: 8px;
-          padding-right: 8px;
-          .v-icon {
-            font-size: 16px !important;
-          }
+          margin: 0 4px 4px 2px !important;
+          padding: 4px 6px;
+          font-size: 16px;
         }
         &-title {
           font-size: 15px;
@@ -785,11 +815,9 @@ html {
       grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
       .video-card {
         .v-chip {
-          padding-left: 12px;
-          padding-right: 12px;
-          .v-icon {
-            font-size: 20px !important;
-          }
+          margin: 0 6px 6px 2px !important;
+          padding: 4px 8px;
+          font-size: 18px;
         }
         &-title {
           font-size: 18px;
@@ -923,6 +951,9 @@ html {
         .flag {
           transform: scale(0.3);
         }
+        .v-chip {
+          font-size: 10px;
+        }
       }
     }
     &-2 {
@@ -945,12 +976,15 @@ html {
         .flag {
           transform: scale(0.4);
         }
+        .v-chip {
+          font-size: 12px;
+        }
       }
     }
     &-3 {
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       .v-chip {
-        padding: 0 6px;
+        padding: 4px 6px;
       }
     }
     &-4 {
@@ -976,7 +1010,8 @@ html {
         }
         .v-chip {
           margin: 0 4px 4px 2px !important;
-          padding: 0 8px;
+          padding: 4px 6px;
+          font-size: 16px;
         }
       }
     }
@@ -1006,7 +1041,8 @@ html {
         }
         .v-chip {
           margin: 0 6px 6px 2px !important;
-          padding: 0 12px;
+          padding: 4px 8px;
+          font-size: 18px;
         }
       }
     }

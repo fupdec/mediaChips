@@ -91,7 +91,6 @@
       <v-card-text v-if="performer.tags.length>0 && !isTagsHidden" class="px-1 py-0">
         <v-chip-group column>
           <v-chip v-for="tag in performer.tags" :key="tag" :to="tagLink(tag)"
-            :x-small="isChipsXS" :small="isChipsS"
             outlined :color="getTagColor(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
@@ -106,7 +105,6 @@
         <div class="caption px-1">Tags from videos</div>
         <v-chip-group column>
           <v-chip v-for="tag in tagsFromVideos" :key="tag" :to="tagLink(tag)"
-            :x-small="isChipsXS" :small="isChipsS"
             outlined :color="getTagColor(tag)" 
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
@@ -121,7 +119,6 @@
         <div class="caption px-1">Websites</div>
         <v-chip-group column>
           <v-chip v-for="website in performer.websites" :key="website" :to="websiteLink(website)"
-            :x-small="isChipsXS" :small="isChipsS"
             outlined label :color="getWebsiteColor(website)" 
             @mouseover.stop="showImage($event, getWebsiteId(website), 'website')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
@@ -189,8 +186,6 @@ export default {
     imgCustom2Key: Date.now()+3,
     isFavorite: false,
     meter: 0,
-    isChipsXS: true,
-    isChipsS: false,
     percentValue: 5.263,
   }),
   computed: {
@@ -298,9 +293,6 @@ export default {
         status = 'grey darken-2'
       }
       return status
-    },
-    chipsSize() {
-      return this.$store.state.Settings.performerCardSize
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
@@ -550,15 +542,6 @@ export default {
         this.$store.state.Performers.menuCard = true
       })
     },
-    getChipsSize() {
-      switch(this.chipsSize) {
-        case 1: this.isChipsXS = true; this.isChipsS = false; break;
-        case 2: this.isChipsXS = true; this.isChipsS = false; break;
-        case 3: this.isChipsXS = true; this.isChipsS = false; break;
-        case 4: this.isChipsXS = false; this.isChipsS = true; break;
-        case 5: this.isChipsXS = false; this.isChipsS = false; break;
-      }
-    },
   },
   watch: {
     updateImagesData(imgData) {
@@ -575,9 +558,6 @@ export default {
     meterMultiplier() {
       this.updateMeter()
     },
-    chipsSize(newSize, oldSize) {
-      this.getChipsSize()
-    }
   },
 }
 </script>
@@ -696,7 +676,9 @@ export default {
   }
   .v-chip {
     margin: 0 2px 2px !important;
-    padding: 0 4px;
+    padding: 3px 4px;
+    height: auto;
+    line-height: 1;
   }
   .flag-icon {
     position: absolute;
