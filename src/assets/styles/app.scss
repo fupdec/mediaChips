@@ -311,146 +311,93 @@ html {
   background: var(--v-secondary-base);
 }
 // FONTS
-.v-application {
-  &--wrap {
-    backface-visibility: unset !important;
-  }
+$headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtitle-1,.subtitle-2,.body-1,.body-2,.caption,.overline';
+#app {
   &.text-font-lato {
     font-family: "Lato", sans-serif !important;
   }
   &.header-font-lato {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "Lato", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "Lato", sans-serif !important;
     }
   }
   &.text-font-lobster {
     font-family: "Lobster", sans-serif !important;
   }
   &.header-font-lobster {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "Lobster", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "Lobster", sans-serif !important;
     }
   }
   &.text-font-merriweather {
     font-family: "Merriweather", sans-serif !important;
   }
   &.header-font-merriweather {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "Merriweather", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "Merriweather", sans-serif !important;
     }
   }
   &.text-font-montserrat {
     font-family: "Montserrat", sans-serif !important;
   }
   &.header-font-montserrat {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "Montserrat", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "Montserrat", sans-serif !important;
     }
   }
   &.text-font-opensans {
     font-family: "OpenSans", sans-serif !important;
   }
   &.header-font-opensans {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "OpenSans", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "OpenSans", sans-serif !important;
     }
   }
   &.text-font-opensanscondensed {
     font-family: "OpenSansCondensed", sans-serif !important;
   }
   &.header-font-opensanscondensed {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "OpenSansCondensed", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "OpenSansCondensed", sans-serif !important;
     }
   }
   &.text-font-oswald {
     font-family: "Oswald", sans-serif !important;
   }
   &.header-font-oswald {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "Oswald", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "Oswald", sans-serif !important;
     }
   }
   &.text-font-ptsans {
     font-family: "PTSans", sans-serif !important;
   }
   &.header-font-ptsans {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "PTSans", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "PTSans", sans-serif !important;
     }
   }
   &.text-font-quicksand {
     font-family: "Quicksand", sans-serif !important;
   }
   &.header-font-quicksand {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "Quicksand", sans-serif !important;
-      }
-    }
-  }
-  &.text-font-roboto {
-    font-family: "Roboto", sans-serif !important;
-  }
-  &.header-font-roboto {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "Roboto", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "Quicksand", sans-serif !important;
     }
   }
   &.text-font-robotocondensed {
     font-family: "RobotoCondensed", sans-serif !important;
   }
   &.header-font-robotocondensed {
-    .v-application--wrap,
-    .v-dialog__content {
-      .headline {
-        font-family: "RobotoCondensed", sans-serif !important;
-      }
+    #{$headings} {
+      font-family: "RobotoCondensed", sans-serif !important;
     }
   }
 }
-.v-application .v-application--wrap,
-.v-application .v-dialog__content {
-  .apexcharts-legend-text,
-  .text-h1,
-  .text-h2,
-  .text-h3,
-  .text-h4,
-  .text-h5,
-  .text-h6,
-  .body-1,
-  .body-2,
-  .overline,
-  .caption {
-    font-family: inherit !important;
+
+.v-application {
+  &--wrap {
+    backface-visibility: unset !important;
   }
 }
 // END FONTS
