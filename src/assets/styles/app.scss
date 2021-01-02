@@ -311,8 +311,11 @@ html {
   background: var(--v-secondary-base);
 }
 // FONTS
-$headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtitle-1,.subtitle-2,.body-1,.body-2,.caption,.overline';
+$headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtitle-1,.subtitle-2,';
 #app {
+  .body-1,.body-2,.caption,.overline {
+    font-family: inherit !important;
+  }
   &.text-font-lato {
     font-family: "Lato", sans-serif !important;
   }
@@ -1305,6 +1308,14 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       font-weight: normal !important;
       display: flex;
       align-items: center;
+    }
+  }
+  .shortcut {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    span:first-of-type {
+      margin-right: 20px;
     }
   }
 }

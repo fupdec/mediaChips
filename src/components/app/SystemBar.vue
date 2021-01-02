@@ -76,6 +76,52 @@
         </v-list>
       </v-menu>
 
+      <v-menu bottom offset-y min-width="160">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn v-bind="attrs" v-on="on" :ripple="false" small tile text height="28">
+            Navigation
+          </v-btn>
+        </template>
+        <v-list dense class="context-menu">
+          <v-list-item link @click="$router.push('/home')">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-home</v-icon> 
+              <div class="shortcut"><span>Home</span> <span>Alt + X</span></div>
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="$router.push('/videos/:default?tabId=default')">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-video</v-icon> 
+              <div class="shortcut"><span>Videos</span> <span>Alt + V</span></div>
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="$router.push('/performers/:default?tabId=default')">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-account</v-icon> 
+              <div class="shortcut"><span>Performers</span> <span>Alt + R</span></div>
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="$router.push('/tags/:default?tabId=default')">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-tag</v-icon> 
+              <div class="shortcut"><span>Tags</span> <span>Alt + T</span></div>
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="$router.push('/websites/:default?tabId=default')">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-web</v-icon> 
+              <div class="shortcut"><span>Websites</span> <span>Alt + W</span></div>
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="$router.push('/settings')">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-cog</v-icon> 
+              <div class="shortcut"><span>Settings</span> <span>Alt + S</span></div>
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
       <v-btn @click="back" text tile small width="46" height="28" class="ml-6">
         <v-icon size="18" class="ma-0">mdi-arrow-left</v-icon>
       </v-btn>

@@ -101,6 +101,32 @@ export default {
       if(this.passwordProtection && this.phrase!=='') {
         this.disableRunApp = this.phrase !== this.password 
       }
+      window.addEventListener('keyup', event => {
+        if(event.altKey && event.keyCode === 83) { // alt+s
+          this.$router.push('/settings')
+          return
+        }
+        if(event.altKey && event.keyCode === 86) { // alt+v
+          this.$router.push('/videos/:default?tabId=default')
+          return
+        }
+        if(event.altKey && event.keyCode === 82) { // alt+r
+          this.$router.push('/performers/:default?tabId=default')
+          return
+        }
+        if(event.altKey && event.keyCode === 84) { // alt+t
+          this.$router.push('/tags/:default?tabId=default')
+          return
+        }
+        if(event.altKey && event.keyCode === 87) { // alt+w
+          this.$router.push('/websites/:default?tabId=default')
+          return
+        }
+        if(event.altKey && event.keyCode === 88) { // alt+x
+          this.$router.push('/home')
+          return
+        }
+      })
     })
   },
   data: () => ({

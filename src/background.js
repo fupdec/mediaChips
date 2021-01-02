@@ -1,9 +1,9 @@
 'use strict'
 
-const fs = require("fs-extra");
-const path = require("path");
+const fs = require("fs-extra")
+const path = require("path")
 
-import { ipcMain, app, protocol, BrowserWindow } from 'electron'
+import { ipcMain, app, protocol, BrowserWindow, Menu, MenuItem  } from 'electron'
 import {
   createProtocol,
   /* installVueDevtools */
@@ -171,4 +171,17 @@ ipcMain.on('reload', function() {
     app.relaunch()
     app.exit()
   }
-});
+})
+
+// keyboard shortcuts
+const menu = new Menu()
+menu.append(new MenuItem({
+  label: 'Electron',
+  submenu: [{
+    role: 'help',
+    accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
+    click: () => { console.log('Page reloading is disabled!') }
+  }]
+}))
+
+Menu.setApplicationMenu(menu)
