@@ -155,9 +155,6 @@ export default {
     this.$nextTick(function () {
     })
   },
-  updated() {
-    this.getChipsSize()
-  },
   beforeDestroy() {
     try {
       this.$refs.video.src = ''

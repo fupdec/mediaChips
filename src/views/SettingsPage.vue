@@ -64,7 +64,7 @@
       <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
         <v-card>
           <v-card-title>
-            <div>Updating data from video</div>
+            <div class="headline">Updating data from video</div>
             <v-spacer></v-spacer>
             <v-icon>mdi-video-outline</v-icon>
           </v-card-title>
