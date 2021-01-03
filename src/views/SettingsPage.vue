@@ -229,7 +229,8 @@
       <div class="subtitle mt-8">Navigation menu position:</div>
       <v-radio-group v-model="navigationSide" mandatory row>
         <v-radio label="Side" value="1"></v-radio>
-        <v-radio label="Bottom" value="0"></v-radio>
+        <v-radio label="Bottom" value="2"></v-radio>
+        <v-radio label="None" value="0"></v-radio>
       </v-radio-group>
       
       <div class="subtitle mb-2 mt-8">Limit of pages in pagination:</div>
@@ -427,7 +428,7 @@
     </v-container>
 
 
-    <div v-show="$store.getters.navigationSide=='0'" class="py-6"></div>
+    <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
 
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
       class="scroll-to-top" fixed fab color="primary">

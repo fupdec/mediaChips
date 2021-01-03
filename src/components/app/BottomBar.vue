@@ -1,7 +1,5 @@
 <template>
-  <v-bottom-navigation 
-    v-if="navigationSide=='0'" absolute style="bottom:20px" shift
-  >
+  <v-bottom-navigation v-if="navigationSide=='2'" absolute style="bottom:20px" shift>
     <v-btn to="/home" text color="secondary">
       <span>Home</span>
       <v-icon>mdi-home-outline</v-icon>

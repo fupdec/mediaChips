@@ -33,6 +33,34 @@
             <template v-slot:activator="{ on, attrs }">
               <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
                 <v-list-item-title> 
+                  <v-icon left size="18">mdi-format-list-bulleted</v-icon> Navigation bar
+                </v-list-item-title>
+                <v-icon size="22">mdi-menu-right</v-icon>
+              </v-list-item>
+            </template>
+            
+            <v-list dense class="context-menu">
+              <v-list-item @click="$store.dispatch('toggleNavigationSide', '1')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-border-left-variant</v-icon> Side
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="$store.dispatch('toggleNavigationSide', '2')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-border-bottom-variant</v-icon> Bottom
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="$store.dispatch('toggleNavigationSide', '0')" class="pr-1" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-border-none-variant</v-icon> None
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+          <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+            <template v-slot:activator="{ on, attrs }">
+              <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
+                <v-list-item-title> 
                   <v-icon left size="18">mdi-arrow-expand-horizontal</v-icon> Gap in card grid
                 </v-list-item-title>
                 <v-icon size="22">mdi-menu-right</v-icon>
@@ -67,6 +95,7 @@
               </v-list-item>
             </v-list>
           </v-menu>
+          <v-divider class="ma-1"></v-divider>
           <v-list-item class="pr-1" link @click="toggleDarkMode">
             <v-list-item-title>
               <v-icon left size="18">mdi-theme-light-dark</v-icon> Toggle Dark Mode

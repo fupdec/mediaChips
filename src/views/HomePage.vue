@@ -195,7 +195,7 @@
       </div>
     </v-container>
 
-    <div v-show="$store.getters.navigationSide=='0'" class="py-6"></div>
+    <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
   </vuescroll>
 </template>
 
