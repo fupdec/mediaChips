@@ -1,6 +1,6 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)"
+    <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
       :class="{favorite: isFavorite}" class="video-card" height="100%"
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
     >

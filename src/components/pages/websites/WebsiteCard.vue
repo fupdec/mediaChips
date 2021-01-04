@@ -1,7 +1,8 @@
 <template>
   <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
-      :data-id="website.id" class="website-card" outlined hover :class="{favorite: isFavorite}">
+      :data-id="website.id" class="website-card" outlined hover 
+      :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
       <v-img @click="openWebsitePage" @click.middle="addNewTabWebsite()" :title='`Open website "${websiteName}"`' 
         class="website-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="website-color" :style="`border-color: ${website.color} transparent transparent transparent;`"/>

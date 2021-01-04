@@ -1,7 +1,8 @@
 <template>
   <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
-      :data-id="tag.id" class="tag-card" outlined hover :class="{favorite: isFavorite}">
+      :data-id="tag.id" class="tag-card" outlined hover 
+      :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
       <v-img @click="openTagPage" @click.middle="addNewTabTag()" :title='`Open tag "${tagName}"`'
         class="tag-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>

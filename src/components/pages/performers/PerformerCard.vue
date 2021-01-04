@@ -3,7 +3,7 @@
     <v-card @click="$store.state.Performers.bottomSheet = true" 
       @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       class="performer-card" :class="{favorite: isFavorite}"
-      :data-id="performer.id" hover outlined height="100%"
+      :data-id="performer.id" hover outlined height="100%" v-ripple="{ class: 'accent--text' }"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
         <div v-if="!isNationalityHidden" @click="filterByNationality"
