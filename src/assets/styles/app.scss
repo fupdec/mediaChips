@@ -928,7 +928,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-chip {
           font-size: 10px;
-          padding: 2px 4px;
         }
       }
       .v-icon {
@@ -952,7 +951,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-chip {
           font-size: 11px;
-          padding: 2px 4px;
         }
       }
       .v-icon {
@@ -983,8 +981,8 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           height: 45px;
         }
         .v-chip {
-          margin: 0 4px 4px 2px !important;
           font-size: 14px;
+          padding: 3px 6px;
         }
       }
       .v-icon {
@@ -1008,7 +1006,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           height: 50px;
         }
         .v-chip {
-          margin: 0 6px 6px 2px !important;
           padding: 3px 6px;
           font-size: 16px;
         }
