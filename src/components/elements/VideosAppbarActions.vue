@@ -277,6 +277,19 @@
       <span v-if="$store.state.Videos.filters.bookmark">Show all</span>
       <span v-else>Show bookmarks</span>
     </v-tooltip>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn @click="$store.state.Videos.dialogFolderTree = true" icon tile v-on="on"> 
+          <v-badge :value="!isTreeEmpty" :content="treeBadgeContent" overlap bottom style="z-index: 5;">
+            <v-icon>mdi-file-tree</v-icon>
+          </v-badge>
+        </v-btn>
+      </template>
+      <span>Open folder tree</span>
+    </v-tooltip>
+    
+    <DialogFolderTree v-if="$store.state.Videos.dialogFolderTree"/>
     
     <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
       <template v-slot:activator="{ on, attrs }">
@@ -388,6 +401,7 @@ export default {
   name: 'VideosAppbarActions',
   components: {
     FiltersPresets: () => import('@/components/elements/FiltersPresets.vue'),
+    DialogFolderTree: () => import('@/components/pages/videos/DialogFolderTree.vue'),
   },
   mixins: [FilterVideos, ShowImageFunction], 
   mounted() {
@@ -424,6 +438,14 @@ export default {
     },
     tabId() {
       return this.$route.query.tabId
+    },
+    isTreeEmpty() {
+      if (this.$store.state.Videos.filters.tree.length) {
+        return false
+      } else return true
+    },
+    treeBadgeContent() {
+      return this.$store.state.Videos.filters.tree.length  
     },
   },
   methods: {

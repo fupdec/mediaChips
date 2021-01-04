@@ -24,7 +24,7 @@
           @input="changeRating($event, video.id)"
           class="rating" :class="{hidden: isRatingHidden}"
           color="yellow darken-2"
-          background-color="rgba(255,255,255,0.2)"
+          background-color="grey darken-1"
           empty-icon="mdi-star-outline"
           half-icon="mdi-star-half-full"
           dense half-increments hover size="18" clearable
@@ -443,17 +443,22 @@ export default {
     height: auto;
     line-height: 1;
   }
+  .v-card__actions {
+    .v-icon.mdi-heart {
+      font-size: 1em !important;
+    }
+  }
   .duration {
     position: absolute;
     right: 2px;
     bottom: 2px;
-    padding-left: 2px;
-    padding-right: 2px;
+    padding: 1px;
+    line-height: 1;
     font-weight: 300;
     font-size: 12px;
     border-radius: 3px;
     color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.3);
     user-select: none;
     &.hidden {
       display: none;
@@ -461,7 +466,6 @@ export default {
   }
   .resolution {
     position: absolute;
-    min-width: 32px;
     left: 1px;
     top: 1px;
     font-weight: 300;
@@ -485,6 +489,7 @@ export default {
       background-color: rgb(236, 197, 22);
       color: #000;
       line-height: 1;
+      padding: 0px 2px;
     }
     .value {
       font-size: 10px;
@@ -492,6 +497,7 @@ export default {
       background-color: #000;
       color: #ffffff;
       line-height: 1.1;
+      padding: 0px 2px;
     }
   }
   .prop {
@@ -633,7 +639,6 @@ export default {
   bottom: 0;
   left: 0;
   line-height: 1;
-  background-color: rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   &.hidden {
     display: none;

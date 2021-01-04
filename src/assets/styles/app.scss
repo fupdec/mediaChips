@@ -656,13 +656,13 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       .video-card {
         .v-chip {
           font-size: 10px;
+          padding: 2px 4px;
         }
         &-title {
           font-size: 11px;
         }
       }
       .resolution {
-        width: auto;
         .text {
           font-size: 9px;
         }
@@ -684,9 +684,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       }
     }
     &-2 {
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       .v-chip {
-        font-size: 12px;
+        font-size: 11px;
       }
       .prop,
       .v-card__actions {
@@ -699,7 +699,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       .video-card {
         .v-chip {
-          padding: 4px 6px;
+          font-size: 12px;
         }
         &-title {
           font-size: 14px;
@@ -720,13 +720,16 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           width: 70px;
           height: 70px;
           .v-icon {
-            font-size: 50px !important; 
+            font-size: 50px !important;
           }
         }
         .prop,
         .v-card__actions {
           .v-icon {
-            font-size: 18px !important; 
+            font-size: 18px !important;  
+            &.mdi-heart {
+              font-size: 1em !important;
+            }
           }
         }
       }
@@ -734,10 +737,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         font-size: 12px;
       }
       .duration {
-        font-size: 14px;
+        font-size: 13px;
       }
       .resolution {
-        width: auto;
         .text {
           font-size: 12px;
         }
@@ -750,9 +752,8 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       .video-card {
         .v-chip {
-          margin: 0 4px 4px 2px !important;
           padding: 4px 6px;
-          font-size: 16px;
+          font-size: 14px;
         }
         &-title {
           font-size: 15px;
@@ -781,11 +782,15 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       .prop {
         font-size: 13px;
       }
+      .v-card__actions {
+        .v-icon {
+          font-size: 18px !important; 
+        }
+      }
       .duration {
-        font-size: 18px;
+        font-size: 16px;
       }
       .resolution {
-        width: auto;
         .text {
           font-size: 13px;
         }
@@ -798,16 +803,12 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
       .video-card {
         .v-chip {
-          margin: 0 6px 6px 2px !important;
-          padding: 4px 8px;
-          font-size: 18px;
+          padding: 4px 6px;
+          font-size: 16px;
         }
         &-title {
           font-size: 18px;
           line-height: 2;
-        }
-        .caption {
-          font-size: 16px !important;
         }
         .v-rating {
           .v-icon {
@@ -818,7 +819,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           width: 50px;
           height: 50px;
           .v-icon {
-            font-size: 40px !important; 
+            font-size: 38px !important; 
           }
         }
         .btn-play {
@@ -835,16 +836,20 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           font-size: 20px !important; 
         }
       }
+      .v-card__actions {
+        .v-icon {
+          font-size: 22px !important; 
+        }
+      }
       .duration {
-        font-size: 20px;
+        font-size: 18px;
       }
       .resolution {
-        width: auto;
         .text {
-          font-size: 16px;
+          font-size: 12px;
         }
         .value {
-          font-size: 14px;
+          font-size: 12px;
         }
       }
     }
@@ -936,6 +941,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-chip {
           font-size: 10px;
+          padding: 2px 4px;
         }
       }
     }
@@ -960,14 +966,21 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           transform: scale(0.4);
         }
         .v-chip {
-          font-size: 12px;
+          font-size: 11px;
+          padding: 2px 4px;
         }
       }
     }
     &-3 {
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       .v-chip {
-        padding: 4px 6px;
+        padding: 3px 5px;
+        font-size: 12px;
+      }
+      .v-rating {
+        .v-icon {
+          font-size: 20px !important;
+        }
       }
     }
     &-4 {
@@ -993,8 +1006,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-chip {
           margin: 0 4px 4px 2px !important;
-          padding: 4px 6px;
-          font-size: 16px;
+          font-size: 14px;
         }
       }
     }
@@ -1024,8 +1036,8 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-chip {
           margin: 0 6px 6px 2px !important;
-          padding: 4px 8px;
-          font-size: 18px;
+          padding: 3px 6px;
+          font-size: 16px;
         }
       }
     }
