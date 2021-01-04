@@ -19,18 +19,15 @@
           unable to find thumb for this video
         </div>
 
-        <v-rating
-          v-model="video.rating"
-          @input="changeRating($event, video.id)"
+        <v-rating v-if="!$store.state.Settings.ratingAndFavoriteInCard" 
+          :value="video.rating" @input="changeRating($event, video.id)"
           class="rating" :class="{hidden: isRatingHidden}"
-          color="yellow darken-2"
-          background-color="grey darken-1"
-          empty-icon="mdi-star-outline"
-          half-icon="mdi-star-half-full"
-          dense half-increments hover size="18" clearable
-        ></v-rating>
+          color="yellow darken-2" background-color="grey darken-1"
+          empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+          dense half-increments hover size="18" clearable />
         
-        <v-btn @click="isFavorite = !isFavorite" icon absolute small
+        <v-btn v-if="!$store.state.Settings.ratingAndFavoriteInCard" 
+          @click="isFavorite = !isFavorite" icon absolute small
           :color="isFavorite===false ? 'white' : 'pink'"
           class="fav-btn" :class="{hidden: isFavoriteHidden}"
         > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
@@ -80,6 +77,18 @@
       
       <v-divider v-if="!isFileInfoHidden"></v-divider>
       <!-- END Video meta -->
+
+      <v-card-actions v-if="$store.state.Settings.ratingAndFavoriteInCard" class="px-1 py-0">
+        <v-rating :value="video.rating" @input="changeRating($event, video.id)"
+          color="yellow darken-2" background-color="grey"
+          empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+          dense half-increments hover size="18" clearable />
+        <v-spacer></v-spacer>
+        <v-btn @click="isFavorite = !isFavorite" small icon color="pink"> 
+          <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart</v-icon>
+        </v-btn>
+      </v-card-actions>
+      <v-divider v-if="$store.state.Settings.ratingAndFavoriteInCard"></v-divider>
 
       <v-card-actions class="px-1 py-0 performers" :class="{hidden: isPerformersHidden}">
         <v-chip-group column >
@@ -242,6 +251,9 @@ export default {
     },
     delayVideoPreview() {
       return this.$store.state.Settings.delayVideoPreview
+    },
+    ratingInCard() {
+      return this.$store.state.Settings.videoRatingInCard
     },
   },
   methods: {
@@ -444,9 +456,14 @@ export default {
     line-height: 1;
   }
   .v-card__actions {
-    .v-icon.mdi-heart {
-      font-size: 1em !important;
+    .v-chip {
+      .v-icon.mdi-heart {
+        font-size: 1em !important;
+      }
     }
+  }
+  .v-rating .v-icon::before {
+    font-size: 1.3em !important;
   }
   .duration {
     position: absolute;

@@ -66,6 +66,7 @@ dbs.defaults({
   videoDurationHidden: false,
   videoPerformersHidden: false,
   videoTagsHidden: false,
+  ratingAndFavoriteInCard: false,
   videoEditPerformersSortBy: 'name',
   videoEditTagsSortBy: 'name',
   videoEditWebsitesSortBy: 'name',
@@ -123,6 +124,7 @@ const Settings = {
     searchTagsInFileName: false,
     scanProcRun: false,
     videoCardSize: dbs.get('videoCardSize').value(),
+    ratingAndFavoriteInCard: dbs.get('ratingAndFavoriteInCard').value(),
     performerCardSize: dbs.get('performerCardSize').value(),
     performerInfoEthnicity: dbs.get('performerInfoEthnicity').value().sort((a,b)=>a.localeCompare(b)),
     performerInfoHair: dbs.get('performerInfoHair').value().sort((a,b)=>a.localeCompare(b)),
@@ -294,6 +296,7 @@ const Settings = {
       state.videoDurationHidden = false
       state.videoPerformersHidden = false
       state.videoTagsHidden = false
+      state.ratingAndFavoriteInCard = false
       state.videoPreviewEnabled = true
       state.tagAltNamesHidden = false
       state.tagPerformersHidden = false
@@ -490,6 +493,7 @@ const Settings = {
         videoDurationHidden: false,
         videoPerformersHidden: false,
         videoTagsHidden: false,
+        ratingAndFavoriteInCard: false,
         videoPreviewEnabled: true,
         tagAltNamesHidden: false,
         tagPerformersHidden: false,

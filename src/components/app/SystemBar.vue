@@ -95,6 +95,12 @@
               </v-list-item>
             </v-list>
           </v-menu>
+          <v-list-item class="pr-1" link @click="$store.state.Settings.ratingAndFavoriteInCard=!$store.state.Settings.ratingAndFavoriteInCard">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Cards
+            </v-list-item-title>
+            <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+          </v-list-item>
           <v-divider class="ma-1"></v-divider>
           <v-list-item class="pr-1" link @click="toggleDarkMode">
             <v-list-item-title>

@@ -26,19 +26,15 @@
           <span class="template-text" v-if="imgAlt.includes('performer_back.png')">Alternate image</span>
         </v-img>
 
-        <div v-if="!isRatingHidden" class="rating-wrapper">
-          <v-rating
-            v-model="performer.rating"
-            color="yellow darken-2"
-            background-color="grey darken-1"
-            empty-icon="mdi-star-outline"
-            half-icon="mdi-star-half-full"
-            dense half-increments hover size="18" clearable
-            @input="changeRating($event, performer.id)"
-          ></v-rating>
+        <div v-if="!isRatingHidden && !$store.state.Settings.ratingAndFavoriteInCard" class="rating-wrapper">
+          <v-rating :value="performer.rating" @input="changeRating($event, performer.id)"
+            color="yellow darken-2" background-color="grey darken-1"
+            empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+            dense half-increments hover size="18" clearable />
         </div>
 
-        <v-btn v-if="!isFavoriteHidden" @click="toggleFavorite" icon absolute 
+        <v-btn v-if="!isFavoriteHidden && !$store.state.Settings.ratingAndFavoriteInCard" 
+          @click="toggleFavorite" icon absolute 
           :color="isFavorite===false ? 'white' : 'pink'" class="fav-btn"
         > <v-icon :color="isFavorite===false ? 'grey' : 'pink'"> mdi-heart-outline </v-icon>
         </v-btn>
@@ -80,6 +76,17 @@
           <span class="aka">aka</span>{{performerAliases}}
         </div>
       </v-card-title>
+
+      <v-card-actions v-if="$store.state.Settings.ratingAndFavoriteInCard" class="px-1 pt-0">
+        <v-rating :value="performer.rating" @input="changeRating($event, performer.id)"
+          color="yellow darken-2" background-color="grey"
+          empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+          dense half-increments hover size="18" clearable />
+        <v-spacer></v-spacer>
+        <v-btn @click="isFavorite = !isFavorite" small icon color="pink"> 
+          <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart</v-icon>
+        </v-btn>
+      </v-card-actions>
 
       <v-card-text v-if="!isCareerStatusHidden" class="pa-2 performer-career-status">
         <span class="caption">Career status</span> 
@@ -609,6 +616,9 @@ export default {
   &-inner {
     height: 100%;
   }
+  .v-rating .v-icon::before {
+    font-size: 1.3em !important;
+  }
   &.favorite {
     &:before {
       content: '';
@@ -619,6 +629,8 @@ export default {
       top: 0;
       border-radius: 4px;
       pointer-events: none;
+      background: none;
+      opacity: 1;
       box-shadow: 0px 2px 8px 3px rgba(255, 0, 75, 0.25), 0 0 0 1px rgba(255, 0, 75, 1);
     }
     .img-container:before {
@@ -627,6 +639,9 @@ export default {
     .hidden:before {
       opacity: 0;
     }
+  }
+  .fav-btn .v-icon:before {
+    font-size: 1.5em !important;
   }
   .rating-wrapper {
     position: absolute;

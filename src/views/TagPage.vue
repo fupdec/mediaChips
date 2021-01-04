@@ -86,7 +86,7 @@
         
         <Loading />
 
-        <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
+        <v-container fluid class="videos-grid" :class="[videoCardSize, gapSize]">
           <!-- Video Blocks parsing -->
           <VideoCard 
             v-for="(video) in videosOnPage" 
@@ -148,7 +148,7 @@
 
         <Loading />
 
-        <v-container fluid class="performers-grid" :class="cardSize">
+        <v-container fluid class="performers-grid" :class="[performerCardSize, gapSize]">
           <PerformerCard v-for="(performer) in performersOnPage" 
             :key="performer.id"
             :performer="performer" 
@@ -212,8 +212,11 @@ export default {
     tagId() {
       return this.$route.params.id.replace(/:/g, '')    
     },
-    cardSize() {
+    videoCardSize() {
       return `card-size-${this.$store.state.Settings.videoCardSize}`
+    },
+    performerCardSize() {
+      return `card-size-${this.$store.state.Settings.performerCardSize}`
     },
     headerColor() {
       return `background: ${this.tag.color}`

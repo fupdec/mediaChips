@@ -653,14 +653,12 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   &.card-size {
     &-1 {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      .video-card {
-        .v-chip {
-          font-size: 10px;
-          padding: 2px 4px;
-        }
-        &-title {
-          font-size: 11px;
-        }
+      .video-card-title {
+        font-size: 11px;
+      }
+      .v-chip {
+        font-size: 10px;
+        padding: 2px 4px;
       }
       .resolution {
         .text {
@@ -676,11 +674,8 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       .duration {
         font-size: 10px;
       }
-      .prop,
-      .v-card__actions {
-        .v-icon {
-          font-size: 14px !important; 
-        }
+      .v-icon {
+        font-size: 14px !important; 
       }
     }
     &-2 {
@@ -727,9 +722,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         .v-card__actions {
           .v-icon {
             font-size: 18px !important;  
-            &.mdi-heart {
-              font-size: 1em !important;
-            }
           }
         }
       }
@@ -931,11 +923,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         .caption {
           font-size: 0.6rem !important;
         }
-        .performer-career-status {
-          .v-chip {
-            padding: 0 4px !important;
-          }
-        }
         .flag {
           transform: scale(0.3);
         }
@@ -943,6 +930,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           font-size: 10px;
           padding: 2px 4px;
         }
+      }
+      .v-icon {
+        font-size: 14px !important;
       }
     }
     &-2 {
@@ -957,11 +947,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         .caption {
           font-size: 0.7rem !important;
         }
-        .performer-career-status {
-          .v-chip {
-            padding: 0 4px !important;
-          }
-        }
         .flag {
           transform: scale(0.4);
         }
@@ -970,6 +955,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           padding: 2px 4px;
         }
       }
+      .v-icon {
+        font-size: 16px !important;
+      }
     }
     &-3 {
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -977,10 +965,8 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         padding: 3px 5px;
         font-size: 12px;
       }
-      .v-rating {
-        .v-icon {
-          font-size: 20px !important;
-        }
+      .v-icon {
+        font-size: 20px !important;
       }
     }
     &-4 {
@@ -992,22 +978,17 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         .aka, .aliases {
           font-size: 13px;
         }
-        .v-rating {
-          .v-icon {
-            font-size: 24px !important;
-          }
-        }
         .fav-btn {
           width: 45px;
           height: 45px;
-          .v-icon {
-            font-size: 35px !important; 
-          }
         }
         .v-chip {
           margin: 0 4px 4px 2px !important;
           font-size: 14px;
         }
+      }
+      .v-icon {
+        font-size: 22px !important;
       }
     }
     &-5 {
@@ -1022,23 +1003,18 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         .flag {
           transform: scale(0.6);
         }
-        .v-rating {
-          .v-icon {
-            font-size: 30px !important;
-          }
-        }
         .fav-btn {
           width: 50px;
           height: 50px;
-          .v-icon {
-            font-size: 40px !important; 
-          }
         }
         .v-chip {
           margin: 0 6px 6px 2px !important;
           padding: 3px 6px;
           font-size: 16px;
         }
+      }
+      .v-icon {
+        font-size: 24px !important;
       }
     }
   }

@@ -70,7 +70,7 @@
       <span v-else>Hide Duration</span>
     </v-tooltip>
 
-    <v-tooltip bottom>
+    <v-tooltip bottom v-if="!$store.state.Settings.ratingAndFavoriteInCard">
       <template v-slot:activator="{ on }">
         <v-badge :value="isRatingHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleRatingVisibilty()" v-on="on">
@@ -82,7 +82,7 @@
       <span v-else>Hide Rating</span>
     </v-tooltip>
 
-    <v-tooltip bottom>
+    <v-tooltip bottom v-if="!$store.state.Settings.ratingAndFavoriteInCard">
       <template v-slot:activator="{ on }">
         <v-badge :value="isFavoriteHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn icon tile @click="toggleFavoriteVisibilty()" v-on="on">

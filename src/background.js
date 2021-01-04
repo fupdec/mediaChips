@@ -176,12 +176,19 @@ ipcMain.on('reload', function() {
 // keyboard shortcuts
 const menu = new Menu()
 menu.append(new MenuItem({
-  label: 'Electron',
-  submenu: [{
-    role: 'help',
-    accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
-    click: () => { console.log('Page reloading is disabled!') }
-  }]
+  label: 'App',
+  submenu: [
+    {
+      role: 'help',
+      accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
+      click: () => { console.log('Page reloading is disabled!') }
+    },
+    {
+      role: 'tool',
+      accelerator: process.platform === 'darwin' ? 'Cmd+Shift+I' : 'Ctrl+Shift+I',
+      click: () => { win.webContents.openDevTools() }
+    },
+  ]
 }))
 
 Menu.setApplicationMenu(menu)

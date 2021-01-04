@@ -232,7 +232,13 @@
         <v-radio label="Bottom" value="2"></v-radio>
         <v-radio label="None" value="0"></v-radio>
       </v-radio-group>
-      
+      <div class="subtitle mt-8">Rating and favorite in card description:</div>
+      <v-switch v-model="ratingAndFavoriteInCard" inset style="display:inline-block;">
+        <template v-slot:label>
+          <span v-if="ratingAndFavoriteInCard">Yes</span>
+          <span v-else>No</span>
+        </template>
+      </v-switch>
       <div class="subtitle mb-2 mt-8">Limit of pages in pagination:</div>
       <v-btn-toggle 
         dense mandatory color="secondary"
@@ -532,6 +538,14 @@ export default {
       },
       set(value) {
         this.$store.dispatch('toggleNavigationSide', value)
+      },
+    },
+    ratingAndFavoriteInCard: {
+      get() {
+        return this.$store.state.Settings.ratingAndFavoriteInCard
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})
       },
     },
     darkMode: {
