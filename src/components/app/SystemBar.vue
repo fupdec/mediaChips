@@ -104,7 +104,8 @@
           <v-divider class="ma-1"></v-divider>
           <v-list-item class="pr-1" link @click="toggleDarkMode">
             <v-list-item-title>
-              <v-icon left size="18">mdi-theme-light-dark</v-icon> Toggle Dark Mode
+              <v-icon left size="18">mdi-theme-light-dark</v-icon>
+              <div class="shortcut"><span>Toggle Dark Mode</span> <span>Alt + D</span></div>
             </v-list-item-title>
             <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
           </v-list-item>
@@ -165,7 +166,7 @@
       </v-btn>
     </div>
     <v-spacer></v-spacer>
-    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.4</span>
+    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.5</span>
     <v-spacer></v-spacer>
     <div class="window-controls">
       <v-btn text tile small width="46" height="28" @click="minimize">

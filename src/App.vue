@@ -126,6 +126,10 @@ export default {
           this.$router.push('/home')
           return
         }
+        if(event.altKey && event.keyCode === 68) { // alt+d
+          this.darkMode = !this.$store.getters.darkMode
+          return
+        }
       })
     })
   },
