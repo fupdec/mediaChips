@@ -1,4 +1,4 @@
-<img align="left" width="100" height="100" src="./public/icons/icon.png">
+<img align="left" width="110" height="110" src="./public/icons/icon.png">
 
 # Adult Video Database
 Manage your porn video collection - add performers, tags, websites and have fun!
@@ -23,6 +23,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 
 #### App
 - Tabs for easy browsing
+- Password protection
 - Backup management
 - Customizing colors, fonts
 - Dark theme
@@ -32,7 +33,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 
 #### Videos
 - Adding performers, tags, websites, rating, favorite, bookmark
-- Sorting and filtering by performers, tags, websites, filesize, quality, etc.
+- Sorting and filtering by performers, tags, websites, filesize, quality, folder, path etc.
 - Save filters and sorting to a preset that can be loaded at any time or set as default
 - Play video in app (supported format only*) or in the system player selected by default
 - Scanning for videos in multiple folders. Information is automatically added to the video: performers, tags, websites
@@ -66,11 +67,13 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 - Of course the tag image
 
 #### Websites
+- Subnetting websites
 - Adding color, favorite, bookmark
 - Sorting and filtering
 - Adding several at a time
 - Website image
-- Networking several (not yet implemented)
+
+*the application plays the video through the html5 tag 
 
 ### View of app
 
