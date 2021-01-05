@@ -45,28 +45,28 @@ export default {
       return value
     },
     calcHeightTitle(resolution) {
-      let height = resolution.match(/\x(.*)/)[1]
-      let title = {}
-      if (height < 720) {
-        title = 'SD'
-      } else if (height >= 720 && height < 1080) {
-        title = 'HD'
-      } else if (height >= 1080 && height < 1800) {
-        title = 'FHD'
-      } else if (height >= 1800) {
-        title = 'UHD'
-      }
-      return title
+      const width = +resolution.match(/\d*/)[0]
+      const height = +resolution.match(/\x(.*)/)[1]
+      if (width > height) {
+        if (height < 720) {
+          return 'SD'
+        } else if (height >= 720 && height < 1080) {
+          return 'HD'
+        } else if (height >= 1080 && height < 1800) {
+          return 'FHD'
+        } else if (height >= 1800) {
+          return 'UHD'
+        }
+      } else return 'Phone'
     },
     calcHeightValue(resolution) {
-      let height = resolution.match(/\x(.*)/)[1]
-      let title = {}
-      if (height > 1800) {
-        title = '4K'
+      const width = +resolution.match(/\d*/)[0]
+      const height = +resolution.match(/\x(.*)/)[1]
+      if (height > 1800 && width > height) {
+        return '4K'
       } else {
-        title = height + 'p'
+        return height + 'p'
       }
-      return title
     },
     calcDur(duration) {
       let sec = Math.floor(duration);

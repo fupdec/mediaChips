@@ -117,7 +117,6 @@ export default {
       async function addPerformerInDb() {
         for (const performer of performersArray) {
           // check for duplicate name of performer
-          // TODO: make case insensitive search
           let duplicate = db.find(p=>(p.name.toLowerCase()===performer.toLowerCase())).value()
           if (duplicate) {
             console.warn(`performer ${JSON.stringify(duplicate.name)} already in DB`)

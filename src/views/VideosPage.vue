@@ -3,7 +3,6 @@
 
     <div class="headline text-h3 text-center my-6">Videos</div>
 
-    <!-- TODO: TREE VIEW (FOLDERS) FOR VIDEOS LIKE IT IN EAZYFLIXPIX -->
     <v-container fluid v-if="!$store.state.Videos.filteredEmpty" class="pagination-container my-6">
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
         :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
