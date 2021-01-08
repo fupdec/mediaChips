@@ -95,19 +95,24 @@
               </v-list-item>
             </v-list>
           </v-menu>
-          <v-list-item class="pr-1" link @click="$store.state.Settings.ratingAndFavoriteInCard=!$store.state.Settings.ratingAndFavoriteInCard">
+          <v-list-item class="pr-1" link @click="$store.state.Settings.ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
             <v-list-item-title>
               <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Cards
             </v-list-item-title>
-            <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+            <v-icon size="20" :color="ratingAndFavoriteInCard?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+          </v-list-item>
+          <v-list-item class="pr-1" link @click="$store.state.Settings.videoPreviewEnabled=!videoPreview">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-video-box</v-icon> Video Preview
+            </v-list-item-title>
+            <v-icon size="22" :color="videoPreview?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
-          <v-list-item class="pr-1" link @click="toggleDarkMode">
+          <v-list-item class="pr-2" link @click="toggleDarkMode">
             <v-list-item-title>
               <v-icon left size="18">mdi-theme-light-dark</v-icon>
               <div class="shortcut"><span>Toggle Dark Mode</span> <span>Alt + D</span></div>
             </v-list-item-title>
-            <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -226,8 +231,11 @@ export default {
         } else return this.$store.state.Settings.appColorLightHeader
       }
     },
-    gradient() {
-      
+    ratingAndFavoriteInCard() {
+      return this.$store.state.Settings.ratingAndFavoriteInCard
+    },
+    videoPreview() {
+      return this.$store.state.Settings.videoPreviewEnabled
     },
   },
   methods: {

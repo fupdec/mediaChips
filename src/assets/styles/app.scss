@@ -660,6 +660,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         font-size: 10px;
         padding: 2px 4px;
       }
+      .v-rating {
+        .v-icon {
+          font-size: 15px !important;
+        }
+      }
       .resolution {
         .text {
           font-size: 9px;
@@ -674,8 +679,10 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       .duration {
         font-size: 10px;
       }
-      .v-icon {
-        font-size: 14px !important; 
+      .v-card__actions {
+        .v-icon {
+          font-size: 14px !important;  
+        }
       }
     }
     &-2 {
