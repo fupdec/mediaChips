@@ -544,7 +544,7 @@ export default {
     },
     updateFiltersOfVideos(key, value){
       this.$store.commit('updateFiltersOfVideos', {key, value})
-      this.updateTabFilters()
+      this.updateFiltersOfVideosTab()
     },
     toggleFavorites() {
       this.updateFiltersOfVideos('favorite', !this.$store.state.Videos.filters.favorite)

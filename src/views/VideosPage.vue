@@ -122,7 +122,7 @@ export default {
         newFilters = _.cloneDeep(this.filtersTab)
       }
       this.$store.state.Videos.filters = newFilters
-      this.$store.dispatch('filterVideos')
+      this.$store.dispatch('filterVideos', true)
     },
   },
   watch: {

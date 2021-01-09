@@ -394,7 +394,7 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
-    updateTabFilters() {
+    updateTabFiltersForNationality() {
       let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
       if (this.tabId === 'default') {
         this.$store.state.Performers.filtersReserved = newFilters
@@ -411,7 +411,7 @@ export default {
       let value = [this.performer.nation]
       this.$store.commit('updateFiltersOfPerformers', {key, value})
       this.$store.dispatch('filterPerformers')
-      this.updateTabFilters()
+      this.updateTabFiltersForNationality()
     },
     openPerformerPage() {
       this.$router.push(`/performer/:${this.performer.id}?tabId=default`)

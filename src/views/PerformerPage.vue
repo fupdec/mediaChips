@@ -684,19 +684,16 @@ export default {
         this.updateFiltersOfVideos('performers', [this.performer.name])
       } else {
         this.$store.state.Videos.filters = _.cloneDeep(this.filtersTab)
-        this.$store.dispatch('filterVideos')
-      }
-    },
-    updateTabFilters() {
-      if (this.tabId === 'default') {
-        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
-        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters: newFilters}).write()
+        this.$store.dispatch('filterVideos', true)
       }
     },
     updateFiltersOfVideos(key, value){
       this.$store.commit('updateFiltersOfVideos', {key, value})
-      this.$store.dispatch('filterVideos')
-      this.updateTabFilters()
+      this.$store.dispatch('filterVideos', true)
+      if (this.tabId === 'default') {
+        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
+        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters: newFilters}).write()
+      }
     },
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_${imgType}.jpg`)

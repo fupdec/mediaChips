@@ -440,9 +440,9 @@ export default {
     },
     updateFiltersOfWebsites(key, value){
       this.$store.commit('updateFiltersOfWebsites', {key, value})
-      this.updateTabFilters()
+      this.updateFiltersOfWebsitesTab()
     },
-    updateTabFilters() {
+    updateFiltersOfWebsitesTab() {
       let newFilters = _.cloneDeep(this.$store.state.Websites.filters)
       if (this.tabId === 'default') {
         this.$store.state.Websites.filtersReserved = newFilters
@@ -467,12 +467,12 @@ export default {
     },
     applyAllFilters(event) {
       this.$store.dispatch('filterWebsites')
-      this.updateTabFilters()
+      this.updateFiltersOfWebsitesTab()
     },
     resetAllFilters(event) {
       this.$store.commit('resetFilteredWebsites')
       this.$store.dispatch('filterWebsites')
-      this.updateTabFilters()
+      this.updateFiltersOfWebsitesTab()
     },
     toggleFavorites() {
       this.updateFiltersOfWebsites('favorite', !this.$store.state.Websites.filters.favorite)

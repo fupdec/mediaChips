@@ -95,7 +95,7 @@ export default {
         return false
       }
     },
-    updateTabFilters() {
+    updateFiltersOfVideosTab() {
       const pages = ['/performer/:','/website/:']
       let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
       if (this.tabId === 'default') {
@@ -116,7 +116,7 @@ export default {
     },
     applyAllFilters() {
       this.$store.dispatch('filterVideos')
-      this.updateTabFilters()
+      this.updateFiltersOfVideosTab()
     },
     resetAllFilters() {
       this.$store.commit('resetFilteredVideos')
@@ -130,10 +130,11 @@ export default {
         let item = this.getItem('websites')
         this.updateFiltersOfVideos('websites', [item.name])
       } else {
-        this.updateTabFilters()
+        this.updateFiltersOfVideosTab()
       }
       this.$store.dispatch('filterVideos')
     },
+    // TODO: after delete selected videos with key "shift" keeps in selection. maybe need to clear previous selected
     remove(item, array) { 
       const index = this[array].indexOf(item)
       if (index >= 0) this[array].splice(index, 1)

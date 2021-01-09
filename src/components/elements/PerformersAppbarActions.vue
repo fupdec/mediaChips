@@ -777,7 +777,7 @@ export default {
     },
     updateFiltersOfPerformers(key, value){
       this.$store.commit('updateFiltersOfPerformers', {key, value})
-      this.updateTabFilters()
+      this.updateFiltersOfPerformersTab()
     },
     toggleSortDirection() {
       let dir = this.sortDirection === 'asc' ? 'desc' : 'asc'

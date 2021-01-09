@@ -1,10 +1,12 @@
 <script>
 import PerformerCard from '@/components/pages/performers/PerformerCard.vue'
+import FilterPerformers from '@/mixins/FilterPerformers'
 
 export default {
   components: {
     PerformerCard
   },
+  mixins: [FilterPerformers],
   data: () => ({
     alphabet: [
       'a','b','c','d','e','f','g','h','i','j','k','l','m','n',
@@ -24,7 +26,7 @@ export default {
         let key = 'firstChar'
         this.$store.commit('updateFiltersOfPerformers', {key, value})
         this.$store.dispatch('filterPerformers')
-        this.updateTabFilters()
+        this.updateFiltersOfPerformersTab()
       },
     },
     pages: {
@@ -41,24 +43,26 @@ export default {
       get () {
         return this.$store.getters.performersPerPage
       },
-      set (quantity) {
-        this.$store.dispatch('changePerformersPerPage', quantity)
+      set (number) {
+        this.$store.dispatch('changePerformersPerPage', number)
       },
     },
     performersPagesSum: {
       get () {
         return this.$store.getters.performersPagesSum
       },
-      set (quantity) {
-        this.$store.dispatch('changePerformersPageTotal', quantity)
+      set (number) {
+        this.$store.dispatch('changePerformersPageTotal', number)
       },
     },
     performersCurrentPage: {
       get () {
         return this.$store.getters.performersCurrentPage
       },
-      set (quantity) {
-        this.$store.dispatch('changePerformersPageCurrent', quantity)
+      set (number) {
+        this.$store.state.Performers.filters.page = number
+        this.updateFiltersOfPerformersTab()
+        this.$store.dispatch('changePerformersPageCurrent', number)
       },
     },
     cardSize() {
@@ -69,24 +73,12 @@ export default {
     },
   },
   methods: {
-    updateTabFilters() {
-      let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
-      if (this.tabId === 'default') {
-        this.$store.state.Performers.filtersReserved = newFilters
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.performersFilters,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
-    },
     clearChars() {
       let key = 'firstChar'
       let value = []
       this.$store.commit('updateFiltersOfPerformers', {key, value})
       this.$store.dispatch('filterPerformers')
-      this.updateTabFilters()
+      this.updateFiltersOfPerformersTab()
     },
   },
 }

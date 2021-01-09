@@ -173,7 +173,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.$store.dispatch('filterWebsites')
+      this.initFilters()
       this.$store.state.Websites.selection = Selection.create({
         boundaries: ['.websites-grid'],
         selectables: ['.website-card'],
@@ -287,24 +287,26 @@ export default {
       get() {
         return this.$store.getters.websitesPerPage
       },
-      set(quantity) {
-        this.$store.dispatch('changeWebsitesPerPage', quantity)
+      set(number) {
+        this.$store.dispatch('changeWebsitesPerPage', number)
       },
     },
     websitesPagesSum: {
       get() {
         return this.$store.getters.websitesPagesSum
       },
-      set(quantity) {
-        this.$store.dispatch('changeWebsitesPageTotal', quantity)
+      set(number) {
+        this.$store.dispatch('changeWebsitesPageTotal', number)
       },
     },
     websitesCurrentPage: {
       get() {
         return this.$store.getters.websitesCurrentPage
       },
-      set(quantity) {
-        this.$store.dispatch('changeWebsitesPageCurrent', quantity)
+      set(number) {
+        this.$store.state.Websites.filters.page = number
+        this.updateFiltersOfWebsitesTab()
+        this.$store.dispatch('changeWebsitesPageCurrent', number)
       },
     },
     selectedWebsitesLength() {
@@ -364,7 +366,7 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
-    updateTabFilters() {
+    updateFiltersOfWebsitesTab() {
       let newFilters = _.cloneDeep(this.$store.state.Websites.filters)
       if (this.tabId === 'default') {
         this.$store.state.Websites.filtersReserved = newFilters
@@ -379,7 +381,7 @@ export default {
     updateFiltersOfWebsites(key, value){
       this.$store.commit('updateFiltersOfWebsites', {key, value})
       this.$store.dispatch('filterWebsites')
-      this.updateTabFilters()
+      this.updateFiltersOfWebsitesTab()
     },
     getSelectedWebsites(selectedWebsites){
       let ids = selectedWebsites.map(item => (item.dataset.id))
@@ -393,11 +395,8 @@ export default {
       this.$store.dispatch('deleteWebsites'), 
       this.$store.state.Websites.dialogDeleteWebsite = false
     },
-  },
-  watch: {
-    $route(newRoute) {
-      if (!this.$route.path.includes('/websites/:')) return
-      let id = newRoute.params.id.replace(':', '')
+    initFilters(){
+      let id = this.tabId.replace(':', '')
       let newFilters
       if (id === 'default') {
         newFilters = _.cloneDeep(this.$store.state.Websites.filtersReserved)
@@ -405,7 +404,13 @@ export default {
         newFilters = _.cloneDeep(this.$store.getters.tabsDb.find({id}).value().filters)
       }
       this.$store.state.Websites.filters = newFilters
-      this.$store.dispatch('filterWebsites')
+      this.$store.dispatch('filterWebsites', true)
+    },
+  },
+  watch: {
+    $route(newRoute) {
+      if (!this.$route.path.includes('/websites/:')) return
+      this.initFilters()
     },
   }
 }

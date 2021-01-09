@@ -1,10 +1,12 @@
 <script>
 import VideoCard from '@/components/pages/videos/VideoCard.vue'
+import FilterVideos from '@/mixins/FilterVideos'
 
 export default {
   components: {
     VideoCard
   },
+  mixins: [FilterVideos],
   data: () => ({
     videosPerPagePreset: [20,40,60,80,100,150,200,300],
   }),
@@ -26,24 +28,26 @@ export default {
       get() {
         return this.$store.getters.videosPerPage
       },
-      set(quantity) {
-        this.$store.dispatch('changeVideosPerPage', quantity)
+      set(number) {
+        this.$store.dispatch('changeVideosPerPage', number)
       },
     },
     videosPagesSum: {
       get() {
         return this.$store.getters.videosPagesSum
       },
-      set(quantity) {
-        this.$store.dispatch('changeVideosPageTotal', quantity)
+      set(number) {
+        this.$store.dispatch('changeVideosPageTotal', number)
       },
     },
     videosCurrentPage: {
       get() {
         return this.$store.getters.videosCurrentPage
       },
-      set(quantity) {
-        this.$store.dispatch('changeVideosPageCurrent', quantity)
+      set(number) {
+        this.$store.state.Videos.filters.page = number
+        this.updateFiltersOfVideosTab()
+        this.$store.dispatch('changeVideosPageCurrent', number)
       },
     },
   },

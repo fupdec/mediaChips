@@ -28,6 +28,7 @@ const defaultFilters = {
   sortBy: 'name',
   sortDirection: 'asc',
   tree: [],
+  page: 1,
 }
 
 const Videos = {
@@ -266,6 +267,7 @@ const Videos = {
       commit('resetLoading')
       commit('filterVideos', filteredVideos)
       if (!stayOnCurrentPage) {
+        state.filters.page = 1
         commit('changeVideosPageCurrent', 1)
       }
     },
@@ -500,6 +502,9 @@ const Videos = {
           c = videosCount
       state.pageTotal = Math.ceil(l/c)
       // console.log(state.pageTotal)
+      if(state.filters.page) {
+        state.pageCurrent = state.filters.page
+      }
       if(state.pageCurrent > state.pageTotal) {
         state.pageCurrent = state.pageTotal
       }

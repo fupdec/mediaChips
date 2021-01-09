@@ -29,6 +29,7 @@ const defaultFilters = {
   name: '',
   sortBy: 'name',
   sortDirection: 'asc',
+  page: 1,
 }
 
 const Websites = {
@@ -188,6 +189,7 @@ const Websites = {
       commit('resetLoading')
       commit('filterWebsites', filteredWebsites)
       if (!stayOnCurrentPage) {
+        state.filters.page = 1
         commit('changeWebsitesPageCurrent', 1)
       }
     },
@@ -269,6 +271,9 @@ const Websites = {
       let l = store.websitesTotal,
           c = websitesCount
       state.pageTotal = Math.ceil(l/c)
+      if(state.filters.page) {
+        state.pageCurrent = state.filters.page
+      }
       if(state.pageCurrent > state.pageTotal) {
         state.pageCurrent = state.pageTotal
       }

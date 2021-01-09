@@ -36,6 +36,7 @@ const defaultFilters = {
   categoryLogic: false,
   sortBy: 'name',
   sortDirection: 'asc',
+  page: 1,
 }
 
 const Tags = {
@@ -235,6 +236,7 @@ const Tags = {
       commit('resetLoading')
       commit('filterTags', filteredTags)
       if (!stayOnCurrentPage) {
+        state.filters.page = 1
         commit('changeTagsPageCurrent', 1)
       }
     },
@@ -331,6 +333,9 @@ const Tags = {
       let l = tags.length,
           c = tagsCount
       state.pageTotal = Math.ceil(l/c)
+      if(state.filters.page) {
+        state.pageCurrent = state.filters.page
+      }
       if(state.pageCurrent > state.pageTotal) {
         state.pageCurrent = state.pageTotal
       }

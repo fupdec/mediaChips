@@ -174,7 +174,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.$store.dispatch('filterTags')
+      this.initFilters()
       this.$store.state.Tags.selection = Selection.create({
         boundaries: ['.tags-grid'],
         selectables: ['.tag-card'],
@@ -288,24 +288,26 @@ export default {
       get() {
         return this.$store.getters.tagsPerPage
       },
-      set(quantity) {
-        this.$store.dispatch('changeTagsPerPage', quantity)
+      set(number) {
+        this.$store.dispatch('changeTagsPerPage', number)
       },
     },
     tagsPagesSum: {
       get() {
         return this.$store.getters.tagsPagesSum
       },
-      set(quantity) {
-        this.$store.dispatch('changeTagsPageTotal', quantity)
+      set(number) {
+        this.$store.dispatch('changeTagsPageTotal', number)
       },
     },
     tagsCurrentPage: {
       get() {
         return this.$store.getters.tagsCurrentPage
       },
-      set(quantity) {
-        this.$store.dispatch('changeTagsPageCurrent', quantity)
+      set(number) {
+        this.$store.state.Tags.filters.page = number
+        this.updateFiltersOfTagsTab()
+        this.$store.dispatch('changeTagsPageCurrent', number)
       },
     },
     selectedTagsLength() {
@@ -365,7 +367,7 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
-    updateTabFilters() {
+    updateFiltersOfTagsTab() {
       let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
       if (this.tabId === 'default') {
         this.$store.state.Tags.filtersReserved = newFilters
@@ -380,7 +382,7 @@ export default {
     updateFiltersOfTags(key, value){
       this.$store.commit('updateFiltersOfTags', {key, value})
       this.$store.dispatch('filterTags')
-      this.updateTabFilters()
+      this.updateFiltersOfTagsTab()
     },
     getSelectedTags(selectedTags){
       let ids = selectedTags.map(item => (item.dataset.id))
@@ -394,11 +396,8 @@ export default {
       this.$store.dispatch('deleteTags')
       this.$store.state.Tags.dialogDeleteTag = false
     },
-  },
-  watch: {
-    $route(newRoute) {
-      if (!this.$route.path.includes('/tags/:')) return
-      let id = newRoute.params.id.replace(':', '')
+    initFilters(){
+      let id = this.tabId.replace(':', '')
       let newFilters
       if (id === 'default') {
         newFilters = _.cloneDeep(this.$store.state.Tags.filtersReserved)
@@ -406,7 +405,13 @@ export default {
         newFilters = _.cloneDeep(this.$store.getters.tabsDb.find({id}).value().filters)
       }
       this.$store.state.Tags.filters = newFilters
-      this.$store.dispatch('filterTags')
+      this.$store.dispatch('filterTags', true)
+    },
+  },
+  watch: {
+    $route(newRoute) {
+      if (!this.$route.path.includes('/tags/:')) return
+      this.initFilters()
     },
   }
 }

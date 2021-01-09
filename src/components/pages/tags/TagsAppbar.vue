@@ -474,13 +474,13 @@ export default {
       let logic = this.$store.state.Tags.filters.categoryLogic
       this.filterCategoryLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
       this.$store.state.Tags.filters.categoryLogic = !logic
-      this.updateTabFilters()
+      this.updateFiltersOfTagsTab()
     },
     updateFiltersOfTags(key, value){
       this.$store.commit('updateFiltersOfTags', {key, value})
-      this.updateTabFilters()
+      this.updateFiltersOfTagsTab()
     },
-    updateTabFilters() {
+    updateFiltersOfTagsTab() {
       let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
       if (this.tabId === 'default') {
         this.$store.state.Tags.filtersReserved = newFilters
@@ -495,7 +495,7 @@ export default {
     resetAllFilters(event) {
       this.$store.commit('resetFilteredTags')
       this.$store.dispatch('filterTags')
-      this.updateTabFilters()
+      this.updateFiltersOfTagsTab()
     },
     addNewTab() {
       let tabId = shortid.generate()
@@ -510,7 +510,7 @@ export default {
     },
     applyAllFilters(event) {
       this.$store.dispatch('filterTags')
-      this.updateTabFilters()
+      this.updateFiltersOfTagsTab()
     },
     toggleFavorites() {
       this.updateFiltersOfTags('favorite', !this.$store.state.Tags.filters.favorite)

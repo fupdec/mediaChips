@@ -101,6 +101,7 @@ const defaultFilters = {
   pussyHairLogic: false,
   sortBy: 'name',
   sortDirection: 'asc',
+  page: 1,
 }
 
 const Performers = {
@@ -518,6 +519,7 @@ const Performers = {
       commit('resetLoading')
       commit('filterPerformers', filteredPerformers)
       if (!stayOnCurrentPage) {
+        state.filters.page = 1
         commit('changePerformersPageCurrent', 1)
       }
     },
@@ -761,6 +763,9 @@ const Performers = {
           c = performersCount;
       state.pageTotal = Math.ceil(l/c);
        // console.log(state.pageTotal)
+      if(state.filters.page) {
+        state.pageCurrent = state.filters.page
+      }
       if(state.pageCurrent > state.pageTotal) {
         state.pageCurrent = state.pageTotal
       }

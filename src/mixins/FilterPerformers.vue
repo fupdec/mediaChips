@@ -56,17 +56,13 @@ export default {
         return false
       }
     },
-    updateTabFilters() {
-      const pages = ['/performer/:','/website/:']
+    updateFiltersOfPerformersTab() {
       let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
       if (this.tabId === 'default') {
         this.$store.state.Performers.filtersReserved = newFilters
       } else if (this.$route.path.includes('/tag/:')) {
         let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
         this.$store.getters.tabsDb.find({id: this.tabId}).get('filters').assign({performers: newFilters}).write()
-      } else if (pages.some(p => this.$route.path.includes(p))) {
-        let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
-        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters:newFilters}).write()
       } else {
         this.$store.getters.tabsDb.find({id: this.tabId}).assign({
           name: this.$store.getters.performersFilters,
@@ -87,13 +83,13 @@ export default {
         let item = this.getItem('websites')
         this.updateFiltersOfPerformers('websites', [item.name])
       } else {
-        this.updateTabFilters()
+        this.updateFiltersOfPerformersTab()
       }
       this.$store.dispatch('filterPerformers')
     },
     applyAllFilters() {
       this.$store.dispatch('filterPerformers')
-      this.updateTabFilters()
+      this.updateFiltersOfPerformersTab()
     },
     remove(item, array) { 
       const index = this[array].indexOf(item);

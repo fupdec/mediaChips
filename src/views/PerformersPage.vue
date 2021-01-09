@@ -198,7 +198,7 @@ export default {
         newFilters = _.cloneDeep(this.filtersTab)
       }
       this.$store.state.Performers.filters = newFilters
-      this.$store.dispatch('filterPerformers')
+      this.$store.dispatch('filterPerformers', true)
     },
     getAge(birthday) {
       let age

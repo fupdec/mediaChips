@@ -245,7 +245,7 @@ export default {
         this.$store.dispatch('filterVideos')
       }
     },
-    updateTabFilters() {
+    updateFiltersOfWebsitesTab() {
       if (this.tabId !== 'default') {
         let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
         this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters:newFilters}).write()
@@ -254,7 +254,7 @@ export default {
     updateFiltersOfVideos(key, value){
       this.$store.commit('updateFiltersOfVideos', {key, value})
       this.$store.dispatch('filterVideos')
-      this.updateTabFilters()
+      this.updateFiltersOfWebsitesTab()
     },
     getImgUrl(websiteId) {
       let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
