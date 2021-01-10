@@ -13,7 +13,7 @@
           <div class="mb-2 red--text">Starting from version 0.5.5 there will be no bitrate information in the video.
             <br> Also updated video resolution information. 
             <br> To update the metadata in existing videos click the "Fix metadata in videos" button. </div>
-          <v-btn @click="fixVideos" color="red" x-large class="mt-8" block> 
+          <v-btn @click="fixVideos" color="red" dark x-large class="my-4" block> 
             <v-icon left>mdi-auto-fix</v-icon> Fix metadata in videos </v-btn>
           <v-dialog v-model="dialogFixVideos" width="1200" scrollable persistent>
             <v-card>
@@ -62,11 +62,12 @@
                 </v-list-item-subtitle>
               </v-list-item-content>
             </v-list-item>
-            <div class="recent-videos-grid"> 
+            <div class="recent-videos-grid" @mousedown="stopSmoothScroll($event)"> 
               <v-hover v-for="video in recentVideos" :key="video.id">
                 <template v-slot:default="{ hover }">
                   <v-img :src="getVideoThumbUrl(video.id)" 
                     @click="playVideo(video.path)" aspect-ratio="1"
+                    @click.middle="addNewTabVideo(video.path)"
                   >
                     <v-fade-transition>
                       <v-overlay v-if="hover" absolute color="secondary">
@@ -98,11 +99,12 @@
                 </v-list-item-subtitle>
               </v-list-item-content>
             </v-list-item>
-            <div class="top-performers-grid"> 
+            <div class="top-performers-grid" @mousedown="stopSmoothScroll($event)"> 
               <v-hover v-for="perf in topPerformers" :key="perf.id">
                 <template v-slot:default="{ hover }">
                   <v-img :src="getPerformerImg(perf.id)" aspect-ratio="1"
                     @click="openPerformerPage(perf.id)" position="top"
+                    @click.middle="addNewTabPerformer(perf.name)"
                   >
                     <v-fade-transition>
                       <v-overlay v-if="hover" absolute color="secondary">
@@ -207,6 +209,7 @@ const shell = require('electron').shell
 import vuescroll from 'vuescroll'
 import VueApexCharts from 'vue-apexcharts'
 import scanMeta from '@/components/pages/settings/VideoMetaFix'
+import LabelFunctions from '@/mixins/LabelFunctions'
 
 export default {
   name: 'HomePage',
@@ -214,6 +217,7 @@ export default {
     vuescroll,
     apexchart: VueApexCharts,
   },
+  mixins: [LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
     })
@@ -311,6 +315,11 @@ export default {
     },
   },
   methods: {
+    stopSmoothScroll(event) {
+      if(event.button != 1) return
+      event.preventDefault()
+      event.stopPropagation()
+    },
     fixVideos() {
       this.dialogFixVideos = true
       this.fixingVideos = true

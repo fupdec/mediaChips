@@ -6,10 +6,10 @@ Manage your porn video collection - add performers, tags, websites and have fun!
 ## Install application (Windows)
 To install, run the executable file. After the first launch, go to your "AppData" directory (just write %appdata% in address bar).
 Find the folder with the name of this application. The folder "userfiles" should appear in it.
-Then you should download files ffmpeg.exe and ffprobe.exe. Maybe from here (https://github.com/FFmpeg/FFmpeg)
-And then place this files into folder "ffmpeg" in "userfiles". 
-Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\"
-And now you can scan folders from application! It's all.
+Then you should download archive https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z
+Extract files ffmpeg.exe and ffprobe.exe from folder "bin" in archive and place this files into folder "ffmpeg" in "userfiles". 
+Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\".
+And now you can scan videos from application! It's all.
 
 ### Portable version
 After the first launch, a folder "userdata" will be created in the folder with the executable file. Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
