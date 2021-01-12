@@ -34,6 +34,8 @@
     "rimraf": "^3.0.2",
     "sharp": "^0.25.2",
     "shortid": "^2.2.15",
+    "video.js": "^7.10.2",
+    "videojs-markers": "^1.0.1",
     "vue": "^2.6.11",
     "vue-advanced-cropper": "^0.16.4",
     "vue-apexcharts": "^1.6.0",

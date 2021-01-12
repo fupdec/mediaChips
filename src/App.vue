@@ -48,6 +48,7 @@
 
     <VideosGridElements />
     <ScanVideos />
+    <VideoPlayer v-if="$store.state.dialogVideoPlayer" />
 
     <img 
       v-show="$store.state.hoveredImage" class="list-img-preview"
@@ -82,6 +83,7 @@ export default {
     StatusBar: () => import('@/components/app/StatusBar.vue'),
     BottomBar: () => import('@/components/app/BottomBar.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
+    VideoPlayer: () => import('@/components/elements/VideoPlayer.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
   },
   mixins: [FilterVideos],

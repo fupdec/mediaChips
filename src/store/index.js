@@ -30,6 +30,8 @@ export default new Vuex.Store({
     pathToUserData: '',
     menuTabs: false,
     contextTab: '',
+    videoPlayerId: null,
+    dialogVideoPlayer: false,
   }),
   getters: {
     getNotifications(state) {

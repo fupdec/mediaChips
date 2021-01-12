@@ -286,7 +286,9 @@ export default {
         this.$store.state.Videos.errorPlayVideoPath = pathToVideo
         return
       }
-      this.$router.push(`/video/:${this.video.id}?tabId=default`)
+      this.$store.state.dialogVideoPlayer = true
+      this.$store.state.videoPlayerId = this.video.id
+      // this.$router.push(`/video/:${this.video.id}?tabId=default`)
     },
     setVideoProgress(percent) {
       this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
