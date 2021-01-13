@@ -4,7 +4,7 @@
 Manage your porn video collection - add performers, tags, websites and have fun!
 
 ## Install application (Windows)
-To install, run the executable file. After the first launch, go to your "AppData" directory (just write %appdata% in address bar).
+To install, run the executable file. You can download the latest executable under Releases on the right hand side of this page. After the first launch, go to your "AppData" directory (just write %appdata% in address bar).
 Find the folder with the name of this application. The folder "userfiles" should appear in it.
 Then you should download archive https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z
 Extract files ffmpeg.exe and ffprobe.exe from folder "bin" in archive and place this files into folder "ffmpeg" in "userfiles". 
