@@ -67,6 +67,13 @@
           <v-list-item-title>Website details</v-list-item-title>
         </v-list-item>
         
+        <v-list-item link to="/playlists" color="secondary">
+          <v-list-item-icon>
+            <v-icon>mdi-playlist-play</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Playlists</v-list-item-title>
+        </v-list-item>
+        
         <v-list-item link to="/settings" color="secondary">
           <v-list-item-icon> 
             <v-icon>mdi-cog-outline</v-icon>

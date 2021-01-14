@@ -92,35 +92,23 @@ export default {
         }
       }
     },
-    // upload(event, imgType) {
-    //   let input = event.target
-		// 	if (input.files && input.files[0]) {
-    //     this.images[imgType].display = true
-    //     let reader = new FileReader()
-    //     reader.onload = (e) => {
-    //       this.images[imgType].file = e.target.result
-    //       console.log( e.target.result)
-    //     }
-    //     reader.readAsDataURL(input.files[0])
-		// 	}
-    // },
     pasteImageFromClipboard: async function(imgType){
-      let vueComponent = this
+      let vm = this
       try {
         const clipboardItems = await navigator.clipboard.read()
         const blobOutput = await clipboardItems[0].getType('image/png')
-        vueComponent.images[imgType].file = window.URL.createObjectURL(blobOutput)
-        vueComponent.images[imgType].btnColor = "success"
-        vueComponent.images[imgType].display = true
+        vm.images[imgType].file = window.URL.createObjectURL(blobOutput)
+        vm.images[imgType].btnColor = "success"
+        vm.images[imgType].display = true
         console.log('Image pasted')
         setTimeout(() => {
-          vueComponent.images[imgType].btnColor = "primary"
+          vm.images[imgType].btnColor = "primary"
         }, 1000)
       } catch(e) {
-        vueComponent.images[imgType].btnColor = "error"
+        vm.images[imgType].btnColor = "error"
         console.log('Failed to read clipboard')
         setTimeout(() => {
-          vueComponent.images[imgType].btnColor = "primary"
+          vm.images[imgType].btnColor = "primary"
         }, 1000)
       }
     },

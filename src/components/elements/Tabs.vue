@@ -40,6 +40,12 @@ export default {
   data: () => ({
     active: 0,
     drag: false,
+    dragOptions: {
+      animation: 200,
+      group: "description",
+      disabled: false,
+      ghostClass: "ghost"
+    },
   }),
   computed: {
     tabs:{
@@ -47,16 +53,8 @@ export default {
         return this.$store.getters.tabs
       },
       set(tabs) {
-        return this.$store.dispatch('updateTabs', tabs)
+        return this.$store.dispatch('updateTabs', tabs) // TODO: check if can delete return
       },
-    },
-    dragOptions() {
-      return {
-        animation: 200,
-        group: "description",
-        disabled: false,
-        ghostClass: "ghost"
-      };
     },
   },
   methods: {

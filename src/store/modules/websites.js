@@ -17,6 +17,7 @@ dbw.defaults({
     network: false,
     childWebsites: [],
     date: Date.now(),
+    edit: Date.now(),
   },]
 }).write()
 

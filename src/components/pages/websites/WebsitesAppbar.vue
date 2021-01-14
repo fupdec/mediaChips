@@ -55,8 +55,8 @@
             <template #activator="{ on: onTooltip }">
               <v-btn v-on="{ ...onMenu, ...onTooltip }" @click="filtersMenu=true" icon tile>
                 <v-badge 
-                  :value="filterBadge" :content="filteredTagsTotal" 
-                  overlap bottom :dot="filteredTagsTotal==0" style="z-index: 5;"
+                  :value="filterBadge" :content="filteredWebsitesTotal" 
+                  overlap bottom :dot="filteredWebsitesTotal==0" style="z-index: 5;"
                 ><v-icon>mdi-filter</v-icon>
                 </v-badge>
               </v-btn>
@@ -306,7 +306,7 @@ export default {
       let total = this.$store.getters.filteredWebsitesTotal
       return total !== this.$store.getters.websitesTotal
     },
-    filteredTagsTotal() {
+    filteredWebsitesTotal() {
       return this.$store.getters.filteredWebsitesTotal
     },
     websitesSort() {

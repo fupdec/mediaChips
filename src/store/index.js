@@ -7,6 +7,7 @@ import Performers from './modules/performers.js'
 import Tags from './modules/tags.js'
 import Websites from './modules/websites.js'
 import Bookmarks from './modules/bookmarks.js'
+import Playlists from './modules/playlists.js'
 import Settings from './modules/settings.js'
 
 Vue.use(Vuex)
@@ -30,7 +31,8 @@ export default new Vuex.Store({
     pathToUserData: '',
     menuTabs: false,
     contextTab: '',
-    videoPlayerId: null,
+    videoPlayerVideoId: null,
+    videoPlayerPlaylist: null,
     dialogVideoPlayer: false,
   }),
   getters: {
@@ -83,6 +85,7 @@ export default new Vuex.Store({
     Tags,
     Websites,
     Bookmarks,
+    Playlists,
     Settings,
   }
 })

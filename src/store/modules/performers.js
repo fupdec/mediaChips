@@ -14,6 +14,7 @@ dbp.defaults({
     id: "1111111111111111",
     name: "Angela White",
     date: Date.now(),
+    edit: Date.now(),
     aliases: [
       "Angela Gabrielle White",
       "Angie"
@@ -53,7 +54,6 @@ dbp.defaults({
     pussyHair: [
       "Bald"
     ],
-    edit: Date.now()
   }]
 }).write()
 

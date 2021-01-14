@@ -89,6 +89,7 @@ dbs.defaults({
   performersPerPage: 20,
   tagsPerPage: 20,
   websitesPerPage: 20,
+  playlistsPerPage: 20,
   gapSize: 's',
 }).write()
 

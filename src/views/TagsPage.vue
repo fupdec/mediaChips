@@ -147,7 +147,7 @@
         <v-divider class="ma-1"></v-divider>
         <v-list-item link @click="$store.state.Tags.dialogDeleteTag = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-delete</v-icon> Delete tag
+            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete tag
           </v-list-item-title>
         </v-list-item>
       </v-list>

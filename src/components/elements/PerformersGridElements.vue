@@ -163,7 +163,7 @@
         
         <v-list-item class="pr-1" link @mouseup="$store.state.Performers.dialogDeletePerformer = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-delete</v-icon> Delete performer
+            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete performer
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>

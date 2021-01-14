@@ -18,12 +18,14 @@ const Website = () => import('../views/WebsitePage.vue')
 const WebsiteAppbar = () => import('../components/pages/website/WebsiteAppbar.vue')
 const Websites = () => import('../views/WebsitesPage.vue')
 const WebsitesAppbar = () => import('../components/pages/websites/WebsitesAppbar.vue')
+const Playlists = () => import('../views/PlaylistsPage.vue')
+const PlaylistsAppbar = () => import('../components/pages/playlists/PlaylistsAppbar.vue')
 const Settings = () => import('../views/SettingsPage.vue')
 const SettingsAppbar = () => import('../components/pages/settings/SettingsAppbar.vue')
 
 Vue.use(VueRouter)
 
-  const routes = [
+const routes = [
   {
     path: '/',
     redirect: '/home'
@@ -98,6 +100,14 @@ Vue.use(VueRouter)
     components: {
       default: Websites,
       appbar: WebsitesAppbar,
+    }
+  },
+  {
+    path: '/playlists',
+    name: 'Playlists',
+    components: {
+      default: Playlists,
+      appbar: PlaylistsAppbar,
     }
   },
   {

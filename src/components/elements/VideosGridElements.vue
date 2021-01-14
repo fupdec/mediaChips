@@ -233,7 +233,7 @@
             </v-list-item>
             <v-list-item link @mouseup="removePerformers">
               <v-list-item-title>
-                <v-icon left size="18">mdi-account-remove</v-icon>Remove all performers
+                <v-icon left size="18" color="red">mdi-account-remove</v-icon>Remove all performers
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -266,7 +266,7 @@
             </v-list-item>
             <v-list-item link @mouseup="removeTags">
               <v-list-item-title>
-                <v-icon left size="18">mdi-tag-remove</v-icon>Remove all tags
+                <v-icon left size="18" color="red">mdi-tag-remove</v-icon>Remove all tags
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -294,7 +294,7 @@
             </v-list-item>
             <v-list-item link @mouseup="removeWebsite">
               <v-list-item-title>
-                <v-icon left size="18">mdi-delete</v-icon>Remove website
+                <v-icon left size="18" color="red">mdi-delete</v-icon>Remove website
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -315,7 +315,7 @@
         
         <v-list-item class="pr-1" link @mouseup="$store.state.Videos.dialogDeleteVideo = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-delete</v-icon> Delete video
+            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete video
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>

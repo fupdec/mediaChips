@@ -1,19 +1,19 @@
 <template>
   <div>
-    <v-dialog v-model="$store.state.dialogVideoPlayer" scrollable persistent width="calc(100vw - 300px)">
+    <v-dialog v-model="$store.state.dialogVideoPlayer" content-class="video-player" persistent width="calc(100vw - 300px)">
       <v-card>
-        <v-card-title class="py-1 px-3">
+        <v-card-title class="pa-0 px-3">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn @click="playVideoInSystemPlayer" v-on="on" icon small class="mr-4">
+              <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile>
                 <v-icon>mdi-television-play</v-icon> 
               </v-btn>
             </template>
             <span>Play video in system player</span>
           </v-tooltip>
-          <v-tooltip v-if="isVideoAvailable" bottom>
+          <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn @click="$store.state.Videos.dialogEditVideoInfo=true" v-on="on" icon small class="mr-4">
+              <v-btn @click="editVideoInfo" v-on="on" icon tile>
                 <v-icon>mdi-movie-edit-outline</v-icon>
               </v-btn>
             </template>
@@ -21,31 +21,57 @@
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn @click="dialogEditThumb=true" v-on="on" icon small class="mr-4">
+              <v-btn @click="openDialogEditThumb" v-on="on" icon tile>
                 <v-icon>mdi-image-edit-outline</v-icon> 
               </v-btn>
             </template>
             <span>Edit thumb</span>
           </v-tooltip>
-          <v-tooltip v-if="isVideoAvailable" bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn @click="setThumb" v-on="on" icon small class="mr-4">
-                <v-icon>mdi-camera-outline</v-icon> 
-              </v-btn>
-            </template>
-            <span>Set as thumb</span>
-          </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn @click="dialogFileInfo=true" v-on="on" icon small class="mr-4">
+              <v-btn @click="dialogFileInfo=true" v-on="on" icon tile>
                 <v-icon>mdi-information-variant</v-icon> 
               </v-btn>
             </template>
             <span>File info</span>
           </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn @click="watchLater" v-on="on" icon tile>
+                <v-icon v-if="isWatchLater">mdi-bookmark-minus-outline</v-icon> 
+                <v-icon v-else>mdi-bookmark-plus-outline</v-icon> 
+              </v-btn>
+            </template>
+            <span v-if="isWatchLater">Remove from watch later</span>
+            <span v-else>Watch later</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn @click="dialogAddToPlaylist=true" v-on="on" icon tile>
+                <v-icon>mdi-playlist-plus</v-icon> 
+              </v-btn>
+            </template>
+            <span>Add to playlist</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn @click="isPlaylistVisible=!isPlaylistVisible, scrollToNowPlaying()" v-on="on" icon tile>
+                <v-icon>mdi-playlist-play</v-icon>
+              </v-btn>
+            </template>
+            <span>Toggle playlist</span>
+          </v-tooltip>
+          <v-tooltip v-if="isVideoAvailable" bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn @click="setThumb" v-on="on" icon tile>
+                <v-icon>mdi-camera-outline</v-icon> 
+              </v-btn>
+            </template>
+            <span>Set as thumb</span>
+          </v-tooltip>
           <v-menu v-if="isVideoAvailable" offset-y nudge-bottom="10" open-on-hover close-delay="1000">
             <template v-slot:activator="{ on, attrs }">
-              <v-btn v-bind="attrs" v-on="on" icon small class="mr-4">
+              <v-btn v-bind="attrs" v-on="on" icon tile>
                 <v-icon>mdi-tooltip-plus-outline</v-icon>
               </v-btn>
             </template>
@@ -68,7 +94,7 @@
           <v-spacer></v-spacer>
           <v-menu v-if="video.performers.length" offset-y nudge-bottom="10" open-on-hover close-delay="500" :close-on-content-click="false">
             <template v-slot:activator="{ on, attrs }">
-              <v-btn v-bind="attrs" v-on="on" icon small class="mr-4">
+              <v-btn v-bind="attrs" v-on="on" icon tile>
                 <v-icon>mdi-account-outline</v-icon>
               </v-btn>
             </template>
@@ -84,7 +110,7 @@
           </v-menu>
           <v-menu v-if="video.tags.length" offset-y nudge-bottom="10" open-on-hover close-delay="500" :close-on-content-click="false">
             <template v-slot:activator="{ on, attrs }">
-              <v-btn v-bind="attrs" v-on="on" icon small class="mr-4">
+              <v-btn v-bind="attrs" v-on="on" icon tile>
                 <v-icon>mdi-tag-outline</v-icon>
               </v-btn>
             </template>
@@ -101,7 +127,7 @@
           </v-menu>
           <v-menu v-if="video.website" offset-y nudge-bottom="10" open-on-hover close-delay="500" :close-on-content-click="false">
             <template v-slot:activator="{ on, attrs }">
-              <v-btn v-bind="attrs" v-on="on" icon small class="mr-4">
+              <v-btn v-bind="attrs" v-on="on" icon tile>
                 <v-icon>mdi-web</v-icon>
               </v-btn>
             </template>
@@ -121,22 +147,46 @@
             empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
             half-increments hover clearable dense class="mb-1"
           />
-          <v-btn icon small @click="toggleFavorite" class="mx-4">
+          <v-btn icon tile @click="toggleFavorite">
             <v-icon v-if="video.favorite===false" color="grey">mdi-heart-outline</v-icon>
             <v-icon v-else color="pink">mdi-heart</v-icon>
           </v-btn>
-          <v-btn @click="$store.state.dialogVideoPlayer = false" small icon>
+          <v-btn @click="$store.state.dialogVideoPlayer = false" icon tile class="ml-4">
             <v-icon>mdi-close</v-icon> </v-btn>
         </v-card-title>
         <v-divider></v-divider>
-        <vuescroll>
-          <v-card-text class="pa-0">
-            <video ref="videoPlayer" class="video-js"></video>
-            <div class="thumb" style="display:none;"> 
-              <canvas ref="canvas" :width="this.videoWidth/6" :height="this.videoHeight/6"/>
-            </div>
-          </v-card-text>
-        </vuescroll>
+        <v-card-actions class="pa-0">
+          <video ref="videoPlayer" class="video-js"></video>
+          <!-- TODO: keep player ratio 16/9 for videos with ratio 4:3 and mobile videos -->
+          <div class="thumb" style="display:none;"> 
+            <canvas ref="canvas" :width="this.videoWidth/6" :height="this.videoHeight/6"/>
+          </div>
+        </v-card-actions>
+        <v-card v-show="isPlaylistVisible" class="vjs-playlist" width="20vw" tile>
+          <v-btn @click="isPlaylistVisible=!isPlaylistVisible" class="close" small fab>
+            <v-icon>mdi-chevron-right</v-icon>
+          </v-btn>
+          <vuescroll ref="playlist" class="playlist">
+            <v-card-text class="pa-0">
+              <v-list dense class="pa-0">
+                <v-list-item-group v-model="selectedVideo" mandatory color="primary">
+                  <v-list-item v-for="(video, i) in $store.state.videoPlayerPlaylist" 
+                    :key="video.id" @click="play(i)" class="video-item" :ref="`videoItem${i}`">
+                    <img :src="getPlaylistImgUrl(video.id)" class="thumb"/>
+                    <span class="video-name">
+                      <b>{{i+1}}.</b>
+                      <span class="path">{{getFileNameFromPath(video.path)}}</span>
+                    </span>
+                    <span v-if="selectedVideo===i" class="play-state overline text--primary">
+                      <v-icon class="pl-2 pr-1">mdi-play</v-icon>
+                      <span class="pr-4">Now playing</span>
+                    </span>
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
+            </v-card-text>
+          </vuescroll>
+        </v-card>
       </v-card>
     </v-dialog>
     
@@ -369,13 +419,8 @@
             <v-col cols="12" align="center" justify="center" class="cropper-wrapper">
               <img id="clipboard" class="img-clipboard-temporary">
               <span class="overline">Thumb image</span>
-              <Cropper
-                :src="images.thumb.file"
-                ref="thumb"
-                class="cropper"
-                :stencil-props="{aspectRatio: 16/9}"
-                :min-height="20"
-              />
+              <Cropper :src="images.thumb.file" ref="thumb" class="cropper"
+                :stencil-props="{aspectRatio: 16/9}" :min-height="20"/>
               <v-btn @click="pasteImageFromClipboard('thumb')" class="mr-10" 
                 outlined :color="images.thumb.btnColor">
                 <v-icon left>mdi-clipboard-outline</v-icon> Paste from clipboard
@@ -416,9 +461,37 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogAddToPlaylist" max-width="420">
+      <v-card class="add-playlist">
+        <v-card-title class="headline py-1">Add to playlist
+          <v-spacer></v-spacer>
+          <v-icon>mdi-playlist-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text class="py-0" v-if="playlists.length">
+            <v-list dense>
+              <v-list-item-group color="secondary" v-model="selectedPlaylist">
+                <v-list-item v-for="(item, i) in playlists" :key="i">
+                  <span>{{item.name}}</span>
+                  <span>{{item.videos.length}}</span>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions>
+          <v-btn @click="dialogAddToPlaylist=false" small class="ma-2">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="addToPlaylist" :disabled="typeof this.selectedPlaylist!=='number'" 
+            small class="ma-2" color="primary">
+            <v-icon left>mdi-plus</v-icon> Add
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
-
 
 
 <script>
@@ -439,11 +512,13 @@ import vuescroll from 'vuescroll'
 import CropImage from '@/mixins/CropImage'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
+import Functions from '@/mixins/Functions'
+
 import videojs from 'video.js'
 import 'video.js/dist/video-js.min.css'
+import playlist from 'videojs-playlist'
 import markers from 'videojs-markers'
 import 'videojs-markers/dist/videojs.markers.min.css'
-import Functions from '@/mixins/Functions'
 
 
 export default {
@@ -460,13 +535,54 @@ export default {
     this.$nextTick(function () {
       ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
       ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
-      this.checkImageExist(this.getImagePath('thumb',''), 'thumb')
-      let vm = this
+      this.selectedVideo = this.getIndexOfCurrentVideo()
+      const vm = this
       this.videoOptions.sources.push({
         src: this.video.path,
         type: "video/mp4",
       })
+      this.videos = this.$store.state.videoPlayerPlaylist.map(video=>({
+        sources: [{
+          src: video.path,
+          type: 'video/mp4'
+        }],
+      }))
       this.player = videojs(this.$refs.videoPlayer, this.videoOptions, function onPlayerReady() {
+        const player = this
+        let Button = videojs.getComponent('Button')
+        let PrevButton = videojs.extend(Button, {
+          constructor: function() {
+            Button.apply(this, arguments)
+            this.addClass('vjs-prev')
+            this.controlText("Previous")
+          },
+          handleClick: function() {
+            player.playlist.previous()
+            let id = vm.$store.state.videoPlayerPlaylist[player.playlist.currentItem()].id
+            vm.$store.state.videoPlayerVideoId = id
+            vm.getMarkers()
+            vm.selectedVideo = player.playlist.currentItem()
+          }
+        })
+        let NextButton = videojs.extend(Button, {
+          constructor: function() {
+            Button.apply(this, arguments)
+            this.addClass('vjs-next')
+            this.controlText("Next")
+          },
+          handleClick: function() {
+            player.playlist.next()
+            let id = vm.$store.state.videoPlayerPlaylist[player.playlist.currentItem()].id
+            vm.$store.state.videoPlayerVideoId = id
+            vm.getMarkers()
+            vm.selectedVideo = player.playlist.currentItem()
+          }
+        })
+        videojs.registerComponent('NextButton', NextButton)
+        videojs.registerComponent('PrevButton', PrevButton)
+        this.getChild('controlBar').addChild('PrevButton', {}, 0)
+        this.getChild('controlBar').addChild('NextButton', {}, 2)
+
         vm.getMarkers()
         this.markers({
           markerStyle: {
@@ -478,9 +594,20 @@ export default {
             text: marker => (marker.text),
           },
         })
+        this.playlist(vm.videos)
+        this.playlist.currentItem(vm.selectedVideo)
       })
       this.player.on('error', function() {
         vm.isVideoAvailable = false
+      })
+      this.player.on('loadeddata', function() {
+        vm.isVideoAvailable = true
+        vm.getMarkers()
+      })
+      this.player.on('playlistitem', function() {
+        let id = vm.$store.state.videoPlayerPlaylist[vm.player.playlist.currentItem()].id
+        vm.$store.state.videoPlayerVideoId = id
+        vm.selectedVideo = vm.player.playlist.currentItem()
       })
       this.getVideoMetadata()
     })
@@ -509,6 +636,7 @@ export default {
     dialogMarkerTag: false,
     dialogMarkerBookmark: false,
     dialogRemoveMarker: false,
+    dialogAddToPlaylist: false,
     markerForRemove: {},
     markersEditable: false,
     markerNameClass: 'marker-name-hide',
@@ -527,16 +655,20 @@ export default {
         'pictureInPictureToggle': false
       },
     },
+    videos: [],
+    selectedVideo: 1,
+    isPlaylistVisible: false,
+    selectedPlaylist: null,
   }),
   computed: {
-    videoId() {
-      return this.$store.state.videoPlayerId
+    video() {
+      return this.$store.getters.videos.find({id: this.$store.state.videoPlayerVideoId}).value()
+    },
+    playlists() {
+      return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value()
     },
     videoDateAdded() {
       return new Date(this.video.date).toLocaleString()
-    },
-    video() {
-      return this.$store.getters.videos.find({ id: this.videoId }).value()
     },
     tagsAll() {
       let tags = this.$store.getters.tags.filter(t=>(t.category.includes('video')))
@@ -553,6 +685,10 @@ export default {
         this.$store.dispatch('updateVideoEditTagsSortBy', value)
       },
     },
+    isWatchLater() {
+      let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
+      return playlist.videos.includes(this.video.id)
+    },
   },
   methods: {
     handleFile(imgType) {
@@ -560,15 +696,15 @@ export default {
       this.images.main.display = true
       this.images.main.file = imgBase64
     },
-    changeRating(stars, videoId) {
+    changeRating(stars,) {
       this.$store.getters.videos
-        .find({ id: this.videoId })
+        .find({ id: this.video.id })
         .assign({ rating: stars })
         .write()
     },
     toggleFavorite() {
       this.$store.getters.videos
-        .find({ id: this.videoId })
+        .find({ id: this.video.id })
         .assign({ favorite: this.video.favorite })
         .write()
       this.video.favorite = !this.video.favorite
@@ -582,7 +718,6 @@ export default {
       let outputImagePath = path.join(this.pathToUserData, `/media/thumbs/${this.video.id}.jpg`)
       this.compressImage(imgBuffer.data, outputImagePath, 'thumb')
     },
-    
     openDialogMarkerTag() {
       this.dialogMarkerTag = true
       this.seektime = this.$refs.videoPlayer.currentTime
@@ -615,7 +750,7 @@ export default {
 
       this.$store.getters.bookmarks.get('markers').push({
         id: shortid.generate(),
-        videoId: this.videoId,
+        videoId: this.video.id,
         type: type,
         name: text,
         time: time,
@@ -624,7 +759,7 @@ export default {
         if (!this.video.tags.includes(this.markerTag)) {
           this.video.tags.push(this.markerTag)
           this.video.tags.sort()
-          this.$store.getters.videos.find({ id: this.videoId }).assign({ 
+          this.$store.getters.videos.find({ id: this.video.id }).assign({ 
             tags: this.video.tags,
           }).write()
           this.$store.commit('updateVideos')
@@ -654,11 +789,11 @@ export default {
     },
     getMarkers() {
       this.markers = this.$store.getters.bookmarks.get('markers')
-        .filter(marker=>(marker.videoId == this.videoId))
+        .filter(marker=>(marker.videoId == this.video.id))
         .orderBy('time', ['asc']).value()
       setTimeout(() => {
         this.getMarkersForTimeline()
-      }, 1000)
+      }, 500) // TODO: add markers after video ready
     },
     getMarkersForTimeline() {
       const markers = this.markers.map(marker=>{
@@ -674,6 +809,9 @@ export default {
         }
       })
       this.player.markers.reset(markers)
+    },
+    getIndexOfCurrentVideo() {
+      return _.findIndex(this.$store.state.videoPlayerPlaylist, {id: this.$store.state.videoPlayerVideoId})
     },
     toggleMarkerPlayable() {
       if (this.markerPlayable) {
@@ -713,7 +851,7 @@ export default {
             .value().length == 1
           if (isLastMarker) {
             this.video.tags = this.video.tags.filter(t => t!==this.markerForRemove.name)
-            this.$store.getters.videos.find({ id: this.videoId })
+            this.$store.getters.videos.find({ id: this.video.id })
               .assign({ tags: this.video.tags }).write()
             this.$store.commit('updateVideos')
           }
@@ -746,38 +884,8 @@ export default {
         }
       })
     },
-    imgPerformer(performer) {
-      let performerId = this.getPerformer(performer).id
-      if (performerId == undefined) {
-        return path.join(this.pathToUserData, '/img/templates/performer.png')
-      } else {
-        let imgMainPath = path.join(this.pathToUserData, `/media/performers/${performerId}_main.jpg`)
-        let imgAvatarPath = path.join(this.pathToUserData, `/media/performers/${performerId}_avatar.jpg`)
-        if (fs.existsSync(imgAvatarPath)) {
-          return imgAvatarPath
-        } else if (fs.existsSync(imgMainPath)) {
-          return imgMainPath
-        } else {
-          return path.join(this.pathToUserData, '/img/templates/performer.png')
-        }
-      }
-    },
-    getPerformer(performerName) {
-      return this.$store.getters.performers.find({name:performerName}).value()
-    },
     getTag(tagName) {
       return this.$store.getters.tags.find({name:tagName}).value()
-    },
-    getTagImgUrl(tagId) {
-      let imgTag = path.join(this.pathToUserData, `/media/tags/${tagId}_.jpg`)
-      return this.checkTagImageExist(imgTag)
-    },
-    checkTagImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
-        return path.join(this.pathToUserData, '/img/templates/tag.png')
-      }
     },
     getTagColor(tagName) {
       return this.$store.getters.tags.find({name:tagName}).value().color
@@ -806,12 +914,179 @@ export default {
       if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
       return found
     },
+    getFileNameFromPath(videoPath) {
+      return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
+    },
+    watchLater() {
+      let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
+      if (playlist.videos.includes(this.video.id)) {
+        this.$store.getters.playlists.find({name:'Watch later'}).assign({
+          videos: playlist.videos.filter(video=>(video !== this.video.id)),
+          edit: Date.now(),
+        }).write()
+      } else {
+        let videosFromPlaylist = playlist.videos
+        videosFromPlaylist.push(this.video.id)
+        this.$store.getters.playlists.find({name:'Watch later'}).assign({
+          videos: videosFromPlaylist,
+          edit: Date.now(),
+        }).write()
+      }
+    },
+    getPlaylistImgUrl(videoId) {
+      let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
+      return this.checkPlaylistImageExist(imgPath)+'?lastmod='+Date.now()
+    },
+    checkPlaylistImageExist(imgPath) {
+      if (fs.existsSync(imgPath)) {
+        return imgPath
+      } else {
+        this.errorThumb = true
+        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+      }
+    },
+    play(number) {
+      this.player.playlist.currentItem(number)
+      this.$store.state.videoPlayerVideoId = this.$store.state.videoPlayerPlaylist[number].id
+      this.getMarkers()
+    },
+    scrollToNowPlaying() {
+      const height = `${this.selectedVideo * document.documentElement.clientWidth / 10}`
+      this.$refs.playlist.scrollTo({ y: height }, 50)
+    },
+    addToPlaylist() {
+      let id = this.playlists[this.selectedPlaylist].id
+      let playlist = this.$store.getters.playlists.find({id: id}).value()
+      if (!playlist.videos.includes(this.video.id)) {
+        let videosFromPlaylist = playlist.videos
+        videosFromPlaylist.push(this.video.id)
+        this.$store.getters.playlists.find({id: id}).assign({
+          videos: videosFromPlaylist,
+          edit: Date.now(),
+        }).write()
+      }
+      this.dialogAddToPlaylist = false
+    },
+    editVideoInfo() {
+      this.$store.commit('updateSelectedVideos', [this.video.id])
+      this.$store.state.Videos.dialogEditVideoInfo = true
+    },
+    openDialogEditThumb() {
+      this.checkImageExist(this.getImagePath('thumb',''), 'thumb')
+      this.dialogEditThumb = true
+    },
   },
 }
 </script>
 
 
 <style lang="less">
+.video-player {
+  overflow: hidden !important;
+}
+.vjs-playlist {
+  position: absolute;
+  top: 64px;
+  right: 0;
+  bottom: 50px;
+  z-index: 1000;
+  .close {
+    position: absolute;
+    left: -45px;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+  }
+  .video-item {
+    position: relative;
+    overflow: hidden;
+    height: 10vw;
+  }
+  .video-name {
+    font-size: 1.8vh;
+    line-height: 1.2;
+    word-break: keep-all;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    overflow: hidden;
+    .path {
+      padding-left: 4px;
+      position: absolute;
+    }
+  }
+  .play-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    font-weight: bold;
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    &::before {
+      content: '';
+      position: absolute;
+      background-color: currentColor;
+      width: 100%;
+      height: 100%;
+      border-radius: 50px;
+      filter: invert(1);
+      z-index: -1;
+    }
+  }
+  .thumb {
+    position: absolute;
+    min-height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1), transparent);
+  }
+}
+.add-playlist {
+  .v-list-item {
+    display: flex;
+    justify-content: space-between;
+    &:after {
+      display: none;
+    }
+  }
+}
+.video-js {
+  .vjs-control-text {
+    height: 0;
+  }
+}
+.vjs-prev {
+  width: 40px;
+  cursor: pointer;
+  &:before {
+    content: "\F04AE";
+    font-family: "Material Design Icons";
+    font-size: 2em;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+.vjs-next {
+  width: 40px;
+  cursor: pointer;
+  &:before {
+    content: "\F04AD";
+    font-family: "Material Design Icons";
+    font-size: 2em;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
 .vjs-marker {
   &:before {
     font-family: "Material Design Icons";

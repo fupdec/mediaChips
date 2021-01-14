@@ -21,6 +21,7 @@ dbt.defaults({
     bookmark: false,
     altNames: [],
     date: Date.now(),
+    edit: Date.now(),
     favorite: true
   },] 
 }).write()

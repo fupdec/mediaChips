@@ -45,6 +45,11 @@
       <v-icon>mdi-web-box</v-icon>
     </v-btn>
 
+    <v-btn to="/playlists" text color="secondary">
+      <span>Playlists</span>
+      <v-icon>mdi-playlist-play</v-icon>
+    </v-btn>
+
     <v-btn to="/settings" text color="secondary">
       <span>Settings</span>
       <v-icon>mdi-cog-outline</v-icon>

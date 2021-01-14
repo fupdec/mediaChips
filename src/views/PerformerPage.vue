@@ -218,11 +218,8 @@
         class="items-per-page-dropdown"
       ></v-overflow-btn>
       <v-spacer></v-spacer>
-      <v-pagination 
-        v-model="videosCurrentPage"
-        :length="videosPagesSum"
-        :total-visible="getNumberOfPagesLimit"
-      ></v-pagination>
+      <v-pagination v-model="videosCurrentPage" :length="videosPagesSum"
+        :total-visible="getNumberOfPagesLimit" style="z-index:1"/>
       <v-spacer></v-spacer>
       <v-overflow-btn v-if="videosPagesSum > 5"
         v-model="videosCurrentPage" :items="pages" dense height="36" solo

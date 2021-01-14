@@ -221,8 +221,6 @@ export default {
     uploadedImage: null,
   }),
   computed: {
-    console: () => console,
-    window: () => window,
     website() {
       let ids = this.$store.getters.getSelectedWebsites
       let websites = this.$store.getters.websites

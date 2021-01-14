@@ -355,6 +355,10 @@ const Videos = {
         }
         // remove video from database
         getters.videos.remove({ 'id': id }).write()
+        // remove video from playlists
+        getters.playlists.filter({'videos': [id]}).each(playlist=>{
+          playlist.videos = playlist.videos.filter(video=>(video !== id))
+        }).write()
         // remove thumb and preview of video
         let thumbPath = path.join(getters.getPathToUserData, `/media/thumbs/${id}.jpg`)
         fs.unlink(thumbPath, (err) => {

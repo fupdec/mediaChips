@@ -287,7 +287,8 @@ export default {
         return
       }
       this.$store.state.dialogVideoPlayer = true
-      this.$store.state.videoPlayerId = this.video.id
+      this.$store.state.videoPlayerPlaylist = this.$store.getters.videosOnPage
+      this.$store.state.videoPlayerVideoId = this.video.id
       // this.$router.push(`/video/:${this.video.id}?tabId=default`)
     },
     setVideoProgress(percent) {

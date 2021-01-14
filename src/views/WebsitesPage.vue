@@ -146,7 +146,7 @@
         <v-divider class="ma-1"></v-divider>
         <v-list-item link @click="$store.state.Websites.dialogDeleteWebsite = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-delete</v-icon> Delete website
+            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete website
           </v-list-item-title>
         </v-list-item>
       </v-list>
