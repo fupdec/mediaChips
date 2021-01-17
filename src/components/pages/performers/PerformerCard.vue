@@ -691,8 +691,8 @@ export default {
   .v-chip {
     margin: 0 2px 2px !important;
     padding: 3px 4px;
-    height: auto;
     line-height: 1;
+    height: auto !important;
   }
   .flag-icon {
     position: absolute;

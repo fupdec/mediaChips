@@ -207,6 +207,7 @@ export default {
   .v-chip {
     margin: 0 2px 2px !important;
     padding: 0 4px;
+    height: auto !important;
   }
   .btn-edit {
     position: absolute;
