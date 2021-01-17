@@ -119,12 +119,58 @@
 
     <div v-if="$store.state.Videos.dialogEditVideoInfo"><DialogEditVideoInfo /></div>
 
+    <v-dialog v-model="dialogAddToPlaylist" max-width="420">
+      <v-card class="add-playlist">
+        <v-card-title class="headline py-1">Add to playlist
+          <v-spacer></v-spacer>
+          <v-icon>mdi-playlist-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text class="py-0" v-if="playlists.length">
+            <v-list dense>
+              <v-list-item-group color="primary" v-model="selectedPlaylist">
+                <v-list-item v-for="(item, i) in playlists" :key="i">
+                  <span>{{item.name}}</span>
+                  <span>{{item.videos.length}}</span>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions>
+          <v-btn @click="dialogAddToPlaylist=false" small class="ma-2">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="addToPlaylist" :disabled="typeof this.selectedPlaylist!=='number'" 
+            small class="ma-2" color="primary">
+            <v-icon left>mdi-plus</v-icon> Add
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-menu v-model="$store.state.Videos.menuCard" :position-x="$store.state.x" leave-absolute
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
         <v-list-item  class="pr-1" link @mouseup="addNewTab" :disabled="!isSelectedSingleVideo">
           <v-list-item-title>
             <v-icon left size="18">mdi-tab-plus</v-icon> Open in a new tab
+          </v-list-item-title>
+          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+        </v-list-item>
+
+        <v-divider class="ma-1"></v-divider>
+
+        <v-list-item  class="pr-1" link @mouseup="dialogAddToPlaylist=true" :disabled="!isSelectedSingleVideo">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-playlist-plus</v-icon> Add to playlist
+          </v-list-item-title>
+          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+        </v-list-item>
+
+        <v-list-item  class="pr-1" link @mouseup="watchLater" :disabled="!isSelectedSingleVideo">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-bookmark-plus</v-icon> Add to "Watch later"
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
@@ -430,6 +476,8 @@ export default {
     performersClipboard: [],
     tagsClipboard: [],
     websiteClipboard: '',
+    dialogAddToPlaylist: false,
+    selectedPlaylist: null,
   }),
   computed: {
     selectedVideosLength() {
@@ -454,6 +502,9 @@ export default {
     },
     isWebsiteClipboardEmpty() {
       return this.websiteClipboard === ''
+    },
+    playlists() {
+      return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value()
     },
   },
   methods: {
@@ -679,6 +730,32 @@ export default {
       this.$store.dispatch('deleteVideos')
       this.$store.state.Videos.dialogDeleteVideo = false
     },
+    addToPlaylist() {
+      let id = this.playlists[this.selectedPlaylist].id
+      let playlist = this.$store.getters.playlists.find({id: id}).value()
+      let videoId = this.$store.getters.getSelectedVideos[0]
+      if (!playlist.videos.includes(videoId)) {
+        let videosFromPlaylist = playlist.videos
+        videosFromPlaylist.push(videoId)
+        this.$store.getters.playlists.find({id: id}).assign({
+          videos: videosFromPlaylist,
+          edit: Date.now(),
+        }).write()
+      }
+      this.dialogAddToPlaylist = false
+    },
+    watchLater() {
+      let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
+      let videoId = this.$store.getters.getSelectedVideos[0]
+      if (!playlist.videos.includes(videoId)) {
+        let videosFromPlaylist = playlist.videos
+        videosFromPlaylist.push(videoId)
+        this.$store.getters.playlists.find({name:'Watch later'}).assign({
+          videos: videosFromPlaylist,
+          edit: Date.now(),
+        }).write()
+      }
+    },
   },
   watch: {
   },
@@ -690,5 +767,14 @@ export default {
 .warning-note {
   font-size:0.55rem;
   line-height: 1;
+}
+.add-playlist {
+  .v-list-item {
+    display: flex;
+    justify-content: space-between;
+    &:after {
+      display: none;
+    }
+  }
 }
 </style>

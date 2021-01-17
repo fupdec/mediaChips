@@ -1,42 +1,27 @@
 'use strict'
 
+import { ipcMain, app, protocol, BrowserWindow, Menu, MenuItem  } from 'electron'
+import { createProtocol, /* installVueDevtools */} from 'vue-cli-plugin-electron-builder/lib'
+
 const fs = require("fs-extra")
 const path = require("path")
-
-import { ipcMain, app, protocol, BrowserWindow, Menu, MenuItem  } from 'electron'
-import {
-  createProtocol,
-  /* installVueDevtools */
-} from 'vue-cli-plugin-electron-builder/lib'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win
-let loading 
+let win, loading, player
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
-function createWindow () {
-  // Create the browser window.
-  win = new BrowserWindow({ 
-    width: 1400, 
-    height: 800, 
-    frame: false,
-    backgroundColor: '#333',
-    icon: __static + `/icons/icon.png`,
-    webPreferences: {
-      nodeIntegration: true,
-      webSecurity: false 
-    },
-    show: false
-  })
+function createLoadingWindow () {
   loading = new BrowserWindow({
     width: 320, 
     height: 320, 
     show: false, 
     frame: false,
+    resizable: false,
+    alwaysOnTop: true, 
     backgroundColor: '#333',
     icon: __static + `/icons/icon.png`,
   })
@@ -48,12 +33,11 @@ function createWindow () {
         win.show() 
         loading.hide()
       })
-      win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-      // Load the url of the dev server if in development mode
-      if (!process.env.IS_TEST) win.webContents.openDevTools()
     })
     loading.loadURL(path.join(__static, 'loading.html'))
-    loading.show() 
+    loading.webContents.on('did-finish-load', () => {
+      loading.show()
+    })
   } else {
     createProtocol('app')
     // Load the index.html when not in development
@@ -64,15 +48,43 @@ function createWindow () {
         loading.hide() 
         loading.close()
       })
-      win.loadURL('app://./index.html')
     })
     loading.loadURL(path.join(__static, 'loading.html'))
-    loading.show()
+    loading.webContents.on('did-finish-load', () => {
+      loading.show()
+    })
+  }
+} 
+
+function createWindow(devPath, prodPath) {
+  // Create the browser window.
+  let window = new BrowserWindow({
+    width: 1200,
+    height: 700,
+    frame: false,
+    backgroundColor: '#333',
+    icon: __static + `/icons/icon.png`,
+    show: false, 
+    webPreferences: {
+      nodeIntegration: true,   
+      webSecurity: false
+    }
+  })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    // Load the url of the dev server if in development mode
+    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
+    if (!process.env.IS_TEST) window.webContents.openDevTools()
+  } else {
+    // Load the index.html when not in development
+    window.loadURL(`app://./${prodPath}`)
   }
 
-  win.on('closed', () => {
-    win = null
+  window.on('closed', () => { 
+    window = null 
+    if (devPath == 'index' || prodPath == 'index.html') app.quit()
   })
+  return window
 }
 
 // Quit when all windows are closed.
@@ -81,14 +93,6 @@ app.on('window-all-closed', () => {
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     app.quit()
-  }
-})
-
-app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (win === null) {
-    createWindow()
   }
 })
 
@@ -105,21 +109,6 @@ if (process.env.PORTABLE_EXECUTABLE_DIR) {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools
-    // Devtools extensions are broken in Electron 6.0.0 and greater
-    // See https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/378 for more info
-    // Electron will not launch with Devtools extensions installed on Windows 10 with dark mode
-    // If you are not using Windows 10 dark mode, you may uncomment these lines
-    // In addition, if the linked issue is closed, you can upgrade electron and uncomment these lines
-    // try {
-    //   await installVueDevtools()
-    // } catch (e) {
-    //   console.error('Vue Devtools failed to install:', e.toString())
-    // }
-
-  }
-  
   // create folder for user's files
   const srcUserDataFolder = path.join(__static, 'userfiles')
   const destUserDataFolder = path.join(app.getPath('userData'), 'userfiles')
@@ -145,7 +134,12 @@ app.on('ready', async () => {
       } 
     }) 
   }
-  createWindow()
+  if (!process.env.WEBPACK_DEV_SERVER_URL) {
+    createProtocol('app')
+  }
+  win = createWindow('index', 'index.html')
+  player = createWindow('player', 'player.html')
+  createLoadingWindow()
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -192,3 +186,13 @@ menu.append(new MenuItem({
 }))
 
 Menu.setApplicationMenu(menu)
+
+ipcMain.on('openPlayer', (event, data) => {
+  // store.dispatch("increment")
+  player.show()
+  player.webContents.send('getDataForPlayer', data)
+})
+
+ipcMain.on('closePlayer', (evt, arg) => {
+  player.hide()
+})

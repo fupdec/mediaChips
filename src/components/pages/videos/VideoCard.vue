@@ -8,7 +8,7 @@
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
-        <v-img @click="openVideoPage" title="Open video page"
+        <v-img @click="openVideoPlayer" title="Open video page"
           :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb"
         />
         <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
@@ -44,7 +44,7 @@
             <span>{{calcHeightValue(video.resolution)}}</span>
           </div>
         </div>
-        <div @click="openVideoPage" class="preview"
+        <div @click="openVideoPlayer" class="preview"
           :style="`animation-delay: ${delayVideoPreview}.7s`">
           <video ref="video" autoplay muted loop />
         </div>
@@ -152,6 +152,7 @@ const path = require('path')
 import Functions from '@/mixins/Functions'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'VideoCard',
@@ -279,17 +280,18 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
-    openVideoPage() {
+    openVideoPlayer() {
       const pathToVideo = this.video.path
       if (!fs.existsSync(pathToVideo)) {
         this.$store.state.Videos.dialogErrorPlayVideo = true
         this.$store.state.Videos.errorPlayVideoPath = pathToVideo
         return
       }
-      this.$store.state.dialogVideoPlayer = true
-      this.$store.state.videoPlayerPlaylist = this.$store.getters.videosOnPage
-      this.$store.state.videoPlayerVideoId = this.video.id
-      // this.$router.push(`/video/:${this.video.id}?tabId=default`)
+      let data = {
+        videos: this.$store.getters.videosOnPage,
+        id: this.video.id,  
+      }
+      ipcRenderer.send('openPlayer', data)
     },
     setVideoProgress(percent) {
       this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
@@ -455,8 +457,8 @@ export default {
   .v-chip {
     margin: 1px 2px !important;
     padding: 3px 4px;
-    height: auto;
     line-height: 1;
+    height: auto !important;
   }
   .v-card__actions {
     .v-chip {

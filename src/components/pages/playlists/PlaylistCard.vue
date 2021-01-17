@@ -29,6 +29,7 @@ const path = require("path")
 
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
+import { ipcRenderer  } from 'electron'
 
 export default {
   name: "PlaylistCard",
@@ -73,11 +74,11 @@ export default {
   },
   methods: {
     play() {
-      if (this.videos.length) {
-        this.$store.state.dialogVideoPlayer = true
-        this.$store.state.videoPlayerPlaylist = this.videos
-        this.$store.state.videoPlayerVideoId = this.videos[0].id
+      let data = {
+        videos: this.videos,
+        id: this.videos[0].id,  
       }
+      ipcRenderer.send('openPlayer', data)
     },
     stopSmoothScroll(event) {
       if(event.button != 1) return
@@ -185,6 +186,7 @@ export default {
   .v-chip {
     margin: 0 2px 2px !important;
     padding: 0 4px;
+    height: auto !important;
   }
   .btn-edit {
     position: absolute;

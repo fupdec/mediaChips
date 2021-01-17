@@ -21,7 +21,21 @@ module.exports = {
   devServer: {
     // hot: false,
     liveReload: false
-  }
+  },
+  pages: {
+    index: {
+      entry: './src/main.js',
+      template: 'public/index.html',
+      filename: 'index.html',
+      title: 'AVDB',
+    },
+    player: {
+      entry: './src/player.js',
+      template: 'public/player.html',
+      filename: 'player.html',
+      title: 'Player',
+    },
+  },
   // configureWebpack: {
   //   watchOptions: {
   //     ignored: /public/

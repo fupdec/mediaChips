@@ -33,7 +33,6 @@ export default new Vuex.Store({
     contextTab: '',
     videoPlayerVideoId: null,
     videoPlayerPlaylist: null,
-    dialogVideoPlayer: false,
   }),
   getters: {
     getNotifications(state) {
