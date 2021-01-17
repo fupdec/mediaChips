@@ -122,6 +122,10 @@ export default {
           this.$router.push('/websites/:default?tabId=default')
           return
         }
+        if(event.altKey && event.keyCode === 80) { // alt+p
+          this.$router.push('/playlists')
+          return
+        }
         if(event.altKey && event.keyCode === 88) { // alt+x
           this.$router.push('/home')
           return
