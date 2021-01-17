@@ -493,6 +493,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     }
   }
 }
+.v-chip {
+  height: auto !important;
+}
 // scrollbar
 ::-webkit-scrollbar {
   width: 10px;
@@ -1028,15 +1031,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
 // END WEBSITES
 // TABS
 .v-app-bar {
-  -webkit-app-region: drag;
-  .app-bar-container {
-    > * {
-      -webkit-app-region: no-drag;
-    }
-    .spacer {
-      -webkit-app-region: drag;
-    }
-  }
   .v-tabs {
     .v-tab {
       -webkit-app-region: no-drag;
