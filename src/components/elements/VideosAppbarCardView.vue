@@ -1,10 +1,15 @@
 <template>
 	<div>
-    <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
+    <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
       <template v-slot:activator="{ on, attrs }">
         <v-badge :content="getCardSizeIcon()" class="text-uppercase" color="secondary" overlap offset-x="25" offset-y="25">
           <v-btn v-bind="attrs" v-on="on" icon tile>
-            <v-icon>mdi-card-bulleted</v-icon>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on">mdi-card-bulleted</v-icon>
+              </template>
+              <span>Card size</span>
+            </v-tooltip>
           </v-btn>
         </v-badge>
       </template>
@@ -34,125 +39,86 @@
       <span v-else>Make labels colored</span>
     </v-tooltip>
 
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isEditBtnHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
-            <v-icon>mdi-movie-edit</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isEditBtnHidden">Show edit button</span>
-      <span v-else>Hide edit button</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isQualityLabelHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleQualityLabelVisibilty()" v-on="on">
-            <v-icon>mdi-video-box</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isQualityLabelHidden">Show Quality Label</span>
-      <span v-else>Hide Quality Label</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isDurationHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleDurationVisibilty()" v-on="on">
-            <v-icon>mdi-timer</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isDurationHidden">Show Duration</span>
-      <span v-else>Hide Duration</span>
-    </v-tooltip>
-
-    <v-tooltip bottom v-if="!$store.state.Settings.ratingAndFavoriteInCard">
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isRatingHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleRatingVisibilty()" v-on="on">
-            <v-icon>mdi-star</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isRatingHidden">Show Rating</span>
-      <span v-else>Hide Rating</span>
-    </v-tooltip>
-
-    <v-tooltip bottom v-if="!$store.state.Settings.ratingAndFavoriteInCard">
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isFavoriteHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleFavoriteVisibilty()" v-on="on">
-            <v-icon>mdi-heart</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isFavoriteHidden">Show Favorite heart</span>
-      <span v-else>Hide Favorite heart</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isFileNameHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleFileNameVisibilty()" v-on="on">
-            <v-icon>mdi-alphabetical-variant</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isFileNameHidden">Show Filename</span>
-      <span v-else>Hide Filename</span>
-    </v-tooltip>
     
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isFileInfoHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleFileInfoVisibilty()" v-on="on">
-            <v-icon>mdi-filmstrip</v-icon>
-          </v-btn>
-        </v-badge>
+    <v-menu bottom offset-y min-width="160">
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn v-bind="attrs" v-on="on" icon tile>
+          <v-icon>mdi-dots-vertical</v-icon>
+        </v-btn>
       </template>
-      <span v-if="isFileInfoHidden">Show File Information</span>
-      <span v-else>Hide File Information</span>
-    </v-tooltip>
+      
+      <v-list dense class="context-menu">
+        <v-list-item link @click="toggleEditBtnVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-account-edit</v-icon> Edit Buttons
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isEditBtnHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
 
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isPerformersHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="togglePerformerVisibilty()" v-on="on">
-            <v-icon>mdi-account</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isPerformersHidden">Show Performers</span>
-      <span v-else>Hide Performers</span>
-    </v-tooltip>
-    
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isTagsHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleTagsVisibilty()" v-on="on">
-            <v-icon>mdi-tag</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isTagsHidden">Show Tags</span>
-      <span v-else>Hide Tags</span>
-    </v-tooltip>
-    
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-badge :value="isWebsiteHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn icon tile @click="toggleWebsiteVisibilty()" v-on="on">
-            <v-icon>mdi-web</v-icon>
-          </v-btn>
-        </v-badge>
-      </template>
-      <span v-if="isWebsiteHidden">Show Website</span>
-      <span v-else>Hide Website</span>
-    </v-tooltip>
+        <v-list-item link @click="toggleQualityLabelVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-video-box</v-icon> Quality Label
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isQualityLabelHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item link @click="toggleDurationVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-timer</v-icon> Duration
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isDurationHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item v-if="!$store.state.Settings.ratingAndFavoriteInCard" link @click="toggleRatingVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-star</v-icon> Rating
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isRatingHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item v-if="!$store.state.Settings.ratingAndFavoriteInCard" link @click="toggleFavoriteVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-heart</v-icon> Favorite
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isFavoriteHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item link @click="toggleFileNameVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-alphabetical-variant</v-icon> Filename
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isFileNameHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item link @click="toggleFileInfoVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-filmstrip</v-icon> File Information
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isFileInfoHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item link @click="togglePerformerVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-account</v-icon> Performers
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isPerformersHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item link @click="toggleTagsVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-tag</v-icon> Tags
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isTagsHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
+        <v-list-item link @click="toggleWebsiteVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-web</v-icon> Website
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isWebsiteHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+      </v-list>
+    </v-menu>
 	</div>
 </template>
 
