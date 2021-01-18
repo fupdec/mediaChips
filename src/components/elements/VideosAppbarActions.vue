@@ -313,7 +313,7 @@
                 </v-icon>
               </v-btn>
             </template>
-            <span>Sort by name</span>
+            <span>Sort by Name</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
@@ -327,7 +327,7 @@
                 </v-icon>
               </v-btn>
             </template>
-            <span>Sort by duration</span>
+            <span>Sort by Duration</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
@@ -341,7 +341,7 @@
               </v-icon>
             </v-btn>
             </template>
-            <span>Sort by size</span>
+            <span>Sort by Size</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
@@ -355,7 +355,7 @@
                 </v-icon>
               </v-btn>
             </template>
-            <span>Sort by rating</span>
+            <span>Sort by Rating</span>
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
@@ -369,7 +369,21 @@
                 </v-icon>
               </v-btn>
             </template>
-            <span>Sort by date added</span>
+            <span>Sort by Date Added</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn outlined @click="toggleSortDirection" value="path" v-on="on">
+                <v-icon>mdi-folder-outline</v-icon>
+                <v-icon right size="14" v-if="sortButtons==='path' && sortDirection==='desc'">
+                  mdi-arrow-down-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons==='path' && sortDirection==='asc'">
+                  mdi-arrow-up-thick
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>Sort by Path</span>
           </v-tooltip>
         </v-btn-toggle>
       </v-card>
