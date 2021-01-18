@@ -508,6 +508,7 @@ import LabelFunctions from '@/mixins/LabelFunctions'
 import Functions from '@/mixins/Functions'
 
 import videojs from 'video.js'
+import 'videojs-flvh265'
 import 'video.js/dist/video-js.min.css'
 import playlist from 'videojs-playlist'
 import markers from 'videojs-markers'
@@ -622,6 +623,10 @@ export default {
         controlBar: {
           'pictureInPictureToggle': false
         },
+        techOrder: [
+          'html5',
+          'flvh265',
+        ],
       }
       this.player = videojs(this.$refs.videoPlayer, options, function onPlayerReady() {
         const player = this
@@ -698,7 +703,6 @@ export default {
       this.playlist = data.videos.map(video=>({ // add playlist
         sources: [{
           src: video.path,
-          type: 'video/mp4'
         }],
       }))
       this.newPlaylistStartVideoIndex = _.findIndex(data.videos, {id: data.id})
