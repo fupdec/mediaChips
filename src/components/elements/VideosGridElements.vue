@@ -161,14 +161,14 @@
 
         <v-divider class="ma-1"></v-divider>
 
-        <v-list-item  class="pr-1" link @mouseup="dialogAddToPlaylist=true" :disabled="!isSelectedSingleVideo">
+        <v-list-item  class="pr-1" link @mouseup="dialogAddToPlaylist=true">
           <v-list-item-title>
             <v-icon left size="18">mdi-playlist-plus</v-icon> Add to playlist
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
 
-        <v-list-item  class="pr-1" link @mouseup="watchLater" :disabled="!isSelectedSingleVideo">
+        <v-list-item  class="pr-1" link @mouseup="watchLater">
           <v-list-item-title>
             <v-icon left size="18">mdi-bookmark-plus</v-icon> Add to "Watch later"
           </v-list-item-title>
@@ -733,28 +733,31 @@ export default {
     addToPlaylist() {
       let id = this.playlists[this.selectedPlaylist].id
       let playlist = this.$store.getters.playlists.find({id: id}).value()
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      if (!playlist.videos.includes(videoId)) {
-        let videosFromPlaylist = playlist.videos
-        videosFromPlaylist.push(videoId)
-        this.$store.getters.playlists.find({id: id}).assign({
-          videos: videosFromPlaylist,
-          edit: Date.now(),
-        }).write()
-      }
+      let videosFromPlaylist = playlist.videos
+
+      this.$store.getters.getSelectedVideos.map(videoId => {
+        if (!videosFromPlaylist.includes(videoId)) { // if the video is not in the playlist 
+          videosFromPlaylist.push(videoId)
+        }
+      })
+      this.$store.getters.playlists.find({id: id}).assign({
+        videos: videosFromPlaylist,
+        edit: Date.now(),
+      }).write()
       this.dialogAddToPlaylist = false
     },
     watchLater() {
       let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      if (!playlist.videos.includes(videoId)) {
-        let videosFromPlaylist = playlist.videos
-        videosFromPlaylist.push(videoId)
-        this.$store.getters.playlists.find({name:'Watch later'}).assign({
-          videos: videosFromPlaylist,
-          edit: Date.now(),
-        }).write()
-      }
+      let videosFromPlaylist = playlist.videos
+      this.$store.getters.getSelectedVideos.map(videoId => {
+        if (!videosFromPlaylist.includes(videoId)) { // if the video is not in the playlist 
+          videosFromPlaylist.push(videoId)
+        }
+      })
+      this.$store.getters.playlists.find({name:'Watch later'}).assign({
+        videos: videosFromPlaylist,
+        edit: Date.now(),
+      }).write()
     },
   },
   watch: {
