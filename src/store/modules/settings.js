@@ -10,6 +10,7 @@ dbs.defaults({
   phrase: '',
   passwordHint: '',
   videoPreviewEnabled: true,
+  videoPreviewGridEnabled: false,
   delayVideoPreview: 0,
   appColorLightPrimary: '#ef0051',
   appColorLightSecondary: '#d80155',
@@ -103,6 +104,7 @@ const Settings = {
     passwordConfirmed: false,
     passwordHint: dbs.get('passwordHint').value(),
     videoPreviewEnabled: dbs.get('videoPreviewEnabled').value(),
+    videoPreviewGridEnabled: dbs.get('videoPreviewGridEnabled').value(),
     delayVideoPreview: dbs.get('delayVideoPreview').value(),
     darkMode: Boolean(+dbs.get('darkMode').value()),
     headerGradient: dbs.get('headerGradient').value(),
@@ -299,6 +301,7 @@ const Settings = {
       state.videoTagsHidden = false
       state.ratingAndFavoriteInCard = false
       state.videoPreviewEnabled = true
+      state.videoPreviewGridEnabled = false
       state.tagAltNamesHidden = false
       state.tagPerformersHidden = false
       state.tagEditBtnHidden = false
@@ -496,6 +499,7 @@ const Settings = {
         videoTagsHidden: false,
         ratingAndFavoriteInCard: false,
         videoPreviewEnabled: true,
+        videoPreviewGridEnabled: false,
         tagAltNamesHidden: false,
         tagPerformersHidden: false,
         tagEditBtnHidden: false,

@@ -168,6 +168,24 @@
         </v-col>
       </v-row>
 
+      <div class="subtitle mt-10 mb-2">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-bind="attrs" v-on="on" left small>
+              mdi-help-circle-outline
+            </v-icon>
+          </template>
+          <span>Will be generated automatically when the video page is opened.</span>
+        </v-tooltip>
+        <span>Video preview grid 3x3:</span>
+      </div>
+      <v-switch v-model="videoPreviewGrid" inset style="display:inline-block;">
+        <template v-slot:label>
+          <span v-if="videoPreviewGrid">Yes</span>
+          <span v-else>No</span>
+        </template>
+      </v-switch>
+
       <v-divider class="my-12"></v-divider>
 
 
@@ -511,6 +529,18 @@ export default {
       },
       set(value) {
         this.$store.dispatch('updateVideoPreviewEnabled', value)
+      },
+    },
+    videoPreviewGrid: {
+      get() {
+        return this.$store.state.Settings.videoPreviewGridEnabled
+      },
+      set(value) {
+        const values = {
+          key: 'videoPreviewGridEnabled',
+          value: value,
+        }
+        this.$store.dispatch('updateSettingsState', values)
       },
     },
     delayVideoPreview: {

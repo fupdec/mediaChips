@@ -3,6 +3,7 @@
     <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
       :class="{favorite: isFavorite}" class="video-card" height="100%"
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
+      :key="cardKey"
     >
       <v-responsive @click.middle="addNewTabVideo"
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
@@ -163,6 +164,7 @@ export default {
   mixins: [ShowImageFunction, Functions, LabelFunctions],
   mounted() {
     this.$nextTick(function () {
+      this.cardKey = this.video.id
     })
   },
   beforeDestroy() {
@@ -180,10 +182,13 @@ export default {
     errorPreview: false,
     isVideoHovered: false,
     timeouts: {},
+    cardKey: '',
   }),
   computed: {
+    updateCard() {
+      return this.$store.state.Videos.updateCard
+    },
     getVideoPath() {
-      console.log('check video')
       return this.video.path
     },
     isChipsColored() {
@@ -249,6 +254,9 @@ export default {
     },
     videoPreviewEnabled() {
       return this.$store.state.Settings.videoPreviewEnabled
+    },
+    videoPreviewGridEnabled() {
+      return this.$store.state.Settings.videoPreviewGridEnabled
     },
     delayVideoPreview() {
       return this.$store.state.Settings.delayVideoPreview
@@ -335,10 +343,13 @@ export default {
     },
     getImgUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
-      return this.checkImageExist(imgPath)+'?lastmod='+Date.now()
+      let gridPath = path.join(this.pathToUserData, `/media/previews/${videoId}.jpg`)
+      return this.checkImageExist(imgPath, gridPath)+'?lastmod='+Date.now()
     },
-    checkImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
+    checkImageExist(imgPath, gridPath) {
+      if (this.videoPreviewGridEnabled && fs.existsSync(gridPath)) {
+        return gridPath
+      } else if (fs.existsSync(imgPath)) {
         return imgPath
       } else {
         this.errorThumb = true
@@ -396,6 +407,9 @@ export default {
     },
   },
   watch: {
+    updateCard() {
+      this.cardKey = this.video.id + Date.now()
+    }
   }
 }
 </script>

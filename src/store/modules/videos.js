@@ -68,6 +68,7 @@ const Videos = {
     videoEditTagsSortBy: dbs.get('videoEditTagsSortBy').value(),
     videoEditWebsitesSortBy: dbs.get('videoEditWebsitesSortBy').value(),
     menuCard: false,
+    updateCard: 1,
   }),
   mutations: {
     updateVideos (state) {
@@ -359,7 +360,7 @@ const Videos = {
         getters.playlists.filter({'videos': [id]}).each(playlist=>{
           playlist.videos = playlist.videos.filter(video=>(video !== id))
         }).write()
-        // remove thumb and preview of video
+        // remove thumb, grid and preview of video
         let thumbPath = path.join(getters.getPathToUserData, `/media/thumbs/${id}.jpg`)
         fs.unlink(thumbPath, (err) => {
           if (err) {
@@ -374,6 +375,14 @@ const Videos = {
             console.log("failed to delete preview:"+err)
           } else {
             console.log('successfully deleted preview')
+          }
+        })
+        let gridPath = path.join(getters.getPathToUserData, `/media/previews/${id}.jpg`)
+        fs.unlink(gridPath, (err) => {
+          if (err) {
+            console.log("failed to delete grid:"+err)
+          } else {
+            console.log('successfully deleted grid')
           }
         })
         commit('setNotification', {
