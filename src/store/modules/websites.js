@@ -1,7 +1,7 @@
 const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
-const FileSync = require('lowdb/adapters/FileSync')
+const FileSync = require('@/components/elements/LowDbAdapter')
 const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbWebsites = path.join(app.getPath('userData'), 'userfiles/databases/dbw.json')
 const adapterSettings = new FileSync(pathToDbSettings)
