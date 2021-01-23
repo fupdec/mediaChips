@@ -177,7 +177,7 @@
       </v-btn>
     </div>
     <v-spacer></v-spacer>
-    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.5</span>
+    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.6</span>
     <v-spacer></v-spacer>
     <div class="window-controls">
       <v-btn text tile small width="46" height="28" @click="minimize">

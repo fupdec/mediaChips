@@ -44,6 +44,29 @@
       </v-form>
     </v-dialog>
 
+    <v-dialog v-model="dialogUpdateApp" persistent width="800">
+      <v-card>
+        <v-card-title class="headline">
+          <v-spacer></v-spacer>
+          <div>A new version of the application is available!</div>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogUpdateApp = false" icon tile>
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="text-center pt-8">
+          <v-icon size="140" color="pink">mdi-alert-decagram-outline</v-icon>
+        </v-card-text>
+        <v-card-actions class="pt-8">
+          <v-spacer></v-spacer>
+          <v-btn @click="openPage" color="primary" large block>
+            <v-icon left>mdi-download</v-icon> Open page with downloads
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <BottomBar />
 
     <VideosGridElements />
@@ -71,7 +94,9 @@ console.clear()
 const {app} = require('electron').remote
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
-const { ipcRenderer } = require('electron')
+const axios = require("axios")
+const cheerio = require("cheerio")
+const shell = require('electron').shell
 
 import FilterVideos from '@/mixins/FilterVideos'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -91,6 +116,7 @@ export default {
   mixins: [FilterVideos, PlayerEvents],
   mounted() {
     this.$nextTick(function () {
+      this.checkForUpdates()
       this.$store.state.pathToUserData = app.getPath('userData')
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.initTheme()
@@ -145,6 +171,7 @@ export default {
     isShowPerformerBtn: false,
     videoPage: '/',
     performerPage: '/',
+    dialogUpdateApp: false,
   }),
   computed: {
     passwordProtection() {
@@ -216,6 +243,19 @@ export default {
       this.$refs.pass.validate()
       this.errorPass = this.phrase !== this.password 
       this.disableRunApp = this.phrase !== this.password 
+    },
+    checkForUpdates() {
+      axios.get(`https://github.com/fupdec/Adult-Video-Database/releases`).then((response) => {
+        if(response.status === 200) {
+          const html = response.data;
+          const $ = cheerio.load(html)
+          let v = $('.release-header .f1 a').eq(0).text().trim()
+          if (v.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0] > app.getVersion()) this.dialogUpdateApp = true
+        }
+      })
+    },
+    openPage() {
+      shell.openExternal('https://github.com/fupdec/Adult-Video-Database/releases')
     },
   },
   watch: {

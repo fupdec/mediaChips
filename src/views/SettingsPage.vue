@@ -456,7 +456,7 @@
       <v-divider class="mt-16"></v-divider>
       <v-row>
         <v-col cols="4">
-          <div>Adult Video Database 0.5.5</div>
+          <div>Adult Video Database 0.5.6</div>
           <p class="text--secondary">by fupdec</p>
           <v-btn color="#eee" light small @click="openGithub">
             <v-icon left>mdi-github</v-icon> Github

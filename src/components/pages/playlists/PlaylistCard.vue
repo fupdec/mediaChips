@@ -8,9 +8,16 @@
       > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
       </v-btn>
       
-      <div @click="play" class="thumbs">
+      <div v-if="playlist.videos.length > 0" @click="play" class="thumbs">
         <v-img v-for="(thumb, i) in thumbs" :key="i" width="50%"
           :src="getImgUrl(thumb)" :aspect-ratio="16/9"/>
+        <v-btn @click="play" icon x-large outlined class="btn-playlist-play" color="white">
+          <v-icon size="40">mdi-play</v-icon>
+        </v-btn>
+      </div>
+      <div v-else class="text-center pt-10">
+        <div class="overline">Playlist is Empty</div>
+        <v-icon size="140">mdi-format-list-bulleted</v-icon>
       </div>
 
       <v-card-title class="py-1 px-2">{{playlist.name}} ({{playlist.videos.length}})
@@ -74,6 +81,13 @@ export default {
   },
   methods: {
     play() {
+      if (this.playlist.videos.length === 0) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Playlist "${this.playlist.name}" is empty. Add video first to play.`
+        })
+        return
+      }
       let data = {
         videos: this.videos,
         id: this.videos[0].id,  
@@ -123,6 +137,8 @@ export default {
   .thumbs {
     display:flex;
     flex-wrap:wrap;
+    position: relative;
+    height: 100%;
     &:before {
       content: '';
       position: absolute;
@@ -145,6 +161,12 @@ export default {
       }
     }
     .btn-edit {
+      opacity: 0.5;
+      &:hover {
+        opacity: 1;
+      }
+    }
+    .btn-playlist-play {
       opacity: 0.5;
       &:hover {
         opacity: 1;
@@ -195,5 +217,14 @@ export default {
     z-index: 4;
     bottom: 5px;
   }
+}
+.btn-playlist-play {
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
 }
 </style>
