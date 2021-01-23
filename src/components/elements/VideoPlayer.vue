@@ -4,7 +4,7 @@
       <v-card-title class="pa-0" :class="{maximized:maximized}">
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile>
+            <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile width="46">
               <v-icon>mdi-television-play</v-icon> 
             </v-btn>
           </template>
@@ -28,7 +28,7 @@
         </v-tooltip> -->
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn @click="openDialogFileInfo" v-on="on" icon tile>
+            <v-btn @click="openDialogFileInfo" v-on="on" icon tile width="46">
               <v-icon>mdi-information-variant</v-icon> 
             </v-btn>
           </template>
@@ -36,7 +36,7 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn @click="watchLater" v-on="on" icon tile>
+            <v-btn @click="watchLater" v-on="on" icon tile width="46">
               <v-icon v-if="isWatchLater">mdi-bookmark-minus-outline</v-icon> 
               <v-icon v-else>mdi-bookmark-plus-outline</v-icon> 
             </v-btn>
@@ -62,23 +62,23 @@
         </v-tooltip> -->
         <v-menu v-if="isVideoAvailable" offset-y nudge-bottom="10" open-on-hover close-delay="1000">
           <template v-slot:activator="{ on, attrs }">
-            <v-btn v-bind="attrs" v-on="on" icon tile>
+            <v-btn v-bind="attrs" v-on="on" icon tile width="46">
               <v-icon>mdi-tooltip-plus-outline</v-icon>
             </v-btn>
           </template>
           <v-card>
-            <v-btn @click="openDialogMarkerTag" icon tile>
+            <v-btn @click="openDialogMarkerTag" icon tile width="46" height="36">
               <v-icon size="20">mdi-tag-outline</v-icon> 
             </v-btn>
-            <v-btn @click="addMarker('favorite')" icon tile>
+            <v-btn @click="addMarker('favorite')" icon tile width="46" height="36">
               <v-icon size="20">mdi-heart-outline</v-icon> 
             </v-btn>
-            <v-btn @click="openDialogMarkerBookmark" icon tile>
+            <v-btn @click="openDialogMarkerBookmark" icon tile width="46" height="36">
               <v-icon size="20">mdi-bookmark-outline</v-icon> 
             </v-btn>
             <v-divider></v-divider>
             <v-card-title v-if="isVideoAvailable && markers.length" class="pa-0">
-              <v-btn @click="dialogEditMarkers=true" block tile x-small>edit markers</v-btn>
+              <v-btn @click="dialogEditMarkers=true" block tile small>edit markers</v-btn>
             </v-card-title>
           </v-card>
         </v-menu>
@@ -1075,6 +1075,7 @@ export default {
   }
 }
 .video-js {
+  font-size: 11px;
   padding-top: calc(100vh - 36px) !important;
   .vjs-control-text {
     height: 0;
@@ -1119,11 +1120,15 @@ export default {
     align-items: center;
   }
 }
+.vjs-tip {
+  font-size: 12px;
+  bottom: 18px;
+}
 .vjs-marker {
   &:before {
     font-family: "Material Design Icons";
     position: absolute;
-    left: -100%;
+    left: -200%;
     top: -100%;
   }
   &.marker {
