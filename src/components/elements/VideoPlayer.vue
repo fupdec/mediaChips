@@ -52,14 +52,6 @@
           </template>
           <span>Add to playlist</span>
         </v-tooltip> -->
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn @click="togglePlaylist" v-on="on" icon tile>
-              <v-icon>mdi-playlist-play</v-icon>
-            </v-btn>
-          </template>
-          <span>Toggle playlist</span>
-        </v-tooltip>
         <!-- <v-tooltip v-if="isVideoAvailable" bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="setThumb" v-on="on" icon tile>
@@ -665,10 +657,22 @@ export default {
             player.playlist.next()
           }
         })
+        let PlaylistButton = videojs.extend(Button, {
+          constructor: function() {
+            Button.apply(this, arguments)
+            this.addClass('vjs-playlist-toggle')
+            this.controlText("Playlist")
+          },
+          handleClick: function() {
+            vm.togglePlaylist()
+          }
+        })
         videojs.registerComponent('NextButton', NextButton)
         videojs.registerComponent('PrevButton', PrevButton)
+        videojs.registerComponent('PlaylistButton', PlaylistButton)
         player.getChild('controlBar').addChild('PrevButton', {}, 0)
         player.getChild('controlBar').addChild('NextButton', {}, 2)
+        player.getChild('controlBar').addChild('PlaylistButton', {}, 3)
         // init markers
         player.markers({
           markerStyle: {
@@ -1095,6 +1099,19 @@ export default {
   cursor: pointer;
   &:before {
     content: "\F04AD";
+    font-family: "Material Design Icons";
+    font-size: 2em;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+.vjs-playlist-toggle {
+  width: 40px;
+  cursor: pointer;
+  &:before {
+    content: "\F0279";
     font-family: "Material Design Icons";
     font-size: 2em;
     height: 100%;
