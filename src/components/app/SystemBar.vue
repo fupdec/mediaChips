@@ -208,10 +208,10 @@ export default {
   components: {
   },
   beforeCreate(){
-    win.once('maximize', ()=>{
+    win.on('maximize', ()=>{
       this.maximized = true
     })
-    win.once('unmaximize', ()=>{
+    win.on('unmaximize', ()=>{
       this.maximized = false
     })
   },

@@ -1,7 +1,7 @@
 <template>
   <div class="video-player-wrapper">
-    <v-card class="video-player" numberoutlined>
-      <v-card-title class="pa-0">
+    <v-card class="video-player" :outlined="!maximized">
+      <v-card-title class="pa-0" :class="{maximized:maximized}">
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile>
@@ -148,8 +148,21 @@
           <v-icon v-if="video.favorite===false" color="grey">mdi-heart-outline</v-icon>
           <v-icon v-else color="pink">mdi-heart</v-icon>
         </v-btn> -->
-        <v-btn @click="closePlayer" icon tile class="ml-4">
-          <v-icon>mdi-close</v-icon> </v-btn>
+        <div class="window-controls">
+          <v-btn text tile small width="46" height="36" @click="minimize">
+            <v-icon size="16">mdi-minus</v-icon>
+          </v-btn>
+          <v-btn v-if="maximized" text tile small width="46" height="36" @click="unmaximize">
+            <v-icon size="18">mdi-window-restore</v-icon>
+          </v-btn>
+          <v-btn v-else text tile small width="46" height="36" @click="maximize">
+            <v-icon size="14">mdi-square-outline</v-icon>
+          </v-btn>
+          <v-btn text tile small width="46" height="36" @click="close" 
+            class="close-app-btn" color="#d70000"> 
+            <v-icon size="18">mdi-window-close</v-icon>
+          </v-btn>
+        </div>
       </v-card-title>
       <video ref="videoPlayer" class="video-js" preload="none"></video>
       <div class="thumb" style="display:none;"> 
@@ -467,6 +480,8 @@ const shortid = require('shortid')
 const ffmpeg = require('fluent-ffmpeg')
 const { spawn } = require( 'child_process' )
 const { ipcRenderer, shell } = require('electron')
+const remote = require('electron').remote
+const win = remote.getCurrentWindow()
 
 import vueFilePond from 'vue-filepond'
 import 'filepond/dist/filepond.min.css'
@@ -501,6 +516,13 @@ export default {
     await this.$store.dispatch('getDb', 'playlists')
     await this.$store.dispatch('getDb', 'markers')
     await this.$store.dispatch('getDb', 'settings')
+    // window events
+    win.on('maximize', ()=>{
+      this.maximized = true
+    })
+    win.on('unmaximize', ()=>{
+      this.maximized = false
+    })
   },
   created() {
     this.$set(this.images, 'thumb', this.getImageObject())
@@ -520,6 +542,7 @@ export default {
     if (this.player) {
       this.player.dispose()
     }
+    win.removeAllListeners()
   },
   data: () => ({
     video: null,
@@ -557,6 +580,7 @@ export default {
     selectedVideo: 1,
     isPlaylistVisible: false,
     selectedPlaylist: null,
+    maximized: win.isMaximized(),
   }),
   computed: {
     playlists() {
@@ -924,7 +948,18 @@ export default {
       this.checkImageExist(this.getImagePath('thumb',''), 'thumb')
       this.dialogEditThumb = true
     },
-    closePlayer() {
+    minimize() {
+      win.minimize()
+    },
+    maximize() {
+      this.maximized = !this.maximized
+      win.maximize()
+    },
+    unmaximize() {
+      this.maximized = !this.maximized
+      win.unmaximize()
+    },
+    close() {
       this.player.pause()
       ipcRenderer.send('closePlayer')
     },
@@ -954,6 +989,9 @@ export default {
       background-color: transparent;
       -webkit-app-region: drag;
       pointer-events: none;
+    }
+    &.maximized:before {
+      top: 0;
     }
     .v-btn, .v-rating, .v-icon {
       -webkit-app-region: no-drag !important;
@@ -1099,6 +1137,25 @@ export default {
     &-ff5722 {color:#ff5722;}
     &-795548 {color:#795548;}
     &-9b9b9b {color:#9b9b9b;}
+  }
+}
+.window-controls {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  .v-btn:not(.v-btn--round).v-size--small {
+    min-width: 0;
+  }
+  .v-btn.close-app-btn:hover::before {
+    opacity: 1;
+  }
+  .v-btn.close-app-btn .v-icon {
+    color: #fff;
+  }
+  .v-btn.close-app-btn:hover .v-icon {
+    color: #fff;
   }
 }
 </style>
