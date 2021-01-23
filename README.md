@@ -22,6 +22,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 ## Features
 
 #### App
+- Video player with time markers (New!)
 - Tabs for easy browsing
 - Password protection
 - Backup management
@@ -29,9 +30,12 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 - Dark theme
 - Statistics about tags, websites (later video statistics will be added)
 - Hover card label preview
+- Checking for updates on start
 - Optimized for one-handed use :)
 
 #### Videos
+- Playlists (New!)
+- Video preview with image grid 3x3 (New!)
 - Adding performers, tags, websites, rating, favorite, bookmark
 - Sorting and filtering by performers, tags, websites, filesize, quality, folder, path etc.
 - Save filters and sorting to a preset that can be loaded at any time or set as default
