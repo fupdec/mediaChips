@@ -195,7 +195,7 @@
 
         <v-list-item class="pr-1" link @mouseup="$store.state.Videos.dialogEditVideoInfo = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-movie-edit</v-icon> Edit Info
+            <v-icon left size="18">mdi-pencil</v-icon> Edit Info
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>

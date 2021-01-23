@@ -86,7 +86,7 @@
         <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer"
           @mouseup="$store.state.Performers.dialogEditPerformerInfo = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-square-edit-outline</v-icon> Edit profile
+            <v-icon left size="18">mdi-pencil</v-icon> Edit profile
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>

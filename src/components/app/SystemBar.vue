@@ -156,7 +156,7 @@
           </v-list-item>
           <v-list-item link @click="$router.push('/playlists')">
             <v-list-item-title>
-              <v-icon left size="18">mdi-playlist-play</v-icon> 
+              <v-icon left size="18">mdi-format-list-bulleted</v-icon> 
               <div class="shortcut"><span>Playlists</span> <span>Alt + P</span></div>
             </v-list-item-title>
           </v-list-item>

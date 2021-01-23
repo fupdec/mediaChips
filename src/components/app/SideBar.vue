@@ -69,7 +69,7 @@
         
         <v-list-item link to="/playlists" color="secondary">
           <v-list-item-icon>
-            <v-icon>mdi-playlist-play</v-icon>
+            <v-icon>mdi-format-list-bulleted</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Playlists</v-list-item-title>
         </v-list-item>

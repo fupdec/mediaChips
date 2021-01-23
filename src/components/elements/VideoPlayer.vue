@@ -67,21 +67,44 @@
             </v-btn>
           </template>
           <v-card>
-            <v-btn @click="openDialogMarkerTag" icon tile width="46" height="36">
-              <v-icon size="20">mdi-tag-outline</v-icon> 
-            </v-btn>
-            <v-btn @click="addMarker('favorite')" icon tile width="46" height="36">
-              <v-icon size="20">mdi-heart-outline</v-icon> 
-            </v-btn>
-            <v-btn @click="openDialogMarkerBookmark" icon tile width="46" height="36">
-              <v-icon size="20">mdi-bookmark-outline</v-icon> 
-            </v-btn>
-            <v-divider></v-divider>
             <v-card-title v-if="isVideoAvailable && markers.length" class="pa-0">
-              <v-btn @click="dialogEditMarkers=true" block tile small>edit markers</v-btn>
+              <v-btn @click="dialogEditMarkers=true" block icon tile small>edit markers</v-btn>
             </v-card-title>
+            <v-divider></v-divider>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn @click="openDialogMarkerTag" v-on="on" icon tile width="46" height="36">
+                  <v-icon size="20">mdi-tag-outline</v-icon> 
+                </v-btn>
+              </template>
+              <span>Add Marker with Tag</span>
+            </v-tooltip>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn @click="addMarker('favorite')" v-on="on" icon tile width="46" height="36">
+                  <v-icon size="20">mdi-heart-outline</v-icon> 
+                </v-btn>
+              </template>
+              <span>Add Favorite Marker</span>
+            </v-tooltip>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn @click="openDialogMarkerBookmark" v-on="on" icon tile width="46" height="36">
+                  <v-icon size="20">mdi-bookmark-outline</v-icon> 
+                </v-btn>
+              </template>
+              <span>Add Marker with Text</span>
+            </v-tooltip>
           </v-card>
         </v-menu>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn @click="togglePlaylist" v-on="on" icon tile width="46">
+              <v-icon>mdi-format-list-bulleted</v-icon>
+            </v-btn>
+          </template>
+          <span>Toggle playlist</span>
+        </v-tooltip>
         <v-spacer></v-spacer>
         <!-- <v-menu v-if="video.performers.length" offset-y nudge-bottom="10" open-on-hover close-delay="500" :close-on-content-click="false">
           <template v-slot:activator="{ on, attrs }">
@@ -487,6 +510,7 @@ import LabelFunctions from '@/mixins/LabelFunctions'
 import Functions from '@/mixins/Functions'
 
 import videojs from 'video.js'
+import hotkeys from 'videojs-hotkeys'
 import 'video.js/dist/video-js.min.css'
 import playlist from 'videojs-playlist'
 import markers from 'videojs-markers'
@@ -626,7 +650,7 @@ export default {
         controls: true,
         fluid: true,
         controlBar: {
-          'pictureInPictureToggle': false
+          pictureInPictureToggle: false,
         },
       }
       this.player = videojs(this.$refs.videoPlayer, options, function onPlayerReady() {
@@ -634,6 +658,9 @@ export default {
         // console.log('init player')
         // init playlist
         player.playlist([])
+        player.hotkeys({
+          seekStep: 10,
+        })
         // add nav buttons
         let Button = videojs.getComponent('Button')
         let PrevButton = videojs.extend(Button, {
@@ -656,22 +683,10 @@ export default {
             player.playlist.next()
           }
         })
-        let PlaylistButton = videojs.extend(Button, {
-          constructor: function() {
-            Button.apply(this, arguments)
-            this.addClass('vjs-playlist-toggle')
-            this.controlText("Playlist")
-          },
-          handleClick: function() {
-            vm.togglePlaylist()
-          }
-        })
         videojs.registerComponent('NextButton', NextButton)
         videojs.registerComponent('PrevButton', PrevButton)
-        videojs.registerComponent('PlaylistButton', PlaylistButton)
         player.getChild('controlBar').addChild('PrevButton', {}, 0)
         player.getChild('controlBar').addChild('NextButton', {}, 2)
-        player.getChild('controlBar').addChild('PlaylistButton', {}, 3)
         // init markers
         player.markers({
           markerStyle: {
@@ -1107,19 +1122,6 @@ export default {
     align-items: center;
   }
 }
-.vjs-playlist-toggle {
-  width: 40px;
-  cursor: pointer;
-  &:before {
-    content: "\F0279";
-    font-family: "Material Design Icons";
-    font-size: 2em;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-}
 .vjs-tip {
   font-size: 12px;
   bottom: 18px;
@@ -1129,7 +1131,7 @@ export default {
     font-family: "Material Design Icons";
     position: absolute;
     left: -200%;
-    top: -100%;
+    top: -120%;
   }
   &.marker {
     &-tag:before {
