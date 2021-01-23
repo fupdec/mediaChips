@@ -9,7 +9,7 @@
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
-        <v-img @click="openVideoPlayer" title="Open video page"
+        <v-img @click="openVideoPage" title="Open video page"
           :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb"
         />
         <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
@@ -45,7 +45,7 @@
             <span>{{calcHeightValue(video.resolution)}}</span>
           </div>
         </div>
-        <div @click="openVideoPlayer" class="preview"
+        <div @click="openVideoPage" class="preview"
           :style="`animation-delay: ${delayVideoPreview}.7s`">
           <video ref="video" autoplay muted loop />
         </div>
@@ -288,18 +288,8 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
-    openVideoPlayer() {
-      const pathToVideo = this.video.path
-      if (!fs.existsSync(pathToVideo)) {
-        this.$store.state.Videos.dialogErrorPlayVideo = true
-        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
-        return
-      }
-      let data = {
-        videos: this.$store.getters.videosOnPage,
-        id: this.video.id,  
-      }
-      ipcRenderer.send('openPlayer', data)
+    openVideoPage() {
+      this.$router.push(`/video/:${this.video.id}?tabId=default`)
     },
     setVideoProgress(percent) {
       this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
@@ -363,7 +353,13 @@ export default {
         this.$store.state.Videos.errorPlayVideoPath = pathToVideo
         return
       }
-      shell.openPath(pathToVideo)
+      if (this.$store.state.Settings.playerType === '0') {
+        let data = {
+          videos: this.$store.getters.videosOnPage,
+          id: this.video.id,  
+        }
+        ipcRenderer.send('openPlayer', data)
+      } else shell.openPath(pathToVideo)
     },
     changeRating(stars, videoID) {
       this.$store.getters.videos

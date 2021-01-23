@@ -702,6 +702,7 @@ export default {
         // player events
         player.on('error', function() {
           vm.isVideoAvailable = false
+          player.pause()
         })
         player.on('loadeddata', function() { // when video loaded
           vm.isVideoAvailable = true
@@ -1020,8 +1021,10 @@ export default {
   }
 }
 .vjs-playlist {
-  width: 20vw;
+  width: 22vw;
   height: calc(100vh - 36px);
+  border-left: 1px solid #5c5c5c;
+  box-shadow: none !important;
   .close {
     position: absolute;
     left: -45px;

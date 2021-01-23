@@ -323,6 +323,7 @@ const shell = require('electron').shell
 
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: "DialogEditPerformer",
@@ -595,9 +596,15 @@ export default {
       const pathToVideo = this.video.path
       if (fs.existsSync(pathToVideo)) {
         this.videoExists = false
-        shell.openPath(pathToVideo)
+        if (this.$store.state.Settings.playerType === '0') {
+          let data = {
+            videos: [this.video],
+            id: this.video.id,  
+          }
+          ipcRenderer.send('openPlayer', data)
+        } else shell.openPath(pathToVideo)
         setTimeout(() => { this.videoExists = true }, 1500)
-      } else {this.videoExists = false}
+      } else this.videoExists = false
     },
   },
   watch: {

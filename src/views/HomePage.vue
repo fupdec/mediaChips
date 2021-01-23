@@ -70,7 +70,7 @@
               <v-hover v-for="video in recentVideos" :key="video.id">
                 <template v-slot:default="{ hover }">
                   <v-img :src="getVideoThumbUrl(video.id)" 
-                    @click="playVideo(video.path)" aspect-ratio="1"
+                    @click="playVideo(video)" aspect-ratio="1"
                     @click.middle="addNewTabVideo(video.path)"
                   >
                     <v-fade-transition>
@@ -214,6 +214,7 @@ import vuescroll from 'vuescroll'
 import VueApexCharts from 'vue-apexcharts'
 import scanMeta from '@/components/pages/settings/VideoMetaFix'
 import LabelFunctions from '@/mixins/LabelFunctions'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'HomePage',
@@ -375,13 +376,19 @@ export default {
         return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
       }
     },
-    playVideo(pathToVideo) {
-      if (!fs.existsSync(pathToVideo)) {
+    playVideo(video) {
+      if (!fs.existsSync(video.path)) {
         this.$store.state.Videos.dialogErrorPlayVideo = true
-        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
+        this.$store.state.Videos.errorPlayVideoPath = video.path
         return
       }
-      shell.openPath(pathToVideo)
+      if (this.$store.state.Settings.playerType === '0') {
+        let data = {
+          videos: this.recentVideos,
+          id: video.id,  
+        }
+        ipcRenderer.send('openPlayer', data)
+      } else shell.openPath(video.path)
     },
     getPerformerImg(id) {
       let imgAvaPath = this.getPerformerImgUrl(id + '_avatar.jpg')

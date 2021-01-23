@@ -96,6 +96,7 @@ dbs.defaults({
   websitesPerPage: 20,
   playlistsPerPage: 20,
   gapSize: 's',
+  playerType: "0",
 }).write()
 
 const Settings = {
@@ -194,6 +195,7 @@ const Settings = {
     websitesFiltersPresetDefault: dbs.get('websitesFiltersPresetDefault').value(),
     dialogHeaderGradient: false,
     gapSize: dbs.get('gapSize').value(),
+    playerType: dbs.get('playerType').value() || '0',
   }),
   mutations: {
     updateSettings (state) {
@@ -283,6 +285,7 @@ const Settings = {
       state.websitePerformersHidden = false
       state.websiteEditBtnHidden = false
       state.gapSize = 's'
+      state.playerType = '0'
     },
   },
   actions: {
@@ -383,6 +386,7 @@ const Settings = {
         websitePerformersHidden: false,
         websiteEditBtnHidden: false,
         gapSize: 's',
+        playerType: '0',
       }).write()
       commit('resetSettingsToDefault')
     },

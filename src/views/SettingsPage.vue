@@ -10,12 +10,32 @@
           <v-icon size="26" left>mdi-plus</v-icon> Add new videos
         </v-btn>
       </div>
+
+      <div class="subtitle mt-10 mb-1">
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+          </template>
+          <span>The built-in player does not support all videos, <br>
+            BUT it has additional features: markers, playlists, information editing. 
+            <br> The list of features will be expanded in new releases!</span>
+        </v-tooltip>
+        Play video in:
+      </div>
+      <v-radio-group v-model="playerType" mandatory row>
+        <v-radio label="Built-in player" value="0"></v-radio>
+        <v-radio label="System player" value="1"></v-radio>
+      </v-radio-group>
       
-      <div class="subtitle mt-10 mb-1">Path to system player:</div>
-      <div class="caption mb-2">
-        <v-icon size="18" left>mdi-alert-box-outline</v-icon>
-        This is necessary to play video from a specific time. 
-        Works only with Media Player Classic.
+      <div class="subtitle mt-10 mb-1">
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+          </template>
+          <span>This is necessary to play video from a specific time. <br> 
+            Works only with Media Player Classic.</span>
+        </v-tooltip>
+        Path to system player:
       </div>
       <v-row>
         <v-col cols="10">
@@ -568,6 +588,14 @@ export default {
       },
       set(value) {
         this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})
+      },
+    },
+    playerType: {
+      get() {
+        return this.$store.state.Settings.playerType
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'playerType', value})
       },
     },
     ratingAndFavoriteInCard: {
