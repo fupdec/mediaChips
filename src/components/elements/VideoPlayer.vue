@@ -156,35 +156,34 @@
           </v-btn>
         </div>
       </v-card-title>
-      <video ref="videoPlayer" class="video-js" preload="none"></video>
-      <div class="thumb" style="display:none;"> 
-        <canvas ref="canvas" :width="videoWidth/6" :height="videoHeight/6"/>
+      <div class="video-player-container">
+        <video ref="videoPlayer" class="video-js" preload="none"></video>
+        <div class="thumb" style="display:none;"> 
+          <canvas ref="canvas" :width="videoWidth/6" :height="videoHeight/6"/>
+        </div>
+        <v-card v-show="isPlaylistVisible" class="vjs-playlist" tile>
+          <vuescroll ref="playlist" class="playlist">
+            <v-card-text class="pa-0">
+              <v-list dense class="pa-0">
+                <v-list-item-group v-model="selectedVideo" mandatory color="primary">
+                  <v-list-item v-for="(video, i) in videos" 
+                    :key="video.id" @click="play(i)" class="video-item" :ref="`videoItem${i}`">
+                    <img :src="getPlaylistImgUrl(video.id)" class="thumb"/>
+                    <span class="video-name">
+                      <b>{{i+1}}.</b>
+                      <span class="path">{{getFileNameFromPath(video.path)}}</span>
+                    </span>
+                    <span v-if="selectedVideo===i" class="play-state overline text--primary">
+                      <v-icon class="pl-2 pr-1">mdi-play</v-icon>
+                      <span class="pr-4">Now playing</span>
+                    </span>
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
+            </v-card-text>
+          </vuescroll>
+        </v-card>
       </div>
-      <v-card v-show="isPlaylistVisible" class="vjs-playlist" width="20vw" tile>
-        <v-btn @click="isPlaylistVisible=!isPlaylistVisible" class="close" small fab>
-          <v-icon>mdi-chevron-right</v-icon>
-        </v-btn>
-        <vuescroll ref="playlist" class="playlist">
-          <v-card-text class="pa-0">
-            <v-list dense class="pa-0">
-              <v-list-item-group v-model="selectedVideo" mandatory color="primary">
-                <v-list-item v-for="(video, i) in videos" 
-                  :key="video.id" @click="play(i)" class="video-item" :ref="`videoItem${i}`">
-                  <img :src="getPlaylistImgUrl(video.id)" class="thumb"/>
-                  <span class="video-name">
-                    <b>{{i+1}}.</b>
-                    <span class="path">{{getFileNameFromPath(video.path)}}</span>
-                  </span>
-                  <span v-if="selectedVideo===i" class="play-state overline text--primary">
-                    <v-icon class="pl-2 pr-1">mdi-play</v-icon>
-                    <span class="pr-4">Now playing</span>
-                  </span>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-          </v-card-text>
-        </vuescroll>
-      </v-card>
     </v-card>
     
 
@@ -980,6 +979,9 @@ export default {
   &-wrapper {
     height: 100%;
   }
+  &-container {
+    display: flex;
+  }
   .v-card__title {
     padding: 0;
     position: relative;
@@ -1003,11 +1005,8 @@ export default {
   }
 }
 .vjs-playlist {
-  position: absolute;
-  top: 64px;
-  right: 0;
-  bottom: 50px;
-  z-index: 1000;
+  width: 20vw;
+  height: calc(100vh - 36px);
   .close {
     position: absolute;
     left: -45px;
