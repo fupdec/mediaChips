@@ -63,29 +63,29 @@ export default {
       let imgMainPerformer = path.join(this.pathToUserData, `/media/performers/${performerId}_main.jpg`)
       let imgMainChecked = this.checkImageExist(imgMainPerformer)
       if (imgAvatarChecked) {
-        return imgAvatarChecked + '?lastmod='+Date.now()
+        return imgAvatarChecked
       } else if (imgMainChecked) {
-        return imgMainChecked + '?lastmod='+Date.now()
+        return imgMainChecked
       } else {
-        return path.join(this.pathToUserData, '/img/templates/performer.png') + '?lastmod='+Date.now()
+        return path.join(this.pathToUserData, '/img/templates/performer.png')
       }
     },
     getImgTagsUrl(tagId) {
       let imgTag = path.join(this.pathToUserData, `/media/tags/${tagId}_.jpg`)
       let imgChecked = this.checkImageExist(imgTag)
       if (imgChecked) {
-        return imgChecked + '?lastmod='+Date.now()
+        return imgChecked
       } else {
-        return path.join(this.pathToUserData, '/img/templates/tag.png') + '?lastmod='+Date.now()
+        return path.join(this.pathToUserData, '/img/templates/tag.png')
       }
     },
     getImgWebsiteUrl(websiteId) {
       let imgWebsite = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
       let imgChecked = this.checkImageExist(imgWebsite)
       if (imgChecked) {
-        return imgChecked + '?lastmod='+Date.now()
+        return imgChecked
       } else {
-        return path.join(this.pathToUserData, '/img/templates/website.png') + '?lastmod='+Date.now()
+        return path.join(this.pathToUserData, '/img/templates/website.png')
       }
     },
     checkImageExist(imgPath) {

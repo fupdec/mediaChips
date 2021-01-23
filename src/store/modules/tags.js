@@ -2,12 +2,9 @@ const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
 const FileSync = require('@/components/elements/LowDbAdapter')
-const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbTags = path.join(app.getPath('userData'), 'userfiles/databases/dbt.json')
-const adapterSettings = new FileSync(pathToDbSettings)
 const adapterTags = new FileSync(pathToDbTags)
 const low = require('lowdb')
-const dbs = low(adapterSettings)
 const dbt = low(adapterTags)
 dbt.defaults({ 
   tags: [{
@@ -42,7 +39,6 @@ const defaultFilters = {
 
 const Tags = {
   state: () => ({
-    tagsPerPage: dbs.get('tagsPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -58,23 +54,17 @@ const Tags = {
     filteredEmpty: false,
     menuCard: false,
     activeTab: null,
-    tagAltNamesHidden: dbs.get('tagAltNamesHidden').value() || false,
-    tagPerformersHidden: dbs.get('tagPerformersHidden').value() || false,
-    tagEditBtnHidden: dbs.get('tagEditBtnHidden').value() || false,
   }),
   mutations: {
     updateTags (state) {
       console.log(':::::::tags UPDATED:::::::')
       state.lastChanged = Date.now()
     },
-    changeTagsPerPage(state, quantity) {
-      state.tagsPerPage = quantity
+    changeTagsPageTotal(state, number) {
+      state.pageTotal = number
     },
-    changeTagsPageTotal(state, quantity) {
-      state.pageTotal = quantity
-    },
-    changeTagsPageCurrent(state, quantity) {
-      state.pageCurrent = quantity
+    changeTagsPageCurrent(state, number) {
+      state.pageCurrent = number
     },
     filterTags(state, filteredTags) {
       state.filteredTags = filteredTags
@@ -91,20 +81,19 @@ const Tags = {
     },
   },
   actions: {
-    changeTagsPerPage({ state, commit, getters}, quantity) {
-      commit('updateTags')
+    changeTagsPerPage({ state, commit, getters, dispatch}, number) {
+      // commit('updateTags')
       commit('resetLoading')
-      commit('changeTagsPerPage', quantity)
-      getters.settings.set('tagsPerPage', quantity).write()
+      dispatch('updateSettingsState', {key:'tagsPerPage', value:number})
     },
-    changeTagsPageTotal({ state, commit}, quantity) {
-      commit('updateTags')
-      commit('changeTagsPageTotal', quantity)
+    changeTagsPageTotal({ state, commit}, number) {
+      // commit('updateTags')
+      commit('changeTagsPageTotal', number)
     },
-    changeTagsPageCurrent({ state, commit}, quantity) {
-      commit('updateTags')
+    changeTagsPageCurrent({ state, commit}, number) {
+      // commit('updateTags')
       commit('resetLoading')
-      commit('changeTagsPageCurrent', quantity)
+      commit('changeTagsPageCurrent', number)
     },
     deleteTags({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedTags.map(id => {
@@ -241,18 +230,6 @@ const Tags = {
         commit('changeTagsPageCurrent', 1)
       }
     },
-    updateTagAltNamesHidden({state, getters}, value) {
-      getters.settings.set('tagAltNamesHidden', value).write()
-      state.tagAltNamesHidden = value
-    },
-    updateTagPerformersHidden({state, getters}, value) {
-      getters.settings.set('tagPerformersHidden', value).write()
-      state.tagPerformersHidden = value
-    },
-    updateTagEditBtnHidden({state, getters}, value) {
-      getters.settings.set('tagEditBtnHidden', value).write()
-      state.tagEditBtnHidden = value
-    },
   },
   getters: {
     dbt(state) {
@@ -328,9 +305,9 @@ const Tags = {
     tagsTotal: (state, store) => {
       return store.tags.value().length;
     },
-    tagsOnPage(state, store) {
+    tagsOnPage(state, store, rootState) {
       const tags = store.filteredTags.value(),
-            tagsCount = store.tagsPerPage
+            tagsCount = rootState.Settings.tagsPerPage
       let l = tags.length,
           c = tagsCount
       state.pageTotal = Math.ceil(l/c)
@@ -344,9 +321,6 @@ const Tags = {
       const end = state.pageCurrent * tagsCount,
             start = end - tagsCount;
       return tags.slice(start, end)
-    },
-    tagsPerPage(state) {
-      return state.tagsPerPage
     },
     tagsPagesSum(state) {
       return state.pageTotal

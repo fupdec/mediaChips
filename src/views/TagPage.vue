@@ -101,7 +101,7 @@
           :total-visible="getNumberOfPagesLimit"
         ></v-pagination>
         
-        <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
+        <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
         
         <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
           class="scroll-to-top" fixed fab color="primary">
@@ -162,7 +162,7 @@
           class="pt-10 pb-16"
         ></v-pagination>
         
-        <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
+        <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 
         <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
           class="scroll-to-top" fixed fab color="primary">
@@ -344,7 +344,7 @@ export default {
     },
     getImgUrl(tagId) {
       let imgPath = path.join(this.pathToUserData, `/media/tags/${tagId}_.jpg`)
-      return this.checkImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkImageExist(imgPath)
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {

@@ -87,13 +87,13 @@ export default {
       return this.$store.getters.bookmarks.get('tags').find({itemId:this.tag.id}).value().text
     },
     isAltNamesHidden() {
-      return this.$store.state.Tags.tagAltNamesHidden 
+      return this.$store.state.Settings.tagAltNamesHidden 
     },
     isEditBtnHidden() {
-      return this.$store.state.Tags.tagEditBtnHidden 
+      return this.$store.state.Settings.tagEditBtnHidden 
     },
     isPerformersHidden() {
-      return this.$store.state.Tags.tagPerformersHidden
+      return this.$store.state.Settings.tagPerformersHidden
     },
   },
   methods: {
@@ -107,7 +107,7 @@ export default {
     },
     getImgUrl(tagId) {
       let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/tags/${tagId}_.jpg`)
-      return this.checkImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkImageExist(imgPath)
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {

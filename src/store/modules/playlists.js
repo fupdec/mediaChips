@@ -1,12 +1,9 @@
 const {app} = require('electron').remote
 const path = require("path")
 const FileSync = require('@/components/elements/LowDbAdapter')
-const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbPlaylists = path.join(app.getPath('userData'), 'userfiles/databases/dbpl.json')
-const adapterSettings = new FileSync(pathToDbSettings)
 const adapterPlaylists = new FileSync(pathToDbPlaylists)
 const low = require('lowdb')
-const dbs = low(adapterSettings)
 const dbpl = low(adapterPlaylists)
 dbpl.defaults({
   playlists: [{
@@ -29,8 +26,6 @@ const defaultFilters = {
 
 const Playlists = {
   state: () => ({
-    playlists: _.cloneDeep(dbpl.get('playlists').value()),
-    playlistsPerPage: dbs.get('playlistsPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -85,18 +80,17 @@ const Playlists = {
       getters.playlists.find({name:oldName}).assign({name:newName}).write()
       state.playlists = _.cloneDeep(getters.playlists.value())
     },
-    changePlaylistsPerPage({ state, commit, getters}, number) {
-      commit('updatePlaylists')
+    changePlaylistsPerPage({ state, commit, getters, dispatch}, number) {
+      // commit('updatePlaylists')
       commit('resetLoading')
-      commit('updateStateValue', {key:'playlistsPerPage', value:number})
-      getters.settings.set('playlistsPerPage', number).write()
+      dispatch('updateSettingsState', {key:'playlistsPerPage', value:number})
     },
     changePlaylistsPageTotal({ state, commit}, number) {
-      commit('updatePlaylists')
+      // commit('updatePlaylists')
       commit('updateStateValue', {key:'pageTotal', value:number})
     },
     changePlaylistsPageCurrent({ state, commit}, number) {
-      commit('updatePlaylists')
+      // commit('updatePlaylists')
       commit('resetLoading')
       commit('updateStateValue', {key:'pageCurrent', value:number})
     },
@@ -178,9 +172,9 @@ const Playlists = {
     playlistsTotal: (state, store) => {
       return store.playlists.value().length
     },
-    playlistsOnPage(state, store) {
+    playlistsOnPage(state, store, rootState) {
       const playlists = store.filteredPlaylists.value(),
-            playlistsCount = store.playlistsPerPage
+            playlistsCount = rootState.Settings.playlistsPerPage
       let l = store.playlistsTotal,
           c = playlistsCount
       state.pageTotal = Math.ceil(l/c)
@@ -194,9 +188,6 @@ const Playlists = {
       const end = state.pageCurrent * playlistsCount,
             start = end - playlistsCount
       return playlists.slice(start, end)
-    },
-    playlistsPerPage(state) {
-      return state.playlistsPerPage
     },
     playlistsPagesSum(state) {
       return state.pageTotal

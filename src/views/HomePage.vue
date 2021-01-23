@@ -10,6 +10,10 @@
       </div>
       <v-row v-else>
         <v-col cols="12">
+          <div class="mb-2 red--text">Starting from version 0.5.6 markers for videos will be stored in their own database.
+            <br> If you have markers just press "Update markers" button.</div>
+          <v-btn @click="updateMarkers" color="red" dark x-large class="my-4" block> 
+            <v-icon left>mdi-auto-fix</v-icon> Update markers </v-btn>
           <div class="mb-2 red--text">Starting from version 0.5.5 there will be no bitrate information in the video.
             <br> Also updated video resolution information. 
             <br> To update the metadata in existing videos click the "Fix metadata in videos" button. </div>
@@ -191,13 +195,13 @@
         </v-col>
       </v-row>
 
-      <div v-if="$store.getters.videosTotal==0">
+      <div v-if="$store.state.Settings.videosTotal==0">
         <h2>First of all add videos in settings</h2>
         <v-btn class="ma-2" color="secondary" to="/settings">Open settings</v-btn>
       </div>
     </v-container>
 
-    <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
+    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
   </vuescroll>
 </template>
 
@@ -320,6 +324,14 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
+    updateMarkers() {
+      this.$store.getters.markers.each(m=>{
+        this.$store.getters.markers.push(m)
+      })
+      setTimeout(() => {
+        this.$store.getters.bookmarks.set('markers', undefined)
+      }, 5000)
+    },
     fixVideos() {
       this.dialogFixVideos = true
       this.fixingVideos = true
@@ -350,11 +362,11 @@ export default {
     },
     getVideoThumbUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
-      return this.checkVideoImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkVideoImageExist(imgPath)
     },
     getVideoUrl(videoId) {
       let videoPath = path.join(this.pathToUserData, `/media/previews/${videoId}.mp4`)
-      return this.checkVideoExist(videoPath)+'?lastmod='+Date.now()
+      return this.checkVideoExist(videoPath)
     },
     checkVideoImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -369,7 +381,7 @@ export default {
         this.$store.state.Videos.errorPlayVideoPath = pathToVideo
         return
       }
-      shell.openItem(pathToVideo)
+      shell.openPath(pathToVideo)
     },
     getPerformerImg(id) {
       let imgAvaPath = this.getPerformerImgUrl(id + '_avatar.jpg')

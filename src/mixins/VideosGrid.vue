@@ -22,21 +22,17 @@ export default {
   }),
   computed: {
     getNumberOfPagesLimit() {
-      return this.$store.getters.getNumberOfPagesLimit
+      return this.$store.state.Settings.numberOfPagesLimit
     },
-    pages: {
-      get() {
-        return this.$store.getters.videosPages
-      },
-      set(value) {
-      },
+    pages(){
+      return this.$store.getters.videosPages
     },
     videosOnPage() {
       return this.$store.getters.videosOnPage
     },
     videosPerPage: {
       get() {
-        return this.$store.getters.videosPerPage
+        return this.$store.state.Settings.videosPerPage
       },
       set(number) {
         this.$store.dispatch('changeVideosPerPage', number)

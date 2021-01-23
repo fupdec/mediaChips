@@ -5,6 +5,10 @@ const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json'
 const adapterSettings = new FileSync(pathToDbSettings)
 const low = require('lowdb')
 const dbs = low(adapterSettings)
+
+import router from '@/router'
+import Vuetify from '@/plugins/vuetify'
+
 dbs.defaults({
   passwordProtection: false,
   phrase: '',
@@ -20,7 +24,7 @@ dbs.defaults({
   appColorDarkSecondary: '#3797cd',
   appColorDarkAccent: '#84329e',
   appColorDarkHeader: '#2b6c90',
-  darkMode: "0",
+  darkMode: false,
   headerGradient: true,
   headerGradientLight: 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)',
   headerGradientDark: 'linear-gradient(to right, #0033a5, #c30059, #C5A401)',
@@ -53,7 +57,7 @@ dbs.defaults({
   performerTagsHidden: false,
   performerVideoTagsHidden: false,
   performerWebsitesHidden: false,
-  performerProfile: '0',
+  performerProfile: false,
   performerProfileTags: true,
   performerProfileWebsites: true,
   selectedDisk: '',
@@ -94,9 +98,6 @@ dbs.defaults({
   gapSize: 's',
 }).write()
 
-import router from '@/router'
-import Vuetify from '@/plugins/vuetify'
-
 const Settings = {
   state: () => ({
     passwordProtection: dbs.get('passwordProtection').value(),
@@ -106,7 +107,7 @@ const Settings = {
     videoPreviewEnabled: dbs.get('videoPreviewEnabled').value(),
     videoPreviewGridEnabled: dbs.get('videoPreviewGridEnabled').value(),
     delayVideoPreview: dbs.get('delayVideoPreview').value(),
-    darkMode: Boolean(+dbs.get('darkMode').value()),
+    darkMode: dbs.get('darkMode').value(),
     headerGradient: dbs.get('headerGradient').value(),
     headerGradientLight: dbs.get('headerGradientLight').value(),
     headerGradientDark: dbs.get('headerGradientDark').value(),
@@ -126,8 +127,38 @@ const Settings = {
     dialogScanVideos: false,
     searchTagsInFileName: false,
     scanProcRun: false,
-    videoCardSize: dbs.get('videoCardSize').value(),
     ratingAndFavoriteInCard: dbs.get('ratingAndFavoriteInCard').value(),
+    selectedDisk: dbs.get('selectedDisk').value() || '',
+    videosPerPage: dbs.get('videosPerPage').value() || 20,
+    videoCardSize: dbs.get('videoCardSize').value(),
+    videoChipsColored: dbs.get('videoChipsColored').value() || true,
+    videoEditBtnHidden: dbs.get('videoEditBtnHidden').value() || false,
+    videoFileNameHidden: dbs.get('videoFileNameHidden').value() || false,
+    videoFileInfoHidden: dbs.get('videoFileInfoHidden').value() || false,
+    videoRatingHidden: dbs.get('videoRatingHidden').value() || false,
+    videoFavoriteHidden: dbs.get('videoFavoriteHidden').value() || false,
+    videoQualityLabelHidden: dbs.get('videoQualityLabelHidden').value() || false,
+    videoDurationHidden: dbs.get('videoDurationHidden').value() || false,
+    videoPerformersHidden: dbs.get('videoPerformersHidden').value() || false,
+    videoTagsHidden: dbs.get('videoTagsHidden').value() || false,
+    videoWebsiteHidden: dbs.get('videoWebsiteHidden').value() || false,
+    videoEditPerformersSortBy: dbs.get('videoEditPerformersSortBy').value(),
+    videoEditTagsSortBy: dbs.get('videoEditTagsSortBy').value(),
+    videoEditWebsitesSortBy: dbs.get('videoEditWebsitesSortBy').value(),
+    performersPerPage: dbs.get('performersPerPage').value() || 20,
+    performerChipsColored: dbs.get('performerChipsColored').value() || true,
+    performerEditBtnHidden: dbs.get('performerEditBtnHidden').value() || false,
+    performerMeterHidden: dbs.get('performerMeterHidden').value() || false,
+    performerNameHidden: dbs.get('performerNameHidden').value() || false,
+    performerRatingHidden: dbs.get('performerRatingHidden').value() || false,
+    performerNationalityHidden: dbs.get('performerNationalityHidden').value() || false,
+    performerFavoriteHidden: dbs.get('performerFavoriteHidden').value() || false,
+    performerProfileProgressHidden: dbs.get('performerProfileProgressHidden').value() || false,
+    performerAliasesHidden: dbs.get('performerAliasesHidden').value() || false,
+    performerCareerStatusHidden: dbs.get('performerCareerStatusHidden').value() || false,
+    performerTagsHidden: dbs.get('performerTagsHidden').value() || false,
+    performerVideoTagsHidden: dbs.get('performerVideoTagsHidden').value() || false,
+    performerWebsitesHidden: dbs.get('performerWebsitesHidden').value() || false,
     performerCardSize: dbs.get('performerCardSize').value(),
     performerInfoEthnicity: dbs.get('performerInfoEthnicity').value().sort((a,b)=>a.localeCompare(b)),
     performerInfoHair: dbs.get('performerInfoHair').value().sort((a,b)=>a.localeCompare(b)),
@@ -142,6 +173,15 @@ const Settings = {
     performerProfile: dbs.get('performerProfile').value(),
     performerProfileTags: dbs.get('performerProfileTags').value(),
     performerProfileWebsites: dbs.get('performerProfileWebsites').value(),
+    tagsPerPage: dbs.get('tagsPerPage').value() || 20,
+    tagAltNamesHidden: dbs.get('tagAltNamesHidden').value() || false,
+    tagPerformersHidden: dbs.get('tagPerformersHidden').value() || false,
+    tagEditBtnHidden: dbs.get('tagEditBtnHidden').value() || false,
+    websitesPerPage: dbs.get('websitesPerPage').value() || 20,
+    websiteVideoTagsHidden: dbs.get('websiteVideoTagsHidden').value() || false,
+    websitePerformersHidden: dbs.get('websitePerformersHidden').value() || false,
+    websiteEditBtnHidden: dbs.get('websiteEditBtnHidden').value() || false,
+    playlistsPerPage: dbs.get('playlistsPerPage').value() || 20,
     backups: dbs.get('backups').value(),
     tab: null,
     tabs: _.cloneDeep(dbs.get('tabs').value()),
@@ -159,72 +199,6 @@ const Settings = {
     updateSettings (state) {
       console.log(':::::::settings UPDATED:::::::')
       state.lastChanged = Date.now()
-    },
-    changePerformerProfile(state, profile) {
-      state.performerProfile = profile
-    },
-    changePerformerProfileTags(state, value) {
-      state.performerProfileTags = value
-    },
-    changePerformerProfileWebsites(state, value) {
-      state.performerProfileWebsites = value
-    },
-    toggleDarkMode(state, value) {
-      state.darkMode = value
-    },
-    toggleHeaderGradient(state, value) {
-      state.headerGradient = value
-    },
-    toggleNavigationSide(state, value) {
-      state.navigationSide = value
-    },
-    changeAppColorLightPrimary(state, color) {
-      state.appColorLightPrimary = color
-      Vuetify.framework.theme.themes.light.primary = color
-    },
-    changeAppColorLightSecondary(state, color) {
-      state.appColorLightSecondary = color
-      Vuetify.framework.theme.themes.light.secondary = color
-    },
-    changeAppColorLightAccent(state, color) {
-      state.appColorLightAccent = color
-      Vuetify.framework.theme.themes.light.accent = color
-    },
-    changeAppColorLightHeader(state, color) {
-      state.appColorLightHeader = color
-    },
-    changeAppColorDarkPrimary(state, color) {
-      state.appColorDarkPrimary = color
-      Vuetify.framework.theme.themes.dark.primary = color
-    },
-    changeAppColorDarkSecondary(state, color) {
-      state.appColorDarkSecondary = color
-      Vuetify.framework.theme.themes.dark.secondary = color
-    },
-    changeAppColorDarkAccent(state, color) {
-      state.appColorDarkAccent = color
-      Vuetify.framework.theme.themes.dark.accent = color
-    },
-    changeAppColorDarkHeader(state, color) {
-      state.appColorDarkHeader = color
-    },
-    changeTextFont(state, font) {
-      state.textFont = font
-    },
-    changeHeaderFont(state, font) {
-      state.headerFont = font
-    },
-    changeNumberOfPagesLimit(state, number) {
-      state.numberOfPagesLimit = number
-    },
-    changeMeterHeight(state, value) {
-      state.meterHeight = value
-    },
-    changeMeterMultiplier(state, value) {
-      state.meterMultiplier = value
-    },
-    changePathToSystemPlayer(state, value) {
-      state.pathToSystemPlayer = value
     },
     updateBackups(state, value) {
       state.backups = value
@@ -262,7 +236,7 @@ const Settings = {
       state.appColorDarkSecondary = '#3797cd'
       state.appColorDarkAccent = '#84329e'
       state.appColorDarkHeader = '#2b6c90'
-      state.darkMode = "0"
+      state.darkMode = false
       state.headerGradient = true
       state.headerGradientLight = 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)'
       state.headerGradientDark = 'linear-gradient(to right, #0033a5, #c30059, #C5A401)'
@@ -285,7 +259,7 @@ const Settings = {
       state.performerTagsHidden = false
       state.performerVideoTagsHidden = false
       state.performerWebsitesHidden = false
-      state.performerProfile = '0'
+      state.performerProfile = false
       state.performerProfileTags = true
       state.performerProfileWebsites = true
       state.selectedDisk = ''
@@ -310,46 +284,8 @@ const Settings = {
       state.websiteEditBtnHidden = false
       state.gapSize = 's'
     },
-    updateVideoPreviewEnabled(state, value) {
-      state.videoPreviewEnabled = value
-    },
-    changeDelayVideoPreview(state, value) {
-      state.delayVideoPreview = value
-    },
   },
   actions: {
-    changePasswordProtection({ state, commit, getters}, value) {
-      getters.settings.set('passwordProtection', value).write()
-      state.passwordProtection = value
-    },
-    changePhrase({ state, commit, getters}, value) {
-      getters.settings.set('phrase', value).write()
-      state.phrase = value
-    },
-    changePasswordHint({ state, commit, getters}, value) {
-      getters.settings.set('passwordHint', value).write()
-      state.passwordHint = value
-    },
-    changePerformerProfile({ state, commit, getters}, profile) {
-      getters.settings.set("performerProfile", profile).write()
-      commit('changePerformerProfile', profile)
-    },
-    changePerformerProfileWebsites({ state, commit, getters}, value) {
-      getters.settings.set("performerProfileWebsites", value).write()
-      commit('changePerformerProfileWebsites', value)
-    },
-    changePerformerProfileTags({ state, commit, getters}, value) {
-      getters.settings.set("performerProfileTags", value).write()
-      commit('changePerformerProfileTags', value)
-    },
-    toggleDarkMode({ state, commit, getters}, value) {
-      getters.settings.set('darkMode', (+value).toString()).write()
-      commit('toggleDarkMode', value)
-    },
-    toggleHeaderGradient({ state, commit, getters}, value) {
-      getters.settings.set('headerGradient', value).write()
-      commit('toggleHeaderGradient', value)
-    },
     saveHeaderGradient({ state, commit, getters}, {gradient, themeDark}) {
       console.log(themeDark)
       if (themeDark) {
@@ -360,68 +296,8 @@ const Settings = {
         state.headerGradientLight = gradient
       }
     },
-    toggleNavigationSide({ state, commit, getters}, value) {
-      getters.settings.set('navigationSide', value).write()
-      commit('toggleNavigationSide', value)
-    },
-    changeAppColorLightPrimary({ state, commit, getters}, color) {
-      getters.settings.set('appColorLightPrimary', color).write()
-      commit('changeAppColorLightPrimary', color)
-    },
-    changeAppColorLightSecondary({ state, commit, getters}, color) {
-      getters.settings.set('appColorLightSecondary', color).write()
-      commit('changeAppColorLightSecondary', color)
-    },
-    changeAppColorLightAccent({ state, commit, getters}, color) {
-      getters.settings.set('appColorLightAccent', color).write()
-      commit('changeAppColorLightAccent', color)
-    },
-    changeAppColorLightHeader({ state, commit, getters}, color) {
-      getters.settings.set('appColorLightHeader', color).write()
-      commit('changeAppColorLightHeader', color)
-    },
-    changeAppColorDarkPrimary({ state, commit, getters}, color) {
-      getters.settings.set('appColorDarkPrimary', color).write()
-      commit('changeAppColorDarkPrimary', color)
-    },
-    changeAppColorDarkSecondary({ state, commit, getters}, color) {
-      getters.settings.set('appColorDarkSecondary', color).write()
-      commit('changeAppColorDarkSecondary', color)
-    },
-    changeAppColorDarkAccent({ state, commit, getters}, color) {
-      getters.settings.set('appColorDarkAccent', color).write()
-      commit('changeAppColorDarkAccent', color)
-    },
-    changeAppColorDarkHeader({ state, commit, getters}, color) {
-      getters.settings.set('appColorDarkHeader', color).write()
-      commit('changeAppColorDarkHeader', color)
-    },
-    changeTextFont({ state, commit, getters}, font) {
-      getters.settings.set('textFont', font).write()
-      commit('changeTextFont', font)
-    },
-    changeHeaderFont({ state, commit, getters}, font) {
-      getters.settings.set('headerFont', font).write()
-      commit('changeHeaderFont', font)
-    },
-    changeNumberOfPagesLimit({ state, commit, getters}, number) {
-      getters.settings.set('numberOfPagesLimit', number).write()
-      commit('changeNumberOfPagesLimit', number)
-    },
-    changeMeterHeight ({ state, commit, getters}, value) {
-      getters.settings.set('meterHeight', value).write()
-      commit('changeMeterHeight', value)
-    },
-    changeMeterMultiplier ({ state, commit, getters}, value) {
-      getters.settings.set('meterMultiplier', value).write()
-      commit('changeMeterMultiplier', value)
-    },
-    changePathToSystemPlayer ({ state, commit, getters}, value) {
-      getters.settings.set('pathToSystemPlayer', value).write()
-      commit('changePathToSystemPlayer', value)
-    },
     updateBackups ({ state, commit, getters}, value) {
-      commit('updateBackups', getters.getBackups)
+      commit('updateBackups', getters.backups)
     },
     addNewTab({state, rootState, commit, dispatch, getters}, tab) {
       getters.tabsDb.push(tab).write()
@@ -460,7 +336,7 @@ const Settings = {
         appColorDarkSecondary: '#3797cd',
         appColorDarkAccent: '#84329e',
         appColorDarkHeader: '#2b6c90',
-        darkMode: "0",
+        darkMode: false,
         headerGradient: true,
         headerGradientLight: 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)',
         headerGradientDark: 'linear-gradient(to right, #0033a5, #c30059, #C5A401)',
@@ -483,7 +359,7 @@ const Settings = {
         performerTagsHidden: false,
         performerVideoTagsHidden: false,
         performerWebsitesHidden: false,
-        performerProfile: '0',
+        performerProfile: false,
         performerProfileTags: true,
         performerProfileWebsites: true,
         selectedDisk: '',
@@ -510,14 +386,6 @@ const Settings = {
       }).write()
       commit('resetSettingsToDefault')
     },
-    updateVideoPreviewEnabled({state, rootState, commit, dispatch, getters}, value) {
-      getters.settings.assign({ videoPreviewEnabled: value }).write()
-      commit('updateVideoPreviewEnabled', value)
-    },
-    changeDelayVideoPreview ({ state, commit, getters}, value) {
-      getters.settings.set("delayVideoPreview", value).write()
-      commit('changeDelayVideoPreview', value)
-    },
     addItemToPerformerInfoParam({state, commit, dispatch, getters}, {param, value}) {
       commit('addItemToPerformerInfoParam', {param, value})
       getters.settings.set(param, state[param]).write()
@@ -530,6 +398,11 @@ const Settings = {
       getters.settings.set(key, value).write()
       state[key] = value
     },
+    updateVuetifyColor({state, rootState, commit, dispatch, getters}, {key, color, theme, type}) {
+      getters.settings.set(key, color).write()
+      state[key] = color
+      Vuetify.framework.theme.themes[theme][type] = color
+    },
   },
   getters: {
     dbs(state) {
@@ -538,70 +411,10 @@ const Settings = {
     settings(state, store) {
       return store.dbs
     },
-    phrase(state) {
-      return state.phrase
-    },
-    passwordProtection(state) {
-      return state.passwordProtection
-    },
-    passwordHint(state) {
-      return state.passwordHint
-    },
-    performerProfile(state) {
-      return state.performerProfile
-    },
-    performerProfileTags(state) {
-      return state.performerProfileTags
-    },
-    performerProfileWebsites(state) {
-      return state.performerProfileWebsites
-    },
-    darkMode(state) {
-      return state.darkMode
-    },
-    headerGradient(state) {
-      return state.headerGradient
-    },
-    navigationSide(state) {
-      return state.navigationSide
-    },
-    appColorLightPrimary(state) {
-      return state.appColorLightPrimary
-    },
-    appColorLightSecondary(state) {
-      return state.appColorLightSecondary
-    },
-    appColorLightAccent(state) {
-      return state.appColorLightAccent
-    },
-    appColorLightHeader(state) {
-      return state.appColorLightHeader
-    },
-    appColorDarkPrimary(state) {
-      return state.appColorDarkPrimary
-    },
-    appColorDarkSecondary(state) {
-      return state.appColorDarkSecondary
-    },
-    appColorDarkAccent(state) {
-      return state.appColorDarkAccent
-    },
-    appColorDarkHeader(state) {
-      return state.appColorDarkHeader
-    },
-    getTextFont(state) {
-      return state.textFont
-    },
-    getHeaderFont(state) {
-      return state.headerFont
-    },
-    getNumberOfPagesLimit(state) {
-      return state.numberOfPagesLimit
-    },
     getSearchTagsInFileName(state) {
       return state.searchTagsInFileName
     },
-    getBackups(state, store) {
+    backups(state, store) {
       return store.dbs.get('backups').value()
     },
     tabsDb(state, store) {

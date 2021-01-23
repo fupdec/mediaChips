@@ -2,12 +2,9 @@ const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path");
 const FileSync = require('@/components/elements/LowDbAdapter')
-const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbVideos = path.join(app.getPath('userData'), 'userfiles/databases/dbv.json')
-const adapterSettings = new FileSync(pathToDbSettings)
 const adapterVideos = new FileSync(pathToDbVideos)
 const low = require('lowdb')
-const dbs = low(adapterSettings)
 const dbv = low(adapterVideos)
 dbv.defaults({ videos: [] }).write()
 
@@ -33,7 +30,6 @@ const defaultFilters = {
 
 const Videos = {
   state: () => ({
-    videosPerPage: dbs.get('videosPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -49,24 +45,9 @@ const Videos = {
     dialogCreatePreview: false,
     dialogErrorPlayVideo: false,
     dialogFolderTree: false,
-    selectedDisk: dbs.get('selectedDisk').value() || '',
     errorPlayVideoPath: '',
     deleteFile: false,
     rating: 0,
-    videoChipsColored: dbs.get('videoChipsColored').value() || true,
-    videoEditBtnHidden: dbs.get('videoEditBtnHidden').value() || false,
-    videoFileNameHidden: dbs.get('videoFileNameHidden').value() || false,
-    videoFileInfoHidden: dbs.get('videoFileInfoHidden').value() || false,
-    videoRatingHidden: dbs.get('videoRatingHidden').value() || false,
-    videoFavoriteHidden: dbs.get('videoFavoriteHidden').value() || false,
-    videoQualityLabelHidden: dbs.get('videoQualityLabelHidden').value() || false,
-    videoDurationHidden: dbs.get('videoDurationHidden').value() || false,
-    videoPerformersHidden: dbs.get('videoPerformersHidden').value() || false,
-    videoTagsHidden: dbs.get('videoTagsHidden').value() || false,
-    videoWebsiteHidden: dbs.get('videoWebsiteHidden').value() || false,
-    videoEditPerformersSortBy: dbs.get('videoEditPerformersSortBy').value(),
-    videoEditTagsSortBy: dbs.get('videoEditTagsSortBy').value(),
-    videoEditWebsitesSortBy: dbs.get('videoEditWebsitesSortBy').value(),
     menuCard: false,
     updateCard: 1,
   }),
@@ -75,14 +56,11 @@ const Videos = {
       console.log(':::::::videos UPDATED:::::::')
       state.lastChanged = Date.now()
     },
-    changeVideosPerPage(state, quantity) {
-      state.videosPerPage = quantity
+    changeVideosPageTotal(state, number) {
+      state.pageTotal = number
     },
-    changeVideosPageTotal(state, quantity) {
-      state.pageTotal = quantity
-    },
-    changeVideosPageCurrent(state, quantity) {
-      state.pageCurrent = quantity
+    changeVideosPageCurrent(state, number) {
+      state.pageCurrent = number
     },
     updateFiltersOfVideos(state, {key, value}) {
       state.filters[key] = value
@@ -97,25 +75,21 @@ const Videos = {
     updateSelectedVideos(state, ids) {
       state.selectedVideos = ids
     },
-    changeSelectedDisk(state, value) {
-      state.selectedDisk = value
-    },
   },
   actions: {
-    changeVideosPerPage({ state, commit, getters}, quantity) {
+    changeVideosPerPage({ state, commit, getters, dispatch}, number) {
       // commit('updateVideos')
       commit('resetLoading')
-      commit('changeVideosPerPage', quantity)
-      getters.settings.set('videosPerPage', quantity).write()
+      dispatch('updateSettingsState', {key:'videosPerPage', value:number})
     },
-    changeVideosPageTotal({ state, commit}, quantity) {
+    changeVideosPageTotal({ state, commit}, number) {
       // commit('updateVideos')
-      commit('changeVideosPageTotal', quantity)
+      commit('changeVideosPageTotal', number)
     },
-    changeVideosPageCurrent({ state, commit}, quantity) {
+    changeVideosPageCurrent({ state, commit}, number) {
       // commit('updateVideos')
       commit('resetLoading')
-      commit('changeVideosPageCurrent', quantity)
+      commit('changeVideosPageCurrent', number)
     },
     filterVideos({ state, commit, getters}, stayOnCurrentPage) {
       // console.log(state.filters.performers)
@@ -272,62 +246,6 @@ const Videos = {
         commit('changeVideosPageCurrent', 1)
       }
     },
-    updateVideoChipsColored({state, getters}, value) {
-      getters.settings.set('videoChipsColored', value).write()
-      state.videoChipsColored = value
-    },
-    updateVideoEditBtnHidden({state, getters}, value) {
-      getters.settings.set('videoEditBtnHidden', value).write()
-      state.videoEditBtnHidden = value
-    },
-    updateVideoFileNameHidden({state, getters}, value) {
-      getters.settings.set('videoFileNameHidden', value).write()
-      state.videoFileNameHidden = value
-    },
-    updateVideoFileInfoHidden({state, getters}, value) {
-      getters.settings.set('videoFileInfoHidden', value).write()
-      state.videoFileInfoHidden = value
-    },
-    updateVideoRatingHidden({state, getters}, value) {
-      getters.settings.set('videoRatingHidden', value).write()
-      state.videoRatingHidden = value
-    },
-    updateVideoFavoriteHidden({state, getters}, value) {
-      getters.settings.set('videoFavoriteHidden', value).write()
-      state.videoFavoriteHidden = value
-    },
-    updateVideoQualityLabelHidden({state, getters}, value) {
-      getters.settings.set('videoQualityLabelHidden', value).write()
-      state.videoQualityLabelHidden = value
-    },
-    updateVideoDurationHidden({state, getters}, value) {
-      getters.settings.set('videoDurationHidden', value).write()
-      state.videoDurationHidden = value
-    },
-    updateVideoPerformersHidden({state, getters}, value) {
-      getters.settings.set('videoPerformersHidden', value).write()
-      state.videoPerformersHidden = value
-    },
-    updateVideoTagsHidden({state, getters}, value) {
-      getters.settings.set('videoTagsHidden', value).write()
-      state.videoTagsHidden = value
-    },
-    updateVideoWebsiteHidden({state, getters}, value) {
-      getters.settings.set('videoWebsiteHidden', value).write()
-      state.videoWebsiteHidden = value
-    },
-    updateVideoEditPerformersSortBy({state, getters}, value) {
-      getters.settings.set('videoEditPerformersSortBy', value).write()
-      state.videoEditPerformersSortBy = value
-    },
-    updateVideoEditTagsSortBy({state, getters}, value) {
-      getters.settings.set('videoEditTagsSortBy', value).write()
-      state.videoEditTagsSortBy = value
-    },
-    updateVideoEditWebsitesSortBy({state, getters}, value) {
-      getters.settings.set('videoEditWebsitesSortBy', value).write()
-      state.videoEditWebsitesSortBy = value
-    },
     deleteVideos({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedVideos.map(id => {
         if (getters.tabsDb.find({id: id}).value()) {
@@ -394,17 +312,10 @@ const Videos = {
       commit('updateVideos')
       dispatch('filterVideos', true)
     },
-    changeSelectedDisk({state, rootState, commit, dispatch, getters}, value) {
-      getters.settings.assign({ selectedDisk: value }).write()
-      commit('changeSelectedDisk', value)
-    },
   },
   getters: {
     dbv(state) {
       return state.lastChanged, dbv
-    },
-    videosDataBase(state, store) {
-      return store.dbv
     },
     videos(state, store) {
       return store.dbv.get('videos')
@@ -507,9 +418,9 @@ const Videos = {
       }
       return total
     },
-    videosOnPage(state, store) {
+    videosOnPage(state, store, rootState) {
       const videos = store.filteredVideos.value(), 
-            videosCount = store.videosPerPage
+            videosCount = rootState.Settings.videosPerPage
       // console.log(videos)
       let l = videos.length,
           c = videosCount
@@ -525,9 +436,6 @@ const Videos = {
       const end = state.pageCurrent * videosCount,
             start = end - videosCount;
       return videos.slice(start, end)
-    },
-    videosPerPage(state) {
-      return state.videosPerPage
     },
     videosPagesSum(state) {
       return state.pageTotal
@@ -546,6 +454,6 @@ const Videos = {
       return state.selectedVideos
     },
   }
-};
+}
 
 export default Videos

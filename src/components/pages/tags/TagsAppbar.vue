@@ -361,26 +361,26 @@ export default {
     },
     isAltNamesHidden: {
       get () {
-        return this.$store.state.Tags.tagAltNamesHidden
+        return this.$store.state.Settings.tagAltNamesHidden
       },
       set (value) {
-        this.$store.dispatch('updateTagAltNamesHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'tagAltNamesHidden', value})
       },
     },
     isPerformersHidden: {
       get () {
-        return this.$store.state.Tags.tagPerformersHidden
+        return this.$store.state.Settings.tagPerformersHidden
       },
       set (value) {
-        this.$store.dispatch('updateTagPerformersHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'tagPerformersHidden', value})
       },
     },
     isEditBtnHidden: {
       get () {
-        return this.$store.state.Tags.tagEditBtnHidden
+        return this.$store.state.Settings.tagEditBtnHidden
       },
       set (value) {
-        this.$store.dispatch('updateTagEditBtnHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'tagEditBtnHidden', value})
       },
     },
   },

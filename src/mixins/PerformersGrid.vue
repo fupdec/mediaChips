@@ -16,7 +16,7 @@ export default {
   }),
   computed: {
     getNumberOfPagesLimit() {
-      return this.$store.getters.getNumberOfPagesLimit
+      return this.$store.state.Settings.numberOfPagesLimit
     },
     chars: {
       get () {
@@ -41,7 +41,7 @@ export default {
     },
     performersPerPage: {
       get () {
-        return this.$store.getters.performersPerPage
+        return this.$store.state.Settings.performersPerPage
       },
       set (number) {
         this.$store.dispatch('changePerformersPerPage', number)

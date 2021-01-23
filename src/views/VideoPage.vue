@@ -174,7 +174,7 @@
       </v-row>
     </v-container>
     
-    <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
+    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
       class="scroll-to-top" fixed fab color="primary">
@@ -561,7 +561,7 @@ export default {
       if (this.markerForRemove.type == 'Tag') {
         if (this.video.tags.includes(this.markerForRemove.name)) {
           // check if no more markers with type "Tag" and with the same name
-          let isLastMarker = this.$store.getters.bookmarks.get('markers')
+          let isLastMarker = this.$store.getters.markers
             .filter(marker=>(marker.type=='Tag'&&marker.name==this.markerForRemove.name))
             .value().length == 1
           if (isLastMarker) {
@@ -573,7 +573,7 @@ export default {
         }
       }
       let markerId = this.markerForRemove.id
-      this.$store.getters.bookmarks.get('markers').remove({'id':markerId}).write()
+      this.$store.getters.markers.remove({'id':markerId}).write()
       this.dialogRemoveMarker = false
       this.getMarkers()
     },
@@ -691,7 +691,7 @@ export default {
         .write()
     },
     playVideoInSystemPlayer() {
-      shell.openItem(this.video.path)
+      shell.openPath(this.video.path)
     },
     validate () {
       this.$refs.form.validate()

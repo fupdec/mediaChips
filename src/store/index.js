@@ -8,6 +8,7 @@ import Tags from './modules/tags.js'
 import Websites from './modules/websites.js'
 import Bookmarks from './modules/bookmarks.js'
 import Playlists from './modules/playlists.js'
+import Markers from './modules/markers.js'
 import Settings from './modules/settings.js'
 
 Vue.use(Vuex)
@@ -85,6 +86,7 @@ export default new Vuex.Store({
     Websites,
     Bookmarks,
     Playlists,
+    Markers,
     Settings,
   }
 })

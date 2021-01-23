@@ -66,8 +66,9 @@ function createWindow(devPath, prodPath) {
     icon: __static + `/icons/icon.png`,
     show: false, 
     webPreferences: {
-      nodeIntegration: true,   
-      webSecurity: false
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
+      webSecurity: false,
+      enableRemoteModule: true,
     }
   })
 
@@ -142,6 +143,14 @@ app.on('ready', async () => {
   createLoadingWindow()
 })
 
+// local file support
+app.whenReady().then(() => {
+  protocol.registerFileProtocol('file', (request, callback) => {
+    const pathname = decodeURI(request.url.replace('file:///', ''))
+    callback(pathname)
+  })
+})
+
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
@@ -187,12 +196,32 @@ menu.append(new MenuItem({
 
 Menu.setApplicationMenu(menu)
 
+// events from render process
 ipcMain.on('openPlayer', (event, data) => {
-  // store.dispatch("increment")
   player.show()
   player.webContents.send('getDataForPlayer', data)
 })
-
-ipcMain.on('closePlayer', (evt, arg) => {
+ipcMain.on('closePlayer', () => {
   player.hide()
 })
+ipcMain.handle('getDb', async (event, dbType) => {
+  win.webContents.send( 'getDb', dbType )
+  const database = await getDb()
+  event.sender.webContents.send( 'getDbAnswer', database )
+})
+function getDb () {
+  return new Promise((resolve) => {
+    ipcMain.once('getDbAnswer', (event, database) => {
+      resolve(database)
+    })
+  }) 
+} 
+ipcMain.on('watchLater', (event, videoId) => {
+  win.webContents.send( 'watchLater', videoId )
+})
+ipcMain.on('addMarker', (event, marker, markerTag, video) => {
+  win.webContents.send( 'addMarker', marker, markerTag, video )
+}) 
+ipcMain.on('removeMarker', (event, markerForRemove, video) => {
+  win.webContents.send( 'removeMarker', markerForRemove, video )
+}) 

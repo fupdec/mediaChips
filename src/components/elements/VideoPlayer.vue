@@ -1,6 +1,6 @@
 <template>
   <div class="video-player-wrapper">
-    <v-card class="video-player" outlined>
+    <v-card class="video-player" numberoutlined>
       <v-card-title class="pa-0">
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
@@ -18,14 +18,14 @@
           </template>
           <span>Edit video</span>
         </v-tooltip> -->
-        <v-tooltip bottom>
+        <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="openDialogEditThumb" v-on="on" icon tile>
               <v-icon>mdi-image-edit-outline</v-icon> 
             </v-btn>
           </template>
           <span>Edit thumb</span>
-        </v-tooltip>
+        </v-tooltip> -->
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="openDialogFileInfo" v-on="on" icon tile>
@@ -34,7 +34,7 @@
           </template>
           <span>File info</span>
         </v-tooltip>
-        <!-- <v-tooltip bottom>
+        <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="watchLater" v-on="on" icon tile>
               <v-icon v-if="isWatchLater">mdi-bookmark-minus-outline</v-icon> 
@@ -43,7 +43,7 @@
           </template>
           <span v-if="isWatchLater">Remove from watch later</span>
           <span v-else>Watch later</span>
-        </v-tooltip> -->
+        </v-tooltip>
         <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="dialogAddToPlaylist=true" v-on="on" icon tile>
@@ -60,14 +60,14 @@
           </template>
           <span>Toggle playlist</span>
         </v-tooltip>
-        <v-tooltip v-if="isVideoAvailable" bottom>
+        <!-- <v-tooltip v-if="isVideoAvailable" bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="setThumb" v-on="on" icon tile>
               <v-icon>mdi-camera-outline</v-icon> 
             </v-btn>
           </template>
           <span>Set as thumb</span>
-        </v-tooltip>
+        </v-tooltip> -->
         <v-menu v-if="isVideoAvailable" offset-y nudge-bottom="10" open-on-hover close-delay="1000">
           <template v-slot:activator="{ on, attrs }">
             <v-btn v-bind="attrs" v-on="on" icon tile>
@@ -193,44 +193,6 @@
         <v-divider></v-divider>
         <vuescroll>
           <v-card-text class="pb-0">
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <span class="caption mr-2">Sort list of tags by</span>
-              <v-btn-toggle v-model="sortButtonsTags" mandatory color="primary">
-                <v-tooltip top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn small outlined value="name" v-on="on">
-                      <v-icon>mdi-alphabetical-variant</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>name</span>
-                </v-tooltip>
-                <v-tooltip top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn small outlined value="favorite" v-on="on">
-                      <v-icon>mdi-heart-outline</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>favorite</span>
-                </v-tooltip>
-                <v-tooltip top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn small outlined value="color" v-on="on">
-                      <v-icon>mdi-palette</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>color</span>
-                </v-tooltip>
-                <v-tooltip top>
-                  <template v-slot:activator="{ on }">
-                    <v-btn small outlined value="date" v-on="on">
-                      <v-icon>mdi-calendar-clock</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>date added</span>
-                </v-tooltip>
-              </v-btn-toggle>
-            </v-card-actions>
             <v-autocomplete
               v-model="markerTag" outlined clearable hide-details
               :items="tagsAll" label="Tag for marker" placeholder="Choose a tag for marker"
@@ -443,7 +405,18 @@
           <v-spacer></v-spacer>
           <v-icon color="red">mdi-delete</v-icon>
         </v-card-title>
-        <v-divider></v-divider>
+        <v-card-text class="mt-6 text-center" v-if="markerForRemove.time">
+          <v-chip @click="jumpTo(markerForRemove.time)" outlined> 
+            <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" 
+              left size="20" color="pink">mdi-heart</v-icon>
+            <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" 
+              left size="20" color="red">mdi-bookmark</v-icon>
+            <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'"
+               left size="20" :color="getTag(markerForRemove.name).color">mdi-tag</v-icon>
+            {{calcDur(markerForRemove.time)}} 
+            <span class="ml-2">{{markerForRemove.name}}</span>
+          </v-chip>
+        </v-card-text>
         <v-card-actions>
           <v-btn @click="dialogRemoveMarker = false" class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
@@ -453,7 +426,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogAddToPlaylist" max-width="420">
+    <!-- <v-dialog v-model="dialogAddToPlaylist" max-width="420">
       <v-card class="add-playlist">
         <v-card-title class="headline py-1">Add to playlist
           <v-spacer></v-spacer>
@@ -481,19 +454,19 @@
           </v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
   </div>
 </template>
 
 
 <script>
+const _ = require("lodash")
 const fs = require("fs")
 const path = require("path")
-const shell = require('electron').shell
 const shortid = require('shortid')
 const ffmpeg = require('fluent-ffmpeg')
 const { spawn } = require( 'child_process' )
-const { ipcRenderer } = require('electron')
+const { ipcRenderer, shell } = require('electron')
 
 import vueFilePond from 'vue-filepond'
 import 'filepond/dist/filepond.min.css'
@@ -508,7 +481,6 @@ import LabelFunctions from '@/mixins/LabelFunctions'
 import Functions from '@/mixins/Functions'
 
 import videojs from 'video.js'
-import 'videojs-flvh265'
 import 'video.js/dist/video-js.min.css'
 import playlist from 'videojs-playlist'
 import markers from 'videojs-markers'
@@ -522,6 +494,14 @@ export default {
     vuescroll,
   },
   mixins: [CropImage, ShowImageFunction, LabelFunctions, Functions],
+  async beforeCreate() {
+    // get databases from main window
+    await this.$store.dispatch('getDb', 'videos')
+    await this.$store.dispatch('getDb', 'tags')
+    await this.$store.dispatch('getDb', 'playlists')
+    await this.$store.dispatch('getDb', 'markers')
+    await this.$store.dispatch('getDb', 'settings')
+  },
   created() {
     this.$set(this.images, 'thumb', this.getImageObject())
   },
@@ -580,7 +560,8 @@ export default {
   }),
   computed: {
     playlists() {
-      return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value()
+      if (this.playlistsDb === null) return []
+      return _.filter(this.playlistsDb, list=>(list.name!='Watch later'))
     },
     videoDateAdded() {
       if (this.video === null) {
@@ -590,27 +571,36 @@ export default {
       }
     },
     tagsAll() {
-      let tags = this.$store.getters.tags.filter(t=>(t.category.includes('video')))
-      return this.sortItems(tags, 'Tags')
+      if (this.tagsDb === null) return []
+      return _.filter(this.tagsDb, t=>(t.category.includes('video')))
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
-    },
-    sortButtonsTags: {
-      get() {
-        return this.$store.state.Videos.videoEditTagsSortBy
-      },
-      set(value) {
-        this.$store.dispatch('updateVideoEditTagsSortBy', value)
-      },
     },
     isWatchLater() {
       if (this.video === null) {
         return false
       } else {
-        let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
+        if (this.playlistsDb === null) return false
+        let playlist = _.find(this.playlistsDb, {name:'Watch later'})
+        console.log(this.video.id)
         return playlist.videos.includes(this.video.id)
       }
+    },
+    videosDb() {
+      return this.$store.state.videosDb
+    },
+    tagsDb() {
+      return this.$store.state.tagsDb
+    },
+    playlistsDb() {
+      return this.$store.state.playlistsDb
+    },
+    markersDb() {
+      return this.$store.state.markersDb
+    },
+    settingsDb() {
+      return this.$store.state.settingsDb
     },
   },
   methods: {
@@ -623,10 +613,6 @@ export default {
         controlBar: {
           'pictureInPictureToggle': false
         },
-        techOrder: [
-          'html5',
-          'flvh265',
-        ],
       }
       this.player = videojs(this.$refs.videoPlayer, options, function onPlayerReady() {
         const player = this
@@ -699,7 +685,7 @@ export default {
       // console.log('update video player')
       // console.log(data)
       this.videos = data.videos
-      this.video = this.$store.getters.videos.find({id: data.id}).value()
+      this.video = _.find(this.videosDb, {id: data.id})
       this.playlist = data.videos.map(video=>({ // add playlist
         sources: [{
           src: video.path,
@@ -758,51 +744,35 @@ export default {
         class: classes
       }])
 
-      this.$store.getters.bookmarks.get('markers').push({
+      const marker = {
         id: shortid.generate(),
         videoId: this.video.id,
         type: type,
         name: text,
         time: time,
-      }).write()
-      if (type == 'tag') {
-        if (!this.video.tags.includes(this.markerTag)) {
-          this.video.tags.push(this.markerTag)
-          this.video.tags.sort()
-          this.$store.getters.videos.find({ id: this.video.id }).assign({ 
-            tags: this.video.tags,
-          }).write()
-          this.$store.commit('updateVideos')
-        }
-      }
+      } 
+
+      ipcRenderer.send('addMarker', marker, this.markerTag, this.video)
+
       this.markerTag = ''
       this.markerBookmarkText = ''
       this.getMarkers()
     },
     jumpTo(time) {
       if (this.markerPlayable) {
-        let specificTime = this.convertVideoTimeWithHours(time)
-        let mpcPath = this.$store.state.Settings.pathToSystemPlayer
+        let specificTime = new Date(1000*time).toISOString().substr(11, 8)
+        let mpcPath = this.$store.state.settingsDb.pathToSystemPlayer
         spawn(`${mpcPath}`, [`${this.video.path}`, '/startpos', specificTime])
       } else {
         this.$refs.videoPlayer.currentTime = time
       }
     },
-    convertVideoTimeWithHours(time) {
-      let hours = Math.floor(time / 3600)
-      let mins = Math.floor(time / 60)
-      let secs = Math.floor(time % 60)
-      if (hours < 10) { hours = '0' + String(hours) }
-      if (mins < 10) { mins = '0' + String(mins) }
-      if (secs < 10) { secs = '0' + String(secs) }
-      return hours + ':' + mins + ':' + secs
-    },
-    getMarkers() {
+    async getMarkers() {
       // console.log('get markers')
       // console.log(this.video)
-      this.markers = this.$store.getters.bookmarks.get('markers')
-        .filter(marker=>(marker.videoId == this.video.id))
-        .orderBy('time', ['asc']).value()
+      await this.$store.dispatch('getDb', 'markers')
+      let markers = _.filter(this.markersDb, marker=>(marker.videoId == this.video.id))
+      this.markers = _.orderBy(markers, 'time', ['asc'])
       this.addMarkersToTimeline()
     },
     addMarkersToTimeline() {
@@ -850,22 +820,8 @@ export default {
       this.markerForRemove = marker
     },
     removeMarker() {
-      if (this.markerForRemove.type == 'Tag') {
-        if (this.video.tags.includes(this.markerForRemove.name)) {
-          // check if no more markers with type "Tag" and with the same name
-          let isLastMarker = this.$store.getters.bookmarks.get('markers')
-            .filter(marker=>(marker.type=='Tag'&&marker.name==this.markerForRemove.name))
-            .value().length == 1
-          if (isLastMarker) {
-            this.video.tags = this.video.tags.filter(t => t!==this.markerForRemove.name)
-            this.$store.getters.videos.find({ id: this.video.id })
-              .assign({ tags: this.video.tags }).write()
-            this.$store.commit('updateVideos')
-          }
-        }
-      }
-      let markerId = this.markerForRemove.id
-      this.$store.getters.bookmarks.get('markers').remove({'id':markerId}).write()
+      ipcRenderer.send('removeMarker', this.markerForRemove, this.video)
+      this.markerForRemove = {}
       this.dialogRemoveMarker = false
       this.getMarkers()
     },
@@ -896,24 +852,16 @@ export default {
       this.dialogFileInfo = true
     },
     getTag(tagName) {
-      return this.$store.getters.tags.find({name:tagName}).value()
+      return _.find(this.tagsDb, {name:tagName})
     },
     getTagColor(tagName) {
-      return this.$store.getters.tags.find({name:tagName}).value().color
+      return _.find(this.tagsDb, {name:tagName}).color
     },
     getWebsiteColor(websiteName) {
-      return this.$store.getters.websites.find({name:websiteName}).value().color
+      return _.find(this.websitesDb, {name:websiteName}).color
     },
     playVideoInSystemPlayer() {
-      shell.openItem(this.video.path)
-    },
-    sortItems(items, type) {
-      const sortBy = this[`sortButtons${type}`]
-      let itemsSorted = items.orderBy(i=>(i.name.toLowerCase()),['asc'])
-      if (sortBy !== 'name') {
-        itemsSorted = itemsSorted.orderBy(i=>(i[sortBy]),['desc']).value()
-        return itemsSorted
-      } else return itemsSorted.value()
+      shell.openPath(this.video.path)
     },
     filterItemsTags(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
@@ -929,24 +877,12 @@ export default {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
     watchLater() {
-      let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
-      if (playlist.videos.includes(this.video.id)) {
-        this.$store.getters.playlists.find({name:'Watch later'}).assign({
-          videos: playlist.videos.filter(video=>(video !== this.video.id)),
-          edit: Date.now(),
-        }).write()
-      } else {
-        let videosFromPlaylist = playlist.videos
-        videosFromPlaylist.push(this.video.id)
-        this.$store.getters.playlists.find({name:'Watch later'}).assign({
-          videos: videosFromPlaylist,
-          edit: Date.now(),
-        }).write()
-      }
+      ipcRenderer.send('watchLater', this.video.id)
+      this.$store.dispatch('getDb', 'playlists')
     },
     getPlaylistImgUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
-      return this.checkPlaylistImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkPlaylistImageExist(imgPath)
     },
     checkPlaylistImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -1098,7 +1034,7 @@ export default {
   }
 }
 .video-js {
-  padding-top: calc(100vh - 38px) !important;
+  padding-top: calc(100vh - 36px) !important;
   .vjs-control-text {
     height: 0;
   }

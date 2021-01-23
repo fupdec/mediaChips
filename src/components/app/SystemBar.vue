@@ -208,10 +208,10 @@ export default {
   components: {
   },
   beforeCreate(){
-    win.on('maximize', ()=>{
+    win.once('maximize', ()=>{
       this.maximized = true
     })
-    win.on('unmaximize', ()=>{
+    win.once('unmaximize', ()=>{
       this.maximized = false
     })
   },
@@ -264,9 +264,9 @@ export default {
       win.close()
     },
     toggleDarkMode() {
-      let darkModeValue = !this.$store.getters.darkMode
+      let darkModeValue = !this.$store.state.Settings.darkMode
       this.$vuetify.theme.dark = darkModeValue
-      this.$store.dispatch('toggleDarkMode', darkModeValue)
+      this.$store.dispatch('updateSettingsState', {key:'darkMode', value:darkModeValue})
     },
     back() {
       this.$router.go(-1)

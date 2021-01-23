@@ -329,26 +329,26 @@ export default {
     },
     isPerformersHidden: {
       get () {
-        return this.$store.state.Websites.websitePerformersHidden
+        return this.$store.state.Settings.websitePerformersHidden
       },
       set (value) {
-        this.$store.dispatch('updateWebsitePerformersHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'websitePerformersHidden', value})
       },
     },
     isVideoTagsHidden: {
       get () {
-        return this.$store.state.Websites.websiteVideoTagsHidden
+        return this.$store.state.Settings.websiteVideoTagsHidden
       },
       set (value) {
-        this.$store.dispatch('updateWebsiteVideoTagsHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'websiteVideoTagsHidden', value})
       },
     },
     isEditBtnHidden: {
       get () {
-        return this.$store.state.Websites.websiteEditBtnHidden
+        return this.$store.state.Settings.websiteEditBtnHidden
       },
       set (value) {
-        this.$store.dispatch('updateWebsiteEditBtnHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'websiteEditBtnHidden', value})
       },
     },
   },

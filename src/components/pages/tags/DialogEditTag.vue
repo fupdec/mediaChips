@@ -373,7 +373,7 @@ export default {
     },
     getImg() {
       let imgPath = this.getImgUrl(this.tag.id + '_.jpg')
-      return this.checkTagImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkTagImageExist(imgPath)
     },
     getImgUrl(img) {
       return path.join(this.$store.getters.getPathToUserData, `/media/tags/${img}`)

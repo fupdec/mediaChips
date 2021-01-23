@@ -144,106 +144,106 @@ export default {
   computed: {
     isChipsColored: {
       get() {
-        return this.$store.state.Performers.performerChipsColored
+        return this.$store.state.Settings.performerChipsColored
       },
       set(value) {
-        this.$store.dispatch('updatePerformerChipsColored', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerChipsColored', value})
       },
     },
     isEditBtnHidden: {
       get() {
-        return this.$store.state.Performers.performerEditBtnHidden
+        return this.$store.state.Settings.performerEditBtnHidden
       },
       set(value) {
-        this.$store.dispatch('updatePerformerEditBtnHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerEditBtnHidden', value})
       },
     },
     isRatingHidden: {
       get () {
-        return this.$store.state.Performers.performerRatingHidden
+        return this.$store.state.Settings.performerRatingHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerRatingHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerRatingHidden', value})
       },
     },
     isNationalityHidden: {
       get () {
-        return this.$store.state.Performers.performerNationalityHidden
+        return this.$store.state.Settings.performerNationalityHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerNationalityHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerNationalityHidden', value})
       },
     },
     isFavoriteHidden: {
       get () {
-        return this.$store.state.Performers.performerFavoriteHidden
+        return this.$store.state.Settings.performerFavoriteHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerFavoriteHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerFavoriteHidden', value})
       },
     },
     isProfileProgressHidden: {
       get () {
-        return this.$store.state.Performers.performerProfileProgressHidden
+        return this.$store.state.Settings.performerProfileProgressHidden
       },
       set (value) {
-        this.$store.dispatch('updateProfileProgressHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerProfileProgressHidden', value})
       },
     },
     isNameHidden: {
       get () {
-        return this.$store.state.Performers.performerNameHidden
+        return this.$store.state.Settings.performerNameHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerNameHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerNameHidden', value})
       },
     },
     isAliasesHidden: {
       get () {
-        return this.$store.state.Performers.performerAliasesHidden
+        return this.$store.state.Settings.performerAliasesHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerAliasesHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerAliasesHidden', value})
       },
     },
     isMeterHidden: {
       get () {
-        return this.$store.state.Performers.performerMeterHidden
+        return this.$store.state.Settings.performerMeterHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerMeterHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerMeterHidden', value})
       },
     },
     isCareerStatusHidden: {
       get () {
-        return this.$store.state.Performers.performerCareerStatusHidden
+        return this.$store.state.Settings.performerCareerStatusHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerCareerStatusHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerCareerStatusHidden', value})
       },
     },
     isTagsHidden: {
       get () {
-        return this.$store.state.Performers.performerTagsHidden
+        return this.$store.state.Settings.performerTagsHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerTagsHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerTagsHidden', value})
       },
     },
     isVideoTagsHidden: {
       get () {
-        return this.$store.state.Performers.performerVideoTagsHidden
+        return this.$store.state.Settings.performerVideoTagsHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerVideoTagsHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerVideoTagsHidden', value})
       },
     },
     isWebsitesHidden: {
       get () {
-        return this.$store.state.Performers.performerWebsitesHidden
+        return this.$store.state.Settings.performerWebsitesHidden
       },
       set (value) {
-        this.$store.dispatch('updatePerformerWebsitesHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerWebsitesHidden', value})
       },
     },
   },
@@ -287,9 +287,9 @@ export default {
     toggleWebsitesVisibilty() {
       this.isWebsitesHidden = !this.isWebsitesHidden
     },
-    changeCardSize(event) {
+    changeCardSize(value) {
+      this.$store.dispatch('updateSettingsState', {key:'performerCardSize', value})
       this.getCardSizeIcon()
-      this.$store.getters.settings.set('performerCardSize', event).write()
     },
     getCardSizeIcon() {
       let size = ''

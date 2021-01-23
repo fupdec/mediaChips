@@ -88,7 +88,7 @@
       :total-visible="getNumberOfPagesLimit" class="mt-6 mb-10"
     ></v-pagination>
 
-    <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
+    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
       class="scroll-to-top" fixed fab color="primary">
@@ -268,7 +268,7 @@ export default {
       },
     },
     getNumberOfPagesLimit() {
-      return this.$store.getters.getNumberOfPagesLimit
+      return this.$store.state.Settings.numberOfPagesLimit
     },
     pages: {
       get() {
@@ -286,7 +286,7 @@ export default {
     },
     tagsPerPage: {
       get() {
-        return this.$store.getters.tagsPerPage
+        return this.$store.state.Settings.tagsPerPage
       },
       set(number) {
         this.$store.dispatch('changeTagsPerPage', number)

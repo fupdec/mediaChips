@@ -44,7 +44,7 @@
           <v-icon>mdi-image-edit-outline</v-icon>
         </v-btn>
       </div>
-      <v-expansion-panels v-model="profile" focusable>
+      <v-expansion-panels focusable>
         <v-expansion-panel :style="profileBackground">
           <v-expansion-panel-header class="pa-6" ripple hide-actions>
             <div class="profile-name text-center">{{performer.name}}</div>
@@ -255,7 +255,7 @@
       :total-visible="getNumberOfPagesLimit"
     ></v-pagination>
     
-    <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
+    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
     
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
       class="scroll-to-top" fixed fab color="primary">
@@ -401,28 +401,29 @@ export default {
       if (progress > 100) progress = 100
       return Math.ceil(progress)
     },
-    profile: {
-      get() {
-        return eval(this.$store.getters.performerProfile)
-      },
-      set(profile) {
-        this.$store.dispatch('changePerformerProfile', String(profile))
-      },
-    },
+    // profile: {
+    //   get() {
+    //     return this.$store.state.Settings.performerProfile
+    //   },
+    //   set(profile) {
+    //     this.$store.dispatch('updateSettingsState', {key:'performerProfile', value:profile})
+    //   },
+    // },
+    // TODO: save profile expansion-panels state
     showTags: {
       get() {
-        return this.$store.getters.performerProfileTags
+        return this.$store.state.Settings.performerProfileTags
       },
       set(value) {
-        this.$store.dispatch('changePerformerProfileTags', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerProfileTags', value})
       },
     },
     showWebsites: {
       get() {
-        return this.$store.getters.performerProfileWebsites
+        return this.$store.state.Settings.performerProfileWebsites
       },
       set(value) {
-        this.$store.dispatch('changePerformerProfileWebsites', value)
+        this.$store.dispatch('updateSettingsState', {key:'performerProfileWebsites', value})
       },
     },
     aliases() {      
@@ -694,7 +695,7 @@ export default {
     },
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_${imgType}.jpg`)
-      return this.checkHeaderImageExist(imgPath, imgType)+'?lastmod='+Date.now()
+      return this.checkHeaderImageExist(imgPath, imgType)
     },
     checkHeaderImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {

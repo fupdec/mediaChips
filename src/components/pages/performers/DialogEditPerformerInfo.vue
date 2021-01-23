@@ -733,10 +733,10 @@ export default {
     },
     sortButtonsTags: {
       get() {
-        return this.$store.state.Videos.videoEditTagsSortBy
+        return this.$store.state.Settings.videoEditTagsSortBy
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditTagsSortBy', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditTagsSortBy', value})
       },
     },
     pathToUserData() {
@@ -1356,7 +1356,7 @@ export default {
     getImg() {
       let imgAvaPath = this.getImgUrl(this.performer.id + '_avatar.jpg')
       let imgMainPath = this.getImgUrl(this.performer.id + '_main.jpg')
-      return this.checkAvatarImageExist(imgAvaPath, imgMainPath)+'?lastmod='+Date.now()
+      return this.checkAvatarImageExist(imgAvaPath, imgMainPath)
     },
     getImgUrl(img) {
       return  path.join(this.pathToUserData, `/media/performers/${img}`)

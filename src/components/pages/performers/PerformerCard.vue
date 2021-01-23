@@ -197,43 +197,43 @@ export default {
   }),
   computed: {
     isChipsColored() {
-      return this.$store.state.Performers.performerChipsColored
+      return this.$store.state.Settings.performerChipsColored
     },
     isEditBtnHidden() {
-      return this.$store.state.Performers.performerEditBtnHidden 
+      return this.$store.state.Settings.performerEditBtnHidden 
     },
     isRatingHidden() {
-      return this.$store.state.Performers.performerRatingHidden
+      return this.$store.state.Settings.performerRatingHidden
     },
     isNationalityHidden() {
-      return this.$store.state.Performers.performerNationalityHidden
+      return this.$store.state.Settings.performerNationalityHidden
     },
     isFavoriteHidden() {
-      return this.$store.state.Performers.performerFavoriteHidden
+      return this.$store.state.Settings.performerFavoriteHidden
     },
     isProfileProgressHidden() {
-      return this.$store.state.Performers.performerProfileProgressHidden
+      return this.$store.state.Settings.performerProfileProgressHidden
     },
     isNameHidden() {
-      return this.$store.state.Performers.performerNameHidden
+      return this.$store.state.Settings.performerNameHidden
     },
     isAliasesHidden() {
-      return this.$store.state.Performers.performerAliasesHidden
+      return this.$store.state.Settings.performerAliasesHidden
     },
     isMeterHidden() {
-      return this.$store.state.Performers.performerMeterHidden
+      return this.$store.state.Settings.performerMeterHidden
     },
     isCareerStatusHidden() {
-      return this.$store.state.Performers.performerCareerStatusHidden
+      return this.$store.state.Settings.performerCareerStatusHidden
     },
     isTagsHidden() {
-      return this.$store.state.Performers.performerTagsHidden
+      return this.$store.state.Settings.performerTagsHidden
     },
     isVideoTagsHidden() {
-      return this.$store.state.Performers.performerVideoTagsHidden
+      return this.$store.state.Settings.performerVideoTagsHidden
     },
     isWebsitesHidden() {
-      return this.$store.state.Performers.performerWebsitesHidden
+      return this.$store.state.Settings.performerWebsitesHidden
     },
     aliases: {
       get() {
@@ -468,7 +468,7 @@ export default {
     },
     getImg(performerId, imageType) {
       let imgMainPath = this.getImgUrl(performerId) + `_${imageType}.jpg`
-      return this.checkImageExist(imgMainPath, imageType)+'?lastmod='+Date.now()
+      return this.checkImageExist(imgMainPath, imageType)
     },
     checkImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {

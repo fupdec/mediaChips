@@ -11,9 +11,7 @@
     "build": "vue-cli-service build",
     "electron:build": "vue-cli-service electron:build",
     "electron:build_portable": "vue-cli-service electron:build --win portable",
-    "electron:serve": "vue-cli-service electron:serve",
-    "postinstall": "electron-builder install-app-deps",
-    "postuninstall": "electron-builder install-app-deps"
+    "electron:serve": "vue-cli-service electron:serve"
   },
   "main": "background.js",
   "dependencies": {
@@ -35,7 +33,6 @@
     "sharp": "^0.25.2",
     "shortid": "^2.2.15",
     "video.js": "^7.10.2",
-    "videojs-flvh265": "^1.0.8",
     "videojs-markers": "^1.0.1",
     "videojs-playlist": "^4.3.1",
     "vue": "^2.6.11",
@@ -48,21 +45,22 @@
     "vuedraggable": "^2.24.3",
     "vuescroll": "^4.16.1",
     "vuetify": "^2.3.9",
-    "vuex": "^3.1.3"
+    "vuex": "^3.1.3",
+    "write-file-atomic": "^3.0.3"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.3.0",
-    "@vue/cli-plugin-router": "~4.3.0",
-    "@vue/cli-plugin-vuex": "~4.3.0",
-    "@vue/cli-service": "~4.3.0",
+    "@vue/cli-plugin-babel": "^4.5.10",
+    "@vue/cli-plugin-router": "^4.5.10",
+    "@vue/cli-plugin-vuex": "^4.5.10",
+    "@vue/cli-service": "^4.5.10",
     "@vue/devtools": "^5.3.3",
-    "electron": "^6.0.0",
+    "electron": "^9.4.1",
     "less": "^3.0.4",
     "less-loader": "^5.0.0",
     "sass": "^1.19.0",
     "sass-loader": "^8.0.0",
-    "vue-cli-plugin-electron-builder": "~1.4.6",
-    "vue-cli-plugin-vuetify": "~2.0.5",
+    "vue-cli-plugin-electron-builder": "^2.0.0-rc.5",
+    "vue-cli-plugin-vuetify": "^2.0.9",
     "vue-devtools": "^5.1.3",
     "vue-template-compiler": "^2.6.11",
     "vuetify-loader": "^1.3.0"

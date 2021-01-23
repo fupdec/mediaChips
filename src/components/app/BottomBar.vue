@@ -70,7 +70,7 @@ export default {
   }),
   computed: {
     navigationSide() {
-      return this.$store.getters.navigationSide
+      return this.$store.state.Settings.navigationSide
     },
   },
   methods: {

@@ -93,13 +93,13 @@ export default {
       return this.$store.getters.bookmarks.get('websites').find({itemId:this.website.id}).value().text
     },
     isEditBtnHidden() {
-      return this.$store.state.Websites.websiteEditBtnHidden 
+      return this.$store.state.Settings.websiteEditBtnHidden 
     },
     isVideoTagsHidden() {
-      return this.$store.state.Websites.websiteVideoTagsHidden 
+      return this.$store.state.Settings.websiteVideoTagsHidden 
     },
     isPerformersHidden() {
-      return this.$store.state.Websites.websitePerformersHidden
+      return this.$store.state.Settings.websitePerformersHidden
     },
   },
   methods: {
@@ -113,7 +113,7 @@ export default {
     },
     getImgUrl(websiteId) {
       let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
-      return this.checkImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkImageExist(imgPath)
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {

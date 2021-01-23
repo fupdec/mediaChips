@@ -44,9 +44,9 @@ export default {
       let imgTag = path.join(this.$store.getters.getPathToUserData, `/media/tags/${tagId}_.jpg`)
       let imgChecked = this.checkImageExist(imgTag)
       if (imgChecked) {
-        return imgChecked + '?lastmod='+Date.now()
+        return imgChecked
       } else {
-        return path.join(this.$store.getters.getPathToUserData, '/img/templates/tag.png') + '?lastmod='+Date.now()
+        return path.join(this.$store.getters.getPathToUserData, '/img/templates/tag.png')
       }
     },
     checkImageExist(imgPath) {

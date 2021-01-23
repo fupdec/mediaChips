@@ -452,7 +452,7 @@
     </v-container>
 
 
-    <div v-show="$store.getters.navigationSide=='2'" class="py-6"></div>
+    <div v-show="navigationSide=='2'" class="py-6"></div>
 
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
       class="scroll-to-top" fixed fab color="primary">
@@ -486,8 +486,8 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
-      this.password = this.$store.getters.phrase
-      this.hint = this.$store.getters.passwordHint
+      this.password = this.$store.state.Settings.phrase
+      this.hint = this.$store.state.Settings.passwordHint
     })
   },
   data: ()=>({
@@ -528,7 +528,7 @@ export default {
         return this.$store.state.Settings.videoPreviewEnabled
       },
       set(value) {
-        this.$store.dispatch('updateVideoPreviewEnabled', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoPreviewEnabled', value})
       },
     },
     videoPreviewGrid: {
@@ -550,24 +550,24 @@ export default {
       set(value) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeDelayVideoPreview', value)
+          this.$store.dispatch('updateSettingsState', {key:'delayVideoPreview', value})
         }, 1000)
       },
     },
     numberOfPagesLimit: {
       get() {
-        return this.$store.getters.getNumberOfPagesLimit
+        return this.$store.state.Settings.getNumberOfPagesLimit
       },
       set(number) {
-        this.$store.dispatch('changeNumberOfPagesLimit', number)
+        this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value:number})
       }
     },
     navigationSide: {
       get() {
-        return this.$store.getters.navigationSide
+        return this.$store.state.Settings.navigationSide
       },
       set(value) {
-        this.$store.dispatch('toggleNavigationSide', value)
+        this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})
       },
     },
     ratingAndFavoriteInCard: {
@@ -580,35 +580,35 @@ export default {
     },
     darkMode: {
       get() {
-        return this.$store.getters.darkMode
+        return this.$store.state.Settings.darkMode
       },
       set(value) {
         this.$vuetify.theme.dark = value
-        this.$store.dispatch('toggleDarkMode', value)
+        this.$store.dispatch('updateSettingsState', {key:'darkMode', value})
       },
     },
     headerGradient: {
       get() {
-        return this.$store.getters.headerGradient
+        return this.$store.state.Settings.headerGradient
       },
       set(value) {
-        this.$store.dispatch('toggleHeaderGradient', value)
+        this.$store.dispatch('updateSettingsState', {key:'headerGradient', value})
       },
     },
     textFont: {
       get() {
-        return this.$store.getters.getTextFont
+        return this.$store.state.Settings.textFont
       },
       set(font) {
-        this.$store.dispatch('changeTextFont', font)
+        this.$store.dispatch('updateSettingsState', {key:'textFont', value: font})
       },
     },
     headerFont: {
       get() {
-        return this.$store.getters.getHeaderFont
+        return this.$store.state.Settings.headerFont
       },
       set(font) {
-        this.$store.dispatch('changeHeaderFont', font)
+        this.$store.dispatch('updateSettingsState', {key:'headerFont', value: font})
       },
     },
     meterHeight: {
@@ -618,7 +618,7 @@ export default {
       set(value) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeMeterHeight', value)
+          this.$store.dispatch('updateSettingsState', {key:'meterHeight', value})
         }, 1000)
       },
     },
@@ -629,7 +629,7 @@ export default {
       set(value) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeMeterMultiplier', value)
+          this.$store.dispatch('updateSettingsState', {key:'meterMultiplier', value})
         }, 1000)
       },
     },
@@ -638,7 +638,7 @@ export default {
         return this.$store.state.Settings.pathToSystemPlayer
       },
       set(value) {
-        this.$store.dispatch('changePathToSystemPlayer', value)
+        this.$store.dispatch('updateSettingsState', {key:'pathToSystemPlayer', value})
       },
     },
     passwordProtection: {
@@ -646,7 +646,7 @@ export default {
         return this.$store.state.Settings.passwordProtection
       },
       set(value) {
-        this.$store.dispatch('changePasswordProtection', value)
+        this.$store.dispatch('updateSettingsState', {key:'passwordProtection', value})
       },
     },
   },
@@ -759,10 +759,10 @@ export default {
       this.dialogResetToDefaultSettings = false
     },
     savePass() {
-      this.$store.dispatch('changePhrase', this.password)
+      this.$store.dispatch('updateSettingsState', {key:'phrase', value:this.password})
     },
     saveHint() {
-      this.$store.dispatch('changePasswordHint', this.hint)
+      this.$store.dispatch('updateSettingsState', {key:'hint', value:this.hint})
     },
     getPasswordRules(pass) {
       if (pass.length > 100) {

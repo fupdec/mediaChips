@@ -388,10 +388,10 @@ export default {
     },
     sortButtonsPerformers: {
       get() {
-        return this.$store.state.Videos.videoEditPerformersSortBy
+        return this.$store.state.Settings.videoEditPerformersSortBy
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditPerformersSortBy', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditPerformersSortBy', value})
       },
     },
     tagsAll() {
@@ -400,10 +400,10 @@ export default {
     },
     sortButtonsTags: {
       get() {
-        return this.$store.state.Videos.videoEditTagsSortBy
+        return this.$store.state.Settings.videoEditTagsSortBy
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditTagsSortBy', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditTagsSortBy', value})
       },
     },
     websitesAll() {
@@ -411,10 +411,10 @@ export default {
     },
     sortButtonsWebsites: {
       get() {
-        return this.$store.state.Videos.videoEditWebsitesSortBy
+        return this.$store.state.Settings.videoEditWebsitesSortBy
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditWebsitesSortBy', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditWebsitesSortBy', value})
       },
     },
   },
@@ -595,7 +595,7 @@ export default {
       const pathToVideo = this.video.path
       if (fs.existsSync(pathToVideo)) {
         this.videoExists = false
-        shell.openItem(pathToVideo)
+        shell.openPath(pathToVideo)
         setTimeout(() => { this.videoExists = true }, 1500)
       } else {this.videoExists = false}
     },

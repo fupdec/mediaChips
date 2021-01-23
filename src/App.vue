@@ -71,8 +71,10 @@ console.clear()
 const {app} = require('electron').remote
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
+const { ipcRenderer } = require('electron')
 
 import FilterVideos from '@/mixins/FilterVideos'
+import PlayerEvents from '@/mixins/PlayerEvents'
 
 export default {
   name: 'App',
@@ -86,21 +88,17 @@ export default {
     // VideoPlayer: () => import('@/components/elements/VideoPlayer.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
   },
-  mixins: [FilterVideos],
+  mixins: [FilterVideos, PlayerEvents],
   mounted() {
     this.$nextTick(function () {
       this.$store.state.pathToUserData = app.getPath('userData')
       this.$router.push({ path: '/home', query: { name: 'Home' } })
-      this.$vuetify.theme.dark = this.$store.getters.darkMode
-      this.$vuetify.theme.themes.light.primary = this.$store.getters.appColorLightPrimary
-      this.$vuetify.theme.themes.light.secondary = this.$store.getters.appColorLightSecondary
-      this.$vuetify.theme.themes.light.accent = this.$store.getters.appColorLightAccent
-      this.$vuetify.theme.themes.dark.primary = this.$store.getters.appColorDarkPrimary
-      this.$vuetify.theme.themes.dark.secondary = this.$store.getters.appColorDarkSecondary
-      this.$vuetify.theme.themes.dark.accent = this.$store.getters.appColorDarkAccent
+      this.initTheme()
+      // password
       if(this.passwordProtection && this.phrase!=='') {
         this.disableRunApp = this.phrase !== this.password 
       }
+      // keyboard shortcuts
       window.addEventListener('keyup', event => {
         if(event.altKey && event.keyCode === 83) { // alt+s
           this.$router.push('/settings')
@@ -131,7 +129,7 @@ export default {
           return
         }
         if(event.altKey && event.keyCode === 68) { // alt+d
-          this.darkMode = !this.$store.getters.darkMode
+          this.darkMode = !this.$store.state.Settings.darkMode
           return
         }
       })
@@ -159,22 +157,22 @@ export default {
       return this.$store.state.Settings.passwordHint
     },
     textFont() {
-      return 'text-font-' + this.$store.getters.getTextFont.toLowerCase()
+      return 'text-font-' + this.$store.state.Settings.textFont.toLowerCase()
     },
     headerFont() {
-      return 'header-font-' + this.$store.getters.getHeaderFont.toLowerCase()
+      return 'header-font-' + this.$store.state.Settings.headerFont.toLowerCase()
     },
     darkMode: {
       get() {
-        return this.$store.getters.darkMode
+        return this.$store.state.Settings.darkMode
       },
-      set(darkModeValue) {
-        this.$vuetify.theme.dark = darkModeValue
-        this.$store.dispatch('toggleDarkMode', darkModeValue)
+      set(value) {
+        this.$vuetify.theme.dark = value
+        this.$store.dispatch('updateSettingsState', {key:'darkMode', value})
       },
     },
     navigationSide() {
-      return this.$store.getters.navigationSide
+      return this.$store.state.Settings.navigationSide
     },
     hoveredImageId() {
       return this.$store.state.hoveredImageId
@@ -195,6 +193,15 @@ export default {
   methods: {
     close() {
       win.close()
+    },
+    initTheme() {
+      this.$vuetify.theme.dark = this.$store.state.Settings.darkMode
+      this.$vuetify.theme.themes.light.primary = this.$store.state.Settings.appColorLightPrimary
+      this.$vuetify.theme.themes.light.secondary = this.$store.state.Settings.appColorLightSecondary
+      this.$vuetify.theme.themes.light.accent = this.$store.state.Settings.appColorLightAccent
+      this.$vuetify.theme.themes.dark.primary = this.$store.state.Settings.appColorDarkPrimary
+      this.$vuetify.theme.themes.dark.secondary = this.$store.state.Settings.appColorDarkSecondary
+      this.$vuetify.theme.themes.dark.accent = this.$store.state.Settings.appColorDarkAccent
     },
     getPasswordRules(pass) {
       if (pass.length > 100) {

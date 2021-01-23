@@ -192,37 +192,37 @@ export default {
       return this.video.path
     },
     isChipsColored() {
-      return this.$store.state.Videos.videoChipsColored
+      return this.$store.state.Settings.videoChipsColored
     },
     isEditBtnHidden() {
-      return this.$store.state.Videos.videoEditBtnHidden 
+      return this.$store.state.Settings.videoEditBtnHidden 
     },
     isFileNameHidden() {
-      return this.$store.state.Videos.videoFileNameHidden 
+      return this.$store.state.Settings.videoFileNameHidden 
     },
     isFileInfoHidden() {
-      return this.$store.state.Videos.videoFileInfoHidden 
+      return this.$store.state.Settings.videoFileInfoHidden 
     },
     isRatingHidden() {
-      return this.$store.state.Videos.videoRatingHidden 
+      return this.$store.state.Settings.videoRatingHidden 
     },
     isFavoriteHidden() {
-      return this.$store.state.Videos.videoFavoriteHidden
+      return this.$store.state.Settings.videoFavoriteHidden
     },
     isQualityLabelHidden() {
-      return this.$store.state.Videos.videoQualityLabelHidden
+      return this.$store.state.Settings.videoQualityLabelHidden
     },
     isDurationHidden() {
-      return this.$store.state.Videos.videoDurationHidden
+      return this.$store.state.Settings.videoDurationHidden
     },
     isPerformersHidden() {
-      return this.$store.state.Videos.videoPerformersHidden
+      return this.$store.state.Settings.videoPerformersHidden
     },
     isTagsHidden() {
-      return this.$store.state.Videos.videoTagsHidden
+      return this.$store.state.Settings.videoTagsHidden
     },
     isWebsiteHidden() {
-      return this.$store.state.Videos.videoWebsiteHidden
+      return this.$store.state.Settings.videoWebsiteHidden
     },
     videoPath() {
       return path.parse(this.video.path).dir
@@ -344,7 +344,7 @@ export default {
     getImgUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
       let gridPath = path.join(this.pathToUserData, `/media/previews/${videoId}.jpg`)
-      return this.checkImageExist(imgPath, gridPath)+'?lastmod='+Date.now()
+      return this.checkImageExist(imgPath, gridPath)
     },
     checkImageExist(imgPath, gridPath) {
       if (this.videoPreviewGridEnabled && fs.existsSync(gridPath)) {
@@ -363,7 +363,7 @@ export default {
         this.$store.state.Videos.errorPlayVideoPath = pathToVideo
         return
       }
-      shell.openItem(pathToVideo)
+      shell.openPath(pathToVideo)
     },
     changeRating(stars, videoID) {
       this.$store.getters.videos

@@ -96,10 +96,10 @@ export default {
     },
     selectedDisk: {
       get() {
-        return this.$store.state.Videos.selectedDisk
+        return this.$store.state.Settings.selectedDisk
       },
       set(value) {
-        this.$store.dispatch('changeSelectedDisk', value)
+        this.$store.dispatch('updateSettingsState', {key:'selectedDisk', value})
       },
     },
   },

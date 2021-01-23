@@ -137,89 +137,125 @@ export default {
   computed: {
     appColorLightPrimary: {
       get() {
-        return this.$store.getters.appColorLightPrimary
+        return this.$store.state.Settings.appColorLightPrimary
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorLightPrimary', color)
+          const values = {
+            key: 'appColorLightPrimary',
+            color: color,
+            theme: 'light',
+            type: 'primary',
+          }
+          this.$store.dispatch('updateVuetifyColor', values)
         }, 500)
       },
     },
     appColorLightSecondary: {
       get() {
-        return this.$store.getters.appColorLightSecondary
+        return this.$store.state.Settings.appColorLightSecondary
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorLightSecondary', color)
+          const values = {
+            key: 'appColorLightSecondary',
+            color: color,
+            theme: 'light',
+            type: 'secondary',
+          }
+          this.$store.dispatch('updateVuetifyColor', values)
         }, 500)
       },
     },
     appColorLightAccent: {
       get() {
-        return this.$store.getters.appColorLightAccent
+        return this.$store.state.Settings.appColorLightAccent
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorLightAccent', color)
+          const values = {
+            key: 'appColorLightAccent',
+            color: color,
+            theme: 'light',
+            type: 'accent',
+          }
+          this.$store.dispatch('updateVuetifyColor', values)
         }, 500)
       },
     },
     appColorLightHeader: {
       get() {
-        return this.$store.getters.appColorLightHeader
+        return this.$store.state.Settings.appColorLightHeader
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorLightHeader', color)
+          this.$store.dispatch('updateSettingsState', {key:'appColorLightHeader', value:color})
         }, 500)
       },
     },
     appColorDarkPrimary: {
       get() {
-        return this.$store.getters.appColorDarkPrimary
+        return this.$store.state.Settings.appColorDarkPrimary
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorDarkPrimary', color)
+          const values = {
+            key: 'appColorDarkPrimary',
+            color: color,
+            theme: 'dark',
+            type: 'primary',
+          }
+          this.$store.dispatch('updateVuetifyColor', values)
         }, 500)
       },
     },
     appColorDarkSecondary: {
       get() {
-        return this.$store.getters.appColorDarkSecondary
+        return this.$store.state.Settings.appColorDarkSecondary
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorDarkSecondary', color)
+          const values = {
+            key: 'appColorDarkSecondary',
+            color: color,
+            theme: 'dark',
+            type: 'secondary',
+          }
+          this.$store.dispatch('updateVuetifyColor', values)
         }, 500)
       },
     },
     appColorDarkAccent: {
       get() {
-        return this.$store.getters.appColorDarkAccent
+        return this.$store.state.Settings.appColorDarkAccent
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorDarkAccent', color)
+          const values = {
+            key: 'appColorDarkAccent',
+            color: color,
+            theme: 'dark',
+            type: 'accent',
+          }
+          this.$store.dispatch('updateVuetifyColor', values)
         }, 500)
       },
     },
     appColorDarkHeader: {
       get() {
-        return this.$store.getters.appColorDarkHeader
+        return this.$store.state.Settings.appColorDarkHeader
       },
       set(color) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
-          this.$store.dispatch('changeAppColorDarkHeader', color)
+          this.$store.dispatch('updateSettingsState', {key:'appColorDarkHeader', value:color})
         }, 500)
       },
     },

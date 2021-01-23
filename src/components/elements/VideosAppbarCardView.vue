@@ -138,97 +138,97 @@ export default {
   computed: {
     isChipsColored: {
       get() {
-        return this.$store.state.Videos.videoChipsColored
+        return this.$store.state.Settings.videoChipsColored
       },
       set(value) {
-        this.$store.dispatch('updateVideoChipsColored', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoChipsColored', value})
       },
     },
     isEditBtnHidden: {
       get() {
-        return this.$store.state.Videos.videoEditBtnHidden
+        return this.$store.state.Settings.videoEditBtnHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditBtnHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditBtnHidden', value})
       },
     },
     isFileNameHidden: {
       get() {
-        return this.$store.state.Videos.videoFileNameHidden
+        return this.$store.state.Settings.videoFileNameHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoFileNameHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoFileNameHidden', value})
       },
     },
     isFileInfoHidden: {
       get() {
-        return this.$store.state.Videos.videoFileInfoHidden
+        return this.$store.state.Settings.videoFileInfoHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoFileInfoHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoFileInfoHidden', value})
       },
     },
     isRatingHidden: {
       get() {
-        return this.$store.state.Videos.videoRatingHidden
+        return this.$store.state.Settings.videoRatingHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoRatingHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoRatingHidden', value})
       },
     },
     isFavoriteHidden: {
       get() {
-        return this.$store.state.Videos.videoFavoriteHidden
+        return this.$store.state.Settings.videoFavoriteHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoFavoriteHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoFavoriteHidden', value})
       },
     },
     isQualityLabelHidden: {
       get() {
-        return this.$store.state.Videos.videoQualityLabelHidden
+        return this.$store.state.Settings.videoQualityLabelHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoQualityLabelHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoQualityLabelHidden', value})
       },
     },
     isDurationHidden: {
       get() {
-        return this.$store.state.Videos.videoDurationHidden
+        return this.$store.state.Settings.videoDurationHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoDurationHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoDurationHidden', value})
       },
     },
     isPerformersHidden: {
       get() {
-        return this.$store.state.Videos.videoPerformersHidden
+        return this.$store.state.Settings.videoPerformersHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoPerformersHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoPerformersHidden', value})
       },
     },
     isTagsHidden: {
       get() {
-        return this.$store.state.Videos.videoTagsHidden
+        return this.$store.state.Settings.videoTagsHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoTagsHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoTagsHidden', value})
       },
     },
     isWebsiteHidden: {
       get() {
-        return this.$store.state.Videos.videoWebsiteHidden
+        return this.$store.state.Settings.videoWebsiteHidden
       },
       set(value) {
-        this.$store.dispatch('updateVideoWebsiteHidden', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoWebsiteHidden', value})
       },
     },
   },
   methods: {
-    changeCardSize(event) {
+    changeCardSize(value) {
+      this.$store.dispatch('updateSettingsState', {key:'videoCardSize', value})
       this.getCardSizeIcon()
-      this.$store.getters.settings.set('videoCardSize', event).write()
     },
     getCardSizeIcon() {
       let size = ''

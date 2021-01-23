@@ -585,8 +585,7 @@ export default {
     revealInFileExplorer() {
       let videoId = this.$store.getters.getSelectedVideos[0]
       let videoPath = this.$store.getters.videos.find({id:videoId}).value().path
-      videoPath = path.parse(videoPath).dir
-      shell.openItem(videoPath)
+      shell.showItemInFolder(videoPath)
     },
     changeRating(stars) {
       console.log('rating changed: ' +stars)

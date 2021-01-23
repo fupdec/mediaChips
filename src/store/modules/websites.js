@@ -2,12 +2,9 @@ const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
 const FileSync = require('@/components/elements/LowDbAdapter')
-const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbWebsites = path.join(app.getPath('userData'), 'userfiles/databases/dbw.json')
-const adapterSettings = new FileSync(pathToDbSettings)
 const adapterWebsites = new FileSync(pathToDbWebsites)
 const low = require('lowdb')
-const dbs = low(adapterSettings)
 const dbw = low(adapterWebsites)
 dbw.defaults({
   websites: [{
@@ -35,7 +32,6 @@ const defaultFilters = {
 
 const Websites = {
   state: () => ({
-    websitesPerPage: dbs.get('websitesPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -50,23 +46,17 @@ const Websites = {
     filteredWebsites: [],
     filteredEmpty: false,
     menuCard: false,
-    websiteVideoTagsHidden: dbs.get('websiteVideoTagsHidden').value() || false,
-    websitePerformersHidden: dbs.get('websitePerformersHidden').value() || false,
-    websiteEditBtnHidden: dbs.get('websiteEditBtnHidden').value() || false,
   }),
   mutations: {
     updateWebsites (state) {
       console.log(':::::::websites UPDATED:::::::')
       state.lastChanged = Date.now()
     },
-    changeWebsitesPerPage(state, quantity) {
-      state.websitesPerPage = quantity
+    changeWebsitesPageTotal(state, number) {
+      state.pageTotal = number
     },
-    changeWebsitesPageTotal(state, quantity) {
-      state.pageTotal = quantity
-    },
-    changeWebsitesPageCurrent(state, quantity) {
-      state.pageCurrent = quantity
+    changeWebsitesPageCurrent(state, number) {
+      state.pageCurrent = number
     },
     filterWebsites(state, filteredWebsites) {
       state.filteredWebsites = filteredWebsites
@@ -83,20 +73,19 @@ const Websites = {
     },
   },
   actions: {
-    changeWebsitesPerPage({ state, commit, getters}, quantity) {
-      commit('updateWebsites')
+    changeWebsitesPerPage({ state, commit, getters, dispatch}, number) {
+      // commit('updateWebsites')
       commit('resetLoading')
-      commit('changeWebsitesPerPage', quantity)
-      getters.settings.set('websitesPerPage', quantity).write()
+      dispatch('updateSettingsState', {key:'websitesPerPage', value:number})
     },
-    changeWebsitesPageTotal({ state, commit}, quantity) {
-      commit('updateWebsites')
-      commit('changeWebsitesPageTotal', quantity)
+    changeWebsitesPageTotal({ state, commit}, number) {
+      // commit('updateWebsites')
+      commit('changeWebsitesPageTotal', number)
     },
-    changeWebsitesPageCurrent({ state, commit}, quantity) {
-      commit('updateWebsites')
+    changeWebsitesPageCurrent({ state, commit}, number) {
+      // commit('updateWebsites')
       commit('resetLoading')
-      commit('changeWebsitesPageCurrent', quantity)
+      commit('changeWebsitesPageCurrent', number)
     },
     deleteWebsites({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedWebsites.map(id => {
@@ -194,18 +183,6 @@ const Websites = {
         commit('changeWebsitesPageCurrent', 1)
       }
     },
-    updateWebsiteVideoTagsHidden({state, getters}, value) {
-      getters.settings.set('websiteVideoTagsHidden', value).write()
-      state.websiteVideoTagsHidden = value
-    },
-    updateWebsitePerformersHidden({state, getters}, value) {
-      getters.settings.set('websitePerformersHidden', value).write()
-      state.websitePerformersHidden = value
-    },
-    updateWebsiteEditBtnHidden({state, getters}, value) {
-      getters.settings.set('websiteEditBtnHidden', value).write()
-      state.websiteEditBtnHidden = value
-    },
   },
   getters: {
     dbw(state) {
@@ -266,9 +243,9 @@ const Websites = {
     websitesTotal: (state, store) => {
       return store.websites.value().length
     },
-    websitesOnPage(state, store) {
+    websitesOnPage(state, store, rootState) {
       const websites = store.filteredWebsites.value(),
-            websitesCount = store.websitesPerPage
+            websitesCount = rootState.Settings.websitesPerPage
       let l = store.websitesTotal,
           c = websitesCount
       state.pageTotal = Math.ceil(l/c)

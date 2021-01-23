@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import store from './store'
+import store from './store/player'
 import vuetify from './plugins/vuetify'
 import vuescroll from 'vuescroll'
 import Player from './Player.vue'

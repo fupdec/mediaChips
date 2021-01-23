@@ -293,10 +293,10 @@ export default {
     },
     sortButtonsPerformers: {
       get() {
-        return this.$store.state.Videos.videoEditPerformersSortBy
+        return this.$store.state.Settings.videoEditPerformersSortBy
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditPerformersSortBy', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditPerformersSortBy', value})
       },
     },
     tagsAll() {
@@ -305,10 +305,10 @@ export default {
     },
     sortButtonsTags: {
       get() {
-        return this.$store.state.Videos.videoEditTagsSortBy
+        return this.$store.state.Settings.videoEditTagsSortBy
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditTagsSortBy', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditTagsSortBy', value})
       },
     },
     websitesAll() {
@@ -316,10 +316,10 @@ export default {
     },
     sortButtonsWebsites: {
       get() {
-        return this.$store.state.Videos.videoEditWebsitesSortBy
+        return this.$store.state.Settings.videoEditWebsitesSortBy
       },
       set(value) {
-        this.$store.dispatch('updateVideoEditWebsitesSortBy', value)
+        this.$store.dispatch('updateSettingsState', {key:'videoEditWebsitesSortBy', value})
       },
     },
     pathToUserData() {
@@ -368,7 +368,7 @@ export default {
       this.$store.state.hoveredImage = false
     },
     getPerformerImg(performerId) {
-      return this.checkPerformerImageExist(performerId)+'?lastmod='+Date.now()
+      return this.checkPerformerImageExist(performerId)
     },
     checkPerformerImageExist(performerId) {
       let imgAvatarPath = path.join(this.pathToUserData, `/media/performers/${performerId}_avatar.jpg`)
@@ -402,7 +402,7 @@ export default {
       }
     },
     getWebsiteImg(websiteId) {
-      return this.checkWebsiteImageExist(websiteId)+'?lastmod='+Date.now()
+      return this.checkWebsiteImageExist(websiteId)
     },
     removeWebsite() {
       this.video.website = ''

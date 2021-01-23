@@ -11,7 +11,6 @@ dbb.defaults({
     performers: [],
     tags: [],
     websites: [],
-    markers: [],
   },
   filtersPresets: {
     videos: [],

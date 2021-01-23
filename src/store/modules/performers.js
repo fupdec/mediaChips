@@ -2,12 +2,9 @@ const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
 const FileSync = require('@/components/elements/LowDbAdapter')
-const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const pathToDbPerformers = path.join(app.getPath('userData'), 'userfiles/databases/dbp.json')
-const adapterSettings = new FileSync(pathToDbSettings)
 const adapterPerformers = new FileSync(pathToDbPerformers)
 const low = require('lowdb')
-const dbs = low(adapterSettings)
 const dbp = low(adapterPerformers)
 dbp.defaults({ 
   performers: [{
@@ -107,7 +104,6 @@ const defaultFilters = {
 const Performers = {
   state: () => ({
     bottomSheet: true,
-    performersPerPage: dbs.get('performersPerPage').value() || 20,
     pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
@@ -125,28 +121,12 @@ const Performers = {
     updateImages: {},
     updateInfo: {},
     rating: 0,
-    performerChipsColored: dbs.get('performerChipsColored').value() || true,
-    performerEditBtnHidden: dbs.get('performerEditBtnHidden').value() || false,
-    performerMeterHidden: dbs.get('performerMeterHidden').value() || false,
-    performerNameHidden: dbs.get('performerNameHidden').value() || false,
-    performerRatingHidden: dbs.get('performerRatingHidden').value() || false,
-    performerNationalityHidden: dbs.get('performerNationalityHidden').value() || false,
-    performerFavoriteHidden: dbs.get('performerFavoriteHidden').value() || false,
-    performerProfileProgressHidden: dbs.get('performerProfileProgressHidden').value() || false,
-    performerAliasesHidden: dbs.get('performerAliasesHidden').value() || false,
-    performerCareerStatusHidden: dbs.get('performerCareerStatusHidden').value() || false,
-    performerTagsHidden: dbs.get('performerTagsHidden').value() || false,
-    performerVideoTagsHidden: dbs.get('performerVideoTagsHidden').value() || false,
-    performerWebsitesHidden: dbs.get('performerWebsitesHidden').value() || false,
     menuCard: false,
   }),
   mutations: {
     updatePerformers (state) {
       console.log(':::::::performers UPDATED:::::::')
       state.lastChanged = Date.now()
-    },
-    changePerformersPerPage(state, quantity) {
-      state.performersPerPage = quantity
     },
     changePerformersPageTotal(state, quantity) {
       state.pageTotal = quantity
@@ -169,18 +149,17 @@ const Performers = {
     },
   },
   actions: {
-    changePerformersPerPage({ state, commit, getters}, quantity) {
-      commit('updatePerformers')
+    changePerformersPerPage({ state, commit, getters, dispatch}, number) {
+      // commit('updatePerformers')
       commit('resetLoading')
-      commit('changePerformersPerPage', quantity)
-      getters.settings.set('performersPerPage', quantity).write()
+      dispatch('updateSettingsState', {key:'performersPerPage', value:number})
     },
     changePerformersPageTotal({ state, commit}, quantity) {
-      commit('updatePerformers')
+      // commit('updatePerformers')
       commit('changePerformersPageTotal', quantity)
     },
     changePerformersPageCurrent({ state, commit}, quantity) {
-      commit('updatePerformers')
+      // commit('updatePerformers')
       commit('resetLoading')
       commit('changePerformersPageCurrent', quantity)
     },
@@ -550,58 +529,6 @@ const Performers = {
       commit('updatePerformers')
       dispatch('filterPerformers', true)
     },
-    updatePerformerChipsColored({state, getters}, value) {
-      getters.settings.set('performerChipsColored', value).write()
-      state.performerChipsColored = value
-    },
-    updatePerformerEditBtnHidden({state, getters}, value) {
-      getters.settings.set('performerEditBtnHidden', value).write()
-      state.performerEditBtnHidden = value
-    },
-    updatePerformerMeterHidden({state, getters}, value) {
-      getters.settings.set('performerMeterHidden', value).write()
-      state.performerMeterHidden = value
-    },
-    updatePerformerNameHidden({state, getters}, value) {
-      getters.settings.set('performerNameHidden', value).write()
-      state.performerNameHidden = value
-    },
-    updatePerformerRatingHidden({state, getters}, value) {
-      getters.settings.set('performerRatingHidden', value).write()
-      state.performerRatingHidden = value
-    },
-    updatePerformerNationalityHidden({state, getters}, value) {
-      getters.settings.set('performerNationalityHidden', value).write()
-      state.performerNationalityHidden = value
-    },
-    updatePerformerFavoriteHidden({state, getters}, value) {
-      getters.settings.set('performerFavoriteHidden', value).write()
-      state.performerFavoriteHidden = value
-    },
-    updateProfileProgressHidden({state, getters}, value) {
-      getters.settings.set('performerProfileProgressHidden', value).write()
-      state.performerProfileProgressHidden = value
-    },
-    updatePerformerAliasesHidden({state, getters}, value) {
-      getters.settings.set('performerAliasesHidden', value).write()
-      state.performerAliasesHidden = value
-    },
-    updatePerformerCareerStatusHidden({state, getters}, value) {
-      getters.settings.set('performerCareerStatusHidden', value).write()
-      state.performerCareerStatusHidden = value
-    },
-    updatePerformerTagsHidden({state, getters}, value) {
-      getters.settings.set('performerTagsHidden', value).write()
-      state.performerTagsHidden = value
-    },
-    updatePerformerVideoTagsHidden({state, getters}, value) {
-      getters.settings.set('performerVideoTagsHidden', value).write()
-      state.performerVideoTagsHidden = value
-    },
-    updatePerformerWebsitesHidden({state, getters}, value) {
-      getters.settings.set('performerWebsitesHidden', value).write()
-      state.performerWebsitesHidden = value
-    },
   },
   getters: {
     dbp(state) {
@@ -755,9 +682,9 @@ const Performers = {
     performersTotal: (state, store) => {
       return store.performers.value().length;
     },
-    performersOnPage(state, store) {
+    performersOnPage(state, store, rootState) {
       const performers = store.filteredPerformers.value(),
-            performersCount = store.performersPerPage
+            performersCount = rootState.Settings.performersPerPage
       // console.log(performers)
       let l = performers.length,
           c = performersCount;
@@ -773,9 +700,6 @@ const Performers = {
       const end = state.pageCurrent * performersCount,
             start = end - performersCount;
       return performers.slice(start, end)
-    },
-    performersPerPage(state) {
-      return state.performersPerPage
     },
     performersPagesSum(state) {
       return state.pageTotal

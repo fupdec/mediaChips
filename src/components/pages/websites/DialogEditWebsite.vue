@@ -368,7 +368,7 @@ export default {
     },
     getImg() {
       let imgPath = this.getImgUrl(this.website.id + '_.jpg')
-      return this.checkWebsiteImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkWebsiteImageExist(imgPath)
     },
     getImgUrl(img) {
       return path.join(this.pathToUserData, `/media/websites/${img}`)
@@ -390,7 +390,7 @@ export default {
     },
     getImgWebsitesUrl(websiteId){
       let imgPath = this.getImgUrl(websiteId + '_.jpg')
-      return this.checkWebsiteImageExist(imgPath)+'?lastmod='+Date.now()
+      return this.checkWebsiteImageExist(imgPath)
     },
     sort(items) {
       this[items] = this[items].sort((a, b) => a.localeCompare(b))

@@ -10,6 +10,7 @@ module.exports = {
           return args
         })
       },
+      nodeIntegration: true,
       externals: ['archiver'],
       builderOptions: {
         win: {
