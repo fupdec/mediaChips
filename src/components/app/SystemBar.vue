@@ -9,11 +9,18 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
+          <v-list-item link @click="lock" v-if="$store.state.Settings.passwordProtection">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-lock</v-icon> Lock
+              <span></span>
+            </v-list-item-title>
+          </v-list-item>
           <v-list-item link @click="restart">
             <v-list-item-title>
               <v-icon left size="18">mdi-restart</v-icon> Restart
             </v-list-item-title>
           </v-list-item>
+          <v-divider class="ma-1"></v-divider>
           <v-list-item link @click="close">
             <v-list-item-title>
               <v-icon left size="18">mdi-logout</v-icon> Exit
@@ -248,6 +255,9 @@ export default {
     },
   },
   methods: {
+    lock() {
+      this.$emit('lock')
+    },
     restart() {
       ipcRenderer.send('reload')
     },

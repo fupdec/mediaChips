@@ -1,6 +1,6 @@
 <template>
   <v-app :class="[textFont, headerFont]">
-    <SystemBar :disableRunApp="disableRunApp"/>
+    <SystemBar :disableRunApp="disableRunApp" @lock="lock"/>
 
     <AppBar />
 
@@ -216,6 +216,10 @@ export default {
     },
   },
   methods: {
+    lock() {
+      this.disableRunApp = true
+      this.password = ''
+    },
     close() {
       win.close()
     },

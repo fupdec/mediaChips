@@ -790,7 +790,7 @@ export default {
       this.$store.dispatch('updateSettingsState', {key:'phrase', value:this.password})
     },
     saveHint() {
-      this.$store.dispatch('updateSettingsState', {key:'hint', value:this.hint})
+      this.$store.dispatch('updateSettingsState', {key:'passwordHint', value:this.hint})
     },
     getPasswordRules(pass) {
       if (pass.length > 100) {
