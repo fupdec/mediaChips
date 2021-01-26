@@ -117,7 +117,7 @@
         </v-list>
       </v-menu>
 
-      <v-menu bottom offset-y min-width="160">
+      <v-menu v-if="!disableRunApp" bottom offset-y min-width="160">
         <template v-slot:activator="{ on, attrs }">
           <v-btn v-bind="attrs" v-on="on" :ripple="false" small tile text height="28">
             Navigation
@@ -169,15 +169,15 @@
         </v-list>
       </v-menu>
 
-      <v-btn @click="back" text tile small width="46" height="28" class="ml-6">
+      <v-btn v-if="!disableRunApp" @click="back" text tile small width="46" height="28" class="ml-6">
         <v-icon size="18" class="ma-0">mdi-arrow-left</v-icon>
       </v-btn>
-      <v-btn @click="forward" text tile small width="46" height="28">
+      <v-btn v-if="!disableRunApp" @click="forward" text tile small width="46" height="28">
         <v-icon size="18" class="ma-0">mdi-arrow-right</v-icon>
       </v-btn>
     </div>
     <v-spacer></v-spacer>
-    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.6</span>
+    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.5.7</span>
     <v-spacer></v-spacer>
     <div class="window-controls">
       <v-btn text tile small width="46" height="28" @click="minimize">
@@ -205,6 +205,9 @@ const { ipcRenderer } = require('electron')
 
 export default {
   name: 'SystemBar',
+  props: {
+    disableRunApp: Boolean,
+  },
   components: {
   },
   beforeCreate(){

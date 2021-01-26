@@ -10,7 +10,7 @@
       </div>
       <v-row v-else>
         <v-col cols="12">
-          <div class="mb-2 red--text">Starting from version 0.5.6 markers for videos will be stored in their own database.
+          <div class="mb-2 red--text">Starting from version 0.5.7 markers for videos will be stored in their own database.
             <br> If you have markers just press "Update markers" button.</div>
           <v-btn @click="updateMarkers" color="red" dark x-large class="my-4" block> 
             <v-icon left>mdi-auto-fix</v-icon> Update markers </v-btn>

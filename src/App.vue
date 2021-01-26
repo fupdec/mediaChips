@@ -1,6 +1,6 @@
 <template>
   <v-app :class="[textFont, headerFont]">
-    <SystemBar />
+    <SystemBar :disableRunApp="disableRunApp"/>
 
     <AppBar />
 
@@ -11,7 +11,7 @@
     </v-main>
 
     <v-dialog v-model="disableRunApp" scrollable persistent width="400" overlay-opacity="1">
-      <v-form ref="pass" v-model="validPass" lazy-validation>
+      <v-form ref="pass" v-model="validPass" lazy-validation @submit.prevent>
         <v-card>
           <v-card-title primary-title class="headline">
             <div>Log in to the application</div>
@@ -25,7 +25,7 @@
               v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
               :rules="[getPasswordRules]" :type="showPassword ? 'text' : 'password'" 
               label="Password" :hint="passwordHint" validate-on-blur
-              @click:append="showPassword = !showPassword"
+              @click:append="showPassword = !showPassword" @keyup.enter="logIn"
             />
             <v-alert v-model="errorPass" text dense type="error" icon="mdi-alert" class="mt-6">
               Wrong password
