@@ -44,28 +44,23 @@
       </v-form>
     </v-dialog>
 
-    <v-dialog v-model="dialogUpdateApp" persistent width="800">
-      <v-card>
-        <v-card-title class="headline">
-          <v-spacer></v-spacer>
-          <div>A new version of the application is available!</div>
-          <v-spacer></v-spacer>
-          <v-btn @click="dialogUpdateApp = false" icon tile>
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-card-text class="text-center pt-8">
-          <v-icon size="140" color="pink">mdi-alert-decagram-outline</v-icon>
+    <v-bottom-sheet v-model="updateApp" hide-overlay no-click-animation persistent width="600">
+      <v-card class="pb-8">
+        <v-card-text class="text-center">
+          <div class="overline py-4">New version AVDB is available!</div>
+          <img alt="AMDB" width="100" height="100" :src="logoPath">
         </v-card-text>
-        <v-card-actions class="pt-8">
+        <v-card-actions>
+          <v-btn @click="updateApp=false" small class="mx-4">
+            <v-icon left>mdi-close</v-icon> Ok
+          </v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="openPage" color="primary" large block>
+          <v-btn @click="openPage" color="primary" small class="mx-4">
             <v-icon left>mdi-download</v-icon> Open page with downloads
           </v-btn>
-          <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-bottom-sheet>
 
     <BottomBar />
 
@@ -90,6 +85,7 @@
 
 <script>
 console.clear()
+const path = require('path')
 const {app} = require('electron').remote
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
@@ -170,7 +166,7 @@ export default {
     isShowPerformerBtn: false,
     videoPage: '/',
     performerPage: '/',
-    dialogUpdateApp: false,
+    updateApp: false,
   }),
   computed: {
     passwordProtection() {
@@ -215,6 +211,9 @@ export default {
         return this.getImgWebsiteUrl(this.hoveredImageId)
       }
     },
+    logoPath() {
+      return path.join(__static, '/icons/icon.png')
+    },
   },
   methods: {
     close() {
@@ -249,7 +248,7 @@ export default {
           const html = response.data;
           const $ = cheerio.load(html)
           let v = $('.release-header .f1 a').eq(0).text().trim()
-          if (v.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0] > app.getVersion()) this.dialogUpdateApp = true
+          if (v.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0] > app.getVersion()) this.updateApp = true
         }
       })
     },
