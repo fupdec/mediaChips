@@ -64,14 +64,13 @@ const nodeDiskInfo = require('node-disk-info')
 
 import vuescroll from 'vuescroll'
 import Functions from '@/mixins/Functions'
-import FilterVideos from '@/mixins/FilterVideos'
 
 export default {
   name: "DialogFolderTree",
   components: {
     vuescroll,
   },
-  mixins: [Functions, FilterVideos],
+  mixins: [Functions],
   mounted () {
     this.$nextTick(function () {
       this.openDialogFolderTree()
@@ -88,10 +87,10 @@ export default {
   computed: {
     selectedFolders: {
       get() {
-        return this.$store.state.Videos.filters.tree
+        return this.$store.state.Videos.tree
       },
       set(value) {
-        this.$store.commit('updateFiltersOfVideos', {key:'tree', value: value})
+        this.$store.state.Videos.tree = value
       },
     },
     selectedDisk: {
@@ -141,10 +140,12 @@ export default {
     },
     clearSelectedFolders() {
       this.selectedFolders = []
+      this.$store.state.Videos.dialogFolderTree = false
+      this.$store.dispatch('filterVideos')
     },
     filterByTree() {
       this.$store.state.Videos.dialogFolderTree = false
-      this.applyAllFilters()
+      this.$store.dispatch('filterVideos')
     },
     selectDisk() {
       this.updatingFolderTree = true

@@ -8,34 +8,31 @@ const low = require('lowdb')
 const dbv = low(adapterVideos)
 dbv.defaults({ videos: [] }).write()
 
-const defaultFilters = {
-  favorite: false,
-  bookmark: false,
-  quality: [],
-  performers: [],
-  performersLogic: false,
-  tags: [],
-  tagsLogic: false,
-  websites: [],
-  path: '',
-  durationActive: false,
-  duration: [0,1],
-  sizeActive: false,
-  size: [0,20000],
-  sortBy: 'name',
-  sortDirection: 'asc',
-  tree: [],
-  page: 1,
-}
+// const defaultFilters = {
+//   favorite: false,
+//   bookmark: false,
+//   quality: [],
+//   performers: [],
+//   performersLogic: false,
+//   tags: [],
+//   tagsLogic: false,
+//   websites: [],
+//   path: '',
+//   durationActive: false,
+//   duration: [0,1],
+//   sizeActive: false,
+//   size: [0,20000],
+//   sortBy: 'name',
+//   sortDirection: 'asc',
+//   tree: [],
+//   page: 1,
+// }
 
 const Videos = {
   state: () => ({
-    pageCurrent: 1,
+    page: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
-    defaultFilters: _.cloneDeep(defaultFilters),
-    filters: _.cloneDeep(defaultFilters),
-    filtersReserved: _.cloneDeep(defaultFilters),
     filteredVideos: [],
     filteredEmpty: false,
     selection: null,
@@ -45,22 +42,22 @@ const Videos = {
     dialogCreatePreview: false,
     dialogErrorPlayVideo: false,
     dialogFolderTree: false,
+    dialogFilterVideos: false,
     errorPlayVideoPath: '',
     deleteFile: false,
     rating: 0,
     menuCard: false,
     updateCard: 1,
+    sortBy: 'name',
+    sortDirection: 'asc',
+    tree: [],
+    showFavorites: false,
+    showBookmarks: false,
   }),
   mutations: {
     updateVideos (state) {
       console.log(':::::::videos UPDATED:::::::')
       state.lastChanged = Date.now()
-    },
-    changeVideosPageTotal(state, number) {
-      state.pageTotal = number
-    },
-    changeVideosPageCurrent(state, number) {
-      state.pageCurrent = number
     },
     updateFiltersOfVideos(state, {key, value}) {
       state.filters[key] = value
@@ -68,9 +65,6 @@ const Videos = {
     },
     filterVideos(state, filteredVideos) {
       state.filteredVideos = filteredVideos
-    },
-    resetFilteredVideos(state) {
-      state.filters = _.cloneDeep(defaultFilters)
     },
     updateSelectedVideos(state, ids) {
       state.selectedVideos = ids
@@ -82,153 +76,151 @@ const Videos = {
       commit('resetLoading')
       dispatch('updateSettingsState', {key:'videosPerPage', value:number})
     },
-    changeVideosPageTotal({ state, commit}, number) {
-      // commit('updateVideos')
-      commit('changeVideosPageTotal', number)
-    },
-    changeVideosPageCurrent({ state, commit}, number) {
-      // commit('updateVideos')
-      commit('resetLoading')
-      commit('changeVideosPageCurrent', number)
-    },
-    filterVideos({ state, commit, getters}, stayOnCurrentPage) {
-      // console.log(state.filters.performers)
+    filterVideos({ state, commit, getters, rootState}, stayOnCurrentPage) {
+      function compare(sign, a, b) {
+        if (sign === 'equal') return a == b
+        if (sign === 'not equal') return a != b
+        if (sign === 'greater than') return a < b
+        if (sign === 'less than') return a > b
+        if (sign === 'greater than or equal') return a <= b
+        if (sign === 'less than or equal') return a >= b
+      }
+
       let videos = getters.videos
-      // console.log(videos)
-      let filteredVideos = []
       videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
-      if (state.filters.performers) {
-        let filteredPerformers = state.filters.performers
-        if (filteredPerformers.length) {
-          if (state.filters.performersLogic) {
-            videos = videos.filter({'performers': filteredPerformers})
-          } else {
+
+      for (let filter in rootState.Settings.videoFilters) {
+        let param = rootState.Settings.videoFilters[filter].param
+        let cond = rootState.Settings.videoFilters[filter].cond
+        let val = rootState.Settings.videoFilters[filter].val
+        let type = rootState.Settings.videoFilters[filter].type
+        
+        if (val === null || val.length === 0) continue
+        
+        if (type === 'number') {
+          if (param === 'height') {
             videos = videos.filter(video=>{
-              let include = false
-              for (let i=0; i<filteredPerformers.length;i++) {
-                if (video.performers.includes(filteredPerformers[i])) {
-                  include = true
-                }
-              }
-              return include
+              let height = +video.resolution.match(/\x(.*)/)[1]
+              return compare(cond, val, height)
             })
-          }
-          // console.log(filteredPerformers)
-          // console.log('videos filtered by performers')
-        }
-      }
-      if (state.filters.tags) {
-        let filteredTags = state.filters.tags
-        if (filteredTags.length) {
-          if (state.filters.tagsLogic) {
-            videos = videos.filter({'tags': filteredTags})
-          } else {
+          } else if (param === 'width') {
             videos = videos.filter(video=>{
-              let include = false
-              for (let i=0; i<filteredTags.length;i++) {
-                if (video.tags.includes(filteredTags[i])) {
-                  include = true
-                }
-              }
-              return include
+              let width = +video.resolution.match(/\d*/)[0]
+              return compare(cond, val, width)
             })
+          } else videos = videos.filter(video => compare(cond, val, video[param]))
+        }
+        
+        if (type === 'string') {
+          let string = val.toLowerCase().trim()
+          if (string.length) {
+            console.log(cond)
+            if (cond === 'including') {
+              videos = videos.filter(video => video[param].toLowerCase().includes(string))
+            } else videos = videos.filter(v => !v[param].toLowerCase().includes(string))
           }
-          // console.log('videos filtered by tags')
         }
-      }
-      if (state.filters.websites) {
-        let filteredwebsites = state.filters.websites
-        if (filteredwebsites.length) {
-          videos = videos.filter(video=>(filteredwebsites.includes(video.website)))
-          // console.log(`videos filtered by websites "${filteredwebsites}"`)
-        }
-      }
-      if (state.filters.path) {
-        let frase = state.filters.path.toLowerCase().trim()
-        if (frase.length) {
-          videos = videos.filter(
-            video => (video.path.toLowerCase().includes(frase)))
-          // console.log(`videos filtered by frase "${frase}" in path`)
-        }
-      }
-      if (state.filters.tree) {
-        let tree = state.filters.tree
-        if (tree.length) {
-          videos = videos.filter(video => {
-            let include = false
-            for (let i=0; i<tree.length; i++) {
-              if (video.path.includes(tree[i])) {
-                include = true
-              }
+
+        if (type === 'array') {
+          if (param === 'websites') {
+            if (cond === 'all' || cond === 'one of') {
+              videos = videos.filter(video=>val.includes(video.website))
+            } else videos = videos.filter(video=>!val.includes(video.website))
+          } else {
+            if (cond === 'all') {
+              videos = videos.filter({[param]: val})
+            } else if (cond === 'one of') {
+              videos = videos.filter(video=>{
+                let include = false
+                for (let i=0; i<val.length;i++) {
+                  if (video[param].includes(val[i])) { include = true }
+                }
+                return include
+              })
+            } else if (cond === 'not') {
+              videos = videos.filter(video=>{
+                let include = false
+                for (let i=0; i<val.length;i++) {
+                  if (video[param].includes(val[i])) { include = true }
+                }
+                return !include
+              })
             }
-            return include
-          })
+          }
         }
       }
-      if (state.filters.durationActive) {
-        let dur = state.filters.duration
+      if (state.showFavorites) {
+        videos = videos.filter(video=>video.favorite)
+      }
+      if (state.showBookmarks) {
+        videos = videos.filter(video=>video.bookmark)
+      }
+      // filter by folder tree
+      if (state.tree.length) {
         videos = videos.filter(video => {
-          let videoDur = Math.ceil(video.duration/60)
-          if (videoDur >= dur[0] && videoDur <= dur[1]) {
-            return true
-          } else {return false}
+          let include = false
+          for (let i = 0; i < state.tree.length; i++) {
+            if (video.path.includes(state.tree[i])) {
+              include = true
+            }
+          }
+          return include
         })
-        // console.log(`videos filtered by duration`)
       }
-      if (state.filters.sizeActive) {
-        let size = state.filters.size
-        videos = videos.filter(video => {
-          let sizeMb = (video.size/1024/1024-0.01).toFixed(0)
-          if (sizeMb >= size[0]*1000 && sizeMb <= size[1]*1000) {
-            return true
-          } else {return false}
-        })
-        // console.log('videos filtered by size')
-        // console.log(size)
+
+      // sort videos
+      if (state.sortBy === 'name') {
+        videos = videos.orderBy(video=>(path.basename(video.path)), [state.sortDirection])
+      } else {
+        videos = videos.orderBy(state.sortBy, [state.sortDirection])
       }
-      if (state.filters.quality) {
-        let quality = state.filters.quality
-        if (quality.length) {
-          videos = videos.filter(video=>{
-            let width = +video.resolution.match(/\d*/)[0]
-            let height = +video.resolution.match(/\x(.*)/)[1]
-            if (quality.includes('4K')) {
-              return width>height && height>1800
-            }
-            if (quality.includes('1080')) {
-              return width>height && height>720 && height<=1080
-            }
-            if (quality.includes('720')) {
-              return width>height && height>480 && height<=720
-            }
-            if (quality.includes('480')) {
-              return width>height && height<=480
-            }
-            if (quality.includes('vert')) {
-              return width<height
-            }
-          })
-          // console.log('videos filtered by quality')
-        }
-      }
-      if (state.filters.sortBy) {
-        let sort = state.filters.sortBy
-        let direction = state.filters.sortDirection
-        if (sort === 'name') {
-          videos = videos.orderBy(video=>(path.basename(video.path)), [direction])
-        } else {
-          videos = videos.orderBy(sort, [direction])
-        }
-        // console.log('videos sorted')
-      }
-      if (state.filters.favorite) {
-        videos = videos.filter(video=>(video.favorite))
-        // console.log('favorite videos')
-      }
-      if (state.filters.bookmark) {
-        videos = videos.filter(video=>(video.bookmark))
-        // console.log('videos with bookmark')
-      }
+      // if (state.filters.durationActive) {
+      //   let dur = state.filters.duration
+      //   videos = videos.filter(video => {
+      //     let videoDur = Math.ceil(video.duration/60)
+      //     if (videoDur >= dur[0] && videoDur <= dur[1]) {
+      //       return true
+      //     } else {return false}
+      //   })
+      //   // console.log(`videos filtered by duration`)
+      // }
+      // if (state.filters.sizeActive) {
+      //   let size = state.filters.size
+      //   videos = videos.filter(video => {
+      //     let sizeMb = (video.size/1024/1024-0.01).toFixed(0)
+      //     if (sizeMb >= size[0]*1000 && sizeMb <= size[1]*1000) {
+      //       return true
+      //     } else {return false}
+      //   })
+      //   // console.log('videos filtered by size')
+      //   // console.log(size)
+      // }
+      // if (state.filters.quality) {
+      //   let quality = state.filters.quality
+      //   if (quality.length) {
+      //     videos = videos.filter(video=>{
+      //       let width = +video.resolution.match(/\d*/)[0]
+      //       let height = +video.resolution.match(/\x(.*)/)[1]
+      //       if (quality.includes('4K')) {
+      //         return width>height && height>1800
+      //       }
+      //       if (quality.includes('1080')) {
+      //         return width>height && height>720 && height<=1080
+      //       }
+      //       if (quality.includes('720')) {
+      //         return width>height && height>480 && height<=720
+      //       }
+      //       if (quality.includes('480')) {
+      //         return width>height && height<=480
+      //       }
+      //       if (quality.includes('vert')) {
+      //         return width<height
+      //       }
+      //     })
+      //     // console.log('videos filtered by quality')
+      //   }
+      // }
+      let filteredVideos = []
       if (videos != getters.videos) {
         if (videos.value().length == 0) {
           state.filteredEmpty = true
@@ -242,8 +234,7 @@ const Videos = {
       commit('resetLoading')
       commit('filterVideos', filteredVideos)
       if (!stayOnCurrentPage) {
-        state.filters.page = 1
-        commit('changeVideosPageCurrent', 1)
+        state.page = 1
       }
     },
     deleteVideos({state, rootState, commit, dispatch, getters}) {
@@ -333,59 +324,29 @@ const Videos = {
       // console.log(state.filteredVideos)
       return videos
     },
-    videosFilters: (state, store) => {
+    videoFiltersForTabName: (state, store, rootState) => {
       let filters = []
-      if (state.filters.path) {
-        filters.push('Search:' + state.filters.path)
-      }
-      if (state.filters.performers.length) {
-        let filterPerformers = 'Perf.:'
-        filterPerformers += state.filters.performers.join(';')
-        filters.push(filterPerformers)
-      }
-      if (state.filters.tags.length) {
-        let filterTags = 'Tags:'
-        filterTags += state.filters.tags.join(';')
-        filters.push(filterTags)
-      }
-      if (state.filters.websites.length) {
-        let filterwebsites = 'Web.:'
-        filterwebsites += state.filters.websites.join(';')
-        filters.push(filterwebsites)
-      }
-      if (state.filters.favorite) {
-        filters.push('Fav.')
-      }
-      if (state.filters.bookmark) {
-        filters.push('Book.')
-      }
-      if (state.filters.quality.length) {
-        let quality = 'Qual.:'
-        if (state.filters.quality.includes(2160)) {
-          quality += '4K;'
+      let equals = ['equal', 'including', 'all', 'one of']
+      let notEquals = ['not equal', 'not', 'excluding']
+      
+      for (let filter in rootState.Settings.videoFilters) {
+        let param = rootState.Settings.videoFilters[filter].param
+        let cond = rootState.Settings.videoFilters[filter].cond
+        let val = rootState.Settings.videoFilters[filter].val
+        let type = rootState.Settings.videoFilters[filter].type
+
+        if (equals.includes(cond)) cond = '='
+        if (notEquals.includes(cond)) cond = '!='
+        
+        if (type === 'array') {
+          let arr = param+' '+cond+' '
+          arr += val.join(';')
+          filters.push(arr)
+        } else {
+          filters.push(param+' '+cond+' '+val)
         }
-        if (state.filters.quality.includes(1080)) {
-          quality += '1080p;'
-        }
-        if (state.filters.quality.includes(720)) {
-          quality += '720p;'
-        }
-        if (state.filters.quality.includes(480)) {
-          quality += '480p;'
-        }
-        filters.push(quality)
       }
-      if (state.filters.durationActive) {
-        filters.push(`Dur.:${state.filters.duration[0]}-${state.filters.duration[1]}min`)
-      }
-      if (state.filters.sizeActive) {
-        filters.push(`Size:${state.filters.size[0]}-${state.filters.size[1]}GB`)
-      }
-      if (filters.length) {
-        return filters.join(', ')
-      } else {
-        return 'Videos'
-      }
+      return 'Videos ' + filters.join(', ')
     },
     videosTotal: (state, store) => {
       return store.videos.value().length
@@ -426,29 +387,20 @@ const Videos = {
           c = videosCount
       state.pageTotal = Math.ceil(l/c)
       // console.log(state.pageTotal)
-      if(state.filters.page) {
-        state.pageCurrent = state.filters.page
-      }
-      if(state.pageCurrent > state.pageTotal) {
-        state.pageCurrent = state.pageTotal
+      if(state.page > state.pageTotal) {
+        state.page = state.pageTotal
       }
       
-      const end = state.pageCurrent * videosCount,
+      const end = state.page * videosCount,
             start = end - videosCount;
       return videos.slice(start, end)
     },
-    videosPagesSum(state) {
-      return state.pageTotal
-    },
-    videosPages(state, store) {
+    videosPages(state) {
       let pages = []
-      for (let i = 0; i < store.videosPagesSum; i++) {
+      for (let i = 0; i < state.pageTotal; i++) {
         pages.push(i+1)
       }
       return pages
-    },
-    videosCurrentPage(state) {
-      return state.pageCurrent
     },
     getSelectedVideos(state) {
       return state.selectedVideos

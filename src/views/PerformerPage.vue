@@ -678,19 +678,29 @@ export default {
     },
     initFilters() {
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
-        this.$store.commit('resetFilteredVideos')
-        this.updateFiltersOfVideos('performers', [this.performer.name])
-      } else {
-        this.$store.state.Videos.filters = _.cloneDeep(this.filtersTab)
+        this.$store.state.Settings.videoFilters = [{
+          param: 'performers',
+          cond: 'all',
+          val: [this.performer.name],
+          type: 'array',
+          lock: true,
+        },{
+          param: 'tags',
+          cond: 'all',
+          val: this.getFilteredTags(),
+          type: 'array',
+          lock: true,
+        },{
+          param: 'websites',
+          cond: 'all',
+          val: this.getFilteredWebsites(),
+          type: 'array',
+          lock: true,
+        }]
         this.$store.dispatch('filterVideos', true)
-      }
-    },
-    updateFiltersOfVideos(key, value){
-      this.$store.commit('updateFiltersOfVideos', {key, value})
-      this.$store.dispatch('filterVideos', true)
-      if (this.tabId === 'default') {
-        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
-        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters: newFilters}).write()
+      } else {
+        this.$store.state.Settings.videoFilters = _.cloneDeep(this.filtersTab)
+        this.$store.dispatch('filterVideos', true)
       }
     },
     getImgUrl(imgType) {
@@ -740,31 +750,55 @@ export default {
         return (tagValue / this.$store.getters.sumOfTagsValue) * 100
       } else return 0
     },
-    filterTags() {
+    getFilteredTags() {
       let active = this.activeTags
       let all = this.tagsFromVideos
       let filtered = [] 
       for (let i=0; i<active.length; i++) {
         filtered.push(all[active[i]])
       }
-      this.updateFiltersOfVideos('tags', filtered)
+      return filtered
     },
-    filterWebsites() {
+    getFilteredWebsites() {
       let active = this.activeWebsites
       let all = this.performer.websites
       let filtered = [] 
       for (let i=0; i<active.length; i++) {
         filtered.push(all[active[i]])
       }
-      this.updateFiltersOfVideos('websites', filtered)
+      return filtered
+    },
+    updateFilters() {
+      const defaults = [{
+        param: 'performers',
+        cond: 'all',
+        val: [this.performer.name],
+        type: 'array',
+        lock: true,
+      },{
+        param: 'tags',
+        cond: 'one of',
+        val: this.getFilteredTags(),
+        type: 'array',
+        lock: true,
+      },{
+        param: 'websites',
+        cond: 'one of',
+        val: this.getFilteredWebsites(),
+        type: 'array',
+        lock: true,
+      }]
+      const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
+      this.$store.state.Settings.videoFilters = [...defaults, ...others]
+      this.$store.dispatch('filterVideos')
     },
   },
   watch: {
     activeTags() {
-      this.filterTags()
+      this.updateFilters()
     },
     activeWebsites() {
-      this.filterWebsites()
+      this.updateFilters()
     },
     $route(newRoute) {
       if (!this.$route.path.includes('/performer/:')) return

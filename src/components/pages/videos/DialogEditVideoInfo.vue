@@ -347,8 +347,7 @@ export default {
         let video = this.video
         if (video) {
           if (video.bookmark) {
-            let text = this.$store.getters.bookmarks.get('videos')
-                            .find({itemId:videoId}).value().text
+            let text = this.$store.getters.bookmarks.get('videos').find({itemId:video.id}).value().text
             this.$store.state.Bookmarks.bookmarkText = text
           }
         }
@@ -460,7 +459,6 @@ export default {
       if (this.valid === false) {
         return false
       }
-      this.$store.state.Videos.dialogEditVideoInfo = false
       let videos = this.$store.getters.getSelectedVideos
       videos.map(videoId => {
         let video = this.$store.getters.videos.find({ id: videoId }).value()
@@ -554,6 +552,7 @@ export default {
         this.$store.commit('updateVideos')
         this.$store.dispatch('filterVideos', true)
       })
+      this.$store.state.Videos.dialogEditVideoInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
     },
     getPathRules(stringPath) {

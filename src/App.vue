@@ -71,7 +71,6 @@
 
     <VideosGridElements />
     <ScanVideos />
-    <!-- <VideoPlayer v-if="$store.state.dialogVideoPlayer" /> -->
 
     <img 
       v-show="$store.state.hoveredImage" class="list-img-preview"
@@ -98,7 +97,7 @@ const axios = require("axios")
 const cheerio = require("cheerio")
 const shell = require('electron').shell
 
-import FilterVideos from '@/mixins/FilterVideos'
+import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
 
 export default {
@@ -110,10 +109,9 @@ export default {
     StatusBar: () => import('@/components/app/StatusBar.vue'),
     BottomBar: () => import('@/components/app/BottomBar.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
-    // VideoPlayer: () => import('@/components/elements/VideoPlayer.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
   },
-  mixins: [FilterVideos, PlayerEvents],
+  mixins: [HoveredImageFunctions, PlayerEvents],
   mounted() {
     this.$nextTick(function () {
       this.checkForUpdates()
@@ -125,6 +123,7 @@ export default {
         this.disableRunApp = this.phrase !== this.password 
       }
       // keyboard shortcuts
+      // TODO: disable shift+enter and shift+click because that add new window
       window.addEventListener('keyup', event => {
         if(event.altKey && event.keyCode === 83) { // alt+s
           this.$router.push('/settings')

@@ -1,6 +1,6 @@
 <template>
 	<div>
-    <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
+    <!-- <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
       <template #activator="{ on: onMenu }">
         <v-tooltip bottom>
           <template #activator="{ on: onTooltip }">
@@ -184,7 +184,7 @@
                 <v-range-slider 
                   v-model="$store.state.Videos.filters.duration" 
                   :disabled="!$store.state.Videos.filters.durationActive"
-                  hide-details :min="0" :max="maxDuration"
+                  hide-details :min="0" 
                 />
               </div>
               <div class="range-wrapper">
@@ -245,7 +245,18 @@
           </v-btn>
         </v-card-actions>
       </v-card>
-    </v-menu>
+    </v-menu> -->
+    
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn @click="$store.state.Videos.dialogFilterVideos=true" v-on="on" icon tile>
+          <v-badge :value="filterBadge" :content="filteredVideosTotal" 
+            overlap bottom :dot="filteredVideosTotal==0" style="z-index: 5;"> 
+          <v-icon>mdi-filter</v-icon> </v-badge>
+        </v-btn>
+      </template>
+      <span>Filter videos</span>
+    </v-tooltip>
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
@@ -259,22 +270,22 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn @click="toggleFavorites" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Videos.filters.favorite">mdi-heart</v-icon>
+          <v-icon v-if="$store.state.Videos.showFavorites">mdi-heart</v-icon>
           <v-icon v-else>mdi-heart-outline</v-icon>
         </v-btn>
       </template>
-      <span v-if="$store.state.Videos.filters.favorite">Show all</span>
+      <span v-if="$store.state.Videos.showFavorites">Show all</span>
       <span v-else>Show favorites</span>
     </v-tooltip>
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Videos.filters.bookmark">mdi-bookmark</v-icon>
+          <v-icon v-if="$store.state.Videos.showBookmarks">mdi-bookmark</v-icon>
           <v-icon v-else>mdi-bookmark-outline</v-icon>
         </v-btn>
       </template>
-      <span v-if="$store.state.Videos.filters.bookmark">Show all</span>
+      <span v-if="$store.state.Videos.showBookmarks">Show all</span>
       <span v-else>Show bookmarks</span>
     </v-tooltip>
 
@@ -288,8 +299,6 @@
       </template>
       <span>Open folder tree</span>
     </v-tooltip>
-    
-    <DialogFolderTree v-if="$store.state.Videos.dialogFolderTree"/>
     
     <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
       <template v-slot:activator="{ on, attrs }">
@@ -398,26 +407,24 @@
 			<span>Select all videos</span>
 		</v-tooltip>
 
-    <FiltersPresets v-if="$store.state.Bookmarks.dialogFiltersPresets" 
-      typeOfPresets="videos"
-    />
+    <FiltersPresets v-if="$store.state.Bookmarks.dialogFiltersPresets" typeOfPresets="videos"/>
+    <DialogFolderTree v-if="$store.state.Videos.dialogFolderTree"/>
+    <DialogFilterVideos v-if="$store.state.Videos.dialogFilterVideos"/>
   </div>
 </template>
 
 
 <script>
-const shortid = require("shortid")
-
-import FilterVideos from '@/mixins/FilterVideos'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
+import vuescroll from 'vuescroll'
 
 export default {
   name: 'VideosAppbarActions',
   components: {
     FiltersPresets: () => import('@/components/elements/FiltersPresets.vue'),
     DialogFolderTree: () => import('@/components/pages/videos/DialogFolderTree.vue'),
+    DialogFilterVideos: () => import('@/components/pages/videos/DialogFilterVideos.vue'),
+    vuescroll,
   },
-  mixins: [FilterVideos, ShowImageFunction], 
   mounted() {
     this.$nextTick(function () {
     })
@@ -436,141 +443,166 @@ export default {
       return this.$store.getters.filteredVideosTotal
     },
     videosSort() {
-      let sort = this.$store.state.Videos.filters.sortBy
+      let sort = this.$store.state.Videos.sortBy
       return sort.charAt(0) + sort.charAt(1) + sort.charAt(2) + '.'
     },
     sortButtons: {
       get() {
-        return this.$store.state.Videos.filters.sortBy
+        return this.$store.state.Videos.sortBy
       },
       set(value) {
-        this.updateFiltersOfVideos('sortBy', value)
+        this.$store.state.Videos.sortBy = value
       },
     },
     sortDirection() {
-      return this.$store.state.Videos.filters.sortDirection
-    },
-    tabId() {
-      return this.$route.query.tabId
+      return this.$store.state.Videos.sortDirection
     },
     isTreeEmpty() {
-      if (this.$store.state.Videos.filters.tree.length) {
+      if (this.$store.state.Videos.tree.length) {
         return false
       } else return true
     },
     treeBadgeContent() {
-      return this.$store.state.Videos.filters.tree.length  
+      return this.$store.state.Videos.tree.length  
+    },
+    itemId() {
+      return this.$route.params.id.replace(/:/g, '')    
+    },
+    tabId() {
+      return this.$route.query.tabId
+    },
+    isPerformerPage() {
+      return this.$route.path.includes('/performer/:')  
+    },
+    isTagPage() {
+      return this.$route.path.includes('/tag/:')  
+    },
+    isWebsitePage() {
+      return this.$route.path.includes('/website/:')  
     },
   },
   methods: {
-    async pastePath() {
-      let text = await navigator.clipboard.readText()
-      let path = this.$store.state.Videos.filters.path
-      if (path) {
-        text = path + text
+    // async pastePath() {
+    //   let text = await navigator.clipboard.readText()
+    //   let path = this.$store.state.Videos.filters.path
+    //   if (path) {
+    //     text = path + text
+    //   }
+    //   this.updateFiltersOfVideos('path', text)
+    // },
+    // async pastePerformers() {
+    //   let text = await navigator.clipboard.readText()
+    //   let perfs = text.split(', ')
+    //   perfs = this.$store.getters.performers.filter(p=>(perfs.includes(p.name))).value()
+    //   perfs = perfs.map(p=>{return p.name})
+    //   if (perfs.length) {
+    //     this.updateFiltersOfVideos('performers', perfs)
+    //   }
+    // },
+    getItem(itemType) {
+      return this.$store.getters[itemType].find({ id: this.itemId }).value()    
+    },
+    resetAllFilters() {
+      if (this.isPerformerPage) {
+        let item = this.getItem('performers')
+        this.$store.state.Settings.videoFilters = [{
+          param: 'performers',
+          cond: 'all',
+          val: [item.name],
+          type: 'array',
+          lock: true,
+        },{
+          param: 'tags',
+          cond: 'one of',
+          val: [],
+          type: 'array',
+          lock: true,
+        },{
+          param: 'websites',
+          cond: 'one of',
+          val: [],
+          type: 'array',
+          lock: true,
+        }]
+      } else if (this.isTagPage) {
+        let item = this.getItem('tags')
+        this.$store.state.Settings.videoFilters = [{
+          param: 'tags',
+          cond: 'all',
+          val: [item.name],
+          type: 'array',
+          lock: true,
+        },{
+          param: 'performers',
+          cond: 'one of',
+          val: [],
+          type: 'array',
+          lock: true,
+        }]
+      } else if (this.isWebsitePage) {
+        let item = this.getItem('websites')
+        this.$store.state.Settings.videoFilters = [{
+          param: 'websites',
+          cond: 'all',
+          val: [item.name],
+          type: 'array',
+          lock: true,
+        },{
+          param: 'performers',
+          cond: 'one of',
+          val: [],
+          type: 'array',
+          lock: true,
+        }]
+      } else {
+        this.$store.state.Settings.videoFilters = [{
+          param: null,
+          cond: null,
+          val: null,
+          type: null,
+          lock: false,
+        }]
       }
-      this.updateFiltersOfVideos('path', text)
-    },
-    async pastePerformers() {
-      let text = await navigator.clipboard.readText()
-      let perfs = text.split(', ')
-      perfs = this.$store.getters.performers.filter(p=>(perfs.includes(p.name))).value()
-      perfs = perfs.map(p=>{return p.name})
-      if (perfs.length) {
-        this.updateFiltersOfVideos('performers', perfs)
+
+      this.$store.dispatch('filterVideos')
+
+      const pages = ['/performer/:','/website/:']
+      let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
+
+      if (this.tabId === 'default') { // for videos page (not for tab)
+        this.$store.getters.settings.set('videoFilters', newFilters).write()
+      } 
+      // for tab of tag page
+      else if (this.$route.path.includes('/tag/:')) { 
+        this.$store.getters.tabsDb.find({id: this.tabId}).get('filters')
+          .assign({videos: newFilters}).write()
+      } 
+      // for tab of performer or website page
+      else if (pages.some(p => this.$route.path.includes(p))) { 
+        this.$store.getters.tabsDb.find({id:this.tabId})
+          .assign({filters:newFilters}).write()
+      } 
+      // for tab of videos page
+      else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+            filters: newFilters,
+            name: this.$store.getters.videoFiltersForTabName,
+          }).write()
+        this.$store.commit('getTabsFromDb')
       }
-    },
-    async pasteTags() {
-      let text = await navigator.clipboard.readText()
-      let tags = text.split(', ')
-      tags = this.$store.getters.tags.filter(t => (
-        t.category.includes('video') && tags.includes(t.name)
-      )).value()
-      tags = tags.map(t=>{return t.name})
-      if (tags.length) {
-        this.updateFiltersOfVideos('tags', tags)
-      }
-    },
-    async pasteWebsites() {
-      let text = await navigator.clipboard.readText()
-      let websites = text.split(', ')
-      websites = this.$store.getters.websites.filter(w=>(websites.includes(w.name))).value()
-      websites = websites.map(p=>{return p.name})
-      if (websites.length) {
-        this.updateFiltersOfVideos('websites', websites)
-      }
-    },
-    filterItemsPerformers(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    },
-    filterItemsTags(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const alternateNames = item.altNames
-      let found = false
-      for (let i=0;i<alternateNames.length;i++) {
-        if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    },
-    changeFilterPerformersLogic() {
-      let logic = this.$store.state.Videos.filters.performersLogic
-      this.filterPerformersLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfVideos('performersLogic', !logic)
-    },
-    changeFilterTagsLogic() {
-      let logic = this.$store.state.Videos.filters.tagsLogic
-      this.filterTagsLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfVideos('tagsLogic', !logic)
-    },
-    addNewTab() {
-      let tabId = shortid.generate()
-      let tab = { 
-        name: this.$store.getters.videosFilters, 
-        link: `/videos/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Videos.filters),
-        icon: 'video-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
-    removePerformer(item) { 
-      const index = this.$store.state.Videos.filters.performers.indexOf(item.name)
-      if (index >= 0) this.$store.state.Videos.filters.performers.splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    removeTag(item) { 
-      const index = this.$store.state.Videos.filters.tags.indexOf(item.name)
-      if (index >= 0) this.$store.state.Videos.filters.tags.splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    removeWebsite(item) { 
-      const index = this.$store.state.Videos.filters.websites.indexOf(item.name)
-      if (index >= 0) this.$store.state.Videos.filters.websites.splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    updateFiltersOfVideos(key, value){
-      this.$store.commit('updateFiltersOfVideos', {key, value})
-      this.updateFiltersOfVideosTab()
     },
     toggleFavorites() {
-      this.updateFiltersOfVideos('favorite', !this.$store.state.Videos.filters.favorite)
+      // this.updateFiltersOfVideos('favorite', !this.$store.state.Videos.filters.favorite)
+      this.$store.state.Videos.showFavorites = !this.$store.state.Videos.showFavorites
       this.$store.dispatch('filterVideos')
     },
     toggleBookmarks() {
-      this.updateFiltersOfVideos('bookmark', !this.$store.state.Videos.filters.bookmark)
+      // this.updateFiltersOfVideos('bookmark', !this.$store.state.Videos.filters.bookmark)
+      this.$store.state.Videos.showBookmarks = !this.$store.state.Videos.showBookmarks
       this.$store.dispatch('filterVideos')
     },
     toggleSortDirection() {
-      let dir = this.sortDirection === 'asc' ? 'desc' : 'asc'
-      this.updateFiltersOfVideos('sortDirection', dir)
+      this.$store.state.Videos.sortDirection = this.sortDirection==='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterVideos')
       },200)

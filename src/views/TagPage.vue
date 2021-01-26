@@ -292,37 +292,68 @@ export default {
       } else this.isScrollToTopVisible = false
     },
     initFilters() {
-      this.$store.commit('resetFilteredVideos')
+      this.$store.state.Settings.videoFilters = [{
+        param: 'tags',
+        cond: 'all',
+        val: [this.tag.name],
+        type: 'array',
+        lock: true,
+      },{
+        param: 'performers',
+        cond: 'one of',
+        val: [],
+        type: 'array',
+        lock: true,
+      }]
       this.$store.commit('resetFilteredPerformers')
       if (this.tabId !== 'default' && typeof this.filtersTab === 'undefined') {
         this.$store.getters.tabsDb.find({id: this.tabId}).assign({
           filters: {
-            videos: _.cloneDeep(this.$store.state.Videos.filters),
+            videos: _.cloneDeep(this.$store.state.Settings.videoFilters),
             performers: _.cloneDeep(this.$store.state.Performers.filters),
           }
         }).write()
       } else if (this.tabId !== 'default' && this.filtersTab) {
-        this.$store.state.Videos.filters = _.cloneDeep(this.filtersTab.videos)
+        this.$store.state.Settings.videoFilters = _.cloneDeep(this.filtersTab.videos)
         this.$store.state.Performers.filters = _.cloneDeep(this.filtersTab.performers)
       }
-      this.updateFiltersOfVideos('tags', [this.tag.name])
       this.updateFiltersOfPerformers('tags', [this.tag.name])
+      this.$store.dispatch('filterVideos')
     },
     showAllPerformers() {
       this.activePerformers = []
     },
-    filterPerformers() {
+    getFilteredPerformers() {
       let active = this.activePerformers
       let all = this.performersWithTagInVideos
       let filtered = [] 
       for (let i=0; i<active.length; i++) {
         filtered.push(all[active[i]])
       }
-      this.updateFiltersOfVideos('performers', filtered)
+      return filtered
+    },
+    updateFilters() {
+      const defaults = [{
+        param: 'tags',
+        cond: 'all',
+        val: [this.tag.name],
+        type: 'array',
+        lock: true,
+      },{
+        param: 'performers',
+        cond: 'one of',
+        val: this.getFilteredPerformers(),
+        type: 'array',
+        lock: true,
+      }]
+      const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
+      this.$store.state.Settings.videoFilters = [...defaults, ...others]
+      this.$store.dispatch('filterVideos')
+      this.updateTabFiltersOfVideos()
     },
     updateTabFiltersOfVideos() {
       if (this.tabId !== 'default') {
-        let newFilters = _.cloneDeep(this.$store.state.Videos.filters)
+        let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
         this.$store.getters.tabsDb.find({id: this.tabId}).get('filters').assign({videos: newFilters}).write()
       }
     },
@@ -331,11 +362,6 @@ export default {
         let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
         this.$store.getters.tabsDb.find({id: this.tabId}).get('filters').assign({performers: newFilters}).write()
       }
-    },
-    updateFiltersOfVideos(key, value){
-      this.$store.commit('updateFiltersOfVideos', {key, value})
-      this.$store.dispatch('filterVideos')
-      this.updateTabFiltersOfVideos()
     },
     updateFiltersOfPerformers(key, value){
       this.$store.commit('updateFiltersOfPerformers', {key, value})
@@ -376,7 +402,7 @@ export default {
   },
   watch: {
     activePerformers() {
-      this.filterPerformers()
+      this.updateFilters()
     },
     $route(newRoute) {
       if (!this.$route.path.includes('/tag/:')) return

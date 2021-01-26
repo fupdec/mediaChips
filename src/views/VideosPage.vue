@@ -88,7 +88,7 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
-    filtersTab() {
+    tabFilters() {
       if (this.tabId === 'default') {
         return undefined
       } else {
@@ -107,21 +107,22 @@ export default {
     },
     initFilters() {
       let newFilters
-      if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
-        const presetDefault = this.$store.state.Settings.videosFiltersPresetDefault
-        const presetLoaded = this.$store.state.Bookmarks.videosDefaultPresetLoaded
-        if (presetDefault && !presetLoaded) {
-          const presets = this.$store.state.Bookmarks.filtersPresets.videos
-          const presetFilters = _.find(presets, {default: true}).filters
-          newFilters = _.cloneDeep(presetFilters)
-          this.$store.state.Bookmarks.videosDefaultPresetLoaded = true
-        } else {
-          newFilters = _.cloneDeep(this.$store.state.Videos.filtersReserved)
-        }
+      if (this.tabId === 'default' || typeof this.tabFilters === 'undefined') {
+        // const presetDefault = this.$store.state.Settings.videosFiltersPresetDefault
+        // const presetLoaded = this.$store.state.Bookmarks.videosDefaultPresetLoaded
+        // if (presetDefault && !presetLoaded) {
+        //   const presets = this.$store.state.Bookmarks.filtersPresets.videos
+        //   const presetFilters = _.find(presets, {default: true}).filters
+        //   newFilters = _.cloneDeep(presetFilters)
+        //   this.$store.state.Bookmarks.videosDefaultPresetLoaded = true
+        // } else {
+          // TODO: create function for saving filters in separated database
+        //   }
+        newFilters = _.cloneDeep(this.$store.getters.settings.get('videoFilters').value())
       } else {
-        newFilters = _.cloneDeep(this.filtersTab)
+        newFilters = _.cloneDeep(this.tabFilters)
       }
-      this.$store.state.Videos.filters = newFilters
+      this.$store.state.Settings.videoFilters = newFilters
       this.$store.dispatch('filterVideos', true)
     },
   },

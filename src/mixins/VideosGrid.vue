@@ -1,6 +1,5 @@
 <script>
 import VideoCard from '@/components/pages/videos/VideoCard.vue'
-import FilterVideos from '@/mixins/FilterVideos'
 import VideoPreviewGrid from '@/components/elements/VideoPreviewGrid'
 
 const fs = require("fs")
@@ -10,7 +9,6 @@ export default {
   components: {
     VideoCard
   },
-  mixins: [FilterVideos],
   beforeDestroy() {
     this.isProcessBreak = true
   },
@@ -40,20 +38,18 @@ export default {
     },
     videosPagesSum: {
       get() {
-        return this.$store.getters.videosPagesSum
+        return this.$store.state.Videos.pageTotal
       },
       set(number) {
-        this.$store.dispatch('changeVideosPageTotal', number)
+        this.$store.state.Videos.pageTotal = number
       },
     },
     videosCurrentPage: {
       get() {
-        return this.$store.getters.videosCurrentPage
+        return this.$store.state.Videos.page
       },
       set(number) {
-        this.$store.state.Videos.filters.page = number
-        this.updateFiltersOfVideosTab()
-        this.$store.dispatch('changeVideosPageCurrent', number)
+        this.$store.state.Videos.page = number
       },
     },
   },

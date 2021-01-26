@@ -753,7 +753,7 @@ export default {
       } else this.isScrollToTopVisible = false
     },
     changeNumberOfPagesLimit(number) {
-      this.$store.dispatch('changeNumberOfPagesLimit', number)
+      this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value: number})
     },
     searchInVideosPath() {
       this.videosWithSamePath = _.cloneDeep( this.$store.getters.videos
