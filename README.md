@@ -1,3 +1,6 @@
+![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database)
+![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total)
+
 <img align="left" width="110" height="110" src="./public/icons/icon.png">
 
 # Adult Video Database
