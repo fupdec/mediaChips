@@ -1,7 +1,7 @@
 const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
-const FileSync = require('@/components/elements/LowDbAdapter')
+const FileSync = require('lowdb/adapters/FileSync')
 const pathToDbPerformers = path.join(app.getPath('userData'), 'userfiles/databases/dbp.json')
 const adapterPerformers = new FileSync(pathToDbPerformers)
 const low = require('lowdb')
@@ -20,7 +20,7 @@ dbp.defaults({
     favorite: true,
     rating: 5,
     nation: "Australia",
-    birthday: "04031985",
+    birthday: "1985-03-04",
     start: "2003",
     end: "",
     ethnicity: [
@@ -35,7 +35,7 @@ dbp.defaults({
     height: "160",
     weight: "55",
     boobs: "Real",
-    cup: "G",
+    cup: ["G"],
     bookmark: false,
     category: [
       "Pornstar"
@@ -115,6 +115,7 @@ const Performers = {
     filteredEmpty: false,
     selection: null,
     selectedPerformers: [],
+    dialogFilterPerformers: false,
     dialogDeletePerformer: false,
     dialogEditPerformerInfo: false,
     dialogEditPerformerImages: false,
@@ -122,6 +123,11 @@ const Performers = {
     updateInfo: {},
     rating: 0,
     menuCard: false,
+    firstChar: [],
+    sortBy: 'name',
+    sortDirection: 'asc',
+    showFavorites: false,
+    showBookmarks: false,
   }),
   mutations: {
     updatePerformers (state) {
@@ -163,328 +169,131 @@ const Performers = {
       commit('resetLoading')
       commit('changePerformersPageCurrent', quantity)
     },
-    async filterPerformers({ state, commit, getters}, stayOnCurrentPage) {
+    async filterPerformers({ state, commit, getters, rootState}, stayOnCurrentPage) {
       let performers = getters.performers
-      let filteredPerformers = []
       performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
-      if (state.filters.firstChar) {
-        let firstChars = state.filters.firstChar
+
+      if (state.showFavorites) {
+        performers = performers.filter(performer=>performer.favorite)
+      }
+      if (state.showBookmarks) {
+        performers = performers.filter(performer=>performer.bookmark)
+      }
+      if (state.firstChar.length) {
         let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
         let allChars = []
-        firstChars.forEach( char => { allChars.push(chars[char]) } )
-        // console.log(allChars)
+        state.firstChar.forEach( char => { allChars.push(chars[char]) } )
         if (allChars.length) {
           performers = performers.filter( performer => {
             let charPerformer = performer.name.charAt(0).toLowerCase()
             return allChars.includes(charPerformer)
           })
-          // console.log(chars[firstChars])
-          // console.log('performers filtered by first character')
         }
       }
-      if (state.filters.tags) {
-        let filteredTags = state.filters.tags
-        if (filteredTags.length) {
-          if (state.filters.tagsLogic) {
-            performers = performers.filter({'tags': filteredTags})
-          } else {
+
+      function compare(sign, a, b) {
+        if (sign === 'equal') return a == b
+        if (sign === 'not equal') return a != b
+        if (sign === 'greater than') return a < b
+        if (sign === 'less than') return a > b
+        if (sign === 'greater than or equal') return a <= b
+        if (sign === 'less than or equal') return a >= b
+      }
+
+      for (let filter in rootState.Settings.performerFilters) {
+        let param = rootState.Settings.performerFilters[filter].param
+        let cond = rootState.Settings.performerFilters[filter].cond
+        let val = rootState.Settings.performerFilters[filter].val
+        let type = rootState.Settings.performerFilters[filter].type
+        
+        if (val === null || val.length === 0) continue
+        
+        if (type === 'number' || type === 'date') {
+          if (type === 'number') val = +val
+          if (param === 'date' || param === 'edit') val = new Date(val).getTime()
+          performers = performers.filter(performer => compare(cond, val, performer[param]))
+        }
+        
+        if (type === 'string') {
+          let string = val.toLowerCase().trim()
+          if (string.length) {
+            if (cond === 'includes') {
+              performers = performers.filter(performer => performer[param].toLowerCase().includes(string))
+            } else performers = performers.filter(v => !v[param].toLowerCase().includes(string))
+          }
+        }
+
+        if (type === 'array') {
+          if (cond === 'all') {
+            performers = performers.filter({[param]: val})
+          } else if (cond === 'one of') {
             performers = performers.filter(performer=>{
               let include = false
-              for (let i=0; i<filteredTags.length;i++) {
-                if (performer.tags.includes(filteredTags[i])) {
-                  include = true
-                }
+              for (let i=0; i<val.length;i++) {
+                if ( performer[param].includes(val[i]) ) include = true
               }
               return include
             })
+          } else if (cond === 'not') {
+            performers = performers.filter(performer=>{
+              let include = false
+              for (let i=0; i<val.length;i++) {
+                if ( performer[param].includes(val[i]) ) include = true
+              }
+              return !include
+            })
           }
-          // console.log('performers filtered by tags')
         }
-      }
-      if (state.filters.category) {
-        let filteredCategory = JSON.parse(JSON.stringify(state.filters.category))
-        if (filteredCategory.length) {
-          if (state.filters.categoryLogic) {
-            performers = performers.filter({'category': filteredCategory})
-          } else {
-            if (filteredCategory.includes('None')) {
-              console.log('performers filtered by category')
-              performers = performers.filter(performer=>(!performer.category.length))
-            } else {
-              performers = performers.filter(performer=>{
-                let include = false
-                for (let i=0; i<filteredCategory.length;i++) {
-                  if (performer.category.includes(filteredCategory[i])) {
-                    include = true
-                  }
-                }
-                return include
-              })
-            }
-          }
-          // console.log('performers filtered by category')
-        }
-      }
-      if (state.filters.ratingActive) {
-        let r = state.filters.rating
-        performers = performers.filter(p => (p.rating>=r[0] && p.rating<=r[1]))
-        // console.log('performers filtered by rating')
-        // console.log(r)
-      }
-      if (state.filters.ageActive) {
-        let a = state.filters.age
-        let year = new Date().getFullYear()
-        performers = performers.filter(p => {
-          if (p.birthday === '') {
-            return false
-          } else {
-            let age = year - (+p.birthday.match(/\d{4}$/i)[0])
-            return age>=a[0] && age<=a[1]
-          }
-        })
-        // console.log('performers filtered by age')
-        // console.log(a)
-      }
-      if (state.filters.careerActive) {
-        let c = state.filters.career
-        if (state.filters.careerEnded) {
-          performers = performers.filter(p => (p.start>=c[0] && p.end<=c[1] && p.end!==""))
-        } else {
-          performers = performers.filter(p => (p.start>=c[0] && p.end===""))
-        }
-        // console.log('performers filtered by career years')
-        // console.log(c)
-      }
-      if (state.filters.heightActive) {
-        let h = state.filters.height
-        performers = performers.filter(p => (p.height>=h[0] && p.height<=h[1]))
-        // console.log('performers filtered by height')
-        // console.log(h)
-      }
-      if (state.filters.weightActive) {
-        let w = state.filters.weight
-        performers = performers.filter(p => (p.weight>=w[0] && p.weight<=w[1]))
-        // console.log('performers filtered by weight')
-        // console.log(w)
-      }
-      if (state.filters.braActive) {
-        let b = state.filters.bra
-        performers = performers.filter(p => (p.bra>=b[0] && p.bra<=b[1]))
-        // console.log('performers filtered by bra')
-        // console.log(b)
-      }
-      if (state.filters.waistActive) {
-        let w = state.filters.waist
-        performers = performers.filter(p => (p.waist>=w[0] && p.waist<=w[1]))
-        // console.log('performers filtered by waist')
-        // console.log(w)
-      }
-      if (state.filters.hipActive) {
-        let h = state.filters.hip
-        performers = performers.filter(p => (p.hip>=h[0] && p.hip<=h[1]))
-        // console.log('performers filtered by hip')
-        // console.log(h)
-      }
-      if (state.filters.ethnicity) {
-        let filteredEthnicity = state.filters.ethnicity
-        if (filteredEthnicity.length) {
-          if (state.filters.ethnicityLogic) {
-            performers = performers.filter({'ethnicity': filteredEthnicity})
-          } else {
-            if (filteredEthnicity.includes('None')) {
-              performers = performers.filter(performer=>(!performer.ethnicity.length))
-            } else {
-              performers = performers.filter(performer=>{
-                let include = false
-                for (let i=0; i<filteredEthnicity.length;i++) {
-                  if (performer.ethnicity.includes(filteredEthnicity[i])) {
-                    include = true
-                  }
-                }
-                return include
-              })
-            }
-          }
-          // console.log('performers filtered by ethnicity')
-        }
-      }
-      if (state.filters.hair) {
-        let filteredHair = state.filters.hair
-        if (filteredHair.length) {
-          if (state.filters.hairLogic) {
-            performers = performers.filter({'hair': filteredHair})
-          } else {
-            if (filteredHair.includes('None')) {
-              performers = performers.filter(performer=>(!performer.hair.length))
-            } else {
-              performers = performers.filter(performer=>{
-                let include = false
-                for (let i=0; i<filteredHair.length;i++) {
-                  if (performer.hair.includes(filteredHair[i])) {
-                    include = true
-                  }
-                }
-                return include
-              })
-            }
-          }
-          // console.log('performers filtered by hair')
-        }
-      }
-      if (state.filters.eyes) {
-        let filteredEyes = state.filters.eyes
-        if (filteredEyes.length) {
-          if (state.filters.eyesLogic) {
-            performers = performers.filter({'eyes': filteredEyes})
-          } else {
-            if (filteredEyes.includes('None')) {
-              performers = performers.filter(performer=>(!performer.eyes.length))
-            } else {
-              performers = performers.filter(performer=>{
-                let include = false
-                for (let i=0; i<filteredEyes.length;i++) {
-                  if (performer.eyes.includes(filteredEyes[i])) {
-                    include = true
-                  }
-                }
-                return include
-              })
-            }
-          }
-          // console.log('performers filtered by eyes')
-        }
-      }
-      if (state.filters.cup.length) {
-        if (state.filters.cup.includes('None')) {
-          performers = performers.filter(p=>(p.cup === ''))
-        } else {
-          performers = performers.filter(p=>(state.filters.cup.includes(p.cup)))
-        }
-        // console.log('performers filtered by cup')
-      }
-      if (state.filters.boobs.length) {
-        if (state.filters.boobs.includes('None')) {
-          performers = performers.filter(p=>(p.boobs === ''))
-        } else {
-          performers = performers.filter(p=>(state.filters.boobs.includes(p.boobs.charAt(0).toUpperCase()+p.boobs.slice(1))))
-        }
-        // console.log('performers filtered by boobs')
-      }
-      if (state.filters.body) {
-        let filteredBody = state.filters.body
-        if (filteredBody.length) {
-          if (state.filters.bodyLogic) {
-            performers = performers.filter({'body': filteredBody})
-          } else {
-            if (filteredBody.includes('None')) {
-              performers = performers.filter(performer=>(!performer.body.length))
-            } else {
-              performers = performers.filter(performer=>{
-                let include = false
-                for (let i=0; i<filteredBody.length;i++) {
-                  if (performer.body.includes(filteredBody[i])) {
-                    include = true
-                  }
-                }
-                return include
-              })
-            }
-          }
-          // console.log('performers filtered by body')
-        }
-      }
-      if (state.filters.pussy.length) {
-        if (state.filters.pussy.includes('None')) {
-          performers = performers.filter(p=>(p.pussy === ''))
-        } else {
-          performers = performers.filter(p=>(state.filters.pussy.includes(p.pussy)))
-        }
-        // console.log('performers filtered by pussy')
-      }
-      if (state.filters.pussyLips.length) {
-        if (state.filters.pussyLips.includes('None')) {
-          performers = performers.filter(p=>(p.pussyLips === ''))
-        } else {
-          performers = performers.filter(p=>(state.filters.pussyLips.includes(p.pussyLips)))
-        }
-        // console.log('performers filtered by pussyLips')
-      }
-      if (state.filters.pussyHair) {
-        let filteredPussyHair = state.filters.pussyHair
-        if (filteredPussyHair.length) {
-          if (state.filters.pussyHairLogic) {
-            performers = performers.filter({'pussyHair': filteredPussyHair})
-          } else {
-            if (filteredPussyHair.includes('None')) {
-              performers = performers.filter(performer=>(!performer.pussyHair.length))
-            } else {
-              performers = performers.filter(performer=>{
-                let include = false
-                for (let i=0; i<filteredPussyHair.length;i++) {
-                  if (performer.pussyHair.includes(filteredPussyHair[i])) {
-                    include = true
-                  }
-                }
-                return include
-              })
-            }
-          }
-          // console.log('performers filtered by pussyHair')
-        }
-      }
-      if (state.filters.nation.length) {
-        if (state.filters.nation.includes('None')) {
-          performers = performers.filter(p=>(p.nation === ''))
-        } else {
-          performers = performers.filter(p=>(state.filters.nation.includes(p.nation)))
-        }
-        // console.log('performers filtered by nationality')
-      }
-      if (state.filters.name) {
-        let frase = state.filters.name.toLowerCase().trim()
-        if (frase.length) {
-          if (state.filters.aliases === true) {
-            let filteredByNames = await performers.filter(
-              perf => (perf.name.toLowerCase().includes(frase))
-            ).map('id').value()
 
-            let filteredByAliases = await performers.filter( perf => {
-              let aliases = perf.aliases.map(p=>(p.toLowerCase()))
-              let matches = aliases.filter(a=>a.includes(frase))
-              if (matches.length>0) {
-                return true
-              } else { return false } 
-            }).map('id').value()
-
-            let mergedIds = _.union(filteredByNames, filteredByAliases)
-
-            performers = performers.filter(p=>(mergedIds.includes(p.id)))
-          } else {
-            performers = performers.filter(
-              perf => (perf.name.toLowerCase().includes(frase)))
-          }
-          // console.log(`performers filtered by frase "${frase}" in name`)
+        if (type === 'select') {
+          if (cond === 'includes') {
+            performers = performers.filter(performer=>val.includes(performer[param]))
+          } else performers = performers.filter(performer=>!val.includes(performer[param]))
         }
       }
-      if (state.filters.sortBy) {
-        let sort = state.filters.sortBy
-        let direction = state.filters.sortDirection
-        if (sort === 'name') {
-          performers = performers.orderBy(p=>(p.name.toLowerCase()), [direction])
-        } else {
-          performers = performers.orderBy(sort, [direction])
-        }
-        // console.log('performers sorted')
+  
+      // sort performers
+      if (state.sortBy === 'name') {
+        performers = performers.orderBy(performer=>performer.name.toLowerCase(), [state.sortDirection])
+      } else {
+        performers = performers.orderBy(state.sortBy, [state.sortDirection])
       }
-      if (state.filters.favorite) {
-        performers = performers.filter(performer=>(performer.favorite))
-        // console.log('favorite performers')
-      }
-      if (state.filters.bookmark) {
-        performers = performers.filter(performer=>(performer.bookmark))
-        // console.log('performers with bookmark')
-      }
-      // console.log(performers.value())
+      // if (state.filters.boobs.length) {
+      //   if (state.filters.boobs.includes('None')) {
+      //     performers = performers.filter(p=>(p.boobs === ''))
+      //   } else {
+      //     performers = performers.filter(p=>(state.filters.boobs.includes(p.boobs.charAt(0).toUpperCase()+p.boobs.slice(1))))
+      //   }
+      //   // console.log('performers filtered by boobs')
+      // }
+      // if (state.filters.name) {
+      //   let frase = state.filters.name.toLowerCase().trim()
+      //   if (frase.length) {
+      //     if (state.filters.aliases === true) {
+      //       let filteredByNames = await performers.filter(
+      //         perf => (perf.name.toLowerCase().includes(frase))
+      //       ).map('id').value()
+
+      //       let filteredByAliases = await performers.filter( perf => {
+      //         let aliases = perf.aliases.map(p=>(p.toLowerCase()))
+      //         let matches = aliases.filter(a=>a.includes(frase))
+      //         if (matches.length>0) {
+      //           return true
+      //         } else { return false } 
+      //       }).map('id').value()
+
+      //       let mergedIds = _.union(filteredByNames, filteredByAliases)
+
+      //       performers = performers.filter(p=>(mergedIds.includes(p.id)))
+      //     } else {
+      //       performers = performers.filter(
+      //         perf => (perf.name.toLowerCase().includes(frase)))
+      //     }
+      //     // console.log(`performers filtered by frase "${frase}" in name`)
+      //   }
+      // }
+      // // console.log(performers.value())
+      let filteredPerformers = []
       if (performers != getters.performers) {
         if (performers.value().length == 0) {
           state.filteredEmpty = true
@@ -543,115 +352,31 @@ const Performers = {
     performersNamesLower(state, store) {
       return store.dbp.get('performers').map(p=>p.name.toLowerCase()).value()
     },
-    performersFilters: (state, store) => {
+    performerFiltersForTabName: (state, store, rootState) => {
       let filters = []
-      if (state.filters.name) {
-        filters.push('Name:' + state.filters.name)
+      let equals = ['equal', 'including', 'all', 'one of']
+      let notEquals = ['not equal', 'not', 'excluding']
+      
+      for (let filter in rootState.Settings.performerFilters) {
+        let param = rootState.Settings.performerFilters[filter].param
+        let cond = rootState.Settings.performerFilters[filter].cond
+        let val = rootState.Settings.performerFilters[filter].val
+        let type = rootState.Settings.performerFilters[filter].type
+
+        if (val === null || val.length === 0) continue
+        
+        if (equals.includes(cond)) cond = '='
+        if (notEquals.includes(cond)) cond = '!='
+        
+        if (type === 'array') {
+          let arr = param+' '+cond+' '
+          arr += val.join(';')
+          filters.push(arr)
+        } else {
+          filters.push(param+' '+cond+' '+val)
+        }
       }
-      if (state.filters.favorite) {
-        filters.push('Fav.')
-      }
-      if (state.filters.bookmark) {
-        filters.push('Book.')
-      }
-      if (state.filters.firstChar.length) {
-        let chars = ['0-9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','#']
-        chars = state.filters.firstChar.map((c)=>(chars[c]))
-        let filterChars = 'Char.:'
-        filterChars += chars.join(';')
-        filters.push(filterChars)
-      }
-      if (state.filters.tags.length) {
-        let filterTags = 'Tags:'
-        filterTags += state.filters.tags.join(';')
-        filters.push(filterTags)
-      }
-      if (state.filters.category.length) {
-        let filterCategory = 'Cat.:'
-        filterCategory += state.filters.category.join(';')
-        filters.push(filterCategory)
-      }
-      if (state.filters.nation.length) {
-        let filterNation = 'Nat.:'
-        filterNation += state.filters.nation.join(';')
-        filters.push(filterNation)
-      }
-      if (state.filters.ageActive) {
-        filters.push(`Age:${state.filters.age[0]}-${state.filters.age[1]}`)
-      }
-      if (state.filters.careerActive) {
-        filters.push(`Car.:${state.filters.career[0]}-${state.filters.career[1]}`)
-      }
-      if (state.filters.heightActive) {
-        filters.push(`Hgt:${state.filters.height[0]}-${state.filters.height[1]}cm`)
-      }
-      if (state.filters.weightActive) {
-        filters.push(`Wgt:${state.filters.weight[0]}-${state.filters.weight[1]}kg`)
-      }
-      if (state.filters.braActive) {
-        filters.push(`Bra:${state.filters.bra[0]}-${state.filters.bra[1]}`)
-      }
-      if (state.filters.waistActive) {
-        filters.push(`Wst:${state.filters.waist[0]}-${state.filters.waist[1]}`)
-      }
-      if (state.filters.hipActive) {
-        filters.push(`Hip:${state.filters.hip[0]}-${state.filters.hip[1]}`)
-      }
-      if (state.filters.ethnicity.length) {
-        let filterEthnicity = 'Eth.:'
-        filterEthnicity += state.filters.ethnicity.join(';')
-        filters.push(filterEthnicity)
-      }
-      if (state.filters.hair.length) {
-        let filterHair = 'Hair:'
-        filterHair += state.filters.hair.join(';')
-        filters.push(filterHair)
-      }
-      if (state.filters.eyes.length) {
-        let filterEyes = 'Eyes:'
-        filterEyes += state.filters.eyes.join(';')
-        filters.push(filterEyes)
-      }
-      if (state.filters.cup.length) {
-        let filterCup = 'Cup:'
-        filterCup += state.filters.cup.join(';')
-        filters.push(filterCup)
-      }
-      if (state.filters.boobs.length) {
-        let filterBoobs = 'Boobs:'
-        filterBoobs += state.filters.boobs.join(';')
-        filters.push(filterBoobs)
-      }
-      if (state.filters.body.length) {
-        let filterBody = 'Body:'
-        filterBody += state.filters.body.join(';')
-        filters.push(filterBody)
-      }
-      if (state.filters.pussy.length) {
-        let filterPus = 'Pus.:'
-        filterPus += state.filters.pussy.join(';')
-        filters.push(filterPus)
-      }
-      if (state.filters.pussy.length) {
-        let filterPussy = 'Pus.:'
-        filterPussy += state.filters.pussy.join(';')
-        filters.push(filterPussy)
-      }
-      if (state.filters.pussyLips.length) {
-        let filterPussyLips = 'PL:'
-        filterPussyLips += state.filters.pussyLips.join(';')
-        filters.push(filterPussyLips)
-      }
-      if (state.filters.pussyHair.length) {
-        let filterPussyHair = 'PH:'
-        filterPussyHair += state.filters.pussyHair.join(';')
-        filters.push(filterPussyHair)
-      }
-      if (filters.length) {
-        return filters.join(', ')
-      } else {
-        return 'Performers'
-      }
+      return 'Performers' + (filters.length ? ' with ': ' ') + filters.join(', ')
     },
     filteredPerformers(state, store) {
       // console.log(state.filteredPerformers.length)

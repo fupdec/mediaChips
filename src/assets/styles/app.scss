@@ -553,13 +553,13 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
 .list-with-preview {
   .v-list-item {
     min-height: 0 !important;
-    padding: 0;
+    padding: 0 10px;
   }
   .list-item {
     display: flex;
     align-items: center;
     font-size: 14px;
-    padding: 3px 10px;
+    padding: 3px 0;
     width: 100%;
     height: 100%;
   }

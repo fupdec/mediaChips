@@ -1,9 +1,9 @@
 <template>
   <div>
-    <v-dialog v-model="$store.state.Videos.dialogFilterVideos" scrollable width="1000">
+    <v-dialog v-model="$store.state.Performers.dialogFilterPerformers" scrollable width="1000">
       <v-card>
         <v-card-title>
-          <span class="headline">Filter videos</span>
+          <span class="headline">Filter performers</span>
           <v-spacer></v-spacer>
           <v-icon>mdi-filter</v-icon>
         </v-card-title>
@@ -38,7 +38,7 @@
               <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
                 label="Value" outlined dense class="val"/>
-
+                
               <v-text-field v-if="filters[i].type==='date'" 
                 :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
                 label="Date" outlined dense readonly/>
@@ -47,58 +47,39 @@
                   :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
                   :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
               </v-dialog>
-                
-              <v-autocomplete v-if="filters[i].param==='performers'"
-                @input="setVal($event,i)" :value="filters[i].val" :items="performers"
-                item-text="name" item-value="name" no-data-text="No more performers"
-                class="mb-4 select-small-chips hidden-close" label="Performers" 
-                multiple hide-selected hide-details clearable dense outlined
-                :menu-props="{contentClass:'list-with-preview'}"
-                :filter="filterItemsPerformers" :disabled="filters[i].lock"
-              >
+
+              <v-autocomplete v-if="filters[i].param==='nation'" 
+                @input="setVal($event,i)" :value="filters[i].val" :disabled="filters[i].lock"
+                :items="countries" item-text="name" item-value="name" label="Nationality" 
+                multiple hide-selected hide-details clearable outlined dense small-chips
+                class="select-small-chips nation-chips hidden-close"
+                :menu-props="{contentClass:'list-with-preview'}">
                 <template v-slot:selection="data">
-                  <v-chip close small class="my-1" close-icon="mdi-close"
-                    v-bind="data.attrs" :input-value="data.selected" 
+                  <v-chip
+                    v-bind="data.attrs" small class="my-1" close
+                    :input-value="data.selected" label close-icon="mdi-close"
                     @click="data.select" @click:close="removeChip(data.item, i)"
-                    @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-                    @mouseleave.stop="$store.state.hoveredImage=false"
-                    :color="getPerformerColorDependsRating(data.item.rating)"
-                    :class="{'tag-with-favorite-performer': data.item.favorite}"
-                  ><span>{{ data.item.name }}</span>
+                  > <country-flag :country='data.item.code' size='normal'/> {{ data.item.name }}
                   </v-chip>
                 </template>
                 <template v-slot:item="data">
-                  <div class="list-item"
-                    @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-                    @mouseleave.stop="$store.state.hoveredImage=false"
-                  > 
-                    <v-icon 
-                      left size="12" 
-                      :color="data.item.favorite===false ? 'grey' : 'pink'"
-                    > mdi-heart </v-icon>
-                    <v-rating 
-                      class="rating-inline small mr-2"
-                      v-model="data.item.rating"
-                      color="yellow darken-3"
-                      background-color="grey darken-1"
-                      empty-icon="$ratingFull" 
-                      half-icon="mdi-star-half-full"
-                      dense half-increments readonly size="10"
-                    />
-                    <span>{{data.item.name}}</span>
-                    <span v-if="data.item.aliases.length" class="aliases"> 
-                      aka {{data.item.aliases.join(', ').slice(0,50)}}
-                    </span>
-                  </div>
+                  <template v-if="typeof data.item !== 'object'">
+                    <v-list-item-content v-text="data.item"></v-list-item-content>
+                  </template>
+                  <template v-else>
+                    <country-flag :country='data.item.code' size='normal'/>
+                    <v-list-item-content>
+                      <v-list-item-title v-html="data.item.name"></v-list-item-title>
+                    </v-list-item-content>
+                  </template>
                 </template>
               </v-autocomplete>
                 
               <v-autocomplete v-if="filters[i].param==='tags'"
                 @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
-                class="mb-4 select-small-chips hidden-close val"
-                item-text="name" dense label="Tags"
-                item-value="name" no-data-text="No more tags" 
-                multiple hide-selected hide-details clearable outlined
+                class="mb-4 select-small-chips hidden-close val" label="Tags" 
+                item-text="name" item-value="name" no-data-text="No more tags" 
+                multiple hide-selected hide-details clearable outlined dense
                 :menu-props="{contentClass:'list-with-preview'}"
                 :filter="filterItemsTags" :disabled="filters[i].lock"
               >
@@ -126,34 +107,35 @@
                 </template>
               </v-autocomplete>
 
-              <v-autocomplete v-if="filters[i].param==='website'"
-                @input="setVal($event,i)" :value="filters[i].val" :items="websites" 
-                class="mb-4 select-small-chips hidden-close"
-                item-text="name" dense label="Websites"
-                item-value="name" no-data-text="No more websites" 
-                multiple hide-selected hide-details clearable outlined
-                :menu-props="{contentClass:'list-with-preview'}" :disabled="filters[i].lock"
-              >
-                <template v-slot:selection="data">
-                  <v-chip
-                    v-bind="data.attrs" small close class="my-1" close-icon="mdi-close"
-                    @click="data.select" @click:close="removeChip(data.item, i)"
-                    @mouseover.stop="showImage($event, data.item.id, 'website')" 
-                    @mouseleave.stop="$store.state.hoveredImage=false"
-                    :input-value="data.selected" outlined label
-                    :color="data.item.color"
-                  ><span>{{ data.item.name }}</span>
-                  </v-chip>
-                </template>
-                <template v-slot:item="data">
-                  <div class="list-item"
-                    @mouseover.stop="showImage($event, data.item.id, 'website')" 
-                    @mouseleave.stop="$store.state.hoveredImage=false"
-                  > <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
-                    {{data.item.name}}
-                  </div>
-                </template>
-              </v-autocomplete>
+              <v-select v-if="filters[i].param==='category'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoCategory" 
+                outlined dense label="Categories"
+                :disabled="filters[i].lock" multiple/>
+
+              <v-select v-if="filters[i].param==='ethnicity'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoEthnicity" 
+                outlined dense label="Ethnicity"
+                :disabled="filters[i].lock" multiple/>
+
+              <v-select v-if="filters[i].param==='hair'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoHair" 
+                outlined dense label="Hair"
+                :disabled="filters[i].lock" multiple/>
+
+              <v-select v-if="filters[i].param==='eyes'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoEyes" 
+                outlined dense label="Eyes"
+                :disabled="filters[i].lock" multiple/>
+
+              <v-select v-if="filters[i].param==='cup'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoCups" 
+                outlined dense label="Cups"
+                :disabled="filters[i].lock" multiple/>
 
               <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
                 class="ml-2 mt-1" color="green" outlined icon fab x-small>
@@ -170,7 +152,7 @@
           </v-card-text>
         </vuescroll>
         <v-card-actions>
-          <v-btn @click="$store.state.Videos.dialogFilterVideos=false" class="ma-4 mt-0">Cancel</v-btn>
+          <v-btn @click="$store.state.Performers.dialogFilterPerformers=false" class="ma-4 mt-0">Cancel</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
             <v-icon left>mdi-tab-plus</v-icon>Add new tab</v-btn>
@@ -187,46 +169,44 @@
 const shortid = require("shortid")
 
 import ShowImageFunction from '@/mixins/ShowImageFunction'
+import Countries from '@/mixins/Countries'
+import CountryFlag from 'vue-country-flag'
 import vuescroll from 'vuescroll'
 
 export default {
-  name: 'DialogFilterVideos',
+  name: 'DialogFilterPerformers',
   components: {
-    vuescroll,
+    CountryFlag, 
+    vuescroll, 
   },
-  mixins: [ShowImageFunction], 
+  mixins: [ShowImageFunction, Countries], 
   mounted() {
     this.$nextTick(function () {
     })
   },
   data: () => ({
-    params: ['path', 'performers', 'tags', 'website', 'duration', 'size', 'rating', 'height', 'width', 'date'],
-    paramTypeNumber: ['duration', 'size', 'rating', 'height', 'width'],
-    paramTypeString: ['path'],
-    paramTypeArray: ['performers', 'tags'],
-    paramTypeSelect: ['website'],
-    paramTypeDate: ['date'],
+    params: ['name','tags','category','rating','birthday','start','end','nation','ethnicity','hair','eyes','height','weight','cup','bra','waist','hip','date','edit'],
+    paramTypeNumber: ['rating','height','weight','bra','waist','hip','start','end',],
+    paramTypeString: ['name',],
+    paramTypeArray: ['tags','category','ethnicity','hair','eyes','cup'],
+    paramTypeSelect: ['nation'],
+    paramTypeBoolean: [],
+    paramTypeDate: ['birthday','date','edit'],
     datePicker: false,
     datePickerIndex: 0,
   }),
   computed: {
     filters: {
       get() {
-        return this.$store.state.Settings.videoFilters
+        return this.$store.state.Settings.performerFilters
       },
       set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoFilters', value})
+        this.$store.dispatch('updateSettingsState', {key:'performerFilters', value})
       },
     },
-    performers() {
-      return this.$store.getters.performers.orderBy([p=>p.name.toLowerCase()],['asc']).value()
-    },
     tags() {
-      let tags = this.$store.getters.tags.filter(t=>(t.category.includes('video')))
+      let tags = this.$store.getters.tags.filter(t=>(t.category.includes('performer')))
       return tags.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
-    },
-    websites() {
-      return this.$store.getters.websites.orderBy([w=>w.name.toLowerCase()],['asc']).value()
     },
     tabId() {
       return this.$route.query.tabId
@@ -242,16 +222,19 @@ export default {
       return []
     },
     getIconParam(param) {
-      if (param === 'path') return 'mdi-file-search'
-      if (param === 'performers') return 'mdi-account'
+      if (param === 'name') return 'mdi-alphabetical-variant'
       if (param === 'tags') return 'mdi-tag'
-      if (param === 'website') return 'mdi-web'
-      if (param === 'duration') return 'mdi-timer-outline'
-      if (param === 'size') return 'mdi-harddisk'
+      if (param === 'category') return 'mdi-account-group-outline'
       if (param === 'rating') return 'mdi-star'
-      if (param === 'height') return 'mdi-monitor-screenshot'
-      if (param === 'width') return 'mdi-monitor-screenshot'
-      if (param === 'date') return 'mdi-calendar'
+      if (param === 'birthday'||param === 'start'||param === 'end'||param === 'date'||param ==='edit') return 'mdi-calendar'
+      if (param === 'nation') return 'mdi-flag'
+      if (param === 'ethnicity') return 'mdi-account-group'
+      if (param === 'hair') return 'mdi-face-woman'
+      if (param === 'eyes') return 'mdi-eye'
+      if (param === 'cup') return 'mdi-coffee'
+      if (param === 'height') return 'mdi-human-male-height'
+      if (param === 'weight') return 'mdi-weight'
+      if (param === 'bra'||param === 'waist'||param === 'hip') return 'mdi-tape-measure'
       return 'mdi-filter'
     },
     getIconCond(cond) {
@@ -286,10 +269,10 @@ export default {
       this.filters.splice(i, 1)
     },
     applyFilters() {
-      this.$store.state.Settings.videoFilters = this.filters
-      this.$store.dispatch('filterVideos')
-      this.updateFiltersOfVideosTab()
-      this.$store.state.Videos.dialogFilterVideos = false 
+      this.$store.state.Settings.performerFilters = this.filters
+      this.$store.dispatch('filterPerformers')
+      this.updateFiltersOfPerformersTab()
+      this.$store.state.Performers.dialogFilterPerformers = false 
     },
     setParam(e, i) {
       this.filters[i].param = e
@@ -324,16 +307,6 @@ export default {
     getValueRules(value) {
       return true
     },
-    filterItemsPerformers(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    },
     filterItemsTags(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const alternateNames = item.altNames
@@ -352,44 +325,24 @@ export default {
     addNewTab() {
       let tabId = shortid.generate()
       let tab = { 
-        name: this.$store.getters.videoFiltersForTabName, 
-        link: `/videos/:${tabId}?tabId=${tabId}`,
+        name: this.$store.getters.performerFiltersForTabName, 
+        link: `/performers/:${tabId}?tabId=${tabId}`,
         id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
-        icon: 'video-outline'
+        filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
+        icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
-      this.$store.state.Videos.dialogFilterVideos = false
+      this.$store.state.Performers.dialogFilterPerformers = false
       this.$router.push(tab.link)
     },
-    getPerformerColorDependsRating(rating) { 
-      if (rating === 0) {
-        return `rgba(150, 150, 150, 0.1)`
-      } else {
-        return `rgba(255, 190, 0, ${0.05*rating})`
-      }
-    },
-    updateFiltersOfVideosTab() {
-      const pages = ['/performer/:','/website/:']
-      let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
+    updateFiltersOfPerformersTab() {
+      let newFilters = _.cloneDeep(this.$store.state.Settings.performerFilters)
 
-      if (this.tabId === 'default') { // for videos page (not for tab)
-        this.$store.getters.settings.set('videoFilters', newFilters).write()
-      } 
-      // for tab of tag page
-      else if (this.$route.path.includes('/tag/:')) { 
-        this.$store.getters.tabsDb.find({id: this.tabId}).get('filters')
-          .assign({videos: newFilters}).write()
-      } 
-      // for tab of performer or website page
-      else if (pages.some(p => this.$route.path.includes(p))) { 
-        this.$store.getters.tabsDb.find({id:this.tabId})
-          .assign({filters:newFilters}).write()
-      } 
-      // for tab of videos page
-      else {
+      if (this.tabId === 'default') { // for performers page (not for tab)
+        this.$store.getters.settings.set('performerFilters', newFilters).write()
+      } else {
         this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.videoFiltersForTabName,
+          name: this.$store.getters.performerFiltersForTabName,
           filters: newFilters,
         }).write()
         this.$store.commit('getTabsFromDb')

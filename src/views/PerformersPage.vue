@@ -30,6 +30,11 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
+    <div class="ma-4 red--text text-center">Starting from version 0.5.8 performer parameters replaced with new values.
+      <br> If you have performers just press "Update performers" button.</div>
+    <v-btn @click="updatePerformerParams" color="red" dark class="my-4" block> 
+      <v-icon left>mdi-auto-fix</v-icon> Update performers </v-btn>
+
     <div class="headline text-h3 text-center my-6">Performers</div>
 
     <v-container fluid v-if="!$store.state.Performers.filteredEmpty" 
@@ -114,7 +119,7 @@
               <span class="mr-2">Bra: <i>{{performer.bra}}</i></span>
               <span class="mr-2">Waist: <i>{{performer.waist}}</i></span>
               <span>Hip: <i>{{performer.hip}}</i></span><br>
-              <span class="mr-2">Cup size: <i>{{performer.cup}}</i></span>
+              <span class="mr-2">Cup size: <i>{{performer.cup.join(', ')}}</i></span>
               <span>Boobs: <i>{{performer.boobs}}</i></span>
             </v-col>
             <v-col cols="12" md="3">
@@ -135,6 +140,7 @@
 import PerformersGrid from '@/mixins/PerformersGrid'
 import PerformersGridElements from '@/components/elements/PerformersGridElements.vue'
 import vuescroll from 'vuescroll'
+import Countries from '@/mixins/Countries'
 
 export default {
   name: "Performers",
@@ -144,7 +150,7 @@ export default {
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),
   },
-  mixins: [PerformersGrid],
+  mixins: [PerformersGrid, Countries],
   mounted () {
     this.$nextTick(function () {
       this.initFilters()
@@ -173,6 +179,44 @@ export default {
     },
   },
   methods: {
+    updatePerformerParams() {
+      let countries = this.countries.map(c=>c.name)
+      
+      this.$store.getters.performers.each(p=>{
+        if (typeof p.cup == 'string') {
+          if (p.cup.length == 0) p.cup = []
+          else p.cup = [p.cup]
+        }
+        if (p.boobs === undefined) {
+          p.boobs = ''
+        }
+        if (p.nation === undefined) {
+          p.nation = ''
+        }
+        if (!countries.includes(p.nation)) {
+          p.nation = ''
+        }
+        if (p.pussy === undefined) {
+          p.pussy = ''
+        }
+        if (p.pussyLips === undefined) {
+          p.pussyLips = ''
+        }
+        if (p.birthday) {
+          if (!p.birthday.match(/\d{4}-\d{2}-\d{2}/)) {
+            if (p.birthday.length!==0 && p.birthday.length!==8) {
+              p.birthday = ''
+            } else {
+              let year = p.birthday.match(/\d{4}$/)[0]
+              let day = p.birthday.match(/\d{2}/)[0]
+              let month = p.birthday.match(/(\d{2})/g)[1]
+              let birthday = `${year}-${month}-${day}`
+              p.birthday = birthday
+            }
+          }
+        }
+      }).write()
+    },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
     },
@@ -184,33 +228,35 @@ export default {
     initFilters() {
       let newFilters
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
-        const presetDefault = this.$store.state.Settings.performersFiltersPresetDefault
-        const presetLoaded = this.$store.state.Bookmarks.performersDefaultPresetLoaded
-        if (presetDefault && !presetLoaded) {
-          const presets = this.$store.state.Bookmarks.filtersPresets.performers
-          const presetFilters = _.find(presets, {default: true}).filters
-          newFilters = _.cloneDeep(presetFilters)
-          this.$store.state.Bookmarks.performersDefaultPresetLoaded = true
-        } else {
-          newFilters = _.cloneDeep(this.$store.state.Performers.filtersReserved)
-        }
+        // const presetDefault = this.$store.state.Settings.performersFiltersPresetDefault
+        // const presetLoaded = this.$store.state.Bookmarks.performersDefaultPresetLoaded
+        // if (presetDefault && !presetLoaded) {
+        //   const presets = this.$store.state.Bookmarks.filtersPresets.performers
+        //   const presetFilters = _.find(presets, {default: true}).filters
+        //   newFilters = _.cloneDeep(presetFilters)
+        //   this.$store.state.Bookmarks.performersDefaultPresetLoaded = true
+        // } else {
+        //   newFilters = _.cloneDeep(this.$store.state.Performers.filtersReserved)
+          // TODO create function for saving filters in separated database
+        // }
+        newFilters = _.cloneDeep(this.$store.getters.settings.get('performerFilters').value())
       } else {
         newFilters = _.cloneDeep(this.filtersTab)
       }
-      this.$store.state.Performers.filters = newFilters
+      this.$store.state.Settings.performerFilters = newFilters
       this.$store.dispatch('filterPerformers', true)
     },
     getAge(birthday) {
       let age
       if(birthday) {
-        age = birthday.match(/\d{4}$/)[0]
+        age = birthday.match(/\d{4}/)[0]
         age = `${age} (${new Date().getFullYear() - age})`
       } else { age = '' }
       return age
     },
   },
   watch: {
-    $route(newRoute) {
+    $route() {
       if (!this.$route.path.includes('/performers/:')) return
       this.initFilters()
     },

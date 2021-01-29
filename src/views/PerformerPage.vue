@@ -473,8 +473,8 @@ export default {
       return Math.floor(this.performer.hip*2.54)
     },
     cup() {
-      if (!this.performer.cup) return '??'
-      return this.performer.cup
+      if (!this.performer.cup.length) return '??'
+      return this.performer.cup.join(', ')
     },
     boobs() {
       if (!this.performer.boobs) return 'unknown'
@@ -548,7 +548,7 @@ export default {
     getAge() {
       let age
       if(this.performer.birthday) {
-        age = this.performer.birthday.match(/\d{4}$/)[0]
+        age = this.performer.birthday.match(/\d{4}/)[0]
         age = this.currentYear - age
       } else { age = '??' }
       return age
@@ -556,7 +556,7 @@ export default {
     getLastActiveAge() {
       let age 
       if(this.performer.birthday) {
-        age = this.performer.birthday.match(/\d{4}$/)[0]
+        age = this.performer.birthday.match(/\d{4}/)[0]
         if (this.performer.end) {
           age = this.performer.end - age
         } else if (this.performer.start && !this.performer.end) {
@@ -568,15 +568,8 @@ export default {
       return age
     },
     getBirthday() {
-      let birthday
-      if(this.performer.birthday) {
-        let day = this.performer.birthday.match(/\d{2}/)[0]
-        let month = this.performer.birthday.charAt(2)
-        month += this.performer.birthday.charAt(3)
-        let year = this.performer.birthday.match(/\d{4}$/)[0]
-        birthday = `${day} ${this.months[month-1]} ${year}`
-      } else { birthday = 'unknown' }
-      return birthday
+      if(this.performer.birthday) return this.performer.birthday
+      else return '??'
     },
     cardSize() {
       return `card-size-${this.$store.state.Settings.videoCardSize}`
@@ -691,10 +684,10 @@ export default {
           type: 'array',
           lock: true,
         },{
-          param: 'websites',
-          cond: 'all',
+          param: 'website',
+          cond: 'includes',
           val: this.getFilteredWebsites(),
-          type: 'array',
+          type: 'select',
           lock: true,
         }]
         this.$store.dispatch('filterVideos', true)
@@ -782,10 +775,10 @@ export default {
         type: 'array',
         lock: true,
       },{
-        param: 'websites',
-        cond: 'one of',
+        param: 'website',
+        cond: 'includes',
         val: this.getFilteredWebsites(),
-        type: 'array',
+        type: 'select',
         lock: true,
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})

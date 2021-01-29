@@ -123,13 +123,11 @@
                     </div>
                   </v-col>
                   <v-col cols="12" sm="6">
-                    <v-select
-                      :items="$store.state.Settings.performerInfoCategory" multiple
-                      label="Category" placeholder=" " v-model="category"
-                    ></v-select>
+                    <v-select v-model="category" :items="$store.state.Settings.performerInfoCategory"
+                      multiple label="Category" placeholder=" " />
                   </v-col>
                   <v-col cols="12" sm="3">
-                    <div class="masked-block">
+                    <!-- <div class="masked-block">
                       <v-text-field 
                         label="Birthday"
                         persistent-hint hint='DD.MM.YYYY'
@@ -142,17 +140,21 @@
                         class="masked-mask"
                       >
                       </the-mask>
-                    </div>
+                    </div> -->
+                    <v-menu v-model="menu" ref="menu" :close-on-content-click="false"
+                      transition="scale-transition" offset-y min-width="auto">
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-text-field v-model="birthday" v-bind="attrs" v-on="on" readonly
+                          label="Birthday" placeholder=" " hint='YYYY-MM-DD' persistent-hint/>
+                      </template>
+                      <v-date-picker v-model="birthday" ref="picker" @change="save" no-title
+                        :max="new Date().toISOString().substr(0, 10)" min="1950-01-01"/>
+                    </v-menu>
                   </v-col>
                   <v-col cols="12" sm="9">
-                    <v-autocomplete
-                      v-model="nation"
-                      :items="countries"
-                      item-text="name"
-                      item-value="name"
-                      label="Nationality" placeholder=" "
-                      class="nation-select" clearable
-                    >
+                    <v-autocomplete v-model="nation" :items="countries"
+                      item-text="name" item-value="name" label="Nationality" placeholder=" "
+                      class="nation-select" clearable>
                       <template v-slot:selection="data">
                         <country-flag :country='data.item.code' size='normal'/>
                         {{ data.item.name }}
@@ -243,7 +245,7 @@
                   <v-col cols="3" sm="2">
                     <v-select
                       :items="$store.state.Settings.performerInfoCups"
-                      label="Cup size" v-model="cup"
+                      label="Cup size" v-model="cup" multiple
                     />
                   </v-col>
                   <v-col cols="3" sm="1">
@@ -638,6 +640,8 @@ export default {
     this.validate()
   },
   data: () => ({
+    date: null,
+    menu: false,
     isPerformerNameEditEnabled: false,
     valid: false,
     dialogFindPerformerInfo: false,
@@ -664,7 +668,7 @@ export default {
     waist: '',
     hip: '',
     boobs: '',
-    cup: '',
+    cup: [],
     body: [],
     pussy: '',
     pussyLips: '',
@@ -698,7 +702,7 @@ export default {
       waist: '',
       hip: '',
       boobs: '',
-      cup: '',
+      cup: [],
     },
   }),
   computed: {
@@ -889,12 +893,15 @@ export default {
           }) 
           profile.start = yearsActive[0]
           profile.end = yearsActive[1]
-          profile.nation = $('[data-test="link-country"] span').text().trim()
+          let countries = this.countries.map(c=>c.name)
+          if ( countries.includes($('[data-test="link-country"] span').text().trim()) ) {
+            profile.nation = $('[data-test="link-country"] span').text().trim()
+          }
           profile.birth = $('[href*="dateOfBirth"]').attr('href')
           if (profile.birth) {
-            profile.birth = profile.birth.match(/\d{4}-\d{2}-\d{2}/)[0]
-            profile.birth = profile.birth.split('-')
-            profile.birth = profile.birth[2]+profile.birth[1]+profile.birth[0]
+            let date = profile.birth.match(/\d{4}-\d{2}-\d{2}/)
+            if (date) profile.birth = date[0]
+            else profile.birth = undefined
           }
           profile.ethnicity = []
           profile.ethnicity.push($('[data-test="link_span_ethnicity"]').text().trim())
@@ -916,7 +923,7 @@ export default {
           }) 
           if (sizes.length>0) {
             if (sizes[0].match(/\D{1,}/)) {
-              profile.cup = sizes[0].match(/\D{1,}/)[0]
+              profile.cup = [ sizes[0].match(/\D{1,}/)[0] ]
             }
             sizes[0] = sizes[0].match(/\d{2}/)[0]
           }
@@ -1006,15 +1013,13 @@ export default {
               this.transfer.found.end = years.match(/\d{4}/)[1]
             }
           }
-          let birth
           if (this.getBioString('birthday', bio)) {
             let year = this.getBioString('birthday', bio).match(/\d{4}/)[0]
             let day = this.getBioString('birthday', bio).match(/\d{2}/)[0]
             let month = this.getBioString('birthday', bio).split(' ')[0]
             month = this.months.indexOf(month.toLowerCase())+1
             if (+month < 10) month = "0"+month.toString()
-            birth = day.toString()+month.toString()+year.toString()
-            this.transfer.found.birthday = birth
+            this.transfer.found.birthday = `${year}-${month}-${day}`
           }
           if (this.getBioString('height', bio)) {
             this.transfer.found.height = this.getBioString('height', bio).match(/\d{3}/)[0]
@@ -1025,18 +1030,18 @@ export default {
           if (this.getBioString('measurements', bio)) {
             let sizes = this.getBioString('measurements', bio).match(/\d{2}/g)
             let cup = this.getBioString('measurements', bio).split('-')[0]
-            this.transfer.found.cup = cup.match(/\D{1,}/)[0]
+            this.transfer.found.cup = [ cup.match(/\D{1,}/)[0] ]
             this.transfer.found.bra = sizes[0]
             this.transfer.found.waist = sizes[1]
             this.transfer.found.hip = sizes[2]
           }
           if (this.getBioString('birthplace', bio)) {
-            this.transfer.found.nation = this.getBioString('birthplace', bio)
-            if (this.getBioString('nationality', bio)) {
-              if (this.getBioString('nationality', bio)
-                .toLowerCase().includes('america')) {
-                this.transfer.found.nation = 'United States'
-              }
+            let countries = this.countries.map(c=>c.name)
+            if (countries.includes(this.getBioString('birthplace', bio))) {
+              this.transfer.found.nation = this.getBioString('birthplace', bio)
+            }
+            if (this.getBioString('nationality', bio).toLowerCase().includes('america')) {
+              this.transfer.found.nation = 'United States'
             }
           }
           this.transfer.found.category = ['Pornstar']
@@ -1274,7 +1279,7 @@ export default {
           rating: this.rating, 
           aliases: newAliases,
           category: this.category,
-          nation: this.nation,
+          nation: this.nation || '',
           birthday: this.birthday,
           start: this.start,
           end: this.end,
@@ -1286,11 +1291,11 @@ export default {
           bra: this.bra,
           waist: this.waist,
           hip: this.hip,
-          boobs: this.boobs,
+          boobs: this.boobs || '',
           body: this.body,
           pussy: this.pussy,
-          pussyLips: this.pussyLips,
-          pussyHair: this.pussyHair,
+          pussyLips: this.pussyLips || '',
+          pussyHair: this.pussyHair || '',
           cup: this.cup,
           tags: this.tags,
           bookmark: newBookmark,
@@ -1304,34 +1309,6 @@ export default {
 
       // update performer card with new values
       console.log('info saved')
-      let info = {}
-      info.id = this.performer.id
-      info.name = newName
-      info.favorite = this.favorite
-      info.rating = this.rating
-      info.aliases = newAliases
-      info.category = this.category
-      info.nation = this.nation
-      info.birthday = this.birthday
-      info.start = this.start
-      info.end = this.end
-      info.ethnicity = this.ethnicity
-      info.hair = this.hair
-      info.eyes = this.eyes
-      info.height = this.height
-      info.weight = this.weight
-      info.bra = this.bra
-      info.waist = this.waist
-      info.hip = this.hip
-      info.boobs = this.boobs
-      info.body = this.body
-      info.pussy = this.pussy
-      info.pussyLips = this.pussyLips
-      info.pussyHair = this.pussyHair
-      info.cup = this.cup
-      info.tags = this.tags
-      info.bookmark = newBookmark
-      this.$store.state.Performers.updateInfo = info
       this.$store.commit('updatePerformers')
       this.$store.state.Performers.dialogEditPerformerInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
@@ -1405,8 +1382,14 @@ export default {
     sort(items) {
       this[items] = this[items].sort((a, b) => a.localeCompare(b))
     },
+    save(date) {
+      this.$refs.menu.save(date)
+    },
   },
   watch: {
+    menu (val) {
+      val && setTimeout(() => (this.$refs.picker.activePicker = 'YEAR'))
+    },
     performerName(newValue, oldValue) {
       this.getPercentComleted(newValue, oldValue)
     },

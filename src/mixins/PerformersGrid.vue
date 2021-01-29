@@ -20,11 +20,10 @@ export default {
     },
     chars: {
       get () {
-        return this.$store.state.Performers.filters.firstChar
+        return this.$store.state.Performers.firstChar
       },
       set (value) {
-        let key = 'firstChar'
-        this.$store.commit('updateFiltersOfPerformers', {key, value})
+        this.$store.state.Performers.firstChar = value
         this.$store.dispatch('filterPerformers')
         this.updateFiltersOfPerformersTab()
       },
@@ -74,9 +73,7 @@ export default {
   },
   methods: {
     clearChars() {
-      let key = 'firstChar'
-      let value = []
-      this.$store.commit('updateFiltersOfPerformers', {key, value})
+      this.$store.state.Performers.firstChar = []
       this.$store.dispatch('filterPerformers')
       this.updateFiltersOfPerformersTab()
     },

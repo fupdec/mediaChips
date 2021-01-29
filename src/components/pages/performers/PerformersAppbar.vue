@@ -149,7 +149,7 @@ export default {
             waist: "",
             hip: "",
             boobs: "",
-            cup: "",
+            cup: [],
             category: [],
             body: [],
             pussy: "",

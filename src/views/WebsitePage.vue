@@ -230,10 +230,10 @@ export default {
     initFilters() {
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
         this.$store.state.Settings.videoFilters = [{
-          param: 'websites',
-          cond: 'all',
+          param: 'website',
+          cond: 'includes',
           val: [this.website.name],
-          type: 'array',
+          type: 'select',
           lock: true,
         },{
           param: 'performers',
@@ -279,10 +279,10 @@ export default {
     },
     updateFilters() {
       const defaults = [{
-        param: 'websites',
-        cond: 'all',
+        param: 'website',
+        cond: 'includes',
         val: [this.website.name],
-        type: 'array',
+        type: 'select',
         lock: true,
       },{
         param: 'performers',

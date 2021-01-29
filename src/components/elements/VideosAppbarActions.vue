@@ -518,10 +518,10 @@ export default {
           type: 'array',
           lock: true,
         },{
-          param: 'websites',
-          cond: 'one of',
+          param: 'website',
+          cond: 'includes',
           val: [],
-          type: 'array',
+          type: 'select',
           lock: true,
         }]
       } else if (this.isTagPage) {
@@ -542,10 +542,10 @@ export default {
       } else if (this.isWebsitePage) {
         let item = this.getItem('websites')
         this.$store.state.Settings.videoFilters = [{
-          param: 'websites',
-          cond: 'all',
+          param: 'website',
+          cond: 'includes',
           val: [item.name],
-          type: 'array',
+          type: 'select',
           lock: true,
         },{
           param: 'performers',

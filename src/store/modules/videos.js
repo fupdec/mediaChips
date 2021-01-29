@@ -1,7 +1,7 @@
 const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path");
-const FileSync = require('@/components/elements/LowDbAdapter')
+const FileSync = require('lowdb/adapters/FileSync')
 const pathToDbVideos = path.join(app.getPath('userData'), 'userfiles/databases/dbv.json')
 const adapterVideos = new FileSync(pathToDbVideos)
 const low = require('lowdb')
@@ -77,78 +77,9 @@ const Videos = {
       dispatch('updateSettingsState', {key:'videosPerPage', value:number})
     },
     filterVideos({ state, commit, getters, rootState}, stayOnCurrentPage) {
-      function compare(sign, a, b) {
-        if (sign === 'equal') return a == b
-        if (sign === 'not equal') return a != b
-        if (sign === 'greater than') return a < b
-        if (sign === 'less than') return a > b
-        if (sign === 'greater than or equal') return a <= b
-        if (sign === 'less than or equal') return a >= b
-      }
-
       let videos = getters.videos
       videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
 
-      for (let filter in rootState.Settings.videoFilters) {
-        let param = rootState.Settings.videoFilters[filter].param
-        let cond = rootState.Settings.videoFilters[filter].cond
-        let val = rootState.Settings.videoFilters[filter].val
-        let type = rootState.Settings.videoFilters[filter].type
-        
-        if (val === null || val.length === 0) continue
-        
-        if (type === 'number') {
-          if (param === 'height') {
-            videos = videos.filter(video=>{
-              let height = +video.resolution.match(/\x(.*)/)[1]
-              return compare(cond, val, height)
-            })
-          } else if (param === 'width') {
-            videos = videos.filter(video=>{
-              let width = +video.resolution.match(/\d*/)[0]
-              return compare(cond, val, width)
-            })
-          } else videos = videos.filter(video => compare(cond, val, video[param]))
-        }
-        
-        if (type === 'string') {
-          let string = val.toLowerCase().trim()
-          if (string.length) {
-            console.log(cond)
-            if (cond === 'including') {
-              videos = videos.filter(video => video[param].toLowerCase().includes(string))
-            } else videos = videos.filter(v => !v[param].toLowerCase().includes(string))
-          }
-        }
-
-        if (type === 'array') {
-          if (param === 'websites') {
-            if (cond === 'all' || cond === 'one of') {
-              videos = videos.filter(video=>val.includes(video.website))
-            } else videos = videos.filter(video=>!val.includes(video.website))
-          } else {
-            if (cond === 'all') {
-              videos = videos.filter({[param]: val})
-            } else if (cond === 'one of') {
-              videos = videos.filter(video=>{
-                let include = false
-                for (let i=0; i<val.length;i++) {
-                  if (video[param].includes(val[i])) { include = true }
-                }
-                return include
-              })
-            } else if (cond === 'not') {
-              videos = videos.filter(video=>{
-                let include = false
-                for (let i=0; i<val.length;i++) {
-                  if (video[param].includes(val[i])) { include = true }
-                }
-                return !include
-              })
-            }
-          }
-        }
-      }
       if (state.showFavorites) {
         videos = videos.filter(video=>video.favorite)
       }
@@ -168,6 +99,79 @@ const Videos = {
         })
       }
 
+      function compare(sign, a, b) {
+        if (sign === 'equal') return a == b
+        if (sign === 'not equal') return a != b
+        if (sign === 'greater than') return a < b
+        if (sign === 'less than') return a > b
+        if (sign === 'greater than or equal') return a <= b
+        if (sign === 'less than or equal') return a >= b
+      }
+
+      for (let filter in rootState.Settings.videoFilters) {
+        let param = rootState.Settings.videoFilters[filter].param
+        let cond = rootState.Settings.videoFilters[filter].cond
+        let val = rootState.Settings.videoFilters[filter].val
+        let type = rootState.Settings.videoFilters[filter].type
+        
+        if (val === null || val.length === 0) continue
+        
+        if (type === 'number' || type === 'date') {
+          if (type === 'number') val = +val
+
+          if (param === 'height') {
+            videos = videos.filter(video=>{
+              let height = +video.resolution.match(/\x(.*)/)[1]
+              return compare(cond, val, height)
+            })
+          } else if (param === 'width') {
+            videos = videos.filter(video=>{
+              let width = +video.resolution.match(/\d*/)[0]
+              return compare(cond, val, width)
+            })
+          } else {
+            if (param === 'date' || param === 'edit') val = new Date(val).getTime()
+            videos = videos.filter(video => compare(cond, val, video[param]))
+          } 
+        }
+        
+        if (type === 'string') {
+          let string = val.toLowerCase().trim()
+          if (string.length) {
+            if (cond === 'includes') {
+              videos = videos.filter(video => video[param].toLowerCase().includes(string))
+            } else videos = videos.filter(v => !v[param].toLowerCase().includes(string))
+          }
+        }
+
+        if (type === 'array') {
+          if (cond === 'all') {
+            videos = videos.filter({[param]: val})
+          } else if (cond === 'one of') {
+            videos = videos.filter(video=>{
+              let include = false
+              for (let i=0; i<val.length;i++) {
+                if ( video[param].includes(val[i]) ) include = true
+              }
+              return include
+            })
+          } else if (cond === 'not') {
+            videos = videos.filter(video=>{
+              let include = false
+              for (let i=0; i<val.length;i++) {
+                if ( video[param].includes(val[i]) ) include = true
+              }
+              return !include
+            })
+          }
+        }
+
+        if (type === 'select') {
+          if (cond === 'includes') {
+            videos = videos.filter(video=>val.includes(video[param]))
+          } else videos = videos.filter(video=>!val.includes(video[param]))
+        }
+      }
       // sort videos
       if (state.sortBy === 'name') {
         videos = videos.orderBy(video=>(path.basename(video.path)), [state.sortDirection])
@@ -335,6 +339,8 @@ const Videos = {
         let val = rootState.Settings.videoFilters[filter].val
         let type = rootState.Settings.videoFilters[filter].type
 
+        if (val === null || val.length === 0) continue
+        
         if (equals.includes(cond)) cond = '='
         if (notEquals.includes(cond)) cond = '!='
         
@@ -346,7 +352,7 @@ const Videos = {
           filters.push(param+' '+cond+' '+val)
         }
       }
-      return 'Videos ' + filters.join(', ')
+      return 'Videos' + (filters.length ? ' with ': ' ') + filters.join(', ')
     },
     videosTotal: (state, store) => {
       return store.videos.value().length

@@ -1,6 +1,6 @@
 const {app} = require('electron').remote
 const path = require("path")
-const FileSync = require('@/components/elements/LowDbAdapter')
+const FileSync = require('lowdb/adapters/FileSync')
 const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
 const adapterSettings = new FileSync(pathToDbSettings)
 const low = require('lowdb')
@@ -34,6 +34,13 @@ dbs.defaults({
   numberOfPagesLimit: 7,
   videoCardSize: 3,
   performerCardSize: 3,
+  performerFilters: [{
+    param: null,
+    cond: null,
+    val: null,
+    type: null,
+    lock: false,
+  }],
   performerInfoEthnicity: ["Asian","Black","Caucasian","Hispanic","Latin","White"],
   performerInfoHair: ["Black","Blonde","Brown","Brunette","Grey","Red","White"],
   performerInfoEyes: ["Blue","Brown","Green","Grey","Hazel"],
@@ -154,6 +161,7 @@ const Settings = {
     videoEditPerformersSortBy: dbs.get('videoEditPerformersSortBy').value(),
     videoEditTagsSortBy: dbs.get('videoEditTagsSortBy').value(),
     videoEditWebsitesSortBy: dbs.get('videoEditWebsitesSortBy').value(),
+    performerFilters: [{param:null,cond:null,val:null,type:null,lock:false}],
     performersPerPage: dbs.get('performersPerPage').value() || 20,
     performerChipsColored: dbs.get('performerChipsColored').value() || true,
     performerEditBtnHidden: dbs.get('performerEditBtnHidden').value() || false,

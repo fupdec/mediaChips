@@ -1,6 +1,17 @@
 <template>
 	<div>
-    <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn @click="$store.state.Performers.dialogFilterPerformers=true" v-on="on" icon tile>
+          <v-badge :value="filterBadge" :content="filteredPerformersTotal" 
+            overlap bottom :dot="filteredPerformersTotal==0" style="z-index: 5;"> 
+          <v-icon>mdi-filter-plus</v-icon> </v-badge>
+        </v-btn>
+      </template>
+      <span>Filter performers</span>
+    </v-tooltip>
+
+    <!-- <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
       <template #activator="{ on: onMenu }">
         <v-tooltip bottom>
           <template #activator="{ on: onTooltip }">
@@ -19,10 +30,6 @@
         <v-card-title class="py-1">
           <span class="headline">Filter performers</span>
           <v-spacer></v-spacer>
-          <v-btn @click="showMoreFilters = !showMoreFilters" small text>
-            <span v-if="!showMoreFilters">Show extra filters</span>
-            <span v-else>Hide extra filters</span>
-          </v-btn>
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
               <v-icon v-bind="attrs" v-on="on" class="mx-2">
@@ -133,7 +140,7 @@
             </v-col>
           </v-row>
         </v-container>
-        <v-container fluid class="py-0" v-if="showMoreFilters">
+        <v-container fluid class="py-0">
           <v-row>
             <v-col cols="12" sm="3" class="py-0">
               <div class="range-wrapper">
@@ -432,7 +439,7 @@
           </v-btn>
         </v-card-actions>
       </v-card>
-    </v-menu>
+    </v-menu> -->
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
@@ -446,22 +453,22 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn @click="toggleFavorites" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Performers.filters.favorite">mdi-heart</v-icon>
+          <v-icon v-if="$store.state.Performers.showFavorites">mdi-heart</v-icon>
           <v-icon v-else>mdi-heart-outline</v-icon>
         </v-btn>
       </template>
-      <span v-if="$store.state.Performers.filters.favorite">Show all</span>
+      <span v-if="$store.state.Performers.showFavorites">Show all</span>
       <span v-else>Show favorites</span>
     </v-tooltip>
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Performers.filters.bookmark">mdi-bookmark</v-icon>
+          <v-icon v-if="$store.state.Performers.showBookmarks">mdi-bookmark</v-icon>
           <v-icon v-else>mdi-bookmark-outline</v-icon>
         </v-btn>
       </template>
-      <span v-if="$store.state.Performers.filters.bookmark">Show all</span>
+      <span v-if="$store.state.Performers.showBookmarks">Show all</span>
       <span v-else>Show bookmarks</span>
     </v-tooltip>
     
@@ -558,38 +565,41 @@
       <span>Select all performers</span>
     </v-tooltip>
 
-    <FiltersPresets v-if="$store.state.Bookmarks.dialogFiltersPresets" 
-      typeOfPresets="performers"
-    />
+    <FiltersPresets v-if="$store.state.Bookmarks.dialogFiltersPresets" typeOfPresets="performers"/>
+    <DialogFilterPerformers v-if="$store.state.Performers.dialogFilterPerformers"/>
 	</div>
 </template>
 
 
 <script>
-const shortid = require("shortid")
+// const shortid = require("shortid")
 
-import FilterPerformers from '@/mixins/FilterPerformers'
+// import FilterPerformers from '@/mixins/FilterPerformers'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 
 export default {
   name: 'PerformersAppbarActions',
   components: {
     FiltersPresets: () => import('@/components/elements/FiltersPresets.vue'),
+    DialogFilterPerformers: () => import('@/components/pages/performers/DialogFilterPerformers.vue'),
   },
-  mixins: [FilterPerformers, ShowImageFunction], 
+  mixins: [
+    // FilterPerformers,
+    ShowImageFunction
+  ], 
   mounted() {
     this.$nextTick(function () {
     })
   },
   data: () => ({
-    filtersMenu: false,
-    filterCategoryLogicIcon: 'mdi-math-norm',
-    filterTagsLogicIcon: 'mdi-math-norm',
-    filterEthnicityLogicIcon: 'mdi-math-norm',
-    filterHairLogicIcon: 'mdi-math-norm',
-    filterEyesLogicIcon: 'mdi-math-norm',
-    filterBodyLogicIcon: 'mdi-math-norm',
-    filterPussyHairLogicIcon: 'mdi-math-norm',
+    // filtersMenu: false,
+    // filterCategoryLogicIcon: 'mdi-math-norm',
+    // filterTagsLogicIcon: 'mdi-math-norm',
+    // filterEthnicityLogicIcon: 'mdi-math-norm',
+    // filterHairLogicIcon: 'mdi-math-norm',
+    // filterEyesLogicIcon: 'mdi-math-norm',
+    // filterBodyLogicIcon: 'mdi-math-norm',
+    // filterPussyHairLogicIcon: 'mdi-math-norm',
   }),
   computed: {
     filterBadge() {
@@ -599,83 +609,75 @@ export default {
     filteredPerformersTotal() {
       return this.$store.getters.filteredPerformersTotal
     },
-    showMoreFilters: {
-      get() {
-        return this.$store.state.Performers.showMoreFilters
-      },
-      set(value) {
-        this.$store.state.Performers.showMoreFilters = value
-      },
-    },
     performersSort() {
-      let sort = this.$store.state.Performers.filters.sortBy
+      let sort = this.$store.state.Performers.sortBy
       return sort.charAt(0) + sort.charAt(1) + sort.charAt(2) + '.'
     },
-    categoriesList() {
-      let cats = _.cloneDeep(this.$store.state.Settings.performerInfoCategory)
-      cats.push('None')
-      return cats
-    },
-    countriesList() {
-      let countries = this.countries
-      countries.unshift({name: 'None', code: ''})
-      return countries
-    },
-    ethnicList() {
-      let ethnic = _.cloneDeep(this.$store.state.Settings.performerInfoEthnicity)
-      ethnic.push('None')
-      return ethnic
-    },
-    hairList() {
-      let hair = _.cloneDeep(this.$store.state.Settings.performerInfoHair)
-      hair.push('None')
-      return hair
-    },
-    eyesList() {
-      let eyes = _.cloneDeep(this.$store.state.Settings.performerInfoEyes)
-      eyes.push('None')
-      return eyes
-    },
-    cupsList() {
-      let cups = _.cloneDeep(this.$store.state.Settings.performerInfoCups)
-      cups.push('None')
-      return cups
-    },
-    boobsList() {
-      let boobs = _.cloneDeep(this.$store.state.Settings.performerInfoBoobs)
-      boobs.push('None')
-      return boobs
-    },
-    bodyList() {
-      let body = _.cloneDeep(this.$store.state.Settings.performerInfoBody)
-      body.push('None')
-      return body
-    },
-    pussyList() {
-      let pussy = _.cloneDeep(this.$store.state.Settings.performerInfoPussy)
-      pussy.push('None')
-      return pussy
-    },
-    pussyLipsList() {
-      let lips = _.cloneDeep(this.$store.state.Settings.performerInfoPussyLips)
-      lips.push('None')
-      return lips
-    },
-    pussyHairList() {
-      let hair = _.cloneDeep(this.$store.state.Settings.performerInfoPussyHair)
-      hair.push('None')
-      return hair
-    },
+    // categoriesList() {
+    //   let cats = _.cloneDeep(this.$store.state.Settings.performerInfoCategory)
+    //   cats.push('None')
+    //   return cats
+    // },
+    // countriesList() {
+    //   let countries = this.countries
+    //   countries.unshift({name: 'None', code: ''})
+    //   return countries
+    // },
+    // ethnicList() {
+    //   let ethnic = _.cloneDeep(this.$store.state.Settings.performerInfoEthnicity)
+    //   ethnic.push('None')
+    //   return ethnic
+    // },
+    // hairList() {
+    //   let hair = _.cloneDeep(this.$store.state.Settings.performerInfoHair)
+    //   hair.push('None')
+    //   return hair
+    // },
+    // eyesList() {
+    //   let eyes = _.cloneDeep(this.$store.state.Settings.performerInfoEyes)
+    //   eyes.push('None')
+    //   return eyes
+    // },
+    // cupsList() {
+    //   let cups = _.cloneDeep(this.$store.state.Settings.performerInfoCups)
+    //   cups.push('None')
+    //   return cups
+    // },
+    // boobsList() {
+    //   let boobs = _.cloneDeep(this.$store.state.Settings.performerInfoBoobs)
+    //   boobs.push('None')
+    //   return boobs
+    // },
+    // bodyList() {
+    //   let body = _.cloneDeep(this.$store.state.Settings.performerInfoBody)
+    //   body.push('None')
+    //   return body
+    // },
+    // pussyList() {
+    //   let pussy = _.cloneDeep(this.$store.state.Settings.performerInfoPussy)
+    //   pussy.push('None')
+    //   return pussy
+    // },
+    // pussyLipsList() {
+    //   let lips = _.cloneDeep(this.$store.state.Settings.performerInfoPussyLips)
+    //   lips.push('None')
+    //   return lips
+    // },
+    // pussyHairList() {
+    //   let hair = _.cloneDeep(this.$store.state.Settings.performerInfoPussyHair)
+    //   hair.push('None')
+    //   return hair
+    // },
     sortButtons: {
       get() {
-        return this.$store.state.Performers.filters.sortBy
+        return this.$store.state.Performers.sortBy
       },
       set(value) {
-        this.updateFiltersOfPerformers('sortBy', value)
+        this.$store.state.Performers.sortBy = value
       },
     },
     sortDirection() {
-      return this.$store.state.Performers.filters.sortDirection
+      return this.$store.state.Performers.sortDirection
     },
     tabId() {
       return this.$route.query.tabId
@@ -688,7 +690,7 @@ export default {
       if (name) {
         text = name + text
       }
-      this.updateFiltersOfPerformers('name', text)
+      // this.updateFiltersOfPerformers('name', text)
     },
     async pasteTags() {
       let text = await navigator.clipboard.readText()
@@ -698,90 +700,101 @@ export default {
       )).value()
       tags = tags.map(t=>{return t.name})
       if (tags.length) {
-        this.updateFiltersOfPerformers('tags', tags)
+        // this.updateFiltersOfPerformers('tags', tags)
       }
     },
-    filterItemsTags(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const alternateNames = item.altNames
-      let found = false
-      for (let i=0;i<alternateNames.length;i++) {
-        if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
+    // changeFilterTagsLogic() {
+    //   let logic = this.$store.state.Performers.filters.tagsLogic
+    //   this.filterTagsLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.updateFiltersOfPerformers('tagsLogic', !logic)
+    // },
+    // changeFilterCategoryLogic() {
+    //   let logic = this.$store.state.Performers.filters.categoryLogic
+    //   this.filterCategoryLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.updateFiltersOfPerformers('categoryLogic', !logic)
+    // },
+    // changeFilterEthnicityLogic() {
+    //   let logic = this.$store.state.Performers.filters.ethnicityLogic
+    //   this.filterEthnicityLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.updateFiltersOfPerformers('ethnicityLogic', !logic)
+    // },
+    // changeFilterHairLogic() {
+    //   let logic = this.$store.state.Performers.filters.hairLogic
+    //   this.filterHairLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.updateFiltersOfPerformers('hairLogic', !logic)
+    // },
+    // changeFilterEyesLogic() {
+    //   let logic = this.$store.state.Performers.filters.eyesLogic
+    //   this.filterEyesLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.updateFiltersOfPerformers('eyesLogic', !logic)
+    // },
+    // changeFilterBodyLogic() {
+    //   let logic = this.$store.state.Performers.filters.bodyLogic
+    //   this.filterBodyLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.updateFiltersOfPerformers('bodyLogic', !logic)
+    // },
+    // changeFilterPussyHairLogic() {
+    //   let logic = this.$store.state.Performers.filters.pussyHairLogic
+    //   this.filterPussyHairLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.updateFiltersOfPerformers('pussyHairLogic', !logic)
+    // },
+    // addNewTab() {
+    //   let tabId = shortid.generate()
+    //   let tab = { 
+    //     name: this.$store.getters.performersFilters, 
+    //     link: `/performers/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Performers.filters),
+    //     icon: 'account-outline'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    // },
+    // removeTag(item) { 
+    //   const index = this.$store.state.Performers.filters.tags.indexOf(item.name)
+    //   if (index >= 0) this.$store.state.Performers.filters.tags.splice(index, 1)
+    //   this.$store.state.hoveredImage = false
+    // },
+    // removeCountry(item) { 
+    //   const index = this.$store.state.Performers.filters.nation.indexOf(item.name)
+    //   if (index >= 0) this.$store.state.Performers.filters.nation.splice(index, 1)
+    //   this.$store.state.hoveredImage = false
+    // },
+    resetAllFilters() {
+      this.$store.state.Settings.performerFilters = [{
+        param: null,
+        cond: null,
+        val: null,
+        type: null,
+        lock: false,
+      }]
+      this.$store.dispatch('filterPerformers')
+
+      let newFilters = _.cloneDeep(this.$store.state.Settings.performerFilters)
+
+      if (this.tabId === 'default') { // for performers page (not for tab)
+        this.$store.getters.settings.set('performerFilters', newFilters).write()
+      } else {
+        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+          name: this.$store.getters.performerFiltersForTabName,
+          filters: newFilters,
+        }).write()
+        this.$store.commit('getTabsFromDb')
       }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    },
-    changeFilterTagsLogic() {
-      let logic = this.$store.state.Performers.filters.tagsLogic
-      this.filterTagsLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfPerformers('tagsLogic', !logic)
-    },
-    changeFilterCategoryLogic() {
-      let logic = this.$store.state.Performers.filters.categoryLogic
-      this.filterCategoryLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfPerformers('categoryLogic', !logic)
-    },
-    changeFilterEthnicityLogic() {
-      let logic = this.$store.state.Performers.filters.ethnicityLogic
-      this.filterEthnicityLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfPerformers('ethnicityLogic', !logic)
-    },
-    changeFilterHairLogic() {
-      let logic = this.$store.state.Performers.filters.hairLogic
-      this.filterHairLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfPerformers('hairLogic', !logic)
-    },
-    changeFilterEyesLogic() {
-      let logic = this.$store.state.Performers.filters.eyesLogic
-      this.filterEyesLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfPerformers('eyesLogic', !logic)
-    },
-    changeFilterBodyLogic() {
-      let logic = this.$store.state.Performers.filters.bodyLogic
-      this.filterBodyLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfPerformers('bodyLogic', !logic)
-    },
-    changeFilterPussyHairLogic() {
-      let logic = this.$store.state.Performers.filters.pussyHairLogic
-      this.filterPussyHairLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.updateFiltersOfPerformers('pussyHairLogic', !logic)
-    },
-    addNewTab() {
-      let tabId = shortid.generate()
-      let tab = { 
-        name: this.$store.getters.performersFilters, 
-        link: `/performers/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Performers.filters),
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
-    removeTag(item) { 
-      const index = this.$store.state.Performers.filters.tags.indexOf(item.name)
-      if (index >= 0) this.$store.state.Performers.filters.tags.splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    removeCountry(item) { 
-      const index = this.$store.state.Performers.filters.nation.indexOf(item.name)
-      if (index >= 0) this.$store.state.Performers.filters.nation.splice(index, 1)
-      this.$store.state.hoveredImage = false
     },
     toggleFavorites() {
-      this.updateFiltersOfPerformers('favorite', !this.$store.state.Performers.filters.favorite)
+      this.$store.state.Performers.showFavorites = !this.$store.state.Performers.showFavorites
       this.$store.dispatch('filterPerformers')
     },
     toggleBookmarks() {
-      this.updateFiltersOfPerformers('bookmark', !this.$store.state.Performers.filters.bookmark)
+      this.$store.state.Performers.showBookmarks = !this.$store.state.Performers.showBookmarks
       this.$store.dispatch('filterPerformers')
     },
-    updateFiltersOfPerformers(key, value){
-      this.$store.commit('updateFiltersOfPerformers', {key, value})
-      this.updateFiltersOfPerformersTab()
-    },
+    // updateFiltersOfPerformers(key, value){
+    //   this.$store.commit('updateFiltersOfPerformers', {key, value})
+    //   this.updateFiltersOfPerformersTab()
+    // },
     toggleSortDirection() {
-      let dir = this.sortDirection === 'asc' ? 'desc' : 'asc'
-      this.updateFiltersOfPerformers('sortDirection', dir)
+      this.$store.state.Performers.sortDirection = this.sortDirection==='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterPerformers')
       },200)
