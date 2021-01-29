@@ -370,28 +370,22 @@ export default {
       }
     },
     updateFiltersOfVideosTab() {
-      const pages = ['/performer/:','/website/:']
       let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
+      const pages = ['/performer/:','/website/:']
 
-      if (this.tabId === 'default') { // for videos page (not for tab)
-        this.$store.getters.settings.set('videoFilters', newFilters).write()
-      } 
-      // for tab of tag page
-      else if (this.$route.path.includes('/tag/:')) { 
-        this.$store.getters.tabsDb.find({id: this.tabId}).get('filters')
-          .assign({videos: newFilters}).write()
-      } 
-      // for tab of performer or website page
-      else if (pages.some(p => this.$route.path.includes(p))) { 
+      if (this.$route.path.includes('/videos/:')) {
+        if (this.tabId === 'default') {
+          this.$store.getters.settings.set('videoFilters', newFilters).write()
+        } else {
+          this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+            name: this.$store.getters.videoFiltersForTabName,
+            filters: newFilters,
+          }).write()
+          this.$store.commit('getTabsFromDb')
+        }
+      } else if (pages.some(p => this.$route.path.includes(p))) { 
         this.$store.getters.tabsDb.find({id:this.tabId})
           .assign({filters:newFilters}).write()
-      } 
-      // for tab of videos page
-      else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.videoFiltersForTabName,
-          filters: newFilters,
-        }).write()
         this.$store.commit('getTabsFromDb')
       }
       // TODO: universal function for update all types of tabs
