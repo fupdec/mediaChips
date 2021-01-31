@@ -12,10 +12,7 @@ dbp.defaults({
     name: "Angela White",
     date: Date.now(),
     edit: Date.now(),
-    aliases: [
-      "Angela Gabrielle White",
-      "Angie"
-    ],
+    aliases: ["Angela Gabrielle White","Angie"],
     tags: [],
     favorite: true,
     rating: 5,
@@ -23,94 +20,82 @@ dbp.defaults({
     birthday: "1985-03-04",
     start: "2003",
     end: "",
-    ethnicity: [
-      "Caucasian"
-    ],
-    hair: [
-      "Brown"
-    ],
-    eyes: [
-      "Blue"
-    ],
+    ethnicity: ["Caucasian"],
+    hair: ["Brown"],
+    eyes: ["Blue"],
     height: "160",
     weight: "55",
-    boobs: "Real",
-    cup: ["G"],
+    boobs: ["Real"],
+    cups: ["G"],
     bookmark: false,
-    category: [
-      "Pornstar"
-    ],
+    category: ["Pornstar"],
     bra: "42",
     waist: "27",
     hip: "41",
-    body: [
-      "Chubby"
-    ],
-    pussy: "Universal",
-    pussyLips: "Medium",
-    pussyHair: [
-      "Bald"
-    ],
+    body: ["Chubby"],
+    pussy: ["Universal"],
+    pussyLips: ["Medium"],
+    pussyHair: ["Bald"],
   }]
 }).write()
 
-const defaultFilters = {
-  favorite: false,
-  bookmark: false,
-  firstChar: [],
-  tags: [],
-  tagsLogic: false,
-  name: '',
-  aliases: false,
-  category: [],
-  categoryLogic: false,
-  ratingActive: false,
-  rating: [0, 5],
-  ageActive: false,
-  age: [18, 99],
-  careerActive: false,
-  career: [1980, new Date().getFullYear()],
-  careerEnded: false,
-  heightActive: false,
-  height: [100, 220],
-  weightActive: false,
-  weight: [20, 220],
-  braActive: false,
-  bra: [20, 60],
-  waistActive: false,
-  waist: [20, 60],
-  hipActive: false,
-  hip: [20, 60],
-  nation: [],
-  ethnicity: [],
-  ethnicityLogic: false,
-  hair: [],
-  hairLogic: false,
-  eyes: [],
-  eyesLogic: false,
-  cup: [],
-  boobs: [],
-  body: [],
-  bodyLogic: false,
-  pussy: [],
-  pussyLips: [],
-  pussyHair: [],
-  pussyHairLogic: false,
-  sortBy: 'name',
-  sortDirection: 'asc',
-  page: 1,
-}
+// const defaultFilters = {
+//   favorite: false,
+//   bookmark: false,
+//   firstChar: [],
+//   tags: [],
+//   tagsLogic: false,
+//   name: '',
+//   aliases: false,
+//   category: [],
+//   categoryLogic: false,
+//   ratingActive: false,
+//   rating: [0, 5],
+//   ageActive: false,
+//   age: [18, 99],
+//   careerActive: false,
+//   career: [1980, new Date().getFullYear()],
+//   careerEnded: false,
+//   heightActive: false,
+//   height: [100, 220],
+//   weightActive: false,
+//   weight: [20, 220],
+//   braActive: false,
+//   bra: [20, 60],
+//   waistActive: false,
+//   waist: [20, 60],
+//   hipActive: false,
+//   hip: [20, 60],
+//   nation: [],
+//   ethnicity: [],
+//   ethnicityLogic: false,
+//   hair: [],
+//   hairLogic: false,
+//   eyes: [],
+//   eyesLogic: false,
+//   cups: [],
+//   boobs: [],
+//   body: [],
+//   bodyLogic: false,
+//   pussy: [],
+//   pussyLips: [],
+//   pussyHair: [],
+//   pussyHairLogic: false,
+//   sortBy: 'name',
+//   sortDirection: 'asc',
+//   page: 1,
+// }
 
 const Performers = {
   state: () => ({
     bottomSheet: true,
-    pageCurrent: 1,
+    page: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
     showMoreFilters: false,
-    defaultFilters: _.cloneDeep(defaultFilters),
-    filters: _.cloneDeep(defaultFilters),
-    filtersReserved: _.cloneDeep(defaultFilters),
+    // defaultFilters: _.cloneDeep(defaultFilters),
+    // filters: _.cloneDeep(defaultFilters),
+    // filtersReserved: _.cloneDeep(defaultFilters),
     filteredPerformers: [],
     filteredEmpty: false,
     selection: null,
@@ -138,7 +123,7 @@ const Performers = {
       state.pageTotal = quantity
     },
     changePerformersPageCurrent(state, quantity) {
-      state.pageCurrent = quantity
+      state.page = quantity
     },
     updateFiltersOfPerformers(state, {key, value}) {
       state.filters[key] = value
@@ -147,9 +132,9 @@ const Performers = {
     filterPerformers(state, filteredPerformers) {
       state.filteredPerformers = filteredPerformers
     },
-    resetFilteredPerformers(state) {
-      state.filters = _.cloneDeep(defaultFilters)
-    },
+    // resetFilteredPerformers(state) {
+    //   state.filters = _.cloneDeep(defaultFilters)
+    // },
     updateSelectedPerformers(state, ids) {
       state.selectedPerformers = ids
     },
@@ -165,6 +150,7 @@ const Performers = {
       commit('changePerformersPageTotal', quantity)
     },
     changePerformersPageCurrent({ state, commit}, quantity) {
+      // TODO clean all useless actions and mutations like already did in videos
       // commit('updatePerformers')
       commit('resetLoading')
       commit('changePerformersPageCurrent', quantity)
@@ -205,6 +191,13 @@ const Performers = {
         let cond = rootState.Settings.performerFilters[filter].cond
         let val = rootState.Settings.performerFilters[filter].val
         let type = rootState.Settings.performerFilters[filter].type
+        let flag = rootState.Settings.performerFilters[filter].flag
+        
+        if (type === 'boolean') {
+          if (cond === 'yes') {
+            performers = performers.filter(performer=>performer[param]===true)
+          } else performers = performers.filter(performer=>performer[param]===false)
+        }
         
         if (val === null || val.length === 0) continue
         
@@ -217,9 +210,33 @@ const Performers = {
         if (type === 'string') {
           let string = val.toLowerCase().trim()
           if (string.length) {
-            if (cond === 'includes') {
-              performers = performers.filter(performer => performer[param].toLowerCase().includes(string))
-            } else performers = performers.filter(v => !v[param].toLowerCase().includes(string))
+            if (param === 'name' && flag === true) {
+              let filteredByNames = await performers.filter(perf => {
+                if (cond === 'includes') {
+                  return perf.name.toLowerCase().includes(string)
+                } else return !perf.name.toLowerCase().includes(string)
+              }).map('id').value()
+  
+              let filteredByAliases = await performers.filter( perf => {
+                let aliases = perf.aliases.map(p=>p.toLowerCase())
+                let matches = aliases.filter(a=>{
+                  if (cond === 'includes') {
+                    return a.includes(string)
+                  } else return !a.includes(string)
+                })
+                if (matches.length>0) {
+                  return true
+                } else { return false } 
+              }).map('id').value()
+  
+              let mergedIds = _.union(filteredByNames, filteredByAliases)
+  
+              performers = performers.filter(p=>(mergedIds.includes(p.id)))
+            } else {
+              if (cond === 'includes') {
+                performers = performers.filter(performer => performer[param].toLowerCase().includes(string))
+              } else performers = performers.filter(v => !v[param].toLowerCase().includes(string))
+            }
           }
         }
 
@@ -258,14 +275,6 @@ const Performers = {
       } else {
         performers = performers.orderBy(state.sortBy, [state.sortDirection])
       }
-      // if (state.filters.boobs.length) {
-      //   if (state.filters.boobs.includes('None')) {
-      //     performers = performers.filter(p=>(p.boobs === ''))
-      //   } else {
-      //     performers = performers.filter(p=>(state.filters.boobs.includes(p.boobs.charAt(0).toUpperCase()+p.boobs.slice(1))))
-      //   }
-      //   // console.log('performers filtered by boobs')
-      // }
       // if (state.filters.name) {
       //   let frase = state.filters.name.toLowerCase().trim()
       //   if (frase.length) {
@@ -307,7 +316,7 @@ const Performers = {
       commit('resetLoading')
       commit('filterPerformers', filteredPerformers)
       if (!stayOnCurrentPage) {
-        state.filters.page = 1
+        state.page = 1
         commit('changePerformersPageCurrent', 1)
       }
     },
@@ -362,6 +371,7 @@ const Performers = {
         let cond = rootState.Settings.performerFilters[filter].cond
         let val = rootState.Settings.performerFilters[filter].val
         let type = rootState.Settings.performerFilters[filter].type
+        let flag = rootState.Settings.performerFilters[filter].flag
 
         if (val === null || val.length === 0) continue
         
@@ -415,29 +425,23 @@ const Performers = {
           c = performersCount;
       state.pageTotal = Math.ceil(l/c);
        // console.log(state.pageTotal)
-      if(state.filters.page) {
-        state.pageCurrent = state.filters.page
+      if(state.page) {
+        state.page = state.page
       }
-      if(state.pageCurrent > state.pageTotal) {
-        state.pageCurrent = state.pageTotal
+      if(state.page > state.pageTotal) {
+        state.page = state.pageTotal
       }
       
-      const end = state.pageCurrent * performersCount,
+      const end = state.page * performersCount,
             start = end - performersCount;
       return performers.slice(start, end)
     },
-    performersPagesSum(state) {
-      return state.pageTotal
-    },
-    performersPages(state, store) {
+    performersPages(state) {
       let pages = []
-      for (let i = 0; i < store.performersPagesSum; i++) {
+      for (let i = 0; i < state.pageTotal; i++) {
         pages.push(i+1)
       }
       return pages
-    },
-    performersCurrentPage(state) {
-      return state.pageCurrent
     },
     getSelectedPerformers(state) {
       return state.selectedPerformers

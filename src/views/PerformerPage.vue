@@ -108,7 +108,7 @@
                 <v-col cols="12" class="pa-0">
                   <div class="overline text-center">Appearance</div>
                 </v-col>
-                <v-col cols="12" sm="4">
+                <v-col cols="12" sm="6">
                   <div class="param">
                     <v-icon left size="16">mdi-account-group</v-icon>
                     Ethnicity <b>{{ethnicity}}</b>
@@ -122,22 +122,14 @@
                     Eyes color <b>{{eyes}}</b>
                   </div>
                 </v-col>
-                <v-col cols="12" sm="4">
+                <v-col cols="12" sm="6">
                   <div class="param">Height <b>{{height}}</b> <i>cm</i></div>
                   <div class="param">Weight <b>{{weight}}</b> <i>kg</i></div><br>
                   <div class="param">Bra <b>{{bra}}</b> <i>cm</i></div>
                   <div class="param">Waist <b>{{waist}}</b> <i>cm</i></div>
                   <div class="param">Hip <b>{{hip}}</b> <i>cm</i></div><br>
-                  <div class="param">Cup size <b>{{cup}}</b></div>
+                  <div class="param">Cups <b>{{cups}}</b></div>
                   <div class="param">Boobs <b>{{boobs}}</b></div>
-                </v-col>
-                <v-col cols="12" sm="4">
-                  <div class="param">
-                  <v-icon left size="16">mdi-human-handsdown</v-icon>
-                    Body type <b>{{bodyType}}</b></div><br>
-                  <div class="param">Pussy type <b>{{pussy}}</b></div>
-                  <div class="param">Pussy lips size <b>{{pussyLips}}</b></div>
-                  <div class="param">Pussy hair <b>{{pussyHair}}</b></div>
                 </v-col>
                 <v-col cols="12" class="text-center pb-0">
                   <v-chip v-for="tag in performer.tags" :key="tag" :to="`/tag/:${getTagId(tag)}`"
@@ -377,22 +369,10 @@ export default {
       if (this.performer.boobs.length) {
         progress += this.percentValue 
       }
-      if (this.performer.cup.length) {
+      if (this.performer.cups.length) {
         progress += this.percentValue 
       }
       if (this.performer.category.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.body.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.pussy.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.pussyLips.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.pussyHair.length) {
         progress += this.percentValue 
       }
       if (this.performer.start.length) {
@@ -472,29 +452,13 @@ export default {
       if (!this.performer.hip) return '??'
       return Math.floor(this.performer.hip*2.54)
     },
-    cup() {
-      if (!this.performer.cup.length) return '??'
-      return this.performer.cup.join(', ')
+    cups() {
+      if (!this.performer.cups.length) return '??'
+      return this.performer.cups.join(', ')
     },
     boobs() {
-      if (!this.performer.boobs) return 'unknown'
-      return this.performer.boobs
-    },
-    bodyType() {
-      if (!this.performer.body.length) return '??'
-      return this.performer.body.join(', ')
-    },
-    pussy() {
-      if (!this.performer.pussy) return '??'
-      return this.performer.pussy
-    },
-    pussyLips() {
-      if (!this.performer.pussyLips) return '??'
-      return this.performer.pussyLips
-    },
-    pussyHair() {
-      if (!this.performer.pussyHair.length) return '??'
-      return this.performer.pussyHair.join(', ')
+      if (!this.performer.boobs) return '??'
+      return this.performer.boobs.join(', ')
     },
     category() {
       if (!this.performer.category.length) return '??'
@@ -676,18 +640,21 @@ export default {
           cond: 'all',
           val: [this.performer.name],
           type: 'array',
+          flag: null,
           lock: true,
         },{
           param: 'tags',
           cond: 'all',
           val: this.getFilteredTags(),
           type: 'array',
+          flag: null,
           lock: true,
         },{
           param: 'website',
           cond: 'includes',
           val: this.getFilteredWebsites(),
           type: 'select',
+          flag: null,
           lock: true,
         }]
         this.$store.dispatch('filterVideos', true)
@@ -767,18 +734,21 @@ export default {
         cond: 'all',
         val: [this.performer.name],
         type: 'array',
+        flag: null,
         lock: true,
       },{
         param: 'tags',
         cond: 'one of',
         val: this.getFilteredTags(),
         type: 'array',
+        flag: null,
         lock: true,
       },{
         param: 'website',
         cond: 'includes',
         val: this.getFilteredWebsites(),
         type: 'select',
+        flag: null,
         lock: true,
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})

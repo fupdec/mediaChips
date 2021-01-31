@@ -30,11 +30,6 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
-    <div class="ma-4 red--text text-center">Starting from version 0.5.8 performer parameters replaced with new values.
-      <br> If you have performers just press "Update performers" button.</div>
-    <v-btn @click="updatePerformerParams" color="red" dark class="my-4" block> 
-      <v-icon left>mdi-auto-fix</v-icon> Update performers </v-btn>
-
     <div class="headline text-h3 text-center my-6">Performers</div>
 
     <v-container fluid v-if="!$store.state.Performers.filteredEmpty" 
@@ -103,30 +98,24 @@
       <v-sheet class="bottom-profle">
         <v-container fluid class="py-0">
           <v-row>
-            <v-col cols="12" md="3">
+            <v-col cols="12" md="4">
               <div>Category: <i>{{performer.category.join(', ')}}</i></div>
               <div>Career: <i>{{performer.start}} - {{performer.end}}</i></div>
               <div>Birth (age): <i>{{getAge(performer.birthday)}}</i></div>
             </v-col>
-            <v-col cols="12" md="3">
+            <v-col cols="12" md="4">
               <div>Ethnicity: <i>{{performer.ethnicity.join(', ')}}</i></div>
               <div>Hair color: <i>{{performer.hair.join(', ')}}</i></div>
               <div>Eyes color: <i>{{performer.eyes.join(', ')}}</i></div>
             </v-col>
-            <v-col cols="12" md="3">
+            <v-col cols="12" md="4">
               <span class="mr-2">Height: <i>{{performer.height}}</i></span>
               <span>Weight: <i>{{performer.weight}}</i></span><br>
               <span class="mr-2">Bra: <i>{{performer.bra}}</i></span>
               <span class="mr-2">Waist: <i>{{performer.waist}}</i></span>
               <span>Hip: <i>{{performer.hip}}</i></span><br>
-              <span class="mr-2">Cup size: <i>{{performer.cup.join(', ')}}</i></span>
-              <span>Boobs: <i>{{performer.boobs}}</i></span>
-            </v-col>
-            <v-col cols="12" md="3">
-              <div>Body: <i>{{performer.body.join(', ')}}</i></div>
-              <span class="mr-2">Pussy: <i>{{performer.pussy}}</i></span>
-              <span class="mr-2">Lips: <i>{{performer.pussyLips}}</i></span><br>
-              <span>Pussy hair: <i>{{performer.pussyHair.join(', ')}}</i></span>
+              <span class="mr-2">Cups: <i>{{performer.cups.join(', ')}}</i></span>
+              <span>Boobs: <i>{{performer.boobs.join(', ')}}</i></span>
             </v-col>
           </v-row>
         </v-container>
@@ -140,7 +129,6 @@
 import PerformersGrid from '@/mixins/PerformersGrid'
 import PerformersGridElements from '@/components/elements/PerformersGridElements.vue'
 import vuescroll from 'vuescroll'
-import Countries from '@/mixins/Countries'
 
 export default {
   name: "Performers",
@@ -150,7 +138,7 @@ export default {
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),
   },
-  mixins: [PerformersGrid, Countries],
+  mixins: [PerformersGrid],
   mounted () {
     this.$nextTick(function () {
       this.initFilters()
@@ -179,44 +167,6 @@ export default {
     },
   },
   methods: {
-    updatePerformerParams() {
-      let countries = this.countries.map(c=>c.name)
-      
-      this.$store.getters.performers.each(p=>{
-        if (typeof p.cup == 'string') {
-          if (p.cup.length == 0) p.cup = []
-          else p.cup = [p.cup]
-        }
-        if (p.boobs === undefined) {
-          p.boobs = ''
-        }
-        if (p.nation === undefined) {
-          p.nation = ''
-        }
-        if (!countries.includes(p.nation)) {
-          p.nation = ''
-        }
-        if (p.pussy === undefined) {
-          p.pussy = ''
-        }
-        if (p.pussyLips === undefined) {
-          p.pussyLips = ''
-        }
-        if (p.birthday) {
-          if (!p.birthday.match(/\d{4}-\d{2}-\d{2}/)) {
-            if (p.birthday.length!==0 && p.birthday.length!==8) {
-              p.birthday = ''
-            } else {
-              let year = p.birthday.match(/\d{4}$/)[0]
-              let day = p.birthday.match(/\d{2}/)[0]
-              let month = p.birthday.match(/(\d{2})/g)[1]
-              let birthday = `${year}-${month}-${day}`
-              p.birthday = birthday
-            }
-          }
-        }
-      }).write()
-    },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
     },

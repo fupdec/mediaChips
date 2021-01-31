@@ -510,18 +510,21 @@ export default {
           cond: 'all',
           val: [item.name],
           type: 'array',
+          flag: null,
           lock: true,
         },{
           param: 'tags',
           cond: 'one of',
           val: [],
           type: 'array',
+          flag: null,
           lock: true,
         },{
           param: 'website',
           cond: 'includes',
           val: [],
           type: 'select',
+          flag: null,
           lock: true,
         }]
       } else if (this.isTagPage) {
@@ -531,12 +534,14 @@ export default {
           cond: 'all',
           val: [item.name],
           type: 'array',
+          flag: null,
           lock: true,
         },{
           param: 'performers',
           cond: 'one of',
           val: [],
           type: 'array',
+          flag: null,
           lock: true,
         }]
       } else if (this.isWebsitePage) {
@@ -546,12 +551,14 @@ export default {
           cond: 'includes',
           val: [item.name],
           type: 'select',
+          flag: null,
           lock: true,
         },{
           param: 'performers',
           cond: 'one of',
           val: [],
           type: 'array',
+          flag: null,
           lock: true,
         }]
       } else {
@@ -560,6 +567,7 @@ export default {
           cond: null,
           val: null,
           type: null,
+          flag: null,
           lock: false,
         }]
       }

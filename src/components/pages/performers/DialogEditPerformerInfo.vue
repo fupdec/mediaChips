@@ -17,22 +17,17 @@
               <span>Name copied to clipboard!</span>
             </v-tooltip>
           </div>
-          
           <v-spacer></v-spacer>
-
           <div class="profile-completed-container ma-6">
             <div class="overline mr-2">completed</div>
             <v-progress-circular class="profile-completed-progress"
               :value="percentComplete" size="36" rotate="270"
-              :color="percentComplete>=99?'green':'white'" width="2"
-            >
+              :color="percentComplete>=99?'green':'white'" width="2">
               <v-icon v-if="percentComplete>=99" color="green">mdi-check</v-icon>
               <div v-else>{{percentComplete}}<span class="percent">%</span></div>
             </v-progress-circular>
           </div>
-
           <v-spacer></v-spacer>
-
           <v-btn class="ma-2" dark outlined @click="close"> Cancel </v-btn>
           <v-btn @click="savePerformerInfo(performer.id)" :disabled="!valid"
             class="ma-2" color="primary"> 
@@ -72,54 +67,37 @@
                         </template>
                         <span>Edit name</span>
                       </v-tooltip>
-                      <v-text-field 
-                        v-model="performerName"
+                      <v-text-field v-model="performerName"
                         label="Name" placeholder=" " :disabled="!isPerformerNameEditEnabled"
                         hint='The name may include letters, numbers, symbols: !?#&+()$~*-_'
                         :rules="[getNameRules]" maxlength="100" counter
                         error-count="3" validate-on-blur
                         @click:append-outer="pastePerformerName" 
-                        append-outer-icon="mdi-clipboard-text-outline"
-                      ></v-text-field>
+                        append-outer-icon="mdi-clipboard-text-outline"/>
                     </div>
                   </v-col>
                   <v-col cols="12">
-                    <v-text-field 
-                      v-model="aliases" label="Aliases" placeholder=" "
+                    <v-text-field v-model="aliases" label="Aliases" placeholder=" "
                       hint='Divide by "," or ; e.g. "Ca$$, Cass!dy; Cassy, Casssidy".
                       Aliases may include letters, numbers, symbols: !?#&+()$~*-_'
                       :rules="[getAliasesRules]" maxlength="500" counter
-                      error-count="3" validate-on-blur
-                      @click:append-outer="pasteAliases" 
-                      append-outer-icon="mdi-clipboard-text-outline"
-                    ></v-text-field>
+                      error-count="3" validate-on-blur @click:append-outer="pasteAliases" 
+                      append-outer-icon="mdi-clipboard-text-outline"/>
                   </v-col>
                   <v-col cols="6" sm="3">
                     <div class="masked-block">
-                      <v-text-field 
+                      <v-text-field v-model="start" :rules="[getCareerStartRules]"
                         label="Career start year" persistent-hint
-                        hint='YYYY' class="masked-input" placeholder=" "
-                        :rules="[getCareerStartRules]" v-model="start"
-                      ></v-text-field>
-                      <the-mask 
-                        mask="####" v-model="start"
-                        type="text" class="masked-mask"
-                      >
-                      </the-mask>
+                        hint='YYYY' class="masked-input" placeholder=" "/>
+                      <the-mask v-model="start" mask="####" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="6" sm="3">
                     <div class="masked-block">
-                      <v-text-field 
-                        label="Career end year" persistent-hint
-                        hint='YYYY' class="masked-input" placeholder=" "
-                        :rules="[getCareerEndRules]" v-model="end"
-                      ></v-text-field>
-                      <the-mask 
-                        mask="####" v-model="end"
-                        type="text" class="masked-mask"
-                      >
-                      </the-mask>
+                      <v-text-field v-model="end" :rules="[getCareerEndRules]"
+                        label="Career end year" persistent-hint hint='YYYY' 
+                        class="masked-input" placeholder=" " />
+                      <the-mask mask="####" v-model="end" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="12" sm="6">
@@ -127,20 +105,6 @@
                       multiple label="Category" placeholder=" " />
                   </v-col>
                   <v-col cols="12" sm="3">
-                    <!-- <div class="masked-block">
-                      <v-text-field 
-                        label="Birthday"
-                        persistent-hint hint='DD.MM.YYYY'
-                        class="masked-input" placeholder=" "
-                      ></v-text-field>
-                      <the-mask 
-                        mask="##.##.####" 
-                        v-model="birthday"
-                        type="text"
-                        class="masked-mask"
-                      >
-                      </the-mask>
-                    </div> -->
                     <v-menu v-model="menu" ref="menu" :close-on-content-click="false"
                       transition="scale-transition" offset-y min-width="auto">
                       <template v-slot:activator="{ on, attrs }">
@@ -192,136 +156,70 @@
                   </v-col>
                   <v-col cols="6" sm="2">
                     <div class="masked-block">
-                      <v-text-field 
-                        label="Height" 
-                        persistent-hint
-                        hint='cm'
-                        class="masked-input" v-model="height" validate-on-blur
-                        placeholder=" " :rules="[getHeightRules]"
-                      />
-                      <the-mask 
-                        mask="###" 
-                        v-model="height"
-                        type="text"
-                        class="masked-mask"
-                      />
+                      <v-text-field v-model="height" :rules="[getHeightRules]"
+                        label="Height" persistent-hint hint='cm' class="masked-input"
+                        validate-on-blur placeholder=" " />
+                      <the-mask v-model="height" mask="###" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="6" sm="2">
                     <div class="masked-block">
-                      <v-text-field 
-                        label="Weight"
-                        persistent-hint
-                        hint='kg'
-                        class="masked-input" v-model="weight" validate-on-blur
-                        placeholder=" " :rules="[getWeightRules]"
-                      ></v-text-field>
-                      <the-mask 
-                        mask="###" 
-                        v-model="weight"
-                        type="text"
-                        class="masked-mask"
-                      >
-                      </the-mask>
+                      <v-text-field v-model="weight" :rules="[getWeightRules]" label="Weight"
+                        persistent-hint hint='kg' class="masked-input" validate-on-blur
+                        placeholder=" " />
+                      <the-mask v-model="weight" mask="###" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="3" sm="1">
                     <div class="masked-block">
-                      <v-text-field 
-                        label="Bra"
-                        class="masked-input"
-                        persistent-hint
-                        hint='in'
-                        placeholder=" "
-                      />
-                      <the-mask 
-                        mask="###"
-                        v-model="bra"
-                        type="text"
-                        class="masked-mask"
-                      />
+                      <v-text-field label="Bra" placeholder=" " class="masked-input"
+                        persistent-hint hint='in'/>
+                      <the-mask v-model="bra" mask="###" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="3" sm="2">
-                    <v-select
-                      :items="$store.state.Settings.performerInfoCups"
-                      label="Cup size" v-model="cup" multiple
-                    />
+                    <v-select v-model="cups" :items="$store.state.Settings.performerInfoCups"
+                      label="Cups" multiple/>
                   </v-col>
                   <v-col cols="3" sm="1">
                     <div class="masked-block">
-                      <v-text-field 
-                        label="Waist"
-                        class="masked-input"
-                        persistent-hint
-                        hint='in'
-                        placeholder=" "
-                      ></v-text-field>
-                      <the-mask 
-                        mask="###"
-                        v-model="waist"
-                        type="text"
-                        class="masked-mask"
-                      >
-                      </the-mask>
+                      <v-text-field label="Waist" class="masked-input"
+                        persistent-hint hint='in' placeholder=" "/>
+                      <the-mask v-model="waist" mask="###" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="3" sm="1">
                     <div class="masked-block">
-                      <v-text-field 
-                        label="Hip"
-                        class="masked-input"
-                        persistent-hint
-                        hint='in'
-                        placeholder=" "
-                      ></v-text-field>
-                      <the-mask 
-                        mask="###"
-                        v-model="hip"
-                        type="text"
-                        class="masked-mask"
-                      >
-                      </the-mask>
+                      <v-text-field label="Hip" class="masked-input"
+                        persistent-hint hint='in' placeholder=" "/>
+                      <the-mask v-model="hip" mask="###" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="8" sm="3">
-                    <v-select
-                      :items="$store.state.Settings.performerInfoBoobs"
-                      label="Boobs" v-model="boobs" placeholder=" " clearable
-                    />
+                    <v-autocomplete v-model="boobs" :items="$store.state.Settings.performerInfoBoobs"
+                      label="Boobs" multiple placeholder=" "/>
                   </v-col>
-                  <v-col cols="6" sm="3">
-                    <v-autocomplete
-                      v-model="body" @blur="sort('body')"
-                      :items="$store.state.Settings.performerInfoBody"
-                      label="Body type" multiple placeholder=" "
-                    >
-                    </v-autocomplete>
+                  <v-col cols="12">
+                    <div v-if="params.length" class="overline text-center">Custom parameters</div>
                   </v-col>
-                  <v-col cols="6" sm="3">
-                    <v-autocomplete
-                      v-model="pussy" clearable
-                      :items="$store.state.Settings.performerInfoPussy"
-                      label="Pussy type" placeholder=" "
-                    >
-                    </v-autocomplete>
+                  <v-col v-for="param in params" :key="param.name" cols="6" sm="3">
+                    <v-text-field v-if="param.type==='string'||param.type==='number'" 
+                      @input="setVal($event,param.name)" :value="values[param.name]"
+                      :label="param.name" placeholder=" " />
+
+                    <v-autocomplete v-if="param.type==='array'" :items="param.items"
+                      @input="setVal($event,param.name)" :value="values[param.name]"
+                      :label="param.name" multiple placeholder=" " />
+
+                    <v-switch v-if="param.type==='boolean'" inset :label="param.name"
+                      @change="setVal($event,param.name)" :value="values[param.name]"/>
+                        
+                    <v-text-field v-if="param.type==='date'" readonly
+                      :value="values[param.name]" @focus="picker=true, pickerParam=param.name"
+                      :label="param.name" placeholder=" " hint='YYYY-MM-DD' persistent-hint
+                      clearable @click:clear="setVal('', param.name)" />
                   </v-col>
-                  <v-col cols="6" sm="3">
-                    <v-autocomplete
-                      v-model="pussyLips" clearable
-                      :items="$store.state.Settings.performerInfoPussyLips"
-                      label="Pussy lips size" placeholder=" "
-                    >
-                    </v-autocomplete>
-                  </v-col>
-                  <v-col cols="6" sm="3">
-                    <v-autocomplete
-                      v-model="pussyHair" @blur="sort('pussyHair')"
-                      :items="$store.state.Settings.performerInfoPussyHair"
-                      label="Pussy hair" multiple placeholder=" "
-                    >
-                    </v-autocomplete>
-                  </v-col>
+                  <v-col cols="12" class="pa-0"/>
                   <v-col cols="12" sm="6" class="text-center">
                     <div class="overline">Rating</div>
                     <v-rating v-model="rating"
@@ -575,6 +473,11 @@
         </vuescroll>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="picker" width="300px">
+      <v-date-picker @change="setVal($event, pickerParam), picker=false"
+        :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
+        :value="values[pickerParam]" no-title color="primary" full-width/>
+    </v-dialog>
   </div>
 </template>
 
@@ -621,11 +524,7 @@ export default {
       this.waist = this.performer.waist
       this.hip = this.performer.hip
       this.boobs = this.performer.boobs
-      this.cup = this.performer.cup
-      this.body = this.performer.body
-      this.pussy = this.performer.pussy
-      this.pussyLips = this.performer.pussyLips
-      this.pussyHair = this.performer.pussyHair
+      this.cups = this.performer.cups
       this.category = this.performer.category
       this.queryString = this.performer.name
       this.tags = this.performer.tags.sort((a, b) => a.localeCompare(b))
@@ -634,6 +533,11 @@ export default {
                     .find({itemId:this.performer.id}).value().text
         this.$store.state.Bookmarks.bookmarkText = text
       }
+      // for custom parameters
+      for (let param in this.params) {
+        this.values[this.params[param].name] = this.performer[this.params[param].name]
+      }
+      // TODO load existing val for custom params
     })
   },
   updated() {
@@ -667,12 +571,8 @@ export default {
     bra: '',
     waist: '',
     hip: '',
-    boobs: '',
-    cup: [],
-    body: [],
-    pussy: '',
-    pussyLips: '',
-    pussyHair: [],
+    boobs: [],
+    cups: [],
     currentYear: new Date().getFullYear(),
     percentCompleteProgress: 0,
     percentValue: 5.263,
@@ -701,9 +601,12 @@ export default {
       bra: '',
       waist: '',
       hip: '',
-      boobs: '',
-      cup: [],
+      boobs: [],
+      cups: [],
     },
+    values: {},
+    picker: false,
+    pickerParam: null,
   }),
   computed: {
     performer() {
@@ -751,6 +654,9 @@ export default {
       let dateFormated = date.toLocaleDateString()
       dateFormated += ' ' + date.toLocaleTimeString() 
       return dateFormated
+    },
+    params() {
+      return this.$store.state.Settings.customParametersPerformer
     },
   },
   methods: {
@@ -923,7 +829,7 @@ export default {
           }) 
           if (sizes.length>0) {
             if (sizes[0].match(/\D{1,}/)) {
-              profile.cup = [ sizes[0].match(/\D{1,}/)[0] ]
+              profile.cups = [ sizes[0].match(/\D{1,}/)[0] ]
             }
             sizes[0] = sizes[0].match(/\d{2}/)[0]
           }
@@ -958,9 +864,9 @@ export default {
             if (profile.boobs === "Natural") {
               profile.boobs = "Real"
             }
-            this.transfer.found.boobs = profile.boobs
+            this.transfer.found.boobs = [profile.boobs]
           }
-          if (profile.cup != undefined) { this.transfer.found.cup = profile.cup }
+          if (profile.cups != undefined) { this.transfer.found.cups = profile.cups }
         }
         this.getTransferCurrent()
         this.dialogTransferInfo = true
@@ -1029,8 +935,8 @@ export default {
           }
           if (this.getBioString('measurements', bio)) {
             let sizes = this.getBioString('measurements', bio).match(/\d{2}/g)
-            let cup = this.getBioString('measurements', bio).split('-')[0]
-            this.transfer.found.cup = [ cup.match(/\D{1,}/)[0] ]
+            let cups = this.getBioString('measurements', bio).split('-')[0]
+            this.transfer.found.cups = [ cups.match(/\D{1,}/)[0] ]
             this.transfer.found.bra = sizes[0]
             this.transfer.found.waist = sizes[1]
             this.transfer.found.hip = sizes[2]
@@ -1080,7 +986,7 @@ export default {
       this.transfer.current.waist = this.waist
       this.transfer.current.hip = this.hip
       this.transfer.current.boobs = this.boobs
-      this.transfer.current.cup = this.cup
+      this.transfer.current.cups = this.cups
     },
     restoreAll() {
       for (const param in this.transfer.current) {
@@ -1291,16 +1197,13 @@ export default {
           bra: this.bra,
           waist: this.waist,
           hip: this.hip,
-          boobs: this.boobs || '',
-          body: this.body,
-          pussy: this.pussy,
-          pussyLips: this.pussyLips || '',
-          pussyHair: this.pussyHair || '',
-          cup: this.cup,
+          boobs: this.boobs || [],
+          cups: this.cups,
           tags: this.tags,
           bookmark: newBookmark,
           edit: Date.now(),
         })
+        .assign(this.values)
         .write();
 
       // update edit dialog with new values
@@ -1329,6 +1232,7 @@ export default {
         this.percentComplete = this.percentCompleteProgress - this.percentValue
       }
       // console.log(this.percentCompleteProgress)
+      // TODO fix complete function
     },
     getImg() {
       let imgAvaPath = this.getImgUrl(this.performer.id + '_avatar.jpg')
@@ -1385,6 +1289,9 @@ export default {
     save(date) {
       this.$refs.menu.save(date)
     },
+    setVal(value, param) {
+      this.values[param] = value 
+    },
   },
   watch: {
     menu (val) {
@@ -1426,22 +1333,10 @@ export default {
     boobs(newValue, oldValue) {
       this.getPercentComleted(newValue, oldValue)
     },
-    cup(newValue, oldValue) {
+    cups(newValue, oldValue) {
       this.getPercentComleted(newValue, oldValue)
     },
     category(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
-    },
-    body(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
-    },
-    pussy(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
-    },
-    pussyLips(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
-    },
-    pussyHair(newValue, oldValue) {
       this.getPercentComleted(newValue, oldValue)
     },
     async start(newValue, oldValue) {

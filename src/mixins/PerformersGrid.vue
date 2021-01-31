@@ -48,18 +48,18 @@ export default {
     },
     performersPagesSum: {
       get () {
-        return this.$store.getters.performersPagesSum
+        return this.$store.state.Performers.pageTotal
       },
       set (number) {
-        this.$store.dispatch('changePerformersPageTotal', number)
+        this.$store.state.Performers.pageTotal = number
       },
     },
     performersCurrentPage: {
       get () {
-        return this.$store.getters.performersCurrentPage
+        return this.$store.state.Performers.page
       },
       set (number) {
-        this.$store.state.Performers.filters.page = number
+        this.$store.state.Performers.page = number
         this.updateFiltersOfPerformersTab()
         this.$store.dispatch('changePerformersPageCurrent', number)
       },

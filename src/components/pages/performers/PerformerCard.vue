@@ -342,22 +342,10 @@ export default {
       if (this.performer.boobs.length) {
         progress += this.percentValue 
       }
-      if (this.performer.cup.length) {
+      if (this.performer.cups.length) {
         progress += this.percentValue 
       }
       if (this.performer.category.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.body.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.pussy.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.pussyLips.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.pussyHair.length) {
         progress += this.percentValue 
       }
       if (this.performer.start.length) {

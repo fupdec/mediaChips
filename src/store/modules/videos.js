@@ -113,6 +113,7 @@ const Videos = {
         let cond = rootState.Settings.videoFilters[filter].cond
         let val = rootState.Settings.videoFilters[filter].val
         let type = rootState.Settings.videoFilters[filter].type
+        let flag = rootState.Settings.videoFilters[filter].flag
         
         if (val === null || val.length === 0) continue
         
@@ -338,6 +339,7 @@ const Videos = {
         let cond = rootState.Settings.videoFilters[filter].cond
         let val = rootState.Settings.videoFilters[filter].val
         let type = rootState.Settings.videoFilters[filter].type
+        let flag = rootState.Settings.videoFilters[filter].flag
 
         if (val === null || val.length === 0) continue
         

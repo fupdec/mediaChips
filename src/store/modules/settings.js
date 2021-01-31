@@ -39,6 +39,7 @@ dbs.defaults({
     cond: null,
     val: null,
     type: null,
+    flag: null,
     lock: false,
   }],
   performerInfoEthnicity: ["Asian","Black","Caucasian","Hispanic","Latin","White"],
@@ -73,6 +74,7 @@ dbs.defaults({
     cond: null,
     val: null,
     type: null,
+    flag: null,
     lock: false,
   }],
   videoChipsColored: true,
@@ -111,6 +113,7 @@ dbs.defaults({
   playlistsPerPage: 20,
   gapSize: 's',
   playerType: "0",
+  customParametersPerformer: [],
 }).write()
 
 const Settings = {
@@ -144,7 +147,7 @@ const Settings = {
     scanProcRun: false,
     ratingAndFavoriteInCard: dbs.get('ratingAndFavoriteInCard').value(),
     selectedDisk: dbs.get('selectedDisk').value() || '',
-    videoFilters: [{param:null,cond:null,val:null,type:null,lock:false}],
+    videoFilters: [{param:null,cond:null,val:null,type:null,flag: null,lock:false}],
     videosPerPage: dbs.get('videosPerPage').value() || 20,
     videoCardSize: dbs.get('videoCardSize').value(),
     videoChipsColored: dbs.get('videoChipsColored').value() || true,
@@ -161,7 +164,7 @@ const Settings = {
     videoEditPerformersSortBy: dbs.get('videoEditPerformersSortBy').value(),
     videoEditTagsSortBy: dbs.get('videoEditTagsSortBy').value(),
     videoEditWebsitesSortBy: dbs.get('videoEditWebsitesSortBy').value(),
-    performerFilters: [{param:null,cond:null,val:null,type:null,lock:false}],
+    performerFilters: [{param:null,cond:null,val:null,type:null,flag: null,lock:false}],
     performersPerPage: dbs.get('performersPerPage').value() || 20,
     performerChipsColored: dbs.get('performerChipsColored').value() || true,
     performerEditBtnHidden: dbs.get('performerEditBtnHidden').value() || false,
@@ -212,6 +215,8 @@ const Settings = {
     dialogHeaderGradient: false,
     gapSize: dbs.get('gapSize').value(),
     playerType: dbs.get('playerType').value() || '0',
+    dialogManagePerformerParameters: false,
+    customParametersPerformer: _.cloneDeep(dbs.get('customParametersPerformer').value()),
   }),
   mutations: {
     updateSettings (state) {
@@ -235,14 +240,6 @@ const Settings = {
     },
     updateFiltersPresetDefault(state, {type, value}) {
       state[`${type}FiltersPresetDefault`] = value
-    },
-    addItemToPerformerInfoParam(state, {param, value}) {
-      state[param].push(value)
-      state = state[param].sort((a,b)=>a.localeCompare(b))
-    },
-    updatePerformerInfoParam(state, {param, value}) {
-      state[param] = value
-      state = state[param].sort((a,b)=>a.localeCompare(b))
     },
     resetSettingsToDefault(state) {
       state.passwordProtection = false
@@ -405,14 +402,6 @@ const Settings = {
         playerType: '0',
       }).write()
       commit('resetSettingsToDefault')
-    },
-    addItemToPerformerInfoParam({state, commit, dispatch, getters}, {param, value}) {
-      commit('addItemToPerformerInfoParam', {param, value})
-      getters.settings.set(param, state[param]).write()
-    },
-    updatePerformerInfoParam({state, rootState, commit, dispatch, getters}, {param, value}) {
-      getters.settings.set(param, value).write()
-      commit('updatePerformerInfoParam', {param, value})
     },
     updateSettingsState({state, rootState, commit, dispatch, getters}, {key, value}) {
       getters.settings.set(key, value).write()

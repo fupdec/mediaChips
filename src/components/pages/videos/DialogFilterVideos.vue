@@ -274,6 +274,7 @@ export default {
         cond: null,
         val: null,
         type: null,
+        flag: null,
         lock: false,
       })
     },

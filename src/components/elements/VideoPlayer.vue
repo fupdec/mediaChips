@@ -516,7 +516,6 @@ import playlist from 'videojs-playlist'
 import markers from 'videojs-markers'
 import 'videojs-markers/dist/videojs.markers.min.css'
 
-
 export default {
   name: 'VideoPlayer',
   components: {
@@ -795,7 +794,8 @@ export default {
         time: time,
       } 
 
-      ipcRenderer.send('addMarker', marker, this.markerTag, this.video)
+      // TODO fix when add new tag to the video replaces all tags
+      // ipcRenderer.send('addMarker', marker, this.markerTag, this.video)
 
       this.markerTag = ''
       this.markerBookmarkText = ''

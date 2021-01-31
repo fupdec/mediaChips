@@ -297,12 +297,14 @@ export default {
         cond: 'all',
         val: [this.tag.name],
         type: 'array',
+        flag: null,
         lock: true,
       },{
         param: 'performers',
         cond: 'one of',
         val: [],
         type: 'array',
+        flag: null,
         lock: true,
       }]
       this.$store.commit('resetFilteredPerformers')
@@ -338,12 +340,14 @@ export default {
         cond: 'all',
         val: [this.tag.name],
         type: 'array',
+        flag: null,
         lock: true,
       },{
         param: 'performers',
         cond: 'one of',
         val: this.getFilteredPerformers(),
         type: 'array',
+        flag: null,
         lock: true,
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})

@@ -5,7 +5,7 @@
         <v-btn @click="$store.state.Performers.dialogFilterPerformers=true" v-on="on" icon tile>
           <v-badge :value="filterBadge" :content="filteredPerformersTotal" 
             overlap bottom :dot="filteredPerformersTotal==0" style="z-index: 5;"> 
-          <v-icon>mdi-filter-plus</v-icon> </v-badge>
+          <v-icon>mdi-filter</v-icon> </v-badge>
         </v-btn>
       </template>
       <span>Filter performers</span>
@@ -367,8 +367,8 @@
             </v-col>
             <v-col cols="12" sm="4" class="pb-0">
               <v-select
-                v-model="$store.state.Performers.filters.cup" :items="cupsList"
-                label="Cup" multiple hide-details outlined dense
+                v-model="$store.state.Performers.filters.cups" :items="cupsList"
+                label="Cups" multiple hide-details outlined dense
                 prepend-icon="mdi-coffee" append-icon=""
                 :menu-props="{contentClass:'select-dense-checkbox'}"
               />
@@ -584,7 +584,7 @@ export default {
     DialogFilterPerformers: () => import('@/components/pages/performers/DialogFilterPerformers.vue'),
   },
   mixins: [
-    // FilterPerformers,
+    // FilterPerformers, TODO check and delete file
     ShowImageFunction
   ], 
   mounted() {
@@ -765,6 +765,7 @@ export default {
         cond: null,
         val: null,
         type: null,
+        flag: null,
         lock: false,
       }]
       this.$store.dispatch('filterPerformers')

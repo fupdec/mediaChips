@@ -246,9 +246,15 @@
             hide-details :thumb-size="32" thumb-label="always" />
         </v-col>
       </v-row>
+      <div class="headline text-h5 text-center mt-10 mb-4"> Parameters </div>
+      <v-btn @click="$store.state.Settings.dialogManagePerformerParameters=true" 
+        class="my-4" block color="primary">
+        <v-icon left>mdi-shape</v-icon> Manage custom parameters
+      </v-btn>
+      <ManagePerformerParameters v-if="$store.state.Settings.dialogManagePerformerParameters"/>
 
-      <div class="subtitle mt-8 mb-2">Edit performer info parameters:</div>
-      <EditPerformerInfoParameters/>
+      <div class="subtitle mt-8">Edit items of parameter:</div>
+      <EditPerformerItemsOfParameter/>
       
       <v-divider class="my-12"></v-divider>
 
@@ -271,7 +277,7 @@
         <v-radio label="None" value="0"></v-radio>
       </v-radio-group>
       <div class="subtitle mt-8">Rating and favorite in card description:</div>
-      <v-switch v-model="ratingAndFavoriteInCard" inset style="display:inline-block;">
+      <v-switch v-model="ratingAndFavoriteInCard" inset class="d-inline-flex">
         <template v-slot:label>
           <span v-if="ratingAndFavoriteInCard">Yes</span>
           <span v-else>No</span>
@@ -408,6 +414,7 @@
 
       <v-divider class="my-12"></v-divider>
 
+ <!-- TODO create function for backup settings. watch for changes in performer params -->
 
       <div class="headline text-h4 text-center mt-6" id="database">Database</div>
       <div class="subtitle mt-10">Manage backups:</div>
@@ -487,7 +494,8 @@ import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
-import EditPerformerInfoParameters from '@/components/pages/settings/EditPerformerInfoParameters.vue'
+import ManagePerformerParameters from '@/components/pages/settings/ManagePerformerParameters.vue'
+import EditPerformerItemsOfParameter from '@/components/pages/settings/EditPerformerItemsOfParameter.vue'
 import vuescroll from 'vuescroll'
 const fs = require('fs-extra')
 const path = require("path")
@@ -501,7 +509,8 @@ export default {
     ThemeColors,
     ManageBackups,
     ClearDatabases,
-    EditPerformerInfoParameters,
+    ManagePerformerParameters,
+    EditPerformerItemsOfParameter,
     vuescroll,
   },
   mounted () {

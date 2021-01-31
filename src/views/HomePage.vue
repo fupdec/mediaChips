@@ -2,6 +2,9 @@
   <vuescroll>
     <div class="headline text-h3 text-center my-6">Home</div>
 
+    <!-- <VlcVideo height="300" controls src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"/> -->
+
+
     <v-container class="text-center">
       <div v-if="$store.getters.videosTotal==0">
         <img alt="AMDB" width="200" height="200" :src="logoPath">
@@ -10,15 +13,39 @@
       </div>
       <v-row v-else>
         <v-col cols="12">
-          <div class="mb-2 red--text">Starting from version 0.5.6 markers for videos will be stored in their own database.
+          <div class="ma-4 red--text text-center">Starting from version 0.5.8 performer parameters replaced with new values.
+            <br> If you have performers just press "Update performers" button.
+            <br> Without update performers will not working as it </div>
+          <v-btn @click="updatePerformerParams" color="red" dark class="my-4" block> 
+            <v-icon left>mdi-auto-fix</v-icon> Update performers </v-btn>
+          <div class="mb-2 caption">Starting from version 0.5.6 markers for videos will be stored in their own database.
             <br> If you have markers just press "Update markers" button.</div>
-          <v-btn @click="updateMarkers" color="red" dark x-large class="my-4" block> 
+          <v-btn @click="updateMarkers" class="my-2" block> 
             <v-icon left>mdi-auto-fix</v-icon> Update markers </v-btn>
-          <div class="mb-2 red--text">Starting from version 0.5.5 there will be no bitrate information in the video.
+          <div class="mb-2 caption">Starting from version 0.5.5 there will be no bitrate information in the video.
             <br> Also updated video resolution information. 
             <br> To update the metadata in existing videos click the "Fix metadata in videos" button. </div>
-          <v-btn @click="fixVideos" color="red" dark x-large class="my-4" block> 
+          <v-btn @click="fixVideos" class="my-2" block> 
             <v-icon left>mdi-auto-fix</v-icon> Fix metadata in videos </v-btn>
+
+
+          <v-dialog v-model="dialogRestartApp" width="400" persistent>
+            <v-card>
+              <v-card-title>
+                <div>Updating finished</div>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text class="pt-10">
+                <div>Please restart the application</div>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer/>
+                <v-btn @click="restart" color="primary" class="ma-4">Restart</v-btn>
+                <v-spacer/>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+
           <v-dialog v-model="dialogFixVideos" width="1200" scrollable persistent>
             <v-card>
               <v-card-title>
@@ -47,8 +74,8 @@
               </vuescroll> 
               <v-card-actions>
                 <v-spacer/>
-                <v-btn @click="dialogFixVideos=false" :disabled="fixingVideos"
-                  color="primary" class="ma-4">OK</v-btn>
+                <v-btn @click="restart" :disabled="fixingVideos"
+                  color="primary" class="ma-4">Restart</v-btn>
                 <v-spacer/>
               </v-card-actions>
             </v-card>
@@ -215,19 +242,23 @@ import VueApexCharts from 'vue-apexcharts'
 import scanMeta from '@/components/pages/settings/VideoMetaFix'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
+import Countries from '@/mixins/Countries'
+// import VlcVideo from "vlc-video"
 
 export default {
   name: 'HomePage',
   components: {
     vuescroll,
     apexchart: VueApexCharts,
+    // VlcVideo,
   },
-  mixins: [LabelFunctions], 
+  mixins: [LabelFunctions, Countries], 
   mounted() {
     this.$nextTick(function () {
     })
   },
   data: ()=>({
+    dialogRestartApp: false,
     dialogFixVideos: false,
     fixingVideos: false,
     errorFixVideos: [],
@@ -320,6 +351,117 @@ export default {
     },
   },
   methods: {
+    restart() {
+      ipcRenderer.send('reload')
+    },
+    updatePerformerParams() {
+      let countries = this.countries.map(c=>c.name)
+      
+      this.$store.getters.performers.each(p=>{
+        if (typeof p.cup === 'string') {
+          if (p.cup.length == 0) p.cups = []
+          else p.cups = [p.cup]
+          p.cup = undefined
+        }
+        if (p.boobs === undefined) {
+          p.boobs = []
+        }
+        if (typeof p.boobs === 'string') {
+          if (p.boobs.length == 0) p.boobs = []
+          else p.boobs = [p.boobs]
+        }
+        if (p.nation === undefined) {
+          p.nation = ''
+        }
+        if (!countries.includes(p.nation)) {
+          p.nation = ''
+        }
+        if (p.pussy === undefined) {
+          p.pussy = ''
+        }
+        if (p.pussyLips === undefined) {
+          p.pussyLips = ''
+        }
+        if (p.birthday) {
+          if (!p.birthday.match(/\d{4}-\d{2}-\d{2}/)) {
+            if (p.birthday.length!==0 && p.birthday.length!==8) {
+              p.birthday = ''
+            } else {
+              let year = p.birthday.match(/\d{4}$/)[0]
+              let day = p.birthday.match(/\d{2}/)[0]
+              let month = p.birthday.match(/(\d{2})/g)[1]
+              let birthday = `${year}-${month}-${day}`
+              p.birthday = birthday
+            }
+          }
+        }
+        if (typeof p.pussy === 'string') {
+          if (p.pussy.length == 0) p.pussy = []
+          else p.pussy = [p.pussy]
+        }
+        if (typeof p.pussyLips === 'string') {
+          if (p.pussyLips.length == 0) p.pussyLips = []
+          else p.pussyLips = [p.pussyLips]
+        }
+      }).write()
+
+
+      let performers = this.$store.getters.performers.value()
+      let body = []
+      let pussy = []
+      let pussyLips = []
+      let pussyHair = []
+      for (let i=0; i<performers.length; i++) {
+        for (let p=0; p<performers[i].body.length; p++) {
+          body.push(performers[i].body[p])
+        }
+        for (let p=0; p<performers[i].pussy.length; p++) {
+          pussy.push(performers[i].pussy[p])
+        }
+        for (let p=0; p<performers[i].pussyLips.length; p++) {
+          pussyLips.push(performers[i].pussyLips[p])
+        }
+        for (let p=0; p<performers[i].pussyHair.length; p++) {
+          pussyHair.push(performers[i].pussyHair[p])
+        }
+      }
+      let bodyUnique = [...new Set(body)]
+      bodyUnique.sort((a, b) => a.localeCompare(b))
+      let pussyUnique = [...new Set(pussy)]
+      pussyUnique.sort((a, b) => a.localeCompare(b))
+      let pussyLipsUnique = [...new Set(pussyLips)]
+      pussyLipsUnique.sort((a, b) => a.localeCompare(b))
+      let pussyHairUnique = [...new Set(pussyHair)]
+      pussyHairUnique.sort((a, b) => a.localeCompare(b))
+
+      let params = this.$store.getters.settings.get('customParametersPerformer')
+      params.push({
+        name: 'body',
+        type: 'array',
+        items: bodyUnique,
+      }).push({
+        name: 'pussy',
+        type: 'array',
+        items: pussyUnique,
+      }).push({
+        name: 'pussyLips',
+        type: 'array',
+        items: pussyLipsUnique,
+      }).push({
+        name: 'pussyHair',
+        type: 'array',
+        items: pussyHairUnique,
+      }).write()
+      
+      this.$store.getters.settings.unset('performerInfoBody').write()
+      this.$store.getters.settings.unset('performerInfoPussy').write()
+      this.$store.getters.settings.unset('performerInfoPussyLips').write()
+      this.$store.getters.settings.unset('performerInfoPussyHair').write()
+      
+      setTimeout(() => {
+        this.dialogRestartApp = true
+      }, 2000);
+    },
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
@@ -328,9 +470,10 @@ export default {
     updateMarkers() {
       this.$store.getters.markers.each(m=>{
         this.$store.getters.markers.push(m)
-      })
+      }).value()
       setTimeout(() => {
         this.$store.getters.bookmarks.set('markers', undefined)
+        this.dialogRestartApp = true
       }, 5000)
     },
     fixVideos() {

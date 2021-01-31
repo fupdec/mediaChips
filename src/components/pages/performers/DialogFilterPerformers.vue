@@ -35,17 +35,20 @@
                 </template>
               </v-select>
 
+              <v-checkbox v-if="filters[i].param==='name'" label="Aliases" class="mt-1 mr-2"
+                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate/>
+              
               <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-                label="Value" outlined dense class="val"/>
+                :disabled="filters[i].lock" label="Value" outlined dense class="val"/>
                 
               <v-text-field v-if="filters[i].type==='date'" 
-                :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
+                :value="filters[i].val" @focus="picker=true, pickerIndex=i"
                 label="Date" outlined dense readonly/>
-              <v-dialog v-model="datePicker" width="300px">
-                <v-date-picker @change="setVal($event,datePickerIndex), datePicker=false"
+              <v-dialog v-model="picker" width="300px">
+                <v-date-picker @change="setVal($event,pickerIndex), picker=false"
                   :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
-                  :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
+                  :value="filters[pickerIndex].val" no-title color="primary" full-width/>
               </v-dialog>
 
               <v-autocomplete v-if="filters[i].param==='nation'" 
@@ -107,6 +110,11 @@
                 </template>
               </v-autocomplete>
 
+              <v-select v-if="filters[i].type==='array' && namesOfCustomParams.includes(filters[i].param)" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="getCustomItems(filters[i].param)" label="Values"
+                :disabled="filters[i].lock" outlined dense multiple />
+
               <v-select v-if="filters[i].param==='category'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoCategory" 
@@ -131,10 +139,16 @@
                 outlined dense label="Eyes"
                 :disabled="filters[i].lock" multiple/>
 
-              <v-select v-if="filters[i].param==='cup'" 
+              <v-select v-if="filters[i].param==='cups'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoCups" 
                 outlined dense label="Cups"
+                :disabled="filters[i].lock" multiple/>
+
+              <v-select v-if="filters[i].param==='boobs'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoBoobs" 
+                outlined dense label="Boobs" 
                 :disabled="filters[i].lock" multiple/>
 
               <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
@@ -182,18 +196,29 @@ export default {
   mixins: [ShowImageFunction, Countries], 
   mounted() {
     this.$nextTick(function () {
+      for (let param in this.customParams) {
+        let type = this.customParams[param].type
+        let name = this.customParams[param].name
+        this.params.push(name)
+        if (type=='number') this.paramTypeNumber.push(name)
+        if (type=='string') this.paramTypeString.push(name)
+        if (type=='array') this.paramTypeArray.push(name)
+        if (type=='select') this.paramTypeSelect.push(name)
+        if (type=='boolean') this.paramTypeBoolean.push(name)
+        if (type=='date') this.paramTypeDate.push(name)
+      }
     })
   },
   data: () => ({
-    params: ['name','tags','category','rating','birthday','start','end','nation','ethnicity','hair','eyes','height','weight','cup','bra','waist','hip','date','edit'],
+    params: ['name','tags','category','rating','birthday','start','end','nation','ethnicity','hair','eyes','height','weight','boobs','cups','bra','waist','hip','date','edit'],
     paramTypeNumber: ['rating','height','weight','bra','waist','hip','start','end',],
     paramTypeString: ['name',],
-    paramTypeArray: ['tags','category','ethnicity','hair','eyes','cup'],
+    paramTypeArray: ['tags','category','ethnicity','hair','eyes','boobs','cups'],
     paramTypeSelect: ['nation'],
     paramTypeBoolean: [],
     paramTypeDate: ['birthday','date','edit'],
-    datePicker: false,
-    datePickerIndex: 0,
+    picker: false,
+    pickerIndex: 0,
   }),
   computed: {
     filters: {
@@ -211,9 +236,20 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
+    customParams() {
+      return this.$store.state.Settings.customParametersPerformer
+    },
+    namesOfCustomParams() {
+      return this.$store.state.Settings.customParametersPerformer.map(p=>p.name)
+    },
   },
   methods: {
     // TODO: add paste from clipboard function for all input's type
+    getCustomItems(paramName) {
+      if (this.namesOfCustomParams.includes(paramName)) {
+        return _.find(this.customParams, {name: paramName}).items
+      } else return []
+    },
     getConditions(type) {
       if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal']
       if (type === 'string' || type === 'select') return ['includes', 'excludes']
@@ -231,7 +267,8 @@ export default {
       if (param === 'ethnicity') return 'mdi-account-group'
       if (param === 'hair') return 'mdi-face-woman'
       if (param === 'eyes') return 'mdi-eye'
-      if (param === 'cup') return 'mdi-coffee'
+      if (param === 'cups') return 'mdi-coffee'
+      if (param === 'boobs') return 'mdi-vector-circle-variant'
       if (param === 'height') return 'mdi-human-male-height'
       if (param === 'weight') return 'mdi-weight'
       if (param === 'bra'||param === 'waist'||param === 'hip') return 'mdi-tape-measure'
@@ -257,6 +294,7 @@ export default {
         cond: null,
         val: null,
         type: null,
+        flag: null,
         lock: false,
       })
     },
@@ -292,6 +330,10 @@ export default {
         this.filters[i].type = 'select'
         this.filters[i].val = ''
       }
+      if (this.paramTypeBoolean.includes(e)) {
+        this.filters[i].type = 'boolean'
+        this.filters[i].val = ''
+      }
       if (this.paramTypeDate.includes(e)) {
         this.filters[i].type = 'date'
         this.filters[i].val = ''
@@ -303,6 +345,9 @@ export default {
     },
     setVal(e, i) {
       this.filters[i].val = e
+    },
+    setFlag(e, i) {
+      this.filters[i].flag = e
     },
     getValueRules(value) {
       return true

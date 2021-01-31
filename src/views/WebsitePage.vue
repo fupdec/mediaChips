@@ -234,12 +234,14 @@ export default {
           cond: 'includes',
           val: [this.website.name],
           type: 'select',
+          flag: null,
           lock: true,
         },{
           param: 'performers',
           cond: 'one of',
           val: this.getFilteredPerformers(),
           type: 'array',
+          flag: null,
           lock: true,
         }]
         this.$store.dispatch('filterVideos', true)
@@ -283,12 +285,14 @@ export default {
         cond: 'includes',
         val: [this.website.name],
         type: 'select',
+        flag: null,
         lock: true,
       },{
         param: 'performers',
         cond: 'one of',
         val: this.getFilteredPerformers(),
         type: 'array',
+        flag: null,
         lock: true,
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
