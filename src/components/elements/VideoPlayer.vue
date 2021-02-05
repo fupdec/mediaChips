@@ -1,7 +1,7 @@
 <template>
   <div class="video-player-wrapper">
     <v-card class="video-player" :outlined="!maximized">
-      <v-card-title class="pa-0" :class="{maximized:maximized}">
+      <v-card-title class="pa-0 title-bar" :class="{maximized:maximized}">
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile width="46">
@@ -26,7 +26,7 @@
           </template>
           <span>Edit thumb</span>
         </v-tooltip> -->
-        <v-tooltip bottom>
+        <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="openDialogFileInfo" v-on="on" icon tile width="46">
               <v-icon>mdi-information-variant</v-icon> 
@@ -43,7 +43,7 @@
           </template>
           <span v-if="isWatchLater">Remove from watch later</span>
           <span v-else>Watch later</span>
-        </v-tooltip>
+        </v-tooltip> -->
         <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="dialogAddToPlaylist=true" v-on="on" icon tile>
@@ -60,10 +60,10 @@
           </template>
           <span>Set as thumb</span>
         </v-tooltip> -->
-        <v-menu v-if="isVideoAvailable" offset-y nudge-bottom="10" open-on-hover close-delay="1000">
+        <!-- <v-menu v-if="isVideoAvailable" offset-y nudge-bottom="10" open-on-hover close-delay="1000">
           <template v-slot:activator="{ on, attrs }">
             <v-btn v-bind="attrs" v-on="on" icon tile width="46">
-              <v-icon>mdi-tooltip-plus-outline</v-icon>
+              <v-icon>mdi-map-marker</v-icon>
             </v-btn>
           </template>
           <v-card>
@@ -96,15 +96,10 @@
               <span>Add Marker with Text</span>
             </v-tooltip>
           </v-card>
-        </v-menu>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn @click="togglePlaylist" v-on="on" icon tile width="46">
-              <v-icon>mdi-format-list-bulleted</v-icon>
-            </v-btn>
-          </template>
-          <span>Toggle playlist</span>
-        </v-tooltip>
+        </v-menu> -->
+        <v-spacer></v-spacer>
+        <span class="now-playing-title">{{getFileNameFromPath(nowPlaying)}}</span>
+
         <v-spacer></v-spacer>
         <!-- <v-menu v-if="video.performers.length" offset-y nudge-bottom="10" open-on-hover close-delay="500" :close-on-content-click="false">
           <template v-slot:activator="{ on, attrs }">
@@ -180,11 +175,77 @@
         </div>
       </v-card-title>
       <div class="video-player-container">
-        <video ref="videoPlayer" class="video-js" preload="none"></video>
+        <VlcPlayer ref="player" autoplay controls enableStatusText 
+          @togglePlaylist="togglePlaylist" @toggleMarkers="toggleMarkers" 
+          @nowPlaying="updateNowPlaying($event)" @next="next" @prev="prev"
+          :src="videoSrc" :playlist="playlist" :playIndex="playIndex" 
+          :markers="markers" />
+
+        <!-- <video ref="videoPlayer" class="video-js" preload="none"></video> -->
         <div class="thumb" style="display:none;"> 
           <canvas ref="canvas" :width="videoWidth/6" :height="videoHeight/6"/>
         </div>
-        <v-card v-show="isPlaylistVisible" class="vjs-playlist" tile>
+        <v-card v-show="isMarkersVisible" class="markers-wrapper" outlined tile>
+          <v-tabs v-model="markerTab" height="36" grow>
+            <v-tabs-slider></v-tabs-slider>
+            <v-tab href="#tab-1">
+              <v-icon>mdi-tag</v-icon>
+            </v-tab>
+            <v-tab href="#tab-2">
+              <v-icon>mdi-account</v-icon>
+            </v-tab>
+            <v-tab href="#tab-3">
+              <v-icon>mdi-heart</v-icon>
+            </v-tab>
+            <v-tab href="#tab-4">
+              <v-icon>mdi-bookmark</v-icon>
+            </v-tab>
+          </v-tabs>
+
+          <v-tabs-items v-model="markerTab">
+            <v-tab-item value="tab-1">
+              <vuescroll>
+                <v-card-text class="pa-0">
+                  <v-list dense class="pa-0">
+                    <v-list-item> Marker 1
+                    </v-list-item>
+                  </v-list>
+                </v-card-text>
+              </vuescroll>
+            </v-tab-item>
+            <v-tab-item value="tab-2">
+              <vuescroll>
+                <v-card-text class="pa-0">
+                  <v-list dense class="pa-0">
+                    <v-list-item> Marker 1
+                    </v-list-item>
+                  </v-list>
+                </v-card-text>
+              </vuescroll>
+            </v-tab-item>
+            <v-tab-item value="tab-3">
+              <vuescroll>
+                <v-card-text class="pa-0">
+                  <v-list dense class="pa-0">
+                    <v-list-item> Marker 1
+                    </v-list-item>
+                  </v-list>
+                </v-card-text>
+              </vuescroll>
+            </v-tab-item>
+            <v-tab-item value="tab-4">
+              <vuescroll>
+                <v-card-text class="pa-0">
+                  <v-list dense class="pa-0">
+                    <v-list-item> Marker 1
+                    </v-list-item>
+                  </v-list>
+                </v-card-text>
+              </vuescroll>
+            </v-tab-item>
+          </v-tabs-items>
+        </v-card>
+        <v-card v-show="isPlaylistVisible" class="playlist-wrapper" outlined tile>
           <vuescroll ref="playlist" class="playlist">
             <v-card-text class="pa-0">
               <v-list dense class="pa-0">
@@ -509,18 +570,20 @@ import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import Functions from '@/mixins/Functions'
 
-import videojs from 'video.js'
-import hotkeys from 'videojs-hotkeys'
-import 'video.js/dist/video-js.min.css'
-import playlist from 'videojs-playlist'
-import markers from 'videojs-markers'
-import 'videojs-markers/dist/videojs.markers.min.css'
+// import videojs from 'video.js'
+// import hotkeys from 'videojs-hotkeys'
+// import 'video.js/dist/video-js.min.css'
+// import playlist from 'videojs-playlist'
+// import markers from 'videojs-markers'
+// import 'videojs-markers/dist/videojs.markers.min.css'
+import VlcPlayer from '@/components/app/player/VlcPlayer'
 
 export default {
   name: 'VideoPlayer',
   components: {
     FilePond,
     vuescroll,
+    VlcPlayer,
   },
   mixins: [CropImage, ShowImageFunction, LabelFunctions, Functions],
   async beforeCreate() {
@@ -546,23 +609,24 @@ export default {
       // include ffmpeg
       ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
       ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
-      this.initVideoPlayer()
+      // this.initVideoPlayer()
       ipcRenderer.on('getDataForPlayer', (event, data) => {
         this.updateVideoPlayer(data)
       })
     })
   },
   beforeDestroy() {
-    if (this.player) {
-      this.player.dispose()
-    }
+    // if (this.player) {
+    //   this.player.dispose()
+    // }
     win.removeAllListeners()
   },
   data: () => ({
+    videoSrc: null,
     video: null,
-    playlist: null,
+    playlist: [],
+    playIndex: 0,
     videos: null,
-    newPlaylistStartVideoIndex: null,
     videoWidth: 480,
     videoHeight: 320,
     fps: null,
@@ -593,8 +657,11 @@ export default {
     player: null,
     selectedVideo: 1,
     isPlaylistVisible: false,
+    isMarkersVisible: false,
     selectedPlaylist: null,
     maximized: win.isMaximized(),
+    markerTab: null,
+    nowPlaying: '',
   }),
   computed: {
     playlists() {
@@ -726,18 +793,20 @@ export default {
     updateVideoPlayer(data) {
       // console.log('update video player')
       // console.log(data)
+      this.videoSrc = 'file:///'+ data.videos[0].path
       this.videos = data.videos
       this.video = _.find(this.videosDb, {id: data.id})
-      this.playlist = data.videos.map(video=>({ // add playlist
-        sources: [{
-          src: video.path,
-        }],
-      }))
-      this.newPlaylistStartVideoIndex = _.findIndex(data.videos, {id: data.id})
+      this.playIndex = _.findIndex(data.videos, {id: data.id})
+      this.selectedVideo = this.playIndex
+      this.playlist = data.videos.map(video=>'file:///'+video.path)
+      this.getMarkers()
       setTimeout(() => {
         console.log(this.video.path)
-        this.player.playlist(this.playlist)
+        // this.player.playlist(this.playlist)
       }, 1000)
+    },
+    loadeddata(event) {
+      console.log(event)
     },
     updateCurrentVideo(index) {
       this.video = this.videos[index]
@@ -795,7 +864,7 @@ export default {
       } 
 
       // TODO fix when add new tag to the video replaces all tags
-      // ipcRenderer.send('addMarker', marker, this.markerTag, this.video)
+      ipcRenderer.send('addMarker', marker, this.markerTag, this.video)
 
       this.markerTag = ''
       this.markerBookmarkText = ''
@@ -814,9 +883,11 @@ export default {
       // console.log('get markers')
       // console.log(this.video)
       await this.$store.dispatch('getDb', 'markers')
-      let markers = _.filter(this.markersDb, marker=>(marker.videoId == this.video.id))
+      let video = this.videos[this.playIndex]
+      console.log(video)
+      let markers = _.filter(this.markersDb, marker=>marker.videoId == video.id)
       this.markers = _.orderBy(markers, 'time', ['asc'])
-      this.addMarkersToTimeline()
+      // this.addMarkersToTimeline()
     },
     addMarkersToTimeline() {
       const markers = this.markers.map(marker=>{
@@ -936,8 +1007,19 @@ export default {
       }
     },
     play(number) {
-      this.player.playlist.currentItem(number)
-      // this.getMarkers()
+      // this.videoSrc = 'file:///'+ this.videos[number].path
+      this.playIndex = number
+      this.getMarkers()
+    },
+    next() {
+      this.playIndex = this.playIndex + 1
+      this.selectedVideo = this.selectedVideo + 1
+      this.getMarkers()
+    },
+    prev() {
+      this.playIndex = this.playIndex - 1
+      this.selectedVideo = this.selectedVideo - 1
+      this.getMarkers()
     },
     togglePlaylist() {
       this.isPlaylistVisible=!this.isPlaylistVisible
@@ -945,6 +1027,9 @@ export default {
       if (!this.isPlaylistVisible) return
       const height = `${this.selectedVideo * document.documentElement.clientWidth / 10}`
       this.$refs.playlist.scrollTo({ y: height }, 50)
+    },
+    toggleMarkers() {
+      this.isMarkersVisible=!this.isMarkersVisible
     },
     addToPlaylist() {
       let id = this.playlists[this.selectedPlaylist].id
@@ -958,6 +1043,11 @@ export default {
         }).write()
       }
       this.dialogAddToPlaylist = false
+    },
+    updateNowPlaying(event) {
+      if (event) {
+        this.nowPlaying = event.mrl
+      }
     },
     editVideoInfo() {
       this.$store.commit('updateSelectedVideos', [this.video.id])
@@ -979,7 +1069,9 @@ export default {
       win.unmaximize()
     },
     close() {
-      this.player.pause()
+      this.playlist = []
+      this.videoSrc = null
+      this.$refs.player.stop()
       ipcRenderer.send('closePlayer')
     },
   },
@@ -997,10 +1089,13 @@ export default {
   }
   &-container {
     display: flex;
+    height: calc(100% - 36px);
   }
   .v-card__title {
     padding: 0;
+    padding-right: 108px !important;
     position: relative;
+    z-index: 5;
     &:before {
       content: '';
       position: absolute;
@@ -1019,19 +1114,17 @@ export default {
       -webkit-app-region: no-drag !important;
     }
   }
-}
-.vjs-playlist {
-  width: 22vw;
-  height: calc(100vh - 36px);
-  border-left: 1px solid #5c5c5c;
-  box-shadow: none !important;
-  .close {
-    position: absolute;
-    left: -45px;
-    top: 0;
-    bottom: 0;
-    margin: auto;
+  .now-playing-title {
+    font-size: 12px;
+    overflow: hidden;
+    max-width: calc(100vw - 350px);
+    white-space: nowrap;
   }
+}
+.playlist-wrapper {
+  min-width: 18vw;
+  height: calc(100vh - 36px);
+  box-shadow: none !important;
   .video-item {
     position: relative;
     overflow: hidden;
@@ -1081,6 +1174,20 @@ export default {
     bottom: 0;
     margin: auto;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 1), transparent);
+  }
+}
+.markers-wrapper {
+  min-width: 20vw;
+  height: calc(100vh - 36px);
+  border-left: 1px solid #5c5c5c;
+  box-shadow: none !important;
+  .v-tab {
+    min-width: 30px;
+    padding: 0;
+  }
+  .v-slide-group__prev,
+  .v-slide-group__next {
+    display: none !important;
   }
 }
 .add-playlist {

@@ -11,7 +11,7 @@ module.exports = {
         })
       },
       nodeIntegration: true,
-      externals: ['archiver'],
+      externals: ['archiver', 'wcjs-prebuilt'],
       builderOptions: {
         win: {
           icon: './icon.ico'

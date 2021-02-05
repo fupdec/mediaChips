@@ -41,7 +41,7 @@ export default {
     },
     addMarker(marker, markerTag, video) {
       this.$store.getters.markers.push(marker).write()
-      if (marker.type == 'tag') {
+      if (marker.type.toLowerCase() == 'tag') {
         if (!video.tags.includes(markerTag)) {
           video.tags.push(markerTag)
           video.tags.sort()
@@ -52,23 +52,8 @@ export default {
         }
       }
     },
-    removeMarker(markerForRemove, video) {
-      if (markerForRemove.type == 'Tag') {
-        if (video.tags.includes(markerForRemove.name)) {
-          // check if no more markers with type "Tag" and with the same name
-          let isLastMarker = this.$store.getters.markers.filter(marker=>
-            (marker.type=='Tag'&&marker.name==markerForRemove.name)).value().length == 1
-          if (isLastMarker) {
-            video.tags = video.tags.filter(t => t!==markerForRemove.name)
-            this.$store.getters.videos.find({ id: video.id })
-              .assign({ tags: video.tags }).write()
-            this.$store.commit('updateVideos')
-          }
-        }
-      }
-      // TODO: fix delete tag from video if no more markers with this tag
-      let markerId = markerForRemove.id
-      this.$store.getters.markers.remove({'id':markerId}).write()
+    removeMarker(markerForRemove) {
+      this.$store.getters.markers.remove({'id':markerForRemove.id}).write()
     },
   },
 }

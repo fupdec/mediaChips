@@ -207,7 +207,7 @@ ipcMain.on('closePlayer', () => {
 ipcMain.handle('getDb', async (event, dbType) => {
   win.webContents.send( 'getDb', dbType )
   const database = await getDb()
-  event.sender.webContents.send( 'getDbAnswer', database )
+  player.webContents.send( 'getDbAnswer', database )
 })
 function getDb () {
   return new Promise((resolve) => {

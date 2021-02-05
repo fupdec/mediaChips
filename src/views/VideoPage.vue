@@ -104,9 +104,9 @@
                     close-icon="mdi-close" :close="markersEditable"
                     :title="marker.name" outlined small class="mr-1 mb-1"
                   > 
-                    <v-icon v-if="marker.type=='Favorite'" left small color="pink">mdi-heart</v-icon>
-                    <v-icon v-if="marker.type=='Bookmark'" left small color="red">mdi-bookmark</v-icon>
-                    <v-icon v-if="marker.type=='Tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
+                    <v-icon v-if="marker.type=='favorite'" left small color="pink">mdi-heart</v-icon>
+                    <v-icon v-if="marker.type=='bookmark'" left small color="red">mdi-bookmark</v-icon>
+                    <v-icon v-if="marker.type=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
                     {{convertVideoTime(marker.time)}} 
                     <span :class="markerNameClass">{{marker.name}}</span>
                   </v-chip>
@@ -260,7 +260,7 @@
                       label="Type of marker" outlined dense hide-details />
                   </v-col>
                   <v-col cols="8">
-                    <v-autocomplete v-if="markerType=='Tag'"
+                    <v-autocomplete v-if="markerType=='tag'"
                       v-model="markerTag" :items="tagsAll" item-text="name" item-value="name"
                       no-data-text="No more tags" hide-selected
                       dense outlined label="Tag" clearable 
@@ -387,8 +387,8 @@ export default {
     bitrate: null,
     seektime: 0,
     markers: [],
-    markerType: 'Tag',
-    markerTypes: ['Tag','Bookmark','Favorite'],
+    markerType: 'tag',
+    markerTypes: ['tag','bookmark','favorite'],
     markerTag: '',
     markerBookmarkText: '',
     isVideoExists: null,
@@ -558,11 +558,11 @@ export default {
       this.markerForRemove = marker
     },
     removeMarker() {
-      if (this.markerForRemove.type == 'Tag') {
+      if (this.markerForRemove.type == 'tag') {
         if (this.video.tags.includes(this.markerForRemove.name)) {
           // check if no more markers with type "Tag" and with the same name
           let isLastMarker = this.$store.getters.markers
-            .filter(marker=>(marker.type=='Tag'&&marker.name==this.markerForRemove.name))
+            .filter(marker=>(marker.type=='tag'&&marker.name==this.markerForRemove.name))
             .value().length == 1
           if (isLastMarker) {
             this.video.tags = this.video.tags.filter(t => t!==this.markerForRemove.name)
@@ -583,7 +583,7 @@ export default {
         return false
       }
       let markerName
-      if (this.markerType=='Tag') {
+      if (this.markerType=='tag') {
         markerName = this.markerTag
       }
       if (this.markerType=='Bookmark') {
@@ -599,7 +599,7 @@ export default {
         name: markerName,
         time: Math.floor(this.$refs.video.currentTime),
       }).write()
-      if (this.markerType == 'Tag') {
+      if (this.markerType == 'tag') {
         if (!this.video.tags.includes(this.markerTag)) {
           this.video.tags.push(this.markerTag)
           this.video.tags.sort()
@@ -697,9 +697,9 @@ export default {
       this.$refs.form.validate()
     },
     getTagRules(tag) {
-      if (tag == '' && this.markerType == 'Tag') {
+      if (tag == '' && this.markerType == 'tag') {
         return 'Choose any tag'
-      } else if (tag == undefined && this.markerType == 'Tag') {
+      } else if (tag == undefined && this.markerType == 'tag') {
         return 'Choose any tag'
       } else return true
     },

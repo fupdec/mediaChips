@@ -315,7 +315,7 @@ export default {
         }).write()
         // rename tag in markers
         this.$store.getters.bookmarks.get('markers')
-          .filter(marker => (marker.type=='Tag' && marker.name==this.tag.name))
+          .filter(marker => (marker.type=='tag' && marker.name==this.tag.name))
           .each(marker => {marker.name = this.tagName}).write()
       }
       let altNames = JSON.stringify(this.tagAlternateNames)
