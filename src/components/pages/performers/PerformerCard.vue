@@ -39,19 +39,15 @@
         > <v-icon :color="isFavorite===false ? 'grey' : 'pink'"> mdi-heart-outline </v-icon>
         </v-btn>
 
-        <div class="custom1-img-wrapper" v-if="!isCustomImgExist(imgCustom1)">
-          <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
-            class="custom1-img" :key="imgCustom1Key"
-            :src="isCustomImgExist(imgCustom1) ? '' : imgCustom1"
-          />
-        </div>
+        <div class="custom1-img-button" v-if="!isCustomImgExist(imgCustom1)">1</div>
+        <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
+          class="custom1-img" :key="imgCustom1Key"
+          :src="isCustomImgExist(imgCustom1) ? '' : imgCustom1"/>
 
-        <div class="custom2-img-wrapper" v-if="!isCustomImgExist(imgCustom2)">
-          <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
-            class="custom2-img" :key="imgCustom2Key"
-            :src="isCustomImgExist(imgCustom2) ? '' : imgCustom2"
-          /> 
-        </div>
+        <div class="custom2-img-button" v-if="!isCustomImgExist(imgCustom2)">2</div>
+        <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
+          class="custom2-img" :key="imgCustom2Key"
+          :src="isCustomImgExist(imgCustom2) ? '' : imgCustom2"/> 
 
         <v-progress-circular v-if="!isProfileProgressHidden" class="profile-complete-progress"
           :value="profileCompleteProgress" size="28" rotate="270" title="Profile complete"
@@ -574,8 +570,8 @@ export default {
         opacity: 1;
       }
     }
-    .custom2-img-wrapper,
-    .custom1-img-wrapper {
+    .custom2-img-button,
+    .custom1-img-button {
       opacity: 0.7;
       transform: translateX(0);
       &:hover {
@@ -773,42 +769,6 @@ export default {
       background-color: rgba(0, 0, 0, 0.5);
     } 
   }
-  .custom2-img,
-  .custom1-img {
-    min-width: 100%;
-    min-height: 100%;
-    &-wrapper {
-      width: 40px;
-      height: 40px;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      border-radius: 50px;
-      position: absolute;
-      right: 5px;
-      overflow: hidden;
-      transition: .3s all ease;
-      opacity: 0;
-      transform: translateX(50px);
-      &:hover {
-        width: 100%;
-        height: 100%;
-        border-width: 0px;
-        border-radius: 0px;
-        position: absolute;
-        bottom: 0px;
-        right: 0px;
-      }
-    }
-  }
-  .custom1-img {
-    &-wrapper {
-      bottom: calc(50% - 18px);
-    }
-  }
-  .custom2-img {
-    &-wrapper {
-      bottom: calc(50% - 62px);
-    }
-  }
   .profile-complete-progress {
     position: absolute;
     z-index: 1;
@@ -818,6 +778,57 @@ export default {
     border-radius: 50%;
     .percent {
       font-size: 8px;
+    }
+  }
+}
+.custom2-img,
+.custom1-img {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  opacity: 0;
+  min-width: 100%;
+  min-height: 100%;
+  transition: .3s opacity ease-out;
+  &-button {
+    width: 30px;
+    height: 30px;
+    background: rgba(10, 10, 10, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    position: absolute;
+    right: 0;
+    opacity: 0;
+    transition: .3s;
+    transform: translateX(50px);
+    z-index: 1;
+  }
+}
+.custom1-img {
+  &-button {
+    bottom: 50%;
+  }
+}
+.custom2-img {
+  &-button {
+    bottom: calc(50% - 30px);
+  }
+}
+.custom1-img-button {
+  &:hover {
+    & + .custom1-img {
+      opacity: 1 !important;
+    }
+  }
+}
+.custom2-img-button {
+  &:hover {
+    & + .custom2-img {
+      opacity: 1 !important;
     }
   }
 }
