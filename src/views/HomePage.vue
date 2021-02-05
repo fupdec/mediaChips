@@ -2,9 +2,6 @@
   <vuescroll>
     <div class="headline text-h3 text-center my-6">Home</div>
 
-    <!-- <VlcVideo height="300" controls src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"/> -->
-
-
     <v-container class="text-center">
       <div v-if="$store.getters.videosTotal==0">
         <img alt="AMDB" width="200" height="200" :src="logoPath">
@@ -243,14 +240,12 @@ import scanMeta from '@/components/pages/settings/VideoMetaFix'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
 import Countries from '@/mixins/Countries'
-// import VlcVideo from "vlc-video"
 
 export default {
   name: 'HomePage',
   components: {
     vuescroll,
     apexchart: VueApexCharts,
-    // VlcVideo,
   },
   mixins: [LabelFunctions, Countries], 
   mounted() {
@@ -458,9 +453,13 @@ export default {
       this.$store.getters.settings.unset('performerInfoPussyLips').write()
       this.$store.getters.settings.unset('performerInfoPussyHair').write()
       
+      this.$store.getters.markers.each(m=>{
+        m.type = m.type.toLowerCase()
+      }).write()
+
       setTimeout(() => {
         this.dialogRestartApp = true
-      }, 2000);
+      }, 2000)
     },
     stopSmoothScroll(event) {
       if(event.button != 1) return
@@ -468,11 +467,14 @@ export default {
       event.stopPropagation()
     },
     updateMarkers() {
-      this.$store.getters.markers.each(m=>{
+      this.$store.getters.bookmarks.get('markers').each(m=>{
         this.$store.getters.markers.push(m)
       }).value()
       setTimeout(() => {
         this.$store.getters.bookmarks.set('markers', undefined)
+        this.$store.getters.markers.each(m=>{
+          m.type = m.type.toLowerCase()
+        }).write()
         this.dialogRestartApp = true
       }, 5000)
     },
