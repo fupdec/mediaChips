@@ -127,6 +127,7 @@ app.on('ready', async () => {
     fs.mkdirSync(path.join(destUserDataFolder, 'media/temp/parts'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/thumbs'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/websites'))
+    fs.mkdirSync(path.join(destUserDataFolder, 'media/markers'))
     fs.copy(srcUserDataFolder, destUserDataFolder, function (err) {
       if (err) {
         console.error(err);

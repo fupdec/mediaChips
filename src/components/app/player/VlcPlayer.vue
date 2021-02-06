@@ -14,8 +14,18 @@
           min="0" step="1" :max="duration" hide-details/>
         <div v-for="(marker,i) in markers" :key="i" class="marker"
           :style="{left: `${marker.time/duration*100}%`}"
-          @mouseup="jump(marker.time)">
-          <div class="tooltip">{{marker.name}}</div>
+          @mouseup="jumpTo(marker.time)">
+          <div class="tooltip text-center">
+            <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb"/>
+            <div>
+              <v-icon v-if="marker.type.toLowerCase()=='tag'" small :color="getTag(marker.name).color">mdi-tag</v-icon>
+              <v-icon v-if="marker.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
+              <v-icon v-if="marker.type.toLowerCase()=='favorite'" small color="pink">mdi-heart</v-icon>
+              <v-icon v-if="marker.type.toLowerCase()=='bookmark'" small color="red">mdi-bookmark</v-icon>
+              {{marker.name}}
+            </div>
+            <div>{{calcDur(marker.time)}}</div>
+          </div>
         </div>
       </v-card-actions>
       <v-card-actions class="pa-1">
@@ -201,9 +211,9 @@
 // (what happens for size on src change for htmlvideo?))
 
 import { chimera } from './webchimera/wrapper'
+import Functions from '@/mixins/Functions'
 import path from "path"
-import CropImage from '@/mixins/CropImage'
-const sharp = require('sharp')
+const fs = require("fs")
 
 export default {
   name: "VlcPlayer",
@@ -251,7 +261,7 @@ export default {
       default: [],
     },
   },
-  mixins: [CropImage],
+  mixins: [Functions],
   data: () => ({
     menu: false,
     player: null,
@@ -428,6 +438,24 @@ export default {
         __static,
         `/menu-icons/${this.dark ? "white" : "black"}/`
       );
+    },
+    pathToUserData() {
+      return this.$store.getters.getPathToUserData
+    },
+    videosDb() {
+      return this.$store.state.videosDb
+    },
+    tagsDb() {
+      return this.$store.state.tagsDb
+    },
+    playlistsDb() {
+      return this.$store.state.playlistsDb
+    },
+    markersDb() {
+      return this.$store.state.markersDb
+    },
+    settingsDb() {
+      return this.$store.state.settingsDb
     },
   },
   methods: {
@@ -769,45 +797,13 @@ export default {
     seek(e) {
       this.player.time = e * 1000
     },
-    jump(e) {
+    jumpTo(e) {
       this.player.time = e * 1000
     },
     toggleMarkers() {
       this.$emit('toggleMarkers')
     },
-    async addMarker() {
-      // let canvas = this.$refs.canvas.getContext('2d')
-      console.log(this.player.input.height)
-      let content = this.player.videoFrame
-      // let imgBuffer = new Blob([content.buffer], { type: 'image/png' } /* (1) */)
-      // canvas.fillRect(0,0,this.videoWidth/6,this.videoHeight/6)
-      // canvas.drawImage(this.$refs.videoPlayer,0,0,this.videoWidth/6,this.videoHeight/6)
-      // let imgBuffer = this.$refs.canvas.toDataURL()
-      // // console.log(imgBuffer)
-      // imgBuffer = this.decodeBase64Image(imgBuffer)
-      // document.getElementById('myximg').src = URL.createObjectURL(
-      //   new Blob([content.buffer], { type: 'image/png' } /* (1) */)
-      // )
-      let outputImagePath = path.join(this.$store.getters.getPathToUserData, `/media/temp/${11111}.jpg`)
-      // this.compressImage(content, outputImagePath, 'thumb')
-      const image = sharp(Buffer.from(content), {
-        raw: {
-          width: this.player.input.width,
-          height: this.player.input.height,
-          channels: 1
-        }
-      });
-      
-      image.metadata()
-        .then(function(metadata) {
-          console.log(metadata)
-        })
-      await image.resize({ height: 180 })
-        .jpeg({
-          quality: 80,
-          chromaSubsampling: '4:4:4'
-        })
-        .toFile(outputImagePath)
+    addMarker() {
       this.$emit('addMarker')
     },
     togglePlaylist() {
@@ -836,6 +832,21 @@ export default {
     decreaseVolume() {
       if (this.player.volume==0) return
       this.player.volume -= 10
+    },
+    // MARKERS
+    getMarkerImgUrl(markerId) {
+      let imgPath = path.join(this.pathToUserData, `/media/markers/${markerId}.jpg`)
+      return this.checkMarkerImageExist(imgPath)
+    },
+    checkMarkerImageExist(imgPath) {
+      if (fs.existsSync(imgPath)) {
+        return imgPath
+      } else {
+        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+      }
+    },
+    getTag(tagName) {
+      return _.find(this.tagsDb, {name:tagName})
     },
   },
   watch: {
@@ -880,9 +891,10 @@ export default {
     position: relative;
     &:hover {
       .marker {
-        width: 10px;
-        transform: translateX(-3px);
-        border-radius: 3px;
+        width: 2vw;
+        height: 10px;
+        transform: translateX(-1vw) translateY(-15px);
+        border-radius: 0 0 2px 2px;
       }
     }
     .marker {
@@ -893,20 +905,19 @@ export default {
       transition: .2s all ease;
       &:hover {
         .tooltip {
-          opacity: 1;
+          display: block;
         }
       }
     }
     .tooltip {
-      pointer-events: none;
       position: absolute;
-      bottom: 30px;
+      bottom: 10px;
       width: 10vw;
-      left: -5vw;
-      opacity: 0.5;
+      left: -4vw;
+      display: none;
       background-color: rgba(10, 10, 10, 0.75);
       padding: 5px;
-      border-radius: 4px;
+      border-radius: 2px 2px 0 0;
       font-size: 12px;
     }
   }
