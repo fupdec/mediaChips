@@ -138,7 +138,7 @@
         </div>
       </v-card-title>
       <div class="video-player-container">
-        <VlcPlayer ref="player" autoplay controls enableStatusText 
+        <VlcPlayer ref="player" enableStatusText 
           @nowPlaying="updateNowPlaying($event)"/>
 
         <div class="thumb" style="display:none;"> 

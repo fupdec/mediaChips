@@ -8,7 +8,7 @@
         @keydown="handleKey" @wheel="changeVolume">
         <canvas ref="canvas" class="canvas"/>
       </div>
-      <v-card v-if="controls" class="vlc-controls" tile>
+      <v-card class="vlc-controls" tile>
         <v-card-actions class="timeline pa-1">
           <v-slider @change="seek($event)" :value="currentTime"
             min="0" step="1" :max="duration" hide-details/>
@@ -484,8 +484,8 @@
     </div>
     <div v-if="showInformation" class="media-information"
       :style="{
-        backgroundColor: dark ? '#333333ee' : '#aaaaaaee',
-        color: dark ? '#aaaaaaee' : '#333333ee',
+        backgroundColor: '#333333ee',
+        color: '#aaaaaaee',
       }"
     >
       <div class="toolbar">
@@ -530,35 +530,9 @@ export default {
   },
   mixins: [ShowImageFunction, LabelFunctions],
   props: {
-    // ------- HTML Video properties -------- //
     src: {
       type: String,
       default: "",
-    },
-    autoplay: {
-      type: Boolean,
-      default: false,
-    },
-    controls: {
-      type: Boolean,
-      default: false,
-    },
-    // ---------- Miscellaneous -------- //
-    dark: {
-      type: Boolean,
-      default: false,
-    },
-    enableStatusText: {
-      type: Boolean,
-      default: false,
-    },
-    disableKeys: {
-      type: Boolean,
-      default: false,
-    },
-    loop: {
-      type: Boolean,
-      default: false,
     },
   },
   beforeDestroy() {
@@ -756,7 +730,7 @@ export default {
     menuIconPath() {
       return path.join(
         __static,
-        `/menu-icons/${this.dark ? "white" : "black"}/`
+        `/menu-icons/${"white"}/`
       );
     },
     // data from main window
@@ -861,7 +835,7 @@ export default {
         this.$emit("timeupdate", this.currentTime);
       });
       this.player.on("ended", () => {
-        if (this.loop) {
+        if (this.playlistMode.includes('loop')) {
           this.currentTime = 0;
           this.player.once("stop", () => {
             this.player.play();
@@ -902,11 +876,9 @@ export default {
           }
         };
         this.player.once("frameReady", () => {
-          if (!this.autoplay) {
-            this.player.mute = this.defaultMuted;
-            this.player.pause();
-            this.player.once("pause", () => (this.preventStatusUpdate = false));
-          }
+          this.player.mute = this.defaultMuted;
+          this.player.pause();
+          this.player.once("pause", () => (this.preventStatusUpdate = false));
         });
         this.player.on("stateChange", onStateChange);
       });
@@ -975,7 +947,7 @@ export default {
       return hms.startsWith("00") ? hms.substr(1) : hms;
     },
     showStatusText(text, timeout = 2000) {
-      if (!this.enableStatusText || this.preventStatusUpdate) return;
+      if (this.preventStatusUpdate) return;
       clearTimeout(this.statusTimeout);
       this.statusAnimationDuration = "0.1s";
       this.statusOpacity = 1;
@@ -1125,7 +1097,6 @@ export default {
       this.player.volume -= e.deltaY / 20;
     },
     handleKey(e) {
-      if (this.disableKeys) return;
       console.log(e.key);
       switch (true) {
         case e.key === " ":
