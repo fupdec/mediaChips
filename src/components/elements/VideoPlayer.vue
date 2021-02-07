@@ -60,43 +60,6 @@
           </template>
           <span>Set as thumb</span>
         </v-tooltip> -->
-        <!-- <v-menu v-if="isVideoAvailable" offset-y nudge-bottom="10" open-on-hover close-delay="1000">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn v-bind="attrs" v-on="on" icon tile width="46">
-              <v-icon>mdi-map-marker</v-icon>
-            </v-btn>
-          </template>
-          <v-card>
-            <v-card-title v-if="isVideoAvailable && markers.length" class="pa-0">
-              <v-btn @click="dialogEditMarkers=true" block icon tile small>edit markers</v-btn>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn @click="openDialogMarkerTag" v-on="on" icon tile width="46" height="36">
-                  <v-icon size="20">mdi-tag-outline</v-icon> 
-                </v-btn>
-              </template>
-              <span>Add Marker with Tag</span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn @click="addMarker('favorite')" v-on="on" icon tile width="46" height="36">
-                  <v-icon size="20">mdi-heart-outline</v-icon> 
-                </v-btn>
-              </template>
-              <span>Add Favorite Marker</span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn @click="openDialogMarkerBookmark" v-on="on" icon tile width="46" height="36">
-                  <v-icon size="20">mdi-bookmark-outline</v-icon> 
-                </v-btn>
-              </template>
-              <span>Add Marker with Text</span>
-            </v-tooltip>
-          </v-card>
-        </v-menu> -->
         <v-spacer></v-spacer>
         <span class="now-playing-title">{{getFileNameFromPath(nowPlaying)}}</span>
 
@@ -176,225 +139,13 @@
       </v-card-title>
       <div class="video-player-container">
         <VlcPlayer ref="player" autoplay controls enableStatusText 
-          @togglePlaylist="togglePlaylist" @toggleMarkers="toggleMarkers" 
-          @nowPlaying="updateNowPlaying($event)" @next="next" @prev="prev"
-          :src="videoSrc" :playlist="playlist" :playIndex="playIndex" 
-          :markers="markers" />
+          @nowPlaying="updateNowPlaying($event)"/>
 
-        <!-- <video ref="videoPlayer" class="video-js" preload="none"></video> -->
         <div class="thumb" style="display:none;"> 
           <canvas ref="canvas" :width="videoWidth/6" :height="videoHeight/6"/>
         </div>
-        <v-card v-show="isMarkersVisible" class="markers-wrapper" outlined tile>
-          <v-card-title class="pa-1">
-            <v-icon left>mdi-map-marker</v-icon>
-            <span>Markers</span> 
-            <v-spacer></v-spacer>
-            <v-icon>mdi-close</v-icon>
-          </v-card-title>
-          <v-card-actions class="pa-0">
-            <v-btn-toggle v-model="markersType" tile dense mandatory multiple color="primary" class="toggle">
-              <v-btn value="tag">
-                <v-icon>mdi-tag</v-icon>
-              </v-btn>
-              <v-btn value="performer">
-                <v-icon>mdi-account</v-icon>
-              </v-btn>
-              <v-btn value="favorite">
-                <v-icon>mdi-heart</v-icon>
-              </v-btn>
-              <v-btn value="bookmark">
-                <v-icon>mdi-bookmark</v-icon>
-              </v-btn>
-            </v-btn-toggle>
-          </v-card-actions>
-          <vuescroll>
-            <v-card-text class="pa-0">
-              <div v-if="markers.length">
-                <div v-for="marker in markers" :key="marker.id">
-                  <div @click="jumpTo(marker.time)" v-if="(markersType.includes(marker.type.toLowerCase()))" class="marker">
-                    <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb">
-                      <span class="time">{{calcDur(marker.time)}}</span>
-                      <span class="ml-16 mt-16">{{marker.id}}</span>
-                    </v-img>
-                    <div class="name">
-                      <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
-                      <v-icon v-if="marker.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
-                      <v-icon v-if="marker.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
-                      <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
-                      <span>{{marker.name}}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-else class="text-center pt-6">
-                <span>No markers</span><br>
-                <v-icon size="60">mdi-close</v-icon>
-              </div>
-            </v-card-text>
-          </vuescroll>
-        </v-card>
-        <v-card v-show="isPlaylistVisible" class="playlist-wrapper" outlined tile>
-          <v-card-title class="pa-1">
-            <v-icon left>mdi-format-list-bulleted</v-icon>
-            <span>Playlist</span> 
-            <v-spacer></v-spacer>
-            <v-icon>mdi-close</v-icon>
-          </v-card-title>
-          <vuescroll ref="playlist" class="playlist">
-            <v-card-text class="pa-0">
-              <v-list dense class="pa-0">
-                <v-list-item-group v-model="selectedVideo" mandatory color="primary">
-                  <v-list-item v-for="(video, i) in videos" 
-                    :key="video.id" @click="play(i)" class="video-item" :ref="`videoItem${i}`">
-                    <img :src="getPlaylistImgUrl(video.id)" class="thumb"/>
-                    <span class="video-name">
-                      <b>{{i+1}}.</b>
-                      <span class="path">{{getFileNameFromPath(video.path)}}</span>
-                    </span>
-                    <span v-if="selectedVideo===i" class="play-state overline text--primary">
-                      <v-icon class="pl-2 pr-1">mdi-play</v-icon>
-                      <span class="pr-4">Now playing</span>
-                    </span>
-                  </v-list-item>
-                </v-list-item-group>
-              </v-list>
-            </v-card-text>
-          </vuescroll>
-        </v-card>
       </div>
     </v-card>
-    
-
-    <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
-      <v-card>
-        <v-card-title class="headline">
-          Marker with tag on {{calcDur(seektime)}}
-          <v-spacer></v-spacer>
-          <v-icon>mdi-tooltip-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <vuescroll>
-          <v-card-text class="pb-0">
-            <v-autocomplete
-              v-model="markerTag" outlined clearable hide-details
-              :items="tagsAll" label="Tag for marker" placeholder="Choose a tag for marker"
-              item-text="name" class="hidden-close"
-              item-value="name" no-data-text="No more tags"
-              :menu-props="{contentClass:'list-with-preview'}"
-              :filter="filterItemsTags"
-            >
-              <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs" :input-value="data.selected" 
-                  @click="data.select" text-color="white" 
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                  :color="getTag(data.item.name).color" 
-                > <span>{{ data.item.name }}</span>
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <div class="list-item"
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
-                    left size="14"> mdi-heart </v-icon>
-                  <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
-                  <span>{{data.item.name}}</span>
-                  <span v-if="data.item.altNames.length" class="aliases"> 
-                    {{data.item.altNames.join(', ').slice(0,50)}}
-                  </span>
-                </div>
-              </template>
-            </v-autocomplete>
-          </v-card-text>
-        </vuescroll>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="addMarker('tag')" :disabled="!markerTag" class="ma-4" color="primary">
-            Add marker
-          </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="dialogMarkerBookmark" max-width="550" scrollable eager>
-      <v-card>
-        <v-card-title class="headline">
-          Marker with bookmark on {{calcDur(seektime)}}
-          <v-spacer></v-spacer>
-          <v-icon>mdi-tooltip-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <vuescroll>
-          <v-card-text>
-            <v-textarea v-model="markerBookmarkText" label="Bookmark text" solo hide-details/>
-          </v-card-text>
-        </vuescroll>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="addMarker('bookmark')" :disabled="!markerBookmarkText" class="ma-4" color="primary">
-            Add marker
-          </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="dialogEditMarkers" max-width="600" scrollable>
-      <v-card>
-        <v-card-title class="pt-2">
-          <span class="headline">Edit markers</span>
-          <v-spacer></v-spacer>
-          <v-tooltip v-if="markers.length>0" top>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined class="ml-2" v-on="on"
-                height="32" width="32" min-width="10" :color="markerPlayableActive"
-                @click="toggleMarkerPlayable"
-              > <v-icon size="20">mdi-television-play</v-icon>
-              </v-btn>  
-            </template>
-            <span>Open markers in system player</span>
-          </v-tooltip>
-          <v-tooltip v-if="markers.length>0" top>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined class="ml-2" v-on="on"
-                height="32" width="32" min-width="10" :color="markerNameActive"
-                @click="toggleMarkerNameVisibility"
-              > <v-icon size="20">mdi-card-text</v-icon>
-              </v-btn>  
-            </template>
-            <span>Show names</span>
-          </v-tooltip>
-          <v-tooltip v-if="markers.length>0" top>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined class="ml-2" v-on="on"
-                height="32" width="32" min-width="10" :color="markerEditActive"
-                @click="toggleMarkerEditable" 
-              > <v-icon size="20">mdi-pencil</v-icon>
-              </v-btn>         
-            </template>
-            <span>Edit markers</span>
-          </v-tooltip>
-        </v-card-title>
-        <v-divider></v-divider>
-        <vuescroll>
-          <v-card-text style="flex-wrap: wrap;">
-            <v-chip v-for="marker in markers" :key="marker.id"
-              @click="jumpTo(marker.time)" @click:close="openDialogRemoveMarker(marker)"
-              close-icon="mdi-close" :close="markersEditable"
-              :title="marker.name" outlined small class="mr-1 mb-1"
-            > 
-              <v-icon v-if="marker.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
-              <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
-              <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
-              {{calcDur(marker.time)}} 
-              <span :class="markerNameClass">{{marker.name}}</span>
-            </v-chip>
-          </v-card-text>
-        </vuescroll>
-      </v-card>
-    </v-dialog>
     <v-dialog v-model="dialogFileInfo" max-width="600" scrollable>
       <v-card>
         <v-card-title class="headline">File info</v-card-title>
@@ -482,33 +233,6 @@
         </vuescroll>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogRemoveMarker" max-width="420">
-      <v-card>
-        <v-card-title class="headline red--text">Remove marker?
-          <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete</v-icon>
-        </v-card-title>
-        <v-card-text class="mt-6 text-center" v-if="markerForRemove.time">
-          <v-chip @click="jumpTo(markerForRemove.time)" outlined> 
-            <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" 
-              left size="20" color="pink">mdi-heart</v-icon>
-            <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" 
-              left size="20" color="red">mdi-bookmark</v-icon>
-            <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'"
-               left size="20" :color="getTag(markerForRemove.name).color">mdi-tag</v-icon>
-            {{calcDur(markerForRemove.time)}} 
-            <span class="ml-2">{{markerForRemove.name}}</span>
-          </v-chip>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="dialogRemoveMarker = false" class="ma-4">Cancel</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="removeMarker" class="ma-4" dark color="red">
-            <v-icon left>mdi-delete-alert</v-icon> Remove
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <!-- <v-dialog v-model="dialogAddToPlaylist" max-width="420">
       <v-card class="add-playlist">
         <v-card-title class="headline py-1">Add to playlist
@@ -546,7 +270,6 @@
 const _ = require("lodash")
 const fs = require("fs")
 const path = require("path")
-const shortid = require('shortid')
 const ffmpeg = require('fluent-ffmpeg')
 const { spawn } = require( 'child_process' )
 const { ipcRenderer, shell } = require('electron')
@@ -600,9 +323,6 @@ export default {
       // include ffmpeg
       ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
       ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
-      ipcRenderer.on('getDataForPlayer', (event, data) => {
-        this.updateVideoPlayer(data)
-      })
     })
   },
   beforeDestroy() {
@@ -612,46 +332,22 @@ export default {
     win.removeAllListeners()
   },
   data: () => ({
-    videoSrc: null,
-    video: null,
     playlist: [],
     playIndex: 0,
-    videos: null,
     videoWidth: 480,
     videoHeight: 320,
     fps: null,
     resolution: null,
     codec: null,
     bitrate: null,
-    seektime: 0,
-    markers: [],
-    markerTag: '',
-    markerBookmarkText: '',
     isVideoAvailable: true,
     imgThumbLoading: null,
     dialogFileInfo: false,
     dialogEditThumb: false,
-    dialogEditMarkers: false,
-    dialogMarkerTag: false,
-    dialogMarkerBookmark: false,
-    dialogRemoveMarker: false,
-    dialogAddToPlaylist: false,
-    markerForRemove: {},
-    markersEditable: false,
-    markerNameClass: 'marker-name-hide',
-    markerNameActive: '',
-    markerEditActive: '',
-    markerPlayable: false,
-    markerPlayableActive: '',
     uploadedImage: null,
     player: null,
-    selectedVideo: 1,
-    isPlaylistVisible: false,
-    isMarkersVisible: false,
-    selectedPlaylist: null,
     maximized: win.isMaximized(),
     nowPlaying: '',
-    markersType: ['tag','performer','favorite','bookmark'],
   }),
   computed: {
     playlists() {
@@ -665,10 +361,10 @@ export default {
         return new Date(this.video.date).toLocaleString()
       }
     },
-    tagsAll() {
-      if (this.tagsDb === null) return []
-      return _.filter(this.tagsDb, t=>(t.category.includes('video')))
-    },
+    // tagsAll() {
+    //   if (this.tagsDb === null) return []
+    //   return _.filter(this.tagsDb, t=>(t.category.includes('video')))
+    // },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
@@ -699,17 +395,6 @@ export default {
     },
   },
   methods: {
-    updateVideoPlayer(data) {
-      // console.log('update video player')
-      // console.log(data)
-      this.videoSrc = 'file:///'+ data.videos[0].path
-      this.videos = data.videos
-      this.video = _.find(this.videosDb, {id: data.id})
-      this.playIndex = _.findIndex(data.videos, {id: data.id})
-      this.selectedVideo = this.playIndex
-      this.playlist = data.videos.map(video=>'file:///'+video.path)
-      this.getMarkers()
-    },
     handleFile(imgType) {
       let imgBase64 = this.$refs.pond.getFiles()[0].getFileEncodeDataURL()
       this.images.main.display = true
@@ -724,151 +409,54 @@ export default {
     //   let outputImagePath = path.join(this.pathToUserData, `/media/thumbs/${this.video.id}.jpg`)
     //   this.compressImage(imgBuffer.data, outputImagePath, 'thumb')
     // },
-    openDialogMarkerTag() {
-      this.dialogMarkerTag = true
-      this.seektime = this.$refs.videoPlayer.currentTime
-    },
-    openDialogMarkerBookmark() {
-      this.dialogMarkerBookmark = true
-      this.seektime = this.$refs.videoPlayer.currentTime
-    },
-    // MARKERS
-    addMarker(type) {
-      let classes = 'marker-' + type
-      let text = ''
-      let time = Math.floor(this.$refs.videoPlayer.currentTime)
-      if (type === 'tag') {
-        text = this.markerTag
-        classes += ' color-' + this.getTag(this.markerTag).color.toLowerCase().replace('#', '')
-        this.dialogMarkerTag = false
-      }
-      if (type === 'favorite') {
-      }
-      if (type === 'bookmark') {
-        text = this.markerBookmarkText
-        this.dialogMarkerBookmark = false
-      }
-    
-      this.player.markers.add([{
-        time: time,
-        text: text,
-        class: classes
-      }])
-
-      const marker = {
-        id: shortid.generate(),
-        videoId: this.video.id,
-        type: type,
-        name: text,
-        time: time,
-      } 
-
-      // TODO fix when add new tag to the video replaces all tags
-      ipcRenderer.send('addMarker', marker, this.markerTag, this.video)
-
-      this.markerTag = ''
-      this.markerBookmarkText = ''
-      this.getMarkers()
-    },
-    async getMarkers() {
-      // console.log('get markers')
-      // console.log(this.video)
-      await this.$store.dispatch('getDb', 'markers')
-      let video = this.videos[this.playIndex]
-      let markers = _.filter(this.markersDb, marker=>marker.videoId == video.id)
-      this.markers = _.orderBy(markers, 'time', ['asc'])
-      // create time
-      for (let i=0; i<markers.length; i++) {
-        let specificTime = new Date(1000*markers[i].time).toISOString().substr(11, 8)
-        let imgPath = path.join(this.pathToUserData, `/media/markers/${markers[i].id}.jpg`)
-        if (fs.existsSync(imgPath)) continue
-        this.createMarkerThumb(specificTime, video.path, imgPath)
-          .then(result => {
-            console.log('thumb created')
-          })
-          .catch(error => {
-            console.log(error)
-          })
-      }
-      // this.addMarkersToTimeline()
-    },
-    addMarkersToTimeline() {
-      const markers = this.markers.map(marker=>{
-        let classes = 'marker-' + marker.type.toLowerCase()
-        if (marker.name) {
-          classes += ' color-' + this.getTag(marker.name).color.toLowerCase().replace('#', '')
-        }
-        let text = marker.type.toLowerCase()=='favorite'? '<3':marker.name
-        return {
-          time: marker.time, 
-          text: text, 
-          class: classes,
-        }
-      })
-      this.player.markers.reset(markers)
-    },
-    toggleMarkerPlayable() {
-      if (this.markerPlayable) {
-        this.markerPlayableActive = ''
-      } else {
-        this.markerPlayableActive = 'primary'
-      }
-      this.markerPlayable = !this.markerPlayable
-    },
-    toggleMarkerNameVisibility() {
-      if (this.markerNameClass == 'marker-name') {
-        this.markerNameClass = 'marker-name-hide'
-        this.markerNameActive = ''
-      } else {
-        this.markerNameClass = 'marker-name'
-        this.markerNameActive = 'primary'
-      }
-    },
-    toggleMarkerEditable() {
-      if (this.markersEditable) {
-        this.markerEditActive = ''
-      } else {
-        this.markerEditActive = 'primary'
-      }
-      this.markersEditable = !this.markersEditable
-    },
-    openDialogRemoveMarker(marker) {
-      this.dialogRemoveMarker = true
-      this.markerForRemove = marker
-    },
-    removeMarker() {
-      ipcRenderer.send('removeMarker', this.markerForRemove, this.video)
-      this.markerForRemove = {}
-      this.dialogRemoveMarker = false
-      this.getMarkers()
-    },
-    getMarkerImgUrl(markerId) {
-      let imgPath = path.join(this.pathToUserData, `/media/markers/${markerId}.jpg`)
-      return this.checkMarkerImageExist(imgPath)
-    },
-    checkMarkerImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
-        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
-      }
-    },
-    createMarkerThumb(timestamp, inputPath, outputPath) {
-      return new Promise((resolve, reject) => {
-        ffmpeg()
-          .addOption('-ss', timestamp)
-          .addOption('-i', inputPath)
-          .addOption('-frames:v', '1')
-          .addOption('-vf','scale=320:-1')
-          .save(outputPath)
-          .on('end', function(e) {
-            resolve(e)
-          })
-          .on('error', function(e) {
-            reject(e)
-          })
-      })
-    },
+    // async getMarkers() {
+    //   // console.log('get markers')
+    //   // console.log(this.video)
+    //   await this.$store.dispatch('getDb', 'markers')
+    //   let video = this.videos[this.playIndex]
+    //   let markers = _.filter(this.markersDb, marker=>marker.videoId == video.id)
+    //   this.markers = _.orderBy(markers, 'time', ['asc'])
+    //   // create time
+    //   for (let i=0; i<markers.length; i++) {
+    //     let specificTime = new Date(1000*markers[i].time).toISOString().substr(11, 8)
+    //     let imgPath = path.join(this.pathToUserData, `/media/markers/${markers[i].id}.jpg`)
+    //     if (fs.existsSync(imgPath)) continue
+    //     this.createMarkerThumb(specificTime, video.path, imgPath)
+    //       .then(result => {
+    //         console.log('thumb created')
+    //       })
+    //       .catch(error => {
+    //         console.log(error)
+    //       })
+    //   }
+    // },
+    // getMarkerImgUrl(markerId) {
+    //   let imgPath = path.join(this.pathToUserData, `/media/markers/${markerId}.jpg`)
+    //   return this.checkMarkerImageExist(imgPath)
+    // },
+    // checkMarkerImageExist(imgPath) {
+    //   if (fs.existsSync(imgPath)) {
+    //     return imgPath
+    //   } else {
+    //     return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+    //   }
+    // },
+    // createMarkerThumb(timestamp, inputPath, outputPath) {
+    //   return new Promise((resolve, reject) => {
+    //     ffmpeg()
+    //       .addOption('-ss', timestamp)
+    //       .addOption('-i', inputPath)
+    //       .addOption('-frames:v', '1')
+    //       .addOption('-vf','scale=320:-1')
+    //       .save(outputPath)
+    //       .on('end', function(e) {
+    //         resolve(e)
+    //       })
+    //       .on('error', function(e) {
+    //         reject(e)
+    //       })
+    //   })
+    // },
     // VIDEOFILE
     getVideoMetadata() {
       ffmpeg.ffprobe(this.video.path, (error, info) => {
@@ -908,16 +496,16 @@ export default {
     playVideoInSystemPlayer() {
       shell.openPath(this.video.path)
     },
-    filterItemsTags(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const alternateNames = item.altNames
-      let found = false
-      for (let i=0;i<alternateNames.length;i++) {
-        if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    },
+    // filterItemsTags(item, queryText, itemText) {
+    //   const searchText = queryText.toLowerCase()
+    //   const alternateNames = item.altNames
+    //   let found = false
+    //   for (let i=0;i<alternateNames.length;i++) {
+    //     if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
+    //   }
+    //   if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
+    //   return found
+    // },
     getFileNameFromPath(videoPath) {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
@@ -925,53 +513,30 @@ export default {
       ipcRenderer.send('watchLater', this.video.id)
       this.$store.dispatch('getDb', 'playlists')
     },
-    getPlaylistImgUrl(videoId) {
-      let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
-      return this.checkPlaylistImageExist(imgPath)
-    },
-    checkPlaylistImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
-        this.errorThumb = true
-        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
-      }
-    },
     // PLAYER
-    play(number) {
-      // this.videoSrc = 'file:///'+ this.videos[number].path
-      this.playIndex = number
-      this.getMarkers()
-    },
-    next() {
-      this.playIndex = this.playIndex + 1
-      this.selectedVideo = this.selectedVideo + 1
-      this.getMarkers()
-    },
-    prev() {
-      this.playIndex = this.playIndex - 1
-      this.selectedVideo = this.selectedVideo - 1
-      this.getMarkers()
-    },
-    jumpTo(time) {
-      if (this.markerPlayable) {
-        let specificTime = new Date(1000*time).toISOString().substr(11, 8)
-        let mpcPath = this.$store.state.settingsDb.pathToSystemPlayer
-        spawn(`${mpcPath}`, [`${this.video.path}`, '/startpos', specificTime])
-      } else {
-        this.$refs.player.jumpTo(time)
-      }
-    },
-    togglePlaylist() {
-      this.isPlaylistVisible=!this.isPlaylistVisible
-      // console.log(this.selectedVideo)
-      if (!this.isPlaylistVisible) return
-      const height = `${this.selectedVideo * document.documentElement.clientWidth / 10}`
-      this.$refs.playlist.scrollTo({ y: height }, 50)
-    },
-    toggleMarkers() {
-      this.isMarkersVisible=!this.isMarkersVisible
-    },
+    // play(number) {
+    //   this.playIndex = number
+    //   this.getMarkers()
+    // },
+    // next() {
+    //   this.playIndex = this.playIndex + 1
+    //   this.selectedVideo = this.selectedVideo + 1
+    //   this.getMarkers()
+    // },
+    // prev() {
+    //   this.playIndex = this.playIndex - 1
+    //   this.selectedVideo = this.selectedVideo - 1
+    //   this.getMarkers()
+    // },
+    // jumpTo(time) {
+    //   if (this.markerPlayable) {
+    //     let specificTime = new Date(1000*time).toISOString().substr(11, 8)
+    //     let mpcPath = this.$store.state.settingsDb.pathToSystemPlayer
+    //     spawn(`${mpcPath}`, [`${this.video.path}`, '/startpos', specificTime])
+    //   } else {
+    //     this.$refs.player.jumpTo(time)
+    //   }
+    // },
     addToPlaylist() {
       let id = this.playlists[this.selectedPlaylist].id
       let playlist = this.$store.getters.playlists.find({id: id}).value()
@@ -1011,7 +576,6 @@ export default {
     },
     close() {
       this.playlist = []
-      this.videoSrc = null
       this.$refs.player.stop()
       ipcRenderer.send('closePlayer')
     },
@@ -1060,105 +624,6 @@ export default {
     overflow: hidden;
     max-width: calc(100vw - 350px);
     white-space: nowrap;
-  }
-}
-.playlist-wrapper {
-  min-width: 18vw;
-  height: calc(100vh - 36px - 40px);
-  box-shadow: none !important;
-  .v-card__title {
-    flex-wrap: nowrap;
-    white-space: nowrap;
-  }
-  .video-item {
-    position: relative;
-    overflow: hidden;
-    height: 10vw;
-  }
-  .video-name {
-    font-size: 1.8vh;
-    line-height: 1.2;
-    word-break: keep-all;
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    right: 5px;
-    overflow: hidden;
-    .path {
-      padding-left: 4px;
-      position: absolute;
-    }
-  }
-  .play-state {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    line-height: 1;
-    position: absolute;
-    bottom: 5px;
-    left: 5px;
-    z-index: 1;
-    &::before {
-      content: '';
-      position: absolute;
-      background-color: currentColor;
-      width: 100%;
-      height: 100%;
-      border-radius: 50px;
-      filter: invert(1);
-      z-index: -1;
-    }
-  }
-  .thumb {
-    position: absolute;
-    min-height: 100%;
-    width: 100%;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1), transparent);
-  }
-}
-.markers-wrapper {
-  min-width: 20vw;
-  height: calc(100vh - 36px);
-  border-left: 1px solid #5c5c5c;
-  box-shadow: none !important;
-  .v-card__title {
-    flex-wrap: nowrap;
-    white-space: nowrap;
-  }
-  .marker {
-    cursor: pointer;
-    padding: 0.4vw;
-    .thumb {
-      width: 19vw;
-      background-color: rgb(38, 50, 61);
-    }
-    .name {
-      margin: 0.5vw;
-      font-size: 1.4vw;
-    }
-    .time {
-      position: absolute;
-      left: 1px;
-      top: 1px;
-      line-height: 1;
-      padding: 2px;
-      border-radius: 2px;
-      font-size: 1.4vw;
-      background-color: rgba(59, 59, 59, 0.7);
-    }
-  }
-  .toggle {
-    width: 100%;
-    .v-btn {
-      min-width: 30px;
-      width: 25%;
-      padding: 0;
-    }
   }
 }
 .add-playlist {

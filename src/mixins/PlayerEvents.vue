@@ -1,5 +1,7 @@
 <script>
 const { ipcRenderer } = require('electron')
+const fs = require("fs")
+const path = require('path')
 
 export default {
   mounted () {
@@ -54,6 +56,15 @@ export default {
     },
     removeMarker(markerForRemove) {
       this.$store.getters.markers.remove({'id':markerForRemove.id}).write()
+      // remove image of marker
+      let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/markers/${markerForRemove.id}.jpg`)
+      fs.unlink(imgPath, (err) => {
+        if (err) {
+          console.log(`failed to delete image of marker "${markerForRemove.id}", "${markerForRemove.name}". ${err}`);
+        } else {
+          console.log(`successfully deleted image of marker "${markerForRemove.id}", "${markerForRemove.name}"`);                                
+        }
+      })
     },
   },
 }

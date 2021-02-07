@@ -1,75 +1,323 @@
 <template>
-  <div ref="player" class="vlc-player" 
-    @mousedown="stopSmoothScroll($event)"
-    @mousemove="moveOverPlayer" @contextmenu="showContextMenu($event)"
-    @keydown="handleKey" @wheel="handleScroll" tabindex="1"
-  >
-  <img id="myximg">
-    <div class="canvas-center" @click="paused ? play() : pause()" @dblclick="toggleFullscreen">
-      <canvas ref="canvas" class="canvas"/>
-    </div>
-    <v-card v-if="controls" class="vlc-controls" tile>
-      <v-card-actions class="timeline pa-1">
-        <v-slider @change="seek($event)" :value="currentTime" color="white"
-          min="0" step="1" :max="duration" hide-details/>
-        <div v-for="(marker,i) in markers" :key="i" class="marker"
-          :style="{left: `${marker.time/duration*100}%`}"
-          @mouseup="jumpTo(marker.time)">
-          <div class="tooltip text-center">
-            <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb"/>
-            <div>
-              <v-icon v-if="marker.type.toLowerCase()=='tag'" small :color="getTag(marker.name).color">mdi-tag</v-icon>
-              <v-icon v-if="marker.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
-              <v-icon v-if="marker.type.toLowerCase()=='favorite'" small color="pink">mdi-heart</v-icon>
-              <v-icon v-if="marker.type.toLowerCase()=='bookmark'" small color="red">mdi-bookmark</v-icon>
-              {{marker.name}}
+  <div ref="player" class="vlc-player" :class="{fullscreen}"
+    @mousedown="stopSmoothScroll($event)" @mousemove="moveOverPlayer">
+    <div class="player-wrapper">
+      <div class="canvas-wrapper" @click="paused ? play() : pause()" 
+        @dblclick="toggleFullscreen" @click.middle="toggleFullscreen" 
+        @contextmenu="showContextMenu($event)"
+        @keydown="handleKey" @wheel="changeVolume">
+        <canvas ref="canvas" class="canvas"/>
+      </div>
+      <v-card v-if="controls" class="vlc-controls" tile>
+        <v-card-actions class="timeline pa-1">
+          <v-slider @change="seek($event)" :value="currentTime"
+            min="0" step="1" :max="duration" hide-details/>
+          <div v-for="(marker,i) in markers" :key="i" class="marker"
+            :style="{left: `${marker.time/duration*100}%`}"
+            @mouseup="jumpTo(marker.time)">
+            <div class="tooltip text-center">
+              <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb"/>
+              <div>
+                <v-icon v-if="marker.type.toLowerCase()=='tag'" small :color="getTag(marker.name).color">mdi-tag</v-icon>
+                <v-icon v-if="marker.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
+                <v-icon v-if="marker.type.toLowerCase()=='favorite'" small color="pink">mdi-heart</v-icon>
+                <v-icon v-if="marker.type.toLowerCase()=='bookmark'" small color="red">mdi-bookmark</v-icon>
+                {{marker.name}}
+              </div>
+              <div>{{msToTime(marker.time*1000)}}</div>
             </div>
-            <div>{{calcDur(marker.time)}}</div>
           </div>
-        </div>
-      </v-card-actions>
+        </v-card-actions>
+        <v-card-actions class="pa-1">
+          <v-btn-toggle class="remove-active">
+            <v-btn @click="paused ? play() : pause()" small class="ml-1">
+              <v-icon v-if="paused">mdi-play</v-icon>
+              <v-icon v-else>mdi-pause</v-icon>
+            </v-btn>
+          </v-btn-toggle>
+          <v-btn-toggle class="mx-2 remove-active">
+            <v-btn @click="prev" small :disabled="playIndex==0">
+              <v-icon>mdi-skip-previous</v-icon>
+            </v-btn>
+            <v-btn @click="stop" small>
+              <v-icon>mdi-stop</v-icon>
+            </v-btn>
+            <v-btn @click="next" small :disabled="playIndex+1>=playlistLength">
+              <v-icon>mdi-skip-next</v-icon>
+            </v-btn>
+          </v-btn-toggle>
+          <v-btn-toggle class="remove-active">
+            <v-btn v-if="!controlsList.includes('nofullscreen')" @click="toggleFullscreen" small>
+              <v-icon v-if="fullscreen">mdi-fullscreen-exit</v-icon>
+              <v-icon v-else>mdi-fullscreen</v-icon>
+            </v-btn>
+          </v-btn-toggle>
+          <v-btn-toggle class="mx-2 remove-active">
+            <v-btn @click="toggleMarkers" :color="isMarkersVisible? 'primary':''" small>
+              <v-icon>mdi-map-marker</v-icon>
+            </v-btn>
+            <v-btn @click="jumpToPrevMarker" small>
+              <v-icon>mdi-map-marker-left</v-icon>
+            </v-btn>
+            <v-btn @click="jumpToNextMarker" small>
+              <v-icon>mdi-map-marker-right</v-icon>
+            </v-btn>
+            <v-menu offset-y nudge-top="30" nudge-right="282" attach=".vlc-controls">
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn v-bind="attrs" v-on="on" small>
+                  <v-icon>mdi-map-marker-plus</v-icon>
+                </v-btn>
+              </template>
+              <v-card style="overflow:hidden;">
+                <v-btn @click="openDialogMarkerTag" icon tile width="50" height="36">
+                  <v-icon size="20">mdi-tag</v-icon> 
+                </v-btn>
+                <v-btn icon tile width="50" height="36" class="remove-active">
+                  <v-icon size="20">mdi-account</v-icon> 
+                </v-btn>
+                <v-btn @click="addMarker('favorite')" icon tile width="50" height="36">
+                  <v-icon size="20">mdi-heart</v-icon> 
+                </v-btn>
+                <v-btn @click="openDialogMarkerBookmark" icon tile width="50" height="36">
+                  <v-icon size="20">mdi-bookmark</v-icon> 
+                </v-btn>
+              </v-card>
+            </v-menu>
+          </v-btn-toggle>
+          <v-btn-toggle class="remove-active">
+            <v-btn @click="togglePlaylist" :color="isPlaylistVisible? 'primary':''" small>
+              <v-icon>mdi-format-list-bulleted</v-icon>
+            </v-btn>
+          </v-btn-toggle>
+          <v-spacer></v-spacer>
+          <div class="duration mx-2">
+            <div class="time-start">{{ msToTime(currentTime * 1000) }}</div>
+            <span class="mx-1">/</span>
+            <div class="time-end">{{ msToTime(duration * 1000) }}</div>
+          </div>
+          <v-slider v-model="volume" value="1" min="0" step="0.01" max="1" hide-details 
+            :prepend-icon="volumeIcon" @click:prepend="player.toggleMute()" class="volume"/>
+        </v-card-actions>
+      </v-card>
+    </div>
+
+    <v-card v-show="isMarkersVisible" class="markers-wrapper" outlined tile>
       <v-card-actions class="pa-1">
-        <v-btn @click="paused ? play() : pause()" small class="ml-1">
-          <v-icon v-if="paused">mdi-play</v-icon>
-          <v-icon v-else>mdi-pause</v-icon>
-        </v-btn>
-        <v-btn-toggle class="mx-2">
-          <v-btn @click="prev" small :disabled="currentItem==null || currentItem==0">
-            <v-icon>mdi-skip-previous</v-icon>
-          </v-btn>
-          <v-btn @click="stop" small>
-            <v-icon>mdi-stop</v-icon>
-          </v-btn>
-          <v-btn @click="next" small :disabled="currentItem==null">
-            <v-icon>mdi-skip-next</v-icon>
-          </v-btn>
-        </v-btn-toggle>
-        <v-btn v-if="!controlsList.includes('nofullscreen')" @click="toggleFullscreen" small>
-          <v-icon v-if="fullscreen">mdi-fullscreen-exit</v-icon>
-          <v-icon v-else>mdi-fullscreen</v-icon>
-        </v-btn>
-        <v-btn-toggle class="mx-2">
-          <v-btn @click="toggleMarkers" small>
-            <v-icon>mdi-map-marker</v-icon>
-          </v-btn>
-          <v-btn @click="addMarker" small disabled>
-            <v-icon>mdi-map-marker-plus</v-icon>
-          </v-btn>
-        </v-btn-toggle>
-        <v-btn @click="togglePlaylist" small>
-          <v-icon>mdi-format-list-bulleted</v-icon>
-        </v-btn>
+        <v-icon left>mdi-map-marker</v-icon>
+        <span>Markers</span> 
         <v-spacer></v-spacer>
-        <div class="duration mx-2">
-          <div class="time-start">{{ msToTime(currentTime * 1000) }}</div>
-          <span class="mx-1">/</span>
-          <div class="time-end">{{ msToTime(duration * 1000) }}</div>
-        </div>
-        <v-slider v-model="volume" value="1" min="0" step="0.01" max="1" 
-          color="white" hide-details style="max-width:120px;" class="mr-2"
-          :prepend-icon="volumeIcon" @click:prepend="player.toggleMute()"/>
+        <v-btn @click="isMarkersVisible=false" icon>
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
       </v-card-actions>
+      <v-card-actions class="pa-0">
+        <v-btn-toggle v-model="markersType" tile dense mandatory multiple color="primary" class="toggle">
+          <v-btn value="tag">
+            <v-icon>mdi-tag</v-icon>
+          </v-btn>
+          <v-btn value="performer">
+            <v-icon>mdi-account</v-icon>
+          </v-btn>
+          <v-btn value="favorite">
+            <v-icon>mdi-heart</v-icon>
+          </v-btn>
+          <v-btn value="bookmark">
+            <v-icon>mdi-bookmark</v-icon>
+          </v-btn>
+        </v-btn-toggle>
+      </v-card-actions>
+      <vuescroll>
+        <v-card-text class="items pa-0">
+          <div v-if="markers.length">
+            <div v-for="marker in markers" :key="marker.id">
+              <div @click="jumpTo(marker.time)" v-if="(markersType.includes(marker.type.toLowerCase()))" class="marker">
+                <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb">
+                  <span class="time">{{msToTime(marker.time*1000)}}</span>
+                  <v-btn @click="openDialogRemoveMarker(marker)" icon color="red" class="delete">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </v-img>
+                <div class="name">
+                  <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
+                  <v-icon v-if="marker.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
+                  <v-icon v-if="marker.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
+                  <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
+                  <span>{{marker.name}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-center pt-6">
+            <span>No markers</span><br>
+            <v-icon size="60">mdi-close</v-icon>
+          </div>
+        </v-card-text>
+      </vuescroll>
     </v-card>
+    <v-card v-show="isPlaylistVisible" class="playlist-wrapper" outlined tile>
+      <v-card-actions class="pa-1">
+        <v-icon left>mdi-format-list-bulleted</v-icon>
+        <span>Playlist</span> 
+        <v-spacer></v-spacer>
+        <v-btn @click="isPlaylistVisible=false" icon>
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-actions>
+      <v-card-actions class="pa-0">
+        <v-btn-toggle v-model="playlistMode" tile dense multiple color="primary" class="toggle">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn value="autoplay" v-on="on">
+                <v-icon>mdi-play-pause</v-icon>
+              </v-btn>
+            </template>
+            <span>Autoplay</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn value="loop" v-on="on">
+                <v-icon>mdi-autorenew</v-icon>
+              </v-btn>
+            </template>
+            <span>Loop</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn value="shuffle" v-on="on">
+                <v-icon>mdi-shuffle-variant</v-icon>
+              </v-btn>
+            </template>
+            <span>Shuffle</span>
+          </v-tooltip>
+        </v-btn-toggle>
+      </v-card-actions>
+      <vuescroll ref="playlist" class="playlist">
+        <v-card-text class="items pa-0">
+          <v-list dense class="pa-0">
+            <v-list-item-group v-model="playIndex" mandatory color="primary">
+              <v-list-item v-for="(video, i) in videos" :key="video.id" :ref="`videoItem${i}`"
+                @click="playItemFromPlaylist(i)" class="video-item">
+                <img :src="getPlaylistImgUrl(video.id)" class="thumb"/>
+                <span class="video-name">
+                  <b>{{i+1}}.</b>
+                  <span class="path">{{getFileNameFromPath(video.path)}}</span>
+                </span>
+                <span v-if="playIndex===i" class="play-state overline text--primary">
+                  <v-icon class="pl-2 pr-1">mdi-play</v-icon>
+                  <span class="pr-4">Now playing</span>
+                </span>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
+        </v-card-text>
+      </vuescroll>
+    </v-card>
+
+    
+    <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
+      <v-card>
+        <v-card-title class="headline">
+          Marker with tag on {{msToTime(seektime)}}
+          <v-spacer></v-spacer>
+          <v-icon>mdi-map-marker-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text class="pb-0">
+            <v-autocomplete
+              v-model="markerTag" outlined clearable hide-details
+              :items="tagsAll" label="Tag for marker" placeholder="Choose a tag for marker"
+              item-text="name" class="hidden-close"
+              item-value="name" no-data-text="No more tags"
+              :menu-props="{contentClass:'list-with-preview'}"
+              :filter="filterItemsTags"
+            >
+              <template v-slot:selection="data">
+                <v-chip
+                  v-bind="data.attrs" :input-value="data.selected" 
+                  @click="data.select" text-color="white" 
+                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                  @mouseleave.stop="$store.state.hoveredImage=false"
+                  :color="getTag(data.item.name).color" 
+                > <span>{{ data.item.name }}</span>
+                </v-chip>
+              </template>
+              <template v-slot:item="data">
+                <div class="list-item"
+                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                  @mouseleave.stop="$store.state.hoveredImage=false"
+                > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
+                    left size="14"> mdi-heart </v-icon>
+                  <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
+                  <span>{{data.item.name}}</span>
+                  <span v-if="data.item.altNames.length" class="aliases"> 
+                    {{data.item.altNames.join(', ').slice(0,50)}}
+                  </span>
+                </div>
+              </template>
+            </v-autocomplete>
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="addMarker('tag')" :disabled="!markerTag" class="ma-4" color="primary">
+            <v-icon left>mdi-plus</v-icon> Add marker
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogMarkerBookmark" max-width="550" scrollable eager>
+      <v-card>
+        <v-card-title class="headline">
+          Marker with bookmark on {{msToTime(seektime)}}
+          <v-spacer></v-spacer>
+          <v-icon>mdi-map-marker-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text>
+            <v-textarea v-model="markerBookmarkText" label="Bookmark text" solo hide-details/>
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="addMarker('bookmark')" :disabled="!markerBookmarkText" class="ma-4" color="primary">
+            <v-icon left>mdi-plus</v-icon> Add marker
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogRemoveMarker" max-width="420">
+      <v-card>
+        <v-card-title class="headline red--text">Remove marker?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete</v-icon>
+        </v-card-title>
+        <v-card-text class="mt-6 text-center" v-if="markerForRemove.time">
+          <div @click="jumpTo(markerForRemove.time)">
+            <v-img :src="getMarkerImgUrl(markerForRemove.id)" :aspect-ratio="16/9" class="thumb">
+              <span class="time">{{msToTime(markerForRemove.time*1000)}}</span>
+            </v-img>
+            <div class="mt-2">
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" left small :color="getTag(markerForRemove.name).color">mdi-tag</v-icon>
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
+              <span>{{markerForRemove.name}}</span>
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="dialogRemoveMarker = false" class="ma-4">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="removeMarker" class="ma-4" dark color="red">
+            <v-icon left>mdi-delete-alert</v-icon> Remove
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     
     <v-menu v-model="menu" :position-x="$store.state.x" leave-absolute
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
@@ -209,14 +457,23 @@
 
 // on loadeddata (when width and height of frame are known, set element size to proper dimensions,
 // (what happens for size on src change for htmlvideo?))
+const { ipcRenderer } = require('electron')
+const fs = require("fs")
+const path = require('path')
+const ffmpeg = require('fluent-ffmpeg')
+const shortid = require('shortid')
 
 import { chimera } from './webchimera/wrapper'
-import Functions from '@/mixins/Functions'
-import path from "path"
-const fs = require("fs")
+import vuescroll from 'vuescroll'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
+import LabelFunctions from '@/mixins/LabelFunctions'
 
 export default {
   name: "VlcPlayer",
+  components: {
+    vuescroll,
+  },
+  mixins: [ShowImageFunction, LabelFunctions],
   props: {
     // ------- HTML Video properties -------- //
     src: {
@@ -248,20 +505,36 @@ export default {
       type: Boolean,
       default: false,
     },
-    playlist: {
-      type: Array,
-      default: null,
-    },
-    playIndex: {
-      type: Number,
-      default: 0,
-    },
-    markers: {
-      type: Array,
-      default: [],
-    },
   },
-  mixins: [Functions],
+  beforeDestroy() {
+    clearInterval(this.interval);
+    clearTimeout(this.statusTimeout);
+    clearTimeout(this.moveTimeout);
+    clearTimeout(this.showBufferTimeout);
+    this.player?.destroy?.();
+    document.removeEventListener("mousemove", this.controlsMove);
+    document.removeEventListener("mouseup", this.controlsUp);
+    document.removeEventListener("fullscreenchange", this.changeFullscreen);
+  },
+  async mounted() {
+    this.init();
+
+    this.interval = setInterval(() => {
+      if (this.player.state === "buffering") this.showBuffering();
+    });
+
+    this.moveTimeout = setTimeout(() => {
+      this.hideControls = true;
+    }, 1000);
+
+    document.addEventListener("mousemove", this.controlsMove, false);
+    document.addEventListener("mouseup", this.controlsUp, false);
+    document.addEventListener("fullscreenchange", this.changeFullscreen, false);
+
+    ipcRenderer.on('getDataForPlayer', (event, data) => {
+      this.updateVideoPlayer(data)
+    })
+  },
   data: () => ({
     menu: false,
     player: null,
@@ -298,39 +571,29 @@ export default {
     networkState: HTMLMediaElement.NETWORK_EMPTY,
     seeking: false,
     srcObject: null,
+    seektime: 0,
+    // Playlist
+    isPlaylistVisible: false,
+    selectedPlaylist: null,
+    videos: null,
+    playlist: [],
+    playIndex: null,
+    playlistLength: 0,
+    playlistMode: ['loop'],
+    // Markers
+    isMarkersVisible: false,
+    markers: [],
+    markerTag: '',
+    markerBookmarkText: '',
+    dialogMarkerTag: false,
+    dialogMarkerBookmark: false,
+    dialogRemoveMarker: false,
+    dialogAddToPlaylist: false,
+    markerForRemove: {},
+    markersType: ['tag','performer','favorite','bookmark'],
   }),
-  beforeDestroy() {
-    clearInterval(this.interval);
-    clearTimeout(this.statusTimeout);
-    clearTimeout(this.moveTimeout);
-    clearTimeout(this.showBufferTimeout);
-    this.player?.destroy?.();
-    document.removeEventListener("mousemove", this.controlsMove);
-    document.removeEventListener("mouseup", this.controlsUp);
-    document.removeEventListener("fullscreenchange", this.changeFullscreen);
-  },
-  async mounted() {
-    this.init();
-
-    this.interval = setInterval(() => {
-      if (this.player.state === "buffering") this.showBuffering();
-    });
-
-    this.moveTimeout = setTimeout(() => {
-      this.hideControls = true;
-    }, 1000);
-
-    document.addEventListener("mousemove", this.controlsMove, false);
-    document.addEventListener("mouseup", this.controlsUp, false);
-    document.addEventListener("fullscreenchange", this.changeFullscreen, false);
-  },
   computed: {
     // ------------ HTMLVideoElement getters ---------- //
-    currentItem() {
-      if (this.player) {
-        return this.player.playlist.currentItem
-      } else return null
-    },
     currentSrc() {
       return this.src;
     },
@@ -438,6 +701,11 @@ export default {
         __static,
         `/menu-icons/${this.dark ? "white" : "black"}/`
       );
+    },
+    // data from main window
+    tagsAll() {
+      if (this.tagsDb === null) return []
+      return _.filter(this.tagsDb, t=>(t.category.includes('video')))
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
@@ -588,8 +856,13 @@ export default {
         console.log("New state: ", newState);
         if (newState === "buffering") this.showBuffering();
       });
-
-      this.loadSrc()
+    },
+    updateVideoPlayer(data) {
+      console.log('update video player')
+      // console.log(data)
+      this.videos = data.videos
+      this.playlist = _.cloneDeep(data.videos.map(video=>'file:///'+video.path))
+      this.playIndex = _.findIndex(data.videos, {id: data.id})
     },
     showBuffering() {
       this.$emit("waiting");
@@ -637,69 +910,6 @@ export default {
       hms = hms.startsWith(":") ? hms.substr(1) : hms;
       return hms.startsWith("00") ? hms.substr(1) : hms;
     },
-    handleScroll(e) {
-      this.player.volume -= e.deltaY / 20;
-    },
-    handleKey(e) {
-      if (this.disableKeys) return;
-      console.log(e.key);
-      switch (true) {
-        case e.key === " ":
-          this.player.togglePause();
-          break;
-        case e.key === "ArrowRight":
-          this.player.time += 10000;
-          break;
-        case e.key === "ArrowLeft":
-          this.player.time -= 10000;
-          break;
-        case e.key === "ArrowUp":
-          this.player.volume += 5;
-          break;
-        case e.key === "ArrowDown":
-          this.player.volume -= 5;
-          break;
-        case e.key === "=":
-          let rateUp = this.player.input.rate * 1.25;
-          this.player.input.rate =
-            rateUp > 0.5 ? Math.round(rateUp * 4) / 4 : rateUp;
-          break;
-        case e.key === "-":
-          let rateDown = this.player.input.rate / 1.25;
-          this.player.input.rate =
-            rateDown > 0.5 ? Math.round(rateDown * 4) / 4 : rateDown;
-          break;
-        case e.key === "m":
-          this.player.mute = !this.player.mute;
-          break;
-      }
-    },
-    async addSubtitles() {
-      let { filePath, canceled } = await this.promptSubtitleFile();
-      if (!canceled) {
-        console.log("Loading subtitles", filePath);
-        this.player.subtitles.load(filePath);
-      }
-    },
-    async promptSubtitleFile() {
-      let { dialog } = require("electron").remote;
-      let { canceled, filePaths } = await dialog.showOpenDialog({
-        title: "Add subtitles from file",
-        buttonLabel: "Add subtitles",
-        filters: [
-          {
-            name: "Subtitle files",
-            extensions: ["cdg","idx","srt","sub","utf","ass","ssa","aqt","jss","psb","rt","sami","smi","txt","smil","stl","usf","dks","pjs","mpl2","mks","vtt","tt","ttml","dfxp","scc",],
-          },
-          {
-            name: "All files",
-            extensions: ["*"],
-          },
-        ],
-        properties: ["openFile"],
-      });
-      return { canceled, filePath: filePaths[0] };
-    },
     showStatusText(text, timeout = 2000) {
       if (!this.enableStatusText || this.preventStatusUpdate) return;
       clearTimeout(this.statusTimeout);
@@ -711,19 +921,19 @@ export default {
         this.statusAnimationDuration = "0.4s";
       }, timeout);
     },
-    loadSrc() {
-      this.preventStatusUpdate = true;
-      this.duration = NaN;
-      this.ended = false;
-      this.readyState = HTMLMediaElement.HAVE_NOTHING;
-      this.networkState = HTMLMediaElement.NETWORK_LOADING;
-      this.currentTime = 0;
-      this.error = null;
-
+    loadPlaylist() {
+      this.preventStatusUpdate = true
+      this.duration = NaN
+      this.ended = false
+      this.readyState = HTMLMediaElement.HAVE_NOTHING
+      this.networkState = HTMLMediaElement.NETWORK_LOADING
+      this.currentTime = 0
+      this.error = null
       if (this.src === "") {
         this.networkState = HTMLMediaElement.NETWORK_NO_SOURCE;
       }
 
+        // TODO Sometimes file opens like DVD and when error it adds all parent folder to the playlist
       if (this.playlist !== [] && this.playlist !== null) {
         let playlist = this.playlist
         this.player.playlist.clear()
@@ -731,11 +941,10 @@ export default {
           this.player.playlist.add(playlist[i])
         }
         this.player.playlist.playItem(this.playIndex)
-        this.$emit("nowPlaying", this.player.playlist.items[this.player.playlist.currentItem])
-      } else {
-        this.player.playUrl(this.src);
+        this.playlistLength = this.player.playlist.items.length
+        this.$emit("nowPlaying", this.player.playlist.items[this.playIndex])
       }
-
+      
       this.$emit("loadstart");
     },
     toggleFullscreen() {
@@ -772,10 +981,11 @@ export default {
       this.player.destroy();
       this.init();
     },
+    // CONTROLS
     async play() {
-      this.player.play();
-      if (this.player.state === "Playing") return;
-      return new Promise((resolve) => this.player.once("play", resolve));
+      this.player.play()
+      if (this.player.state === "Playing") return
+      return new Promise((resolve) => this.player.once("play", resolve))
     },
     pause() {
       this.player.pause()
@@ -785,14 +995,14 @@ export default {
       this.player.time = 0
     },
     next() {
+      this.playIndex = this.playIndex + 1
       this.player.playlist.next()
-      this.$emit("next")
-      this.$emit("nowPlaying", this.player.playlist.items[this.player.playlist.currentItem])
+      this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
     },
     prev() {
+      this.playIndex = this.playIndex - 1
       this.player.playlist.prev()
-      this.$emit("prev")
-      this.$emit("nowPlaying", this.player.playlist.items[this.player.playlist.currentItem])
+      this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
     },
     seek(e) {
       this.player.time = e * 1000
@@ -801,15 +1011,29 @@ export default {
       this.player.time = e * 1000
     },
     toggleMarkers() {
-      this.$emit('toggleMarkers')
+      this.isMarkersVisible=!this.isMarkersVisible
     },
-    addMarker() {
-      this.$emit('addMarker')
+    jumpToPrevMarker() {
+      let markers = _.orderBy(this.markers, 'time', ['desc'])
+      let currentTime = this.player.time - 5000
+      for (let i=0; i<markers.length; i++) {
+        let markerTime = markers[i].time*1000
+        if (markerTime < currentTime) {
+          this.player.time = markerTime
+          break
+        }
+      }
     },
-    togglePlaylist() {
-      // this.player.playlist.play(this.src)
-      this.$emit('togglePlaylist', this.player.playlist.items)
-      console.log(this.player.playlist.items)
+    jumpToNextMarker() {
+      let markers = this.markers
+      let currentTime = this.player.time
+      for (let i=0; i<markers.length; i++) {
+        let markerTime = markers[i].time*1000
+        if (markerTime > currentTime) {
+          this.player.time = markerTime
+          break
+        }
+      }
     },
     seekToNextFrame(n = 1) {
       this.player.time += (1000 * n) / this.player.input.fps;
@@ -833,7 +1057,80 @@ export default {
       if (this.player.volume==0) return
       this.player.volume -= 10
     },
+    changeVolume(e) {
+      this.player.volume -= e.deltaY / 20;
+    },
+    handleKey(e) {
+      if (this.disableKeys) return;
+      console.log(e.key);
+      switch (true) {
+        case e.key === " ":
+          this.player.togglePause();
+          break;
+        case e.key === "ArrowRight":
+          this.player.time += 10000;
+          break;
+        case e.key === "ArrowLeft":
+          this.player.time -= 10000;
+          break;
+        case e.key === "ArrowUp":
+          this.player.volume += 5;
+          break;
+        case e.key === "ArrowDown":
+          this.player.volume -= 5;
+          break;
+        case e.key === "=":
+          let rateUp = this.player.input.rate * 1.25;
+          this.player.input.rate =
+            rateUp > 0.5 ? Math.round(rateUp * 4) / 4 : rateUp;
+          break;
+        case e.key === "-":
+          let rateDown = this.player.input.rate / 1.25;
+          this.player.input.rate =
+            rateDown > 0.5 ? Math.round(rateDown * 4) / 4 : rateDown;
+          break;
+        case e.key === "m":
+          this.player.mute = !this.player.mute;
+          break;
+      }
+    },
     // MARKERS
+    async getMarkers() {
+      // console.log('get markers')
+      await this.$store.dispatch('getDb', 'markers')
+      let video = this.videos[this.playIndex]
+      let markers = _.filter(this.markersDb, marker=>marker.videoId == video.id)
+      this.markers = _.orderBy(markers, 'time', ['asc'])
+      // create marker thumb
+      for (let i=0; i<markers.length; i++) {
+        let imgPath = path.join(this.pathToUserData, `/media/markers/${markers[i].id}.jpg`)
+        if (fs.existsSync(imgPath)) continue
+        let specificTime = new Date(1000*markers[i].time).toISOString().substr(11, 8)
+        this.createMarkerThumb(specificTime, video.path, imgPath)
+          .then(result => {
+            console.log('thumb created')
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      }
+    },
+    createMarkerThumb(timestamp, inputPath, outputPath) {
+      return new Promise((resolve, reject) => {
+        ffmpeg()
+          .addOption('-ss', timestamp)
+          .addOption('-i', inputPath)
+          .addOption('-frames:v', '1')
+          .addOption('-vf','scale=320:-1')
+          .save(outputPath)
+          .on('end', function(e) {
+            resolve(e)
+          })
+          .on('error', function(e) {
+            reject(e)
+          })
+      })
+    },
     getMarkerImgUrl(markerId) {
       let imgPath = path.join(this.pathToUserData, `/media/markers/${markerId}.jpg`)
       return this.checkMarkerImageExist(imgPath)
@@ -847,6 +1144,92 @@ export default {
     },
     getTag(tagName) {
       return _.find(this.tagsDb, {name:tagName})
+    },
+    openDialogMarkerTag() {
+      this.dialogMarkerTag = true
+      this.seektime = this.player.time
+    },
+    openDialogMarkerBookmark() {
+      this.dialogMarkerBookmark = true
+      this.seektime = this.player.time
+    },
+    addMarker(type) {
+      if (type === 'performer') return
+      let text = ''
+      let time = Math.floor(this.player.time / 1000)
+      if (type === 'tag') {
+        text = this.markerTag
+        this.dialogMarkerTag = false
+      }
+      if (type === 'favorite') {}
+      if (type === 'bookmark') {
+        text = this.markerBookmarkText
+        this.dialogMarkerBookmark = false
+      }
+    
+      let video = _.cloneDeep(this.videos[this.playIndex])
+      const marker = {
+        id: shortid.generate(),
+        videoId: video.id,
+        type: type,
+        name: text,
+        time: time,
+      } 
+
+      // TODO fix when add new tag to the video replaces all tags
+      ipcRenderer.send('addMarker', marker, this.markerTag, video)
+
+      this.markerTag = ''
+      this.markerBookmarkText = ''
+      this.getMarkers()
+    },
+    openDialogRemoveMarker(marker) {
+      this.dialogRemoveMarker = true
+      this.markerForRemove = marker
+    },
+    removeMarker() {
+      let video = _.cloneDeep(this.videos[this.playIndex])
+      ipcRenderer.send('removeMarker', this.markerForRemove, video)
+      this.markerForRemove = {}
+      this.dialogRemoveMarker = false
+      this.getMarkers()
+    },
+    filterItemsTags(item, queryText, itemText) {
+      const searchText = queryText.toLowerCase()
+      const alternateNames = item.altNames
+      let found = false
+      for (let i=0;i<alternateNames.length;i++) {
+        if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
+      }
+      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
+      return found
+    },
+    // PLAYLIST
+    playItemFromPlaylist(index) {
+      // console.log(this.player.playlist.items.map(i=>i.mrl))
+      this.player.playlist.playItem(index)
+      this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[index]))
+    },
+    togglePlaylist() {
+      this.isPlaylistVisible=!this.isPlaylistVisible
+      if (!this.isPlaylistVisible) return
+      const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
+      this.$refs.playlist.scrollTo({ y: height }, 50)
+    },
+    getPlaylistImgUrl(videoId) {
+      let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
+      return this.checkPlaylistImageExist(imgPath)
+    },
+    checkPlaylistImageExist(imgPath) {
+      if (fs.existsSync(imgPath)) {
+        return imgPath
+      } else {
+        this.errorThumb = true
+        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+      }
+    },
+    getFileNameFromPath(videoPath) {
+      return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
   },
   watch: {
@@ -862,25 +1245,47 @@ export default {
     volume(newValue, oldValue) {
       if (newValue !== oldValue) this.player.volume = this.volume * 100;
     },
-    src() {
-      this.loadSrc()
-    },
     playlist() {
-      this.loadSrc()
+      this.loadPlaylist()
     },
-    playIndex(newIndex) {
-      this.player.playlist.playItem(newIndex)
+    playIndex() {
+      this.getMarkers()
     },
   },
 };
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 .vlc-player {
-  display: inline-block;
+  display: flex;
   position: relative;
   width: 100%;
   background: #000;
+  .player-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  .remove-active {
+    .v-btn {
+      opacity: 0.8 !important;
+    }
+    .v-btn--active:before {
+      opacity: 0 !important;
+    }
+  }
+  .canvas-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    place-items: center;
+    justify-content: center;
+    background-color: #000;
+  }
+  .canvas {
+    background: #fff;
+    width: 100%;
+    height: auto;
+  }
 }
 .vlc-controls {
   position: absolute;
@@ -898,6 +1303,7 @@ export default {
       }
     }
     .marker {
+      cursor: pointer;
       position: absolute;
       width: 3px;
       height: 10px;
@@ -924,28 +1330,144 @@ export default {
   .duration {
     display: flex;
   }
+  .volume {
+    max-width: 100px;
+    .v-input__prepend-outer {
+      margin-right: 0;
+    }
+  }
+  // .hoverable {
+  //   &:hover {
+  //     .hidden {
+  //       width: 50px !important;
+  //       border-width: 1px !important;
+  //       .v-btn__content {
+  //         display: flex;
+  //       }
+  //     }
+  //   }
+  // }
+  // .hidden {
+  //   min-width: 0 !important;
+  //   width: 0 !important;
+  //   padding: 0 !important;
+  //   transition: .3s;
+  //   border-width: 0 !important;
+  //   .v-btn__content {
+  //     display: none;
+  //   }
+  // }
 }
-
-.vlc-player:focus {
-  outline: none;
+.playlist-wrapper {
+  min-width: 18vw;
+  box-shadow: none !important;
+  .v-card__title {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  .video-item {
+    position: relative;
+    overflow: hidden;
+    height: 10vw;
+  }
+  .video-name {
+    font-size: 1.8vh;
+    line-height: 1.2;
+    word-break: keep-all;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    overflow: hidden;
+    .path {
+      padding-left: 4px;
+      position: absolute;
+    }
+  }
+  .play-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    line-height: 1;
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    z-index: 1;
+    &::before {
+      content: '';
+      position: absolute;
+      background-color: currentColor;
+      width: 100%;
+      height: 100%;
+      border-radius: 50px;
+      filter: invert(1);
+      z-index: -1;
+    }
+  }
+  .thumb {
+    position: absolute;
+    min-height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1), transparent);
+  }
+  .toggle {
+    width: 100%;
+    .v-btn {
+      min-width: 30px;
+      width: 33.33%;
+      padding: 0;
+    }
+  }
 }
-
-.canvas-center {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  place-items: center;
-  justify-content: center;
-  background-color: #000;
-  pointer-events: none;
+.markers-wrapper {
+  min-width: 20vw;
+  border-left: 1px solid #5c5c5c;
+  box-shadow: none !important;
+  .v-card__title {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  .marker {
+    cursor: pointer;
+    padding: 0.4vw;
+    .thumb {
+      width: 19vw;
+      background-color: rgb(38, 50, 61);
+    }
+    .name {
+      margin: 0.5vw;
+      font-size: 1.4vw;
+    }
+    .time {
+      position: absolute;
+      left: 1px;
+      top: 1px;
+      line-height: 1;
+      padding: 2px;
+      border-radius: 2px;
+      font-size: 1.4vw;
+      background-color: rgba(59, 59, 59, 0.7);
+    }
+  }
+  .toggle {
+    width: 100%;
+    .v-btn {
+      min-width: 30px;
+      width: 25%;
+      padding: 0;
+    }
+  }
+  .delete {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
 }
-
-.canvas {
-  background: #fff;
-  width: 100%;
-  height: auto;
-}
-
 .status-text {
   font-family: "Segoe UI Symbol", Symbol, sans-serif;
   position: absolute;
@@ -957,7 +1479,6 @@ export default {
   color: white;
   text-shadow: 0 0 calc(var(--width) / 100) black;
 }
-
 .lds-ring {
   position: absolute;
   z-index: 3;
@@ -999,46 +1520,5 @@ export default {
   100% {
     transform: rotate(360deg);
   }
-}
-
-.media-information {
-  width: calc(var(--width) - 40px);
-  max-height: calc(var(--height) - 40px);
-
-  position: absolute;
-  z-index: 3;
-}
-
-.toolbar {
-  width: 100%;
-  height: 30px;
-  background-color: rgba(128, 128, 128, 0.2);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.close {
-  margin: 3px;
-  width: 24px;
-  height: 24px;
-  line-height: 24px;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px rgba(128, 128, 128, 0.5);
-  transition: background-color 0.15s;
-  user-select: none;
-}
-
-.close:hover {
-  background-color: rgba(128, 128, 128, 0.3);
-}
-
-.content {
-  padding: 20px;
-  text-align: left;
-  overflow-y: auto;
-  max-height: calc(var(--height) - 110px);
 }
 </style>

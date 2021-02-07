@@ -37,6 +37,7 @@
         </v-tooltip>
         Path to system player:
       </div>
+      <!-- TODO remove this option from settings JSON -->
       <v-row>
         <v-col cols="10">
           <v-text-field v-model="pathToSystemPlayer" outlined dense
