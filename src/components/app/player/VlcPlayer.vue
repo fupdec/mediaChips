@@ -8,7 +8,9 @@
         @keydown="handleKey" @wheel="changeVolume">
         <canvas ref="canvas" class="canvas"/>
       </div>
-      <v-card class="vlc-controls" tile>
+      <v-card class="vlc-controls" tile 
+        @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
+        :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:readyState===0?0.5:1}">
         <v-card-actions class="timeline pa-1">
           <v-slider @change="seek($event)" :value="currentTime"
             min="0" step="1" :max="duration" hide-details/>
@@ -132,19 +134,20 @@
           <div v-if="markers.length">
             <div v-for="marker in markers" :key="marker.id">
               <div @click="jumpTo(marker.time)" v-if="(markersType.includes(marker.type.toLowerCase()))" class="marker">
-                <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb">
+                <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb" 
+                  gradient="to bottom, rgba(0, 0, 0, 0.5), transparent">
                   <span class="time">{{msToTime(marker.time*1000)}}</span>
-                  <v-btn @click="openDialogRemoveMarker(marker)" icon color="red" class="delete">
+                  <div class="name">
+                    <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
+                    <v-icon v-if="marker.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
+                    <v-icon v-if="marker.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
+                    <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
+                    <span>{{marker.name}}</span>
+                  </div>
+                  <v-btn @click="openDialogRemoveMarker(marker)" height="25" width="25" outlined icon color="red" class="delete">
                     <v-icon>mdi-delete</v-icon>
                   </v-btn>
                 </v-img>
-                <div class="name">
-                  <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
-                  <v-icon v-if="marker.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
-                  <v-icon v-if="marker.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
-                  <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
-                  <span>{{marker.name}}</span>
-                </div>
               </div>
             </div>
           </div>
@@ -198,7 +201,7 @@
                 </span>
                 <span v-if="playIndex===i" class="play-state overline text--primary">
                   <v-icon class="pl-2 pr-1">mdi-play</v-icon>
-                  <span class="pr-4">Now playing</span>
+                  <span class="pr-4 text">Now playing</span>
                 </span>
               </v-list-item>
             </v-list-item-group>
@@ -213,7 +216,9 @@
         <v-card-title class="headline">
           Marker with tag on {{msToTime(seektime)}}
           <v-spacer></v-spacer>
-          <v-icon>mdi-map-marker-plus</v-icon>
+          <v-btn @click="dialogMarkerTag=false" icon>
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-divider></v-divider>
         <vuescroll>
@@ -266,7 +271,9 @@
         <v-card-title class="headline">
           Marker with performer on {{msToTime(seektime)}}
           <v-spacer></v-spacer>
-          <v-icon>mdi-map-marker-plus</v-icon>
+          <v-btn @click="dialogMarkerPerformer=false" icon>
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-divider></v-divider>
         <vuescroll>
@@ -320,7 +327,9 @@
         <v-card-title class="headline">
           Marker with bookmark on {{msToTime(seektime)}}
           <v-spacer></v-spacer>
-          <v-icon>mdi-map-marker-plus</v-icon>
+          <v-btn @click="dialogMarkerBookmark=false" icon>
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-divider></v-divider>
         <vuescroll>
@@ -345,15 +354,14 @@
         </v-card-title>
         <v-card-text class="mt-6 text-center" v-if="markerForRemove.time">
           <div @click="jumpTo(markerForRemove.time)">
-            <v-img :src="getMarkerImgUrl(markerForRemove.id)" :aspect-ratio="16/9" class="thumb">
-              <span class="time">{{msToTime(markerForRemove.time*1000)}}</span>
-            </v-img>
+            <v-img :src="getMarkerImgUrl(markerForRemove.id)" :aspect-ratio="16/9" class="thumb"/>
             <div class="mt-2">
               <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" left small :color="getTag(markerForRemove.name).color">mdi-tag</v-icon>
               <v-icon v-if="markerForRemove.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
               <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
               <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
-              <span>{{markerForRemove.name}}</span>
+              <span>{{markerForRemove.name}}</span> at 
+              <span>{{msToTime(markerForRemove.time*1000)}}</span>
             </div>
           </div>
         </v-card-text>
@@ -505,6 +513,8 @@
 
 // on loadeddata (when width and height of frame are known, set element size to proper dimensions,
 // (what happens for size on src change for htmlvideo?))
+// fix markers position on timeline
+// fix key press for control player
 const { ipcRenderer } = require('electron')
 const fs = require("fs")
 const path = require('path')
@@ -1297,6 +1307,18 @@ export default {
   width: 100%;
   background: #000;
   &.fullscreen {
+    .vlc-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 800px;
+      border-radius: 5px 5px 0 0 !important;
+      margin: auto;
+    }
+    .canvas-wrapper {
+      max-height: 100%;
+    }
     .markers-wrapper,
     .playlist-wrapper {
       .items {
@@ -1307,6 +1329,8 @@ export default {
   .player-wrapper {
     position: relative;
     width: 100%;
+    display: flex;
+    flex-direction: column;
   }
   .remove-active {
     .v-btn {
@@ -1319,6 +1343,7 @@ export default {
   .canvas-wrapper {
     width: 100%;
     height: 100%;
+    max-height: calc(100vh - 36px - 80px);
     display: flex;
     place-items: center;
     justify-content: center;
@@ -1331,10 +1356,7 @@ export default {
   }
 }
 .vlc-controls {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  opacity: 0.9;
+  position: relative;
   .timeline {
     position: relative;
     &:hover {
@@ -1417,7 +1439,7 @@ export default {
     height: 10vw;
   }
   .video-name {
-    font-size: 1.8vh;
+    font-size: 1vw;
     line-height: 1.2;
     word-break: keep-all;
     position: absolute;
@@ -1450,6 +1472,9 @@ export default {
       filter: invert(1);
       z-index: -1;
     }
+    .text {
+      font-size: 1vw;
+    }
   }
   .thumb {
     position: absolute;
@@ -1471,7 +1496,7 @@ export default {
   }
 }
 .markers-wrapper {
-  min-width: 20vw;
+  min-width: 18vw;
   border-left: 1px solid #5c5c5c;
   box-shadow: none !important;
   .items {
@@ -1483,26 +1508,32 @@ export default {
   }
   .marker {
     cursor: pointer;
-    padding: 0.4vw;
+    &:hover {
+      .delete {
+        opacity: 1;
+      }
+    }
     .thumb {
-      width: 19vw;
+      width: 100%;
       background-color: rgb(38, 50, 61);
     }
     .name {
-      margin: 0.5vw;
-      font-size: 1.4vw;
+      position: absolute;
+      font-size: 1vw;
       display: flex;
       align-items: center;
+      left: 5px;
+      top: 1px;
     }
     .time {
       position: absolute;
-      left: 1px;
-      top: 1px;
+      bottom: 1px;
+      right: 1px;
       line-height: 1;
       padding: 2px;
       border-radius: 2px;
-      font-size: 1.4vw;
-      background-color: rgba(59, 59, 59, 0.7);
+      font-size: 1vw;
+      background-color: rgba(17, 17, 17, 0.6);
     }
   }
   .toggle {
@@ -1514,9 +1545,13 @@ export default {
     }
   }
   .delete {
+    opacity: 0;
+    transition: .3s;
     position: absolute;
-    right: 0;
+    left: 0;
     bottom: 0;
+    border-radius: 0 5px 0 0;
+    background-color: rgba(0, 0, 0, 0.5);
   }
 }
 .status-text {

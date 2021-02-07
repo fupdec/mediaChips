@@ -2,14 +2,14 @@
   <div class="video-player-wrapper">
     <v-card class="video-player" :outlined="!maximized">
       <v-card-title class="pa-0 title-bar" :class="{maximized:maximized}">
-        <v-tooltip bottom>
+        <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile width="46">
               <v-icon>mdi-television-play</v-icon> 
             </v-btn>
           </template>
           <span>Play video in system player</span>
-        </v-tooltip>
+        </v-tooltip> -->
         <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="editVideoInfo" v-on="on" icon tile>

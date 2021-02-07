@@ -203,6 +203,7 @@ ipcMain.on('openPlayer', (event, data) => {
   player.webContents.send('getDataForPlayer', data)
 })
 ipcMain.on('closePlayer', () => {
+  // TODO fix close player from panel. catch system event of window closing 
   player.hide()
 })
 ipcMain.handle('getDb', async (event, dbType) => {
