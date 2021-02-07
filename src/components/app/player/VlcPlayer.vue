@@ -165,7 +165,8 @@
         </v-btn>
       </v-card-actions>
       <v-card-actions class="pa-0">
-        <v-btn-toggle v-model="playlistMode" tile dense multiple color="primary" class="toggle">
+        <v-btn-toggle v-model="playlistMode" @change="changePlaylistMode" 
+          tile dense multiple color="primary" class="toggle">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <v-btn value="autoplay" v-on="on">
@@ -176,15 +177,7 @@
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn value="loop" v-on="on">
-                <v-icon>mdi-autorenew</v-icon>
-              </v-btn>
-            </template>
-            <span>Loop</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn value="shuffle" v-on="on">
+              <v-btn value="shuffle" v-on="on" disabled>
                 <v-icon>mdi-shuffle-variant</v-icon>
               </v-btn>
             </template>
@@ -595,7 +588,6 @@ export default {
     controlsList: [],
     crossOrigin: "",
     defaultMuted: false,
-    ended: false,
     error: null,
     networkState: HTMLMediaElement.NETWORK_EMPTY,
     seeking: false,
@@ -608,7 +600,7 @@ export default {
     playlist: [],
     playIndex: null,
     playlistLength: 0,
-    playlistMode: ['loop'],
+    playlistMode: ['autoplay'],
     // Markers
     isMarkersVisible: false,
     markers: [],
@@ -834,18 +826,7 @@ export default {
         this.currentTime = this.player.time / 1000;
         this.$emit("timeupdate", this.currentTime);
       });
-      this.player.on("ended", () => {
-        if (this.playlistMode.includes('loop')) {
-          this.currentTime = 0;
-          this.player.once("stop", () => {
-            this.player.play();
-            this.player.once("pause", this.player.play);
-          });
-        } else {
-          this.$emit("ended");
-          this.ended = true;
-        }
-      });
+      this.player.on("ended", () => {})
 
       this.player.on("durationChange", (duration) => {
         console.log("durationchange", duration);
@@ -875,11 +856,7 @@ export default {
             console.log("canplaythrough");
           }
         };
-        this.player.once("frameReady", () => {
-          this.player.mute = this.defaultMuted;
-          this.player.pause();
-          this.player.once("pause", () => (this.preventStatusUpdate = false));
-        });
+        this.player.once("frameReady", () => {})
         this.player.on("stateChange", onStateChange);
       });
 
@@ -960,7 +937,6 @@ export default {
     loadPlaylist() {
       this.preventStatusUpdate = true
       this.duration = NaN
-      this.ended = false
       this.readyState = HTMLMediaElement.HAVE_NOTHING
       this.networkState = HTMLMediaElement.NETWORK_LOADING
       this.currentTime = 0
@@ -1283,6 +1259,13 @@ export default {
     getFileNameFromPath(videoPath) {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
+    changePlaylistMode() {
+      if (this.playlistMode.includes('autoplay')) {
+        this.player.playlist.mode = 'Loop'
+      } else {
+        this.player.playlist.mode = 'Normal'
+      }
+    },
   },
   watch: {
     currentTime(newValue, oldValue) {
@@ -1471,7 +1454,7 @@ export default {
     width: 100%;
     .v-btn {
       min-width: 30px;
-      width: 33.33%;
+      width: 50%;
       padding: 0;
     }
   }
