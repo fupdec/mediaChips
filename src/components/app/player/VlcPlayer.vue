@@ -127,8 +127,8 @@
           </v-btn>
         </v-btn-toggle>
       </v-card-actions>
-      <vuescroll>
-        <v-card-text class="items pa-0">
+      <vuescroll class="items">
+        <v-card-text class="pa-0">
           <div v-if="markers.length">
             <div v-for="marker in markers" :key="marker.id">
               <div @click="jumpTo(marker.time)" v-if="(markersType.includes(marker.type.toLowerCase()))" class="marker">
@@ -185,8 +185,8 @@
           </v-tooltip>
         </v-btn-toggle>
       </v-card-actions>
-      <vuescroll ref="playlist" class="playlist">
-        <v-card-text class="items pa-0">
+      <vuescroll ref="playlist" class="items">
+        <v-card-text class="pa-0">
           <v-list dense class="pa-0">
             <v-list-item-group v-model="playIndex" mandatory color="primary">
               <v-list-item v-for="(video, i) in videos" :key="video.id" :ref="`videoItem${i}`"
@@ -1296,6 +1296,14 @@ export default {
   position: relative;
   width: 100%;
   background: #000;
+  &.fullscreen {
+    .markers-wrapper,
+    .playlist-wrapper {
+      .items {
+        height: calc(100vh - 80px) !important;
+      }
+    }
+  }
   .player-wrapper {
     position: relative;
     width: 100%;
@@ -1396,6 +1404,9 @@ export default {
 .playlist-wrapper {
   min-width: 18vw;
   box-shadow: none !important;
+  .items {
+    height: calc(100vh - 116px) !important;
+  }
   .v-card__title {
     flex-wrap: nowrap;
     white-space: nowrap;
@@ -1463,6 +1474,9 @@ export default {
   min-width: 20vw;
   border-left: 1px solid #5c5c5c;
   box-shadow: none !important;
+  .items {
+    height: calc(100vh - 116px) !important;
+  }
   .v-card__title {
     flex-wrap: nowrap;
     white-space: nowrap;
