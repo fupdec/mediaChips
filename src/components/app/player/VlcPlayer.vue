@@ -62,26 +62,27 @@
             <v-btn @click="jumpToNextMarker" small>
               <v-icon>mdi-map-marker-right</v-icon>
             </v-btn>
-            <v-menu offset-y nudge-top="30" nudge-right="282" attach=".vlc-controls">
+            <v-menu offset-y nudge-top="20" nudge-right="282" attach=".vlc-controls">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn v-bind="attrs" v-on="on" small>
                   <v-icon>mdi-map-marker-plus</v-icon>
                 </v-btn>
               </template>
-              <v-card style="overflow:hidden;">
-                <v-btn @click="openDialogMarkerTag" icon tile width="50" height="36">
+              
+              <v-btn-toggle class="remove-active" dense>
+                <v-btn @click="openDialogMarkerTag" small>
                   <v-icon size="20">mdi-tag</v-icon> 
                 </v-btn>
-                <v-btn icon tile width="50" height="36" class="remove-active">
-                  <v-icon size="20">mdi-account</v-icon> 
+                <v-btn small>
+                  <v-icon @click="openDialogMarkerPerformer" size="20">mdi-account</v-icon> 
                 </v-btn>
-                <v-btn @click="addMarker('favorite')" icon tile width="50" height="36">
+                <v-btn @click="addMarker('favorite')" small>
                   <v-icon size="20">mdi-heart</v-icon> 
                 </v-btn>
-                <v-btn @click="openDialogMarkerBookmark" icon tile width="50" height="36">
+                <v-btn @click="openDialogMarkerBookmark" small>
                   <v-icon size="20">mdi-bookmark</v-icon> 
                 </v-btn>
-              </v-card>
+              </v-btn-toggle>
             </v-menu>
           </v-btn-toggle>
           <v-btn-toggle class="remove-active">
@@ -226,7 +227,7 @@
           <v-card-text class="pb-0">
             <v-autocomplete
               v-model="markerTag" outlined clearable hide-details
-              :items="tagsAll" label="Tag for marker" placeholder="Choose a tag for marker"
+              :items="tagsAll" label="Tag" placeholder="Choose a tag for the marker"
               item-text="name" class="hidden-close"
               item-value="name" no-data-text="No more tags"
               :menu-props="{contentClass:'list-with-preview'}"
@@ -261,6 +262,60 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="addMarker('tag')" :disabled="!markerTag" class="ma-4" color="primary">
+            <v-icon left>mdi-plus</v-icon> Add marker
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogMarkerPerformer" max-width="500" scrollable eager>
+      <v-card>
+        <v-card-title class="headline">
+          Marker with performer on {{msToTime(seektime)}}
+          <v-spacer></v-spacer>
+          <v-icon>mdi-map-marker-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text class="pb-0">
+            <v-autocomplete
+              v-model="markerPerformer" outlined clearable hide-details
+              :items="performersAll" label="Performer" placeholder="Choose a performer for the marker"
+              item-text="name" class="hidden-close"
+              item-value="name" no-data-text="No more performers"
+              :menu-props="{contentClass:'list-with-preview'}"
+              :filter="filterItemsPerformers"
+            >
+              <template v-slot:selection="data">
+                <v-chip
+                  v-bind="data.attrs" :input-value="data.selected" 
+                  @click="data.select" text-color="white" 
+                  @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                  @mouseleave.stop="$store.state.hoveredImage=false"
+                > <span>{{ data.item.name }}</span>
+                </v-chip>
+              </template>
+              <template v-slot:item="data">
+                <div class="list-item"
+                  @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                  @mouseleave.stop="$store.state.hoveredImage=false"> 
+                  <v-icon left size="14" :color="data.item.favorite==false?'grey':'pink'">mdi-heart</v-icon>
+                  <v-rating v-model="data.item.rating" class="rating-inline small mr-2"
+                    color="yellow darken-3" background-color="grey darken-1"
+                    empty-icon="$ratingFull" half-icon="mdi-star-half-full"
+                    dense half-increments readonly size="12"/>
+                  <span>{{data.item.name}}</span>
+                  <span v-if="data.item.aliases.length" class="aliases"> 
+                    aka {{data.item.aliases.join(', ').slice(0,50)}}
+                  </span>
+                </div>
+              </template>
+            </v-autocomplete>
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="addMarker('performer')" :disabled="!markerPerformer" class="ma-4" color="primary">
             <v-icon left>mdi-plus</v-icon> Add marker
           </v-btn>
           <v-spacer></v-spacer>
@@ -584,8 +639,10 @@ export default {
     isMarkersVisible: false,
     markers: [],
     markerTag: '',
+    markerPerformer: '',
     markerBookmarkText: '',
     dialogMarkerTag: false,
+    dialogMarkerPerformer: false,
     dialogMarkerBookmark: false,
     dialogRemoveMarker: false,
     dialogAddToPlaylist: false,
@@ -707,11 +764,18 @@ export default {
       if (this.tagsDb === null) return []
       return _.filter(this.tagsDb, t=>(t.category.includes('video')))
     },
+    performersAll() {
+      if (this.performersDb === null) return []
+      return this.performersDb
+    },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
     videosDb() {
       return this.$store.state.videosDb
+    },
+    performersDb() {
+      return this.$store.state.performersDb
     },
     tagsDb() {
       return this.$store.state.tagsDb
@@ -1149,17 +1213,24 @@ export default {
       this.dialogMarkerTag = true
       this.seektime = this.player.time
     },
+    openDialogMarkerPerformer() {
+      this.dialogMarkerPerformer = true
+      this.seektime = this.player.time
+    },
     openDialogMarkerBookmark() {
       this.dialogMarkerBookmark = true
       this.seektime = this.player.time
     },
-    addMarker(type) {
-      if (type === 'performer') return
+    addMarker(type) { 
       let text = ''
       let time = Math.floor(this.player.time / 1000)
       if (type === 'tag') {
         text = this.markerTag
         this.dialogMarkerTag = false
+      }
+      if (type === 'performer') {
+        text = this.markerPerformer
+        this.dialogMarkerPerformer = false
       }
       if (type === 'favorite') {}
       if (type === 'bookmark') {
@@ -1200,6 +1271,16 @@ export default {
       let found = false
       for (let i=0;i<alternateNames.length;i++) {
         if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
+      }
+      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
+      return found
+    },
+    filterItemsPerformers(item, queryText, itemText) {
+      const searchText = queryText.toLowerCase()
+      const aliases = item.aliases
+      let found = false
+      for (let i=0;i<aliases.length;i++) {
+        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
       }
       if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
       return found
@@ -1442,6 +1523,8 @@ export default {
     .name {
       margin: 0.5vw;
       font-size: 1.4vw;
+      display: flex;
+      align-items: center;
     }
     .time {
       position: absolute;

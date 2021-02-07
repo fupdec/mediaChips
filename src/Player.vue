@@ -20,11 +20,14 @@ const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
 
+import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
+
 export default {
   name: 'Player',
   components: {
     VideoPlayer: () => import('@/components/elements/VideoPlayer.vue'),
   },
+  mixins: [HoveredImageFunctions],
   mounted() {
     this.$nextTick(function () {
       this.$store.state.pathToUserData = app.getPath('userData')
@@ -42,9 +45,14 @@ export default {
     },
     getHoveredImage() {
       let imgType = this.$store.state.hoveredImageType
+      if (imgType === 'performer') {
+        return this.getImgPerformersUrl(this.hoveredImageId)
+      }
       if (imgType === 'tag') {
-        let img = path.join(this.pathToUserData, `/media/tags/${this.hoveredImageId}_.jpg`)
-        return fs.existsSync(img) ? img : path.join(this.pathToUserData,'/img/templates/tag.png')
+        return this.getImgTagsUrl(this.hoveredImageId)
+      }
+      if (imgType === 'website') {
+        return this.getImgWebsiteUrl(this.hoveredImageId)
       }
     },
   },
