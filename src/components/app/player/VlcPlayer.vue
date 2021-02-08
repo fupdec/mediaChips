@@ -882,7 +882,9 @@ export default {
             console.log("canplaythrough");
           }
         };
-        this.player.once("frameReady", () => {})
+        this.player.once("frameReady", () => {
+          this.getCanvasSizes()
+        })
         this.player.on("stateChange", onStateChange);
       });
 
@@ -902,7 +904,6 @@ export default {
       this.videos = data.videos
       this.playlist = _.cloneDeep(data.videos.map(video=>'file:///'+video.path))
       this.playIndex = _.findIndex(data.videos, {id: data.id})
-      this.getCanvasSizes()
     },
     showBuffering() {
       this.$emit("waiting");
@@ -988,12 +989,14 @@ export default {
     },
     toggleFullscreen() {
       if (this.fullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen()
       } else {
-        let container = this.$refs.player;
-        container.requestFullscreen();
+        let container = this.$refs.player
+        container.requestFullscreen()
       }
-      this.getCanvasSizes()
+      setTimeout(() => {
+        this.getCanvasSizes()
+      }, 100)
     },
     iconUrl(icon) {
       return `https://fonts.gstatic.com/s/i/materialicons/${icon}/v6/24px.svg?download=true`;
@@ -1312,7 +1315,6 @@ export default {
       this.loadPlaylist()
     },
     playIndex() {
-      this.getCanvasSizes()
       this.getMarkers()
     },
   },
