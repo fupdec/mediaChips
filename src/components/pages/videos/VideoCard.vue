@@ -9,7 +9,7 @@
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
-        <v-img :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb"/>
+        <v-img :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb" contain/>
         <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
           <v-icon size="40">mdi-play</v-icon>
         </v-btn>
@@ -599,6 +599,7 @@ export default {
   .thumb {
     width: 100%;
     position: absolute;
+    background-color: #000;
   }
   .preview {
     opacity: 0;
@@ -613,7 +614,7 @@ export default {
     video {
       min-width: 100%;
       min-height: 100%;
-      object-fit: cover;
+      object-fit: contain;
     }
   }
   .rating,
