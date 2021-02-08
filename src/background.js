@@ -81,6 +81,14 @@ function createWindow(devPath, prodPath) {
     window.loadURL(`app://./${prodPath}`)
   }
 
+  window.on('close', (e) => {
+    if (devPath == 'player' || prodPath == 'player.html') {
+      e.preventDefault()
+      window.hide()
+      window.webContents.send('closePlayer')
+    }
+  })
+
   window.on('closed', () => { 
     window = null 
     if (devPath == 'index' || prodPath == 'index.html') app.quit()
@@ -211,7 +219,7 @@ ipcMain.handle('getDb', async (event, dbType) => {
   const database = await getDb()
   player.webContents.send( 'getDbAnswer', database )
 })
-function getDb () {
+function getDb() {
   return new Promise((resolve) => {
     ipcMain.once('getDbAnswer', (event, database) => {
       resolve(database)

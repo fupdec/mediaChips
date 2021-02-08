@@ -10,7 +10,7 @@
       </div>
       <v-card class="vlc-controls" tile 
         @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
-        :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:readyState===0?0.5:1}">
+        :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:fullscreen?0.7:1}">
         <v-card-actions class="timeline pa-1">
           <v-slider @change="seek($event)" :value="currentTime"
             min="0" step="1" :max="duration" hide-details/>
@@ -210,7 +210,7 @@
       </vuescroll>
     </v-card>
 
-    
+
     <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
       <v-card>
         <v-card-title class="headline">
@@ -565,6 +565,9 @@ export default {
 
     ipcRenderer.on('getDataForPlayer', (event, data) => {
       this.updateVideoPlayer(data)
+    })
+    ipcRenderer.on('closePlayer', () => {
+      this.player.stop()
     })
   },
   data: () => ({
@@ -1195,17 +1198,17 @@ export default {
         this.dialogMarkerBookmark = false
       }
     
-      let video = _.cloneDeep(this.videos[this.playIndex])
+      let videoId = _.cloneDeep(this.videos[this.playIndex].id)
       const marker = {
         id: shortid.generate(),
-        videoId: video.id,
+        videoId: videoId,
         type: type,
         name: text,
         time: time,
       } 
 
       // TODO fix when add new tag to the video replaces all tags
-      ipcRenderer.send('addMarker', marker, this.markerTag, video)
+      ipcRenderer.send('addMarker', marker, this.markerTag, videoId)
 
       this.markerTag = ''
       this.markerBookmarkText = ''
@@ -1312,7 +1315,8 @@ export default {
       bottom: 0;
       left: 0;
       right: 0;
-      width: 800px;
+      width: 80%;
+      min-width: 800px;
       border-radius: 5px 5px 0 0 !important;
       margin: auto;
     }

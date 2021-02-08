@@ -41,7 +41,8 @@ export default {
         }).write()
       }
     },
-    addMarker(marker, markerTag, video) {
+    addMarker(marker, markerTag, videoId) {
+      let video = this.$store.getters.videos.find({id: videoId}).value()
       this.$store.getters.markers.push(marker).write()
       if (marker.type.toLowerCase() == 'tag') {
         if (!video.tags.includes(markerTag)) {

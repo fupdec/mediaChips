@@ -27,7 +27,7 @@
         <v-radio label="System player" value="1"></v-radio>
       </v-radio-group>
       
-      <div class="subtitle mt-10 mb-1">
+      <!-- <div class="subtitle mt-10 mb-1">
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
             <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
@@ -37,7 +37,6 @@
         </v-tooltip>
         Path to system player:
       </div>
-      <!-- TODO remove this option from settings JSON -->
       <v-row>
         <v-col cols="10">
           <v-text-field v-model="pathToSystemPlayer" outlined dense
@@ -46,7 +45,8 @@
         <v-col cols="2">
           <v-btn color="secondary" @click="testPathToSystemPlayer" block height="calc(100% - 26px)">Test</v-btn>
         </v-col>
-      </v-row>
+      </v-row> -->
+      <!-- TODO remove this option from settings JSON -->
 
       <v-row>
         <v-col cols="12" sm="6">
