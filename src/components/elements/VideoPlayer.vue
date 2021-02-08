@@ -122,24 +122,23 @@
           <v-icon v-else color="pink">mdi-heart</v-icon>
         </v-btn> -->
         <div class="window-controls">
-          <v-btn text tile small width="46" height="36" @click="minimize">
+          <v-btn text tile small width="46" height="32" @click="minimize">
             <v-icon size="16">mdi-minus</v-icon>
           </v-btn>
-          <v-btn v-if="maximized" text tile small width="46" height="36" @click="unmaximize">
+          <v-btn v-if="maximized" text tile small width="46" height="32" @click="unmaximize">
             <v-icon size="18">mdi-window-restore</v-icon>
           </v-btn>
-          <v-btn v-else text tile small width="46" height="36" @click="maximize">
+          <v-btn v-else text tile small width="46" height="32" @click="maximize">
             <v-icon size="14">mdi-square-outline</v-icon>
           </v-btn>
-          <v-btn text tile small width="46" height="36" @click="close" 
+          <v-btn text tile small width="46" height="32" @click="close" 
             class="close-app-btn" color="#d70000"> 
             <v-icon size="18">mdi-window-close</v-icon>
           </v-btn>
         </div>
       </v-card-title>
       <div class="video-player-container">
-        <VlcPlayer ref="player" enableStatusText 
-          @nowPlaying="updateNowPlaying($event)"/>
+        <VlcPlayer ref="player" @nowPlaying="updateNowPlaying($event)"/>
 
         <div class="thumb" style="display:none;"> 
           <canvas ref="canvas" :width="videoWidth/6" :height="videoHeight/6"/>
@@ -715,6 +714,7 @@ export default {
   top: 0;
   right: 0;
   height: 100%;
+  display: flex;
   .v-btn:not(.v-btn--round).v-size--small {
     min-width: 0;
   }

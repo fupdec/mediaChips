@@ -353,7 +353,7 @@ export default {
       let countries = this.countries.map(c=>c.name)
       
       this.$store.getters.performers.each(p=>{
-        if (typeof p.cup === 'string') {
+        if (typeof p.cup === 'string' && p.cup !== undefined) {
           if (p.cup.length == 0) p.cups = []
           else p.cups = [p.cup]
           p.cup = undefined
@@ -407,17 +407,25 @@ export default {
       let pussyLips = []
       let pussyHair = []
       for (let i=0; i<performers.length; i++) {
-        for (let p=0; p<performers[i].body.length; p++) {
-          body.push(performers[i].body[p])
+        if (performers[i].body!==undefined) {
+          for (let p=0; p<performers[i].body.length; p++) {
+            body.push(performers[i].body[p])
+          }
         }
-        for (let p=0; p<performers[i].pussy.length; p++) {
-          pussy.push(performers[i].pussy[p])
+        if (performers[i].pussy!==undefined) {
+          for (let p=0; p<performers[i].pussy.length; p++) {
+            pussy.push(performers[i].pussy[p])
+          }
         }
-        for (let p=0; p<performers[i].pussyLips.length; p++) {
-          pussyLips.push(performers[i].pussyLips[p])
+        if (performers[i].pussyLips!==undefined) {
+          for (let p=0; p<performers[i].pussyLips.length; p++) {
+            pussyLips.push(performers[i].pussyLips[p])
+          }
         }
-        for (let p=0; p<performers[i].pussyHair.length; p++) {
-          pussyHair.push(performers[i].pussyHair[p])
+        if (performers[i].pussyHair!==undefined) {
+          for (let p=0; p<performers[i].pussyHair.length; p++) {
+            pussyHair.push(performers[i].pussyHair[p])
+          }
         }
       }
       let bodyUnique = [...new Set(body)]

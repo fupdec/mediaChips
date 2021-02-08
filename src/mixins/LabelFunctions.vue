@@ -69,33 +69,6 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
-    addNewTabTag(tagName) {
-      console.log(tagName)
-      let tabId, tabName
-      if (tagName) {
-        tabId = this.getTagId(tagName)
-        tabName = tagName
-      } else if (this.tag) {
-        tabId = this.tag.id
-        tabName = this.tag.name
-      } else return
-
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with tag "${tabName}" already exists`
-        })
-        return
-      }
-
-      let tab = { 
-        name: tabName,
-        link: `/tag/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     tagLink(itemName) {
       return `/tag/:${this.getTagId(itemName)}?tabId=default`
     },

@@ -196,7 +196,7 @@ export default {
       return this.$store.getters.filteredVideos.value().length
     },
     isVideosPage() {
-      const pages = ['/videos/:','/performer/:','/website/:','/tag/:']
+      const pages = ['/videos/:','/performer/:','/website/:']
       return pages.some(page => this.$route.path.includes(page))
     },
   },

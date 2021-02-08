@@ -125,13 +125,6 @@
     <v-menu v-model="$store.state.Tags.menuCard" :position-x="$store.state.x" 
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
-        <v-list-item class="pr-1" link :disabled="!isSelectedSingleTag" @mouseup="addNewTab">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-tab-plus</v-icon> Open in a new tab
-          </v-list-item-title>
-          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
-        </v-list-item>
-        <v-divider class="ma-1"></v-divider>
         <v-list-item link @click="$store.state.Tags.dialogEditTag = true"
           :disabled="!isSelectedSingleTag">
           <v-list-item-title>
@@ -324,23 +317,6 @@ export default {
     },
   },
   methods: {
-    addNewTab() {
-      let tabId = this.$store.getters.getSelectedTags[0]
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with tag "${this.selectedTags()}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.selectedTags(), 
-        link: `/tag/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     selectedTags(list) {
       let ids = this.$store.getters.getSelectedTags
       let tags = this.$store.getters.tags

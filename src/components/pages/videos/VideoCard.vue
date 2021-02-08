@@ -5,13 +5,11 @@
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
       :key="cardKey"
     >
-      <v-responsive @click.middle="addNewTabVideo"
+      <v-responsive 
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
-        <v-img @click="openVideoPage" title="Open video page"
-          :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb"
-        />
+        <v-img :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb"/>
         <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
           <v-icon size="40">mdi-play</v-icon>
         </v-btn>
@@ -45,7 +43,7 @@
             <span>{{calcHeightValue(video.resolution)}}</span>
           </div>
         </div>
-        <div @click="openVideoPage" class="preview"
+        <div class="preview"
           :style="`animation-delay: ${delayVideoPreview}.7s`">
           <video ref="video" autoplay muted loop />
         </div>
@@ -111,12 +109,10 @@
       <v-card-actions class="px-1 py-0 video-tags" :class="{hidden: isTagsHidden}">
         <v-chip-group column>
           <v-icon left>mdi-tag-outline</v-icon>
-          <v-chip v-for="tag in video.tags" :key="tag" :to="tagLink(tag)"
+          <v-chip v-for="tag in video.tags" :key="tag"
             outlined :color="colorTag(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
-            @click="$store.state.hoveredImage=false"
-            @click.middle="addNewTabTag(tag)"
           > {{ tag }}
           </v-chip>
         </v-chip-group>
@@ -145,7 +141,6 @@
 </template>
 
 <script>
-const { dialog } = require('electron').remote
 const shell = require('electron').shell
 const fs = require('fs')
 const path = require('path')
@@ -266,30 +261,10 @@ export default {
     },
   },
   methods: {
-    addNewTabVideo() {
-      let tabId = this.video.id
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with video ${this.fileName} already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.fileName,
-        link: `/video/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'video-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
-    },
-    openVideoPage() {
-      this.$router.push(`/video/:${this.video.id}?tabId=default`)
     },
     setVideoProgress(percent) {
       this.$refs.video.currentTime = Math.floor(this.video.duration*percent)

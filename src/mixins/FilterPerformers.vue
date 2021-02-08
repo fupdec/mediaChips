@@ -22,9 +22,6 @@ export default {
     isPerformerPage() {
       return this.$route.path.includes('/performer/:')  
     },
-    isTagPage() {
-      return this.$route.path.includes('/tag/:')  
-    },
     isWebsitePage() {
       return this.$route.path.includes('/website/:')  
     },
@@ -60,9 +57,6 @@ export default {
       let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
       if (this.tabId === 'default') {
         this.$store.state.Performers.filtersReserved = newFilters
-      } else if (this.$route.path.includes('/tag/:')) {
-        let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
-        this.$store.getters.tabsDb.find({id: this.tabId}).get('filters').assign({performers: newFilters}).write()
       } else {
         this.$store.getters.tabsDb.find({id: this.tabId}).assign({
           name: this.$store.getters.performersFilters,
@@ -76,9 +70,6 @@ export default {
       if (this.isPerformerPage) {
         let item = this.getItem('performers')
         this.updateFiltersOfPerformers('performers', [item.name])
-      } else if (this.isTagPage) {
-        let item = this.getItem('tags')
-        this.updateFiltersOfPerformers('tags', [item.name])
       } else if (this.isWebsitePage) {
         let item = this.getItem('websites')
         this.updateFiltersOfPerformers('websites', [item.name])

@@ -152,15 +152,6 @@
     <v-menu v-model="$store.state.Videos.menuCard" :position-x="$store.state.x" leave-absolute
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
-        <v-list-item  class="pr-1" link @mouseup="addNewTab" :disabled="!isSelectedSingleVideo">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-tab-plus</v-icon> Open in a new tab
-          </v-list-item-title>
-          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
-        </v-list-item>
-
-        <v-divider class="ma-1"></v-divider>
-
         <v-list-item  class="pr-1" link @mouseup="dialogAddToPlaylist=true">
           <v-list-item-title>
             <v-icon left size="18">mdi-playlist-plus</v-icon> Add to playlist
@@ -181,12 +172,6 @@
           link @mouseup="revealInFileExplorer">
           <v-list-item-title>
             <v-icon left size="18">mdi-folder-open</v-icon> Reveal in File Explorer
-          </v-list-item-title>
-          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
-        </v-list-item>
-        <v-list-item class="pr-1" link @mouseup="$store.state.Videos.dialogCreatePreview = true">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-filmstrip</v-icon> Create Preview
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
@@ -508,23 +493,6 @@ export default {
     },
   },
   methods: {
-    addNewTab() {
-      let tabId = this.$store.getters.getSelectedVideos[0]
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with video "${this.selectedVideos()}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.selectedVideos(), 
-        link: `/video/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'video-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
 		selectedVideos(list) {
       let ids = this.$store.getters.getSelectedVideos
       let vids = this.$store.getters.videos
@@ -548,7 +516,7 @@ export default {
       this.$store.state.Videos.dialogCreatePreview = false
       this.createPreviewLoading = false
     },
-    createPreviewForVideo() {
+    createPreviewForVideo() { // TODO delete feature create preview
       this.createPreviewLoading = true
       this.createPreviewStarted = true
       this.createPreviewProgress = 0

@@ -3,8 +3,7 @@
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
       :data-id="tag.id" class="tag-card" outlined hover 
       :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
-      <v-img @click="openTagPage" @click.middle="addNewTabTag()" :title='`Open tag "${tagName}"`'
-        class="tag-card-img" :src="imgMain" :aspect-ratio="1">
+      <v-img class="tag-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>
         <v-icon v-if="tag.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
           mdi-bookmark
@@ -102,9 +101,6 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
-    openTagPage() {
-      this.$router.push(`/tag/:${this.tag.id}?tabId=default`)
-    },
     getImgUrl(tagId) {
       let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/tags/${tagId}_.jpg`)
       return this.checkImageExist(imgPath)
@@ -156,9 +152,6 @@ export default {
 <style lang="less">
 .tag-card {
   cursor: default;
-  .v-image {
-    cursor: pointer;
-  }
   &:hover {
     .bookmark {
       opacity: 0.7;

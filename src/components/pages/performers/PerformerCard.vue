@@ -93,12 +93,10 @@
 
       <v-card-text v-if="performer.tags.length>0 && !isTagsHidden" class="px-1 py-0">
         <v-chip-group column>
-          <v-chip v-for="tag in performer.tags" :key="tag" :to="tagLink(tag)"
+          <v-chip v-for="tag in performer.tags" :key="tag"
             outlined :color="getTagColor(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
-            @click="$store.state.hoveredImage=false"
-            @click.middle="addNewTabTag(tag)"
           > {{ tag }}
           </v-chip>
         </v-chip-group>
@@ -107,12 +105,10 @@
       <v-card-text v-if="tagsFromVideos.length>0 && !isVideoTagsHidden" class="pa-1 py-0">
         <div class="caption px-1">Tags from videos</div>
         <v-chip-group column>
-          <v-chip v-for="tag in tagsFromVideos" :key="tag" :to="tagLink(tag)"
+          <v-chip v-for="tag in tagsFromVideos" :key="tag"
             outlined :color="getTagColor(tag)" 
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
-            @click="$store.state.hoveredImage=false"
-            @click.middle="addNewTabTag(tag)"
           > {{ tag }}
           </v-chip>
         </v-chip-group>

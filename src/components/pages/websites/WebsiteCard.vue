@@ -32,12 +32,10 @@
       <v-card-text v-if="website.videoTags.length>0 && !isVideoTagsHidden" class="pa-1 py-0">
         <div class="caption px-1">Tags from videos</div>
         <v-chip-group column>
-          <v-chip v-for="tag in website.videoTags" :key="tag" :to="tagLink(tag)"
+          <v-chip v-for="tag in website.videoTags" :key="tag"
             outlined x-small
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
-            @click="$store.state.hoveredImage=false"
-            @click.middle="addNewTabTag(tag)"
           > {{ tag }}
           </v-chip>
         </v-chip-group>

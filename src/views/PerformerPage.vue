@@ -132,12 +132,10 @@
                   <div class="param">Boobs <b>{{boobs}}</b></div>
                 </v-col>
                 <v-col cols="12" class="text-center pb-0">
-                  <v-chip v-for="tag in performer.tags" :key="tag" :to="`/tag/:${getTagId(tag)}`"
+                  <v-chip v-for="tag in performer.tags" :key="tag"
                     outlined class="mr-2 mb-1 px-2"
                     @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
                     @mouseleave.stop="$store.state.hoveredImage=false"
-                    @click="$store.state.hoveredImage=false"
-                    @click.middle="addNewTabTag(tag)"
                     >{{tag}}</v-chip>
                 </v-col>
                 <v-col v-if="tagsFromVideos.length && showTags" cols="12" class="text-center py-0">
@@ -160,8 +158,6 @@
                       outlined small class="mr-2 mb-1 px-2"
                       @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
                       @mouseleave.stop="$store.state.hoveredImage=false"
-                      @click="$store.state.hoveredImage=false"
-                      @click.middle="addNewTabTag(tag)"
                     >{{tag}}</v-chip>
                   </v-chip-group>
                 </v-col>
@@ -573,23 +569,6 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
-    addNewTabTag(tagName) {
-      let tabId = this.getTagId(tagName)
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with tag "${tagName}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: tagName,
-        link: `/tag/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     getTagId(itemName) {
       return this.$store.getters.tags.find({name: itemName}).value().id
     },
@@ -629,9 +608,6 @@ export default {
       } else this.isScrollToTopVisible = false
       // parallax effect
       this.header = `top:${vertical.scrollTop * 0.7}px`
-    },
-    getTagId(itemName) {
-      return this.$store.getters.tags.find({name: itemName}).value().id
     },
     initFilters() {
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {

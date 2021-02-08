@@ -30,6 +30,9 @@
 
 
 <script>
+const fs = require('fs')
+import { ipcRenderer } from 'electron'
+
 export default {
   name: 'VideosAppbar',
   components: {
@@ -47,16 +50,28 @@ export default {
   methods: {
     openRandomVideo() {
       const rand = this.getRandomIntInclusive(1, this.$store.getters.videosTotal)
-      const videoId = this.$store.getters.videos.value()[rand].id
-      this.openVideoPage(videoId)
+      const video = this.$store.getters.videos.value()[rand]
+      this.playVideo(video)
     },
     getRandomIntInclusive(min, max) {
       min = Math.ceil(min)
       max = Math.floor(max)
       return Math.floor(Math.random() * (max - min + 1)) + min
     },
-    openVideoPage(videoId) {
-      this.$router.push(`/video/:${videoId}?tabId=default`)
+    playVideo(video) {
+      const pathToVideo = video.path
+      if (!fs.existsSync(pathToVideo)) {
+        this.$store.state.Videos.dialogErrorPlayVideo = true
+        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
+        return
+      }
+      if (this.$store.state.Settings.playerType === '0') {
+        let data = {
+          videos: [video],
+          id: video.id,  
+        }
+        ipcRenderer.send('openPlayer', data)
+      } else shell.openPath(pathToVideo)
     },
   },
   watch: {

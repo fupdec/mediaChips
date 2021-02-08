@@ -2,16 +2,12 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 const Home = () => import('../views/HomePage.vue')
 const HomeAppbar = () => import('../components/pages/home/HomeAppbar.vue')
-const Video = () => import('../views/VideoPage.vue')
-const VideoAppbar = () => import('../components/pages/video/VideoAppbar.vue')
 const Videos = () => import('../views/VideosPage.vue')
 const VideosAppbar = () => import('../components/pages/videos/VideosAppbar.vue')
 const Performer = () => import('../views/PerformerPage.vue')
 const PerformerAppbar = () => import('../components/pages/performer/PerformerAppbar.vue')
 const Performers = () => import('../views/PerformersPage.vue')
 const PerformersAppbar = () => import('../components/pages/performers/PerformersAppbar.vue')
-const Tag = () => import('../views/TagPage.vue')
-const TagAppbar = () => import('../components/pages/tag/TagAppbar.vue')
 const Tags = () => import('../views/TagsPage.vue')
 const TagsAppbar = () => import('../components/pages/tags/TagsAppbar.vue')
 const Website = () => import('../views/WebsitePage.vue')
@@ -39,14 +35,6 @@ const routes = [
     }
   },
   {
-    path: '/video/:id',
-    name: 'Video',
-    components: {
-      default: Video,
-      appbar: VideoAppbar,
-    }
-  },
-  {
     path: '/videos/:id?',
     name: 'Videos',
     components: {
@@ -68,14 +56,6 @@ const routes = [
     components: {
       default: Performers,
       appbar: PerformersAppbar,
-    }
-  },
-  {
-    path: '/tag/:id',
-    name: 'Tag',
-    components: {
-      default: Tag,
-      appbar: TagAppbar,
     }
   },
   {
