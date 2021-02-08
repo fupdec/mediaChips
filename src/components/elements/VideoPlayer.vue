@@ -52,14 +52,7 @@
           </template>
           <span>Add to playlist</span>
         </v-tooltip> -->
-        <!-- <v-tooltip v-if="isVideoAvailable" bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn @click="setThumb" v-on="on" icon tile>
-              <v-icon>mdi-camera-outline</v-icon> 
-            </v-btn>
-          </template>
-          <span>Set as thumb</span>
-        </v-tooltip> -->
+        <!-- TODO create function for set current frame as video thumb -->
         <v-spacer></v-spacer>
         <span class="now-playing-title">{{getFileNameFromPath(nowPlaying)}}</span>
 
@@ -139,10 +132,6 @@
       </v-card-title>
       <div class="video-player-container">
         <VlcPlayer ref="player" @nowPlaying="updateNowPlaying($event)"/>
-
-        <div class="thumb" style="display:none;"> 
-          <canvas ref="canvas" :width="videoWidth/6" :height="videoHeight/6"/>
-        </div>
       </div>
     </v-card>
     <v-dialog v-model="dialogFileInfo" max-width="600" scrollable>
@@ -400,15 +389,6 @@ export default {
       this.images.main.display = true
       this.images.main.file = imgBase64
     },
-    // setThumb() {
-    //   let canvas = this.$refs.canvas.getContext('2d')
-    //   canvas.fillRect(0,0,this.videoWidth/6,this.videoHeight/6)
-    //   canvas.drawImage(this.$refs.videoPlayer,0,0,this.videoWidth/6,this.videoHeight/6)
-    //   let imgBuffer = this.$refs.canvas.toDataURL()
-    //   imgBuffer = this.decodeBase64Image(imgBuffer)
-    //   let outputImagePath = path.join(this.pathToUserData, `/media/thumbs/${this.video.id}.jpg`)
-    //   this.compressImage(imgBuffer.data, outputImagePath, 'thumb')
-    // },
     // async getMarkers() {
     //   // console.log('get markers')
     //   // console.log(this.video)
@@ -593,14 +573,16 @@ export default {
     height: 100%;
   }
   &-container {
-    display: flex;
-    height: calc(100% - 36px);
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
   .title-bar {
     padding: 0;
     padding-right: 108px !important;
     position: relative;
     z-index: 5;
+    min-height: 32px;
     &:before {
       content: '';
       position: absolute;

@@ -6,7 +6,7 @@
         @dblclick="toggleFullscreen" @click.middle="toggleFullscreen" 
         @contextmenu="showContextMenu($event)"
         @keydown="handleKey" @wheel="changeVolume">
-        <canvas ref="canvas" class="canvas"/>
+        <canvas ref="canvas" class="canvas" :style="canvasSizes"/>
       </div>
       <v-card class="vlc-controls" tile 
         @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
@@ -547,6 +547,7 @@ export default {
     document.removeEventListener("mousemove", this.controlsMove);
     document.removeEventListener("mouseup", this.controlsUp);
     document.removeEventListener("fullscreenchange", this.changeFullscreen);
+    window.removeEventListener('resize', this.getCanvasSizes)
   },
   async mounted() {
     this.init();
@@ -569,8 +570,10 @@ export default {
     ipcRenderer.on('closePlayer', () => {
       this.player.stop()
     })
+    window.addEventListener('resize', this.getCanvasSizes)
   },
   data: () => ({
+    canvasSizes: '',
     menu: false,
     player: null,
     interval: null,
@@ -770,6 +773,16 @@ export default {
     },
   },
   methods: {
+    getCanvasSizes() {
+      let windowWidth = document.documentElement.clientWidth
+      let windowHeight = document.documentElement.clientHeight
+      if (this.$refs.canvas) {
+        let canvasRatio = this.$refs.canvas.width / this.$refs.canvas.height
+        let heightOffset = this.fullscreen ? 0 : 114
+        let windowRatio = windowWidth / (windowHeight - heightOffset)
+        this.canvasSizes = canvasRatio > windowRatio ? '':'width:auto;height:100%;'
+      } else this.canvasSizes = ''
+    },
     init() {
       let firstPlay = true,
           firstPause = true
@@ -884,11 +897,12 @@ export default {
       });
     },
     updateVideoPlayer(data) {
-      console.log('update video player')
+      // console.log('update video player')
       // console.log(data)
       this.videos = data.videos
       this.playlist = _.cloneDeep(data.videos.map(video=>'file:///'+video.path))
       this.playIndex = _.findIndex(data.videos, {id: data.id})
+      this.getCanvasSizes()
     },
     showBuffering() {
       this.$emit("waiting");
@@ -979,6 +993,7 @@ export default {
         let container = this.$refs.player;
         container.requestFullscreen();
       }
+      this.getCanvasSizes()
     },
     iconUrl(icon) {
       return `https://fonts.gstatic.com/s/i/materialicons/${icon}/v6/24px.svg?download=true`;
@@ -1297,6 +1312,7 @@ export default {
       this.loadPlaylist()
     },
     playIndex() {
+      this.getCanvasSizes()
       this.getMarkers()
     },
   },
@@ -1308,6 +1324,7 @@ export default {
   display: flex;
   position: relative;
   width: 100%;
+  height: 100%;
   background: #000;
   &.fullscreen {
     .vlc-controls {
@@ -1347,7 +1364,7 @@ export default {
   .canvas-wrapper {
     width: 100%;
     height: 100%;
-    max-height: calc(100vh - 36px - 80px);
+    max-height: calc(100vh - 34px - 80px);
     display: flex;
     place-items: center;
     justify-content: center;
