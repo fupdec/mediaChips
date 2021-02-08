@@ -400,7 +400,7 @@ export default {
         }
       }).write()
 
-
+      // fix update performers for future release (current 0.5.7)
       let performers = this.$store.getters.performers.value()
       let body = []
       let pussy = []
