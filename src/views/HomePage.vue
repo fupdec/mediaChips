@@ -409,32 +409,23 @@ export default {
         }
       }).write()
 
-      // fix update performers for future release (current 0.5.7)
       let performers = this.$store.getters.performers.value()
       let body = []
       let pussy = []
       let pussyLips = []
       let pussyHair = []
       for (let i=0; i<performers.length; i++) {
-        if (performers[i].body!==undefined) {
-          for (let p=0; p<performers[i].body.length; p++) {
-            body.push(performers[i].body[p])
-          }
+        for (let p=0; p<performers[i].body.length; p++) {
+          body.push(performers[i].body[p])
         }
-        if (performers[i].pussy!==undefined) {
-          for (let p=0; p<performers[i].pussy.length; p++) {
-            pussy.push(performers[i].pussy[p])
-          }
+        for (let p=0; p<performers[i].pussy.length; p++) {
+          pussy.push(performers[i].pussy[p])
         }
-        if (performers[i].pussyLips!==undefined) {
-          for (let p=0; p<performers[i].pussyLips.length; p++) {
-            pussyLips.push(performers[i].pussyLips[p])
-          }
+        for (let p=0; p<performers[i].pussyLips.length; p++) {
+          pussyLips.push(performers[i].pussyLips[p])
         }
-        if (performers[i].pussyHair!==undefined) {
-          for (let p=0; p<performers[i].pussyHair.length; p++) {
-            pussyHair.push(performers[i].pussyHair[p])
-          }
+        for (let p=0; p<performers[i].pussyHair.length; p++) {
+          pussyHair.push(performers[i].pussyHair[p])
         }
       }
       let bodyUnique = [...new Set(body)]

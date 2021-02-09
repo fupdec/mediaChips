@@ -214,7 +214,7 @@
     <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
       <v-card>
         <v-card-title class="headline">
-          Marker with tag on {{msToTime(seektime)}}
+          Marker with tag on {{msToTime(seekTime)}}
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerTag=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -269,7 +269,7 @@
     <v-dialog v-model="dialogMarkerPerformer" max-width="500" scrollable eager>
       <v-card>
         <v-card-title class="headline">
-          Marker with performer on {{msToTime(seektime)}}
+          Marker with performer on {{msToTime(seekTime)}}
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerPerformer=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -325,7 +325,7 @@
     <v-dialog v-model="dialogMarkerBookmark" max-width="550" scrollable eager>
       <v-card>
         <v-card-title class="headline">
-          Marker with bookmark on {{msToTime(seektime)}}
+          Marker with bookmark on {{msToTime(seekTime)}}
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerBookmark=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -410,70 +410,6 @@
         </v-list-item>
       </v-list>
     </v-menu>
-    <!-- <div v-if="controls && bounds" class="controls" 
-      @mouseenter="mouseOverControls = true"
-      @mouseleave="mouseOverControls = false"
-      :style="{
-        opacity:
-          hideControls && !mouseOverControls && !paused
-            ? 0
-            : readyState === 0
-            ? 0.5
-            : 1,
-        pointerEvents: readyState === 0 ? 'none' : 'all',
-      }"
-    >
-      <div class="controls-top">
-        <div class="controls-left">
-          <div
-            class="play-button"
-            @click="paused ? play() : pause()"
-          ></div>
-          <div class="time-info">
-            {{ msToTime(currentTime * 1000) }} / {{ msToTime(duration * 1000) }}
-          </div>
-        </div>
-        <div class="controls-right">
-          <div class="volume">
-            <input
-              type="range"
-              step="0.01"
-              min="0"
-              max="2"
-              v-model="volume"
-              value="1"
-              class="volume-slider"
-            />
-            <div
-              class="volume-icon"
-              @click="player.toggleMute()"
-            ></div>
-          </div>
-          <div
-            class="fullscreen-button"
-            v-if="!controlsList.includes('nofullscreen')"
-            @click="toggleFullscreen"
-          ></div>
-        </div>
-      </div>
-      <div class="controls-bottom" @mousedown="controlsDown">
-        <div class="seek-background">
-          <div
-            class="seek-progress"
-            :style="{
-              width: Math.round(position * 10000) / 100 + '%',
-            }"
-          ></div>
-          <div
-            class="seek-thumb"
-            :style="{
-              opacity: mouseOverControls ? 1 : 0,
-              left: `calc(${Math.round(position * 10000) / 100}% - 6px)`,
-            }"
-          ></div>
-        </div>
-      </div>
-    </div> -->
     <div v-html="statusText" class="status-text"
       :style="{opacity: statusOpacity,transitionDuration: statusAnimationDuration,}"
     />
@@ -608,7 +544,7 @@ export default {
     networkState: HTMLMediaElement.NETWORK_EMPTY,
     seeking: false,
     srcObject: null,
-    seektime: 0,
+    seekTime: 0,
     // Playlist
     isPlaylistVisible: false,
     selectedPlaylist: null,
@@ -632,7 +568,6 @@ export default {
     markersType: ['tag','performer','favorite','bookmark'],
   }),
   computed: {
-    // ------------ HTMLVideoElement getters ---------- //
     currentSrc() {
       return this.src;
     },
@@ -725,21 +660,6 @@ export default {
           },
         };
       },
-    },
-    seekable() {
-      return this.readyState > 0;
-    },
-    // ---------------- Miscellaneous ----------------- //
-    position() {
-      if (this.duration && this.duration !== 0)
-        return this.currentTime / this.duration;
-      return 0;
-    },
-    menuIconPath() {
-      return path.join(
-        __static,
-        `/menu-icons/${"white"}/`
-      );
     },
     // data from main window
     tagsAll() {
@@ -905,6 +825,7 @@ export default {
       this.videos = data.videos
       this.playlist = _.cloneDeep(data.videos.map(video=>'file:///'+video.path))
       this.playIndex = _.findIndex(data.videos, {id: data.id})
+      this.getMarkers()
     },
     showBuffering() {
       this.$emit("waiting");
@@ -1193,15 +1114,15 @@ export default {
     },
     openDialogMarkerTag() {
       this.dialogMarkerTag = true
-      this.seektime = this.player.time
+      this.seekTime = this.player.time
     },
     openDialogMarkerPerformer() {
       this.dialogMarkerPerformer = true
-      this.seektime = this.player.time
+      this.seekTime = this.player.time
     },
     openDialogMarkerBookmark() {
       this.dialogMarkerBookmark = true
-      this.seektime = this.player.time
+      this.seekTime = this.player.time
     },
     addMarker(type) { 
       let text = ''
