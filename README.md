@@ -7,26 +7,38 @@
 Manage your porn video collection - add performers, tags, websites and have fun!
 
 ## Install application (Windows)
-To install, run the executable file. You can download the latest executable under "Releases" on the right hand side of this page. After the first launch, go to your "AppData" directory (just write %appdata% in address bar).
-Find the folder with the name of this application. The folder "userfiles" should appear in it.
-Then you should download archive https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z
-Extract files ffmpeg.exe and ffprobe.exe from folder "bin" in archive and place this files into folder "ffmpeg" in "userfiles". 
-Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\".
+To install, run the executable file. <br>
+You can download the latest executable under "Releases" on the right hand side of this page. <br>
+After the first launch, go to your "AppData" directory (just write %appdata% in address bar). <br>
+Find the folder with the name of this application. The folder "userfiles" should appear in it. <br>
+Then you should download archive https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z <br>
+Extract files ffmpeg.exe and ffprobe.exe from folder "bin" in archive and place this files into folder "ffmpeg" in "userfiles".  <br>
+Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\". <br>
 And now you can scan videos from application! It's all.
 
+## Built-in video player
+First of all, the VLC player must be installed in the system. Official page with download: https://www.videolan.org/vlc/ <br>
+Second, a system variable must be registered in Windows Path. <br>
+In the variable you need to register the path to the folder of the VLC player. <br>
+By default it will be like this: "C:\Program Files\VideoLAN\VLC" <br>
+Guide how to add variable: https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/ <br>
+
 ### Portable version
-After the first launch, a folder "userdata" will be created in the folder with the executable file. Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
+After the first launch, a folder "userdata" will be created in the folder with the executable file. <br>
+Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
 
 ### Linux and macOS support
-If you are a developer, it may not be difficult for you to adapt the application for other operating systems. 
-The application is made on electron. Paths should be responsive to the operating system. It remains to correctly add ffmpeg files that are needed to create a preview. 
-Perhaps if there are a lot of people willing, I will port it for these systems.
+If you are a developer, it may not be difficult for you to adapt the application for other operating systems. <br>
+The application is made on electron. Paths should be responsive to the operating system.  <br>
+It remains to correctly add ffmpeg files that are needed to create a preview.  <br>
+Perhaps if there are a lot of people willing, I will port it for these systems. <br>
 
 ## Features
 
 #### App
 - Video player with time markers (New!)
 - Tabs for easy browsing
+- Flexible and convenient filter system for any parameter
 - Password protection
 - Backup management
 - Customizing colors, fonts
@@ -42,21 +54,21 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 - Adding performers, tags, websites, rating, favorite, bookmark
 - Sorting and filtering by performers, tags, websites, filesize, quality, folder, path etc.
 - Save filters and sorting to a preset that can be loaded at any time or set as default
-- Play video in app (supported format only*) or in the system player selected by default
+- Play video in app or in the system player selected by default
 - Scanning for videos in multiple folders. Information is automatically added to the video: performers, tags, websites
-- Video preview on hover (supported format only*)
+- Video preview on hover (only supports formats that the HTML5 video tag can play)
 - Detailed video information: filesize, duration, dimension, quality, filename, format, date added
 - Creating video preview manually
 - Replacing thumb for a video 
-- Add markers to the video (supported format only*): tag, favorite, bookmark
-- Play video from a marker in the system player (Media Player Classic only)
+- Add markers to the video: tag, performer, favorite, bookmark
 - Change paths of the videos
 - Filesize of selected and all videos in the status bar
 - ... and more
 
 #### Performers
 - Adding tags, rating, favorite, bookmark
-- Detailed profile: aliases, category, career, age, country and many appearance parameters
+- Detailed profile: aliases, category, career, age, country and many other parameters
+- Add custom parameter (New!)
 - Autosearch for information on the Internet and import data (Freeones, IAFD)
 - Sorting and filtering by all profile parameters
 - Save filters and sorting to a preset that can be loaded at any time or set as default
@@ -80,8 +92,6 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 - Adding several at a time
 - Website image
 
-*the application plays the video through the html5 tag 
-
 ### View of app
 
 #### Home 
@@ -92,9 +102,6 @@ Perhaps if there are a lot of people willing, I will port it for these systems.
 
 #### Edit video and hovered label
 ![alt text](https://i.ibb.co/3sXK9ms/edit.jpg)
-
-#### Video details
-![alt text](https://i.ibb.co/t2T7tP7/video.jpg)
 
 #### Performers
 ![alt text](https://i.ibb.co/s6wvvTf/performers.jpg)
@@ -131,5 +138,9 @@ npm run electron:serve
 npm run electron:build
 ```
 
+### Compiles and minifies for production (portable version)
+```
+npm run electron:build_portable
+```
 ### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+See [Configuration Reference](https://cli.vuejs.org/config/)
