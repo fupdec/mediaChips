@@ -26,7 +26,7 @@ function createLoadingWindow () {
     icon: __static + `/icons/icon.png`,
   })
   
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
+  if (isDevelopment) {
     loading.once('show', () => {
       win.webContents.on('did-finish-load', () => {
         console.log('app loaded')
@@ -46,7 +46,7 @@ function createLoadingWindow () {
         console.log('app loaded')
         win.show()
         loading.hide() 
-        loading.close()
+        loading= null
       })
     })
     loading.loadURL(path.join(__static, 'loading.html'))
@@ -56,7 +56,7 @@ function createLoadingWindow () {
   }
 } 
 
-function createWindow(devPath, prodPath) {
+function createPlayerWindow(devPath, prodPath) {
   // Create the browser window.
   let window = new BrowserWindow({
     width: 1200,
@@ -72,7 +72,7 @@ function createWindow(devPath, prodPath) {
     }
   })
 
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
+  if (isDevelopment) {
     // Load the url of the dev server if in development mode
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
     if (!process.env.IS_TEST) window.webContents.openDevTools()
@@ -82,16 +82,43 @@ function createWindow(devPath, prodPath) {
   }
 
   window.on('close', (e) => {
-    if (devPath == 'player' || prodPath == 'player.html') {
-      e.preventDefault()
-      window.hide()
-      window.webContents.send('closePlayer')
+    e.preventDefault()
+    window.hide()
+    window.webContents.send('closePlayer')
+  })
+  return window
+}
+
+function createMainWindow(devPath, prodPath) {
+  // Create the browser window.
+  let window = new BrowserWindow({
+    width: 1200,
+    height: 700,
+    frame: false,
+    backgroundColor: '#333',
+    icon: __static + `/icons/icon.png`,
+    show: false, 
+    webPreferences: {
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
+      webSecurity: false,
+      enableRemoteModule: true,
     }
   })
 
-  window.on('closed', () => { 
-    window = null 
-    if (devPath == 'index' || prodPath == 'index.html') app.quit()
+  if (isDevelopment) {
+    // Load the url of the dev server if in development mode
+    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
+    if (!process.env.IS_TEST) window.webContents.openDevTools()
+  } else {
+    // Load the index.html when not in development
+    window.loadURL(`app://./${prodPath}`)
+  }
+  
+  window.on('closed', () => {
+    loading = null 
+    player = null 
+    win = null  
+    app.exit()
   })
   return window
 }
@@ -144,11 +171,11 @@ app.on('ready', async () => {
       } 
     }) 
   }
-  if (!process.env.WEBPACK_DEV_SERVER_URL) {
+  if (!isDevelopment) {
     createProtocol('app')
   }
-  win = createWindow('index', 'index.html')
-  player = createWindow('player', 'player.html')
+  win = createMainWindow('index', 'index.html')
+  player = createPlayerWindow('player', 'player.html')
   createLoadingWindow()
 })
 
@@ -177,11 +204,11 @@ if (isDevelopment) {
 
 // restart application
 ipcMain.on('reload', function() {
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
+  if (isDevelopment) {
     win.reload()
   } else {
     app.relaunch()
-    app.exit()
+    app.exit() // TODO fix relaunch
   }
 })
 
@@ -211,7 +238,6 @@ ipcMain.on('openPlayer', (event, data) => {
   player.webContents.send('getDataForPlayer', data)
 })
 ipcMain.on('closePlayer', () => {
-  // TODO fix close player from panel. catch system event of window closing 
   player.hide()
 })
 ipcMain.handle('getDb', async (event, dbType) => {
