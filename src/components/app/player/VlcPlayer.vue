@@ -779,7 +779,8 @@ export default {
       if (this.$refs.canvas) {
         let canvasRatio = this.$refs.canvas.width / this.$refs.canvas.height
         let heightOffset = this.fullscreen ? 0 : 114
-        let windowRatio = windowWidth / (windowHeight - heightOffset)
+        let widthOffset = (this.isMarkersVisible ? (windowWidth/100*18) : 0) + (this.isPlaylistVisible ? (windowWidth/100*18) : 0)
+        let windowRatio = (windowWidth - widthOffset) / (windowHeight - heightOffset)
         this.canvasSizes = canvasRatio > windowRatio ? '':'width:auto;height:100%;'
       } else this.canvasSizes = ''
     },
@@ -1053,9 +1054,6 @@ export default {
     jumpTo(e) {
       this.player.time = e * 1000
     },
-    toggleMarkers() {
-      this.isMarkersVisible=!this.isMarkersVisible
-    },
     jumpToPrevMarker() {
       let markers = _.orderBy(this.markers, 'time', ['desc'])
       let currentTime = this.player.time - 5000
@@ -1137,6 +1135,12 @@ export default {
       }
     },
     // MARKERS
+    toggleMarkers() {
+      this.isMarkersVisible=!this.isMarkersVisible
+      setTimeout(() => {
+        this.getCanvasSizes()
+      }, 100)
+    },
     async getMarkers() {
       // console.log('get markers')
       await this.$store.dispatch('getDb', 'markers')
@@ -1271,6 +1275,9 @@ export default {
     },
     togglePlaylist() {
       this.isPlaylistVisible=!this.isPlaylistVisible
+      setTimeout(() => {
+        this.getCanvasSizes()
+      }, 100)
       if (!this.isPlaylistVisible) return
       const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
       this.$refs.playlist.scrollTo({ y: height }, 50)
