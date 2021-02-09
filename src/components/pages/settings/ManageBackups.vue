@@ -66,7 +66,7 @@
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
-          <div class="subtitle-2 py-6">
+          <div class="py-6">
             This will replace current state of the database.
             <br>Confirm if you are sure.
           </div>
@@ -84,7 +84,7 @@
             class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="restoreBackup" :disabled="isRestoringBackupRun" 
-            class="ma-4" depressed color="primary">
+            class="ma-4" depressed color="orange" dark>
             <v-icon left>mdi-backup-restore</v-icon> Restore
           </v-btn>
         </v-card-actions>
@@ -98,7 +98,7 @@
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
-          <div class="subtitle-2 py-4">
+          <div class="py-4">
             This action will remove selected backup from application.
           </div>
           <v-icon size="72" color="red">mdi-alert-outline</v-icon>
@@ -207,7 +207,7 @@ export default {
                       + (secs>9?secs:'0'+secs),
           currentDB = path.join(this.pathToUserData, '/databases/'),
           currentFiles = path.join(this.pathToUserData, '/media/'),
-          backupDB = path.join(this.pathToUserData, '/backups/'+backupName+'/databases/'),
+          settings = path.join(this.pathToUserData, 'dbs.json'),
           backupInfo = {},
           vm = this
           
@@ -242,6 +242,7 @@ export default {
       archive.directory(currentDB, 'databases')
       archive.directory(currentFiles, 'media')
       archive.append(JSON.stringify(backupInfo), { name: 'info.json' })
+      archive.file(settings, { name: 'dbs.json' })
       archive.finalize()
     },
     openDialogRestoreBackup() {
@@ -257,9 +258,7 @@ export default {
       this.isRestoringBackupRun = true
       let date = this.selectedBackup[0].date,
           appDb = path.join(this.pathToUserData, '/databases/'),
-          appFiles = path.join(this.pathToUserData, '/media/'),
-          backupDB = path.join(this.pathToUserData, '/backups/temp/databases/'),
-          backupFiles = path.join(this.pathToUserData, '/backups/temp/media/')
+          appFiles = path.join(this.pathToUserData, '/media/')
       // clear folders with media
       await this.clearFiles(appFiles + 'thumbs/')
       await this.clearFiles(appFiles + 'previews/')
@@ -409,24 +408,31 @@ export default {
     deleteBackup() {
       let backupDate = this.selectedBackup[0].date
       let backupPath = path.join(this.pathToUserData, '/backups/'+backupDate+'.zip')
-      fs.unlink(backupPath, err => {
-        if (err) {
-          this.$store.dispatch('setNotification', {
-            type: 'error',
-            text: err
-          })
-          throw err
-        } else {
-          this.$store.getters.settings.get('backups').remove({ 'date': backupDate }).write()
-          this.$store.dispatch('setNotification', {
-            type: 'success',
-            text: 'Backup successfully deleted'
-          })
-          this.$store.dispatch('updateBackups')
-          this.backups = this.getBackups()
-        }
-      })
+      if (fs.existsSync(backupPath)) {
+        fs.unlink(backupPath, err => {
+          if (err) {
+            this.$store.dispatch('setNotification', {
+              type: 'error',
+              text: err
+            })
+            throw err
+          } else {
+            this.deleteBackupFromDb(backupDate)
+          }
+        })
+      } else {
+        this.deleteBackupFromDb(backupDate)
+      }
       this.dialogDeleteBackup = false
+    },
+    deleteBackupFromDb(backupDate) {
+      this.$store.getters.settings.get('backups').remove({ 'date': backupDate }).write()
+      this.$store.dispatch('setNotification', {
+        type: 'info',
+        text: 'Backup successfully deleted'
+      })
+      this.$store.dispatch('updateBackups')
+      this.backups = this.getBackups()
     },
     restartApp() {
       ipcRenderer.send('reload')
