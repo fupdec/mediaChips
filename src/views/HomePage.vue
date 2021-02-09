@@ -10,20 +10,26 @@
       </div>
       <v-row v-else>
         <v-col cols="12">
-          <div class="ma-4 red--text text-center">Starting from version 0.5.8 performer parameters replaced with new values.
-            <br> If you have performers just press "Update performers" button.
-            <br> Without update performers will not working as it </div>
-          <v-btn @click="updatePerformerParams" color="red" dark class="my-4" block> 
-            <v-icon left>mdi-auto-fix</v-icon> Update performers </v-btn>
-          <div class="mb-2 caption">Starting from version 0.5.6 markers for videos will be stored in their own database.
-            <br> If you have markers just press "Update markers" button.</div>
-          <v-btn @click="updateMarkers" class="my-2" block> 
-            <v-icon left>mdi-auto-fix</v-icon> Update markers </v-btn>
-          <div class="mb-2 caption">Starting from version 0.5.5 there will be no bitrate information in the video.
-            <br> Also updated video resolution information. 
-            <br> To update the metadata in existing videos click the "Fix metadata in videos" button. </div>
-          <v-btn @click="fixVideos" class="my-2" block> 
-            <v-icon left>mdi-auto-fix</v-icon> Fix metadata in videos </v-btn>
+          <div v-if="!settings.appNewVersionUpdatePerformers">
+            <div class="ma-4 red--text text-center">Starting from version 0.5.8 performer parameters replaced with new values.
+              <br> If you have performers just press "Update performers" button.
+              <br> Without update performers will not working as it </div>
+            <v-btn @click="updatePerformerParams" color="red" dark class="my-4" block> 
+              <v-icon left>mdi-auto-fix</v-icon> Update performers </v-btn>
+          </div>
+          <div v-if="!settings.appNewVersionUpdateMarkers">
+            <div class="mb-2 caption">Starting from version 0.5.6 markers for videos will be stored in their own database.
+              <br> If you have markers just press "Update markers" button.</div>
+            <v-btn @click="updateMarkers" class="my-2" block> 
+              <v-icon left>mdi-auto-fix</v-icon> Update markers </v-btn>
+          </div>
+          <div v-if="!settings.appNewVersionFixMetadataInVideos">
+            <div class="mb-2 caption">Starting from version 0.5.5 there will be no bitrate information in the video.
+              <br> Also updated video resolution information. 
+              <br> To update the metadata in existing videos click the "Fix metadata in videos" button. </div>
+            <v-btn @click="fixVideos" class="my-2" block> 
+              <v-icon left>mdi-auto-fix</v-icon> Fix metadata in videos </v-btn>
+          </div>
 
 
           <v-dialog v-model="dialogRestartApp" width="400" persistent>
@@ -262,6 +268,9 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
+    settings() {
+      return this.$store.getters.settings.value()
+    },
     logoPath() {
       return path.join(__static, '/icons/icon.png')
     },
@@ -466,6 +475,7 @@ export default {
       }).write()
 
       setTimeout(() => {
+        this.$store.getters.settings.set('appNewVersionUpdatePerformers', true).write()
         this.dialogRestartApp = true
       }, 2000)
     },
@@ -476,13 +486,16 @@ export default {
     },
     updateMarkers() {
       this.$store.getters.bookmarks.get('markers').each(m=>{
-        this.$store.getters.markers.push(m)
+        if (!this.$store.getters.markers.find({id: m.id}).value()) {
+          this.$store.getters.markers.push(m).write()
+        }
       }).value()
       setTimeout(() => {
-        this.$store.getters.bookmarks.set('markers', undefined)
+        this.$store.getters.bookmarks.set('markers', undefined).write()
         this.$store.getters.markers.each(m=>{
           m.type = m.type.toLowerCase()
         }).write()
+        this.$store.getters.settings.set('appNewVersionUpdateMarkers', true).write()
         this.dialogRestartApp = true
       }, 5000)
     },
@@ -510,7 +523,9 @@ export default {
           }
         }
         scanVideoResolution(videos).then(()=>{
+          this.$store.getters.settings.set('appNewVersionFixMetadataInVideos', true).write()
           vm.fixingVideos = false
+          this.dialogRestartApp = true
         })
       }, 100)
     },
