@@ -274,6 +274,19 @@ const Videos = {
         getters.playlists.filter({'videos': [id]}).each(playlist=>{
           playlist.videos = playlist.videos.filter(video=>(video !== id))
         }).write()
+        // remove marker from DB and image of marker
+        let markers = getters.markers.filter({videoId: id}).value()
+        for (let m=0;m<markers.length; m++) {
+          let imgPath = path.join(getters.getPathToUserData, `/media/markers/${markers[m].id}.jpg`)
+          fs.unlink(imgPath, (err) => {
+            if (err) {
+              console.log(`failed to delete image of marker "${markers[m].id}", "${markers[m].name}". ${err}`);
+            } else {
+              console.log(`successfully deleted image of marker "${markers[m].id}", "${markers[m].name}"`);                                
+            }
+          })
+        }
+        getters.markers.remove({videoId: id}).write()
         // remove thumb, grid and preview of video
         let thumbPath = path.join(getters.getPathToUserData, `/media/thumbs/${id}.jpg`)
         fs.unlink(thumbPath, (err) => {
