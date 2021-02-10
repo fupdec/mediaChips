@@ -328,54 +328,44 @@ export default {
       return this.$store.state.Settings.meterMultiplier
     },
     profileCompleteProgress() {
-      let progress = 0
-      if (this.performer.name.length) {
-        progress += this.percentValue 
+      let appParams = [
+        'name', 
+        'start', 
+        'category',
+        'birthday', 
+        'nation', 
+        'ethnicity',
+        'eyes',
+        'hair', 
+        'height', 
+        'weight', 
+        'bra', 
+        'waist', 
+        'hip', 
+        'cups', 
+        'boobs', 
+      ]
+      let customParams = []
+      let params = this.$store.state.Settings.customParametersPerformer
+      for (let param in params) {
+        customParams.push(params[param].name)
       }
-      if (this.performer.birthday.length) {
-        progress += this.percentValue 
+      
+      let completed = []
+      for (let param in this.performer) {
+        if (appParams.includes(param) || customParams.includes(param)) {
+          if (typeof this.performer[param] == 'boolean') {
+            this.performer[param] === true ? completed.push(1) : completed.push(0)    
+          } else {
+            this.performer[param].length > 0 ? completed.push(1) : completed.push(0) 
+          }
+        }
       }
-      if (this.performer.nation.length) {
-        progress += this.percentValue 
+      let completedValue = 0
+      for (let i=0; i<completed.length; i++) {
+        completedValue = completedValue + completed[i]
       }
-      if (this.performer.ethnicity.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.hair.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.eyes.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.height.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.weight.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.bra.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.waist.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.hip.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.boobs.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.cups.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.category.length) {
-        progress += this.percentValue 
-      }
-      if (this.performer.start.length) {
-        progress += this.percentValue 
-      }
-      if (progress > 100) progress = 100
-      return Math.ceil(progress)
+      return Math.ceil(completedValue / completed.length * 100)
     },
     // profile: {
     //   get() {

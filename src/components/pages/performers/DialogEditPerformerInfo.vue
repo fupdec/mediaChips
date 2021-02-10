@@ -21,10 +21,10 @@
           <div class="profile-completed-container ma-6">
             <div class="overline mr-2">completed</div>
             <v-progress-circular class="profile-completed-progress"
-              :value="percentComplete" size="36" rotate="270"
-              :color="percentComplete>=99?'green':'white'" width="2">
-              <v-icon v-if="percentComplete>=99" color="green">mdi-check</v-icon>
-              <div v-else>{{percentComplete}}<span class="percent">%</span></div>
+              :value="percentCompleted" size="36" rotate="270"
+              :color="percentCompleted>=99?'green':'white'" width="2">
+              <v-icon v-if="percentCompleted>=99" color="green">mdi-check</v-icon>
+              <div v-else>{{percentCompleted}}<span class="percent">%</span></div>
             </v-progress-circular>
           </div>
           <v-spacer></v-spacer>
@@ -537,7 +537,7 @@ export default {
       for (let param in this.params) {
         this.values[this.params[param].name] = this.performer[this.params[param].name]
       }
-      // TODO load existing val for custom params
+      this.calcPercentComleted()
     })
   },
   updated() {
@@ -574,8 +574,7 @@ export default {
     boobs: [],
     cups: [],
     currentYear: new Date().getFullYear(),
-    percentCompleteProgress: 0,
-    percentValue: 5.263,
+    percentCompleted: 0,
     tags: [],
     tooltipCopyName: false,
     tooltipCopyPerformerName: false,
@@ -625,14 +624,6 @@ export default {
     },
     performerNameForSearch() {
       return this.performer.name.trim().toLowerCase().replace(/ /g, '-')
-    },
-    percentComplete: {
-      get() {
-        return Math.ceil(this.percentCompleteProgress)
-      },
-      set(percents) {
-        this.percentCompleteProgress = percents
-      },
     },
     tagsAll() {
       let tags = this.$store.getters.tags.filter(t=>(t.category.includes('performer')))
@@ -1216,23 +1207,42 @@ export default {
       this.$store.state.Performers.dialogEditPerformerInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
     },
-    getPercentComleted(newValue, oldValue) {
-      // console.log(`newValue: ${newValue} oldValue: ${oldValue}`)
-      // console.log(`newValue: ${typeof newValue} oldValue: ${typeof oldValue}`)
-      // console.log(`newValue: ${newValue == true} oldValue: ${oldValue == true}`)
-      if (newValue === undefined) return
-      if (newValue.length > 0 && oldValue === undefined) {
-        this.percentComplete = this.percentCompleteProgress + this.percentValue
-        return
+    calcPercentComleted() {
+      let completed = []
+      let appParams = [
+        'performerName', 
+        'start', 
+        'category',
+        'birthday', 
+        'nation', 
+        'ethnicity',
+        'eyes',
+        'hair', 
+        'height', 
+        'weight', 
+        'bra', 
+        'waist', 
+        'hip', 
+        'cups', 
+        'boobs', 
+      ]
+      for (let i=0; i<appParams.length; i++) {
+        this[appParams[i]].length > 0 ? completed.push(1) : completed.push(0) 
       }
-      if (newValue.length > 0 && oldValue.length == 0) {
-        this.percentComplete = this.percentCompleteProgress + this.percentValue
+      // for custom parameters
+      for (let val in this.values) {
+        if (typeof val == 'boolean') {
+          this.values[val] === true ? completed.push(1) : completed.push(0)    
+        } else {
+          this.values[val].length > 0 ? completed.push(1) : completed.push(0) 
+        }
       }
-      if (newValue.length == 0 && oldValue.length > 0) {
-        this.percentComplete = this.percentCompleteProgress - this.percentValue
+
+      let completedValue = 0
+      for (let i=0; i<completed.length; i++) {
+        completedValue = completedValue + completed[i]
       }
-      // console.log(this.percentCompleteProgress)
-      // TODO fix complete function
+      this.percentCompleted = Math.ceil(completedValue / completed.length * 100)
     },
     getImg() {
       let imgAvaPath = this.getImgUrl(this.performer.id + '_avatar.jpg')
@@ -1291,60 +1301,61 @@ export default {
     },
     setVal(value, param) {
       this.values[param] = value 
+      this.calcPercentComleted()
     },
   },
   watch: {
     menu (val) {
       val && setTimeout(() => (this.$refs.picker.activePicker = 'YEAR'))
     },
-    performerName(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    performerName() {
+      this.calcPercentComleted()
     },
-    birthday(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    birthday() {
+      this.calcPercentComleted()
     },
-    nation(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    nation() {
+      this.calcPercentComleted()
     },
-    ethnicity(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    ethnicity() {
+      this.calcPercentComleted()
     },
-    hair(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    hair() {
+      this.calcPercentComleted()
     },
-    eyes(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    eyes() {
+      this.calcPercentComleted()
     },
-    height(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    height() {
+      this.calcPercentComleted()
     },
-    weight(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    weight() {
+      this.calcPercentComleted()
     },
-    bra(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    bra() {
+      this.calcPercentComleted()
     },
-    waist(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    waist() {
+      this.calcPercentComleted()
     },
-    hip(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    hip() {
+      this.calcPercentComleted()
     },
-    boobs(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    boobs() {
+      this.calcPercentComleted()
     },
-    cups(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    cups() {
+      this.calcPercentComleted()
     },
-    category(newValue, oldValue) {
-      this.getPercentComleted(newValue, oldValue)
+    category() {
+      this.calcPercentComleted()
     },
-    async start(newValue, oldValue) {
+    async start() {
       await this.$nextTick();
-      this.getPercentComleted(newValue, oldValue)
+      this.calcPercentComleted()
       this.validate();
     },
-    async end(newValue, oldValue) {
+    async end() {
       await this.$nextTick();
       this.validate();
     }
