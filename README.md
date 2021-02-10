@@ -1,5 +1,7 @@
-![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database)
-![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total)
+![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
+![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
 <img align="left" width="110" height="110" src="./public/icons/icon.png">
 
