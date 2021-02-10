@@ -769,7 +769,7 @@ export default {
 }
 .custom2-img,
 .custom1-img {
-  position: absolute;
+  position: absolute !important;
   top: 0;
   bottom: 0;
   right: 0;

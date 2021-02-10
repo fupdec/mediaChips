@@ -59,10 +59,6 @@ const Videos = {
       console.log(':::::::videos UPDATED:::::::')
       state.lastChanged = Date.now()
     },
-    updateFiltersOfVideos(state, {key, value}) {
-      state.filters[key] = value
-      // console.log(state.filters)
-    },
     filterVideos(state, filteredVideos) {
       state.filteredVideos = filteredVideos
     },
