@@ -47,17 +47,17 @@
             </template>
             
             <v-list dense class="context-menu">
-              <v-list-item @click="$store.dispatch('toggleNavigationSide', '1')" class="pr-1" link>
+              <v-list-item @click="$store.dispatch('updateSettingsState', {key:'navigationSide', value: '1'})" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-left-variant</v-icon> Side
                 </v-list-item-title>
               </v-list-item>
-              <v-list-item @click="$store.dispatch('toggleNavigationSide', '2')" class="pr-1" link>
+              <v-list-item @click="$store.dispatch('updateSettingsState', {key:'navigationSide', value: '2'})" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-bottom-variant</v-icon> Bottom
                 </v-list-item-title>
               </v-list-item>
-              <v-list-item @click="$store.dispatch('toggleNavigationSide', '0')" class="pr-1" link>
+              <v-list-item @click="$store.dispatch('updateSettingsState', {key:'navigationSide', value: '0'})" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-none-variant</v-icon> None
                 </v-list-item-title>
