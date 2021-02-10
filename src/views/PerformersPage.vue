@@ -90,8 +90,9 @@
     
     <PerformersGridElements />
 
+<!-- TODO make correct display bottom sheet with bottom sidebar -->
     <v-bottom-sheet 
-      v-if="$store.getters.getSelectedPerformers.length==1" 
+      v-if="$store.getters.getSelectedPerformers.length==1 && $store.state.Settings.navigationSide!=2" 
       v-model="$store.state.Performers.bottomSheet" 
       hide-overlay inset no-click-animation persistent
     >
