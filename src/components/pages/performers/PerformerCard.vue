@@ -79,7 +79,7 @@
           empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
           dense half-increments hover size="18" clearable />
         <v-spacer></v-spacer>
-        <v-btn @click="isFavorite = !isFavorite" small icon color="pink"> 
+        <v-btn @click="toggleFavorite" small icon color="pink"> 
           <v-icon v-if="isFavorite" color="pink">mdi-heart</v-icon>
           <v-icon v-else color="grey">mdi-heart-outline</v-icon>
         </v-btn>
