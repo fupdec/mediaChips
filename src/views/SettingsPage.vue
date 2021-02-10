@@ -241,7 +241,7 @@
               </template>
               <span>Uses video tag values. 
                 <br> Can be hidden by clicking on the button
-                <v-icon size="18">mdi-gauge</v-icon> 
+                <v-icon size="18">mdi-thermometer</v-icon> 
               </span>
             </v-tooltip>
           </div>

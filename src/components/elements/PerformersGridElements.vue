@@ -57,7 +57,8 @@
 
         <v-divider class="ma-1"></v-divider>
 
-        <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+          <!-- TODO fix filter by tag -->
+        <!-- <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on" :disabled="!isSelectedSinglePerformer">
               <v-list-item-title> 
@@ -81,7 +82,7 @@
           </v-list>
         </v-menu>
 
-        <v-divider class="ma-1"></v-divider>
+        <v-divider class="ma-1"></v-divider> -->
 
         <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer"
           @mouseup="$store.state.Performers.dialogEditPerformerInfo = true">

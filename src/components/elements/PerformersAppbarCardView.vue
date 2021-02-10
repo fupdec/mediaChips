@@ -103,6 +103,13 @@
           <v-icon size="20" class="pl-10" :color="!isCareerStatusHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
         </v-list-item>
 
+        <v-list-item link @click="toggleMeterVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-thermometer</v-icon>Tag Meter
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isMeterHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
+
         <v-list-item link @click="toggleTagsVisibilty()">
           <v-list-item-title>
             <v-icon left size="18">mdi-tag</v-icon> Tags
