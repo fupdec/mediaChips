@@ -84,7 +84,8 @@
           dense half-increments hover size="18" clearable />
         <v-spacer></v-spacer>
         <v-btn @click="isFavorite = !isFavorite" small icon color="pink"> 
-          <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart</v-icon>
+          <v-icon v-if="isFavorite" color="pink">mdi-heart</v-icon>
+          <v-icon v-else color="grey">mdi-heart-outline</v-icon>
         </v-btn>
       </v-card-actions>
       <v-divider v-if="$store.state.Settings.ratingAndFavoriteInCard"></v-divider>
