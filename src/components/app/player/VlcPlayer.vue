@@ -11,7 +11,7 @@
       <v-card class="vlc-controls" tile 
         @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
         :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:fullscreen?0.7:1}">
-        <v-card-actions class="timeline pa-1">
+        <v-card-actions class="timeline py-1 px-0 mx-3">
           <v-slider @change="seek($event)" :value="currentTime"
             min="0" step="1" :max="duration" hide-details/>
           <div v-for="(marker,i) in markers" :key="i" class="marker"
@@ -449,7 +449,6 @@
 
 // on loadeddata (when width and height of frame are known, set element size to proper dimensions,
 // (what happens for size on src change for htmlvideo?))
-// fix markers position on timeline
 // fix key press for control player
 const { ipcRenderer } = require('electron')
 const fs = require("fs")
@@ -1317,6 +1316,9 @@ export default {
         transform: translateX(-1vw) translateY(-15px);
         border-radius: 0 0 2px 2px;
       }
+    }
+    .v-slider {
+      margin: 0;
     }
     .marker {
       cursor: pointer;
