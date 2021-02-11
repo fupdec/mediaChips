@@ -328,6 +328,9 @@ const Performers = {
           let index = video.performers.indexOf(performerName)
           if (index !== -1) video.performers.splice(index, 1)
         }).write()
+        // close tab with this performer
+        let tab = _.find(getters.tabs, {'id': id })
+        if (tab) dispatch('closeTab', id)
         // remove perfromer from database
         getters.performers.remove({ 'id': id }).write()
         // remove images of perfromer
