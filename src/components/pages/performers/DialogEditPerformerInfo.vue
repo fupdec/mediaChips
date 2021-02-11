@@ -800,12 +800,39 @@ export default {
             if (date) profile.birth = date[0]
             else profile.birth = undefined
           }
-          profile.ethnicity = []
-          profile.ethnicity.push($('[data-test="link_span_ethnicity"]').text().trim())
-          profile.eyes = []
-          profile.eyes.push($('[data-test="link_span_eye_color"]').text().trim())
-          profile.hair = []
-          profile.hair.push($('[data-test="link_span_hair_color"]').text().trim())
+          let ethnicity = $('[data-test="link_span_ethnicity"]').text().trim()
+          if (ethnicity) {
+            profile.ethnicity = []
+            ethnicity = ethnicity.split(',')
+            let performerInfoEthnicity = this.$store.getters.settings.get('performerInfoEthnicity').value()
+            for (let i=0; i<ethnicity.length; i++) {
+              if ( performerInfoEthnicity.includes(ethnicity[i]) ) {
+                profile.ethnicity.push(ethnicity[i])
+              }
+            }
+          }
+          let eyes = $('[data-test="link_span_eye_color"]').text().trim()
+          if (eyes) {
+            profile.eyes = []
+            eyes = eyes.split(',')
+            let performerInfoEyes = this.$store.getters.settings.get('performerInfoEyes').value()
+            for (let i=0; i<eyes.length; i++) {
+              if ( performerInfoEyes.includes(eyes[i]) ) {
+                profile.eyes.push(eyes[i])
+              }
+            }
+          }
+          let hair = $('[data-test="link_span_hair_color"]').text().trim()
+          if (hair) {
+            profile.hair = []
+            hair = hair.split(',')
+            let performerInfoHair = this.$store.getters.settings.get('performerInfoHair').value()
+            for (let i=0; i<hair.length; i++) {
+              if ( performerInfoHair.includes(hair[i]) ) {
+                profile.hair.push(hair[i])
+              }
+            }
+          }
           profile.height = $('[data-test="link_span_height"]').text().trim()
           if(profile.height) {
             profile.height = profile.height.match(/\d{3}/)[0]
@@ -833,13 +860,15 @@ export default {
           if (profile.start != undefined) { this.transfer.found.start = profile.start }
           if (profile.end != undefined) { this.transfer.found.end = profile.end }
           if (profile.profession != undefined) { 
-            if (profile.profession === 'Adult Models') {
+            if (profile.profession.includes('Adult')) {
               profile.profession = 'Erotic model'
             }
-            if (profile.profession === 'Porn Stars') {
+            if (profile.profession.includes('Porn')) {
               profile.profession = 'Pornstar'
             }
-            this.transfer.found.category = [profile.profession]
+            if (this.$store.getters.settings.get('performerInfoCategory').value().includes(profile.profession)) {
+              this.transfer.found.category = [profile.profession]
+            } else profile.profession = undefined
           }
           if (profile.nation != undefined) { this.transfer.found.nation = profile.nation }
           if (profile.birth != undefined) { this.transfer.found.birthday = profile.birth }
@@ -893,14 +922,30 @@ export default {
             this.transfer.found.aliases = this.getBioString('performer', bio)
           }
           if (this.getBioString('ethnicity', bio)) {
-            let ethnicity = []
-            ethnicity.push(this.getBioString('ethnicity', bio))
-            this.transfer.found.ethnicity = ethnicity
+            let ethnicity = this.getBioString('ethnicity', bio).split(',')
+            let foundEth = []
+            let performerInfoEthnicity = this.$store.getters.settings.get('performerInfoEthnicity').value()
+            for (let i=0; i<ethnicity.length; i++) {
+              if ( performerInfoEthnicity.includes(ethnicity[i]) ) {
+                foundEth.push(ethnicity[i])
+              }
+            }
+            if (foundEth.length) {
+              this.transfer.found.ethnicity = foundEth
+            }
           }
           if (this.getBioString('hair', bio)) {
-            let hair = [] 
-            hair.push(this.getBioString('hair', bio))
-            this.transfer.found.hair = hair
+            let hair = this.getBioString('hair', bio).split(',')
+            let foundHair = []
+            let performerInfoHair = this.$store.getters.settings.get('performerInfoHair').value()
+            for (let i=0; i<hair.length; i++) {
+              if ( performerInfoHair.includes(hair[i]) ) {
+                foundHair.push(hair[i])
+              }
+            }
+            if (foundHair.length) {
+              this.transfer.found.hair = foundHair
+            }
           }
           let years
           if (this.getBioString('years', bio)) {
@@ -957,6 +1002,14 @@ export default {
         })
       })
     },
+    getBioString(string, bio) {
+      let val = _.filter(bio, (param) => (
+        param.heading.toLowerCase().includes(string)
+      ))[0].biodata
+      if (val != 'No known aliases' && val != 'No data') {
+        return val 
+      } else return false
+    },
     clearPreviouslyFound() {
       this.transfer.current = _.cloneDeep(this.defaultParamsForInfo)
       this.transfer.found = _.cloneDeep(this.defaultParamsForInfo)
@@ -1010,14 +1063,6 @@ export default {
           }
         }
       }, 1000)
-    },
-    getBioString(string, bio) {
-      let val = _.filter(bio, (param) => (
-        param.heading.toLowerCase().includes(string)
-      ))[0].biodata
-      if (val != 'No known aliases' && val != 'No data') {
-        return val 
-      } else return false
     },
     validate () {
       this.$refs.form.validate()
