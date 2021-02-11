@@ -6,8 +6,7 @@
       :data-id="performer.id" hover outlined height="100%" v-ripple="{ class: 'accent--text' }"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
-        <div v-if="!isNationalityHidden" @click="filterByNationality"
-          @click.middle="addNewTabWithNationality" class="flag-icon">
+        <div v-if="!isNationalityHidden" class="flag-icon">
           <country-flag :country='findCountryCode(performer.nation)' 
             size='normal' :title="performer.nation" />
         </div>
@@ -350,6 +349,7 @@ export default {
       event.stopPropagation()
     },
     addNewTabWithNationality() {
+      // TODO fix addNewTabWithNationality
       let key = 'nation'
       let value = [this.performer.nation]
       this.$store.commit('updateFiltersOfPerformers', {key, value})
@@ -365,6 +365,7 @@ export default {
       this.$store.dispatch('addNewTab', tab)
     },
     updateTabFiltersForNationality() {
+      // TODO fix updateTabFiltersForNationality
       let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
       if (this.tabId === 'default') {
         this.$store.state.Performers.filtersReserved = newFilters
@@ -377,6 +378,7 @@ export default {
       }
     },
     filterByNationality() {
+      // TODO fix filterByNationality
       let key = 'nation'
       let value = [this.performer.nation]
       this.$store.commit('updateFiltersOfPerformers', {key, value})
