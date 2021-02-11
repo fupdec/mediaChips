@@ -233,16 +233,24 @@
 
           
           <div class="headline text-h5 text-center pt-10 mb-4"> Meter
-            <v-tooltip right>
+            <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
                 <v-icon v-bind="attrs" v-on="on" right small>
                   mdi-help-circle-outline
                 </v-icon>
               </template>
-              <span>Uses video tag values. 
-                <br> Can be hidden by clicking on the button
-                <v-icon size="18">mdi-thermometer</v-icon> 
-              </span>
+              <v-card class="my-2">
+                <v-card-actions>
+                  <div class="text-center mx-4">
+                    You can use a meter to <br>see how hot the performer is. <br>
+                    The larger the tag value, <br>the more the meter will fill. <br><br>
+                    Tags from the video are used <br> in which the performer is involved. <br><br>
+                    Most likely none of your performers <br> will have a fully filled scale. <br>
+                    To increase the scale, <br>you can use a multiplier<br> in the settings -> performer.
+                  </div>
+                  <v-img :src="getMeterImg" width="165"/><br>
+                </v-card-actions>
+              </v-card>
             </v-tooltip>
           </div>
           <v-row>
@@ -682,6 +690,9 @@ export default {
       set(value) {
         this.$store.dispatch('updateSettingsState', {key:'passwordProtection', value})
       },
+    },
+    getMeterImg() {
+      return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)
     },
   },
   methods: {

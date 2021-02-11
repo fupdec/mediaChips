@@ -23,9 +23,8 @@
         <v-spacer></v-spacer>
         <div>
           <v-btn outlined dark class="mr-6" @click="close">Cancel</v-btn>
-          <v-btn 
-            :disabled="!valid" color="primary" @click="saveTagInfo"
-          ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
+          <v-btn :disabled="!valid" color="primary" @click="saveTagInfo"
+            ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
         </div>
       </v-card-title>
       <vuescroll>
@@ -87,17 +86,38 @@
                       </div>
                     </v-col>
                     <v-col cols="12" sm="6" align="center" justify="center">
-                      <div class="mb-6">Tag value</div>
+                      <div class="mb-6"> Tag value
+                        <v-tooltip right>
+                          <template v-slot:activator="{ on, attrs }">
+                            <v-icon v-bind="attrs" v-on="on" class="ml-2" с>
+                              mdi-help-circle-outline
+                            </v-icon>
+                          </template>
+                          <v-card class="my-2">
+                            <v-card-actions>
+                              <div class="text-center mx-4">
+                                You can use a meter to <br>see how hot the performer is. <br>
+                                The larger the tag value, <br>the more the meter will fill. <br><br>
+                                Tags from the video are used <br> in which the performer is involved. <br><br>
+                                Most likely none of your performers <br> will have a fully filled scale. <br>
+                                To increase the scale, <br>you can use a multiplier<br> in the settings -> performer.
+                              </div>
+                              <v-img :src="getMeterImg" width="165"/><br>
+                            </v-card-actions>
+                          </v-card>
+                        </v-tooltip>
+                      </div>
                       <v-slider
-                        v-model="tag.value" step="1" max="10" hide-details
+                        v-model="tag.value" step="1" max="10" persistent-hint
                         ticks tick-size="2" :thumb-size="24" thumb-label="always"
+                        hint="This value will be use for performer's 'Tag Meter'."
                       />
                     </v-col>
                     <v-col cols="12" sm="6" align="center" justify="center">
                       <div class="mb-4">Tag category</div>
                       <v-select
                         v-model="tag.category" :items="categories" label="Categories"
-                        solo multiple hide-details
+                        outlined multiple :rules="[getCategoryRules]"
                       ></v-select>
                     </v-col>
                     <v-col cols="12" align="center" justify="center">
@@ -238,6 +258,9 @@ export default {
       dateFormated += ' ' + date.toLocaleTimeString() 
       return dateFormated
     },
+    getMeterImg() {
+      return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)
+    },
   },
   methods: {
     handleFile(imgType) {
@@ -278,6 +301,14 @@ export default {
         return 'Duplicates in names'
       } else if (this.parseStringToArray(names).includes(this.tagName)) {
         return 'Names must not include a tag name'
+      } else {
+        return true
+      }
+    },
+    getCategoryRules(categories) {
+      console.log(categories)
+      if (categories.length == 0) {
+        return 'Choose at least one category'
       } else {
         return true
       }
