@@ -30,7 +30,7 @@
 
     <v-dialog :value="dialogEditItems" width="400" persistent scrollable eager>
       <v-card>
-        <v-card-title class="py-1 headline">
+        <v-card-title class="py-1 px-4 headline">
           {{param}}
           <v-spacer></v-spacer>
           <v-icon>mdi-{{paramIcon}}</v-icon>
@@ -52,10 +52,10 @@
             <v-icon left>mdi-close</v-icon> Close
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogDeleteItem=true" small class="ma-2" color="red" dark :disabled="isBtnsDisbaled"> 
+          <v-btn @click="dialogDeleteItem=true" small dark class="ma-2" color="red" :disabled="isBtnsDisbaled"> 
             <v-icon>mdi-delete</v-icon> 
           </v-btn>
-          <v-btn @click="openDialogEditItemName" small class="ma-2" color="orange" :disabled="isBtnsDisbaled"> 
+          <v-btn @click="openDialogEditItemName" small dark class="ma-2" color="orange" :disabled="isBtnsDisbaled"> 
             <v-icon>mdi-pencil</v-icon> 
           </v-btn>
           <v-btn @click="dialogAddItem=true" small dark class="ma-2" color="green"> 

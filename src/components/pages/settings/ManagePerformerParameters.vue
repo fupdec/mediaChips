@@ -30,9 +30,9 @@
         <v-card-actions class="pt-0">
           <v-btn @click="$store.state.Settings.dialogManagePerformerParameters=false" class="ma-4">Close</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogDeleteParam=true" :disabled="selectedParam===undefined" class="ma-4" color="red"> 
+          <v-btn @click="dialogDeleteParam=true" :disabled="selectedParam===undefined" dark class="ma-4" color="red"> 
             <v-icon left>mdi-delete</v-icon> Delete parameter </v-btn>
-          <v-btn @click="dialogAddPerformerParameter=true" class="ma-4" color="green"> 
+          <v-btn @click="dialogAddPerformerParameter=true" dark class="ma-4" color="green"> 
             <v-icon left>mdi-plus</v-icon> Add new parameter </v-btn>
         </v-card-actions>
       </v-card>
@@ -54,7 +54,7 @@
         <v-card-actions class="pt-0">
           <v-btn @click="dialogDeleteParam=false" class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="deleteParam" class="ma-4" color="red"> 
+          <v-btn @click="deleteParam" class="ma-4" color="red" dark> 
             <v-icon left>mdi-delete-alert</v-icon> Delete parameter </v-btn>
         </v-card-actions>
       </v-card>
