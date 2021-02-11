@@ -113,6 +113,7 @@ export default {
       let dups = []
       let newPerformers = []
       let db = this.$store.getters.performers
+      let params = this.$store.state.Settings.customParametersPerformer
 
       async function addPerformerInDb() {
         for (const performer of performersArray) {
@@ -125,8 +126,8 @@ export default {
           }
 
           // create performer info
-          var performerID = shortid.generate()
-          var performerInfo = {
+          let performerID = shortid.generate()
+          let performerInfo = {
             id: performerID,
             name: performer,
             date: Date.now(),
@@ -155,6 +156,17 @@ export default {
             tags: [],
             videoTags: [],
             websites: [],
+          }
+
+          for (let param in params) {
+            let type = params[param].type
+            if (type == 'boolean') {
+              performerInfo[params[param].name] = false
+            } else if (type == 'number' || type == 'string' || type == 'date') {
+              performerInfo[params[param].name] = ''
+            } else if (type == 'array') {
+              performerInfo[params[param].name] = []
+            }
           }
 
           // add performerInfo to DB
