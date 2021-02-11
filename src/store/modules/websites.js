@@ -94,6 +94,9 @@ const Websites = {
         getters.videos.filter({'website': websiteName}).each(video=>{
           video.website = ""
         }).write()
+        // close tab with this website
+        let tab = _.find(getters.tabs, {'id': id })
+        if (tab) dispatch('closeTab', id)
         // remove website from database
         getters.websites.remove({ 'id': id }).write()
         // remove images of website
