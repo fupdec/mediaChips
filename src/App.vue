@@ -251,10 +251,17 @@ export default {
         if(response.status === 200) {
           const html = response.data;
           const $ = cheerio.load(html)
-          let v = $('.release-header .f1 a').eq(0).text().trim()
-          if (v.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0] > app.getVersion()) this.updateApp = true
+          let lastVersion = $('.release-header .f1 a').eq(0).text().trim()
+          lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
+          let currentVersion = app.getVersion()
+          if (this.compareVersion(currentVersion, lastVersion)) this.updateApp = true
         }
       })
+    },
+    compareVersion(currentVersion, lastVersion) {
+      lastVersion = lastVersion.split('.').map( s => s.padStart(10) ).join('.')
+      currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
+      return lastVersion > currentVersion
     },
     openPage() {
       shell.openExternal('https://github.com/fupdec/Adult-Video-Database/releases')
