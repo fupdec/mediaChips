@@ -90,7 +90,7 @@
 
     <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
-      <VideoCard v-for="(video) in videosFromWebsite" :key="video.id" :video="video"/>
+      <VideoCard v-for="(video) in videosOnPage" :key="video.id" :video="video"/>
     </v-container>
 
     <v-pagination class="pt-10 pb-16"
@@ -116,10 +116,10 @@
 const fs = require("fs")
 const path = require("path")
 import VideosGrid from '@/mixins/VideosGrid'
-import CropImage from '@/mixins/CropImage'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
+// TODO maybe make website type array instead string. than you can add multiple websites to each video
 
 export default {
   name: 'WebsitePage',
@@ -145,13 +145,8 @@ export default {
     websiteId() {
       return this.$route.params.id.replace(/:/g, '')    
     },
-    videosFromWebsite: {
-      get() {
-        return this.$store.getters.videosOnPage
-      },
-      set(value) {
-        // this.$store.dispatch('rearrangeVideos', filteredVideos)
-      },
+    videosOnPage() {
+      return this.$store.getters.videosOnPage
     },
     cardSize() {
       return `card-size-${this.$store.state.Settings.videoCardSize}`

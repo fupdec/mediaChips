@@ -11,7 +11,9 @@
         </v-img>
         <div class="ml-6">
           <div class="font-weight-regular headline body-1">
-            Edit video{{isSelectedSingleVideo ? '':'s'}} info
+            Edit video{{isSelectedSingleVideo ? '':'s'}} info 
+            <!-- TODO add help tooltip for understood how works writing when you edit multiple videos.
+              for multiple videos new data not replaced old values, it just add new data. -->
           </div>
           <div v-if="isSelectedSingleVideo" class="font-weight-light headline body-1">
             {{fileName}}
@@ -263,8 +265,8 @@
                 </v-col>
                 <v-col cols="8" md="4" align="center" justify="center">
                   <div class="overline mb-3">Rating</div>
-                  <v-rating style="display:inline-flex;"
-                    v-model="rating" clearable :disabled="clearFavorite"
+                  <v-rating style="display:inline-flex;" :readonly="clearRating"
+                    v-model="rating" clearable :disabled="clearRating"
                     color="yellow darken-2"
                     background-color="grey"
                     empty-icon="mdi-star-outline"
@@ -282,13 +284,13 @@
                 </v-col>
                 <v-col cols="12" class="mt-6 py-0" v-if="!isSelectedSingleVideo">
                   <div class="overline text-center">Clear Information</div>
-                </v-col>
-                <v-col cols="12" class="rating-favorite py-0" v-if="!isSelectedSingleVideo">
-                  <v-switch inset v-model="clearPerformers" label="Performers" color="red" />
-                  <v-switch inset v-model="clearTags" label="Tags" color="red" />
-                  <v-switch inset v-model="clearWebsite" label="Website" color="red" />
-                  <v-switch inset v-model="clearRating" label="Rating" color="red" />
-                  <v-switch inset v-model="clearFavorite" label="Favorite" color="red" />
+                  <div cols="12" class="d-flex justify-space-between">
+                    <v-switch inset v-model="clearPerformers" label="Performers" color="red" />
+                    <v-switch inset v-model="clearTags" label="Tags" color="red" />
+                    <v-switch inset v-model="clearWebsite" label="Website" color="red" />
+                    <v-switch inset v-model="clearRating" label="Rating" color="red" />
+                    <v-switch inset v-model="clearFavorite" label="Favorite" color="red" />
+                  </div>
                 </v-col>
                 <v-col cols="12" v-if="isSelectedSingleVideo">
                   <div class="overline text-center mb-4">Bookmark</div>
@@ -335,7 +337,7 @@ export default {
     this.$nextTick(function () {
       // get info of video
       if (this.isSelectedSingleVideo) {
-        let video = this.video
+        let video = _.cloneDeep(this.video)
         this.performers = video.performers.sort()
         this.tags = video.tags.sort()
         this.website = video.website

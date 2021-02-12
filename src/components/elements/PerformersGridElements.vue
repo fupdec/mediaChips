@@ -300,10 +300,11 @@ export default {
         }
       }
     },
-    getSelectedVideos(selectedVideos){
-      let ids = selectedVideos.map(item => (item.dataset.id))
-      this.$store.commit('updateSelectedVideos', ids)
-    },
+    // getSelectedVideos(selectedVideos){
+    //   let ids = selectedVideos.map(item => (item.dataset.id))
+    //   this.$store.commit('updateSelectedVideos', ids)
+    // }, 
+    // TODO check if getSelectedVideos function needed
     getSelectedPerformers(selectedPerformers){
       let ids = selectedPerformers.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedPerformers', ids)

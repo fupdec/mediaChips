@@ -233,7 +233,7 @@
 
     <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
-      <VideoCard v-for="(video) in videosOfPerformer" :key="video.id" :video="video"/>
+      <VideoCard v-for="(video) in videosOnPage" :key="video.id" :video="video"/>
     </v-container>
 
     <v-pagination class="pt-10 pb-16"
@@ -456,13 +456,8 @@ export default {
     performerId() {
       return this.$route.params.id.replace(/:/g, '')    
     },
-    videosOfPerformer: {
-      get() {
-        return this.$store.getters.videosOnPage
-      },
-      set(value) {
-        // this.$store.dispatch('rearrangeVideos', filteredVideos)
-      },
+    videosOnPage() {
+      return this.$store.getters.videosOnPage
     },
     totalCareer() {
       let years
