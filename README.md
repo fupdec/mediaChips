@@ -14,7 +14,7 @@ Manage your porn video collection - add performers, tags, websites and have fun!
 
 ## Install application (Windows)
 To install, run the executable file. <br>
-You can download the latest executable under "Releases" on the right hand side of this page. <br>
+You can download the latest executable under  <a href="https://github.com/fupdec/Adult-Video-Database/releases">"Releases"</a> on the right hand side of this page. <br>
 After the first launch, go to your "AppData" directory (just write %appdata% in address bar). <br>
 Find the folder with the name of this application. The folder "userfiles" should appear in it. <br>
 Then you should download archive https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z <br>
