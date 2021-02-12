@@ -172,7 +172,7 @@
           tile dense multiple color="primary" class="toggle">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn value="autoplay" v-on="on">
+              <v-btn value="autoplay" v-on="on" disabled>
                 <v-icon>mdi-play-pause</v-icon>
               </v-btn>
             </template>
@@ -551,7 +551,7 @@ export default {
     playlist: [],
     playIndex: null,
     playlistLength: 0,
-    playlistMode: ['autoplay'],
+    playlistMode: [],
     // Markers
     isMarkersVisible: false,
     markers: [],
@@ -772,7 +772,11 @@ export default {
         this.currentTime = this.player.time / 1000;
         this.$emit("timeupdate", this.currentTime);
       });
-      this.player.on("ended", () => {})
+      this.player.on("ended", () => {
+        if (this.player.playlist.items.length != this.playIndex+1) {
+          this.playIndex = this.playIndex + 1
+        }
+      })
 
       this.player.on("durationChange", (duration) => {
         console.log("durationchange", duration);
@@ -1218,11 +1222,12 @@ export default {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
     changePlaylistMode() {
-      if (this.playlistMode.includes('autoplay')) {
-        this.player.playlist.mode = 'Loop'
-      } else {
-        this.player.playlist.mode = 'Normal'
-      }
+      // TODO need to fix this function
+      // if (this.playlistMode.includes('autoplay')) {
+      //   this.player.playlist.mode = 'Normal'
+      // } else {
+      //   this.player.playlist.mode = 'Single'
+      // }
     },
   },
   watch: {
