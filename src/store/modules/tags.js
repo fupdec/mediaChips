@@ -99,12 +99,12 @@ const Tags = {
       getters.getSelectedTags.map(id => {
         let tagName = getters.tags.find({id:id}).value().name
         // remove tag from videos
-        getters.videos.each(video=>{
+        getters.videos.filter({'tags': [tagName]}).each(video=>{
           let index = video.tags.indexOf(tagName);
           if (index !== -1) video.tags.splice(index, 1);
         }).write()
         // remove tag from performers
-        getters.performers.each(performer=>{
+        getters.performers.filter({'tags': [tagName]}).each(performer=>{
           let index = performer.tags.indexOf(tagName);
           if (index !== -1) performer.tags.splice(index, 1);
         }).write()
