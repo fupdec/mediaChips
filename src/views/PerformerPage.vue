@@ -50,7 +50,7 @@
             <div class="profile-name text-center">{{performer.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
-            <v-container>
+            <v-container class="pa-0">
               <v-row>
                 <v-col cols="12" sm="4">
                   <div class="overline text-center">Main info</div>
@@ -108,28 +108,37 @@
                 <v-col cols="12" class="pa-0">
                   <div class="overline text-center">Appearance</div>
                 </v-col>
-                <v-col cols="12" sm="6">
-                  <div class="param">
-                    <v-icon left size="16">mdi-account-group</v-icon>
-                    Ethnicity <b>{{ethnicity}}</b>
-                  </div><br>
-                  <div class="param">
-                    <v-icon left size="16">mdi-face-woman-outline</v-icon>
-                    Hair color <b>{{hair}}</b>
-                  </div><br>
-                  <div class="param">
-                    <v-icon left size="16">mdi-eye</v-icon>
-                    Eyes color <b>{{eyes}}</b>
-                  </div>
+                <v-col cols="4" class="pb-0">
+                  <v-icon left size="16">mdi-account-group</v-icon>
+                  Ethnicity <b>{{ethnicity}}</b>
                 </v-col>
-                <v-col cols="12" sm="6">
+                <v-col cols="4" class="pb-0">
+                  <v-icon left size="16">mdi-face-woman-outline</v-icon>
+                  Hair color <b>{{hair}}</b>
+                </v-col>
+                <v-col cols="4" class="pb-0">
+                  <v-icon left size="16">mdi-eye</v-icon>
+                  Eyes color <b>{{eyes}}</b>
+                </v-col>
+                <v-col cols="4" class="py-0">
                   <div class="param">Height <b>{{height}}</b> <i>cm</i></div>
                   <div class="param">Weight <b>{{weight}}</b> <i>kg</i></div><br>
+                </v-col>
+                <v-col cols="4" class="py-0">
                   <div class="param">Bra <b>{{bra}}</b> <i>cm</i></div>
                   <div class="param">Waist <b>{{waist}}</b> <i>cm</i></div>
                   <div class="param">Hip <b>{{hip}}</b> <i>cm</i></div><br>
+                </v-col>
+                <v-col cols="4" class="py-0">
                   <div class="param">Cups <b>{{cups}}</b></div>
                   <div class="param">Boobs <b>{{boobs}}</b></div>
+                </v-col>
+                <v-col v-if="params.length" cols="12" class="pb-0">
+                  <div class="overline text-center">Custom parameters</div>
+                </v-col>
+                <v-col v-for="param in params" :key="param.name" cols="4" class="py-0">
+                  <v-icon left size="16">mdi-shape</v-icon>
+                  {{param.name}} <b>{{getCustomParamValue(param.name, param.type)}}</b>
                 </v-col>
                 <v-col cols="12" class="text-center pb-0">
                   <v-chip v-for="tag in performer.tags" :key="tag"
@@ -139,7 +148,7 @@
                     >{{tag}}</v-chip>
                 </v-col>
                 <v-col v-if="tagsFromVideos.length && showTags" cols="12" class="text-center py-0">
-                  <div class="my-2 font-weight-light"> 
+                  <div class="mt-2 font-weight-light"> 
                     <v-tooltip left>
                       <template v-slot:activator="{ on, attrs }">
                         <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
@@ -149,7 +158,7 @@
                     <span>Tags from videos</span>
                     <v-btn v-if="activeTags.length" @click="activeTags=[]" 
                       x-small rounded class="ml-4">
-                      <v-icon left>mdi-cancel</v-icon> Unselect all
+                      <v-icon left small>mdi-cancel</v-icon> Show all
                     </v-btn>
                   </div>
                   <v-chip-group v-model="activeTags" active-class="active-chip"
@@ -162,7 +171,7 @@
                   </v-chip-group>
                 </v-col>
                 <v-col v-if="performer.websites.length && showWebsites" cols="12" class="text-center py-0">
-                  <div class="my-2 font-weight-light"> 
+                  <div class="mt-2 font-weight-light"> 
                     <v-tooltip left>
                       <template v-slot:activator="{ on, attrs }">
                         <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
@@ -172,7 +181,7 @@
                     <span>Websites from videos</span>
                     <v-btn v-if="activeWebsites.length" @click="activeWebsites=[]" 
                       x-small rounded class="ml-4">
-                      <v-icon left>mdi-cancel</v-icon> Unselect all
+                      <v-icon left small>mdi-cancel</v-icon> Show all
                     </v-btn>
                   </div>
                   <v-chip-group v-model="activeWebsites" active-class="active-chip"
@@ -535,6 +544,9 @@ export default {
     gapSize() {
       return `gap-size-${this.$store.state.Settings.gapSize}`
     },
+    params() {
+      return this.$store.state.Settings.customParametersPerformer
+    },
   },
   methods: {
     addNewTabPerformer() {
@@ -715,6 +727,21 @@ export default {
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
       this.$store.state.Settings.videoFilters = [...defaults, ...others]
       this.$store.dispatch('filterVideos')
+    },
+    getCustomParamValue(name, type) {
+      if (type == 'array') {
+        if (this.performer[name].length) {
+          return this.performer[name].join(',')
+        } else return '??'
+      } else if (type == 'boolean') {
+        if (this.performer[name]) {
+          return 'Yes'
+        } else return 'No'
+      } else {
+        if (this.performer[name].length) {
+          return this.performer[name]
+        } else return '??'
+      }
     },
   },
   watch: {
