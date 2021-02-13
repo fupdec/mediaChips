@@ -92,6 +92,16 @@
               <v-icon>mdi-format-list-bulleted</v-icon>
             </v-btn>
           </v-btn-toggle>
+          <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn-toggle class="mx-2 remove-active">
+              <v-btn @click="setAsThumb" v-on="on" small>
+                <v-icon>mdi-image</v-icon>
+              </v-btn>
+            </v-btn-toggle>
+          </template>
+          <span>Set Frame as Thumb</span>
+        </v-tooltip>
           <v-spacer></v-spacer>
           <div class="duration mx-2">
             <div class="time-start">{{ msToTime(currentTime * 1000) }}</div>
@@ -432,6 +442,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 // TODO
@@ -949,6 +960,18 @@ export default {
       this.player.destroy();
       this.init();
     },
+    setAsThumb() {
+      let video = this.videos[this.playIndex]
+      let imgPath = path.join(this.pathToUserData, `/media/thumbs/${video.id}.jpg`)
+      let specificTime = new Date(this.currentTime*1000).toISOString().substr(11, 8)
+      this.createMarkerThumb(specificTime, video.path, imgPath, 320)
+        .then(result => {
+          console.log('thumb created')
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
     // CONTROLS
     async play() {
       this.player.play()
@@ -1076,7 +1099,7 @@ export default {
         let imgPath = path.join(this.pathToUserData, `/media/markers/${markers[i].id}.jpg`)
         if (fs.existsSync(imgPath)) continue
         let specificTime = new Date(1000*markers[i].time).toISOString().substr(11, 8)
-        this.createMarkerThumb(specificTime, video.path, imgPath)
+        this.createMarkerThumb(specificTime, video.path, imgPath, 180)
           .then(result => {
             console.log('thumb created')
           })
@@ -1085,13 +1108,13 @@ export default {
           })
       }
     },
-    createMarkerThumb(timestamp, inputPath, outputPath) {
+    createMarkerThumb(timestamp, inputPath, outputPath, width) {
       return new Promise((resolve, reject) => {
         ffmpeg()
           .addOption('-ss', timestamp)
           .addOption('-i', inputPath)
           .addOption('-frames:v', '1')
-          .addOption('-vf','scale=320:-1')
+          .addOption('-vf',`scale=-1:${width}`)
           .save(outputPath)
           .on('end', function(e) {
             resolve(e)
@@ -1251,6 +1274,7 @@ export default {
   },
 };
 </script>
+
 
 <style lang="less">
 .vlc-player {
