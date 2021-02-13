@@ -50,11 +50,13 @@
     "wcjs-prebuilt": "github:fupdec/wcjs-prebuilt"
   },
   "devDependencies": {
+    "@mdi/font": "^5.9.55",
     "@vue/cli-plugin-babel": "^4.5.10",
     "@vue/cli-plugin-router": "^4.5.10",
     "@vue/cli-plugin-vuex": "^4.5.10",
     "@vue/cli-service": "^4.5.10",
     "@vue/devtools": "^5.3.3",
+    "css-loader": "^5.0.2",
     "electron": "^11.1.0",
     "less": "^3.0.4",
     "less-loader": "^5.0.0",

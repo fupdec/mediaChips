@@ -1153,7 +1153,6 @@ export default {
         time: time,
       } 
 
-      // TODO fix when add new tag to the video replaces all tags
       ipcRenderer.send('addMarker', marker, this.markerTag, videoId)
 
       this.markerTag = ''

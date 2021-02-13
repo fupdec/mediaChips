@@ -99,24 +99,24 @@
       <v-sheet class="bottom-profle">
         <v-container fluid class="py-0">
           <v-row>
-            <v-col cols="12" md="4">
-              <div>Category: <i>{{performer.category.join(', ')}}</i></div>
-              <div>Career: <i>{{performer.start}} - {{performer.end}}</i></div>
-              <div>Birth (age): <i>{{getAge(performer.birthday)}}</i></div>
+            <v-col cols="4">
+              <div>Category: <b>{{performer.category.join(', ')}}</b></div>
+              <div>Career: <b>{{performer.start}} - {{performer.end}}</b></div>
+              <div>Birth (age): <b>{{getAge(performer.birthday)}}</b></div>
             </v-col>
-            <v-col cols="12" md="4">
-              <div>Ethnicity: <i>{{performer.ethnicity.join(', ')}}</i></div>
-              <div>Hair color: <i>{{performer.hair.join(', ')}}</i></div>
-              <div>Eyes color: <i>{{performer.eyes.join(', ')}}</i></div>
+            <v-col cols="4">
+              <div>Ethnicity: <b>{{performer.ethnicity.join(', ')}}</b></div>
+              <div>Hair color: <b>{{performer.hair.join(', ')}}</b></div>
+              <div>Eyes color: <b>{{performer.eyes.join(', ')}}</b></div>
             </v-col>
-            <v-col cols="12" md="4">
-              <span class="mr-2">Height: <i>{{performer.height}}</i></span>
-              <span>Weight: <i>{{performer.weight}}</i></span><br>
-              <span class="mr-2">Bra: <i>{{performer.bra}}</i></span>
-              <span class="mr-2">Waist: <i>{{performer.waist}}</i></span>
-              <span>Hip: <i>{{performer.hip}}</i></span><br>
-              <span class="mr-2">Cups: <i>{{performer.cups.join(', ')}}</i></span>
-              <span>Boobs: <i>{{performer.boobs.join(', ')}}</i></span>
+            <v-col cols="4">
+              <span class="mr-2">Height: <b>{{performer.height}}</b></span>
+              <span>Weight: <b>{{performer.weight}}</b></span><br>
+              <span class="mr-2">Bra: <b>{{performer.bra}}</b></span>
+              <span class="mr-2">Waist: <b>{{performer.waist}}</b></span>
+              <span>Hip: <b>{{performer.hip}}</b></span><br>
+              <span class="mr-2">Cups: <b>{{performer.cups.join(', ')}}</b></span>
+              <span>Boobs: <b>{{performer.boobs.join(', ')}}</b></span>
             </v-col>
           </v-row>
         </v-container>
