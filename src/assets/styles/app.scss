@@ -1,4 +1,17 @@
 @font-face {
+  font-family: "Arimo";
+  src: url(assets/fonts/Arimo/Arimo-Regular.ttf) format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+  font-family: "Arimo";
+  src: url(assets/fonts/Arimo/Arimo-Bold.ttf) format("truetype");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
   font-family: "Lato";
   src: url(assets/fonts/Lato/Lato-Light.ttf) format("truetype");
 	font-weight: 300;
@@ -58,6 +71,25 @@
 @font-face {
   font-family: "Montserrat";
   src: url(assets/fonts/Montserrat/Montserrat-Bold.ttf) format("truetype");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url(assets/fonts/Nunito/Nunito-Light.ttf) format("truetype");
+	font-weight: 300;
+	font-style: normal;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url(assets/fonts/Nunito/Nunito-Regular.ttf) format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url(assets/fonts/Nunito/Nunito-Bold.ttf) format("truetype");
 	font-weight: 700;
 	font-style: normal;
 }
@@ -147,6 +179,25 @@
 }
 
 @font-face {
+  font-family: "Raleway";
+  src: url(assets/fonts/Raleway/Raleway-Light.ttf) format("truetype");
+	font-weight: 300;
+	font-style: normal;
+}
+@font-face {
+  font-family: "Raleway";
+  src: url(assets/fonts/Raleway/Raleway-Regular.ttf) format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+  font-family: "Raleway";
+  src: url(assets/fonts/Raleway/Raleway-Bold.ttf) format("truetype");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
   font-family: "Roboto";
   src: url(assets/fonts/Roboto/Roboto-Light.ttf) format("truetype");
 	font-weight: 300;
@@ -183,6 +234,25 @@
 	font-weight: 700;
 	font-style: normal;
 }
+
+@font-face {
+  font-family: "Ubuntu";
+  src: url(assets/fonts/Ubuntu/Ubuntu-Light.ttf) format("truetype");
+	font-weight: 300;
+	font-style: normal;
+}
+@font-face {
+  font-family: "Ubuntu";
+  src: url(assets/fonts/Ubuntu/Ubuntu-Regular.ttf) format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+  font-family: "Ubuntu";
+  src: url(assets/fonts/Ubuntu/Ubuntu-Bold.ttf) format("truetype");
+	font-weight: 700;
+	font-style: normal;
+}
 html {
   overflow-y: hidden !important;
   -webkit-font-smoothing: subpixel-antialiased !important;
@@ -198,6 +268,14 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
 #app {
   .body-1,.body-2,.caption,.overline {
     font-family: inherit !important;
+  }
+  &.text-font-arimo {
+    font-family: "Arimo", sans-serif !important;
+  }
+  &.header-font-arimo {
+    #{$headings} {
+      font-family: "Arimo", sans-serif !important;
+    }
   }
   &.text-font-lato {
     font-family: "Lato", sans-serif !important;
@@ -229,6 +307,14 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   &.header-font-montserrat {
     #{$headings} {
       font-family: "Montserrat", sans-serif !important;
+    }
+  }
+  &.text-font-nunito {
+    font-family: "Nunito", sans-serif !important;
+  }
+  &.header-font-nunito {
+    #{$headings} {
+      font-family: "Nunito", sans-serif !important;
     }
   }
   &.text-font-opensans {
@@ -271,12 +357,28 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       font-family: "Quicksand", sans-serif !important;
     }
   }
+  &.text-font-raleway {
+    font-family: "Raleway", sans-serif !important;
+  }
+  &.header-font-raleway {
+    #{$headings} {
+      font-family: "Raleway", sans-serif !important;
+    }
+  }
   &.text-font-robotocondensed {
     font-family: "RobotoCondensed", sans-serif !important;
   }
   &.header-font-robotocondensed {
     #{$headings} {
       font-family: "RobotoCondensed", sans-serif !important;
+    }
+  }
+  &.text-font-ubuntu {
+    font-family: "Ubuntu", sans-serif !important;
+  }
+  &.header-font-ubuntu {
+    #{$headings} {
+      font-family: "Ubuntu", sans-serif !important;
     }
   }
 }

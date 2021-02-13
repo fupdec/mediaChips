@@ -534,17 +534,21 @@ export default {
     dialogUpdateNumberOfVideos: false,
     updatingNumberOfVideos: false,
     fonts: [
+      'Arimo',
       'Lato',
       'Lobster',
       'Merriweather',
       'Montserrat',
+      'Nunito',
       'OpenSans',
       'OpenSansCondensed',
       'Oswald',
       'PTSans',
       'Quicksand',
+      'Raleway',
       'Roboto',
-      'RobotoCondensed'
+      'RobotoCondensed',
+      'Ubuntu'
     ],
     dialogChangeHeaderGradientLight: false,
     dialogChangeHeaderGradientDark: false,
