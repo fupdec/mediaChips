@@ -137,10 +137,12 @@
                   <div class="overline text-center">Custom parameters</div>
                 </v-col>
                 <v-col v-for="param in params" :key="param.name" cols="4" class="py-0">
-                  <v-icon left size="16">mdi-shape</v-icon>
                   {{param.name}} <b>{{getCustomParamValue(param.name, param.type)}}</b>
                 </v-col>
-                <v-col cols="12" class="text-center pb-0">
+                <v-col cols="12" class="text-center pt-4">
+                  <div class="mt-2 font-weight-light">Tags of performer</div>
+                </v-col>
+                <v-col cols="12" class="text-center py-0">
                   <v-chip v-for="tag in performer.tags" :key="tag"
                     outlined class="mr-2 mb-1 px-2"
                     @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
@@ -176,7 +178,7 @@
                       <template v-slot:activator="{ on, attrs }">
                         <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
                       </template>
-                      <span>Click on website for filter videos</span>
+                      <span>Click on website for filter videos <br> Middle click opens new tab with website</span>
                     </v-tooltip>
                     <span>Websites from videos</span>
                     <v-btn v-if="activeWebsites.length" @click="activeWebsites=[]" 
@@ -731,7 +733,7 @@ export default {
     getCustomParamValue(name, type) {
       if (type == 'array') {
         if (this.performer[name].length) {
-          return this.performer[name].join(',')
+          return this.performer[name].join(', ')
         } else return '??'
       } else if (type == 'boolean') {
         if (this.performer[name]) {

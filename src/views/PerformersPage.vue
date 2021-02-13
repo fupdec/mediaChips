@@ -97,19 +97,19 @@
       hide-overlay inset no-click-animation persistent
     >
       <v-sheet class="bottom-profle">
-        <v-container fluid class="py-0">
+        <v-container fluid class="pt-0">
           <v-row>
-            <v-col cols="4">
+            <v-col cols="4" class="pb-0">
               <div>Category: <b>{{performer.category.join(', ')}}</b></div>
               <div>Career: <b>{{performer.start}} - {{performer.end}}</b></div>
               <div>Birth (age): <b>{{getAge(performer.birthday)}}</b></div>
             </v-col>
-            <v-col cols="4">
+            <v-col cols="4" class="pb-0">
               <div>Ethnicity: <b>{{performer.ethnicity.join(', ')}}</b></div>
               <div>Hair color: <b>{{performer.hair.join(', ')}}</b></div>
               <div>Eyes color: <b>{{performer.eyes.join(', ')}}</b></div>
             </v-col>
-            <v-col cols="4">
+            <v-col cols="4" class="pb-0">
               <span class="mr-2">Height: <b>{{performer.height}}</b></span>
               <span>Weight: <b>{{performer.weight}}</b></span><br>
               <span class="mr-2">Bra: <b>{{performer.bra}}</b></span>
@@ -117,6 +117,9 @@
               <span>Hip: <b>{{performer.hip}}</b></span><br>
               <span class="mr-2">Cups: <b>{{performer.cups.join(', ')}}</b></span>
               <span>Boobs: <b>{{performer.boobs.join(', ')}}</b></span>
+            </v-col>
+            <v-col v-for="param in params" :key="param.name" cols="4" class="py-0">
+              {{param.name}}: <b>{{getCustomParamValue(param.name, param.type)}}</b>
             </v-col>
           </v-row>
         </v-container>
@@ -166,6 +169,9 @@ export default {
     gapSize() {
       return `gap-size-${this.$store.state.Settings.gapSize}`
     },
+    params() {
+      return this.$store.state.Settings.customParametersPerformer
+    },
   },
   methods: {
     scrollToTop() {
@@ -204,6 +210,21 @@ export default {
         age = `${age} (${new Date().getFullYear() - age})`
       } else { age = '' }
       return age
+    },
+    getCustomParamValue(name, type) {
+      if (type == 'array') {
+        if (this.performer[name].length) {
+          return this.performer[name].join(', ')
+        } else return ''
+      } else if (type == 'boolean') {
+        if (this.performer[name]) {
+          return 'Yes'
+        } else return 'No'
+      } else {
+        if (this.performer[name].length) {
+          return this.performer[name]
+        } else return ''
+      }
     },
   },
   watch: {
