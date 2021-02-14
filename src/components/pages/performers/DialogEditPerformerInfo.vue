@@ -40,7 +40,7 @@
               <v-container fluid>
                 <v-row>
                   <v-col cols="8" class="pt-0">
-                    <v-btn @click="getInfoFreeonce(performerNameForSearch)" 
+                    <v-btn @click="getPerformerInfoFreeonce(performerNameForSearch)" 
                       :loading="searchInProgress" color="secondary" class="mr-8">
                       <v-icon left>mdi-auto-fix</v-icon> Autosearch info by name
                     </v-btn>
@@ -396,11 +396,11 @@
                             </v-card-text>
                             <v-fade-transition>
                               <v-overlay v-if="hover" absolute color="secondary">
-                                <v-btn v-if="resultFromFreeones" @click="getInfoFreeonce(fp.link)" color="primary" 
+                                <v-btn v-if="resultFromFreeones" @click="getPerformerInfoFreeonce(fp.link)" color="primary" 
                                   :loading="searchInProgress">
                                   <v-icon left>mdi-information-variant</v-icon> Get info
                                 </v-btn>
-                                <v-btn v-else @click="getInfoIafd(fp.link)" color="primary" :loading="searchInProgress">
+                                <v-btn v-else @click="getPerformerInfoIafd(fp.link)" color="primary" :loading="searchInProgress">
                                   <v-icon left>mdi-information-variant</v-icon> Get info
                                 </v-btn>
                               </v-overlay>
@@ -771,11 +771,11 @@ export default {
         })
       })
     },
-    getInfoFreeonce(performer) {
+    getPerformerInfoFreeonce(performer) {
       this.searchInProgress = true
       this.foundPerformers = []
       axios.get(`https://www.freeones.com/${performer}/profile`).then((response)=>{
-        if(response.status === 200) {
+        if (response.status === 200) {
           this.searchInProgress = false
           this.clearPreviouslyFound()
 
@@ -788,8 +788,12 @@ export default {
           $('.timeline-horizontal .m-0').each((i, elem)=>{
             yearsActive[i] = $(elem).text().trim()
           }) 
-          profile.start = yearsActive[0]
-          profile.end = yearsActive[1]
+          if (yearsActive[0]) {
+            if (!yearsActive[0].match(/\D*/)[0]) profile.start = yearsActive[0] // if not contains words
+          }
+          if (yearsActive[1]) {
+            if (!yearsActive[1].match(/\D*/)[0]) profile.end = yearsActive[1] // if not contains words like "Now"
+          }
           let countries = this.countries.map(c=>c.name)
           if ( countries.includes($('[data-test="link-country"] span').text().trim()) ) {
             profile.nation = $('[data-test="link-country"] span').text().trim()
@@ -901,7 +905,7 @@ export default {
         })
       })
     },
-    getInfoIafd(performer) {
+    getPerformerInfoIafd(performer) {
       this.searchInProgress = true
       this.foundPerformers = []
       axios.get(`http://www.iafd.com${performer}`).then((response) => {
