@@ -472,7 +472,7 @@
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-row>
             <v-col cols="4">
-              <div>Adult Video Database 0.5.10</div>
+              <div>Adult Video Database 0.6.0</div>
               <p class="text--secondary">by fupdec</p>
               <v-btn color="#eee" light small @click="openGithub">
                 <v-icon left>mdi-github</v-icon> Github
