@@ -910,6 +910,7 @@ export default {
       }
 
         // TODO Sometimes file opens like DVD and when error it adds all parent folder to the playlist
+        // that error occured when opened file located in directory "#unknown"
       if (this.playlist !== [] && this.playlist !== null) {
         let playlist = this.playlist
         this.player.playlist.clear()
@@ -1176,7 +1177,7 @@ export default {
         time: time,
       } 
 
-      ipcRenderer.send('addMarker', marker, this.markerTag, videoId)
+      ipcRenderer.send('addMarker', marker, videoId)
 
       this.markerTag = ''
       this.markerBookmarkText = ''

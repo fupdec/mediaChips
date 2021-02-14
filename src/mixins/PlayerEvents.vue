@@ -14,8 +14,8 @@ export default {
       ipcRenderer.on('watchLater', (event, videoId) => {
         this.watchLater(videoId)
       })
-      ipcRenderer.on('addMarker', (event, marker, markerTag, video) => {
-        this.addMarker(marker, markerTag, video)
+      ipcRenderer.on('addMarker', (event, marker, video) => {
+        this.addMarker(marker, video)
       })
       ipcRenderer.on('removeMarker', (event, markerForRemove, video) => {
         this.removeMarker(markerForRemove, video)
@@ -41,15 +41,24 @@ export default {
         }).write()
       }
     },
-    addMarker(marker, markerTag, videoId) {
-      let video = this.$store.getters.videos.find({id: videoId}).value()
+    addMarker(marker, videoId) {
+      let video = _.cloneDeep(this.$store.getters.videos.find({id: videoId}).value())
       this.$store.getters.markers.push(marker).write()
       if (marker.type.toLowerCase() == 'tag') {
-        if (!video.tags.includes(markerTag)) {
-          video.tags.push(markerTag)
+        if (!video.tags.includes(marker.name)) {
+          video.tags.push(marker.name)
           video.tags.sort()
           this.$store.getters.videos.find({ id: video.id }).assign({ 
             tags: video.tags,
+          }).write()
+          this.$store.commit('updateVideos')
+        }
+      } else if (marker.type == 'performer') {
+        if (!video.performers.includes(marker.name)) {
+          video.performers.push(marker.name)
+          video.performers.sort()
+          this.$store.getters.videos.find({ id: video.id }).assign({ 
+            performers: video.performers,
           }).write()
           this.$store.commit('updateVideos')
         }
