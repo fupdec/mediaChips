@@ -321,7 +321,7 @@
                         <v-tooltip top>
                           <template v-slot:activator="{ on }">
                             <v-btn outlined value="date" v-on="on">
-                              <v-icon>mdi-calendar-clock</v-icon>
+                              <v-icon>mdi-calendar-plus</v-icon>
                             </v-btn>
                           </template>
                           <span>date added</span>

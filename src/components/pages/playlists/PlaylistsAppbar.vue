@@ -135,12 +135,12 @@
                   </v-icon>
                 </v-btn>
               </template>
-              <span>Sort by name</span>
+              <span>Sort by Name</span>
             </v-tooltip>
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
                 <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
-                  <v-icon>mdi-calendar-clock</v-icon>
+                  <v-icon>mdi-calendar-plus</v-icon>
                   <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='desc'">
                     mdi-arrow-down-thick
                   </v-icon>
@@ -149,12 +149,12 @@
                   </v-icon>
                 </v-btn>
               </template>
-              <span>Sort by date added</span>
+              <span>Sort by Date Added</span>
             </v-tooltip>
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
                 <v-btn outlined @click="toggleSortDirection" value="edit" v-on="on">
-                  <v-icon>mdi-history</v-icon>
+                  <v-icon>mdi-calendar-edit</v-icon>
                   <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='desc'">
                     mdi-arrow-down-thick
                   </v-icon>
@@ -163,7 +163,7 @@
                   </v-icon>
                 </v-btn>
               </template>
-              <span>Sort by date of editing</span>
+              <span>Sort by Date of Editing</span>
             </v-tooltip>
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
@@ -177,7 +177,7 @@
                   </v-icon>
                 </v-btn>
               </template>
-              <span>Sort by number of videos</span>
+              <span>Sort by Number of Videos</span>
             </v-tooltip>
           </v-btn-toggle>
         </v-card>

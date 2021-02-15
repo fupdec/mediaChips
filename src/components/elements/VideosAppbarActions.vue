@@ -122,7 +122,7 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
-                <v-icon>mdi-calendar-clock</v-icon>
+                <v-icon>mdi-calendar-plus</v-icon>
                 <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='desc'">
                   mdi-arrow-down-thick
                 </v-icon>
@@ -136,7 +136,7 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="edit" v-on="on">
-                <v-icon>mdi-history</v-icon>
+                <v-icon>mdi-calendar-edit</v-icon>
                 <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='desc'">
                   mdi-arrow-down-thick
                 </v-icon>
