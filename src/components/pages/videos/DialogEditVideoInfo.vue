@@ -29,8 +29,13 @@
           <v-form ref="form" v-model="valid">
             <v-container fluid>
               <v-row>
-                <v-col cols="12" class="py-0 text-right" v-if="isSelectedSingleVideo">
-                  last edit {{edit}}
+                <v-col cols="12" class="py-0 d-flex justify-space-between" v-if="isSelectedSingleVideo">
+                  <v-chip label outlined>
+                    <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{added}}
+                  </v-chip>
+                  <v-chip label outlined>
+                    <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{edit}}
+                  </v-chip>
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-card-actions>
@@ -390,10 +395,8 @@ export default {
         this.websites = video.websites
         this.rating = video.rating
         this.favorite = video.favorite
-      }
-      // get bookmark text
-      if (this.isSelectedSingleVideo) {
-        let video = this.video
+
+        // get bookmark text
         if (video) {
           if (video.bookmark) {
             let text = this.$store.getters.bookmarks.get('videos').find({itemId:video.id}).value().text
@@ -401,11 +404,12 @@ export default {
           }
         }
         this.pathToFile = video.path
-      }
-      // get bookmark text
-      if (this.isSelectedSingleVideo) {
-        let date = new Date(this.video.edit)
-        this.edit = date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+
+        // get date added and date of last edit text
+        let dateAdded = new Date(video.date)
+        this.added = dateAdded.toLocaleDateString() + ' ' + dateAdded.toLocaleTimeString()
+        let dateEdit = new Date(video.edit)
+        this.edit = dateEdit.toLocaleDateString() + ' ' + dateEdit.toLocaleTimeString()
       }
     })
   },
@@ -425,6 +429,7 @@ export default {
     pathEditable: false,
     videoExists: true,
     edit: '',
+    added: '',
   }),
   computed: {
     isSelectedSingleVideo() {

@@ -20,8 +20,6 @@
             </div> 
           </div>
           <v-spacer></v-spacer>
-          <div class="caption">last edit {{editDate}}</div>
-          <v-spacer></v-spacer>
           <div>
             <v-btn outlined dark class="mr-6" @click="close">Cancel</v-btn>
             <v-btn :disabled="!valid" color="primary" @click="saveTagInfo"
@@ -35,6 +33,14 @@
                 <v-col cols="12" md="8" class="pt-0">
                   <v-form ref="form" v-model="valid">
                     <v-row>
+                      <v-col cols="12" class="py-0 d-flex justify-space-between">
+                        <v-chip label outlined class="mr-4">
+                          <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+                        </v-chip>
+                        <v-chip label outlined>
+                          <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+                        </v-chip>
+                      </v-col>
                       <v-col cols="12" sm="9" align="center" justify="center">
                         <div>Tag name</div>
                         <div class="editable-text-field">
@@ -277,11 +283,13 @@ export default {
         return tags.find('id').value()
       }
     },
-    editDate() {
+    dateAdded() {
+      let date = new Date(this.tag.date)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
+    dateEdit() {
       let date = new Date(this.tag.edit)
-      let dateFormated = date.toLocaleDateString()
-      dateFormated += ' ' + date.toLocaleTimeString() 
-      return dateFormated
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
     getMeterImg() {
       return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)

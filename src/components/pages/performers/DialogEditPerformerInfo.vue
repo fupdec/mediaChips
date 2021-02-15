@@ -39,17 +39,27 @@
             <v-form ref="form" v-model="valid">
               <v-container fluid>
                 <v-row>
-                  <v-col cols="8" class="pt-0">
-                    <v-btn @click="getPerformerInfoFreeonce(performerNameForSearch)" 
-                      :loading="searchInProgress" color="secondary" class="mr-8">
-                      <v-icon left>mdi-auto-fix</v-icon> Autosearch info by name
-                    </v-btn>
+                  <v-col cols="4" class="pt-0">
+                    <v-tooltip bottom>
+                      <template v-slot:activator="{ on }">
+                        <v-btn @click="getPerformerInfoFreeonce(performerNameForSearch)" v-on="on"
+                          :loading="searchInProgress" color="secondary" class="mr-4" fab small>
+                          <v-icon>mdi-auto-fix</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Find information by name automatically on freeones.com</span>
+                    </v-tooltip>
                     <v-btn @click="dialogFindPerformerInfo=true" color="secondary"> 
-                      <v-icon left>mdi-magnify</v-icon> Find info 
+                      <v-icon left>mdi-magnify</v-icon> Find info
                     </v-btn>
                   </v-col>
-                  <v-col cols="4" class="pt-0">
-                    <div class="text-right">last edit {{editDate}}</div>
+                  <v-col cols="8" class="pt-0 text-right">
+                    <v-chip label outlined class="mr-4">
+                      <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+                    </v-chip>
+                    <v-chip label outlined>
+                      <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+                    </v-chip>
                   </v-col>
                   <v-col cols="12" class="pb-0">
                     <div class="editable-text-field">
@@ -640,11 +650,13 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
-    editDate() {
+    dateAdded() {
+      let date = new Date(this.performer.date)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
+    dateEdit() {
       let date = new Date(this.performer.edit)
-      let dateFormated = date.toLocaleDateString()
-      dateFormated += ' ' + date.toLocaleTimeString() 
-      return dateFormated
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
     params() {
       return this.$store.state.Settings.customParametersPerformer

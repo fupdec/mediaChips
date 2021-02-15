@@ -15,8 +15,6 @@
           </div> 
         </div>
         <v-spacer></v-spacer>
-        <div class="caption">last edit {{editDate}}</div>
-        <v-spacer></v-spacer>
         <div>
           <v-btn outlined dark class="mr-6" @click="close">Cancel</v-btn>
           <v-btn 
@@ -29,6 +27,14 @@
         <v-card-text>
           <v-container fluid class="py-0">
             <v-row>
+              <v-col cols="12" class="py-0 d-flex justify-space-between">
+                <v-chip label outlined class="mr-4">
+                  <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+                </v-chip>
+                <v-chip label outlined>
+                  <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+                </v-chip>
+              </v-col>
               <v-col cols="12" sm="9" align="center" justify="center">
                 <div>Playlist name</div>
                 <div v-show="isPlaylistWatchLater" class="overline pt-4">Name is not editable</div>
@@ -140,11 +146,13 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
-    editDate() {
+    dateAdded() {
+      let date = new Date(this.playlist.date)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
+    dateEdit() {
       let date = new Date(this.playlist.edit)
-      let dateFormated = date.toLocaleDateString()
-      dateFormated += ' ' + date.toLocaleTimeString() 
-      return dateFormated
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
     videos() {
       let videos = this.$store.getters.videos.filter(v=>(this.playlist.videos.includes(v.id))).value()
