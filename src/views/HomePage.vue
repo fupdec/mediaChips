@@ -10,6 +10,12 @@
       </div>
       <v-row v-else>
         <v-col cols="12">
+          <div v-if="!settings.appNewVersionUpdateVideoWebsite">
+            <div class="ma-4 red--text text-center">Starting from version 0.6.1 you can assign multiple websites to one video.
+              <br> If you have videos just press "Update video website" button. </div>
+            <v-btn @click="updateVideoWebsite" color="red" dark class="my-4" block> 
+              <v-icon left>mdi-auto-fix</v-icon> Update video website </v-btn>
+          </div>
           <div v-if="!settings.appNewVersionUpdatePerformers">
             <div class="ma-4 red--text text-center">Starting from version 0.5.8 performer parameters replaced with new values.
               <br> If you have performers just press "Update performers" button.
@@ -467,6 +473,22 @@ export default {
 
       setTimeout(() => {
         this.$store.getters.settings.set('appNewVersionUpdatePerformers', true).write()
+        this.dialogRestartApp = true
+      }, 2000)
+    },
+    updateVideoWebsite() {
+      this.$store.getters.videos.each(v=>{
+        if (typeof v.website === 'string') {
+          if (v.website.length == 0) v.websites = []
+          else v.websites = [v.website]
+          v.website = undefined
+        }
+        v.edit = Date.now()
+        v.viewed = 0
+      }).write()
+
+      setTimeout(() => {
+        this.$store.getters.settings.set('appNewVersionUpdateVideoWebsite', true).write()
         this.dialogRestartApp = true
       }, 2000)
     },

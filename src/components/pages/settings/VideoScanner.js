@@ -43,9 +43,9 @@ function createInfoForDb() {
     if (names.performer) {
       performers.push(names.performer)
     }
-    let website = ''
+    let websites = []
     if (names.website) {
-      website = names.website
+      websites.push(names.website)
     }
         
     // get file info 
@@ -57,11 +57,13 @@ function createInfoForDb() {
       resolution: resolution,
       tags: names.tags,
       performers: performers,
-      website: website,
+      websites: websites,
       rating: 0,
       favorite: false,
       bookmark: false,
       date: Date.now(),
+      edit: Date.now(),
+      viewed: 0,
     }
     
     let outputPathThumbs = path.join(store.getters.getPathToUserData, '/media/thumbs/')
@@ -109,6 +111,9 @@ function checkPathContainsNames(filePath) {
       }
     }
   }
+  // TODO if duplicated item in path than remove duplicates
+  // create more powerful search in string
+  // maybe remove all spaces, split by ,.-_
 
   // add performer if found 
   if (names.performer) {

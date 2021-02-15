@@ -91,8 +91,9 @@ const Websites = {
       getters.getSelectedWebsites.map(id => {
         let websiteName = getters.websites.find({id:id}).value().name
         // remove website from videos
-        getters.videos.filter({'website': websiteName}).each(video=>{
-          video.website = ""
+        getters.videos.filter({'websites': [websiteName]}).each(video=>{
+          let index = video.websites.indexOf(websiteName)
+          if (index !== -1) video.websites.splice(index, 1)
         }).write()
         // close tab with this website
         let tab = _.find(getters.tabs, {'id': id })
@@ -108,6 +109,7 @@ const Websites = {
             console.log(`successfully deleted image of website "${websiteName}"`);                                
           }
         })
+        // run update data function (in settings button with this function)
       })
       state.selectedWebsites = []
       commit('updateWebsites')

@@ -9,7 +9,6 @@
       <v-divider></v-divider>
       <vuescroll>
         <v-card-text class="text-center">
-          <!-- TODO stretch blocks equally 33 percent -->
           <div v-for="(filter,i) in filters" :key="i" class="filter-row">
             <v-select @input="setParam($event,i)" :value="filters[i].param" 
               :items="params" label="Parameter" outlined dense class="param"
@@ -41,7 +40,7 @@
 
             <v-text-field v-if="filters[i].type==='date'" 
               :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
-              label="Date" outlined dense readonly/>
+              label="Date" outlined dense readonly class="val"/>
             <v-dialog v-model="datePicker" width="300px">
               <v-date-picker @change="setVal($event,datePickerIndex), datePicker=false"
                 :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
@@ -51,20 +50,19 @@
             <v-autocomplete v-if="filters[i].param==='performers'"
               @input="setVal($event,i)" :value="filters[i].val" :items="performers"
               item-text="name" item-value="name" no-data-text="No more performers"
-              class="mb-4 select-small-chips hidden-close" label="Performers" 
+              class="mb-4 select-small-chips hidden-close val" label="Performers" 
               multiple hide-selected hide-details clearable dense outlined
               :menu-props="{contentClass:'list-with-preview'}"
               :filter="filterItemsPerformers" :disabled="filters[i].lock"
             >
               <template v-slot:selection="data">
-                <v-chip close small class="my-1" close-icon="mdi-close"
+                <v-chip close small label class="my-1" close-icon="mdi-close"
                   v-bind="data.attrs" :input-value="data.selected" 
                   @click="data.select" @click:close="removeChip(data.item, i)"
                   @mouseover.stop="showImage($event, data.item.id, 'performer')" 
                   @mouseleave.stop="$store.state.hoveredImage=false"
-                  :color="getPerformerColorDependsRating(data.item.rating)"
-                  :class="{'tag-with-favorite-performer': data.item.favorite}"
-                ><span>{{ data.item.name }}</span>
+                > <span> <v-icon v-if="data.item.favorite" small color="pink">
+                    mdi-heart </v-icon> {{ data.item.name }}</span>
                 </v-chip>
               </template>
               <template v-slot:item="data">
@@ -126,9 +124,9 @@
               </template>
             </v-autocomplete>
 
-            <v-autocomplete v-if="filters[i].param==='website'"
+            <v-autocomplete v-if="filters[i].param==='websites'"
               @input="setVal($event,i)" :value="filters[i].val" :items="websites" 
-              class="mb-4 select-small-chips hidden-close"
+              class="mb-4 select-small-chips hidden-close val"
               item-text="name" dense label="Websites"
               item-value="name" no-data-text="No more websites" 
               multiple hide-selected hide-details clearable outlined
@@ -199,11 +197,11 @@ export default {
     })
   },
   data: () => ({
-    params: ['path', 'performers', 'tags', 'website', 'duration', 'size', 'rating', 'height', 'width', 'date'],
+    params: ['path', 'performers', 'tags', 'websites', 'duration', 'size', 'rating', 'height', 'width', 'date'],
     paramTypeNumber: ['duration', 'size', 'rating', 'height', 'width'],
     paramTypeString: ['path'],
-    paramTypeArray: ['performers', 'tags'],
-    paramTypeSelect: ['website'],
+    paramTypeArray: ['performers', 'tags', 'websites'],
+    paramTypeSelect: [],
     paramTypeDate: ['date'],
     datePicker: false,
     datePickerIndex: 0,
@@ -244,7 +242,7 @@ export default {
       if (param === 'path') return 'mdi-file-search'
       if (param === 'performers') return 'mdi-account'
       if (param === 'tags') return 'mdi-tag'
-      if (param === 'website') return 'mdi-web'
+      if (param === 'websites') return 'mdi-web'
       if (param === 'duration') return 'mdi-timer-outline'
       if (param === 'size') return 'mdi-harddisk'
       if (param === 'rating') return 'mdi-star'
@@ -362,13 +360,6 @@ export default {
       this.$store.state.Videos.dialogFilterVideos = false
       this.$router.push(tab.link)
     },
-    getPerformerColorDependsRating(rating) { 
-      if (rating === 0) {
-        return `rgba(150, 150, 150, 0.1)`
-      } else {
-        return `rgba(255, 190, 0, ${0.05*rating})`
-      }
-    },
     updateFiltersOfVideosTab() {
       let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
       const pages = ['/performer/:','/website/:']
@@ -423,8 +414,10 @@ export default {
   .val {
     width: 50%;
   }
-  .v-input__icon--append {
-    display: none;
+  .v-input {
+    &__icon--append {
+      display: none;
+    }
   }
 }
 </style>

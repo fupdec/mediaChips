@@ -135,6 +135,20 @@
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
+              <v-btn outlined @click="toggleSortDirection" value="edit" v-on="on">
+                <v-icon>mdi-history</v-icon>
+                <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='desc'">
+                  mdi-arrow-down-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='asc'">
+                  mdi-arrow-up-thick
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>Sort by Date of Editing</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="path" v-on="on">
                 <v-icon>mdi-folder-outline</v-icon>
                 <v-icon right size="14" v-if="sortButtons==='path' && sortDirection==='desc'">
@@ -270,20 +284,20 @@ export default {
           flag: null,
           lock: true,
         },{
-          param: 'website',
-          cond: 'includes',
+          param: 'websites',
+          cond: 'one of',
           val: [],
-          type: 'select',
+          type: 'array',
           flag: null,
           lock: true,
         }]
       } else if (this.isWebsitePage) {
         let item = this.getItem('websites')
         this.$store.state.Settings.videoFilters = [{
-          param: 'website',
-          cond: 'includes',
+          param: 'websites',
+          cond: 'one of',
           val: [item.name],
-          type: 'select',
+          type: 'array',
           flag: null,
           lock: true,
         },{

@@ -296,9 +296,11 @@ export default {
       }
       if (this.isWebsiteNameEditEnabled) {
         // rename website in videos
-        this.$store.getters.videos.filter({website: this.website.name}).each(video=>{
-          video.website = this.websiteName
-        }).write()
+        this.$store.getters.videos.filter({websites: [this.website.name]})
+          .each(video=>{
+            let index = video.websites.indexOf(this.website.name)
+            if (index !== -1) video.websites.splice(index, 1, this.websiteName)
+          }).write()
         // rename website in performers
         this.$store.getters.performers.filter({websites: [this.website.name]})
           .each(performer=>{

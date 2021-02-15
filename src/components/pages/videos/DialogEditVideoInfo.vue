@@ -29,6 +29,9 @@
           <v-form ref="form" v-model="valid">
             <v-container fluid>
               <v-row>
+                <v-col cols="12" class="py-0 text-right" v-if="isSelectedSingleVideo">
+                  last edit {{edit}}
+                </v-col>
                 <v-col cols="12" md="6">
                   <v-card-actions>
                     <v-spacer></v-spacer>
@@ -79,15 +82,13 @@
                     :filter="filterItemsPerformers"
                   >
                     <template v-slot:selection="data">
-                      <v-chip
-                        v-bind="data.attrs" close close-icon="mdi-close"
-                        :input-value="data.selected"
-                        @click="data.select" @click:close="removePerformer(data.item)"
+                      <v-chip v-bind="data.attrs" close close-icon="mdi-close"
+                        :input-value="data.selected" label class="px-2"
+                        @click="data.select" @click:close="removeItem(data.item, 'performers')"
                         @mouseover.stop="showImage($event, data.item.id, 'performer')" 
                         @mouseleave.stop="$store.state.hoveredImage=false"
-                        :color="getPerformerColorDependsRating(data.item)"
-                        :class="{'tag-with-favorite-performer': data.item.favorite}"
-                      > <span>{{ data.item.name }}</span>
+                      > <span> <v-icon v-if="data.item.favorite" small color="pink">
+                        mdi-heart </v-icon> {{ data.item.name }}</span>
                       </v-chip>
                     </template>
                     <template v-slot:item="data">
@@ -172,7 +173,7 @@
                         v-bind="data.attrs" close
                         :input-value="data.selected" 
                         @click="data.select" text-color="white"
-                        @click:close="removeTag(data.item)" close-icon="mdi-close"
+                        @click:close="removeItem(data.item, 'tags')" close-icon="mdi-close"
                         @mouseover.stop="showImage($event, data.item.id, 'tag')" 
                         @mouseleave.stop="$store.state.hoveredImage=false"
                         :color="getTag(data.item.name).color" 
@@ -233,17 +234,18 @@
                       </v-tooltip>
                     </v-btn-toggle>
                   </v-card-actions>
-                  <v-autocomplete :disabled="clearWebsite"
-                    v-model="website" label="Website"
-                    :items="websitesAll" outlined prepend-icon="mdi-web"
+                  <v-autocomplete :disabled="clearWebsites"
+                    v-model="websites" outlined clearable
+                    :items="websitesAll" label="Websites" prepend-icon="mdi-web"
                     item-text="name" class="mt-0 hidden-close" 
-                    item-value="name" hide-details no-data-text="No more websites"
+                    item-value="name" multiple hide-selected hide-details
+                    no-data-text="No more websites"
                     :menu-props="{contentClass:'list-with-preview'}"
                   >
                     <template v-slot:selection="data">
                       <v-chip
                         v-bind="data.attrs" label close close-icon="mdi-close"
-                        @click="data.select" @click:close="website = ''"
+                        @click="data.select" @click:close="removeItem(data.item, 'websites')" 
                         @mouseover.stop="showImage($event, data.item.id, 'website')" 
                         @mouseleave.stop="$store.state.hoveredImage=false"
                         :input-value="data.selected" 
@@ -285,11 +287,56 @@
                 <v-col cols="12" class="mt-6 py-0" v-if="!isSelectedSingleVideo">
                   <div class="overline text-center">Clear Information</div>
                   <div cols="12" class="d-flex justify-space-between">
-                    <v-switch inset v-model="clearPerformers" label="Performers" color="red" />
-                    <v-switch inset v-model="clearTags" label="Tags" color="red" />
-                    <v-switch inset v-model="clearWebsite" label="Website" color="red" />
-                    <v-switch inset v-model="clearRating" label="Rating" color="red" />
-                    <v-switch inset v-model="clearFavorite" label="Favorite" color="red" />
+                    <v-switch inset v-model="clearPerformers" color="red">
+                      <template v-slot:label>
+                        <span v-if="clearPerformers" class="red--text">
+                          <v-icon left color="red">mdi-account-outline</v-icon> Performers
+                        </span>
+                        <span v-else>
+                          <v-icon left>mdi-account-outline</v-icon> Performers
+                        </span>
+                      </template>
+                    </v-switch>
+                    <v-switch inset v-model="clearTags" color="red">
+                      <template v-slot:label>
+                        <span v-if="clearTags" class="red--text">
+                          <v-icon left color="red">mdi-tag-outline</v-icon> Tags
+                        </span>
+                        <span v-else>
+                          <v-icon left>mdi-tag-outline</v-icon> Tags
+                        </span>
+                      </template>
+                    </v-switch>
+                    <v-switch inset v-model="clearWebsites" color="red">
+                      <template v-slot:label>
+                        <span v-if="clearWebsites" class="red--text">
+                          <v-icon left color="red">mdi-web</v-icon> Websites
+                        </span>
+                        <span v-else>
+                          <v-icon left>mdi-web</v-icon> Websites
+                        </span>
+                      </template>
+                    </v-switch>
+                    <v-switch inset v-model="clearRating" color="red">
+                      <template v-slot:label>
+                        <span v-if="clearRating" class="red--text">
+                          <v-icon left color="red">mdi-star-outline</v-icon> Rating
+                        </span>
+                        <span v-else>
+                          <v-icon left>mdi-star-outline</v-icon> Rating
+                        </span>
+                      </template>
+                    </v-switch>
+                    <v-switch inset v-model="clearFavorite" color="red">
+                      <template v-slot:label>
+                        <span v-if="clearFavorite" class="red--text">
+                          <v-icon left color="red">mdi-heart-outline</v-icon> Favorite
+                        </span>
+                        <span v-else>
+                          <v-icon left>mdi-heart-outline</v-icon> Favorite
+                        </span>
+                      </template>
+                    </v-switch>
                   </div>
                 </v-col>
                 <v-col cols="12" v-if="isSelectedSingleVideo">
@@ -340,7 +387,7 @@ export default {
         let video = _.cloneDeep(this.video)
         this.performers = video.performers.sort()
         this.tags = video.tags.sort()
-        this.website = video.website
+        this.websites = video.websites
         this.rating = video.rating
         this.favorite = video.favorite
       }
@@ -355,23 +402,29 @@ export default {
         }
         this.pathToFile = video.path
       }
+      // get bookmark text
+      if (this.isSelectedSingleVideo) {
+        let date = new Date(this.video.edit)
+        this.edit = date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+      }
     })
   },
   data: () => ({
     valid: false,
     performers: [],
     tags: [],
-    website: "",
+    websites: [],
     rating: 0,
     favorite: false,
     clearPerformers: false,
     clearTags: false,
-    clearWebsite: false,
+    clearWebsites: false,
     clearRating: false,
     clearFavorite: false,
     pathToFile: '',
     pathEditable: false,
     videoExists: true,
+    edit: '',
   }),
   computed: {
     isSelectedSingleVideo() {
@@ -463,44 +516,36 @@ export default {
       }
       let videos = this.$store.getters.getSelectedVideos
       videos.map(videoId => {
-        let video = this.$store.getters.videos.find({ id: videoId }).value()
-        let newPerformers, newTags, newWebsite, newRating, newFavorite, newBookmark, newPath
+        let video = _.cloneDeep(this.$store.getters.videos.find({ id: videoId }).value())
+        let newPerformers, newTags, newWebsites, newRating, newFavorite, newBookmark, newPath
 
         if (this.clearPerformers) {
           newPerformers = []
-        } else if (this.performers.length == 0 && this.isSelectedSingleVideo) {
-          newPerformers = this.performers
-        } else if (this.performers.length == 0) {
-          newPerformers = video.performers
-        } else {
+        } else if (!this.isSelectedSingleVideo) {
           newPerformers = _.union(this.performers, video.performers).sort()
+        } else if (this.isSelectedSingleVideo) {
+          newPerformers = this.performers
         }
 
         if (this.clearTags) {
           newTags = []
-        } else if (this.tags.length == 0 && this.isSelectedSingleVideo) {
-          newTags = this.tags.sort()
-        } else if (this.tags.length == 0) {
-          newTags = video.tags.sort()
-        } else {
+        } else if (!this.isSelectedSingleVideo) {
           newTags = _.union(this.tags, video.tags).sort()
+        } else if (this.isSelectedSingleVideo) {
+          newTags = this.tags
         }
 
         if (this.clearWebsite) {
-          newWebsite = ""
-        } else if (this.website == "" && this.isSelectedSingleVideo) {
-          newWebsite = this.website
-        } else if (this.website == "") {
-          newWebsite = video.website
-        } else {
-          newWebsite = this.website
+          newWebsites = []
+        } else if (!this.isSelectedSingleVideo) {
+          newWebsites = _.union(this.websites, video.websites).sort()
+        } else if (this.isSelectedSingleVideo) {
+          newWebsites = this.websites
         }
 
         if (this.clearRating) {
           newRating = 0
-        } else if (this.rating == 0 && this.isSelectedSingleVideo) {
-          newRating = this.rating
-        } else if (this.rating == 0) {
+        } else if (this.rating == 0 && !this.isSelectedSingleVideo) {
           newRating = video.rating
         } else {
           newRating = this.rating
@@ -508,9 +553,7 @@ export default {
         
         if (this.clearFavorite) {
           newFavorite = false
-        } else if (this.favorite == false && this.isSelectedSingleVideo) {
-          newFavorite = this.favorite
-        } else if (this.favorite == false) {
+        } else if (this.favorite == false && !this.isSelectedSingleVideo) {
           newFavorite = video.favorite
         } else {
           newFavorite = this.favorite
@@ -542,14 +585,16 @@ export default {
         } else {
           newPath = video.path
         }
+
         this.$store.getters.videos.find({ id: videoId }).assign({ 
           performers: newPerformers,
           tags: newTags,
-          website: newWebsite,
+          websites: newWebsites,
           rating: newRating,
           favorite: newFavorite,
           bookmark: newBookmark,
           path: newPath,
+          edit: Date.now(),
         }).write()
         this.$store.commit('updateVideos')
         this.$store.dispatch('filterVideos', true)
@@ -564,17 +609,6 @@ export default {
         return true
       }
     },
-    getPerformerColorDependsRating(item) { 
-      if (item.rating === 0) {
-        return `rgba(150, 150, 150, 0.1)`
-      } else {
-        return `rgba(255, 190, 0, ${0.05*item.rating})`
-      }
-    },
-    removePerformer(item) { 
-      const index = this.performers.indexOf(item.name);
-      if (index >= 0) this.performers.splice(index, 1);
-    },
     getImg() {
       let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
       if (fs.existsSync(imgPath)) {
@@ -586,9 +620,9 @@ export default {
     getTag(tagName) {
       return this.$store.getters.tags.find({name:tagName}).value()
     },
-    removeTag(item) { 
-      const index = this.tags.indexOf(item.name);
-      if (index >= 0) this.tags.splice(index, 1);
+    removeItem(item, type) { 
+      const index = this[type].indexOf(item.name)
+      if (index >= 0) this[type].splice(index, 1)
     },
     sort(items) {
       this[items] = this[items].sort((a, b) => a.localeCompare(b))

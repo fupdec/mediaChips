@@ -419,7 +419,6 @@
             </v-col>
           </v-row>
         </v-card>
- <!-- TODO create function for backup settings. watch for changes in performer params -->
       </v-tab-item>
       <v-tab-item value="database-settings">
         <v-card flat max-width="900" style="margin: auto;" class="pb-10">
@@ -707,7 +706,7 @@ export default {
       setTimeout(()=>{
         // update performer data
         this.$store.getters.performers.each(p=>{
-          const vids = videos.filter(v=>(v.performers.includes(p.name)))
+          const vids = videos.filter(v=>v.performers.includes(p.name))
           p.videos = vids.value().length // write number of videos
           // get tags of videos
           let tagsAllVideos = vids.map('tags').value()
@@ -717,15 +716,17 @@ export default {
           tags = tags.filter(el => (el !== null && el !== undefined))
           p.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
           // get websites of videos
-          let websites = vids.map('website').value()
+          let websitesAllVideos = vids.map('website').value()
+          let websites = []
+          websitesAllVideos.map(vWeb=>{ if (vWeb.length>0) vWeb.map(web=>websites.push(web)) })
           websites = websites.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-          websites = websites.filter(el => (el !== null && el !== undefined && el !== ""))
+          websites = websites.filter(el => (el !== null && el !== undefined))
           p.websites = websites.sort((a, b) => a.localeCompare(b)) // write websites of videos
         }).write()
 
         // update tag data
         this.$store.getters.tags.each(t=>{
-          const vids = videos.filter(v=>(v.tags.includes(t.name)))
+          const vids = videos.filter(v=>v.tags.includes(t.name))
           t.videos = vids.value().length // write number of videos
           // get performers of tag
           let performers = this.$store.getters.performers.filter({tags:[t.name]}).map('name').value()
@@ -734,7 +735,7 @@ export default {
 
         // update website data
         this.$store.getters.websites.each(w=>{
-          const vids = videos.filter({website: w.name})
+          const vids = videos.filter(v=>v.websites.includes(w.name))
           w.videos = vids.value().length // write number of videos
           // get performers of videos
           let performersAllVideos = vids.map('performers').value()

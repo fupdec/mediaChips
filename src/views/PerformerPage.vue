@@ -625,10 +625,10 @@ export default {
           flag: null,
           lock: true,
         },{
-          param: 'website',
-          cond: 'includes',
+          param: 'websites',
+          cond: 'one of',
           val: this.getFilteredWebsites(),
-          type: 'select',
+          type: 'array',
           flag: null,
           lock: true,
         }]
@@ -719,10 +719,10 @@ export default {
         flag: null,
         lock: true,
       },{
-        param: 'website',
-        cond: 'includes',
+        param: 'websites',
+        cond: 'one of',
         val: this.getFilteredWebsites(),
-        type: 'select',
+        type: 'array',
         flag: null,
         lock: true,
       }]

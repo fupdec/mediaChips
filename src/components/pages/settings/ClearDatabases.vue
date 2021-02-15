@@ -113,7 +113,7 @@ export default {
           .set('websites', [])
           .write()
         this.$store.getters.videos
-          .each((video) => video.website = '')
+          .each((video) => video.websites = [])
           .write()
         this.clearFiles(path.join(this.pathToUserData, '/media/websites/'))
         this.$store.commit('updateWebsites')
@@ -128,8 +128,7 @@ export default {
             videos: [],
             performers: [],
             tags: [],
-            websites: [],
-            markers: [],
+            websites: []
           })
           .write()
         this.$store.getters.videos

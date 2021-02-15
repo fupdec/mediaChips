@@ -175,7 +175,7 @@
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
-<!-- TODO: add function of parsing path for performer, tags, website  -->
+<!-- TODO: add function of parsing path for performer, tags, websites  -->
         <v-divider class="ma-1"></v-divider>
 
         <v-list-item class="pr-1" link @mouseup="$store.state.Videos.dialogEditVideoInfo = true">
@@ -302,11 +302,11 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
+        <!-- <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-web</v-icon> Website
+                <v-icon left size="18">mdi-web</v-icon> Websites
               </v-list-item-title>
               <v-icon size="22">mdi-menu-right</v-icon>
             </v-list-item>
@@ -329,7 +329,8 @@
               </v-list-item-title>
             </v-list-item>
           </v-list>
-        </v-menu>
+        </v-menu> -->
+        <!-- TODO recreate website function from type string to array -->
 
         <v-divider class="ma-1"></v-divider>
         <v-list-item link @mouseup="copyVideoPathToClipboard">
@@ -663,29 +664,29 @@ export default {
         })
       }
     },
-    copyWebsite() {
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      this.websiteClipboard = this.$store.getters.videos.find({id:videoId}).value().website
-    },
-    addWebsite() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          let vid = vids.find({id:i})
-          vid.assign({website:this.websiteClipboard}).write()
-        })
-      }
-    },
-    removeWebsite() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          vids.find({id:i}).assign({website:''}).write()
-        })
-      }
-    },
+    // copyWebsite() {
+    //   let videoId = this.$store.getters.getSelectedVideos[0]
+    //   this.websiteClipboard = this.$store.getters.videos.find({id:videoId}).value().website
+    // },
+    // addWebsite() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       let vid = vids.find({id:i})
+    //       vid.assign({website:this.websiteClipboard}).write()
+    //     })
+    //   }
+    // },
+    // removeWebsite() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       vids.find({id:i}).assign({website:''}).write()
+    //     })
+    //   }
+    // },
     copyVideoPathToClipboard(){
       navigator.clipboard.writeText(this.selectedVideosPaths)
     },

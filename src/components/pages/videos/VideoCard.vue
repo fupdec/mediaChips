@@ -94,7 +94,7 @@
         <v-chip-group column >
           <v-icon left>mdi-account-outline</v-icon>
           <v-chip v-for="performer in video.performers" :key="performer"
-            :color="colorDependsRating(performer)" :to="performerLink(performer)"
+            :to="performerLink(performer)" label
             @mouseover.stop="showImage($event, getPerformerId(performer), 'performer')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
             @click="$store.state.hoveredImage=false"
@@ -111,7 +111,7 @@
         <v-chip-group column>
           <v-icon left>mdi-tag-outline</v-icon>
           <v-chip v-for="tag in video.tags" :key="tag"
-            outlined :color="colorTag(tag)"
+            :outlined="isChipsColored" :color="colorTag(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
           > {{ tag }}
@@ -120,13 +120,16 @@
       </v-card-actions>
 
       <v-card-actions class="px-1 py-0 website" :class="{hidden: isWebsiteHidden}">
-        <v-icon left>mdi-web</v-icon>
-        <v-chip v-if="video.website" label outlined :color="colorWebsite" :to="websiteLink(video.website)"
-          @mouseover.stop="showImage($event, getWebsiteId(video.website), 'website')" 
-          @mouseleave.stop="$store.state.hoveredImage=false"
-          @click="$store.state.hoveredImage=false"
-          @click.middle="addNewTabWebsite(video.website)"
-        > {{ video.website }} </v-chip>
+        <v-chip-group column>
+          <v-icon left>mdi-web</v-icon>
+          <v-chip v-for="website in video.websites" :key="website" label 
+            :outlined="isChipsColored" :color="colorWebsite(website)" :to="websiteLink(website)"
+            @mouseover.stop="showImage($event, getWebsiteId(website), 'website')" 
+            @mouseleave.stop="$store.state.hoveredImage=false"
+            @click="$store.state.hoveredImage=false"
+            @click.middle="addNewTabWebsite(website)"
+          > {{ website }} </v-chip>
+        </v-chip-group>
       </v-card-actions>
       
       <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
@@ -222,11 +225,6 @@ export default {
     },
     videoPath() {
       return path.parse(this.video.path).dir
-    },
-    colorWebsite() {
-      if (this.isChipsColored) {
-        return this.$store.getters.websites.find({name:this.video.website}).value().color
-      } else return ''
     },
     fileName() {
       let filename = this.video.path.split("\\").pop()
@@ -349,22 +347,17 @@ export default {
     performerLink(performer) {
       return `/performer/:${this.getPerformerByName(performer).id}?tabId=default`
     },
-    colorDependsRating(performer) {
-      let rating = this.getPerformerByName(performer).rating
-      if (this.isChipsColored) {
-        if (rating === 0) {
-          return `rgba(150, 150, 150, 0.1)`
-        } else {
-          return `rgba(255, 190, 0, ${0.1 * rating})`
-        }
-      } else return ''
-    },
     isFavoritePerformer(performer) {
       return this.getPerformerByName(performer).favorite
     },
     colorTag(tag) {
       if (this.isChipsColored) {
         return this.$store.getters.tags.find({name:tag}).value().color
+      } else return ''
+    },
+    colorWebsite(website) {
+      if (this.isChipsColored) {
+        return this.$store.getters.websites.find({name: website}).value().color
       } else return ''
     },
     showContextMenu(e) {
@@ -695,8 +688,5 @@ export default {
   &.hidden {
     display: none;
   }
-}
-.tag-with-favorite-performer {
-  border: 1px solid rgba(255, 0, 85, 0.5) !important;
 }
 </style>

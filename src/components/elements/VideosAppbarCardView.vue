@@ -113,7 +113,7 @@
 
         <v-list-item link @click="toggleWebsiteVisibilty()">
           <v-list-item-title>
-            <v-icon left size="18">mdi-web</v-icon> Website
+            <v-icon left size="18">mdi-web</v-icon> Websites
           </v-list-item-title>
           <v-icon size="20" class="pl-10" :color="!isWebsiteHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
         </v-list-item>

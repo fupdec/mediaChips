@@ -31,7 +31,8 @@
               </v-card>
             </div>
           </div>
-          <div class="px-4 performers-title"> Performers of website 
+          <div v-if="performersOfWebsite.length" class="px-4 performers-title">
+            <span>Performers of website </span>
             <v-btn v-if="activePerformers.length" @click="showAllPerformers" 
               x-small rounded class="mx-4">
               <v-icon left>mdi-eye-outline</v-icon> Show all
@@ -172,9 +173,7 @@ export default {
       return performersUnique.sort((a, b) => a.localeCompare(b))
     },
     videosOfWebsite() {
-      return this.$store.getters.videos.filter(video=>
-        (video.website == this.website.name)
-      )
+      return this.$store.getters.videos.filter(video=>video.websites.includes(this.website.name))
     },
     videoThumbImgUrls() {
       let imgUrls = this.videosOfWebsite.orderBy('rating',['desc']).take(40).value().map(v=>{
@@ -225,10 +224,10 @@ export default {
     initFilters() {
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
         this.$store.state.Settings.videoFilters = [{
-          param: 'website',
-          cond: 'includes',
+          param: 'websites',
+          cond: 'one of',
           val: [this.website.name],
-          type: 'select',
+          type: 'array',
           flag: null,
           lock: true,
         },{
@@ -276,10 +275,10 @@ export default {
     },
     updateFilters() {
       const defaults = [{
-        param: 'website',
-        cond: 'includes',
+        param: 'websites',
+        cond: 'one of',
         val: [this.website.name],
-        type: 'select',
+        type: 'array',
         flag: null,
         lock: true,
       },{
