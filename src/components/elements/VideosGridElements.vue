@@ -358,11 +358,8 @@
 
 
 <script>
-const fs = require("fs")
-const path = require("path")
 const shell = require('electron').shell
 import Selection from "@simonwep/selection-js"
-import createPreview from '@/components/pages/videos/CreatePreview'
 import vuescroll from 'vuescroll'
 
 export default {

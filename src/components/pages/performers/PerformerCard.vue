@@ -94,7 +94,7 @@
       <v-card-text v-if="performer.tags.length>0 && !isTagsHidden" class="px-1 py-0">
         <v-chip-group column>
           <v-chip v-for="tag in performer.tags" :key="tag"
-            outlined :color="getTagColor(tag)"
+            :outlined="isChipsColored" :color="getTagColor(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
           > {{ tag }}
@@ -106,7 +106,7 @@
         <div class="caption px-1">Tags from videos</div>
         <v-chip-group column>
           <v-chip v-for="tag in tagsFromVideos" :key="tag"
-            outlined :color="getTagColor(tag)" 
+            :outlined="isChipsColored" :color="getTagColor(tag)" 
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
           > {{ tag }}
@@ -118,7 +118,7 @@
         <div class="caption px-1">Websites</div>
         <v-chip-group column>
           <v-chip v-for="website in performer.websites" :key="website" :to="websiteLink(website)"
-            outlined label :color="getWebsiteColor(website)" 
+            :outlined="isChipsColored" label :color="getWebsiteColor(website)" 
             @mouseover.stop="showImage($event, getWebsiteId(website), 'website')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
             @click="$store.state.hoveredImage=false"

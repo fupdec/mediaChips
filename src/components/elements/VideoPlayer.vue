@@ -52,7 +52,6 @@
           </template>
           <span>Add to playlist</span>
         </v-tooltip> -->
-        <!-- TODO create function for set current frame as video thumb -->
         <v-spacer></v-spacer>
         <span class="now-playing-title">{{getFileNameFromPath(nowPlaying)}}</span>
 
