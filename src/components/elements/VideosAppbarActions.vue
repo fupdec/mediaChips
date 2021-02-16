@@ -53,13 +53,19 @@
       <span>Open folder tree</span>
     </v-tooltip>
     
-    <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn v-bind="attrs"  v-on="on" icon tile>
-          <v-badge :content="videosSort" overlap bottom class="badge-sort">
-            <v-icon>mdi-sort-variant</v-icon>
-          </v-badge>
-        </v-btn>
+    <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
+      <template #activator="{ on: onMenu }">
+        <v-tooltip bottom>
+          <template #activator="{ on: onTooltip }">
+            <v-badge :icon="sortIcon" overlap offset-x="25" offset-y="45">
+              <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                <v-icon v-if="sortDirection=='desc'">mdi-sort-descending</v-icon>
+                <v-icon v-else>mdi-sort-ascending</v-icon>
+              </v-btn>
+            </v-badge>
+          </template>
+          <span>Sort Videos</span>
+        </v-tooltip>
       </template>
       <v-card>
         <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
@@ -67,10 +73,10 @@
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
                 <v-icon>mdi-alphabetical-variant</v-icon>
-                <v-icon right size="14" v-if="sortButtons==='name' && sortDirection==='desc'">
+                <v-icon right size="14" v-if="sortButtons=='name' && sortDirection=='desc'">
                   mdi-arrow-up-thick
                 </v-icon>
-                <v-icon right size="14" v-if="sortButtons==='name' && sortDirection==='asc'">
+                <v-icon right size="14" v-if="sortButtons=='name' && sortDirection=='asc'">
                   mdi-arrow-down-thick
                 </v-icon>
               </v-btn>
@@ -81,11 +87,11 @@
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="duration" v-on="on">
                 <v-icon>mdi-timer-outline</v-icon>
-                <v-icon right size="14" v-if="sortButtons==='duration' && sortDirection==='desc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons==='duration' && sortDirection==='asc'">
+                <v-icon right size="14" v-if="sortButtons=='duration' && sortDirection=='desc'">
                   mdi-arrow-up-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons=='duration' && sortDirection=='asc'">
+                  mdi-arrow-down-thick
                 </v-icon>
               </v-btn>
             </template>
@@ -95,11 +101,11 @@
             <template v-slot:activator="{ on }">
             <v-btn outlined @click="toggleSortDirection" value="size" v-on="on">
               <v-icon>mdi-harddisk</v-icon>
-              <v-icon right size="14" v-if="sortButtons==='size' && sortDirection==='desc'">
-                mdi-arrow-down-thick
-              </v-icon>
-              <v-icon right size="14" v-if="sortButtons==='size' && sortDirection==='asc'">
+              <v-icon right size="14" v-if="sortButtons=='size' && sortDirection=='desc'">
                 mdi-arrow-up-thick
+              </v-icon>
+              <v-icon right size="14" v-if="sortButtons=='size' && sortDirection=='asc'">
+                mdi-arrow-down-thick
               </v-icon>
             </v-btn>
             </template>
@@ -109,11 +115,11 @@
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="rating" v-on="on">
                 <v-icon>mdi-star-outline</v-icon>
-                <v-icon right size="14" v-if="sortButtons==='rating' && sortDirection==='desc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons==='rating' && sortDirection==='asc'">
+                <v-icon right size="14" v-if="sortButtons=='rating' && sortDirection=='desc'">
                   mdi-arrow-up-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons=='rating' && sortDirection=='asc'">
+                  mdi-arrow-down-thick
                 </v-icon>
               </v-btn>
             </template>
@@ -123,11 +129,11 @@
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
                 <v-icon>mdi-calendar-plus</v-icon>
-                <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='desc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons==='date' && sortDirection==='asc'">
+                <v-icon right size="14" v-if="sortButtons=='date' && sortDirection=='desc'">
                   mdi-arrow-up-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons=='date' && sortDirection=='asc'">
+                  mdi-arrow-down-thick
                 </v-icon>
               </v-btn>
             </template>
@@ -137,11 +143,11 @@
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="edit" v-on="on">
                 <v-icon>mdi-calendar-edit</v-icon>
-                <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='desc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons==='edit' && sortDirection==='asc'">
+                <v-icon right size="14" v-if="sortButtons=='edit' && sortDirection=='desc'">
                   mdi-arrow-up-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons=='edit' && sortDirection=='asc'">
+                  mdi-arrow-down-thick
                 </v-icon>
               </v-btn>
             </template>
@@ -151,11 +157,11 @@
             <template v-slot:activator="{ on }">
               <v-btn outlined @click="toggleSortDirection" value="path" v-on="on">
                 <v-icon>mdi-folder-outline</v-icon>
-                <v-icon right size="14" v-if="sortButtons==='path' && sortDirection==='desc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons==='path' && sortDirection==='asc'">
+                <v-icon right size="14" v-if="sortButtons=='path' && sortDirection=='desc'">
                   mdi-arrow-up-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons=='path' && sortDirection=='asc'">
+                  mdi-arrow-down-thick
                 </v-icon>
               </v-btn>
             </template>
@@ -209,9 +215,15 @@ export default {
     filteredVideosTotal() {
       return this.$store.getters.filteredVideosTotal
     },
-    videosSort() {
-      let sort = this.$store.state.Videos.sortBy
-      return sort.charAt(0) + sort.charAt(1) + sort.charAt(2) + '.'
+    sortIcon() {
+      if (this.sortButtons=='name') return 'mdi-alphabetical-variant'
+      if (this.sortButtons=='duration') return 'mdi-timer-outline'
+      if (this.sortButtons=='size') return 'mdi-harddisk'
+      if (this.sortButtons=='rating') return 'mdi-star-outline'
+      if (this.sortButtons=='date') return 'mdi-calendar-plus'
+      if (this.sortButtons=='edit') return 'mdi-calendar-edit'
+      if (this.sortButtons=='path') return 'mdi-folder-outline'
+      return 'mdi-help'
     },
     sortButtons: {
       get() {
@@ -352,7 +364,7 @@ export default {
       this.$store.dispatch('filterVideos')
     },
     toggleSortDirection() {
-      this.$store.state.Videos.sortDirection = this.sortDirection==='asc' ? 'desc':'asc'
+      this.$store.state.Videos.sortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterVideos')
       },200)

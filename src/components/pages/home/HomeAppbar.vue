@@ -1,6 +1,6 @@
 <template>
   <div class="app-bar-container">
-    <v-menu offset-y nudge-bottom="10" open-on-hover close-delay="1000" :close-on-content-click="false">
+    <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
       <template v-slot:activator="{ on, attrs }">
         <v-btn v-bind="attrs"  v-on="on" icon tile>
           <v-icon>mdi-counter</v-icon>
