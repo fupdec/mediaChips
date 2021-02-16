@@ -11,8 +11,14 @@
         <v-list dense class="context-menu">
           <v-list-item link @click="$store.state.Settings.dialogScanVideos=true">
             <v-list-item-title>
-              <v-icon left size="18">mdi-video-plus</v-icon> Add Videos
+              <v-icon left size="18">mdi-video-plus</v-icon> Add New Videos
             </v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="playerType=playerType=='0'?'1':'0'">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-television-play</v-icon> Play Video in System Player
+            </v-list-item-title>
+            <v-icon size="20" class="ml-6" :color="playerType=='1'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
           <v-list-item link @click="lock" v-if="$store.state.Settings.passwordProtection">
@@ -26,7 +32,6 @@
               <v-icon left size="18">mdi-restart</v-icon> Restart
             </v-list-item-title>
           </v-list-item>
-          <v-divider class="ma-1"></v-divider>
           <v-list-item link @click="close">
             <v-list-item-title>
               <v-icon left size="18">mdi-logout</v-icon> Exit
@@ -108,17 +113,17 @@
               </v-list-item>
             </v-list>
           </v-menu>
-          <v-list-item class="pr-1" link @click="$store.state.Settings.ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
+          <v-list-item class="pr-1" link @click="ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
             <v-list-item-title>
               <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Cards
             </v-list-item-title>
-            <v-icon size="20" :color="ratingAndFavoriteInCard?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            <v-icon size="20" class="ml-6" :color="ratingAndFavoriteInCard?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
-          <v-list-item class="pr-1" link @click="$store.state.Settings.videoPreviewEnabled=!videoPreview">
+          <v-list-item class="pr-1" link @click="videoPreview=!videoPreview">
             <v-list-item-title>
-              <v-icon left size="18">mdi-video-box</v-icon> Video Preview
+              <v-icon left size="18">mdi-video-box</v-icon> Video Preview on Hover
             </v-list-item-title>
-            <v-icon size="22" :color="videoPreview?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            <v-icon size="22" class="ml-6" :color="videoPreview?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
           <v-list-item class="pr-2" link @click="toggleDarkMode">
@@ -253,11 +258,29 @@ export default {
         } else return this.$store.state.Settings.appColorLightHeader
       }
     },
-    ratingAndFavoriteInCard() {
-      return this.$store.state.Settings.ratingAndFavoriteInCard
+    ratingAndFavoriteInCard: {
+      get() {
+        return this.$store.state.Settings.ratingAndFavoriteInCard
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})
+      },
     },
-    videoPreview() {
-      return this.$store.state.Settings.videoPreviewEnabled
+    videoPreview: {
+      get() {
+        return this.$store.state.Settings.videoPreviewEnabled
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'videoPreviewEnabled', value})
+      },
+    },
+    playerType: {
+      get() {
+        return this.$store.state.Settings.playerType
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'playerType', value})
+      },
     },
   },
   methods: {
