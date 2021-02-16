@@ -14,21 +14,21 @@ Manage your porn video collection - add performers, tags, websites and have fun!
 
 ## Install application (Windows)
 To install, run the executable file. <br>
-You can download the latest executable under <a target="_blank" href="https://github.com/fupdec/Adult-Video-Database/releases">Releases</a> on the right hand side of this page. <br>
+You can download the latest executable under &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/releases">Releases</a> on the right hand side of this page. <br>
 After the first launch, go to your "AppData" directory (just write %appdata% in address bar). <br>
 Find the folder with the name of this application "AVDB". The folder "userfiles" should appear in it. <br>
-Then you should download <a target="_blank" href="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z">archive</a> with FFmpeg <br>
+Then you should download &#128279;<a href="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z">archive</a> with FFmpeg <br>
 Extract files ffmpeg.exe and ffprobe.exe from folder "bin" in archive and place this files into folder "ffmpeg" in "userfiles".  <br>
 Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\". <br>
 And now you can scan videos from application! It's all.
 
 ## Built-in video player
 You can play videos inside the app, add markers to videos, open playlists and more. For this you need: <br>
-1) download and install VLC player. <a target="_blank" href="https://www.videolan.org/vlc/">Official page</a> <br>
+1) download and install VLC player. &#128279;<a href="https://www.videolan.org/vlc/">Official page</a> <br>
 2) a system variable must be registered in Windows Path. <br>
 In the variable you need to register the path to the folder of the VLC player. <br>
 By default it will be like "C:\Program Files\VideoLAN\VLC". <br>
-This <a target="_blank" href="https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/">guide</a> can help you <br>
+This &#128279;<a href="https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/">guide</a> can help you <br>
 
 ### Portable version
 After the first launch, a folder "userdata" will be created in the folder with the executable file. <br>
