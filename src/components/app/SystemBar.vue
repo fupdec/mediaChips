@@ -9,6 +9,12 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
+          <v-list-item link @click="$store.state.Settings.dialogScanVideos=true">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-video-plus</v-icon> Add Videos
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider class="ma-1"></v-divider>
           <v-list-item link @click="lock" v-if="$store.state.Settings.passwordProtection">
             <v-list-item-title>
               <v-icon left size="18">mdi-lock</v-icon> Lock
@@ -40,7 +46,7 @@
             <template v-slot:activator="{ on, attrs }">
               <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
                 <v-list-item-title> 
-                  <v-icon left size="18">mdi-format-list-bulleted</v-icon> Navigation bar
+                  <v-icon left size="18">mdi-format-list-bulleted</v-icon> Navigation Bar
                 </v-list-item-title>
                 <v-icon size="22">mdi-menu-right</v-icon>
               </v-list-item>
@@ -68,7 +74,7 @@
             <template v-slot:activator="{ on, attrs }">
               <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
                 <v-list-item-title> 
-                  <v-icon left size="18">mdi-arrow-expand-horizontal</v-icon> Gap in card grid
+                  <v-icon left size="18">mdi-arrow-expand-horizontal</v-icon> Gap in Card Grid
                 </v-list-item-title>
                 <v-icon size="22">mdi-menu-right</v-icon>
               </v-list-item>
@@ -77,7 +83,7 @@
             <v-list dense class="context-menu">
               <v-list-item @click="updateGutterSize('xs')" class="pr-1" link>
                 <v-list-item-title>
-                  <v-icon left size="18">mdi-size-xs</v-icon> Extra small
+                  <v-icon left size="18">mdi-size-xs</v-icon> Extra Small
                 </v-list-item-title>
               </v-list-item>
               <v-list-item @click="updateGutterSize('s')" class="pr-1" link>
@@ -97,7 +103,7 @@
               </v-list-item>
               <v-list-item @click="updateGutterSize('xl')" class="pr-1" link>
                 <v-list-item-title>
-                  <v-icon left size="18">mdi-size-xl</v-icon> Extra large
+                  <v-icon left size="18">mdi-size-xl</v-icon> Extra Large
                 </v-list-item-title>
               </v-list-item>
             </v-list>
