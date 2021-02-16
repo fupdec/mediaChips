@@ -934,6 +934,12 @@ export default {
       setTimeout(() => {
         this.getCanvasSizes()
       }, 100)
+      setTimeout(() => {
+        this.getCanvasSizes()
+      }, 500)
+      setTimeout(() => {
+        this.getCanvasSizes()
+      }, 1000)
     },
     iconUrl(icon) {
       return `https://fonts.gstatic.com/s/i/materialicons/${icon}/v6/24px.svg?download=true`;
