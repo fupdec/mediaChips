@@ -244,12 +244,6 @@ export default {
         this.$store.dispatch('filterVideos')
       }
     },
-    updateFiltersOfWebsitesTab() {
-      if (this.tabId !== 'default') {
-        let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
-        this.$store.getters.tabsDb.find({id:this.tabId}).assign({filters:newFilters}).write()
-      }
-    },
     getImgUrl(websiteId) {
       let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
       return this.checkImageExist(imgPath)
@@ -291,8 +285,10 @@ export default {
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
       this.$store.state.Settings.videoFilters = [...defaults, ...others]
+      if (this.tabId !== 'default' || typeof this.filtersTab !== 'undefined') {
+        this.$store.dispatch('saveFiltersOfVideos', this.$route)
+      }
       this.$store.dispatch('filterVideos')
-      this.updateFiltersOfWebsitesTab()
     },
   },
   watch: {

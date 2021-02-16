@@ -287,7 +287,7 @@ export default {
     applyFilters() {
       this.$store.state.Settings.videoFilters = this.filters
       this.$store.dispatch('filterVideos')
-      this.updateFiltersOfVideosTab()
+      this.$store.dispatch('saveFiltersOfVideos', this.$route)
       this.$store.state.Videos.dialogFilterVideos = false 
     },
     setParam(e, i) {
@@ -360,27 +360,6 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$store.state.Videos.dialogFilterVideos = false
       this.$router.push(tab.link)
-    },
-    updateFiltersOfVideosTab() {
-      let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
-      const pages = ['/performer/:','/website/:']
-
-      if (this.$route.path.includes('/videos/:')) {
-        if (this.tabId === 'default') {
-          this.$store.getters.settings.set('videoFilters', newFilters).write()
-        } else {
-          this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-            name: this.$store.getters.videoFiltersForTabName,
-            filters: newFilters,
-          }).write()
-          this.$store.commit('getTabsFromDb')
-        }
-      } else if (pages.some(p => this.$route.path.includes(p))) { 
-        this.$store.getters.tabsDb.find({id:this.tabId})
-          .assign({filters:newFilters}).write()
-        this.$store.commit('getTabsFromDb')
-      }
-      // TODO: universal function for update all types of tabs
     },
   },
 }

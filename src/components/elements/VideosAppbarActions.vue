@@ -355,12 +355,10 @@ export default {
       }
     },
     toggleFavorites() {
-      // this.updateFiltersOfVideos('favorite', !this.$store.state.Videos.filters.favorite)
       this.$store.state.Videos.showFavorites = !this.$store.state.Videos.showFavorites
       this.$store.dispatch('filterVideos')
     },
     toggleBookmarks() {
-      // this.updateFiltersOfVideos('bookmark', !this.$store.state.Videos.filters.bookmark)
       this.$store.state.Videos.showBookmarks = !this.$store.state.Videos.showBookmarks
       this.$store.dispatch('filterVideos')
     },

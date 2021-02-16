@@ -238,6 +238,25 @@ const Videos = {
         state.page = 1
       }
     },
+    saveFiltersOfVideos({state, commit, getters, rootState}, route) {
+      const newFilters = _.cloneDeep(rootState.Settings.videoFilters)
+      const pagesWithVideos = ['/performer/:','/website/:']
+
+      if (route.path.includes('/videos/:')) {
+        if (route.query.tabId === 'default') {
+          getters.settings.set('videoFilters', newFilters).write()
+        } else {
+          getters.tabsDb.find({id: route.query.tabId}).assign({
+            name: getters.videoFiltersForTabName,
+            filters: newFilters,
+          }).write()
+          commit('getTabsFromDb')
+        }
+      } else if (pagesWithVideos.some(page => route.path.includes(page))) {
+        getters.tabsDb.find({id: route.query.tabId}).assign({filters: newFilters}).write()
+        commit('getTabsFromDb')
+      }
+    },
     deleteVideos({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedVideos.map(id => {
         if (getters.tabsDb.find({id: id}).value()) {

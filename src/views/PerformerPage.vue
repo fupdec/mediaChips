@@ -728,6 +728,9 @@ export default {
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
       this.$store.state.Settings.videoFilters = [...defaults, ...others]
+      if (this.tabId !== 'default' || typeof this.filtersTab !== 'undefined') {
+        this.$store.dispatch('saveFiltersOfVideos', this.$route)
+      }
       this.$store.dispatch('filterVideos')
     },
     getCustomParamValue(name, type) {
