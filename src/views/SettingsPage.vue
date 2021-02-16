@@ -716,7 +716,7 @@ export default {
           tags = tags.filter(el => (el !== null && el !== undefined))
           p.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
           // get websites of videos
-          let websitesAllVideos = vids.map('website').value()
+          let websitesAllVideos = vids.map('websites').value()
           let websites = []
           websitesAllVideos.map(vWeb=>{ if (vWeb.length>0) vWeb.map(web=>websites.push(web)) })
           websites = websites.filter((x, i, a) => a.indexOf(x) === i) // get unique values
