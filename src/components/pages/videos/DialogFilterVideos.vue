@@ -197,12 +197,12 @@ export default {
     })
   },
   data: () => ({
-    params: ['path', 'performers', 'tags', 'websites', 'duration', 'size', 'rating', 'height', 'width', 'date'],
+    params: ['path', 'performers', 'tags', 'websites', 'duration', 'size', 'rating', 'height', 'width', 'date','edit'],
     paramTypeNumber: ['duration', 'size', 'rating', 'height', 'width'],
     paramTypeString: ['path'],
     paramTypeArray: ['performers', 'tags', 'websites'],
     paramTypeSelect: [],
-    paramTypeDate: ['date'],
+    paramTypeDate: ['date','edit'],
     datePicker: false,
     datePickerIndex: 0,
   }),
@@ -248,7 +248,8 @@ export default {
       if (param === 'rating') return 'mdi-star'
       if (param === 'height') return 'mdi-monitor-screenshot'
       if (param === 'width') return 'mdi-monitor-screenshot'
-      if (param === 'date') return 'mdi-calendar'
+      if (param === 'date') return 'mdi-calendar-plus'
+      if (param === 'edit') return 'mdi-calendar-edit'
       return 'mdi-filter'
     },
     getIconCond(cond) {
