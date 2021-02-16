@@ -46,8 +46,9 @@
           <template #activator="{ on: onTooltip }">
             <v-badge :icon="sortIcon" overlap offset-x="25" offset-y="45">
               <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
-                <v-icon v-if="sortDirection=='desc'">mdi-sort-descending</v-icon>
-                <v-icon v-else>mdi-sort-ascending</v-icon>
+                <v-icon>mdi-sort-variant</v-icon>
+                <v-icon v-if="sortDirection=='desc'" size="16" class="badge-sort-icon">mdi-arrow-up-thick</v-icon>
+                <v-icon v-else size="16" class="badge-sort-icon">mdi-arrow-down-thick</v-icon>
               </v-btn>
             </v-badge>
           </template>
