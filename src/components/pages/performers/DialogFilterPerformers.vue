@@ -9,7 +9,6 @@
       <v-divider></v-divider>
       <vuescroll>
         <v-card-text class="text-center">
-          <!-- TODO stretch blocks equally 33 percent -->
           <div v-for="(filter,i) in filters" :key="i" class="filter-row">
             <v-select @input="setParam($event,i)" :value="filters[i].param" 
               :items="params" label="Parameter" outlined dense class="param"
@@ -44,7 +43,7 @@
               
             <v-text-field v-if="filters[i].type==='date'" 
               :value="filters[i].val" @focus="picker=true, pickerIndex=i"
-              label="Date" outlined dense readonly/>
+              label="Date" outlined dense readonly class="val"/>
             <v-dialog v-model="picker" width="300px">
               <v-date-picker @change="setVal($event,pickerIndex), picker=false"
                 :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
@@ -55,7 +54,7 @@
               @input="setVal($event,i)" :value="filters[i].val" :disabled="filters[i].lock"
               :items="countries" item-text="name" item-value="name" label="Nationality" 
               multiple hide-selected hide-details clearable outlined dense small-chips
-              class="select-small-chips nation-chips hidden-close"
+              class="select-small-chips nation-chips hidden-close val"
               :menu-props="{contentClass:'list-with-preview'}">
               <template v-slot:selection="data">
                 <v-chip
@@ -111,44 +110,44 @@
             </v-autocomplete>
 
             <v-select v-if="filters[i].type==='array' && namesOfCustomParams.includes(filters[i].param)" 
-              @input="setVal($event,i)" :value="filters[i].val" 
+              @input="setVal($event,i)" :value="filters[i].val" class="val"
               :items="getCustomItems(filters[i].param)" label="Values"
               :disabled="filters[i].lock" outlined dense multiple />
 
             <v-select v-if="filters[i].param==='category'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoCategory" 
-              outlined dense label="Categories"
+              outlined dense label="Categories" class="val"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='ethnicity'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoEthnicity" 
-              outlined dense label="Ethnicity"
+              outlined dense label="Ethnicity" class="val"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='hair'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoHair" 
-              outlined dense label="Hair"
+              outlined dense label="Hair" class="val"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='eyes'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoEyes" 
-              outlined dense label="Eyes"
+              outlined dense label="Eyes" class="val"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='cups'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoCups" 
-              outlined dense label="Cups"
+              outlined dense label="Cups" class="val"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='boobs'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoBoobs" 
-              outlined dense label="Boobs" 
+              outlined dense label="Boobs" class="val"
               :disabled="filters[i].lock" multiple/>
 
             <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
@@ -209,12 +208,12 @@ export default {
     })
   },
   data: () => ({
-    params: ['name','tags','category','rating','birthday','start','end','nation','ethnicity','hair','eyes','height','weight','boobs','cups','bra','waist','hip','date','edit'],
+    params: ['name','tags','category','rating','favorite','bookmark','birthday','start','end','nation','ethnicity','hair','eyes','height','weight','boobs','cups','bra','waist','hip','date','edit'],
     paramTypeNumber: ['rating','height','weight','bra','waist','hip','start','end',],
     paramTypeString: ['name',],
     paramTypeArray: ['tags','category','ethnicity','hair','eyes','boobs','cups'],
     paramTypeSelect: ['nation'],
-    paramTypeBoolean: [],
+    paramTypeBoolean: ['favorite','bookmark'],
     paramTypeDate: ['birthday','date','edit'],
     picker: false,
     pickerIndex: 0,
@@ -271,6 +270,8 @@ export default {
       if (param === 'height') return 'mdi-human-male-height'
       if (param === 'weight') return 'mdi-weight'
       if (param === 'bra'||param === 'waist'||param === 'hip') return 'mdi-tape-measure'
+      if (param === 'favorite') return 'mdi-heart'
+      if (param === 'bookmark') return 'mdi-bookmark'
       return 'mdi-filter'
     },
     getIconCond(cond) {
@@ -285,6 +286,8 @@ export default {
       if (cond === 'not') return 'mdi-not-equal-variant'
       if (cond === 'includes') return 'mdi-alphabetical'
       if (cond === 'excludes') return 'mdi-alphabetical-off'
+      if (cond === 'yes') return 'mdi-check'
+      if (cond === 'no') return 'mdi-close'
       return 'mdi-help'
     },
     addFilter() {

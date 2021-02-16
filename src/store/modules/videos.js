@@ -51,8 +51,6 @@ const Videos = {
     sortBy: 'name',
     sortDirection: 'asc',
     tree: [],
-    showFavorites: false,
-    showBookmarks: false,
   }),
   mutations: {
     updateVideos (state) {
@@ -76,12 +74,6 @@ const Videos = {
       let videos = getters.videos
       videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
 
-      if (state.showFavorites) {
-        videos = videos.filter(video=>video.favorite)
-      }
-      if (state.showBookmarks) {
-        videos = videos.filter(video=>video.bookmark)
-      }
       // filter by folder tree
       if (state.tree.length) {
         videos = videos.filter(video => {
@@ -110,6 +102,12 @@ const Videos = {
         let val = rootState.Settings.videoFilters[filter].val
         let type = rootState.Settings.videoFilters[filter].type
         let flag = rootState.Settings.videoFilters[filter].flag
+        
+        if (type === 'boolean') {
+          if (cond === 'yes') {
+            videos = videos.filter(video => video[param] === true)
+          } else videos = videos.filter(video => video[param] ===  false)
+        }
         
         if (val === null || val.length === 0) continue
         

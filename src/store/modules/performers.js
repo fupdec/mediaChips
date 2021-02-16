@@ -93,9 +93,6 @@ const Performers = {
     pageTotal: 1,
     lastChanged: Date.now(),
     showMoreFilters: false,
-    // defaultFilters: _.cloneDeep(defaultFilters),
-    // filters: _.cloneDeep(defaultFilters),
-    // filtersReserved: _.cloneDeep(defaultFilters),
     filteredPerformers: [],
     filteredEmpty: false,
     selection: null,
@@ -111,8 +108,6 @@ const Performers = {
     firstChar: [],
     sortBy: 'name',
     sortDirection: 'asc',
-    showFavorites: false,
-    showBookmarks: false,
   }),
   mutations: {
     updatePerformers (state) {
@@ -159,12 +154,6 @@ const Performers = {
       let performers = getters.performers
       performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
 
-      if (state.showFavorites) {
-        performers = performers.filter(performer=>performer.favorite)
-      }
-      if (state.showBookmarks) {
-        performers = performers.filter(performer=>performer.bookmark)
-      }
       if (state.firstChar.length) {
         let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
         let allChars = []

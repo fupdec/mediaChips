@@ -20,26 +20,6 @@
       <span>Reset Filters</span>
     </v-tooltip>
     
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn @click="toggleFavorites" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Performers.showFavorites">mdi-heart</v-icon>
-          <v-icon v-else>mdi-heart-outline</v-icon>
-        </v-btn>
-      </template>
-      <span>Favorites</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Performers.showBookmarks">mdi-bookmark</v-icon>
-          <v-icon v-else>mdi-bookmark-outline</v-icon>
-        </v-btn>
-      </template>
-      <span>Bookmarks</span>
-    </v-tooltip>
-    
     <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
       <template #activator="{ on: onMenu }">
         <v-tooltip bottom>
@@ -235,18 +215,6 @@ export default {
         this.$store.commit('getTabsFromDb')
       }
     },
-    toggleFavorites() {
-      this.$store.state.Performers.showFavorites = !this.$store.state.Performers.showFavorites
-      this.$store.dispatch('filterPerformers')
-    },
-    toggleBookmarks() {
-      this.$store.state.Performers.showBookmarks = !this.$store.state.Performers.showBookmarks
-      this.$store.dispatch('filterPerformers')
-    },
-    // updateFiltersOfPerformers(key, value){
-    //   this.$store.commit('updateFiltersOfPerformers', {key, value})
-    //   this.updateFiltersOfPerformersTab()
-    // },
     toggleSortDirection() {
       this.$store.state.Performers.sortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{

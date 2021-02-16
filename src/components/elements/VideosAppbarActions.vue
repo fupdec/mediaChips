@@ -22,28 +22,6 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-btn @click="toggleFavorites" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Videos.showFavorites">mdi-heart</v-icon>
-          <v-icon v-else>mdi-heart-outline</v-icon>
-        </v-btn>
-      </template>
-      <span v-if="$store.state.Videos.showFavorites">Show all</span>
-      <span v-else>Show favorites</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
-          <v-icon v-if="$store.state.Videos.showBookmarks">mdi-bookmark</v-icon>
-          <v-icon v-else>mdi-bookmark-outline</v-icon>
-        </v-btn>
-      </template>
-      <span v-if="$store.state.Videos.showBookmarks">Show all</span>
-      <span v-else>Show bookmarks</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
         <v-btn @click="$store.state.Videos.dialogFolderTree = true" icon tile v-on="on"> 
           <v-badge :value="!isTreeEmpty" :content="treeBadgeContent" overlap bottom style="z-index: 5;">
             <v-icon>mdi-file-tree</v-icon>
@@ -353,14 +331,6 @@ export default {
           }).write()
         this.$store.commit('getTabsFromDb')
       }
-    },
-    toggleFavorites() {
-      this.$store.state.Videos.showFavorites = !this.$store.state.Videos.showFavorites
-      this.$store.dispatch('filterVideos')
-    },
-    toggleBookmarks() {
-      this.$store.state.Videos.showBookmarks = !this.$store.state.Videos.showBookmarks
-      this.$store.dispatch('filterVideos')
     },
     toggleSortDirection() {
       this.$store.state.Videos.sortDirection = this.sortDirection=='asc' ? 'desc':'asc'

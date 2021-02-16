@@ -197,12 +197,13 @@ export default {
     })
   },
   data: () => ({
-    params: ['path', 'performers', 'tags', 'websites', 'duration', 'size', 'rating', 'height', 'width', 'date','edit'],
-    paramTypeNumber: ['duration', 'size', 'rating', 'height', 'width'],
+    params: ['path','performers','tags','websites','favorite','bookmark','duration','size','rating','height','width','date','edit'],
+    paramTypeNumber: ['duration','size','rating','height','width'],
     paramTypeString: ['path'],
-    paramTypeArray: ['performers', 'tags', 'websites'],
+    paramTypeArray: ['performers','tags','websites'],
     paramTypeSelect: [],
     paramTypeDate: ['date','edit'],
+    paramTypeBoolean: ['favorite','bookmark'],
     datePicker: false,
     datePickerIndex: 0,
   }),
@@ -250,6 +251,8 @@ export default {
       if (param === 'width') return 'mdi-monitor-screenshot'
       if (param === 'date') return 'mdi-calendar-plus'
       if (param === 'edit') return 'mdi-calendar-edit'
+      if (param === 'favorite') return 'mdi-heart'
+      if (param === 'bookmark') return 'mdi-bookmark'
       return 'mdi-filter'
     },
     getIconCond(cond) {
@@ -264,6 +267,8 @@ export default {
       if (cond === 'not') return 'mdi-not-equal-variant'
       if (cond === 'includes') return 'mdi-alphabetical'
       if (cond === 'excludes') return 'mdi-alphabetical-off'
+      if (cond === 'yes') return 'mdi-check'
+      if (cond === 'no') return 'mdi-close'
       return 'mdi-help'
     },
     addFilter() {
@@ -310,6 +315,10 @@ export default {
       }
       if (this.paramTypeDate.includes(e)) {
         this.filters[i].type = 'date'
+        this.filters[i].val = ''
+      }
+      if (this.paramTypeBoolean.includes(e)) {
+        this.filters[i].type = 'boolean'
         this.filters[i].val = ''
       }
       this.filters[i].cond = this.getConditions(this.filters[i].type)[0]
