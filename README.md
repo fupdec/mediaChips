@@ -39,6 +39,15 @@ The application is made on electron. Paths should be responsive to the operating
 It remains to correctly add ffmpeg files that are needed to create a preview.  <br>
 Perhaps if there are a lot of people willing, I will port it for these systems. <br>
 
+## Roadmap to Beta
+~~VLC Video player~~ <br>
+~~playlists~~
+- save state of sort, favorite, bookmark 
+- auto-update of data based on videos, performers, websites with the ability to customize the update interval
+- add play mode shuffle, autoplay for player
+- improve player usabilty
+- improve stability and fix bugs
+
 ## Features
 
 #### App
