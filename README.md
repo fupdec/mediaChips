@@ -10,7 +10,7 @@
 Manage your porn video collection - add performers, tags, websites and have fun!
 
 ## Sponsorship 
-&#127828; Support app on <a target="_blank" href="https://www.patreon.com/avdb">Patreon</a>
+&#127828; Support app on &#128279;<a href="https://www.patreon.com/avdb">Patreon</a>
 
 ## Install application (Windows)
 To install, run the executable file. <br>
@@ -51,7 +51,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 
 ## Features
 
-#### App
+#### &#128421; App
 - Video player with time markers (New!)
 - Tabs for easy browsing
 - Flexible and convenient filter system for any parameter
@@ -64,7 +64,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Checking for updates on start
 - Optimized for one-handed use :)
 
-#### Videos
+#### &#128249; Videos
 - Playlists (New!)
 - Video preview with image grid 3x3 (New!)
 - Adding performers, tags, websites, rating, favorite, bookmark
@@ -81,7 +81,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Filesize of selected and all videos in the status bar
 - ... and more
 
-#### Performers
+#### &#128110; Performers
 - Adding tags, rating, favorite, bookmark
 - Detailed profile: aliases, category, career, age, country and many other parameters
 - Add custom parameter (New!)
@@ -95,13 +95,13 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Edit performer info parameters in settings (the ability to add new parameters will be added later) 
 - ... and something else
 
-#### Tags
+#### &#127991; Tags
 - Adding alternate names (for easy search), color, value (for a meter), favorite, bookmark
 - Sorting and filtering
 - Adding several at a time
 - Of course the tag image
 
-#### Websites
+#### &#127760; Websites
 - Subnetting websites
 - Adding color, favorite, bookmark
 - Sorting and filtering
