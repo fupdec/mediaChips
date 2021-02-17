@@ -59,6 +59,7 @@ export default {
   },
   methods: {
     closeTab(e, tabId) {
+      e.preventDefault()
       this.$store.dispatch('closeTab', tabId)
       this.$store.state.menuTabs = false
     },

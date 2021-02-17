@@ -1073,8 +1073,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           width: 18px !important;
         }
         &:hover {
+          background-color: #e43434;
           i {
-            color: #e43434;
+            color: #fff;
           }
         }
       }
