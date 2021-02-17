@@ -925,6 +925,10 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .flag {
           transform: scale(0.3);
+          &-icon {
+            top: 2px;
+            left: 0;
+          }
         }
         .v-chip {
           font-size: 10px;
@@ -952,6 +956,10 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .flag {
           transform: scale(0.4);
+          &-icon {
+            top: 3px;
+            left: 2px;
+          }
         }
         .v-chip {
           font-size: 11px;
