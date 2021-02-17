@@ -20,7 +20,7 @@
 
         <v-rating v-if="!$store.state.Settings.ratingAndFavoriteInCard" 
           :value="video.rating" @input="changeRating($event, video.id)"
-          class="rating" :class="{hidden: isRatingHidden}"
+          class="rating rating-wrapper" :class="{hidden: isRatingHidden}"
           color="yellow darken-2" background-color="grey darken-1"
           empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
           dense half-increments hover size="18" clearable />
@@ -644,6 +644,13 @@ export default {
   border-radius: 5px;
   &.hidden {
     display: none;
+  }
+  .v-icon {
+    padding: 0;
+  }
+  &-wrapper {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-top-right-radius: 3px;
   }
 }
 .btn-play {

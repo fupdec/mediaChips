@@ -650,7 +650,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       }
       .v-rating {
         .v-icon {
-          font-size: 15px !important;
+          font-size: 13px !important;
         }
       }
       .resolution {
@@ -684,6 +684,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
           font-size: 16px !important; 
         }
       }
+      .v-rating {
+        .v-icon {
+          font-size: 15px !important;
+        }
+      }
     }
     &-3 {
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -696,7 +701,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-rating {
           .v-icon {
-            font-size: 22px !important;
+            font-size: 18px !important;
           }
         }
         .fav-btn {
@@ -748,7 +753,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-rating {
           .v-icon {
-            font-size: 25px !important;
+            font-size: 20px !important;
           }
         }
         .fav-btn {
@@ -799,7 +804,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
         .v-rating {
           .v-icon {
-            font-size: 30px !important;
+            font-size: 24px !important;
           }
         }
         .fav-btn {
@@ -926,7 +931,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
       }
       .v-icon {
-        font-size: 14px !important;
+        font-size: 12px !important;
+      }
+      .fav-btn {
+        width: 26px;
+        height: 26px;
       }
     }
     &-2 {
@@ -949,7 +958,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
       }
       .v-icon {
-        font-size: 16px !important;
+        font-size: 14px !important;
       }
     }
     &-3 {
@@ -959,7 +968,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         font-size: 12px;
       }
       .v-icon {
-        font-size: 20px !important;
+        font-size: 16px !important;
       }
     }
     &-4 {
@@ -981,7 +990,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
       }
       .v-icon {
-        font-size: 22px !important;
+        font-size: 18px !important;
       }
     }
     &-5 {
@@ -1006,7 +1015,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
         }
       }
       .v-icon {
-        font-size: 24px !important;
+        font-size: 22px !important;
       }
     }
   }

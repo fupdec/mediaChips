@@ -620,7 +620,13 @@ export default {
     bottom: 0;
     left: 0;
     z-index: 1;
-    border-top-right-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding-top: 2px;
+    padding-right: 2px;
+    border-top-right-radius: 3px;
+    .v-icon {
+      padding: 0;
+    }
   }
   .img-container {
     position: relative;
