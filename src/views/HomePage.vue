@@ -105,10 +105,7 @@
             <div class="recent-videos-grid" @mousedown="stopSmoothScroll($event)"> 
               <v-hover v-for="video in recentVideos" :key="video.id">
                 <template v-slot:default="{ hover }">
-                  <v-img :src="getVideoThumbUrl(video.id)" 
-                    @click="playVideo(video)" aspect-ratio="1"
-                    @click.middle="addNewTabVideo(video.path)"
-                  >
+                  <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video)" aspect-ratio="1">
                     <v-fade-transition>
                       <v-overlay v-if="hover" absolute color="secondary">
                         <v-btn icon x-large outlined>
