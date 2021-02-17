@@ -143,11 +143,9 @@
                   <div class="mt-2 font-weight-light">Tags of performer</div>
                 </v-col>
                 <v-col cols="12" class="text-center py-0">
-                  <v-chip v-for="tag in performer.tags" :key="tag"
-                    outlined class="mr-2 mb-1 px-2"
+                  <v-chip v-for="tag in performer.tags" :key="tag" class="mr-2 mb-1 px-2"
                     @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
-                    @mouseleave.stop="$store.state.hoveredImage=false"
-                    >{{tag}}</v-chip>
+                    @mouseleave.stop="$store.state.hoveredImage=false">{{tag}}</v-chip>
                 </v-col>
                 <v-col v-if="tagsFromVideos.length && showTags" cols="12" class="text-center py-0">
                   <div class="mt-2 font-weight-light"> 
@@ -189,7 +187,7 @@
                   <v-chip-group v-model="activeWebsites" active-class="active-chip"
                     multiple column class="tags-from-videos">
                     <v-chip v-for="website in performer.websites" :key="website"
-                      outlined small class="mr-2 mb-1 px-2"
+                      outlined small label class="mr-2 mb-1 px-2"
                       @mouseover.stop="showImage($event, getWebsiteId(website), 'website')" 
                       @mouseleave.stop="$store.state.hoveredImage=false"
                       @click="$store.state.hoveredImage=false"
@@ -619,14 +617,14 @@ export default {
       },{
         param: 'tags',
         cond: 'all',
-        val: this.getFilteredTags(),
+        val: [],
         type: 'array',
         flag: null,
         lock: true,
       },{
         param: 'websites',
         cond: 'one of',
-        val: this.getFilteredWebsites(),
+        val: [],
         type: 'array',
         flag: null,
         lock: true,
