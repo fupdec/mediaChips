@@ -11,25 +11,23 @@
         <v-card-text class="text-center">
           <div v-for="(filter,i) in filters" :key="i" class="filter-row">
             <v-select @input="setParam($event,i)" :value="filters[i].param" 
-              :items="params" label="Parameter" outlined dense class="param"
-              :prepend-icon="getIconParam(filters[i].param)"
-              :menu-props="{contentClass:'list-with-preview'}" :disabled="filters[i].lock">
+              :items="params" label="Parameter" outlined dense class="param overline"
+              :prepend-icon="getIconParam(filters[i].param)" :disabled="filters[i].lock">
               <template v-slot:item="data">
                 <div class="list-item"> 
-                  <v-icon left size="14">{{getIconParam(data.item)}}</v-icon>
-                  <span>{{data.item}}</span>
+                  <v-icon left>{{getIconParam(data.item)}}</v-icon>
+                  <span class="overline">{{data.item}}</span>
                 </div>
               </template>
             </v-select>
 
-            <v-select @input="setCond($event,i)" :value="filters[i].cond" 
+            <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
               :items="getConditions(filters[i].type)" outlined dense label="Condition"
-              :menu-props="{contentClass:'list-with-preview'}" class="cond"
               :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
               <template v-slot:item="data">
                 <div class="list-item"> 
-                  <v-icon left size="14">{{getIconCond(data.item)}}</v-icon>
-                  <span>{{data.item}}</span>
+                  <v-icon left>{{getIconCond(data.item)}}</v-icon>
+                  <span class="overline">{{data.item}}</span>
                 </div>
               </template>
             </v-select>
@@ -39,11 +37,11 @@
             
             <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
               @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-              :disabled="filters[i].lock" label="Value" outlined dense class="val"/>
+              :disabled="filters[i].lock" label="Value" outlined dense class="val overline"/>
               
             <v-text-field v-if="filters[i].type==='date'" 
               :value="filters[i].val" @focus="picker=true, pickerIndex=i"
-              label="Date" outlined dense readonly class="val"/>
+              label="Date" outlined dense readonly class="val overline"/>
             <v-dialog v-model="picker" width="300px">
               <v-date-picker @change="setVal($event,pickerIndex), picker=false"
                 :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
@@ -54,7 +52,7 @@
               @input="setVal($event,i)" :value="filters[i].val" :disabled="filters[i].lock"
               :items="countries" item-text="name" item-value="name" label="Nationality" 
               multiple hide-selected hide-details clearable outlined dense small-chips
-              class="select-small-chips nation-chips hidden-close val"
+              class="select-small-chips nation-chips hidden-close val overline"
               :menu-props="{contentClass:'list-with-preview'}">
               <template v-slot:selection="data">
                 <v-chip
@@ -79,7 +77,7 @@
               
             <v-autocomplete v-if="filters[i].param==='tags'"
               @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
-              class="mb-4 select-small-chips hidden-close val" label="Tags" 
+              class="mb-4 select-small-chips hidden-close val overline" label="Tags" 
               item-text="name" item-value="name" no-data-text="No more tags" 
               multiple hide-selected hide-details clearable outlined dense
               :menu-props="{contentClass:'list-with-preview'}"
@@ -110,44 +108,44 @@
             </v-autocomplete>
 
             <v-select v-if="filters[i].type==='array' && namesOfCustomParams.includes(filters[i].param)" 
-              @input="setVal($event,i)" :value="filters[i].val" class="val"
+              @input="setVal($event,i)" :value="filters[i].val" class="val overline"
               :items="getCustomItems(filters[i].param)" label="Values"
               :disabled="filters[i].lock" outlined dense multiple />
 
             <v-select v-if="filters[i].param==='category'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoCategory" 
-              outlined dense label="Categories" class="val"
+              outlined dense label="Categories" class="val overline"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='ethnicity'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoEthnicity" 
-              outlined dense label="Ethnicity" class="val"
+              outlined dense label="Ethnicity" class="val overline"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='hair'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoHair" 
-              outlined dense label="Hair" class="val"
+              outlined dense label="Hair" class="val overline"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='eyes'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoEyes" 
-              outlined dense label="Eyes" class="val"
+              outlined dense label="Eyes" class="val overline"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='cups'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoCups" 
-              outlined dense label="Cups" class="val"
+              outlined dense label="Cups" class="val overline"
               :disabled="filters[i].lock" multiple/>
 
             <v-select v-if="filters[i].param==='boobs'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoBoobs" 
-              outlined dense label="Boobs" class="val"
+              outlined dense label="Boobs" class="val overline"
               :disabled="filters[i].lock" multiple/>
 
             <v-btn @click="duplicateFilter(i)" title="Duplicate filter"

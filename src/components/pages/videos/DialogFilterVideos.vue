@@ -11,36 +11,35 @@
         <v-card-text class="text-center">
           <div v-for="(filter,i) in filters" :key="i" class="filter-row">
             <v-select @input="setParam($event,i)" :value="filters[i].param" 
-              :items="params" label="Parameter" outlined dense class="param"
+              :items="params" label="Parameter" outlined dense class="param overline"
               :prepend-icon="getIconParam(filters[i].param)"
-              :menu-props="{contentClass:'list-with-preview'}" :disabled="filters[i].lock">
+              :disabled="filters[i].lock">
               <template v-slot:item="data">
                 <div class="list-item"> 
-                  <v-icon left size="14">{{getIconParam(data.item)}}</v-icon>
-                  <span>{{data.item}}</span>
+                  <v-icon left>{{getIconParam(data.item)}}</v-icon>
+                  <span class="overline">{{data.item}}</span>
                 </div>
               </template>
             </v-select>
 
-            <v-select @input="setCond($event,i)" :value="filters[i].cond" 
+            <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
               :items="getConditions(filters[i].type)" outlined dense label="Condition"
-              :menu-props="{contentClass:'list-with-preview'}" class="cond"
               :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
               <template v-slot:item="data">
                 <div class="list-item"> 
-                  <v-icon left size="14">{{getIconCond(data.item)}}</v-icon>
-                  <span>{{data.item}}</span>
+                  <v-icon left>{{getIconCond(data.item)}}</v-icon>
+                  <span class="overline">{{data.item}}</span>
                 </div>
               </template>
             </v-select>
 
             <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
               @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-              label="Value" outlined dense class="val"/>
+              label="Value" outlined dense class="val overline"/>
 
             <v-text-field v-if="filters[i].type==='date'" 
               :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
-              label="Date" outlined dense readonly class="val"/>
+              label="Date" outlined dense readonly class="val overline"/>
             <v-dialog v-model="datePicker" width="300px">
               <v-date-picker @change="setVal($event,datePickerIndex), datePicker=false"
                 :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
@@ -50,7 +49,7 @@
             <v-autocomplete v-if="filters[i].param==='performers'"
               @input="setVal($event,i)" :value="filters[i].val" :items="performers"
               item-text="name" item-value="name" no-data-text="No more performers"
-              class="mb-4 select-small-chips hidden-close val" label="Performers" 
+              class="mb-4 select-small-chips hidden-close val overline" label="Performers" 
               multiple hide-selected hide-details clearable dense outlined
               :menu-props="{contentClass:'list-with-preview'}"
               :filter="filterItemsPerformers" :disabled="filters[i].lock"
@@ -93,7 +92,7 @@
               
             <v-autocomplete v-if="filters[i].param==='tags'"
               @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
-              class="mb-4 select-small-chips hidden-close val"
+              class="mb-4 select-small-chips hidden-close val overline"
               item-text="name" dense label="Tags"
               item-value="name" no-data-text="No more tags" 
               multiple hide-selected hide-details clearable outlined
@@ -126,7 +125,7 @@
 
             <v-autocomplete v-if="filters[i].param==='websites'"
               @input="setVal($event,i)" :value="filters[i].val" :items="websites" 
-              class="mb-4 select-small-chips hidden-close val"
+              class="mb-4 select-small-chips hidden-close val overline"
               item-text="name" dense label="Websites"
               item-value="name" no-data-text="No more websites" 
               multiple hide-selected hide-details clearable outlined
