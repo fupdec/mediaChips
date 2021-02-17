@@ -290,7 +290,7 @@ export default {
       this.filters.splice(i, 1)
     },
     applyFilters() {
-      this.$store.state.Settings.videoFilters = this.filters
+      this.$store.state.Settings.videoFilters = _.cloneDeep(this.filters)
       this.$store.dispatch('filterVideos')
       this.$store.dispatch('saveFiltersOfVideos', this.$route)
       this.$store.state.Videos.dialogFilterVideos = false 

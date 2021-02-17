@@ -307,7 +307,7 @@ export default {
       this.filters.splice(i, 1)
     },
     applyFilters() {
-      this.$store.state.Settings.performerFilters = this.filters
+      this.$store.state.Settings.performerFilters = _.cloneDeep(this.filters)
       this.$store.dispatch('filterPerformers')
       this.$store.dispatch('saveFiltersOfPerformers', this.$route)
       this.$store.state.Performers.dialogFilterPerformers = false 
