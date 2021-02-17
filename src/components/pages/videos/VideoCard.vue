@@ -119,7 +119,7 @@
         </v-chip-group>
       </v-card-actions>
 
-      <v-card-actions class="px-1 py-0 website" :class="{hidden: isWebsiteHidden}">
+      <v-card-actions class="px-1 py-0 websites" :class="{hidden: isWebsiteHidden}">
         <v-chip-group column>
           <v-icon left>mdi-web</v-icon>
           <v-chip v-for="website in video.websites" :key="website" label 
@@ -523,10 +523,6 @@ export default {
     }
   }
   .performers {
-    padding-left: 20px;
-    .caption {
-      letter-spacing: 0 !important;
-    }
     &.hidden {
       display: none;
     }
@@ -544,12 +540,7 @@ export default {
   .theme--dark.v-text-field > .v-input__control > .v-input__slot:before {
     border-color: rgba(255, 255, 255, 0.05);
   }
-  .website {
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    .caption {
-      letter-spacing: 0 !important;
-    }
+  .websites {
     &.hidden {
       display: none;
     }
@@ -689,9 +680,6 @@ export default {
   }
 }
 .video-tags {
-  .caption {
-    letter-spacing: 0 !important;
-  }
   &.hidden {
     display: none;
   }
