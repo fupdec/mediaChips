@@ -609,40 +609,40 @@ export default {
       this.header = `top:${vertical.scrollTop * 0.7}px`
     },
     initFilters() {
+      let defaultFilters = [{
+        param: 'performers',
+        cond: 'all',
+        val: [this.performer.name],
+        type: 'array',
+        flag: null,
+        lock: true,
+      },{
+        param: 'tags',
+        cond: 'all',
+        val: this.getFilteredTags(),
+        type: 'array',
+        flag: null,
+        lock: true,
+      },{
+        param: 'websites',
+        cond: 'one of',
+        val: this.getFilteredWebsites(),
+        type: 'array',
+        flag: null,
+        lock: true,
+      }]
       if (this.tabId === 'default' || typeof this.tab === 'undefined') {
-        this.$store.state.Settings.videoFilters = [{
-          param: 'performers',
-          cond: 'all',
-          val: [this.performer.name],
-          type: 'array',
-          flag: null,
-          lock: true,
-        },{
-          param: 'tags',
-          cond: 'all',
-          val: this.getFilteredTags(),
-          type: 'array',
-          flag: null,
-          lock: true,
-        },{
-          param: 'websites',
-          cond: 'one of',
-          val: this.getFilteredWebsites(),
-          type: 'array',
-          flag: null,
-          lock: true,
-        }]
-        this.$store.state.Videos.sortBy = 'name'
-        this.$store.state.Videos.sortDirection = 'asc'
-        this.$store.state.Videos.page = 1
-        this.$store.dispatch('filterVideos', true)
+        this.$store.state.Settings.videoFilters = _.cloneDeep(defaultFilters)
+        this.$store.state.Settings.videoSortBy = 'name'
+        this.$store.state.Settings.videoSortDirection = 'asc'
+        this.$store.state.Settings.videoPage = 1
       } else {
-        this.$store.state.Settings.videoFilters = _.cloneDeep(this.tab.filters)
-        this.$store.state.Videos.sortBy = this.tab.sort.by
-        this.$store.state.Videos.sortDirection = this.tab.sort.direction
-        this.$store.state.Videos.page = this.tab.page
-        this.$store.dispatch('filterVideos', true)
+        this.$store.state.Settings.videoFilters = _.cloneDeep(this.tab.filters) || _.cloneDeep(defaultFilters)
+        this.$store.state.Settings.videoSortBy = this.tab.sortBy || 'name'
+        this.$store.state.Settings.videoSortDirection = this.tab.sortDirection || 'asc'
+        this.$store.state.Settings.videoPage = this.tab.page || 1
       }
+      this.$store.dispatch('filterVideos', true)
     },
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_${imgType}.jpg`)
@@ -733,10 +733,10 @@ export default {
         lock: true,
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
-      this.$store.state.Settings.videoFilters = [...defaults, ...others]
-      if (this.tabId !== 'default' || typeof this.tab !== 'undefined') {
-        this.$store.dispatch('saveFiltersOfVideos', this.$route)
-      }
+      this.$store.state.Settings.videoFilters = _.cloneDeep([...defaults, ...others])
+      // if (this.tabId !== 'default' || typeof this.tab !== 'undefined') {
+      //   this.$store.dispatch('saveFiltersOfVideos', this.$route)
+      // }
       this.$store.dispatch('filterVideos')
     },
     getCustomParamValue(name, type) {

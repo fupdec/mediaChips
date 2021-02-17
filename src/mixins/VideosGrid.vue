@@ -46,11 +46,11 @@ export default {
     },
     videosCurrentPage: {
       get() {
-        return this.$store.state.Videos.page
+        return this.$store.state.Settings.videoPage
       },
       set(number) {
-        this.$store.state.Videos.page = number
-        this.$store.dispatch('saveFiltersOfVideos', this.$route)
+        this.$store.state.Settings.videoPage = number
+        this.$store.dispatch('saveFiltersOfVideos')
       },
     },
   },

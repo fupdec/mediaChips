@@ -194,6 +194,7 @@ export default {
       const rand = this.getRandomIntInclusive(1, this.$store.getters.performersTotal)
       const performerId = this.$store.getters.performers.value()[rand].id
       this.openPerformerPage(performerId)
+      // TODO open only from filtered items. do the same for videos and websites
     },
     getRandomIntInclusive(min, max) {
       min = Math.ceil(min)

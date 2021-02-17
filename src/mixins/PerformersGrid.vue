@@ -20,12 +20,12 @@ export default {
     },
     chars: {
       get () {
-        return this.$store.state.Performers.firstChar
+        return this.$store.state.Settings.performerFirstChar
       },
       set (value) {
-        this.$store.state.Performers.firstChar = value
+        this.$store.state.Settings.performerFirstChar = value
         this.$store.dispatch('filterPerformers')
-        this.updateFiltersOfPerformersTab()
+        // this.$store.dispatch('saveFiltersOfPerformers', this.$route)
       },
     },
     pages: {
@@ -56,12 +56,11 @@ export default {
     },
     performersCurrentPage: {
       get () {
-        return this.$store.state.Performers.page
+        return this.$store.state.Settings.performerPage
       },
       set (number) {
-        this.$store.state.Performers.page = number
-        this.updateFiltersOfPerformersTab()
-        this.$store.dispatch('changePerformersPageCurrent', number)
+        this.$store.state.Settings.performerPage = number
+        this.$store.dispatch('saveFiltersOfPerformers')
       },
     },
     cardSize() {
@@ -73,9 +72,8 @@ export default {
   },
   methods: {
     clearChars() {
-      this.$store.state.Performers.firstChar = []
+      this.$store.state.Settings.performerFirstChar = []
       this.$store.dispatch('filterPerformers')
-      this.updateFiltersOfPerformersTab()
     },
   },
 }

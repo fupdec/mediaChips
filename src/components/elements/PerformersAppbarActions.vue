@@ -161,37 +161,20 @@ export default {
     },
     sortButtons: {
       get() {
-        return this.$store.state.Performers.sortBy
+        return this.$store.state.Settings.performerSortBy
       },
       set(value) {
-        this.$store.state.Performers.sortBy = value
+        this.$store.state.Settings.performerSortBy = value
       },
     },
     sortDirection() {
-      return this.$store.state.Performers.sortDirection
+      return this.$store.state.Settings.performerSortDirection
     },
     tabId() {
       return this.$route.query.tabId
     },
   },
   methods: {
-    async pasteName() {
-      let text = await navigator.clipboard.readText()
-      let name = this.$store.state.Performers.filters.name
-      if (name) {
-        text = name + text
-      }
-    },
-    async pasteTags() {
-      let text = await navigator.clipboard.readText()
-      let tags = text.split(', ')
-      tags = this.$store.getters.tags.filter(t => (
-        t.category.includes('performer') && tags.includes(t.name)
-      )).value()
-      tags = tags.map(t=>{return t.name})
-      if (tags.length) {
-      }
-    },
     resetAllFilters() {
       this.$store.state.Settings.performerFilters = [{
         param: null,
@@ -202,24 +185,13 @@ export default {
         lock: false,
       }]
       this.$store.dispatch('filterPerformers')
-
-      let newFilters = _.cloneDeep(this.$store.state.Settings.performerFilters)
-
-      if (this.tabId === 'default') { // for performers page (not for tab)
-        this.$store.getters.settings.set('performerFilters', newFilters).write()
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.performerFiltersForTabName,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
+      // this.$store.dispatch('saveFiltersOfPerformers', this.$route)
     },
     toggleSortDirection() {
-      this.$store.state.Performers.sortDirection = this.sortDirection=='asc' ? 'desc':'asc'
+      this.$store.state.Settings.performerSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterPerformers')
-        this.$store.dispatch('saveFiltersOfPerformers', this.$route)
+        // this.$store.dispatch('saveFiltersOfPerformers', this.$route)
       },200)
     },
     selectAllPerformers() {

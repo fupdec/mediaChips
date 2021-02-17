@@ -292,7 +292,7 @@ export default {
     applyFilters() {
       this.$store.state.Settings.videoFilters = _.cloneDeep(this.filters)
       this.$store.dispatch('filterVideos')
-      this.$store.dispatch('saveFiltersOfVideos', this.$route)
+      // this.$store.dispatch('saveFiltersOfVideos', this.$route)
       this.$store.state.Videos.dialogFilterVideos = false 
     },
     setParam(e, i) {
@@ -364,10 +364,8 @@ export default {
         link: `/videos/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
-        sort: {
-          by: this.$store.state.Videos.sortBy,
-          direction: this.$store.state.Videos.sortDirection,
-        },
+        sortBy: this.$store.state.Settings.videoSortBy,
+        sortDirection: this.$store.state.Settings.videoSortDirection,
         page: 1,
         icon: 'video-outline'
       }

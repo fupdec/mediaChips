@@ -6,6 +6,9 @@ const pathToDbPerformers = path.join(app.getPath('userData'), 'userfiles/databas
 const adapterPerformers = new FileSync(pathToDbPerformers)
 const low = require('lowdb')
 const dbp = low(adapterPerformers)
+
+import router from '@/router'
+
 dbp.defaults({ 
   performers: [{
     id: "1111111111111111",
@@ -39,57 +42,9 @@ dbp.defaults({
   }]
 }).write()
 
-// const defaultFilters = {
-//   favorite: false,
-//   bookmark: false,
-//   firstChar: [],
-//   tags: [],
-//   tagsLogic: false,
-//   name: '',
-//   aliases: false,
-//   category: [],
-//   categoryLogic: false,
-//   ratingActive: false,
-//   rating: [0, 5],
-//   ageActive: false,
-//   age: [18, 99],
-//   careerActive: false,
-//   career: [1980, new Date().getFullYear()],
-//   careerEnded: false,
-//   heightActive: false,
-//   height: [100, 220],
-//   weightActive: false,
-//   weight: [20, 220],
-//   braActive: false,
-//   bra: [20, 60],
-//   waistActive: false,
-//   waist: [20, 60],
-//   hipActive: false,
-//   hip: [20, 60],
-//   nation: [],
-//   ethnicity: [],
-//   ethnicityLogic: false,
-//   hair: [],
-//   hairLogic: false,
-//   eyes: [],
-//   eyesLogic: false,
-//   cups: [],
-//   boobs: [],
-//   body: [],
-//   bodyLogic: false,
-//   pussy: [],
-//   pussyLips: [],
-//   pussyHair: [],
-//   pussyHairLogic: false,
-//   sortBy: 'name',
-//   sortDirection: 'asc',
-//   page: 1,
-// }
-
 const Performers = {
   state: () => ({
     bottomSheet: true,
-    page: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
     showMoreFilters: false,
@@ -105,9 +60,6 @@ const Performers = {
     updateInfo: {},
     rating: 0,
     menuCard: false,
-    firstChar: [],
-    sortBy: 'name',
-    sortDirection: 'asc',
   }),
   mutations: {
     updatePerformers (state) {
@@ -116,9 +68,6 @@ const Performers = {
     },
     changePerformersPageTotal(state, quantity) {
       state.pageTotal = quantity
-    },
-    changePerformersPageCurrent(state, quantity) {
-      state.page = quantity
     },
     updateFiltersOfPerformers(state, {key, value}) {
       state.filters[key] = value
@@ -141,23 +90,18 @@ const Performers = {
       dispatch('updateSettingsState', {key:'performersPerPage', value:number})
     },
     changePerformersPageTotal({ state, commit}, quantity) {
+      // TODO clean all useless actions and mutations like already did in videos
       // commit('updatePerformers')
       commit('changePerformersPageTotal', quantity)
     },
-    changePerformersPageCurrent({ state, commit}, quantity) {
-      // TODO clean all useless actions and mutations like already did in videos
-      // commit('updatePerformers')
-      commit('resetLoading')
-      commit('changePerformersPageCurrent', quantity)
-    },
-    async filterPerformers({ state, commit, getters, rootState}, stayOnCurrentPage) {
+    async filterPerformers({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
       let performers = getters.performers
       performers = performers.orderBy(p=>(p.name.toLowerCase()), ['asc'])
 
-      if (state.firstChar.length) {
+      if (rootState.Settings.performerFirstChar.length) {
         let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
         let allChars = []
-        state.firstChar.forEach( char => { allChars.push(chars[char]) } )
+        rootState.Settings.performerFirstChar.forEach( char => { allChars.push(chars[char]) } )
         if (allChars.length) {
           performers = performers.filter( performer => {
             let charPerformer = performer.name.charAt(0).toLowerCase()
@@ -259,10 +203,10 @@ const Performers = {
       }
   
       // sort performers
-      if (state.sortBy === 'name') {
-        performers = performers.orderBy(performer=>performer.name.toLowerCase(), [state.sortDirection])
+      if (rootState.Settings.performerSortBy === 'name') {
+        performers = performers.orderBy(performer=>performer.name.toLowerCase(), [rootState.Settings.performerSortDirection])
       } else {
-        performers = performers.orderBy(state.sortBy, [state.sortDirection])
+        performers = performers.orderBy(rootState.Settings.performerSortBy, [rootState.Settings.performerSortDirection])
       }
       // if (state.filters.name) {
       //   let frase = state.filters.name.toLowerCase().trim()
@@ -305,24 +249,32 @@ const Performers = {
       commit('resetLoading')
       commit('filterPerformers', filteredPerformers)
       if (!stayOnCurrentPage) {
-        state.page = 1
-        commit('changePerformersPageCurrent', 1)
+        rootState.Settings.performerPage = 1
       }
+      dispatch('saveFiltersOfPerformers')
     },
-    saveFiltersOfPerformers({state, commit, getters, rootState}, route) {
+    saveFiltersOfPerformers({state, commit, getters, rootState}) {
+      const route = router.currentRoute
       const newFilters = _.cloneDeep(rootState.Settings.performerFilters)
+      const sortBy = rootState.Settings.performerSortBy
+      const sortDirection = rootState.Settings.performerSortDirection
+      const page = rootState.Settings.performerPage
+      const firstChar = rootState.Settings.performerFirstChar
 
       if (route.query.tabId === 'default') { // for performers page (not for tab)
         getters.settings.set('performerFilters', newFilters).write()
+        getters.settings.set('performerSortBy', sortBy).write()
+        getters.settings.set('performerSortDirection', sortDirection).write()
+        getters.settings.set('performerPage', page).write()
+        getters.settings.set('performerFirstChar', firstChar).write()
       } else {  // for tab with performers 
         getters.tabsDb.find({id: route.query.tabId}).assign({
           name: getters.performerFiltersForTabName,
           filters: newFilters,
-          sort: {
-            by: state.sortBy,
-            direction: state.sortDirection,
-          },
-          page: state.page,
+          sortBy: sortBy,
+          sortDirection: sortDirection,
+          page: page,
+          firstChar: firstChar,
         }).write()
         commit('getTabsFromDb')
       }
@@ -435,14 +387,14 @@ const Performers = {
           c = performersCount;
       state.pageTotal = Math.ceil(l/c);
        // console.log(state.pageTotal)
-      if(state.page) {
-        state.page = state.page
+      if(rootState.Settings.performerPage) {
+        rootState.Settings.performerPage = rootState.Settings.performerPage
       }
-      if(state.page > state.pageTotal) {
-        state.page = state.pageTotal
+      if(rootState.Settings.performerPage > state.pageTotal) {
+        rootState.Settings.performerPage = state.pageTotal
       }
       
-      const end = state.page * performersCount,
+      const end = rootState.Settings.performerPage * performersCount,
             start = end - performersCount;
       return performers.slice(start, end)
     },

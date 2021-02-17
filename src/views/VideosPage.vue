@@ -119,14 +119,14 @@ export default {
           // TODO: create function for saving filters in separated database
         //   }
         newFilters = _.cloneDeep(this.$store.getters.settings.get('videoFilters').value())
-        this.$store.state.Videos.sortBy = 'name'
-        this.$store.state.Videos.sortDirection = 'asc'
-        this.$store.state.Videos.page = 1
+        this.$store.state.Settings.videoSortBy = this.$store.getters.settings.get('videoSortBy').value()
+        this.$store.state.Settings.videoSortDirection = this.$store.getters.settings.get('videoSortDirection').value()
+        this.$store.state.Settings.videoPage = this.$store.getters.settings.get('videoPage').value()
       } else {
         newFilters = _.cloneDeep(this.tab.filters)
-        this.$store.state.Videos.sortBy = this.tab.sort.by
-        this.$store.state.Videos.sortDirection = this.tab.sort.direction
-        this.$store.state.Videos.page = this.tab.page
+        this.$store.state.Settings.videoSortBy = this.tab.sortBy
+        this.$store.state.Settings.videoSortDirection = this.tab.sortDirection
+        this.$store.state.Settings.videoPage = this.tab.page
       }
       this.$store.state.Settings.videoFilters = newFilters
       this.$store.dispatch('filterVideos', true)

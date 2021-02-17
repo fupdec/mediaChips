@@ -197,14 +197,16 @@ export default {
           // TODO create function for saving filters in separated database
         // }
         newFilters = _.cloneDeep(this.$store.getters.settings.get('performerFilters').value())
-        this.$store.state.Performers.sortBy = 'name'
-        this.$store.state.Performers.sortDirection = 'asc'
-        this.$store.state.Performers.page = 1
+        this.$store.state.Settings.performerSortBy = this.$store.getters.settings.get('performerSortBy').value()
+        this.$store.state.Settings.performerSortDirection = this.$store.getters.settings.get('performerSortDirection').value()
+        this.$store.state.Settings.performerPage = this.$store.getters.settings.get('performerPage').value()
+        this.$store.state.Settings.performerFirstChar = this.$store.getters.settings.get('performerFirstChar').value()
       } else {
         newFilters = _.cloneDeep(this.tab.filters)
-        this.$store.state.Performers.sortBy = this.tab.sort.by
-        this.$store.state.Performers.sortDirection = this.tab.sort.direction
-        this.$store.state.Performers.page = this.tab.page
+        this.$store.state.Settings.performerSortBy = this.tab.sortBy || 'name'
+        this.$store.state.Settings.performerSortDirection = this.tab.sortDirection || 'asc'
+        this.$store.state.Settings.performerPage = this.tab.page || 1
+        this.$store.state.Settings.performerFirstChar = this.tab.firstChar || []
       }
       this.$store.state.Settings.performerFilters = newFilters
       this.$store.dispatch('filterPerformers', true)

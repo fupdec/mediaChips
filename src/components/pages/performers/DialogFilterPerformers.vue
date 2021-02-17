@@ -309,7 +309,7 @@ export default {
     applyFilters() {
       this.$store.state.Settings.performerFilters = _.cloneDeep(this.filters)
       this.$store.dispatch('filterPerformers')
-      this.$store.dispatch('saveFiltersOfPerformers', this.$route)
+      // this.$store.dispatch('saveFiltersOfPerformers', this.$route)
       this.$store.state.Performers.dialogFilterPerformers = false 
     },
     setParam(e, i) {
@@ -374,11 +374,10 @@ export default {
         link: `/performers/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
-        sort: {
-          by: this.$store.state.Performers.sortBy,
-          direction: this.$store.state.Performers.sortDirection,
-        },
+        sortBy: this.$store.state.Settings.performerSortBy,
+        sortDirection: this.$store.state.Settings.performerSortDirection,
         page: 1,
+        firstChar: this.$store.state.Settings.performerFirstChar,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)

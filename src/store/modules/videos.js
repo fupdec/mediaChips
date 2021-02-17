@@ -6,31 +6,13 @@ const pathToDbVideos = path.join(app.getPath('userData'), 'userfiles/databases/d
 const adapterVideos = new FileSync(pathToDbVideos)
 const low = require('lowdb')
 const dbv = low(adapterVideos)
-dbv.defaults({ videos: [] }).write()
 
-// const defaultFilters = {
-//   favorite: false,
-//   bookmark: false,
-//   quality: [],
-//   performers: [],
-//   performersLogic: false,
-//   tags: [],
-//   tagsLogic: false,
-//   websites: [],
-//   path: '',
-//   durationActive: false,
-//   duration: [0,1],
-//   sizeActive: false,
-//   size: [0,20000],
-//   sortBy: 'name',
-//   sortDirection: 'asc',
-//   tree: [],
-//   page: 1,
-// }
+import router from '@/router'
+
+dbv.defaults({ videos: [] }).write()
 
 const Videos = {
   state: () => ({
-    page: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
     filteredVideos: [],
@@ -48,8 +30,6 @@ const Videos = {
     rating: 0,
     menuCard: false,
     updateCard: 1,
-    sortBy: 'name',
-    sortDirection: 'asc',
     tree: [],
   }),
   mutations: {
@@ -70,7 +50,7 @@ const Videos = {
       commit('resetLoading')
       dispatch('updateSettingsState', {key:'videosPerPage', value:number})
     },
-    filterVideos({ state, commit, getters, rootState}, stayOnCurrentPage) {
+    filterVideos({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
       let videos = getters.videos
       videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
 
@@ -168,10 +148,10 @@ const Videos = {
         }
       }
       // sort videos
-      if (state.sortBy === 'name') {
-        videos = videos.orderBy(video=>(path.basename(video.path)), [state.sortDirection])
+      if (rootState.Settings.videoSortBy === 'name') {
+        videos = videos.orderBy(video=>(path.basename(video.path)), [rootState.Settings.videoSortDirection])
       } else {
-        videos = videos.orderBy(state.sortBy, [state.sortDirection])
+        videos = videos.orderBy(rootState.Settings.videoSortBy, [rootState.Settings.videoSortDirection])
       }
       // if (state.filters.durationActive) {
       //   let dur = state.filters.duration
@@ -233,38 +213,44 @@ const Videos = {
       commit('resetLoading')
       commit('filterVideos', filteredVideos)
       if (!stayOnCurrentPage) {
-        state.page = 1
+        rootState.Settings.videoPage = 1
       }
+      dispatch('saveFiltersOfVideos')
     },
-    saveFiltersOfVideos({state, commit, getters, rootState}, route) {
+    saveFiltersOfVideos({state, commit, getters, rootState}) {
+      const route = router.currentRoute
       const newFilters = _.cloneDeep(rootState.Settings.videoFilters)
+      const sortDirection = rootState.Settings.videoSortDirection
+      const sortBy = rootState.Settings.videoSortBy
+      const page = rootState.Settings.videoPage
       const pagesWithVideos = ['/performer/:','/website/:']
 
       if (route.path.includes('/videos/:')) {
         if (route.query.tabId === 'default') {
           getters.settings.set('videoFilters', newFilters).write()
+          getters.settings.set('videoSortDirection', sortDirection).write()
+          getters.settings.set('videoSortBy', sortBy).write()
+          getters.settings.set('videoPage', page).write()
         } else {
           getters.tabsDb.find({id: route.query.tabId}).assign({
             name: getters.videoFiltersForTabName,
             filters: newFilters,
-            sort: {
-              by: state.sortBy,
-              direction: state.sortDirection,
-            },
-            page: state.page,
+            sortBy: sortBy,
+            sortDirection: sortDirection,
+            page: page,
           }).write()
           commit('getTabsFromDb')
         }
       } else if (pagesWithVideos.some(page => route.path.includes(page))) {
-        getters.tabsDb.find({id: route.query.tabId}).assign({
-          filters: newFilters,
-          sort: {
-            by: state.sortBy,
-            direction: state.sortDirection,
-          },
-          page: state.page,
-        }).write()
-        commit('getTabsFromDb')
+        if (route.query.tabId !== 'default') {
+          getters.tabsDb.find({id: route.query.tabId}).assign({
+            filters: newFilters,
+            sortBy: sortBy,
+            sortDirection: sortDirection,
+            page: page,
+          }).write()
+          commit('getTabsFromDb')
+        }
       }
     },
     deleteVideos({state, rootState, commit, dispatch, getters}) {
@@ -433,11 +419,11 @@ const Videos = {
           c = videosCount
       state.pageTotal = Math.ceil(l/c)
       // console.log(state.pageTotal)
-      if(state.page > state.pageTotal) {
-        state.page = state.pageTotal
+      if(rootState.Settings.videoPage > state.pageTotal) {
+        rootState.Settings.videoPage = state.pageTotal
       }
       
-      const end = state.page * videosCount,
+      const end = rootState.Settings.videoPage * videosCount,
             start = end - videosCount;
       return videos.slice(start, end)
     },

@@ -206,14 +206,14 @@ export default {
     },
     sortButtons: {
       get() {
-        return this.$store.state.Videos.sortBy
+        return this.$store.state.Settings.videoSortBy
       },
       set(value) {
-        this.$store.state.Videos.sortBy = value
+        this.$store.state.Settings.videoSortBy = value
       },
     },
     sortDirection() {
-      return this.$store.state.Videos.sortDirection
+      return this.$store.state.Settings.videoSortDirection
     },
     isTreeEmpty() {
       if (this.$store.state.Videos.tree.length) {
@@ -311,13 +311,13 @@ export default {
       }
 
       this.$store.dispatch('filterVideos')
-      this.$store.dispatch('saveFiltersOfVideos', this.$route)
+      // this.$store.dispatch('saveFiltersOfVideos', this.$route)
     },
     toggleSortDirection() {
-      this.$store.state.Videos.sortDirection = this.sortDirection=='asc' ? 'desc':'asc'
+      this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterVideos')
-        this.$store.dispatch('saveFiltersOfVideos', this.$route)
+        // this.$store.dispatch('saveFiltersOfVideos', this.$route)
       },200)
     },
     selectAllVideos() {
