@@ -43,7 +43,8 @@
               :value="filters[i].val" @focus="picker=true, pickerIndex=i"
               label="Date" outlined dense readonly class="val overline"/>
             <v-dialog v-model="picker" width="300px">
-              <v-date-picker @change="setVal($event,pickerIndex), picker=false"
+              <v-date-picker v-if="filters[i].type==='date'"
+                @change="setVal($event,pickerIndex), picker=false"
                 :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
                 :value="filters[pickerIndex].val" no-title color="primary" full-width/>
             </v-dialog>
@@ -110,43 +111,50 @@
             <v-select v-if="filters[i].type==='array' && namesOfCustomParams.includes(filters[i].param)" 
               @input="setVal($event,i)" :value="filters[i].val" class="val overline"
               :items="getCustomItems(filters[i].param)" label="Values"
-              :disabled="filters[i].lock" outlined dense multiple />
+              :disabled="filters[i].lock" outlined dense multiple 
+              :menu-props="{contentClass:'overline'}"/>
 
             <v-select v-if="filters[i].param==='category'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoCategory" 
               outlined dense label="Categories" class="val overline"
-              :disabled="filters[i].lock" multiple/>
+              :disabled="filters[i].lock" multiple
+              :menu-props="{contentClass:'overline'}"/>
 
             <v-select v-if="filters[i].param==='ethnicity'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoEthnicity" 
               outlined dense label="Ethnicity" class="val overline"
-              :disabled="filters[i].lock" multiple/>
+              :disabled="filters[i].lock" multiple
+              :menu-props="{contentClass:'overline'}"/>
 
             <v-select v-if="filters[i].param==='hair'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoHair" 
               outlined dense label="Hair" class="val overline"
-              :disabled="filters[i].lock" multiple/>
+              :disabled="filters[i].lock" multiple
+              :menu-props="{contentClass:'overline'}"/>
 
             <v-select v-if="filters[i].param==='eyes'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoEyes" 
               outlined dense label="Eyes" class="val overline"
-              :disabled="filters[i].lock" multiple/>
+              :disabled="filters[i].lock" multiple
+              :menu-props="{contentClass:'overline'}"/>
 
             <v-select v-if="filters[i].param==='cups'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoCups" 
               outlined dense label="Cups" class="val overline"
-              :disabled="filters[i].lock" multiple/>
+              :disabled="filters[i].lock" multiple
+              :menu-props="{contentClass:'overline'}"/>
 
             <v-select v-if="filters[i].param==='boobs'" 
               @input="setVal($event,i)" :value="filters[i].val" 
               :items="$store.state.Settings.performerInfoBoobs" 
               outlined dense label="Boobs" class="val overline"
-              :disabled="filters[i].lock" multiple/>
+              :disabled="filters[i].lock" multiple
+              :menu-props="{contentClass:'overline'}"/>
 
             <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
               class="ml-2 mt-1" color="green" outlined icon fab x-small>

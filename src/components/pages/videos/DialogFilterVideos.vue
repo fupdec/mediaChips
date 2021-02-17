@@ -41,7 +41,8 @@
               :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
               label="Date" outlined dense readonly class="val overline"/>
             <v-dialog v-model="datePicker" width="300px">
-              <v-date-picker @change="setVal($event,datePickerIndex), datePicker=false"
+              <v-date-picker v-if="filters[i].type==='date'"
+                @change="setVal($event,datePickerIndex), datePicker=false"
                 :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
                 :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
             </v-dialog>
