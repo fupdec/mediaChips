@@ -152,11 +152,11 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
-    filtersTab() {
+    tab() {
       if (this.tabId === 'default') {
         return undefined
       } else {
-        return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value()    
       }
     },
     tabId() {
@@ -184,7 +184,7 @@ export default {
     },
     initFilters() {
       let newFilters
-      if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
+      if (this.tabId === 'default' || typeof this.tab.filters === 'undefined') {
         // const presetDefault = this.$store.state.Settings.performersFiltersPresetDefault
         // const presetLoaded = this.$store.state.Bookmarks.performersDefaultPresetLoaded
         // if (presetDefault && !presetLoaded) {
@@ -197,8 +197,14 @@ export default {
           // TODO create function for saving filters in separated database
         // }
         newFilters = _.cloneDeep(this.$store.getters.settings.get('performerFilters').value())
+        this.$store.state.Performers.sortBy = 'name'
+        this.$store.state.Performers.sortDirection = 'asc'
+        this.$store.state.Performers.page = 1
       } else {
-        newFilters = _.cloneDeep(this.filtersTab)
+        newFilters = _.cloneDeep(this.tab.filters)
+        this.$store.state.Performers.sortBy = this.tab.sort.by
+        this.$store.state.Performers.sortDirection = this.tab.sort.direction
+        this.$store.state.Performers.page = this.tab.page
       }
       this.$store.state.Settings.performerFilters = newFilters
       this.$store.dispatch('filterPerformers', true)

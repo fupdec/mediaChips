@@ -219,6 +219,7 @@ export default {
       this.$store.state.Performers.sortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterPerformers')
+        this.$store.dispatch('saveFiltersOfPerformers', this.$route)
       },200)
     },
     selectAllPerformers() {

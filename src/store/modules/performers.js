@@ -309,6 +309,24 @@ const Performers = {
         commit('changePerformersPageCurrent', 1)
       }
     },
+    saveFiltersOfPerformers({state, commit, getters, rootState}, route) {
+      const newFilters = _.cloneDeep(rootState.Settings.performerFilters)
+
+      if (route.query.tabId === 'default') { // for performers page (not for tab)
+        getters.settings.set('performerFilters', newFilters).write()
+      } else {  // for tab with performers 
+        getters.tabsDb.find({id: route.query.tabId}).assign({
+          name: getters.performerFiltersForTabName,
+          filters: newFilters,
+          sort: {
+            by: state.sortBy,
+            direction: state.sortDirection,
+          },
+          page: state.page,
+        }).write()
+        commit('getTabsFromDb')
+      }
+    },
     deletePerformers({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedPerformers.map(id => {
         let performerName = getters.performers.find({id:id}).value().name

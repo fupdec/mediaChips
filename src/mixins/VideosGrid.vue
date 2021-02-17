@@ -50,6 +50,7 @@ export default {
       },
       set(number) {
         this.$store.state.Videos.page = number
+        this.$store.dispatch('saveFiltersOfVideos', this.$route)
       },
     },
   },

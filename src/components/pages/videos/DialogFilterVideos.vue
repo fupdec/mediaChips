@@ -167,6 +167,7 @@
         </v-card-text>
       </vuescroll>
       <v-card-actions>
+        <!-- TODO create copy of filters on dialog opened and restore if pressed cancel -->
         <v-btn @click="$store.state.Videos.dialogFilterVideos=false" class="ma-4 mt-0">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
@@ -367,7 +368,7 @@ export default {
           by: this.$store.state.Videos.sortBy,
           direction: this.$store.state.Videos.sortDirection,
         },
-        page: this.$store.state.Videos.page,
+        page: 1,
         icon: 'video-outline'
       }
       this.$store.dispatch('addNewTab', tab)

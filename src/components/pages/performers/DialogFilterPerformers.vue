@@ -309,7 +309,7 @@ export default {
     applyFilters() {
       this.$store.state.Settings.performerFilters = this.filters
       this.$store.dispatch('filterPerformers')
-      this.updateFiltersOfPerformersTab()
+      this.$store.dispatch('saveFiltersOfPerformers', this.$route)
       this.$store.state.Performers.dialogFilterPerformers = false 
     },
     setParam(e, i) {
@@ -374,25 +374,16 @@ export default {
         link: `/performers/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
+        sort: {
+          by: this.$store.state.Performers.sortBy,
+          direction: this.$store.state.Performers.sortDirection,
+        },
+        page: 1,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
       this.$store.state.Performers.dialogFilterPerformers = false
       this.$router.push(tab.link)
-    },
-    updateFiltersOfPerformersTab() {
-      let newFilters = _.cloneDeep(this.$store.state.Settings.performerFilters)
-
-      if (this.tabId === 'default') { // for performers page (not for tab)
-        this.$store.getters.settings.set('performerFilters', newFilters).write()
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.performerFiltersForTabName,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
-      // TODO: universal function for update all types of tabs
     },
   },
 }

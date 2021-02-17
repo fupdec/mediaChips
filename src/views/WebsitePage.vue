@@ -190,11 +190,11 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
-    filtersTab() {
+    tab() {
       if (this.tabId === 'default') {
         return undefined
       } else {
-        return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value()  
       }
     },
     gapSize() {
@@ -222,7 +222,7 @@ export default {
       this.activePerformers = []
     },
     initFilters() {
-      if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
+      if (this.tabId === 'default' || typeof this.tab === 'undefined') {
         this.$store.state.Settings.videoFilters = [{
           param: 'websites',
           cond: 'one of',
@@ -238,9 +238,15 @@ export default {
           flag: null,
           lock: true,
         }]
+        this.$store.state.Videos.sortBy = 'name'
+        this.$store.state.Videos.sortDirection = 'asc'
+        this.$store.state.Videos.page = 1
         this.$store.dispatch('filterVideos', true)
       } else {
-        this.$store.state.Settings.videoFilters = _.cloneDeep(this.filtersTab)
+        this.$store.state.Settings.videoFilters = _.cloneDeep(this.tab.filters)
+        this.$store.state.Videos.sortBy = this.tab.sort.by
+        this.$store.state.Videos.sortDirection = this.tab.sort.direction
+        this.$store.state.Videos.page = this.tab.page
         this.$store.dispatch('filterVideos')
       }
     },
@@ -285,7 +291,7 @@ export default {
       }]
       const others = _.filter(this.$store.state.Settings.videoFilters, {lock: false})
       this.$store.state.Settings.videoFilters = [...defaults, ...others]
-      if (this.tabId !== 'default' || typeof this.filtersTab !== 'undefined') {
+      if (this.tabId !== 'default' || typeof this.tab !== 'undefined') {
         this.$store.dispatch('saveFiltersOfVideos', this.$route)
       }
       this.$store.dispatch('filterVideos')

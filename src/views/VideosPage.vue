@@ -88,11 +88,11 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
-    tabFilters() {
+    tab() {
       if (this.tabId === 'default') {
         return undefined
       } else {
-        return this.$store.getters.tabsDb.find({id:this.tabId}).value().filters    
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value()  
       }
     },
   },
@@ -107,7 +107,7 @@ export default {
     },
     initFilters() {
       let newFilters
-      if (this.tabId === 'default' || typeof this.tabFilters === 'undefined') {
+      if (this.tabId === 'default' || typeof this.tab.filters === 'undefined') {
         // const presetDefault = this.$store.state.Settings.videosFiltersPresetDefault
         // const presetLoaded = this.$store.state.Bookmarks.videosDefaultPresetLoaded
         // if (presetDefault && !presetLoaded) {
@@ -119,8 +119,14 @@ export default {
           // TODO: create function for saving filters in separated database
         //   }
         newFilters = _.cloneDeep(this.$store.getters.settings.get('videoFilters').value())
+        this.$store.state.Videos.sortBy = 'name'
+        this.$store.state.Videos.sortDirection = 'asc'
+        this.$store.state.Videos.page = 1
       } else {
-        newFilters = _.cloneDeep(this.tabFilters)
+        newFilters = _.cloneDeep(this.tab.filters)
+        this.$store.state.Videos.sortBy = this.tab.sort.by
+        this.$store.state.Videos.sortDirection = this.tab.sort.direction
+        this.$store.state.Videos.page = this.tab.page
       }
       this.$store.state.Settings.videoFilters = newFilters
       this.$store.dispatch('filterVideos', true)
