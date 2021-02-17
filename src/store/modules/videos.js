@@ -247,11 +247,23 @@ const Videos = {
           getters.tabsDb.find({id: route.query.tabId}).assign({
             name: getters.videoFiltersForTabName,
             filters: newFilters,
+            sort: {
+              by: state.sortBy,
+              direction: state.sortDirection,
+            },
+            page: state.page,
           }).write()
           commit('getTabsFromDb')
         }
       } else if (pagesWithVideos.some(page => route.path.includes(page))) {
-        getters.tabsDb.find({id: route.query.tabId}).assign({filters: newFilters}).write()
+        getters.tabsDb.find({id: route.query.tabId}).assign({
+          filters: newFilters,
+          sort: {
+            by: state.sortBy,
+            direction: state.sortDirection,
+          },
+          page: state.page,
+        }).write()
         commit('getTabsFromDb')
       }
     },

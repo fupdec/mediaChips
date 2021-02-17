@@ -608,7 +608,7 @@ export default {
       // parallax effect
       this.header = `top:${vertical.scrollTop * 0.7}px`
     },
-    initFilters() {
+    initFilters() { // TODO create universal function for init pages with videos grid maybe it will be action in vuex
       if (this.tabId === 'default' || typeof this.filtersTab === 'undefined') {
         this.$store.state.Settings.videoFilters = [{
           param: 'performers',
@@ -732,6 +732,7 @@ export default {
         this.$store.dispatch('saveFiltersOfVideos', this.$route)
       }
       this.$store.dispatch('filterVideos')
+      this.$store.dispatch('saveFiltersOfVideos', this.$route)
     },
     getCustomParamValue(name, type) {
       if (type == 'array') {

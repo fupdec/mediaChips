@@ -363,6 +363,11 @@ export default {
         link: `/videos/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
+        sort: {
+          by: this.$store.state.Videos.sortBy,
+          direction: this.$store.state.Videos.sortDirection,
+        },
+        page: this.$store.state.Videos.page,
         icon: 'video-outline'
       }
       this.$store.dispatch('addNewTab', tab)

@@ -311,31 +311,13 @@ export default {
       }
 
       this.$store.dispatch('filterVideos')
-
-      const pages = ['/performer/:','/website/:']
-      let newFilters = _.cloneDeep(this.$store.state.Settings.videoFilters)
-
-      if (this.tabId === 'default') { // for videos page (not for tab)
-        this.$store.getters.settings.set('videoFilters', newFilters).write()
-      } 
-      // for tab of performer or website page
-      else if (pages.some(p => this.$route.path.includes(p))) { 
-        this.$store.getters.tabsDb.find({id:this.tabId})
-          .assign({filters:newFilters}).write()
-      } 
-      // for tab of videos page
-      else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-            filters: newFilters,
-            name: this.$store.getters.videoFiltersForTabName,
-          }).write()
-        this.$store.commit('getTabsFromDb')
-      }
+      this.$store.dispatch('saveFiltersOfVideos', this.$route)
     },
     toggleSortDirection() {
       this.$store.state.Videos.sortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterVideos')
+        this.$store.dispatch('saveFiltersOfVideos', this.$route)
       },200)
     },
     selectAllVideos() {
