@@ -621,9 +621,8 @@ export default {
     left: 0;
     z-index: 1;
     background-color: rgba(0, 0, 0, 0.1);
-    padding-top: 2px;
-    padding-right: 2px;
     border-top-right-radius: 3px;
+    line-height: 1;
     .v-icon {
       padding: 0;
     }
