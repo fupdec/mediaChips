@@ -435,6 +435,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     right: 0;
     top: -10px;
   }
+  .badge-sort {
+    .v-icon {
+      font-size: 15px;
+    }
+  }
 }
 .app-bar-container {
   display: flex;

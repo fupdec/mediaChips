@@ -166,7 +166,7 @@
         <template #activator="{ on: onMenu }">
           <v-tooltip bottom>
             <template #activator="{ on: onTooltip }">
-              <v-badge :icon="sortIcon" overlap offset-x="23" offset-y="44">
+              <v-badge :icon="sortIcon" overlap offset-x="23" offset-y="44" class="badge-sort">
                 <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
                   <v-icon>mdi-sort-variant</v-icon>
                   <v-icon v-if="sortDirection=='desc'" size="16" class="badge-sort-icon">mdi-arrow-up-thick</v-icon>
