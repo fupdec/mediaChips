@@ -236,6 +236,8 @@ export default {
         sortBy: this.$store.state.Settings.tagSortBy,
         sortDirection: this.$store.state.Settings.tagSortDirection,
         page: 1,
+        firstChar: this.$store.state.Settings.tagFirstChar,
+        color: this.$store.state.Settings.tagColor,
         icon: 'tag-outline'
       }
       this.$store.dispatch('addNewTab', tab)

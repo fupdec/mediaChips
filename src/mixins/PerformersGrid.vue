@@ -28,21 +28,17 @@ export default {
         // this.$store.dispatch('saveFiltersOfPerformers', this.$route)
       },
     },
-    pages: {
-      get () {
-        return this.$store.getters.performersPages
-      },
-      set (value) {
-      },
+    pages() {
+      return this.$store.getters.performersPages
     },
     performersOnPage() {
       return this.$store.getters.performersOnPage
     },
     performersPerPage: {
-      get () {
+      get() {
         return this.$store.state.Settings.performersPerPage
       },
-      set (number) {
+      set(number) {
         this.$store.dispatch('changePerformersPerPage', number)
       },
     },

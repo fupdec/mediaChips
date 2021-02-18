@@ -246,36 +246,30 @@ export default {
   computed: {
     chars: {
       get () {
-        return this.$store.state.Tags.filters.firstChar
+        return this.$store.state.Settings.tagFirstChar
       },
       set (value) {
-        this.updateFiltersOfTags('firstChar', value)
+        this.$store.state.Settings.tagFirstChar = value
+        this.$store.dispatch('filterTags')
       },
     },
     colors: {
       get () {
-        return this.$store.state.Tags.filters.colors
+        return this.$store.state.Settings.tagColor
       },
       set (value) {
-        this.updateFiltersOfTags('colors', value)
+        this.$store.state.Settings.tagColor = value
+        this.$store.dispatch('filterTags')
       },
     },
     getNumberOfPagesLimit() {
       return this.$store.state.Settings.numberOfPagesLimit
     },
-    pages: {
-      get() {
-        return this.$store.getters.tagsPages
-      },
-      set(value) {
-      },
+    pages() {
+      return this.$store.getters.tagsPages
     },
-    tagsOnPage: {
-      get() {
-        return this.$store.getters.tagsOnPage
-      },
-      set(value) {
-      },
+    tagsOnPage() {
+      return this.$store.getters.tagsOnPage
     },
     tagsPerPage: {
       get() {
@@ -299,7 +293,7 @@ export default {
       },
       set(number) {
         this.$store.state.Settings.tagPage = number
-        this.updateFiltersOfTagsTab()
+        this.$store.dispatch('saveFiltersOfTags')
       },
     },
     selectedTagsLength() {
@@ -336,10 +330,12 @@ export default {
       }
     },
     clearChars() {
-      this.updateFiltersOfTags('firstChar', [])
+      this.$store.state.Settings.tagFirstChar = []
+      this.$store.dispatch('filterTags')
     },
     clearColors() {
-      this.updateFiltersOfTags('colors', [])
+      this.$store.state.Settings.tagColor = []
+      this.$store.dispatch('filterTags')
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
@@ -348,23 +344,6 @@ export default {
       if (vertical.scrollTop > 150) {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
-    },
-    // updateFiltersOfTagsTab() {
-    //   let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
-    //   if (this.tabId === 'default') {
-    //     this.$store.state.Tags.filtersReserved = newFilters
-    //   } else {
-    //     this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-    //       name: this.$store.getters.tagsFilters,
-    //       filters: newFilters,
-    //     }).write()
-    //     this.$store.commit('getTabsFromDb')
-    //   }
-    // },
-    updateFiltersOfTags(key, value){
-      this.$store.commit('updateFiltersOfTags', {key, value})
-      this.$store.dispatch('filterTags')
-      this.updateFiltersOfTagsTab()
     },
     getSelectedTags(selectedTags){
       let ids = selectedTags.map(item => (item.dataset.id))
@@ -393,7 +372,7 @@ export default {
         this.$store.state.Settings.tagSortDirection = this.tab.sortDirection || 'asc'
         this.$store.state.Settings.tagPage = this.tab.page || 1
         this.$store.state.Settings.tagFirstChar = this.tab.firstChar || []
-        this.$store.state.Settings.tagColor = this.tab.tagColor || []
+        this.$store.state.Settings.tagColor = this.tab.color || []
       }
       this.$store.state.Settings.tagFilters = newFilters
       this.$store.dispatch('filterTags', true)

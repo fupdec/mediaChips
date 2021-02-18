@@ -26,23 +26,8 @@ dbt.defaults({
   },] 
 }).write()
 
-const defaultFilters = {
-  firstChar: [],
-  colors: [],
-  favorite: false,
-  bookmark: false,
-  name: '',
-  alternate: false,
-  category: [],
-  categoryLogic: false,
-  sortBy: 'name',
-  sortDirection: 'asc',
-  page: 1,
-}
-
 const Tags = {
   state: () => ({
-    pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
     dialogDeleteTag: false,
@@ -52,8 +37,6 @@ const Tags = {
     selectedTags: [],
     updateInfo: {},
     updateImage: {},
-    filters: _.cloneDeep(defaultFilters),
-    filtersReserved: _.cloneDeep(defaultFilters),
     filteredTags: [],
     filteredEmpty: false,
     menuCard: false,
@@ -93,10 +76,10 @@ const Tags = {
     },
     async filterTags({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
       let tags = getters.tags
-      tags = tags.orderBy(tag=>(tag.name.toLowerCase()), ['asc'])
+      tags = tags.orderBy(tag => tag.name.toLowerCase(), ['asc'])
 
       if (rootState.Settings.tagColor.length) { // filter by color
-        tags = tags.filter(tag => (rootState.Settings.tagColor.includes(tag.color.toLowerCase())))
+        tags = tags.filter(tag => rootState.Settings.tagColor.includes(tag.color.toLowerCase()))
       }
 
       if (rootState.Settings.tagFirstChar.length) { // filter by first character
@@ -208,70 +191,9 @@ const Tags = {
       if (rootState.Settings.tagSortBy === 'name') {
         tags = tags.orderBy(tag=>tag.name.toLowerCase(), [rootState.Settings.tagSortDirection])
       } else {
+        // TODO add correct sort for colors based on swatches array
         tags = tags.orderBy(rootState.Settings.tagSortBy, [rootState.Settings.tagSortDirection])
       }
-      // if (state.filters.category) {
-      //   let filteredCategory = JSON.parse(JSON.stringify(state.filters.category))
-      //   if (filteredCategory.length) {
-      //     if (state.filters.categoryLogic) {
-      //       tags = tags.filter({'category': filteredCategory})
-      //     } else {
-      //       tags = tags.filter(tag=>{
-      //         let include = false
-      //         for (let i=0; i<filteredCategory.length;i++) {
-      //           if (tag.category.includes(filteredCategory[i])) include = true
-      //         }
-      //         return include
-      //       })
-      //     }
-      //     // console.log('tags filtered by category')
-      //   }
-      // }
-      // if (state.filters.name) {
-      //   let frase = state.filters.name.toLowerCase().trim()
-      //   if (frase.length) {
-      //     if (state.filters.alternate === true) {
-      //       let filteredByNames = await tags.filter(
-      //         tag => (tag.name.toLowerCase().includes(frase))
-      //       ).map('id').value()
-
-      //       let filteredByAlternate = await tags.filter( tag => {
-      //         let alternates = tag.altNames.map(p=>(p.toLowerCase()))
-      //         let matches = alternates.filter(a=>a.includes(frase))
-      //         if (matches.length>0) {
-      //           return true
-      //         } else { return false } 
-      //       }).map('id').value()
-
-      //       let mergedIds = _.union(filteredByNames, filteredByAlternate)
-
-      //       tags = tags.filter(p=>(mergedIds.includes(p.id)))
-      //     } else {
-      //       tags = tags.filter(
-      //         tag => (tag.name.toLowerCase().includes(frase)))
-      //     }
-      //     // console.log(`tags filtered by frase "${frase}" in name`)
-      //   }
-      // }
-      // if (state.filters.sortBy) {
-      //   let sort = state.filters.sortBy
-      //   let direction = state.filters.sortDirection
-      //   if (sort === 'name') {
-      //     tags = tags.orderBy(p=>(p.name.toLowerCase()), [direction])
-      //   } else {
-      //     tags = tags.orderBy(sort, [direction])
-      //   }
-      //   // console.log('tags sorted')
-      //   // TODO: add correct sort for collors based on swatches array
-      // }
-      // if (state.filters.favorite) {
-      //   tags = tags.filter(tag=>(tag.favorite))
-      //   // console.log('tags with favorite')
-      // }
-      // if (state.filters.bookmark) {
-      //   tags = tags.filter(tag=>(tag.bookmark))
-      //   // console.log('tags with bookmark')
-      // }
       
       let filteredTags = []
       if (tags != getters.tags) {
@@ -285,6 +207,7 @@ const Tags = {
       }
       // console.log(filteredTags)
       commit('resetLoading')
+      commit('filterTags', filteredTags)
       if (!stayOnCurrentPage) {
         rootState.Settings.tagPage = 1
       }
