@@ -281,10 +281,10 @@ export default {
     },
     tagsPagesSum: {
       get() {
-        return this.$store.getters.tagsPagesSum
+        return this.$store.state.Tags.pageTotal
       },
       set(number) {
-        this.$store.dispatch('changeTagsPageTotal', number)
+        this.$store.state.Tags.pageTotal = number
       },
     },
     tagsCurrentPage: {

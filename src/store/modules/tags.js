@@ -47,9 +47,6 @@ const Tags = {
       console.log(':::::::tags UPDATED:::::::')
       state.lastChanged = Date.now()
     },
-    changeTagsPageTotal(state, number) {
-      state.pageTotal = number
-    },
     filterTags(state, filteredTags) {
       state.filteredTags = filteredTags
     },
@@ -69,10 +66,6 @@ const Tags = {
       // commit('updateTags')
       commit('resetLoading')
       dispatch('updateSettingsState', {key:'tagsPerPage', value:number})
-    },
-    changeTagsPageTotal({ state, commit}, number) {
-      // commit('updateTags')
-      commit('changeTagsPageTotal', number)
     },
     async filterTags({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
       let tags = getters.tags
