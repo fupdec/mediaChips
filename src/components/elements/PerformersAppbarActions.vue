@@ -3,8 +3,7 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn @click="$store.state.Performers.dialogFilterPerformers=true" v-on="on" icon tile>
-          <v-badge :value="filterBadge" :content="filteredPerformersTotal" 
-            overlap bottom :dot="filteredPerformersTotal==0" style="z-index: 5;"> 
+          <v-badge :value="filterBadge" :content="filteredPerformersTotal" overlap bottom style="z-index: 5;"> 
           <v-icon>mdi-filter</v-icon> </v-badge>
         </v-btn>
       </template>
@@ -145,11 +144,32 @@ export default {
   }),
   computed: {
     filterBadge() {
-      let total = this.$store.getters.filteredPerformersTotal
-      return total !== this.$store.getters.performersTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.performerFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length > 0
+      } else return false
     },
     filteredPerformersTotal() {
-      return this.$store.getters.filteredPerformersTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.performerFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length
+      } else return 0
     },
     sortIcon() {
       if (this.sortButtons=='name') return 'mdi-alphabetical-variant'

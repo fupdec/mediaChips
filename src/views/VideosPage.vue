@@ -1,7 +1,9 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
 
-    <div class="headline text-h3 text-center my-6">Videos</div>
+    <div class="headline text-h3 text-center my-6"> Videos
+      <span class="text-h5">({{$store.getters.filteredVideosTotal}})</span>
+    </div>
 
     <v-container fluid v-if="!$store.state.Videos.filteredEmpty" class="pagination-container my-6">
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint

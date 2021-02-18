@@ -50,9 +50,7 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="$store.state.Tags.dialogFilterTags=true" v-on="on" icon tile>
-            <!-- TODO in badge value should be number of filters instead number of filtered videos -->
-            <v-badge :value="filterBadge" :content="filteredTagsTotal" 
-              overlap bottom :dot="filteredTagsTotal==0" style="z-index: 5;"> 
+            <v-badge :value="filterBadge" :content="filteredTagsTotal" overlap bottom style="z-index: 5;"> 
             <v-icon>mdi-filter</v-icon> </v-badge>
           </v-btn>
         </template>
@@ -241,11 +239,32 @@ export default {
   }),
   computed: {
     filterBadge() {
-      let total = this.$store.getters.filteredTagsTotal
-      return total !== this.$store.getters.tagsTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.tagFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length > 0
+      } else return false
     },
     filteredTagsTotal() {
-      return this.$store.getters.filteredTagsTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.tagFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length
+      } else return 0
     },
     sortIcon() {
       if (this.sortButtons=='name') return 'mdi-alphabetical-variant'

@@ -30,7 +30,9 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
-    <div class="headline text-h3 text-center my-6">Performers</div>
+    <div class="headline text-h3 text-center my-6"> Performers
+      <span class="text-h5">({{$store.getters.filteredPerformersTotal}})</span>
+    </div>
 
     <v-container fluid v-if="!$store.state.Performers.filteredEmpty" 
       class="pagination-container mb-6">

@@ -43,7 +43,9 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
-    <div class="headline text-h3 text-center my-6">Tags</div>
+    <div class="headline text-h3 text-center my-6"> Tags 
+      <span class="text-h5">({{$store.getters.filteredTagsTotal}})</span>
+    </div>
     
     <v-container fluid v-if="!$store.state.Tags.filteredEmpty" class="pagination-container my-6">
       <v-overflow-btn v-model="tagsPerPage" hint="items per page" persistent-hint
