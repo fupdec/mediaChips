@@ -76,8 +76,6 @@
 
 
 <script>
-const shortid = require("shortid")
-
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import vuescroll from 'vuescroll'
 
@@ -218,8 +216,7 @@ export default {
       this.$store.state.hoveredImage = false
     },
     addNewTab() {
-      // TODO replace shortid with Date.now() miliseconds for all func with creating tab
-      let tabId = shortid.generate() 
+      let tabId = Date.now()
       let tab = {
         name: this.$store.getters.websiteFiltersForTabName, 
         link: `/websites/:${tabId}?tabId=${tabId}`,

@@ -184,8 +184,6 @@
 
 
 <script>
-const shortid = require("shortid")
-
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import Countries from '@/mixins/Countries'
 import CountryFlag from 'vue-country-flag'
@@ -376,7 +374,7 @@ export default {
       this.$store.state.hoveredImage = false
     },
     addNewTab() {
-      let tabId = shortid.generate()
+      let tabId = Date.now()
       let tab = { 
         name: this.$store.getters.performerFiltersForTabName, 
         link: `/performers/:${tabId}?tabId=${tabId}`,

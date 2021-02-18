@@ -158,7 +158,7 @@ export default {
       if (this.tabId === 'default') {
         return undefined
       } else {
-        return this.$store.getters.tabsDb.find({id:this.tabId}).value()    
+        return this.$store.getters.tabsDb.find({id: +this.tabId}).value()    
       }
     },
     tabId() {
