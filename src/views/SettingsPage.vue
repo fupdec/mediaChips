@@ -12,29 +12,80 @@
 
     <v-tabs-items v-model="tab">
       <v-tab-item value="videos-settings">
-        <v-card flat max-width="800" style="margin: auto;">
-          <div class="pt-10">
-            <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large>
-              <v-icon size="26" left>mdi-plus</v-icon> Add new videos
-            </v-btn>
-          </div>
-
-          <div class="subtitle mt-10 mb-1">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <div class="subtitle d-flex justify-center">
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+                <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
               </template>
               <span>The built-in player does not support all videos, <br>
                 BUT it has additional features: markers, playlists, information editing. 
                 <br> The list of features will be expanded in new releases!</span>
             </v-tooltip>
-            Play video in:
+            <span class="mr-10">Play video in:</span>
+            <v-radio-group v-model="playerType" mandatory hide-details row class="mt-0 pt-0">
+              <v-radio label="Built-in player" value="0"></v-radio>
+              <v-radio label="System player" value="1"></v-radio>
+            </v-radio-group>
           </div>
-          <v-radio-group v-model="playerType" mandatory row>
-            <v-radio label="Built-in player" value="0"></v-radio>
-            <v-radio label="System player" value="1"></v-radio>
-          </v-radio-group>
-          <v-divider></v-divider>
+          <div class="pt-10">
+            <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large rounded>
+              <v-icon size="26" left>mdi-plus</v-icon> Add new videos
+            </v-btn>
+          </div>
+          
+          <v-card flat max-width="800" style="margin: auto;">
+            <div class="headline text-h5 text-center mt-10 mb-4"> Updating data from videos
+              <v-tooltip right>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
+                </template>
+                <span>The following data from the videos will be updated: <br>
+                  - number of videos for performers, tags and websites <br>
+                  - tags for performers and websites <br>
+                  - performers for tags and websites <br>
+                  - websites for performers</span>
+              </v-tooltip>
+            </div>
+
+            <v-row>
+              <v-col cols="12" sm="6">
+                <div class="subtitle d-flex align-center">
+                  <div class="mr-6">Start update automatically:</div>
+                  <v-switch v-model="autoUpdateDataFromVideos" inset hide-details class="mt-0 pt-0 d-inline-flex">
+                    <template v-slot:label>
+                      <span v-if="autoUpdateDataFromVideos">Yes</span>
+                      <span v-else>No</span>
+                    </template>
+                  </v-switch>
+                </div>
+                <v-slider v-model="updateIntervalDataFromVideos" :min="1" :max="60"
+                  :disabled="!autoUpdateDataFromVideos" hide-details thumb-label />
+                <div class="caption">Update interval (in minutes): {{updateIntervalDataFromVideos}}</div>
+              </v-col>
+              <v-col cols="12" sm="6" class="text-right">
+                <v-btn @click="updateNumberOfVideos" color="secondary" rounded> 
+                  <v-icon left>mdi-update</v-icon> Start update manually </v-btn>
+              </v-col>
+            </v-row>
+            <v-divider class="my-6"/>
+            <v-row>
+              <v-col cols="12">
+                <div class="subtitle d-flex align-center">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                    </template>
+                    <span>If you have moved the video, you can change the path manually</span>
+                  </v-tooltip>
+                  <span class="mr-10">Manually update the video path:</span>
+                  <v-btn color="secondary" @click="dialogUpdatePath=true" rounded>
+                    <v-icon left>mdi-form-textbox</v-icon> Update path
+                  </v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card>
           
           <!-- <div class="subtitle mt-10 mb-1">
             <v-tooltip top>
@@ -56,39 +107,6 @@
             </v-col>
           </v-row> -->
           <!-- TODO remove this option from settings JSON -->
-          <v-row>
-            <v-col cols="12" sm="6">
-              <div class="subtitle mb-2">
-                <v-tooltip top>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-icon v-bind="attrs" v-on="on" left small>
-                      mdi-help-circle-outline
-                    </v-icon>
-                  </template>
-                  <span>Number of videos, performers, tags and websites</span>
-                </v-tooltip>
-                Update data from videos:
-              </div>
-              <v-btn @click="updateNumberOfVideos" color="secondary"> 
-                <v-icon left>mdi-update</v-icon> Start updating </v-btn>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <div class="subtitle mb-2">
-                <v-tooltip top>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-icon v-bind="attrs" v-on="on" left small>
-                      mdi-help-circle-outline
-                    </v-icon>
-                  </template>
-                  <span>If you have moved the video, you can change the path manually</span>
-                </v-tooltip>
-                Update path in videos:
-              </div>
-              <v-btn color="secondary" @click="dialogUpdatePath=true">
-                <v-icon left>mdi-dots-vertical</v-icon> Show details
-              </v-btn>
-            </v-col>
-          </v-row>
         </v-card>
 
         <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
@@ -175,9 +193,7 @@
           <div class="headline text-h5 text-center mt-10 mb-4"> Video preview
             <v-tooltip right>
               <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" right small>
-                  mdi-help-circle-outline
-                </v-icon>
+                <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
               </template>
               <span>Plays on hover</span>
             </v-tooltip>
@@ -185,38 +201,40 @@
 
           <v-row>
             <v-col cols="12" sm="6">
-              <div class="subtitle">Video preview enabled:</div>
-              <v-switch v-model="videoPreview" inset style="display:inline-block;">
-                <template v-slot:label>
-                  <span v-if="videoPreview">Yes</span>
-                  <span v-else>No</span>
-                </template>
-              </v-switch>
+              <div class="subtitle d-flex align-center">
+                <div class="mr-6">Video preview enabled:</div>
+                <v-switch v-model="videoPreview" inset style="display:inline-block;">
+                  <template v-slot:label>
+                    <span v-if="videoPreview">Yes</span>
+                    <span v-else>No</span>
+                  </template>
+                </v-switch>
+              </div>
             </v-col>
             <v-col cols="12" sm="6">
-              <div class="subtitle mb-8">Delay before starting playback (in seconds):</div>
               <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
-                hide-details :thumb-size="24" thumb-label="always" />
+                hide-details :thumb-size="24" thumb-label />
+              <div class="caption">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
             </v-col>
           </v-row>
 
-          <div class="subtitle mt-10 mb-2">
-            <v-tooltip bottom>
+          <v-divider class="my-6"/>
+
+          <div class="subtitle d-flex align-center pb-10">
+            <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" left small>
-                  mdi-help-circle-outline
-                </v-icon>
+                <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
               </template>
               <span>Will be generated automatically when the video page is opened.</span>
             </v-tooltip>
-            <span>Video preview grid 3x3:</span>
+            <span class="mr-6">Video preview grid 3x3:</span>
+            <v-switch v-model="videoPreviewGrid" inset style="display:inline-block;">
+              <template v-slot:label>
+                <span v-if="videoPreviewGrid">Yes</span>
+                <span v-else>No</span>
+              </template>
+            </v-switch>
           </div>
-          <v-switch v-model="videoPreviewGrid" inset style="display:inline-block;">
-            <template v-slot:label>
-              <span v-if="videoPreviewGrid">Yes</span>
-              <span v-else>No</span>
-            </template>
-          </v-switch>
         </v-card>
       </v-tab-item>
       <v-tab-item value="performers-settings">
@@ -235,9 +253,7 @@
           <div class="headline text-h5 text-center pt-10 mb-4"> Meter
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" right small>
-                  mdi-help-circle-outline
-                </v-icon>
+                <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
               </template>
               <v-card class="my-2">
                 <v-card-actions>
@@ -263,9 +279,7 @@
               <div class="subtitle mb-10">
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
-                    <v-icon v-bind="attrs" v-on="on" left small>
-                      mdi-help-circle-outline
-                    </v-icon>
+                    <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
                   </template>
                   <span>Change if the meter of tags shows an incorrect value</span>
                 </v-tooltip>
@@ -560,6 +574,25 @@ export default {
     gradientThemeDark: null,
   }),
   computed: {
+    updateIntervalDataFromVideos: {
+      get() {
+        return this.$store.state.Settings.updateIntervalDataFromVideos
+      },
+      set(value) {
+        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
+        window.LIT = setTimeout(() => {
+          this.$store.dispatch('updateSettingsState', {key:'updateIntervalDataFromVideos', value})
+        }, 1000)
+      },
+    },
+    autoUpdateDataFromVideos: {
+      get() {
+        return this.$store.state.Settings.autoUpdateDataFromVideos
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'autoUpdateDataFromVideos', value})
+      },
+    },
     videoPreview: {
       get() {
         return this.$store.state.Settings.videoPreviewEnabled

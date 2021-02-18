@@ -119,6 +119,8 @@ dbs.defaults({
   gapSize: 's',
   playerType: "0",
   customParametersPerformer: [],
+  updateIntervalDataFromVideos: 1,
+  autoUpdateDataFromVideos: false,
 }).write()
 
 const Settings = {
@@ -241,6 +243,8 @@ const Settings = {
     playerType: dbs.get('playerType').value() || '0',
     dialogManagePerformerParameters: false,
     customParametersPerformer: _.cloneDeep(dbs.get('customParametersPerformer').value()),
+    updateIntervalDataFromVideos: dbs.get('updateIntervalDataFromVideos').value(),
+    autoUpdateDataFromVideos: dbs.get('autoUpdateDataFromVideos').value(),
   }),
   mutations: {
     updateSettings (state) {
