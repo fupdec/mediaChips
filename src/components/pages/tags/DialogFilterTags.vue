@@ -134,11 +134,13 @@ export default {
       return []
     },
     getIconParam(param) {
-      if (param === 'name') return 'mdi-file-search'
+      if (param === 'name') return 'mdi-alphabetical-variant'
       if (param === 'date') return 'mdi-calendar-plus'
       if (param === 'edit') return 'mdi-calendar-edit'
       if (param === 'favorite') return 'mdi-heart'
       if (param === 'bookmark') return 'mdi-bookmark'
+      if (param === 'category') return 'mdi-shape'
+      if (param === 'value') return 'mdi-thermometer'
       return 'mdi-filter'
     },
     getIconCond(cond) {

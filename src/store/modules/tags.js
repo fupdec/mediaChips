@@ -50,13 +50,6 @@ const Tags = {
     filterTags(state, filteredTags) {
       state.filteredTags = filteredTags
     },
-    resetFilteredTags(state) {
-      state.filters = _.cloneDeep(defaultFilters)
-    },
-    updateFiltersOfTags(state, {key, value}) {
-      state.filters[key] = value
-      // console.log(state.filters)
-    },
     updateSelectedTags(state, ids) {
       state.selectedTags = ids
     },
@@ -341,9 +334,8 @@ const Tags = {
     tagsOnPage(state, store, rootState) {
       const tags = store.filteredTags.value(),
             tagsCount = rootState.Settings.tagsPerPage
-      let l = tags.length,
-          c = tagsCount
-      state.pageTotal = Math.ceil(l/c)
+      state.pageTotal = Math.ceil(tags.length / tagsCount)
+      
       if(rootState.Settings.tagPage > state.pageTotal) {
         rootState.Settings.tagPage = state.pageTotal
       }

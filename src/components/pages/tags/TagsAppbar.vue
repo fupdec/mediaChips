@@ -233,9 +233,6 @@ export default {
     duplicateTags: "",
     newTags: "",
     tagName: "",
-    filtersMenu: false,
-    filterCategoryLogicIcon: 'mdi-math-norm',
-    categories: ['performer', 'video'],
   }),
   computed: {
     filterBadge() {
