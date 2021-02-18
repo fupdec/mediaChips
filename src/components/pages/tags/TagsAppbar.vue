@@ -9,12 +9,12 @@
                 <v-icon>mdi-tag-plus</v-icon>
               </v-btn>
             </template>
-            <span>Add new tag</span>
+            <span>Add New Tag</span>
           </v-tooltip>
         </template>
         <v-card width="500">
           <v-card-title class="py-1">
-            <span class="headline">Add new tag</span>
+            <span class="headline">Add New Tag</span>
             <v-spacer></v-spacer>
             <v-icon>mdi-tag-plus</v-icon>
           </v-card-title>
@@ -46,8 +46,19 @@
             </v-card-actions>
         </v-card>
       </v-menu>
+        
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="$store.state.Tags.dialogFilterTags=true" v-on="on" icon tile>
+            <v-badge :value="filterBadge" :content="filteredTagsTotal" 
+              overlap bottom :dot="filteredTagsTotal==0" style="z-index: 5;"> 
+            <v-icon>mdi-filter</v-icon> </v-badge>
+          </v-btn>
+        </template>
+        <span>Filter Tags</span>
+      </v-tooltip>
 
-      <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
+      <!-- <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
           <v-tooltip bottom>
             <template #activator="{ on: onTooltip }">
@@ -129,9 +140,9 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-      </v-menu>
+      </v-menu> -->
       
-      <v-tooltip bottom>
+      <!-- <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="resetAllFilters" icon tile v-on="on"> 
             <v-icon>mdi-filter-off</v-icon>
@@ -160,7 +171,7 @@
         </template>
         <span v-if="$store.state.Tags.filters.bookmark">Show all</span>
         <span v-else>Show bookmarks</span>
-      </v-tooltip>
+      </v-tooltip> -->
 
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
@@ -300,6 +311,7 @@
         <span v-else>Hide Tags</span>
       </v-tooltip>
     </div>
+    <DialogFilterTags v-if="$store.state.Tags.dialogFilterTags"/>
 	</div>
 </template>
 
@@ -310,6 +322,7 @@ const shortid = require('shortid')
 export default {
   name: 'TagsAppbar',
   components: {
+    DialogFilterTags: () => import('@/components/pages/tags/DialogFilterTags.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -472,56 +485,56 @@ export default {
         this.$store.dispatch('filterTags', true)
       })
     },
-    changeFilterCategoryLogic() {
-      let logic = this.$store.state.Tags.filters.categoryLogic
-      this.filterCategoryLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
-      this.$store.state.Tags.filters.categoryLogic = !logic
-      this.updateFiltersOfTagsTab()
-    },
-    updateFiltersOfTags(key, value){
-      this.$store.commit('updateFiltersOfTags', {key, value})
-      this.updateFiltersOfTagsTab()
-    },
-    updateFiltersOfTagsTab() {
-      let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
-      if (this.tabId === 'default') {
-        this.$store.state.Tags.filtersReserved = newFilters
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.tagsFilters,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
-    },
-    resetAllFilters(event) {
-      this.$store.commit('resetFilteredTags')
-      this.$store.dispatch('filterTags')
-      this.updateFiltersOfTagsTab()
-    },
-    addNewTab() {
-      let tabId = shortid.generate()
-      let tab = { 
-        name: this.$store.getters.tagsFilters, 
-        link: `/tags/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Tags.filters),
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
-    applyAllFilters(event) {
-      this.$store.dispatch('filterTags')
-      this.updateFiltersOfTagsTab()
-    },
-    toggleFavorites() {
-      this.updateFiltersOfTags('favorite', !this.$store.state.Tags.filters.favorite)
-      this.$store.dispatch('filterTags')
-    },
-    toggleBookmarks() {
-      this.updateFiltersOfTags('bookmark', !this.$store.state.Tags.filters.bookmark)
-      this.$store.dispatch('filterTags')
-    },
+    // changeFilterCategoryLogic() {
+    //   let logic = this.$store.state.Tags.filters.categoryLogic
+    //   this.filterCategoryLogicIcon = logic ? 'mdi-math-norm' : 'mdi-ampersand' 
+    //   this.$store.state.Tags.filters.categoryLogic = !logic
+    //   this.updateFiltersOfTagsTab()
+    // },
+    // updateFiltersOfTags(key, value){
+    //   this.$store.commit('updateFiltersOfTags', {key, value})
+    //   this.updateFiltersOfTagsTab()
+    // },
+    // updateFiltersOfTagsTab() {
+    //   let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
+    //   if (this.tabId === 'default') {
+    //     this.$store.state.Tags.filtersReserved = newFilters
+    //   } else {
+    //     this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+    //       name: this.$store.getters.tagsFilters,
+    //       filters: newFilters,
+    //     }).write()
+    //     this.$store.commit('getTabsFromDb')
+    //   }
+    // },
+    // resetAllFilters(event) {
+    //   this.$store.commit('resetFilteredTags')
+    //   this.$store.dispatch('filterTags')
+    //   this.updateFiltersOfTagsTab()
+    // },
+    // addNewTab() {
+    //   let tabId = shortid.generate()
+    //   let tab = { 
+    //     name: this.$store.getters.tagsFilters, 
+    //     link: `/tags/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Tags.filters),
+    //     icon: 'tag-outline'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    // },
+    // applyAllFilters(event) {
+    //   this.$store.dispatch('filterTags')
+    //   this.updateFiltersOfTagsTab()
+    // },
+    // toggleFavorites() {
+    //   this.updateFiltersOfTags('favorite', !this.$store.state.Tags.filters.favorite)
+    //   this.$store.dispatch('filterTags')
+    // },
+    // toggleBookmarks() {
+    //   this.updateFiltersOfTags('bookmark', !this.$store.state.Tags.filters.bookmark)
+    //   this.$store.dispatch('filterTags')
+    // },
     toggleSortDirection() {
       let dir = this.sortDirection == 'asc' ? 'desc' : 'asc'
       this.updateFiltersOfTags('sortDirection', dir)

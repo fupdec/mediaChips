@@ -295,12 +295,11 @@ export default {
     },
     tagsCurrentPage: {
       get() {
-        return this.$store.getters.tagsCurrentPage
+        return this.$store.state.Settings.tagPage
       },
       set(number) {
-        this.$store.state.Tags.filters.page = number
+        this.$store.state.Settings.tagPage = number
         this.updateFiltersOfTagsTab()
-        this.$store.dispatch('changeTagsPageCurrent', number)
       },
     },
     selectedTagsLength() {
@@ -314,6 +313,13 @@ export default {
     },
     gapSize() {
       return `gap-size-${this.$store.state.Settings.gapSize}`
+    },
+    tab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value()    
+      }
     },
   },
   methods: {
@@ -343,18 +349,18 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
-    updateFiltersOfTagsTab() {
-      let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
-      if (this.tabId === 'default') {
-        this.$store.state.Tags.filtersReserved = newFilters
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.tagsFilters,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
-    },
+    // updateFiltersOfTagsTab() {
+    //   let newFilters = _.cloneDeep(this.$store.state.Tags.filters)
+    //   if (this.tabId === 'default') {
+    //     this.$store.state.Tags.filtersReserved = newFilters
+    //   } else {
+    //     this.$store.getters.tabsDb.find({id: this.tabId}).assign({
+    //       name: this.$store.getters.tagsFilters,
+    //       filters: newFilters,
+    //     }).write()
+    //     this.$store.commit('getTabsFromDb')
+    //   }
+    // },
     updateFiltersOfTags(key, value){
       this.$store.commit('updateFiltersOfTags', {key, value})
       this.$store.dispatch('filterTags')
@@ -372,15 +378,24 @@ export default {
       this.$store.dispatch('deleteTags')
       this.$store.state.Tags.dialogDeleteTag = false
     },
-    initFilters(){
-      let id = this.tabId.replace(':', '')
+    initFilters() {
       let newFilters
-      if (id === 'default') {
-        newFilters = _.cloneDeep(this.$store.state.Tags.filtersReserved)
+      if (this.tabId === 'default' || typeof this.tab.filters === 'undefined') {
+        newFilters = _.cloneDeep(this.$store.getters.settings.get('tagFilters').value())
+        this.$store.state.Settings.tagSortBy = this.$store.getters.settings.get('tagSortBy').value()
+        this.$store.state.Settings.tagSortDirection = this.$store.getters.settings.get('tagSortDirection').value()
+        this.$store.state.Settings.tagPage = this.$store.getters.settings.get('tagPage').value()
+        this.$store.state.Settings.tagFirstChar = this.$store.getters.settings.get('tagFirstChar').value()
+        this.$store.state.Settings.tagColor = this.$store.getters.settings.get('tagColor').value()
       } else {
-        newFilters = _.cloneDeep(this.$store.getters.tabsDb.find({id}).value().filters)
+        newFilters = _.cloneDeep(this.tab.filters)
+        this.$store.state.Settings.tagSortBy = this.tab.sortBy || 'name'
+        this.$store.state.Settings.tagSortDirection = this.tab.sortDirection || 'asc'
+        this.$store.state.Settings.tagPage = this.tab.page || 1
+        this.$store.state.Settings.tagFirstChar = this.tab.firstChar || []
+        this.$store.state.Settings.tagColor = this.tab.tagColor || []
       }
-      this.$store.state.Tags.filters = newFilters
+      this.$store.state.Settings.tagFilters = newFilters
       this.$store.dispatch('filterTags', true)
     },
   },

@@ -348,6 +348,14 @@ const Performers = {
           filters.push(param+' '+cond+' '+val)
         }
       }
+      // TODO add first char to name of tab
+      // if (state.filters.firstChar.length) {
+      //   let chars = ['0-9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','#']
+      //   chars = state.filters.firstChar.map((c)=>(chars[c]))
+      //   let filterChars = 'Char.:'
+      //   filterChars += chars.join(';')
+      //   filters.push(filterChars)
+      // }
       return 'Performers' + (filters.length ? ' with ': ' ') + filters.join(', ')
     },
     filteredPerformers(state, store) {
@@ -387,15 +395,12 @@ const Performers = {
           c = performersCount;
       state.pageTotal = Math.ceil(l/c);
        // console.log(state.pageTotal)
-      if(rootState.Settings.performerPage) {
-        rootState.Settings.performerPage = rootState.Settings.performerPage
-      }
       if(rootState.Settings.performerPage > state.pageTotal) {
         rootState.Settings.performerPage = state.pageTotal
       }
       
       const end = rootState.Settings.performerPage * performersCount,
-            start = end - performersCount;
+            start = end - performersCount
       return performers.slice(start, end)
     },
     performersPages(state) {
