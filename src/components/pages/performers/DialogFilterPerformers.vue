@@ -395,38 +395,3 @@ export default {
   },
 }
 </script>
-
-
-<style lang="less">
-.filter-row {
-  display: flex;
-  .param {
-    width: 25%;
-    display: flex;
-    input {
-      display: none;
-    }
-  }
-  .cond {
-    width: 25%;
-    margin-left: 15px;
-    margin-right: 15px;
-    .v-select__selections {
-      display: flex;
-      justify-content: center;
-    }
-    .v-select__selection {
-      margin: 0;
-    }
-    input {
-      display: none;
-    }
-  }
-  .val {
-    width: 50%;
-  }
-  .v-input__icon--append {
-    display: none;
-  }
-}
-</style>

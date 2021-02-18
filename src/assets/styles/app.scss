@@ -1398,6 +1398,37 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     z-index: 5;
   }
 }
+.filter-row {
+  display: flex;
+  .param {
+    width: 25%;
+    display: flex;
+    input {
+      display: none;
+    }
+  }
+  .cond {
+    width: 25%;
+    margin-left: 15px !important;
+    margin-right: 15px !important;
+    .v-select__selections {
+      display: flex;
+      justify-content: center;
+    }
+    .v-select__selection {
+      margin: 0;
+    }
+    input {
+      display: none;
+    }
+  }
+  .val {
+    width: 50%;
+  }
+  .v-input__icon--append {
+    display: none;
+  }
+}
 @media (max-width: 720px) {
   .console-log-in-status {
     .log-text {
