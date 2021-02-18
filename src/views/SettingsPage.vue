@@ -50,7 +50,7 @@
 
             <v-row>
               <v-col cols="12" sm="6">
-                <div class="subtitle d-flex align-center">
+                <div class="subtitle d-flex align-center justify-center">
                   <div class="mr-6">Start update automatically:</div>
                   <v-switch v-model="autoUpdateDataFromVideos" inset hide-details class="mt-0 pt-0 d-inline-flex">
                     <template v-slot:label>
@@ -61,9 +61,9 @@
                 </div>
                 <v-slider v-model="updateIntervalDataFromVideos" :min="1" :max="60"
                   :disabled="!autoUpdateDataFromVideos" hide-details thumb-label />
-                <div class="caption">Update interval (in minutes): {{updateIntervalDataFromVideos}}</div>
+                <div class="caption text-center">Update interval (in minutes): {{updateIntervalDataFromVideos}}</div>
               </v-col>
-              <v-col cols="12" sm="6" class="text-right">
+              <v-col cols="12" sm="6" class="text-center">
                 <v-btn @click="updateNumberOfVideos" color="secondary" rounded> 
                   <v-icon left>mdi-update</v-icon> Start update manually </v-btn>
               </v-col>
@@ -214,7 +214,7 @@
             <v-col cols="12" sm="6">
               <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
                 hide-details :thumb-size="24" thumb-label />
-              <div class="caption">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
+              <div class="caption text-center">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
             </v-col>
           </v-row>
 
@@ -271,22 +271,24 @@
           </div>
           <v-row>
             <v-col cols="12" sm="6">
-              <div class="subtitle mb-10">Height:</div>
+              <div class="subtitle text-center">Height</div>
               <v-slider v-model="meterHeight" :min="1" :max="20"
-                hide-details :thumb-size="32" thumb-label="always" />
+                hide-details :thumb-size="32" thumb-label />
+              <div class="caption text-center">{{meterHeight}} pixels</div>
             </v-col>
             <v-col cols="12" sm="6">
-              <div class="subtitle mb-10">
+              <div class="subtitle text-center">
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
                   </template>
                   <span>Change if the meter of tags shows an incorrect value</span>
                 </v-tooltip>
-                Multiplier:
+                Multiplier
               </div>
               <v-slider v-model="meterMultiplier" :min="1" :max="100"
-                hide-details :thumb-size="32" thumb-label="always" />
+                hide-details :thumb-size="32" thumb-label />
+              <div class="caption text-center">Value: {{meterMultiplier}} %</div>
             </v-col>
           </v-row>
         </v-card>
@@ -295,23 +297,27 @@
         <v-card flat max-width="800" style="margin: auto;" class="pb-10">
           <div class="headline text-h5 text-center pt-10">Theme</div>
           <v-row>
-            <v-col cols="12" sm="6">
-              <div class="subtitle mt-8">Dark mode:</div>
-              <v-switch v-model="darkMode" inset style="display:inline-block;">
-                <template v-slot:label>
-                  <span v-if="darkMode">Yes</span>
-                  <span v-else>No</span>
-                </template>
-              </v-switch>
+            <v-col cols="12">
+              <div class="subtitle d-flex">
+                <span class="mr-6">Dark mode:</span>
+                <v-switch v-model="darkMode" inset hide-details class="d-inline-flex mt-0 pt-0">
+                  <template v-slot:label>
+                    <span v-if="darkMode">Yes</span>
+                    <span v-else>No</span>
+                  </template>
+                </v-switch>
+              </div>
             </v-col>
-            <v-col cols="12" sm="6">
-              <div class="subtitle mt-8">Use header gradient:</div>
-              <v-switch v-model="headerGradient" inset style="display:inline-block;">
-                <template v-slot:label>
-                  <span v-if="headerGradient">Yes</span>
-                  <span v-else>No</span>
-                </template>
-              </v-switch>
+            <v-col cols="12">
+              <div class="subtitle d-flex">
+                <span class="mr-6">Use header gradient:</span>
+                <v-switch v-model="headerGradient" inset hide-details class="d-inline-flex mt-0 pt-0">
+                  <template v-slot:label>
+                    <span v-if="headerGradient">Yes</span>
+                    <span v-else>No</span>
+                  </template>
+                </v-switch>
+              </div>
             </v-col>
             <v-col cols="12" sm="6" v-if="headerGradient">
               <div class="subtitle mb-2">Colors for header gradient (light theme):</div>
@@ -330,16 +336,14 @@
           <HeaderGradient :themeDark="gradientThemeDark"/>
 
           <ThemeColors />
-          <v-divider></v-divider>
 
-          <div class="headline text-h5 text-center mt-10">Fonts</div>
+          <div class="headline text-h5 text-center my-6">Fonts</div>
           <v-row>
             <v-col cols="12" sm="6">
-              <div class="subtitle mb-2">Text font:</div>
               <v-autocomplete
-                v-model="textFont" :items="fonts"
+                v-model="textFont" :items="fonts" label="Text font"
                 :style="`font-family:'${textFont}',sans-serif !important;`"
-                solo dense placeholder="Main content font"
+                outlined dense placeholder="Main content font" class="overline"
               >
                 <template v-slot:item="data">
                   <div :style="`font-family:'${data.item}',sans-serif !important;`">
@@ -349,11 +353,10 @@
               </v-autocomplete>
             </v-col>
             <v-col cols="12" sm="6">
-              <div class="subtitle mb-2">Header font:</div>
               <v-autocomplete
-                v-model="headerFont" :items="fonts" 
+                v-model="headerFont" :items="fonts" label="Header font"
                 :style="`font-family:'${headerFont}',sans-serif !important;`"
-                solo dense placeholder="Main content font"
+                outlined dense placeholder="Main content font" class="overline"
               >
                 <template v-slot:item="data">
                   <span :style="`font-family:'${data.item}',sans-serif !important;`">
@@ -364,50 +367,55 @@
             </v-col>
           </v-row>
 
-          <v-divider></v-divider>
+          <div class="headline text-h5 text-center my-6">Application</div>
 
-          <div class="subtitle pt-8">Navigation menu position:</div>
-          <v-radio-group v-model="navigationSide" mandatory row>
-            <v-radio label="Side" value="1"></v-radio>
-            <v-radio label="Bottom" value="2"></v-radio>
-            <v-radio label="None" value="0"></v-radio>
-          </v-radio-group>
-          <div class="subtitle mt-8">Rating and favorite in card description:</div>
-          <v-switch v-model="ratingAndFavoriteInCard" inset class="d-inline-flex">
-            <template v-slot:label>
-              <span v-if="ratingAndFavoriteInCard">Yes</span>
-              <span v-else>No</span>
-            </template>
-          </v-switch>
-          <div class="subtitle mb-2 mt-8">Limit of pages in pagination:</div>
-          <v-btn-toggle 
-            dense mandatory color="secondary"
-            v-model="numberOfPagesLimit"
-          >
-            <v-btn outlined @click="changeNumberOfPagesLimit(5)" :value="5">5</v-btn>
-            <v-btn outlined @click="changeNumberOfPagesLimit(7)" :value="7">7</v-btn>
-            <v-btn outlined @click="changeNumberOfPagesLimit(9)" :value="9">9</v-btn>
-            <v-btn outlined @click="changeNumberOfPagesLimit(11)" :value="11">11</v-btn>
-            <v-btn outlined @click="changeNumberOfPagesLimit(13)" :value="13">13</v-btn>
-            <v-btn outlined @click="changeNumberOfPagesLimit(15)" :value="15">15</v-btn>
-          </v-btn-toggle>
+          <div class="subtitle d-flex">
+            <span class="mr-6">Navigation menu position:</span>
+            <v-radio-group v-model="navigationSide" mandatory row hide-details class="mt-0 pt-0">
+              <v-radio label="Side" value="1"></v-radio>
+              <v-radio label="Bottom" value="2"></v-radio>
+              <v-radio label="None" value="0"></v-radio>
+            </v-radio-group>
+          </div>
+          <div class="subtitle mt-8 d-flex">
+            <span class="mr-6">Rating and favorite in card description:</span>
+            <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex">
+              <template v-slot:label>
+                <span v-if="ratingAndFavoriteInCard">Yes</span>
+                <span v-else>No</span>
+              </template>
+            </v-switch>
+          </div>
+          <div class="subtitle py-8">
+            <span class="mr-6">Limit of pages in pagination:</span>
+            <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
+              <v-btn outlined @click="changeNumberOfPagesLimit(5)" :value="5">5</v-btn>
+              <v-btn outlined @click="changeNumberOfPagesLimit(7)" :value="7">7</v-btn>
+              <v-btn outlined @click="changeNumberOfPagesLimit(9)" :value="9">9</v-btn>
+              <v-btn outlined @click="changeNumberOfPagesLimit(11)" :value="11">11</v-btn>
+              <v-btn outlined @click="changeNumberOfPagesLimit(13)" :value="13">13</v-btn>
+              <v-btn outlined @click="changeNumberOfPagesLimit(15)" :value="15">15</v-btn>
+            </v-btn-toggle>
+          </div>
         </v-card>
       </v-tab-item>
       <v-tab-item value="application-settings">
-        <v-card flat max-width="800" style="margin: auto;">
+        <v-card flat max-width="800" class="pb-10" style="margin: auto;">
           <div class="headline text-h5 text-center pt-6">Login</div>
           <v-row>
-            <v-col cols="12" sm="3">
-              <div class="subtitle mt-8">Password protect entry:</div>
-              <v-switch v-model="passwordProtection" inset style="display:inline-block;">
-                <template v-slot:label>
-                  <span v-if="passwordProtection">Yes</span>
-                  <span v-else>No</span>
-                </template>
-              </v-switch>
+            <v-col cols="12">
+              <div class="subtitle mt-8 d-flex">
+                <span class="mr-6">Password protect entry:</span>
+                <v-switch v-model="passwordProtection" inset hide-details class="mt-0 pt-0 d-inline-flex">
+                  <template v-slot:label>
+                    <span v-if="passwordProtection">Yes</span>
+                    <span v-else>No</span>
+                  </template>
+                </v-switch>
+              </div>
             </v-col>
-            <v-col cols="12" sm="4">
-              <div class="subtitle mt-8 mb-2">Password:</div>
+            <v-col v-if="passwordProtection" cols="12" sm="6">
+              <div class="subtitle mt-8 mb-2 text-center">Password</div>
               <v-form ref="pass" v-model="validPass">
                 <v-text-field :disabled="!passwordProtection"
                   v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -419,8 +427,8 @@
                 </v-btn>
               </v-form>
             </v-col>
-            <v-col cols="12" sm="5">
-              <div class="subtitle mt-8 mb-2">Hint for password:</div>
+            <v-col v-if="passwordProtection" cols="12" sm="6">
+              <div class="subtitle mt-8 mb-2 text-center">Hint for password</div>
               <v-form ref="hint" v-model="validHint">
                 <v-text-field :disabled="!passwordProtection"
                   v-model="hint" :rules="[getHintRules]" solo counter dense
@@ -487,7 +495,7 @@
             <v-col cols="4">
               <div>Adult Video Database 0.6.1</div>
               <p class="text--secondary">by fupdec</p>
-              <v-btn color="#eee" light small @click="openGithub">
+              <v-btn color="#eee" light rounded class="px-5" @click="openGithub">
                 <v-icon left>mdi-github</v-icon> Github
               </v-btn>
             </v-col>
