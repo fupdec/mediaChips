@@ -83,7 +83,7 @@ const routes = [
     }
   },
   {
-    path: '/playlists',
+    path: '/playlists/:id?',
     name: 'Playlists',
     components: {
       default: Playlists,

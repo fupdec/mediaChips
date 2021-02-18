@@ -1,6 +1,8 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <div class="headline text-h3 text-center my-6">Playlists</div>
+    <div class="headline text-h3 text-center my-6"> Playlists
+      <span class="text-h5">({{$store.getters.filteredPlaylistsTotal}})</span>
+    </div>
       
     <v-container fluid v-if="!$store.state.Playlists.filteredEmpty" class="pagination-container my-6">
       <v-overflow-btn v-model="playlistsPerPage" hint="items per page" persistent-hint
@@ -95,9 +97,6 @@
 
 
 <script>
-const fs = require("fs")
-const path = require("path")
-
 import PlaylistCard from "@/components/pages/playlists/PlaylistCard.vue"
 import Selection from "@simonwep/selection-js";
 import vuescroll from 'vuescroll'
@@ -112,7 +111,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.$store.dispatch('filterPlaylists')
+      this.initFilters()
       this.$store.state.Playlists.selection = Selection.create({
         boundaries: ['.playlists-grid'],
         selectables: ['.playlist-card'],
@@ -181,38 +180,14 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
-    chars: {
-      get () {
-        return this.$store.state.Playlists.filters.firstChar
-      },
-      set (value) {
-        this.updateFiltersOfPlaylists('firstChar', value)
-      },
-    },
-    colors: {
-      get () {
-        return this.$store.state.Playlists.filters.colors
-      },
-      set (value) {
-        this.updateFiltersOfPlaylists('colors', value)
-      },
-    },
     getNumberOfPagesLimit() {
       return this.$store.state.Settings.numberOfPagesLimit
     },
-    pages: {
-      get() {
-        return this.$store.getters.playlistsPages
-      },
-      set(value) {
-      },
+    pages() {
+      return this.$store.getters.playlistsPagesSum
     },
-    playlistsOnPage: {
-      get() {
-        return this.$store.getters.playlistsOnPage
-      },
-      set(value) {
-      },
+    playlistsOnPage() {
+      return this.$store.getters.playlistsOnPage
     },
     playlistsPerPage: {
       get() {
@@ -224,19 +199,19 @@ export default {
     },
     playlistsPagesSum: {
       get() {
-        return this.$store.getters.playlistsPagesSum
+        return this.$store.state.Playlists.pageTotal
       },
       set(number) {
-        this.$store.dispatch('changePlaylistsPageTotal', number)
+        this.$store.state.Playlists.pageTotal = number
       },
     },
     playlistsCurrentPage: {
       get() {
-        return this.$store.getters.playlistsCurrentPage
+        return this.$store.state.Settings.playlistPage
       },
       set(number) {
-        this.$store.state.Playlists.filters.page = number
-        this.$store.dispatch('changePlaylistsPageCurrent', number)
+        this.$store.state.Settings.playlistPage = number
+        this.$store.dispatch('saveFiltersOfPlaylists')
       },
     },
     selectedPlaylistsLength() {
@@ -253,6 +228,13 @@ export default {
     },
     gapSize() {
       return `gap-size-${this.$store.state.Settings.gapSize}`
+    },
+    tab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value()    
+      }
     },
   },
   methods: {
@@ -276,10 +258,6 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
-    updateFiltersOfPlaylists(key, value){
-      this.$store.commit('updateFiltersOfPlaylists', {key, value})
-      this.$store.dispatch('filterPlaylists')
-    },
     getSelectedPlaylists(selectedPlaylists){
       let ids = selectedPlaylists.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedPlaylists', ids)
@@ -292,8 +270,32 @@ export default {
       this.$store.dispatch('deletePlaylists'), 
       this.$store.state.Playlists.dialogDeletePlaylist = false
     },
+    initFilters() {
+      let newFilters
+      if (this.tabId === 'default' || typeof this.tab.filters === 'undefined') {
+        newFilters = _.cloneDeep(this.$store.getters.settings.get('playlistFilters').value())
+        this.$store.state.Settings.playlistSortBy = this.$store.getters.settings.get('playlistSortBy').value()
+        this.$store.state.Settings.playlistSortDirection = this.$store.getters.settings.get('playlistSortDirection').value()
+        this.$store.state.Settings.playlistPage = this.$store.getters.settings.get('playlistPage').value()
+        this.$store.state.Settings.playlistFirstChar = this.$store.getters.settings.get('playlistFirstChar').value()
+        this.$store.state.Settings.playlistColor = this.$store.getters.settings.get('playlistColor').value()
+      } else {
+        newFilters = _.cloneDeep(this.tab.filters)
+        this.$store.state.Settings.playlistSortBy = this.tab.sortBy || 'name'
+        this.$store.state.Settings.playlistSortDirection = this.tab.sortDirection || 'asc'
+        this.$store.state.Settings.playlistPage = this.tab.page || 1
+        this.$store.state.Settings.playlistFirstChar = this.tab.firstChar || []
+        this.$store.state.Settings.playlistColor = this.tab.color || []
+      }
+      this.$store.state.Settings.playlistFilters = newFilters
+      this.$store.dispatch('filterPlaylists', true)
+    },
   },
   watch: {
+    $route(newRoute) {
+      if (!this.$route.path.includes('/playlists/:')) return
+      this.initFilters()
+    },
   }
 }
 </script>

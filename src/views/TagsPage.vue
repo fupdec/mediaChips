@@ -152,9 +152,6 @@
 
 
 <script>
-const fs = require("fs")
-const path = require("path")
-
 import TagCard from "@/components/pages/tags/TagCard.vue";
 import Selection from "@simonwep/selection-js";
 import vuescroll from 'vuescroll'

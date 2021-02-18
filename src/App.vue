@@ -142,7 +142,7 @@ export default {
           return
         }
         if(event.altKey && event.keyCode === 80) { // alt+p
-          this.$router.push('/playlists')
+          this.$router.push('/playlists/:default?tabId=default')
           return
         }
         if(event.altKey && event.keyCode === 88) { // alt+x

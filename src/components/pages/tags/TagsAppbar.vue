@@ -282,9 +282,6 @@ export default {
     sortDirection() {
       return this.$store.state.Settings.tagSortDirection
     },
-    tabId() {
-      return this.$route.query.tabId
-    },
     isAltNamesHidden: {
       get () {
         return this.$store.state.Settings.tagAltNamesHidden

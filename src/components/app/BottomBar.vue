@@ -45,7 +45,7 @@
       <v-icon>mdi-web-box</v-icon>
     </v-btn>
 
-    <v-btn to="/playlists" text color="secondary">
+    <v-btn to="/playlists/:default?tabId=default" text color="secondary">
       <span>Playlists</span>
       <v-icon>mdi-format-list-bulleted</v-icon>
     </v-btn>

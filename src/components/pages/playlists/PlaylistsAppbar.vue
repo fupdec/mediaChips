@@ -9,12 +9,12 @@
                 <v-icon>mdi-playlist-plus</v-icon>
               </v-btn>
             </template>
-            <span>Add new playlist</span>
+            <span>Add New Playlist</span>
           </v-tooltip>
         </template>
         <v-card width="500">
           <v-card-title class="py-1">
-            <span class="headline">Add new playlist</span>
+            <span class="headline">Add New Playlist</span>
             <v-spacer></v-spacer>
             <v-icon>mdi-playlist-plus</v-icon>
           </v-card-title>
@@ -49,49 +49,15 @@
         </v-card>
       </v-menu>
 
-      <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
-        <template #activator="{ on: onMenu }">
-          <v-tooltip bottom>
-            <template #activator="{ on: onTooltip }">
-              <v-btn v-on="{ ...onMenu, ...onTooltip }" @click="filtersMenu=true" icon tile>
-                <v-badge :value="filterBadge" :content="filteredPlaylistsTotal" 
-                  overlap bottom :dot="filteredPlaylistsTotal==0" style="z-index: 5;"
-                ><v-icon>mdi-filter</v-icon>
-                </v-badge>
-              </v-btn>
-            </template>
-            <span>Filter playlists</span>
-          </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="$store.state.Playlists.dialogFilterPlaylists=true" v-on="on" icon tile>
+            <v-badge :value="filterBadge" :content="filteredPlaylistsTotal" overlap bottom style="z-index: 5;"> 
+            <v-icon>mdi-filter</v-icon> </v-badge>
+          </v-btn>
         </template>
-        <v-card width="620">
-          <v-card-title class="py-1">
-            <span class="headline">Filter playlists</span>
-            <v-spacer></v-spacer>
-            <v-icon>mdi-filter</v-icon>
-          </v-card-title>
-          <v-divider></v-divider>
-          <v-card-text>
-            <v-text-field 
-              v-model="$store.state.Playlists.filters.name"
-              label="Name" hide-details clearable outlined dense
-              prepend-icon="mdi-alphabetical-variant"
-              @click:append-outer="pasteName" 
-              append-outer-icon="mdi-clipboard-text-outline"
-            />
-          </v-card-text>
-          <v-card-actions>
-            <v-btn small class="mx-2 mb-2" color="secondary" @click="resetAllFilters(), filtersMenu=false">
-              <v-icon left>mdi-filter-off</v-icon> Reset all filters
-            </v-btn>
-
-            <v-spacer></v-spacer>
-            
-            <v-btn small class="mr-2 mb-2" color="primary" @click="applyAllFilters(), filtersMenu=false">
-              <v-icon left>mdi-filter</v-icon> Apply
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-menu>
+        <span>Filter Playlists</span>
+      </v-tooltip>
       
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -99,18 +65,7 @@
             <v-icon>mdi-filter-off</v-icon>
           </v-btn>
         </template>
-        <span>Reset all filters</span>
-      </v-tooltip>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="toggleFavorites" icon tile v-on="on"> 
-            <v-icon v-if="$store.state.Playlists.filters.favorite">mdi-heart</v-icon>
-            <v-icon v-else>mdi-heart-outline</v-icon>
-          </v-btn>
-        </template>
-        <span v-if="$store.state.Playlists.filters.favorite">Show all</span>
-        <span v-else>Show favorites</span>
+        <span>Reset All Filters</span>
       </v-tooltip>
 
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
@@ -196,9 +151,10 @@
             <v-icon>mdi-select-all</v-icon>
           </v-btn>
         </template>
-        <span>Select all playlists</span>
+        <span>Select All Playlists</span>
       </v-tooltip>
 	  </div>
+    <DialogFilterPlaylists v-if="$store.state.Playlists.dialogFilterPlaylists"/>
 	</div>
 </template>
 
@@ -209,6 +165,7 @@ const shortid = require('shortid')
 export default {
   name: 'PlaylistsAppbar',
   components: {
+    DialogFilterPlaylists: () => import('@/components/pages/playlists/DialogFilterPlaylists.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -226,15 +183,35 @@ export default {
     duplicatePlaylists: "",
     newPlaylists: "",
     playlistName: "",
-    filtersMenu: false,
   }),
   computed: {
     filterBadge() {
-      let total = this.$store.getters.filteredPlaylistsTotal
-      return total !== this.$store.getters.playlistsTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.playlistFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length > 0
+      } else return false
     },
     filteredPlaylistsTotal() {
-      return this.$store.getters.filteredPlaylistsTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.playlistFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length
+      } else return 0
     },
     sortIcon() {
       if (this.sortButtons=='name') return 'mdi-alphabetical-variant'
@@ -245,18 +222,14 @@ export default {
     },
     sortButtons: {
       get() {
-        return this.$store.state.Playlists.filters.sortBy
+        return this.$store.state.Settings.playlistSortBy
       },
       set(value) {
-        const values = {
-          key: 'sortBy', 
-          value: value,
-        }
-        this.$store.commit('updateFiltersOfPlaylists', values)
+        this.$store.state.Settings.playlistSortBy = value
       },
     },
     sortDirection() {
-      return this.$store.state.Playlists.filters.sortDirection
+      return this.$store.state.Settings.playlistSortDirection
     },
   },
   methods: {
@@ -266,44 +239,6 @@ export default {
         text = this.playlistName + text
       }
       this.playlistName = text
-    },
-    async pasteName() {
-      let text = await navigator.clipboard.readText()
-      let name = this.$store.state.Playlists.filters.name
-      if (name) {
-        text = name + text
-      }
-      const values = {
-        key: 'name', 
-        value: text,
-      }
-      this.$store.commit('updateFiltersOfPlaylists', values)
-    },
-    applyAllFilters(event) {
-      this.$store.dispatch('filterPlaylists')
-    },
-    resetAllFilters(event) {
-      this.$store.commit('resetFilteredPlaylists')
-      this.$store.dispatch('filterPlaylists')
-    },
-    toggleFavorites() {
-      const values = {
-        key: 'favorite', 
-        value: !this.$store.state.Playlists.filters.favorite,
-      }
-      this.$store.commit('updateFiltersOfPlaylists', values)
-      this.$store.dispatch('filterPlaylists')
-    },
-    toggleSortDirection() {
-      let dir = this.sortDirection == 'asc' ? 'desc' : 'asc'
-      const values = {
-        key: 'sortDirection', 
-        value: dir,
-      }
-      this.$store.commit('updateFiltersOfPlaylists', values)
-      setTimeout(()=>{
-        this.$store.dispatch('filterPlaylists')
-      },200)
     },
     addNewPlaylist() {
       let playlistsArray = this.playlistName.trim()
@@ -359,6 +294,23 @@ export default {
         this.$store.commit('updatePlaylists')
         this.$store.dispatch('filterPlaylists', true)
       })
+    },
+    resetAllFilters() {
+      this.$store.state.Settings.playlistFilters = [{
+        param: null,
+        cond: null,
+        val: null,
+        type: null,
+        flag: null,
+        lock: false,
+      }]
+      this.$store.dispatch('filterPlaylists')
+    },
+    toggleSortDirection() {
+      this.$store.state.Settings.playlistSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
+      setTimeout(()=>{
+        this.$store.dispatch('filterPlaylists')
+      },200)
     },
     selectAllPlaylists() {
       this.$store.state.Playlists.selection.clearSelection()
