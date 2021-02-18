@@ -48,57 +48,16 @@
             </v-card-actions>
         </v-card>
       </v-menu>
-
-      <v-menu v-model="filtersMenu" offset-y nudge-bottom="10" :close-on-content-click="false">
-        <template #activator="{ on: onMenu }">
-          <v-tooltip bottom>
-            <template #activator="{ on: onTooltip }">
-              <v-btn v-on="{ ...onMenu, ...onTooltip }" @click="filtersMenu=true" icon tile>
-                <v-badge 
-                  :value="filterBadge" :content="filteredWebsitesTotal" 
-                  overlap bottom :dot="filteredWebsitesTotal==0" style="z-index: 5;"
-                ><v-icon>mdi-filter</v-icon>
-                </v-badge>
-              </v-btn>
-            </template>
-            <span>Filter websites</span>
-          </v-tooltip>
+        
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="$store.state.Websites.dialogFilterWebsites=true" v-on="on" icon tile>
+            <v-badge :value="filterBadge" :content="filteredWebsitesTotal" overlap bottom style="z-index: 5;"> 
+            <v-icon>mdi-filter</v-icon> </v-badge>
+          </v-btn>
         </template>
-        <v-card width="620">
-          <v-card-title class="py-1">
-            <span class="headline">Filter websites</span>
-            <v-spacer></v-spacer>
-            <v-icon>mdi-filter</v-icon>
-          </v-card-title>
-          <v-divider></v-divider>
-          <v-card-text>
-            <v-text-field 
-              v-model="$store.state.Websites.filters.name"
-              label="Name" hide-details clearable outlined dense
-              prepend-icon="mdi-alphabetical-variant"
-              @click:append-outer="pasteName" 
-              append-outer-icon="mdi-clipboard-text-outline"
-            />
-            <v-checkbox label="Only networks" v-model="$store.state.Websites.filters.network" 
-              prepend-icon="mdi-family-tree" hide-details/>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn small class="mx-2 mb-2" color="secondary" @click="resetAllFilters(), filtersMenu=false">
-              <v-icon left>mdi-filter-off</v-icon> Reset all filters
-            </v-btn>
-
-            <v-spacer></v-spacer>
-
-            <v-btn small class="mb-2 mr-2" color="secondary" @click="addNewTab(), filtersMenu=false">
-              <v-icon left>mdi-tab-plus</v-icon> New tab
-            </v-btn>
-            
-            <v-btn small class="mr-2 mb-2" color="primary" @click="applyAllFilters(), filtersMenu=false">
-              <v-icon left>mdi-filter</v-icon> Apply
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-menu>
+        <span>Filter Websites</span>
+      </v-tooltip>
       
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -108,29 +67,6 @@
         </template>
         <span>Reset all filters</span>
       </v-tooltip>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="toggleFavorites" icon tile v-on="on"> 
-            <v-icon v-if="$store.state.Websites.filters.favorite">mdi-heart</v-icon>
-            <v-icon v-else>mdi-heart-outline</v-icon>
-          </v-btn>
-        </template>
-        <span v-if="$store.state.Websites.filters.favorite">Show all</span>
-        <span v-else>Show favorites</span>
-      </v-tooltip>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="toggleBookmarks" icon tile v-on="on"> 
-            <v-icon v-if="$store.state.Websites.filters.bookmark">mdi-bookmark</v-icon>
-            <v-icon v-else>mdi-bookmark-outline</v-icon>
-          </v-btn>
-        </template>
-        <span v-if="$store.state.Websites.filters.bookmark">Show all</span>
-        <span v-else>Show bookmarks</span>
-      </v-tooltip>
-
       
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
@@ -279,6 +215,7 @@
         <span v-else>Hide Tags</span>
       </v-tooltip>
     </div>
+    <DialogFilterWebsites v-if="$store.state.Websites.dialogFilterWebsites"/>
 	</div>
 </template>
 
@@ -289,6 +226,7 @@ const shortid = require('shortid')
 export default {
   name: 'WebsitesAppbar',
   components: {
+    DialogFilterWebsites: () => import('@/components/pages/websites/DialogFilterWebsites.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -306,15 +244,35 @@ export default {
     duplicateWebsites: "",
     newWebsites: "",
     websiteName: "",
-    filtersMenu: false,
   }),
   computed: {
     filterBadge() {
-      let total = this.$store.getters.filteredWebsitesTotal
-      return total !== this.$store.getters.websitesTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.websiteFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length > 0
+      } else return false
     },
     filteredWebsitesTotal() {
-      return this.$store.getters.filteredWebsitesTotal
+      let filters = _.cloneDeep(this.$store.state.Settings.websiteFilters)
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+            if (f.val.length) return true 
+            else return false
+          } 
+          if (f.type == 'boolean') return true
+        })
+        return filters.length
+      } else return 0
     },
     sortIcon() {
       if (this.sortButtons=='name') return 'mdi-alphabetical-variant'
@@ -326,14 +284,14 @@ export default {
     },
     sortButtons: {
       get() {
-        return this.$store.state.Websites.filters.sortBy
+        return this.$store.state.Settings.websiteSortBy
       },
       set(value) {
-        this.updateFiltersOfWebsites('sortBy', value)
+        this.$store.state.Settings.websiteSortBy = value
       },
     },
     sortDirection() {
-      return this.$store.state.Websites.filters.sortDirection
+      return this.$store.state.Settings.websiteSortDirection
     },
     tabId() {
       return this.$route.query.tabId
@@ -379,14 +337,6 @@ export default {
         text = this.websiteName + text
       }
       this.websiteName = text
-    },
-    async pasteName() {
-      let text = await navigator.clipboard.readText()
-      let name = this.$store.state.Websites.filters.name
-      if (name) {
-        text = name + text
-      }
-      this.updateFiltersOfWebsites('name', text)
     },
     addNewWebsite() {
       let websitesArray = this.websiteName.trim()
@@ -449,53 +399,19 @@ export default {
         this.$store.dispatch('filterWebsites', true)
       })
     },
-    updateFiltersOfWebsites(key, value){
-      this.$store.commit('updateFiltersOfWebsites', {key, value})
-      this.updateFiltersOfWebsitesTab()
-    },
-    updateFiltersOfWebsitesTab() {
-      let newFilters = _.cloneDeep(this.$store.state.Websites.filters)
-      if (this.tabId === 'default') {
-        this.$store.state.Websites.filtersReserved = newFilters
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.websitesFilters,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
-    },
-    addNewTab() {
-      let tabId = shortid.generate()
-      let tab = { 
-        name: this.$store.getters.websitesFilters, 
-        link: `/websites/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Websites.filters),
-        icon: 'web'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
-    applyAllFilters(event) {
-      this.$store.dispatch('filterWebsites')
-      this.updateFiltersOfWebsitesTab()
-    },
-    resetAllFilters(event) {
-      this.$store.commit('resetFilteredWebsites')
-      this.$store.dispatch('filterWebsites')
-      this.updateFiltersOfWebsitesTab()
-    },
-    toggleFavorites() {
-      this.updateFiltersOfWebsites('favorite', !this.$store.state.Websites.filters.favorite)
-      this.$store.dispatch('filterWebsites')
-    },
-    toggleBookmarks() {
-      this.updateFiltersOfWebsites('bookmark', !this.$store.state.Websites.filters.bookmark)
+    resetAllFilters() {
+      this.$store.state.Settings.websiteFilters = [{
+        param: null,
+        cond: null,
+        val: null,
+        type: null,
+        flag: null,
+        lock: false,
+      }]
       this.$store.dispatch('filterWebsites')
     },
     toggleSortDirection() {
-      let dir = this.sortDirection == 'asc' ? 'desc' : 'asc'
-      this.updateFiltersOfWebsites('sortDirection', dir)
+      this.$store.state.Settings.websiteSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{
         this.$store.dispatch('filterWebsites')
       },200)

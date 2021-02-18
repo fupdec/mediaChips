@@ -43,7 +43,9 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
-    <div class="headline text-h3 text-center my-6">Websites</div>
+    <div class="headline text-h3 text-center my-6">Websites
+      <span class="text-h5">({{$store.getters.filteredWebsitesTotal}})</span>
+    </div>
       
     <v-container fluid v-if="!$store.state.Websites.filteredEmpty" class="pagination-container my-6">
       <v-overflow-btn v-model="websitesPerPage" hint="items per page" persistent-hint
@@ -252,36 +254,30 @@ export default {
   computed: {
     chars: {
       get () {
-        return this.$store.state.Websites.filters.firstChar
+        return this.$store.state.Settings.websiteFirstChar
       },
       set (value) {
-        this.updateFiltersOfWebsites('firstChar', value)
+        this.$store.state.Settings.websiteFirstChar = value
+        this.$store.dispatch('filterWebsites')
       },
     },
     colors: {
       get () {
-        return this.$store.state.Websites.filters.colors
+        return this.$store.state.Settings.websiteColor
       },
       set (value) {
-        this.updateFiltersOfWebsites('colors', value)
+        this.$store.state.Settings.websiteColor = value
+        this.$store.dispatch('filterWebsites')
       },
     },
     getNumberOfPagesLimit() {
       return this.$store.state.Settings.numberOfPagesLimit
     },
-    pages: {
-      get() {
-        return this.$store.getters.websitesPages
-      },
-      set(value) {
-      },
+    pages() {
+      return this.$store.getters.websitesPages
     },
-    websitesOnPage: {
-      get() {
-        return this.$store.getters.websitesOnPage
-      },
-      set(value) {
-      },
+    websitesOnPage() {
+      return this.$store.getters.websitesOnPage
     },
     websitesPerPage: {
       get() {
@@ -293,20 +289,19 @@ export default {
     },
     websitesPagesSum: {
       get() {
-        return this.$store.getters.websitesPagesSum
+        return this.$store.state.Websites.pageTotal
       },
       set(number) {
-        this.$store.dispatch('changeWebsitesPageTotal', number)
+        this.$store.state.Websites.pageTotal = number
       },
     },
     websitesCurrentPage: {
       get() {
-        return this.$store.getters.websitesCurrentPage
+        return this.$store.state.Settings.websitePage
       },
       set(number) {
-        this.$store.state.Websites.filters.page = number
-        this.updateFiltersOfWebsitesTab()
-        this.$store.dispatch('changeWebsitesPageCurrent', number)
+        this.$store.state.Settings.websitePage = number
+        this.$store.dispatch('saveFiltersOfWebsites')
       },
     },
     selectedWebsitesLength() {
@@ -321,6 +316,13 @@ export default {
     gapSize() {
       return `gap-size-${this.$store.state.Settings.gapSize}`
     },
+    tab() {
+      if (this.tabId === 'default') {
+        return undefined
+      } else {
+        return this.$store.getters.tabsDb.find({id:this.tabId}).value()    
+      }
+    },
   },
   methods: {
     addNewTab() {
@@ -333,9 +335,15 @@ export default {
         return
       }
       let tab = { 
-        name: this.selectedWebsites(), 
-        link: `/website/:${tabId}?tabId=${tabId}`,
+        name: this.$store.getters.websiteFiltersForTabName, 
+        link: `/websites/:${tabId}?tabId=${tabId}`,
         id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
+        sortBy: this.$store.state.Settings.websiteSortBy,
+        sortDirection: this.$store.state.Settings.websiteSortDirection,
+        page:  this.$store.state.Settings.websitePage,
+        firstChar: this.$store.state.Settings.websiteFirstChar,
+        color: this.$store.state.Settings.websiteColor,
         icon: 'web'
       }
       this.$store.dispatch('addNewTab', tab)
@@ -353,10 +361,12 @@ export default {
       }
     },
     clearChars() {
-      this.updateFiltersOfWebsites('firstChar', [])
+      this.$store.state.Settings.websiteFirstChar = []
+      this.$store.dispatch('filterWebsites')
     },
     clearColors() {
-      this.updateFiltersOfWebsites('colors', [])
+      this.$store.state.Settings.websiteColor = []
+      this.$store.dispatch('filterWebsites')
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
@@ -365,23 +375,6 @@ export default {
       if (vertical.scrollTop > 150) {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
-    },
-    updateFiltersOfWebsitesTab() {
-      let newFilters = _.cloneDeep(this.$store.state.Websites.filters)
-      if (this.tabId === 'default') {
-        this.$store.state.Websites.filtersReserved = newFilters
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.websitesFilters,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
-    },
-    updateFiltersOfWebsites(key, value){
-      this.$store.commit('updateFiltersOfWebsites', {key, value})
-      this.$store.dispatch('filterWebsites')
-      this.updateFiltersOfWebsitesTab()
     },
     getSelectedWebsites(selectedWebsites){
       let ids = selectedWebsites.map(item => (item.dataset.id))
@@ -396,14 +389,23 @@ export default {
       this.$store.state.Websites.dialogDeleteWebsite = false
     },
     initFilters(){
-      let id = this.tabId.replace(':', '')
       let newFilters
-      if (id === 'default') {
-        newFilters = _.cloneDeep(this.$store.state.Websites.filtersReserved)
+      if (this.tabId === 'default' || typeof this.tab.filters === 'undefined') {
+        newFilters = _.cloneDeep(this.$store.getters.settings.get('websiteFilters').value())
+        this.$store.state.Settings.websiteSortBy = this.$store.getters.settings.get('websiteSortBy').value()
+        this.$store.state.Settings.websiteSortDirection = this.$store.getters.settings.get('websiteSortDirection').value()
+        this.$store.state.Settings.websitePage = this.$store.getters.settings.get('websitePage').value()
+        this.$store.state.Settings.websiteFirstChar = this.$store.getters.settings.get('websiteFirstChar').value()
+        this.$store.state.Settings.websiteColor = this.$store.getters.settings.get('websiteColor').value()
       } else {
-        newFilters = _.cloneDeep(this.$store.getters.tabsDb.find({id}).value().filters)
+        newFilters = _.cloneDeep(this.tab.filters)
+        this.$store.state.Settings.websiteSortBy = this.tab.sortBy || 'name'
+        this.$store.state.Settings.websiteSortDirection = this.tab.sortDirection || 'asc'
+        this.$store.state.Settings.websitePage = this.tab.page || 1
+        this.$store.state.Settings.websiteFirstChar = this.tab.firstChar || []
+        this.$store.state.Settings.websiteColor = this.tab.color || []
       }
-      this.$store.state.Websites.filters = newFilters
+      this.$store.state.Settings.websiteFilters = newFilters
       this.$store.dispatch('filterWebsites', true)
     },
   },

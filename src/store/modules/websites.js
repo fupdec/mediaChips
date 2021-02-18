@@ -6,6 +6,9 @@ const pathToDbWebsites = path.join(app.getPath('userData'), 'userfiles/databases
 const adapterWebsites = new FileSync(pathToDbWebsites)
 const low = require('lowdb')
 const dbw = low(adapterWebsites)
+
+import router from '@/router'
+
 dbw.defaults({
   websites: [{
     id: "defaultID",
@@ -18,31 +21,17 @@ dbw.defaults({
   },]
 }).write()
 
-const defaultFilters = {
-  firstChar: [],
-  colors: [],
-  network: false,
-  favorite: false,
-  bookmark: false,
-  name: '',
-  sortBy: 'name',
-  sortDirection: 'asc',
-  page: 1,
-}
-
 const Websites = {
   state: () => ({
-    pageCurrent: 1,
     pageTotal: 1,
     lastChanged: Date.now(),
     dialogDeleteWebsite: false,
     dialogEditWebsite: false,
+    dialogFilterWebsites: false,
     selection: null,
     selectedWebsites: [],
     updateInfo: {},
     updateImage: {},
-    filters: _.cloneDeep(defaultFilters),
-    filtersReserved: _.cloneDeep(defaultFilters),
     filteredWebsites: [],
     filteredEmpty: false,
     menuCard: false,
@@ -52,21 +41,8 @@ const Websites = {
       console.log(':::::::websites UPDATED:::::::')
       state.lastChanged = Date.now()
     },
-    changeWebsitesPageTotal(state, number) {
-      state.pageTotal = number
-    },
-    changeWebsitesPageCurrent(state, number) {
-      state.pageCurrent = number
-    },
     filterWebsites(state, filteredWebsites) {
       state.filteredWebsites = filteredWebsites
-    },
-    resetFilteredWebsites(state) {
-      state.filters = _.cloneDeep(defaultFilters)
-    },
-    updateFiltersOfWebsites(state, {key, value}) {
-      state.filters[key] = value
-      // console.log(state.filters)
     },
     updateSelectedWebsites(state, ids) {
       state.selectedWebsites = ids
@@ -78,14 +54,173 @@ const Websites = {
       commit('resetLoading')
       dispatch('updateSettingsState', {key:'websitesPerPage', value:number})
     },
-    changeWebsitesPageTotal({ state, commit}, number) {
-      // commit('updateWebsites')
-      commit('changeWebsitesPageTotal', number)
-    },
-    changeWebsitesPageCurrent({ state, commit}, number) {
-      // commit('updateWebsites')
+    async filterWebsites({state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
+      let websites = getters.websites
+      websites = websites.orderBy(website=>(website.name.toLowerCase()), ['asc'])
+
+      if (rootState.Settings.websiteColor.length) { // filter by color
+        websites = websites.filter(website => rootState.Settings.websiteColor.includes(website.color.toLowerCase()))
+      }
+
+      if (rootState.Settings.websiteFirstChar.length) { // filter by first character
+        let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
+        let allChars = []
+        rootState.Settings.websiteFirstChar.forEach( char => { allChars.push(chars[char]) } )
+        if (allChars.length) {
+          websites = websites.filter( website => {
+            let charWebsite = website.name.charAt(0).toLowerCase()
+            return allChars.includes(charWebsite)
+          })
+        }
+      }
+
+      function compare(sign, a, b) {
+        if (sign === 'equal') return a == b
+        if (sign === 'not equal') return a != b
+        if (sign === 'greater than') return a < b
+        if (sign === 'less than') return a > b
+        if (sign === 'greater than or equal') return a <= b
+        if (sign === 'less than or equal') return a >= b
+      }
+
+      
+      for (let filter in rootState.Settings.websiteFilters) {
+        let param = rootState.Settings.websiteFilters[filter].param
+        let cond = rootState.Settings.websiteFilters[filter].cond
+        let val = rootState.Settings.websiteFilters[filter].val
+        let type = rootState.Settings.websiteFilters[filter].type
+        let flag = rootState.Settings.websiteFilters[filter].flag
+        
+        if (type === 'boolean') {
+          if (cond === 'yes') {
+            websites = websites.filter(website=>website[param]===true)
+          } else websites = websites.filter(website=>website[param]===false)
+        }
+        
+        if (val === null || val.length === 0) continue
+        
+        if (type === 'number' || type === 'date') {
+          if (type === 'number') val = +val
+          if (param === 'date' || param === 'edit') val = new Date(val).getTime()
+          websites = websites.filter(website => compare(cond, val, website[param]))
+        }
+        
+        if (type === 'string') {
+          let string = val.toLowerCase().trim()
+          if (string.length) {
+            if (param === 'name' && flag === true) {
+              let filteredByNames = await websites.filter(website => {
+                if (cond === 'includes') {
+                  return website.name.toLowerCase().includes(string)
+                } else return !website.name.toLowerCase().includes(string)
+              }).map('id').value()
+  
+              let filteredByAltNames = await websites.filter( website => {
+                let altNames = website.altNames.map(p=>p.toLowerCase())
+                let matches = altNames.filter(a=>{
+                  if (cond === 'includes') {
+                    return a.includes(string)
+                  } else return !a.includes(string)
+                })
+                if (matches.length>0) {
+                  return true
+                } else { return false } 
+              }).map('id').value()
+  
+              let mergedIds = _.union(filteredByNames, filteredByAltNames)
+  
+              websites = websites.filter(p=>(mergedIds.includes(p.id)))
+            } else {
+              if (cond === 'includes') {
+                websites = websites.filter(website => website[param].toLowerCase().includes(string))
+              } else websites = websites.filter(v => !v[param].toLowerCase().includes(string))
+            }
+          }
+        }
+
+        if (type === 'array') {
+          if (cond === 'all') {
+            websites = websites.filter({[param]: val})
+          } else if (cond === 'one of') {
+            websites = websites.filter(website=>{
+              let include = false
+              for (let i=0; i<val.length;i++) {
+                if ( website[param].includes(val[i]) ) include = true
+              }
+              return include
+            })
+          } else if (cond === 'not') {
+            websites = websites.filter(website=>{
+              let include = false
+              for (let i=0; i<val.length;i++) {
+                if ( website[param].includes(val[i]) ) include = true
+              }
+              return !include
+            })
+          }
+        }
+
+        if (type === 'select') {
+          if (cond === 'includes') {
+            websites = websites.filter(website=>val.includes(website[param]))
+          } else websites = websites.filter(website=>!val.includes(website[param]))
+        }
+      }
+  
+      // sort websites
+      if (rootState.Settings.websiteSortBy === 'name') {
+        websites = websites.orderBy(website=>website.name.toLowerCase(), [rootState.Settings.websiteSortDirection])
+      } else {
+        // TODO add correct sort for colors based on swatches array
+        websites = websites.orderBy(rootState.Settings.websiteSortBy, [rootState.Settings.websiteSortDirection])
+      }
+
+      // TODO try to remove default websites and load always filtered websites without condition
+      let filteredWebsites = []
+      if (websites != getters.websites) {
+        if (websites.value().length == 0) {
+          state.filteredEmpty = true
+          filteredWebsites = websites
+        } else {
+          state.filteredEmpty = false
+          filteredWebsites = websites
+        }
+      }
       commit('resetLoading')
-      commit('changeWebsitesPageCurrent', number)
+      commit('filterWebsites', filteredWebsites)
+      if (!stayOnCurrentPage) {
+        rootState.Settings.websitePage = 1
+      }
+      dispatch('saveFiltersOfWebsites')
+    },
+    saveFiltersOfWebsites({state, commit, getters, rootState}) {
+      const route = router.currentRoute
+      const newFilters = _.cloneDeep(rootState.Settings.websiteFilters)
+      const sortBy = rootState.Settings.websiteSortBy
+      const sortDirection = rootState.Settings.websiteSortDirection
+      const page = rootState.Settings.websitePage
+      const firstChar = rootState.Settings.websiteFirstChar
+      const color = rootState.Settings.websiteColor
+
+      if (route.query.tabId === 'default') { // for websites page (not for tab)
+        getters.settings.set('websiteFilters', newFilters).write()
+        getters.settings.set('websiteSortBy', sortBy).write()
+        getters.settings.set('websiteSortDirection', sortDirection).write()
+        getters.settings.set('websitePage', page).write()
+        getters.settings.set('websiteFirstChar', firstChar).write()
+        getters.settings.set('websiteColor', color).write()
+      } else {  // for tab with websites 
+        getters.tabsDb.find({id: route.query.tabId}).assign({
+          name: getters.websiteFiltersForTabName,
+          filters: newFilters,
+          sortBy: sortBy,
+          sortDirection: sortDirection,
+          page: page,
+          firstChar: firstChar,
+          color: color,
+        }).write()
+        commit('getTabsFromDb')
+      }
     },
     deleteWebsites({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedWebsites.map(id => {
@@ -115,79 +250,6 @@ const Websites = {
       commit('updateWebsites')
       dispatch('filterWebsites', true)
     },
-    filterWebsites({ state, commit, getters}, stayOnCurrentPage) {
-      let websites = getters.websites
-      let filteredWebsites = []
-      websites = websites.orderBy(website=>(website.name.toLowerCase()), ['asc'])
-      if (state.filters.colors) {
-        let colors = state.filters.colors
-        if (colors.length) {
-          websites = websites.filter(website => (colors.includes(website.color.toLowerCase())))
-          // console.log('websites filtered by color')
-        }
-      }
-      if (state.filters.firstChar) {
-        let firstChars = state.filters.firstChar
-        let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k',
-          'l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
-        let allChars = []
-        firstChars.forEach( char => { allChars.push(chars[char]) } )
-        // console.log(allChars)
-        if (allChars.length) {
-          websites = websites.filter( website => {
-            let charTag = website.name.charAt(0).toLowerCase()
-            return allChars.includes(charTag)
-          })
-          // console.log(chars[firstChars])
-          // console.log('websites filtered by first character')
-        }
-      }
-      if (state.filters.name) {
-        let frase = state.filters.name.toLowerCase().trim()
-        if (frase.length) {
-          websites = websites.filter(website => (website.name.toLowerCase().includes(frase)))
-          // console.log(`websites filtered by frase "${frase}" in name`)
-        }
-      }
-      if (state.filters.sortBy) {
-        let sort = state.filters.sortBy
-        let direction = state.filters.sortDirection
-        if (sort === 'name') {
-          websites = websites.orderBy(p=>(p.name.toLowerCase()), [direction])
-        } else {
-          websites = websites.orderBy(sort, [direction])
-        }
-        // console.log('websites sorted')
-        // TODO: add correct sort for collors based on swatches array
-      }
-      if (state.filters.favorite) {
-        websites = websites.filter(website=>(website.favorite))
-        // console.log('websites with favorite')
-      }
-      if (state.filters.bookmark) {
-        websites = websites.filter(website=>(website.bookmark))
-        // console.log('websites with bookmark')
-      }
-      if (state.filters.network) {
-        websites = websites.filter(website=>(website.network))
-        // console.log('websites with network')
-      }
-      if (websites != getters.websites) {
-        if (websites.value().length == 0) {
-          state.filteredEmpty = true
-          filteredWebsites = websites
-        } else {
-          state.filteredEmpty = false
-          filteredWebsites = websites
-        }
-      }
-      commit('resetLoading')
-      commit('filterWebsites', filteredWebsites)
-      if (!stayOnCurrentPage) {
-        state.filters.page = 1
-        commit('changeWebsitesPageCurrent', 1)
-      }
-    },
   },
   getters: {
     dbw(state) {
@@ -205,29 +267,33 @@ const Websites = {
     websitesNamesLower(state, store) {
       return store.dbw.get('websites').map(w=>w.name.toLowerCase()).value()
     },
-    websitesFilters: (state, store) => {
+    websiteFiltersForTabName: (state, store, rootState) => {
       let filters = []
-      if (state.filters.name) {
-        filters.push('Name:' + state.filters.name)
+      let equals = ['equal', 'including', 'all', 'one of']
+      let notEquals = ['not equal', 'not', 'excluding']
+      
+      for (let filter in rootState.Settings.websiteFilters) {
+        let param = rootState.Settings.websiteFilters[filter].param
+        let cond = rootState.Settings.websiteFilters[filter].cond
+        let val = rootState.Settings.websiteFilters[filter].val
+        let type = rootState.Settings.websiteFilters[filter].type
+        let flag = rootState.Settings.websiteFilters[filter].flag
+
+        if (val === null || val.length === 0) continue
+        
+        if (equals.includes(cond)) cond = '='
+        if (notEquals.includes(cond)) cond = '!='
+        
+        if (type === 'array') {
+          let arr = param+' '+cond+' '
+          arr += val.join(';')
+          filters.push(arr)
+        } else {
+          filters.push(param+' '+cond+' '+val)
+        }
       }
-      if (state.filters.favorite) {
-        filters.push('Fav.')
-      }
-      if (state.filters.bookmark) {
-        filters.push('Book.')
-      }
-      if (state.filters.firstChar.length) {
-        let chars = ['0-9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','#']
-        chars = state.filters.firstChar.map((c)=>(chars[c]))
-        let filterChars = 'Char.:'
-        filterChars += chars.join(';')
-        filters.push(filterChars)
-      }
-      if (filters.length) {
-        return filters.join(', ')
-      } else {
-        return 'Websites'
-      }
+      // TODO show first char and color in tab name
+      return 'Websites' + (filters.length ? ' with ': ' ') + filters.join(', ')
     },
     filteredWebsites(state, store) {
       let websites 
@@ -251,17 +317,13 @@ const Websites = {
     websitesOnPage(state, store, rootState) {
       const websites = store.filteredWebsites.value(),
             websitesCount = rootState.Settings.websitesPerPage
-      let l = store.websitesTotal,
-          c = websitesCount
-      state.pageTotal = Math.ceil(l/c)
-      if(state.filters.page) {
-        state.pageCurrent = state.filters.page
-      }
-      if(state.pageCurrent > state.pageTotal) {
-        state.pageCurrent = state.pageTotal
+      state.pageTotal = Math.ceil(websites.length / websitesCount)
+
+      if(rootState.Settings.websitePage > state.pageTotal) {
+        rootState.Settings.websitePage = state.pageTotal
       }
       
-      const end = state.pageCurrent * websitesCount,
+      const end = rootState.Settings.websitePage * websitesCount,
             start = end - websitesCount
       return websites.slice(start, end)
     },
@@ -277,9 +339,6 @@ const Websites = {
         pages.push(i+1)
       }
       return pages
-    },
-    websitesCurrentPage(state) {
-      return state.pageCurrent
     },
     getSelectedWebsites(state) {
       return state.selectedWebsites
