@@ -114,6 +114,7 @@ export default {
       this.$store.state.pathToUserData = app.getPath('userData')
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.initTheme()
+      this.runUpdateDataFromVideos()
       // password
       if(this.passwordProtection && this.phrase!=='') {
         this.disableRunApp = this.phrase !== this.password 
@@ -156,6 +157,9 @@ export default {
       })
     })
   },
+  beforeDestroy() {
+    clearInterval(this.intervalUpdateDataFromVideos)
+  },
   data: () => ({
     password: '',
     showPassword: false,
@@ -167,6 +171,7 @@ export default {
     videoPage: '/',
     performerPage: '/',
     updateApp: false,
+    intervalUpdateDataFromVideos: null,
   }),
   computed: {
     passwordProtection() {
@@ -214,8 +219,24 @@ export default {
     logoPath() {
       return path.join(__static, '/icons/icon.png')
     },
+    updateIntervalDataFromVideos() {
+      return this.$store.state.Settings.updateIntervalDataFromVideos
+    },
+    autoUpdateDataFromVideos() {
+      return this.$store.state.Settings.autoUpdateDataFromVideos
+    },
   },
   methods: {
+    runUpdateDataFromVideos() {
+      if (this.autoUpdateDataFromVideos) {
+        if (this.intervalUpdateDataFromVideos) {
+          clearInterval(this.intervalUpdateDataFromVideos) 
+        }
+        this.intervalUpdateDataFromVideos = setInterval(()=>{
+          this.$store.dispatch('updateDataFromVideos')
+        }, this.updateIntervalDataFromVideos * 60 * 1000)
+      } else clearInterval(this.intervalUpdateDataFromVideos) 
+    },
     lock() {
       this.disableRunApp = true
       this.password = ''
@@ -274,7 +295,13 @@ export default {
       this.videoPage = this.$router.currentRoute
       this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/')
       this.performerPage = this.$router.currentRoute
-    }
+    },
+    updateIntervalDataFromVideos(n) {
+      this.runUpdateDataFromVideos()
+    },
+    autoUpdateDataFromVideos(n) {
+      this.runUpdateDataFromVideos()
+    },
   },
 }
 </script>

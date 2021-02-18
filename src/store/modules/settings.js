@@ -119,7 +119,7 @@ dbs.defaults({
   gapSize: 's',
   playerType: "0",
   customParametersPerformer: [],
-  updateIntervalDataFromVideos: 1,
+  updateIntervalDataFromVideos: 30,
   autoUpdateDataFromVideos: false,
 }).write()
 

@@ -13,6 +13,11 @@
     <v-tabs-items v-model="tab">
       <v-tab-item value="videos-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <div class="pb-10">
+            <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large rounded>
+              <v-icon size="26" left>mdi-plus</v-icon> Add new videos
+            </v-btn>
+          </div>
           <div class="subtitle d-flex justify-center">
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
@@ -27,11 +32,6 @@
               <v-radio label="Built-in player" value="0"></v-radio>
               <v-radio label="System player" value="1"></v-radio>
             </v-radio-group>
-          </div>
-          <div class="pt-10">
-            <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large rounded>
-              <v-icon size="26" left>mdi-plus</v-icon> Add new videos
-            </v-btn>
           </div>
           
           <v-card flat max-width="800" style="margin: auto;">
@@ -59,12 +59,12 @@
                     </template>
                   </v-switch>
                 </div>
-                <v-slider v-model="updateIntervalDataFromVideos" :min="1" :max="60"
+                <v-slider v-model="updateIntervalDataFromVideos" :min="5" :max="60" step="5"
                   :disabled="!autoUpdateDataFromVideos" hide-details thumb-label />
                 <div class="caption text-center">Update interval (in minutes): {{updateIntervalDataFromVideos}}</div>
               </v-col>
               <v-col cols="12" sm="6" class="text-center">
-                <v-btn @click="updateNumberOfVideos" color="secondary" rounded> 
+                <v-btn @click="updateDataFromVideos" color="secondary" rounded> 
                   <v-icon left>mdi-update</v-icon> Start update manually </v-btn>
               </v-col>
             </v-row>
@@ -740,59 +740,12 @@ export default {
     },
   },
   methods: {
-    updateNumberOfVideos() {
+    updateDataFromVideos() {
       this.dialogUpdateNumberOfVideos = true
       this.updatingNumberOfVideos = true
-      const videos = this.$store.getters.videos
       setTimeout(()=>{
         // update performer data
-        this.$store.getters.performers.each(p=>{
-          const vids = videos.filter(v=>v.performers.includes(p.name))
-          p.videos = vids.value().length // write number of videos
-          // get tags of videos
-          let tagsAllVideos = vids.map('tags').value()
-          let tags = []
-          tagsAllVideos.map(vTags=>{ if (vTags.length>0) vTags.map(tag=>tags.push(tag)) })
-          tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-          tags = tags.filter(el => (el !== null && el !== undefined))
-          p.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
-          // get websites of videos
-          let websitesAllVideos = vids.map('websites').value()
-          let websites = []
-          websitesAllVideos.map(vWeb=>{ if (vWeb.length>0) vWeb.map(web=>websites.push(web)) })
-          websites = websites.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-          websites = websites.filter(el => (el !== null && el !== undefined))
-          p.websites = websites.sort((a, b) => a.localeCompare(b)) // write websites of videos
-        }).write()
-
-        // update tag data
-        this.$store.getters.tags.each(t=>{
-          const vids = videos.filter(v=>v.tags.includes(t.name))
-          t.videos = vids.value().length // write number of videos
-          // get performers of tag
-          let performers = this.$store.getters.performers.filter({tags:[t.name]}).map('name').value()
-          t.performers = performers.sort((a, b) => a.localeCompare(b)) // write performers of tag
-        }).write()
-
-        // update website data
-        this.$store.getters.websites.each(w=>{
-          const vids = videos.filter(v=>v.websites.includes(w.name))
-          w.videos = vids.value().length // write number of videos
-          // get performers of videos
-          let performersAllVideos = vids.map('performers').value()
-          let performers = []
-          performersAllVideos.map(perfs=>{ if (perfs.length>0) perfs.map(p=>performers.push(p)) })
-          performers = performers.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-          performers = performers.filter(el => (el !== null && el !== undefined))
-          w.performers = performers.sort((a, b) => a.localeCompare(b)) // write performers of videos
-          // get tags of videos
-          let tagsAllVideos = vids.map('tags').value()
-          let tags = []
-          tagsAllVideos.map(vTags=>{ if (vTags.length>0) vTags.map(tag=>tags.push(tag)) })
-          tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-          tags = tags.filter(el => (el !== null && el !== undefined))
-          w.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
-        }).write()
+        this.$store.dispatch('updateDataFromVideos')
         this.updatingNumberOfVideos = false
       }, 500)
     },
