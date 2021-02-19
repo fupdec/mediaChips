@@ -1,6 +1,6 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.1-alpha?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.2-alpha?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
 ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
@@ -44,7 +44,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 ~~VLC Video player~~ <br>
 ~~playlists~~
 ~~save state of sort, favorite, bookmark, page~~
-- auto-update of data based on videos, performers, websites with the ability to customize the update interval
+~~auto-update of data based on videos, performers, websites with the ability to customize the update interval~~
 - add play mode shuffle, autoplay for player
 - improve player usabilty
 - improve stability and fix bugs

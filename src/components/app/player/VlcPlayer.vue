@@ -1159,7 +1159,7 @@ export default {
     },
     addMarker(type) { 
       let text = ''
-      let time = Math.floor(this.player.time / 1000)
+      let time = Math.floor(this.player.time / 1000) // TODO time should be like in card title
       if (type === 'tag') {
         text = this.markerTag
         this.dialogMarkerTag = false
