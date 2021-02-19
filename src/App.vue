@@ -114,7 +114,10 @@ export default {
       this.$store.state.pathToUserData = app.getPath('userData')
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.initTheme()
-      this.runUpdateDataFromVideos()
+      this.runAutoUpdateDataFromVideos()
+      if (this.$store.state.Settings.updateDataFromVideosOnStart) {
+        this.$store.dispatch('updateDataFromVideos')
+      }
       // password
       if(this.passwordProtection && this.phrase!=='') {
         this.disableRunApp = this.phrase !== this.password 
@@ -227,7 +230,7 @@ export default {
     },
   },
   methods: {
-    runUpdateDataFromVideos() {
+    runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
         if (this.intervalUpdateDataFromVideos) {
           clearInterval(this.intervalUpdateDataFromVideos) 
@@ -297,10 +300,10 @@ export default {
       this.performerPage = this.$router.currentRoute
     },
     updateIntervalDataFromVideos(n) {
-      this.runUpdateDataFromVideos()
+      this.runAutoUpdateDataFromVideos()
     },
     autoUpdateDataFromVideos(n) {
-      this.runUpdateDataFromVideos()
+      this.runAutoUpdateDataFromVideos()
     },
   },
 }

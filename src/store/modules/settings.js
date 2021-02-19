@@ -121,6 +121,7 @@ dbs.defaults({
   customParametersPerformer: [],
   updateIntervalDataFromVideos: 30,
   autoUpdateDataFromVideos: false,
+  updateDataFromVideosOnStart: false,
 }).write()
 
 const Settings = {
@@ -245,6 +246,7 @@ const Settings = {
     customParametersPerformer: _.cloneDeep(dbs.get('customParametersPerformer').value()),
     updateIntervalDataFromVideos: dbs.get('updateIntervalDataFromVideos').value(),
     autoUpdateDataFromVideos: dbs.get('autoUpdateDataFromVideos').value(),
+    updateDataFromVideosOnStart: dbs.get('updateDataFromVideosOnStart').value(),
   }),
   mutations: {
     updateSettings (state) {

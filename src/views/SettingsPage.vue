@@ -18,7 +18,7 @@
               <v-icon size="26" left>mdi-plus</v-icon> Add new videos
             </v-btn>
           </div>
-          <div class="subtitle d-flex justify-center">
+          <div class="d-flex justify-center">
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
                 <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -50,7 +50,7 @@
 
             <v-row>
               <v-col cols="12" sm="6">
-                <div class="subtitle d-flex align-center justify-center">
+                <div class="d-flex align-center justify-center">
                   <div class="mr-6">Start update automatically:</div>
                   <v-switch v-model="autoUpdateDataFromVideos" inset hide-details class="mt-0 pt-0 d-inline-flex">
                     <template v-slot:label>
@@ -64,14 +64,23 @@
                 <div class="caption text-center">Update interval (in minutes): {{updateIntervalDataFromVideos}}</div>
               </v-col>
               <v-col cols="12" sm="6" class="text-center">
-                <v-btn @click="updateDataFromVideos" color="secondary" rounded> 
+                <v-btn @click="updateDataFromVideos" color="secondary" rounded class="mb-4"> 
                   <v-icon left>mdi-update</v-icon> Start update manually </v-btn>
+                <div class="d-flex align-center justify-center">
+                  <div class="mr-6">Run update at app start:</div>
+                  <v-switch v-model="updateDataFromVideosOnStart" inset dense hide-details class="mt-0 pt-0 d-inline-flex">
+                    <template v-slot:label>
+                      <span v-if="updateDataFromVideosOnStart">Yes</span>
+                      <span v-else>No</span>
+                    </template>
+                  </v-switch>
+                </div>
               </v-col>
             </v-row>
             <v-divider class="my-6"/>
             <v-row>
               <v-col cols="12">
-                <div class="subtitle d-flex align-center">
+                <div class="d-flex align-center">
                   <v-tooltip top>
                     <template v-slot:activator="{ on, attrs }">
                       <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -201,7 +210,7 @@
 
           <v-row>
             <v-col cols="12" sm="6">
-              <div class="subtitle d-flex align-center">
+              <div class="d-flex align-center">
                 <div class="mr-6">Video preview enabled:</div>
                 <v-switch v-model="videoPreview" inset style="display:inline-block;">
                   <template v-slot:label>
@@ -220,7 +229,7 @@
 
           <v-divider class="my-6"/>
 
-          <div class="subtitle d-flex align-center pb-10">
+          <div class="d-flex align-center pb-10">
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
                 <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -246,7 +255,7 @@
           </v-btn>
           <ManagePerformerParameters v-if="$store.state.Settings.dialogManagePerformerParameters"/>
 
-          <div class="subtitle mt-8">Edit items of parameter:</div>
+          <div class="mt-8">Edit items of parameter:</div>
           <EditPerformerItemsOfParameter/>
 
           
@@ -271,13 +280,13 @@
           </div>
           <v-row>
             <v-col cols="12" sm="6">
-              <div class="subtitle text-center">Height</div>
+              <div class="text-center">Height</div>
               <v-slider v-model="meterHeight" :min="1" :max="20"
                 hide-details :thumb-size="32" thumb-label />
               <div class="caption text-center">{{meterHeight}} pixels</div>
             </v-col>
             <v-col cols="12" sm="6">
-              <div class="subtitle text-center">
+              <div class="text-center">
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -298,7 +307,7 @@
           <div class="headline text-h5 text-center pt-10">Theme</div>
           <v-row>
             <v-col cols="12">
-              <div class="subtitle d-flex">
+              <div class="d-flex">
                 <span class="mr-6">Dark mode:</span>
                 <v-switch v-model="darkMode" inset hide-details class="d-inline-flex mt-0 pt-0">
                   <template v-slot:label>
@@ -309,7 +318,7 @@
               </div>
             </v-col>
             <v-col cols="12">
-              <div class="subtitle d-flex">
+              <div class="d-flex">
                 <span class="mr-6">Use header gradient:</span>
                 <v-switch v-model="headerGradient" inset hide-details class="d-inline-flex mt-0 pt-0">
                   <template v-slot:label>
@@ -320,13 +329,13 @@
               </div>
             </v-col>
             <v-col cols="12" sm="6" v-if="headerGradient">
-              <div class="subtitle mb-2">Colors for header gradient (light theme):</div>
+              <div class="mb-2">Colors for header gradient (light theme):</div>
               <v-btn @click="openDialogHeaderGradientLight" color="secondary">
                 <v-icon left>mdi-palette</v-icon> Change
               </v-btn>
             </v-col>
             <v-col cols="12" sm="6" v-if="headerGradient">
-              <div class="subtitle mb-2">Colors for header gradient (dark theme):</div>
+              <div class="mb-2">Colors for header gradient (dark theme):</div>
               <v-btn @click="openDialogHeaderGradientDark" color="secondary">
                 <v-icon left>mdi-palette</v-icon> Change
               </v-btn>
@@ -369,7 +378,7 @@
 
           <div class="headline text-h5 text-center my-6">Application</div>
 
-          <div class="subtitle d-flex">
+          <div class="d-flex">
             <span class="mr-6">Navigation menu position:</span>
             <v-radio-group v-model="navigationSide" mandatory row hide-details class="mt-0 pt-0">
               <v-radio label="Side" value="1"></v-radio>
@@ -377,7 +386,7 @@
               <v-radio label="None" value="0"></v-radio>
             </v-radio-group>
           </div>
-          <div class="subtitle mt-8 d-flex">
+          <div class="mt-8 d-flex">
             <span class="mr-6">Rating and favorite in card description:</span>
             <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex">
               <template v-slot:label>
@@ -386,7 +395,7 @@
               </template>
             </v-switch>
           </div>
-          <div class="subtitle py-8">
+          <div class="py-8">
             <span class="mr-6">Limit of pages in pagination:</span>
             <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
               <v-btn outlined @click="changeNumberOfPagesLimit(5)" :value="5">5</v-btn>
@@ -404,7 +413,7 @@
           <div class="headline text-h5 text-center pt-6">Login</div>
           <v-row>
             <v-col cols="12">
-              <div class="subtitle mt-8 d-flex">
+              <div class="mt-8 d-flex">
                 <span class="mr-6">Password protect entry:</span>
                 <v-switch v-model="passwordProtection" inset hide-details class="mt-0 pt-0 d-inline-flex">
                   <template v-slot:label>
@@ -415,7 +424,7 @@
               </div>
             </v-col>
             <v-col v-if="passwordProtection" cols="12" sm="6">
-              <div class="subtitle mt-8 mb-2 text-center">Password</div>
+              <div class="mt-8 mb-2 text-center">Password</div>
               <v-form ref="pass" v-model="validPass">
                 <v-text-field :disabled="!passwordProtection"
                   v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -428,7 +437,7 @@
               </v-form>
             </v-col>
             <v-col v-if="passwordProtection" cols="12" sm="6">
-              <div class="subtitle mt-8 mb-2 text-center">Hint for password</div>
+              <div class="mt-8 mb-2 text-center">Hint for password</div>
               <v-form ref="hint" v-model="validHint">
                 <v-text-field :disabled="!passwordProtection"
                   v-model="hint" :rules="[getHintRules]" solo counter dense
@@ -448,7 +457,7 @@
           <ManageBackups />
 
           <div class="headline text-h5 text-center red--text pt-10">Clear data</div>
-          <div class="subtitle red--text">Clear data:</div>
+          <div class="red--text">Clear data:</div>
           <div class="caption mb-2 red--text">
             <v-icon size="18" color="red" left>mdi-alert-outline</v-icon>
             This will completely delete all data. Data recovery is possible only from a backup.
@@ -462,7 +471,7 @@
           <!-- TODO: delete apropriate bookmarks when deleted video, performer, tag or website -->
           
 
-          <div class="subtitle mt-10 mb-2">Reset to default settings:</div>
+          <div class="mt-10 mb-2">Reset to default settings:</div>
           <v-btn color="red" @click="dialogResetToDefaultSettings=true">
             <v-icon left>mdi-restore</v-icon> Reset</v-btn>
             
@@ -599,6 +608,14 @@ export default {
       },
       set(value) {
         this.$store.dispatch('updateSettingsState', {key:'autoUpdateDataFromVideos', value})
+      },
+    },
+    updateDataFromVideosOnStart: {
+      get() {
+        return this.$store.state.Settings.updateDataFromVideosOnStart
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'updateDataFromVideosOnStart', value})
       },
     },
     videoPreview: {
