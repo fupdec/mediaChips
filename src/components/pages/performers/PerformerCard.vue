@@ -461,10 +461,10 @@ export default {
     },
     changeRating(stars, performerID) {
       console.log('rating changed: ' +stars);
-      this.$store.getters.performers
-        .find({ id: performerID })
-        .assign({ rating: stars })
-        .write();
+      this.$store.getters.performers.find({ id: performerID }).assign({ 
+        rating: stars,
+        edit: Date.now(),
+      }).write()
       this.$store.commit('updatePerformers')
     },
     toggleFavorite() {
@@ -476,10 +476,10 @@ export default {
         console.log('added to favorite')
       }
 
-      this.$store.getters.performers
-        .find({ id: this.performer.id })
-        .assign({ favorite: this.isFavorite })
-        .write();
+      this.$store.getters.performers.find({ id: this.performer.id }).assign({ 
+        favorite: this.isFavorite,
+        edit: Date.now(),
+      }).write();
       this.$store.commit('updatePerformers')
     },
     getTagColor(itemName) {

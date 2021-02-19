@@ -312,10 +312,10 @@ export default {
     changeRating(stars) {
       console.log('rating changed: ' +stars)
       this.$store.state.Performers.selectedPerformers.map(performerId => {
-        this.$store.getters.performers
-          .find({ id: performerId })
-          .assign({ rating: stars })
-          .write();
+        this.$store.getters.performers.find({ id: performerId }).assign({ 
+          rating: stars,
+          edit: Date.now(),
+        }).write()
       })
       setTimeout(()=>{
         this.$store.state.Performers.rating = 0
@@ -335,28 +335,28 @@ export default {
     },
     clearRating() {
       this.$store.state.Performers.selectedPerformers.map(performerId => {
-        this.$store.getters.performers
-          .find({ id: performerId })
-          .assign({ rating: 0 })
-          .write();
+        this.$store.getters.performers.find({ id: performerId }).assign({ 
+          rating: 0,
+          edit: Date.now(),
+        }).write()
       })
       this.$store.commit('updatePerformers')
     },
     addToFavorite() {
       this.$store.state.Performers.selectedPerformers.map(performerId => {
-        this.$store.getters.performers
-          .find({ id: performerId })
-          .assign({ favorite: true })
-          .write();
+        this.$store.getters.performers.find({ id: performerId }).assign({ 
+          favorite: true,
+          edit: Date.now(), 
+        }).write()
       })
       this.$store.commit('updatePerformers')
     },
     removeFromFavorite() {
       this.$store.state.Performers.selectedPerformers.map(performerId => {
-        this.$store.getters.performers
-          .find({ id: performerId })
-          .assign({ favorite: false })
-          .write();
+        this.$store.getters.performers.find({ id: performerId }).assign({ 
+          favorite: false,
+          edit: Date.now(),
+        }).write()
       })
       this.$store.commit('updatePerformers')
     },

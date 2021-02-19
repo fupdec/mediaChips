@@ -236,7 +236,10 @@ export default {
       },
       set(value) {
         this.video.favorite = value
-        this.$store.getters.videos.find({id: this.video.id}).assign({favorite: value}).write()
+        this.$store.getters.videos.find({id: this.video.id}).assign({
+          favorite: value,
+          edit: Date.now(),
+        }).write()
         this.$store.commit('updateVideos')
       },
     },
@@ -336,10 +339,10 @@ export default {
       } else shell.openPath(pathToVideo)
     },
     changeRating(stars, videoID) {
-      this.$store.getters.videos
-        .find({ id: videoID })
-        .assign({ rating: stars })
-        .write()
+      this.$store.getters.videos.find({ id: videoID }).assign({
+        rating: stars,  
+        edit: Date.now(),  
+      }).write()
     },
     getPerformerByName(performer) {
       return this.$store.getters.performers.find({name:performer}).value()

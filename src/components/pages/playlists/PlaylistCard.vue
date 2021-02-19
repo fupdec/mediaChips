@@ -74,7 +74,10 @@ export default {
       },
       set(value) {
         this.playlist.favorite = value
-        this.$store.getters.playlists.find({id: this.playlist.id}).assign({favorite: value}).write()
+        this.$store.getters.playlists.find({id: this.playlist.id}).assign({
+          favorite: value,
+          edit: Date.now(),
+        }).write()
         this.$store.commit('updatePlaylists')
       },
     },

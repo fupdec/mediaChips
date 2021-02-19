@@ -83,7 +83,10 @@ export default {
       },
       set(value) {
         this.website.favorite = value
-        this.$store.getters.websites.find({id: this.website.id}).assign({favorite: value}).write()
+        this.$store.getters.websites.find({id: this.website.id}).assign({
+          favorite: value, 
+          edit: Date.now(),
+        }).write()
         this.$store.commit('updateWebsites')
       },
     },

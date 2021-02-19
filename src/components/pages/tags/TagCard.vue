@@ -78,7 +78,10 @@ export default {
       },
       set(value) {
         this.tag.favorite = value
-        this.$store.getters.tags.find({id: this.tag.id}).assign({favorite: value}).write()
+        this.$store.getters.tags.find({id: this.tag.id}).assign({
+          favorite: value,
+          edit: Date.now(),
+        }).write()
         this.$store.commit('updateTags')
       },
     },

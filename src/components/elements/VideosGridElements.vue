@@ -55,68 +55,6 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="$store.state.Videos.dialogCreatePreview" scrollable persistent max-width="800">
-      <v-card :loading="createPreviewLoading" loader-height="6">
-        <v-card-title class="headline"> Create preview 
-          <v-spacer></v-spacer>
-          <v-icon>mdi-filmstrip</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-actions v-if="createPreviewStarted" class="py-0 px-4">
-          <v-progress-linear
-            v-model="createPreviewProgress" height="20" rounded 
-            class="my-2 progress-striped" :class="{active: createPreviewLoading}"
-          > <template v-slot="{ value }">
-              <strong class="process-percents">{{ Math.ceil(value) }}%</strong>
-            </template>
-          </v-progress-linear>
-        </v-card-actions>
-        <v-card-actions v-if="createPreviewStarted" class="py-0 px-6">
-          <v-row>
-            <v-col class="caption py-0">
-            Current file: {{currentFileInProgress}}
-            </v-col>
-            <v-col class="caption text-right py-0">
-            previews created: {{currentNumberOfScanVideos}} / {{totalNumberOfScanVideos}}
-            </v-col>
-          </v-row>
-        </v-card-actions>
-        <vuescroll>
-          <v-card-text style="white-space: pre-wrap;">
-            <div class="body-1">Video<span v-if="selectedVideosLength>1">s
-              ({{selectedVideosLength}})</span>
-            </div>
-            {{selectedVideos(true)}}
-          </v-card-text>
-        </vuescroll>
-        <v-card-actions>
-          <v-radio-group 
-            v-model="previewQuality" :disabled="createPreviewLoading" 
-            class="mx-4" row dense label="Quality:"
-            hint="The creation process takes from one to several minutes 
-            depending on the file size and the selected quality.
-            The heavy load on the CPU is possible." persistent-hint
-          >
-            <v-radio label="Worse" value="100"></v-radio>
-            <v-radio label="Low" value="160"></v-radio>
-            <v-radio label="Medium" value="220"></v-radio>
-            <v-radio label="High" value="280"></v-radio>
-            <v-radio label="Ultra" value="340"></v-radio>
-          </v-radio-group>
-        </v-card-actions>
-        <v-card-actions>
-          <v-btn class="ma-4" :disabled="createPreviewLoading"
-            @click="closeDialogCreatePreview">Cancel
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" class="ma-4" :disabled="createPreviewLoading"
-            @click="createPreviewForVideo"> 
-            <v-icon left>mdi-video-vintage</v-icon> Create
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
     <div v-if="$store.state.Videos.dialogEditVideoInfo"><DialogEditVideoInfo /></div>
 
     <v-dialog v-model="dialogAddToPlaylist" max-width="420">
@@ -449,13 +387,6 @@ export default {
   },
   data: () => ({
     previousSelection: [],
-    previewQuality: '160',
-    currentFileInProgress: '',
-    createPreviewLoading: false,
-    createPreviewStarted: false,
-    createPreviewProgress: 0,
-    currentNumberOfScanVideos: 0,
-    totalNumberOfScanVideos: 0,
     performersClipboard: [],
     tagsClipboard: [],
     websiteClipboard: '',
@@ -510,44 +441,6 @@ export default {
       let ids = selectedVideos.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedVideos', ids)
     },
-    closeDialogCreatePreview(){
-      this.$store.state.Videos.dialogCreatePreview = false
-      this.createPreviewLoading = false
-    },
-    createPreviewForVideo() { // TODO delete feature create preview
-      this.createPreviewLoading = true
-      this.createPreviewStarted = true
-      this.createPreviewProgress = 0
-      this.currentNumberOfScanVideos = 0
-      this.totalNumberOfScanVideos = 0
-      // console.log(file, fileId)
-
-      const vm = this
-
-      async function processArray(files) {
-        let percentsPerFile = 100/files.length 
-        vm.totalNumberOfScanVideos = files.length
-        // console.log(percentsPerFile)
-        for (const fileId of files) {
-          let file = vm.$store.getters.videos.find({id:fileId}).value().path
-          vm.currentFileInProgress=file.split('\\').pop().split('.').slice(0,-1).join('.')
-          await createPreview(file, fileId, vm.previewQuality)
-          ++vm.currentNumberOfScanVideos
-          vm.createPreviewProgress += percentsPerFile
-          if (vm.createPreviewProgress > 100) {
-            vm.createPreviewProgress = 100
-          }
-        }
-        vm.isVideoScanFinished = true
-        console.log('Files scaned!')
-      }
-
-      const files = this.$store.getters.getSelectedVideos
-      processArray(files).then(() => {
-        vm.createPreviewLoading = false
-        vm.$store.commit('updateVideos') //TODO: make smart update (only for videos in array)
-      })
-    },    
     revealInFileExplorer() {
       let videoId = this.$store.getters.getSelectedVideos[0]
       let videoPath = this.$store.getters.videos.find({id:videoId}).value().path
@@ -556,10 +449,10 @@ export default {
     changeRating(stars) {
       console.log('rating changed: ' +stars)
       this.$store.state.Videos.selectedVideos.map(videoId => {
-        this.$store.getters.videos
-          .find({ id: videoId })
-          .assign({ rating: stars })
-          .write();
+        this.$store.getters.videos.find({ id: videoId }).assign({ 
+          rating: stars,
+          edit: Date.now(),
+        }).write()
       })
       setTimeout(()=>{
         this.$store.state.Videos.rating = 0
@@ -568,28 +461,28 @@ export default {
     },
     clearRating() {
       this.$store.state.Videos.selectedVideos.map(videoId => {
-        this.$store.getters.videos
-          .find({ id: videoId })
-          .assign({ rating: 0 })
-          .write();
+        this.$store.getters.videos.find({ id: videoId }).assign({ 
+          rating: 0,
+          edit: Date.now(),
+        }).write()
       })
       this.$store.commit('updateVideos')
     },
     addToFavorite() {
       this.$store.state.Videos.selectedVideos.map(videoId => {
-        this.$store.getters.videos
-          .find({ id: videoId })
-          .assign({ favorite: true })
-          .write();
+        this.$store.getters.videos.find({ id: videoId }).assign({
+          favorite: true,
+          edit: Date.now(),
+        }).write()
       })
       this.$store.commit('updateVideos')
     },
     removeFromFavorite() {
       this.$store.state.Videos.selectedVideos.map(videoId => {
-        this.$store.getters.videos
-          .find({ id: videoId })
-          .assign({ favorite: false })
-          .write();
+        this.$store.getters.videos.find({ id: videoId }).assign({ 
+          favorite: false,
+          edit: Date.now(),
+        }).write()
       })
       this.$store.commit('updateVideos')
     },
@@ -605,7 +498,7 @@ export default {
           let vid = vids.find({id:i})
           let performers = vid.value().performers
           performers = _.union(performers, this.performersClipboard).sort()
-          vid.assign({performers:performers}).write()
+          vid.assign({performers:performers, edit:Date.now()}).write()
         })
       }
     },
@@ -614,7 +507,7 @@ export default {
       let vids = this.$store.getters.videos
       if (ids.length!==0) {
         ids.map(i => {
-          vids.find({id:i}).assign({performers:this.performersClipboard}).write()
+          vids.find({id:i}).assign({performers: this.performersClipboard, edit:Date.now()}).write()
         })
       }
     },
@@ -623,7 +516,7 @@ export default {
       let vids = this.$store.getters.videos
       if (ids.length!==0) {
         ids.map(i => {
-          vids.find({id:i}).assign({performers:[]}).write()
+          vids.find({id:i}).assign({performers:[], edit:Date.now()}).write()
         })
       }
     },
@@ -639,7 +532,7 @@ export default {
           let vid = vids.find({id:i})
           let tags = vid.value().tags
           tags = _.union(tags, this.tagsClipboard).sort()
-          vid.assign({tags:tags}).write()
+          vid.assign({tags:tags, edit:Date.now()}).write()
         })
       }
     },
@@ -648,7 +541,7 @@ export default {
       let vids = this.$store.getters.videos
       if (ids.length!==0) {
         ids.map(i => {
-          vids.find({id:i}).assign({tags:this.tagsClipboard}).write()
+          vids.find({id:i}).assign({tags:this.tagsClipboard, edit:Date.now()}).write()
         })
       }
     },
@@ -657,7 +550,7 @@ export default {
       let vids = this.$store.getters.videos
       if (ids.length!==0) {
         ids.map(i => {
-          vids.find({id:i}).assign({tags:[]}).write()
+          vids.find({id:i}).assign({tags:[], edit:Date.now()}).write()
         })
       }
     },

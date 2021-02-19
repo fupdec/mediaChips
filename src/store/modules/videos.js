@@ -21,7 +21,6 @@ const Videos = {
     selectedVideos: [],
     dialogDeleteVideo: false,
     dialogEditVideoInfo: false,
-    dialogCreatePreview: false,
     dialogErrorPlayVideo: false,
     dialogFolderTree: false,
     dialogFilterVideos: false,
