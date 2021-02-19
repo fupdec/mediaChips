@@ -119,7 +119,7 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="secondary" to="/videos/:default?tabId=default">Open Videos</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/videos/:default?tabId=default" draggable="false">Open Videos</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -156,7 +156,7 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="secondary" to="/performers/:default?tabId=default">Open Performers</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/performers/:default?tabId=default" draggable="false">Open Performers</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -180,7 +180,7 @@
             
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="secondary" to="/tags/:default?tabId=default">Open tags</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/tags/:default?tabId=default" draggable="false">Open tags</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -204,13 +204,13 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="secondary" to="/websites/:default?tabId=default">Open websites</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/websites/:default?tabId=default" draggable="false">Open websites</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
         </v-col>
         <v-col cols="12">
-          <v-card hover to="/settings">
+          <v-card hover to="/settings" draggable="false">
             <v-list-item>
               <v-list-item-content>
                 <v-list-item-title class="">
@@ -221,7 +221,7 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="secondary" to="/settings">Open settings</v-btn>
+              <v-btn class="ma-2" color="secondary" to="/settings" draggable="false">Open settings</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -230,7 +230,7 @@
 
       <div v-if="$store.state.Settings.videosTotal==0">
         <h2>First of all add videos in settings</h2>
-        <v-btn class="ma-2" color="secondary" to="/settings">Open settings</v-btn>
+        <v-btn class="ma-2" color="secondary" to="/settings" draggable="false">Open settings</v-btn>
       </div>
     </v-container>
 

@@ -2,12 +2,12 @@
   <vuescroll ref="mainContainer">
 
     <v-tabs v-model="tab" centered icons-and-text>
-      <v-tab href="#videos-settings">Videos<v-icon>mdi-video</v-icon></v-tab>
-      <v-tab href="#performers-settings">Performers<v-icon>mdi-account</v-icon></v-tab>
-      <v-tab href="#appearance-settings">Appearance<v-icon>mdi-palette</v-icon></v-tab>
-      <v-tab href="#application-settings">Privacy<v-icon>mdi-key</v-icon></v-tab>
-      <v-tab href="#database-settings">Database<v-icon>mdi-database</v-icon></v-tab>
-      <v-tab href="#about-settings">About<v-icon>mdi-information-variant</v-icon></v-tab>
+      <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
+      <v-tab href="#performers-settings" draggable="false">Performers<v-icon>mdi-account</v-icon></v-tab>
+      <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
+      <v-tab href="#application-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
+      <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
+      <v-tab href="#about-settings" draggable="false">About<v-icon>mdi-information-variant</v-icon></v-tab>
     </v-tabs>
 
     <v-tabs-items v-model="tab">
