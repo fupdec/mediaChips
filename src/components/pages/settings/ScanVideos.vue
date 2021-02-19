@@ -135,6 +135,11 @@
             <vuescroll>
               <v-card-text class="py-1" style="max-height: calc(100vh - 450px)">
                 <v-alert style="overflow:hidden;"
+                  v-model="alertFolderError" type="error" :icon="false" 
+                  border="left" text dense outlined 
+                > Folder read error: ({{errorFolders.length}}) <br>{{errorScanFolders}}
+                </v-alert>
+                <v-alert style="overflow:hidden;"
                   v-model="alertScanError" type="error" :icon="false" 
                   border="left" text dense outlined :height="alertScanErrorHeight" 
                 > <v-row align="start">
@@ -230,12 +235,14 @@ export default {
     isVideoScanFinished: false,
     currentNumberOfScanVideos: 0,
     totalNumberOfScanVideos: 0,
+    alertFolderError: false,
     alertScanError: false,
     alertScanErrorHeight: 100,
     alertDuplicateVideos: false,
     alertDuplicateVideosHeight: 100,
     alertAddNewVideos: false,
     alertAddNewVideosHeight: 100,
+    errorFolders: [],
     errorVideos: [],
     duplicateVideos: [],
     newVideos: [],
@@ -244,6 +251,9 @@ export default {
     ffmpeg: true,
   }),
   computed: {
+    errorScanFolders() {
+      return this.errorFolders.join(', \n')
+    },
     errorScanVideos() {
       return this.errorVideos.join(', \n')
     },
@@ -311,9 +321,11 @@ export default {
       this.isVideoScanFinished = false
       this.currentNumberOfScanVideos = 0
       this.totalNumberOfScanVideos = 0
+      this.alertFolderError = false
       this.alertScanError = false
       this.alertDuplicateVideos = false
       this.alertAddNewVideos = false
+      this.errorFolders = []
       this.errorVideos = []
       this.duplicateVideos = []
       this.newVideos = []
@@ -378,20 +390,28 @@ export default {
       })
     },
     findInDir(dir, filter, fileList = []) {
-      const files = fs.readdirSync(dir);
+      let files
+      try {
+        files = fs.readdirSync(dir)
+      } catch (err) {
+        console.log(err)
+        files = []
+        this.alertFolderError = true
+        this.errorFolders.unshift(dir)
+      }
 
       files.forEach((file) => {
-        const filePath = path.join(dir, file);
-        const fileStat = fs.lstatSync(filePath);
+        const filePath = path.join(dir, file)
+        const fileStat = fs.lstatSync(filePath)
 
         if (fileStat.isDirectory()) {
-          this.findInDir(filePath, filter, fileList);
+          this.findInDir(filePath, filter, fileList)
         } else if (filter.test(filePath)) {
-          fileList.push(filePath);
+          fileList.push(filePath)
         }
-      });
+      })
 
-      return fileList;
+      return fileList
     },
     getPathRules(path) {
       if (path.length===0) {
