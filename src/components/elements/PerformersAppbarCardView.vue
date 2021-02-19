@@ -130,6 +130,13 @@
           </v-list-item-title>
           <v-icon size="20" class="pl-10" :color="!isWebsitesHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
         </v-list-item>
+
+        <v-list-item link @click="toggleBottomProfileVisibilty()">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-account-box</v-icon> Bottom Profile
+          </v-list-item-title>
+          <v-icon size="20" class="pl-10" :color="!isBottomProfileHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+        </v-list-item>
       </v-list>
     </v-menu>
   </div>
@@ -253,6 +260,14 @@ export default {
         this.$store.dispatch('updateSettingsState', {key:'performerWebsitesHidden', value})
       },
     },
+    isBottomProfileHidden: {
+      get () {
+        return this.$store.state.Settings.performerBottomProfileHidden
+      },
+      set (value) {
+        this.$store.dispatch('updateSettingsState', {key:'performerBottomProfileHidden', value})
+      },
+    },
   },
   methods: {
     toggleChipsColored() {
@@ -293,6 +308,9 @@ export default {
     },
     toggleWebsitesVisibilty() {
       this.isWebsitesHidden = !this.isWebsitesHidden
+    },
+    toggleBottomProfileVisibilty() {
+      this.isBottomProfileHidden = !this.isBottomProfileHidden
     },
     changeCardSize(value) {
       this.$store.dispatch('updateSettingsState', {key:'performerCardSize', value})

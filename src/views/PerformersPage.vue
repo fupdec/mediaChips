@@ -93,8 +93,7 @@
     <PerformersGridElements />
 
 <!-- TODO make correct display bottom sheet with bottom sidebar -->
-    <v-bottom-sheet 
-      v-if="$store.getters.getSelectedPerformers.length==1 && $store.state.Settings.navigationSide!=2" 
+    <v-bottom-sheet v-if="bottomProfile" 
       v-model="$store.state.Performers.bottomSheet" 
       hide-overlay inset no-click-animation persistent
     >
@@ -173,6 +172,12 @@ export default {
     },
     params() {
       return this.$store.state.Settings.customParametersPerformer
+    },
+    bottomProfile() {
+      let selectedSingle = this.$store.getters.getSelectedPerformers.length == 1
+      let bottomProfile = !this.$store.state.Settings.performerBottomProfileHidden
+      let notBottomNavigation = this.$store.state.Settings.navigationSide != 2
+      return selectedSingle && bottomProfile && notBottomNavigation
     },
   },
   methods: {

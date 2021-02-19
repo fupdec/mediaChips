@@ -61,6 +61,7 @@ dbs.defaults({
   performerProfile: false,
   performerProfileTags: true,
   performerProfileWebsites: true,
+  performerBottomProfileHidden: false,
   selectedDisk: '',
   videoFilters: [{param: null,cond: null,val: null,type: null,flag: null,lock: false,}],
   videoSortBy: 'name',
@@ -204,6 +205,7 @@ const Settings = {
     performerProfile: dbs.get('performerProfile').value(),
     performerProfileTags: dbs.get('performerProfileTags').value(),
     performerProfileWebsites: dbs.get('performerProfileWebsites').value(),
+    performerBottomProfileHidden: dbs.get('performerBottomProfileHidden').value(),
     tagsPerPage: dbs.get('tagsPerPage').value() || 20,
     tagAltNamesHidden: dbs.get('tagAltNamesHidden').value() || false,
     tagPerformersHidden: dbs.get('tagPerformersHidden').value() || false,
@@ -271,7 +273,7 @@ const Settings = {
     updateFiltersPresetDefault(state, {type, value}) {
       state[`${type}FiltersPresetDefault`] = value
     },
-    resetSettingsToDefault(state) {
+    resetSettingsToDefault(state) { // TODO reset only visuals. change text in settings
       state.passwordProtection = false
       state.appColorLightPrimary = '#ef0051'
       state.appColorLightSecondary = '#d80155'
