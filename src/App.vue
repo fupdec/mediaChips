@@ -92,6 +92,7 @@ const win = remote.getCurrentWindow()
 const axios = require("axios")
 const cheerio = require("cheerio")
 const shell = require('electron').shell
+const chokidar = require('chokidar');
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -230,6 +231,19 @@ export default {
     },
   },
   methods: {
+    watchDir(path) {
+      const watcher = chokidar.watch(path, {
+        ignored: /^.*\.(?!3gp$|avi$|dat$|f4v$|flv$|m4v$|mkv$|mod$|mov$|mp4$|mpeg$|mpg$|mts$|rm$|rmvb$|swf$|ts$|vob$|webm$|wmv$|yuv$)[^.]+$/gm, // ignore all files not videos
+        persistent: true,
+        ignoreInitial: true,
+      })
+      // Something to use when events are received.
+      const log = console.log.bind(console);
+      // Add event listeners.
+      watcher
+        .on('add', path => log(`File ${path} has been added`))
+        .on('ready', () => log('folders scanned'))
+    },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
         if (this.intervalUpdateDataFromVideos) {
