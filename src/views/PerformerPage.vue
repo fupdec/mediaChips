@@ -24,11 +24,15 @@
         <v-btn @click="copyPerformerNameToClipboard" icon
           title="Copy performer name to clipboard"><v-icon>mdi-content-copy</v-icon>
         </v-btn>
-        <v-btn @click="showTags = !showTags" icon
-          title="Toggle tags from videos visibilty"><v-icon>mdi-tag-outline</v-icon>
+        <v-btn @click="showTags = !showTags" icon title="Toggle tags from videos visibilty">
+          <v-badge :value="!showTags" dot overlap>
+            <v-icon>mdi-tag-outline</v-icon>
+          </v-badge>
         </v-btn>
-        <v-btn @click="showWebsites = !showWebsites" icon
-          title="Toggle websites visibilty"><v-icon>mdi-web</v-icon>
+        <v-btn @click="showWebsites = !showWebsites" icon title="Toggle websites visibilty">
+          <v-badge :value="!showWebsites" dot overlap>
+            <v-icon>mdi-web</v-icon>
+          </v-badge>
         </v-btn>
         <v-btn v-if="tabId==='default'" @click="addNewTabPerformer" icon
           title="Open performer in a new tab"><v-icon>mdi-tab-plus</v-icon>
@@ -44,8 +48,8 @@
           <v-icon>mdi-image-edit-outline</v-icon>
         </v-btn>
       </div>
-      <v-expansion-panels focusable>
-        <v-expansion-panel :style="profileBackground">
+      <v-expansion-panels v-model="profile" multiple focusable>
+        <v-expansion-panel :style="profileBackground" :key="0">
           <v-expansion-panel-header class="pa-6" ripple hide-actions>
             <div class="profile-name text-center">{{performer.name}}</div>
           </v-expansion-panel-header>
@@ -286,11 +290,13 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
+      if (this.$store.state.Settings.performerProfile) this.profile.push(0)
       this.initFilters()
       this.updateMeter()
     })
   },
   data: () => ({
+    profile: [],
     currentYear: new Date().getFullYear(),
     months: [
       'January',
@@ -376,15 +382,6 @@ export default {
       }
       return Math.ceil(completedValue / completed.length * 100)
     },
-    // profile: {
-    //   get() {
-    //     return this.$store.state.Settings.performerProfile
-    //   },
-    //   set(profile) {
-    //     this.$store.dispatch('updateSettingsState', {key:'performerProfile', value:profile})
-    //   },
-    // },
-    // TODO: save profile expansion-panels state
     showTags: {
       get() {
         return this.$store.state.Settings.performerProfileTags
@@ -549,6 +546,12 @@ export default {
     },
   },
   methods: {
+    toggleProfile() {
+      let value
+      if (this.profile.length) value = true
+      else value = false
+      this.$store.dispatch('updateSettingsState', {key:'performerProfile', value: value})
+    },
     addNewTabPerformer() {
       let tabId = this.performerId
       if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
@@ -754,6 +757,9 @@ export default {
     },
   },
   watch: {
+    profile() {
+      this.toggleProfile()
+    },
     activeTags() {
       this.updateFilters()
     },
