@@ -52,7 +52,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 ## Features
 
 #### &#128421; App
-- Video player with time markers (New!)
+- Video player with time markers
 - Tabs for easy browsing
 - Flexible and convenient filter system for any parameter
 - Password protection
@@ -63,10 +63,11 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Hover card label preview
 - Checking for updates on start
 - Optimized for one-handed use :)
+- The app does not track your personal data and does not send any personal data!
 
 #### &#128249; Videos
-- Playlists (New!)
-- Video preview with image grid 3x3 (New!)
+- Playlists
+- Video preview with image grid 3x3
 - Adding performers, tags, websites, rating, favorite, bookmark
 - Sorting and filtering by performers, tags, websites, filesize, quality, folder, path etc.
 - Save filters and sorting to a preset that can be loaded at any time or set as default
@@ -84,7 +85,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 #### &#128110; Performers
 - Adding tags, rating, favorite, bookmark
 - Detailed profile: aliases, category, career, age, country and many other parameters
-- Add custom parameter (New!)
+- Add custom parameter
 - Autosearch for information on the Internet and import data (Freeones, IAFD)
 - Sorting and filtering by all profile parameters
 - Save filters and sorting to a preset that can be loaded at any time or set as default
