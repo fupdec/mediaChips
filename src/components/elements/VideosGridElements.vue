@@ -290,12 +290,27 @@
           <v-list dense class="context-menu">
             <v-list-item link @mouseup="copyVideoPathToClipboard">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-file-find</v-icon> Video Path 
+                <v-icon left size="18">mdi-file-find</v-icon> Full Path to Video 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="copyVideoNameToClipboard">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-alphabetical-variant</v-icon> Video Name
+                <v-icon left size="18">mdi-alphabetical-variant</v-icon> Filename
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item link @mouseup="copyVideoPerformersToClipboard">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-account</v-icon> Performers
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item link @mouseup="copyVideoTagsToClipboard">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-tag</v-icon> Tags
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item link @mouseup="copyVideoWebsitesToClipboard">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-web</v-icon> Websites
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -613,6 +628,28 @@ export default {
     },
     copyVideoNameToClipboard(){
       navigator.clipboard.writeText(this.selectedVideos())
+    },
+    copyVideoPerformersToClipboard(){
+      navigator.clipboard.writeText(this.getTextFromSelectedVideos('performers'))
+    },
+    copyVideoTagsToClipboard(){
+      navigator.clipboard.writeText(this.getTextFromSelectedVideos('tags'))
+    },
+    copyVideoWebsitesToClipboard(){
+      navigator.clipboard.writeText(this.getTextFromSelectedVideos('websites'))
+    },
+		getTextFromSelectedVideos(textType) {
+      let ids = this.$store.getters.getSelectedVideos
+      let vids = this.$store.getters.videos
+      if (ids.length!==0) {
+        let all = []
+        for (let i=0; i<ids.length; i++) {
+          let items = vids.find({id:ids[i]}).value()[textType]
+          all = _.union(all, items)
+        }
+        return all.join(', ')
+      } else return ''
+      // TODO add option for select join delimiter for copied text
     },
     deleteVideos() {
       this.previousSelection = []
