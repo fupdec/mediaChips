@@ -50,19 +50,24 @@
       <v-list dense class="context-menu">
         <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer" @mouseup="addNewTab">
           <v-list-item-title>
-            <v-icon left size="18">mdi-tab-plus</v-icon> Open in a new tab
+            <v-icon left size="18">mdi-tab-plus</v-icon> Open in a New Tab
+          </v-list-item-title>
+          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+        </v-list-item>
+        <v-list-item class="pr-1" link @mouseup="filterVideosByPerformers">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-video</v-icon> Filter Videos by Performers 
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
 
         <v-divider class="ma-1"></v-divider>
 
-          <!-- TODO fix filter by tag -->
-        <!-- <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+        <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on" :disabled="!isSelectedSinglePerformer">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-filter</v-icon> Filter by tag 
+                <v-icon left size="18">mdi-filter</v-icon> Filter Performers by Tag 
               </v-list-item-title>
               <v-icon size="22">mdi-menu-right</v-icon>
             </v-list-item>
@@ -82,19 +87,19 @@
           </v-list>
         </v-menu>
 
-        <v-divider class="ma-1"></v-divider> -->
+        <v-divider class="ma-1"></v-divider>
 
         <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer"
           @mouseup="$store.state.Performers.dialogEditPerformerInfo = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-pencil</v-icon> Edit profile
+            <v-icon left size="18">mdi-pencil</v-icon> Edit Profile
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
         <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer"
           @mouseup="$store.state.Performers.dialogEditPerformerImages = true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-image-edit</v-icon> Edit images
+            <v-icon left size="18">mdi-image-edit</v-icon> Edit Images
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
@@ -122,7 +127,7 @@
             </v-list-item>
             <v-list-item link @mouseup="clearRating">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-star-off</v-icon> Clear rating 
+                <v-icon left size="18">mdi-star-off</v-icon> Clear Rating 
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -140,12 +145,12 @@
           <v-list dense class="context-menu">
             <v-list-item link @mouseup="addToFavorite">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-heart-plus</v-icon> Add to favorite 
+                <v-icon left size="18">mdi-heart-plus</v-icon> Add to Favorite 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="removeFromFavorite">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-heart-remove</v-icon> Remove from favorite 
+                <v-icon left size="18">mdi-heart-remove</v-icon> Remove from Favorite 
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -155,7 +160,7 @@
 
         <v-list-item class="pr-1" link @mouseup="copyPerformerNameToClipboard">
           <v-list-item-title>
-            <v-icon left size="18">mdi-clipboard-text</v-icon> Copy performer name
+            <v-icon left size="18">mdi-clipboard-text</v-icon> Copy Performer Name
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
@@ -164,7 +169,7 @@
         
         <v-list-item class="pr-1" link @mouseup="$store.state.Performers.dialogDeletePerformer = true">
           <v-list-item-title>
-            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete performer
+            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete Performer
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
@@ -287,6 +292,30 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
+    filterVideosByPerformers() {
+      let filters = [{
+        param: 'performers',
+        cond: 'one of',
+        val: this.selectedPerformers().split(', '),
+        type: 'array',
+        flag: null,
+        lock: false,
+      }]
+      this.$store.state.Settings.videoFilters = _.cloneDeep(filters)
+      let tabId = Date.now()
+      let tab = {
+        name: this.$store.getters.videoFiltersForTabName,
+        link: `/videos/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
+        sortBy: 'name',
+        sortDirection: 'asc',
+        page: 1,
+        icon: 'video-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
+    },
     selectedPerformers(list) {
       let ids = this.$store.getters.getSelectedPerformers
       let ps = this.$store.getters.performers
@@ -323,11 +352,15 @@ export default {
       this.$store.commit('updatePerformers')
     },
     filterByTag(tag) {
-      let values = {
-        key: 'tags',
-        value: [tag],
+      let filter = {
+        param: 'tags',
+        cond: 'one of',
+        val: [tag],
+        type: 'array',
+        flag: null,
+        lock: false,
       }
-      this.$store.commit('updateFiltersOfPerformers', values)
+      this.$store.state.Settings.performerFilters.push(filter)
       this.$store.dispatch('filterPerformers')
     },
     getTagColor(tag) {

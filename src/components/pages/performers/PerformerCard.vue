@@ -6,7 +6,8 @@
       :data-id="performer.id" hover outlined height="100%" v-ripple="{ class: 'accent--text' }"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
-        <div v-if="!isNationalityHidden" class="flag-icon">
+        <div v-if="!isNationalityHidden" class="flag-icon" 
+          @click="filterByNationality" @click.middle="addNewTabWithNationality">
           <country-flag :country='findCountryCode(performer.nation)' 
             size='normal' :title="performer.nation" />
         </div>
@@ -93,7 +94,7 @@
 
       <v-card-text v-if="performer.tags.length>0 && !isTagsHidden" class="px-1 py-0">
         <v-chip-group column>
-          <v-chip v-for="tag in performer.tags" :key="tag"
+          <v-chip v-for="tag in performer.tags" :key="tag" @click="filterByTag(tag)"
             :outlined="isChipsColored" :color="getTagColor(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
@@ -349,41 +350,40 @@ export default {
       event.stopPropagation()
     },
     addNewTabWithNationality() {
-      // TODO fix addNewTabWithNationality
-      let key = 'nation'
-      let value = [this.performer.nation]
-      this.$store.commit('updateFiltersOfPerformers', {key, value})
-      this.$store.dispatch('filterPerformers')
-      let tabId = shortid.generate()
-      let tab = { 
-        name: this.performer.nation, 
+      let filters = [{
+        param: 'nation',
+        cond: 'one of',
+        val: [this.performer.nation],
+        type: 'array',
+        flag: null,
+        lock: false,
+      }]
+      this.$store.state.Settings.performerFilters = _.cloneDeep(filters)
+      let tabId = Date.now()
+      let tab = {
+        name: this.$store.getters.performerFiltersForTabName,
         link: `/performers/:${tabId}?tabId=${tabId}`,
         id: tabId,
-        filters: _.cloneDeep(this.$store.state.Performers.filters),
+        filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
+        sortBy: 'name',
+        sortDirection: 'asc',
+        page: 1,
         icon: 'account-outline'
       }
       this.$store.dispatch('addNewTab', tab)
-    },
-    updateTabFiltersForNationality() {
-      // TODO fix updateTabFiltersForNationality
-      let newFilters = _.cloneDeep(this.$store.state.Performers.filters)
-      if (this.tabId === 'default') {
-        this.$store.state.Performers.filtersReserved = newFilters
-      } else {
-        this.$store.getters.tabsDb.find({id: this.tabId}).assign({
-          name: this.$store.getters.performersFilters,
-          filters: newFilters,
-        }).write()
-        this.$store.commit('getTabsFromDb')
-      }
+      this.$router.push(tab.link)
     },
     filterByNationality() {
-      // TODO fix filterByNationality
-      let key = 'nation'
-      let value = [this.performer.nation]
-      this.$store.commit('updateFiltersOfPerformers', {key, value})
+      let filter = {
+        param: 'nation',
+        cond: 'one of',
+        val: [this.performer.nation],
+        type: 'array',
+        flag: null,
+        lock: false,
+      }
+      this.$store.state.Settings.performerFilters.push(filter)
       this.$store.dispatch('filterPerformers')
-      this.updateTabFiltersForNationality()
     },
     openPerformerPage() {
       this.$router.push(`/performer/:${this.performer.id}?tabId=default`)
@@ -520,6 +520,18 @@ export default {
       this.$nextTick(() => {
         this.$store.state.Performers.menuCard = true
       })
+    },
+    filterByTag(tag) {
+      let filter = {
+        param: 'tags',
+        cond: 'one of',
+        val: [tag],
+        type: 'array',
+        flag: null,
+        lock: false,
+      }
+      this.$store.state.Settings.performerFilters.push(filter)
+      this.$store.dispatch('filterPerformers')
     },
   },
   watch: {
