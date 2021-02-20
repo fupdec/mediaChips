@@ -173,6 +173,8 @@
       <v-card-actions>
         <v-btn @click="$store.state.Performers.dialogFilterPerformers=false" class="ma-4 mt-0">Cancel</v-btn>
         <v-spacer></v-spacer>
+        <v-btn v-if="filters.length>5" @click="removeAll" class="ma-4 mt-0" color="red" dark>
+          <v-icon left>mdi-close</v-icon>Remove all</v-btn>
         <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
           <v-icon left>mdi-tab-plus</v-icon>Add new tab</v-btn>
         <v-btn @click="applyFilters" class="ma-4 mt-0" color="primary">
@@ -209,9 +211,11 @@ export default {
         if (type=='boolean') this.paramTypeBoolean.push(name)
         if (type=='date') this.paramTypeDate.push(name)
       }
+      this.filters = _.cloneDeep(this.$store.state.Settings.performerFilters)
     })
   },
   data: () => ({
+    filters: [],
     params: ['name','tags','category','rating','favorite','bookmark','birthday','start','end','nation','ethnicity','hair','eyes','height','weight','boobs','cups','bra','waist','hip','date','edit'],
     paramTypeNumber: ['rating','height','weight','bra','waist','hip','start','end',],
     paramTypeString: ['name',],
@@ -223,14 +227,6 @@ export default {
     pickerIndex: 0,
   }),
   computed: {
-    filters: {
-      get() {
-        return this.$store.state.Settings.performerFilters
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'performerFilters', value})
-      },
-    },
     tags() {
       let tags = this.$store.getters.tags.filter(t=>(t.category.includes('performer')))
       return tags.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
@@ -372,6 +368,9 @@ export default {
       const index = this.filters[i].val.indexOf(item.name)
       if (index >= 0) this.filters[i].val.splice(index, 1)
       this.$store.state.hoveredImage = false
+    },
+    removeAll() { 
+      this.filters = _.filter(this.filters, {lock: true})
     },
     addNewTab() {
       let tabId = Date.now()

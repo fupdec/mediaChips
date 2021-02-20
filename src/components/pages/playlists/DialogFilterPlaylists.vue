@@ -71,9 +71,10 @@
         </v-card-text>
       </vuescroll>
       <v-card-actions>
-        <!-- TODO create copy of filters on dialog opened and restore if pressed cancel -->
         <v-btn @click="$store.state.Playlists.dialogFilterPlaylists=false" class="ma-4 mt-0">Cancel</v-btn>
         <v-spacer></v-spacer>
+        <v-btn v-if="filters.length>5" @click="removeAll" class="ma-4 mt-0" color="red" dark>
+          <v-icon left>mdi-close</v-icon>Remove all</v-btn>
         <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
           <v-icon left>mdi-tab-plus</v-icon>Add new tab</v-btn>
         <v-btn @click="applyFilters" class="ma-4 mt-0" color="primary">
@@ -96,9 +97,11 @@ export default {
   mixins: [ShowImageFunction], 
   mounted() {
     this.$nextTick(function () {
+      this.filters = _.cloneDeep(this.$store.state.Settings.playlistFilters)
     })
   },
   data: () => ({
+    filters: [],
     params: ['name','favorite','date','edit'],
     paramTypeNumber: [],
     paramTypeString: ['name'],
@@ -110,14 +113,6 @@ export default {
     datePickerIndex: 0,
   }),
   computed: {
-    filters: {
-      get() {
-        return this.$store.state.Settings.playlistFilters
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'playlistFilters', value})
-      },
-    },
     tabId() {
       return this.$route.query.tabId
     },
@@ -171,6 +166,9 @@ export default {
     },
     removeFilter(i) {
       this.filters.splice(i, 1)
+    },
+    removeAll() { 
+      this.filters = _.filter(this.filters, {lock: true})
     },
     applyFilters() {
       this.$store.state.Settings.playlistFilters = _.cloneDeep(this.filters)
