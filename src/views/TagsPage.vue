@@ -127,22 +127,33 @@
     <v-menu v-model="$store.state.Tags.menuCard" :position-x="$store.state.x" 
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
+        <v-list-item link @click="filterVideosByTag" :disabled="!isSelectedTagsOnlyWithVideoCategory">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-video</v-icon> Filter Videos by Tag 
+          </v-list-item-title>
+        </v-list-item>
+        <v-list-item link @click="filterPerformersByTag" :disabled="!isSelectedTagsOnlyWithPerformerCategory">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-account</v-icon> Filter Performers by Tag 
+          </v-list-item-title>
+        </v-list-item>
+        <v-divider class="ma-1"></v-divider>
         <v-list-item link @click="$store.state.Tags.dialogEditTag = true"
           :disabled="!isSelectedSingleTag">
           <v-list-item-title>
-            <v-icon left size="18">mdi-pencil</v-icon> Edit tag
+            <v-icon left size="18">mdi-pencil</v-icon> Edit Tag
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
         <v-list-item link @click="copyTagNameToClipboard">
           <v-list-item-title>
-            <v-icon left size="18">mdi-clipboard-text</v-icon> Copy tag name
+            <v-icon left size="18">mdi-clipboard-text</v-icon> Copy Tag Name
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
         <v-list-item link @click="$store.state.Tags.dialogDeleteTag = true">
           <v-list-item-title>
-            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete tag
+            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete Tag
           </v-list-item-title>
         </v-list-item>
       </v-list>
@@ -314,6 +325,34 @@ export default {
         return this.$store.getters.tabsDb.find({id: +this.tabId}).value()    
       }
     },
+    isSelectedTagsOnlyWithVideoCategory() {
+      let ids = this.$store.getters.getSelectedTags
+      let tags = this.$store.getters.tags
+      if (ids.length!==0) {
+        let categories = []
+        for (let i=0; i<ids.length; i++) {
+          if (tags.find({ id: ids[i], category: ['video']}).value()) {
+            categories.push(true)
+          } else categories.push(false) 
+        }
+        console.log(!categories.includes(false))
+        return !categories.includes(false)
+      } else return false
+    },
+    isSelectedTagsOnlyWithPerformerCategory() {
+      let ids = this.$store.getters.getSelectedTags
+      let tags = this.$store.getters.tags
+      if (ids.length!==0) {
+        let categories = []
+        for (let i=0; i<ids.length; i++) {
+          if (tags.find({ id: ids[i], category: ['performer']}).value()) {
+            categories.push(true)
+          } else categories.push(false) 
+        }
+        console.log(!categories.includes(false))
+        return !categories.includes(false)
+      } else return false
+    },
   },
   methods: {
     selectedTags(list) {
@@ -375,6 +414,54 @@ export default {
       }
       this.$store.state.Settings.tagFilters = newFilters
       this.$store.dispatch('filterTags', true)
+    },
+    filterVideosByTag() {
+      let filters = [{
+        param: 'tags',
+        cond: 'one of',
+        val: this.selectedTags().split(', '),
+        type: 'array',
+        flag: null,
+        lock: false,
+      }]
+      this.$store.state.Settings.videoFilters = _.cloneDeep(filters)
+      let tabId = Date.now()
+      let tab = {
+        name: this.$store.getters.videoFiltersForTabName,
+        link: `/videos/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
+        sortBy: 'name',
+        sortDirection: 'asc',
+        page: 1,
+        icon: 'video-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
+    },
+    filterPerformersByTag() {
+      let filters = [{
+        param: 'tags',
+        cond: 'one of',
+        val: this.selectedTags().split(', '),
+        type: 'array',
+        flag: null,
+        lock: false,
+      }]
+      this.$store.state.Settings.performerFilters = _.cloneDeep(filters)
+      let tabId = Date.now()
+      let tab = {
+        name: this.$store.getters.performerFiltersForTabName,
+        link: `/performers/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
+        sortBy: 'name',
+        sortDirection: 'asc',
+        page: 1,
+        icon: 'account-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
     },
   },
   watch: {
