@@ -59,7 +59,7 @@
 
     <v-dialog v-model="dialogAddToPlaylist" max-width="420">
       <v-card class="add-playlist">
-        <v-card-title class="headline py-1">Add to playlist
+        <v-card-title class="headline py-1">Add to Playlist
           <v-spacer></v-spacer>
           <v-icon>mdi-playlist-plus</v-icon>
         </v-card-title>
@@ -92,10 +92,11 @@
       <v-list dense class="context-menu">
         <v-list-item  class="pr-1" link @mouseup="dialogAddToPlaylist=true">
           <v-list-item-title>
-            <v-icon left size="18">mdi-playlist-plus</v-icon> Add to playlist
+            <v-icon left size="18">mdi-playlist-plus</v-icon> Add to Playlist
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
+        <!-- TODO create menu with playlists and place into it button "Watch later" -->
 
         <v-list-item  class="pr-1" link @mouseup="watchLater">
           <v-list-item-title>
@@ -146,7 +147,7 @@
             </v-list-item>
             <v-list-item link @mouseup="clearRating">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-star-off</v-icon> Clear rating 
+                <v-icon left size="18">mdi-star-off</v-icon> Clear Rating 
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -164,12 +165,12 @@
           <v-list dense class="context-menu">
             <v-list-item link @mouseup="addToFavorite">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-heart-plus</v-icon> Add to favorite 
+                <v-icon left size="18">mdi-heart-plus</v-icon> Add to Favorite 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="removeFromFavorite">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-heart-remove</v-icon> Remove from favorite 
+                <v-icon left size="18">mdi-heart-remove</v-icon> Remove from Favorite 
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -187,22 +188,22 @@
           <v-list dense class="context-menu">
             <v-list-item link @mouseup="copyPerformers" :disabled="!isSelectedSingleVideo">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-account-multiple-outline</v-icon>Copy performers 
+                <v-icon left size="18">mdi-account-multiple-outline</v-icon>Copy Performers 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="addPerformers" :disabled="isPerformersClipboardEmpty">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-account-plus</v-icon>Add performers 
+                <v-icon left size="18">mdi-account-plus</v-icon>Add Performers 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="replacePerformers" :disabled="isPerformersClipboardEmpty">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-account-multiple</v-icon>Replace performers 
+                <v-icon left size="18">mdi-account-multiple</v-icon>Replace Performers 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="removePerformers">
               <v-list-item-title>
-                <v-icon left size="18" color="red">mdi-account-remove</v-icon>Remove all performers
+                <v-icon left size="18" color="red">mdi-account-remove</v-icon>Remove all Performers
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -220,27 +221,27 @@
           <v-list dense class="context-menu">
             <v-list-item link @mouseup="copyTags" :disabled="!isSelectedSingleVideo">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-tag-multiple-outline</v-icon>Copy tags 
+                <v-icon left size="18">mdi-tag-multiple-outline</v-icon>Copy Tags 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="addTags" :disabled="isTagsClipboardEmpty">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-tag-plus</v-icon>Add tags 
+                <v-icon left size="18">mdi-tag-plus</v-icon>Add Tags 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="replaceTags" :disabled="isTagsClipboardEmpty">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-tag-multiple</v-icon>Replace tags 
+                <v-icon left size="18">mdi-tag-multiple</v-icon>Replace Tags 
               </v-list-item-title>
             </v-list-item>
             <v-list-item link @mouseup="removeTags">
               <v-list-item-title>
-                <v-icon left size="18" color="red">mdi-tag-remove</v-icon>Remove all tags
+                <v-icon left size="18" color="red">mdi-tag-remove</v-icon>Remove all Tags
               </v-list-item-title>
             </v-list-item>
           </v-list>
         </v-menu>
-        <!-- <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
+        <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
               <v-list-item-title> 
@@ -251,36 +252,55 @@
           </template>
           
           <v-list dense class="context-menu">
-            <v-list-item link @mouseup="copyWebsite" :disabled="!isSelectedSingleVideo">
+            <v-list-item link @mouseup="copyWebsites" :disabled="!isSelectedSingleVideo">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-content-copy</v-icon>Copy website 
+                <v-icon left size="18">mdi-content-copy</v-icon>Copy Websites 
               </v-list-item-title>
             </v-list-item>
-            <v-list-item link @mouseup="addWebsite" :disabled="isWebsiteClipboardEmpty">
+            <v-list-item link @mouseup="addWebsites" :disabled="isWebsitesClipboardEmpty">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-content-paste</v-icon>Paste website 
+                <v-icon left size="18">mdi-content-paste</v-icon>Paste Websites
               </v-list-item-title>
             </v-list-item>
-            <v-list-item link @mouseup="removeWebsite">
+            <v-list-item link @mouseup="replaceWebsites" :disabled="isWebsitesClipboardEmpty">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-content-paste</v-icon>Replace Websites 
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item link @mouseup="removeWebsites">
               <v-list-item-title>
-                <v-icon left size="18" color="red">mdi-delete</v-icon>Remove website
+                <v-icon left size="18" color="red">mdi-delete</v-icon>Remove Websites
               </v-list-item-title>
             </v-list-item>
           </v-list>
-        </v-menu> -->
-        <!-- TODO recreate website function from type string to array -->
+        </v-menu>
 
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @mouseup="copyVideoPathToClipboard">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-clipboard-text</v-icon> Copy video path
-          </v-list-item-title>
-        </v-list-item>
-        <v-list-item link @mouseup="copyVideoNameToClipboard">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-clipboard-list</v-icon> Copy video name
-          </v-list-item-title>
-        </v-list-item>
+        
+        <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
+          <template v-slot:activator="{ on, attrs }">
+            <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-clipboard-text</v-icon> Copy To Clipboard 
+              </v-list-item-title>
+              <v-icon size="22">mdi-menu-right</v-icon>
+            </v-list-item>
+          </template>
+          
+          <v-list dense class="context-menu">
+            <v-list-item link @mouseup="copyVideoPathToClipboard">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-file-find</v-icon> Video Path 
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item link @mouseup="copyVideoNameToClipboard">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-alphabetical-variant</v-icon> Video Name
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        
         <v-divider class="ma-1"></v-divider>
         
         <v-list-item class="pr-1" link @mouseup="$store.state.Videos.dialogDeleteVideo = true">
@@ -389,7 +409,7 @@ export default {
     previousSelection: [],
     performersClipboard: [],
     tagsClipboard: [],
-    websiteClipboard: '',
+    websitesClipboard: [],
     dialogAddToPlaylist: false,
     selectedPlaylist: null,
   }),
@@ -414,8 +434,8 @@ export default {
     isTagsClipboardEmpty() {
       return this.tagsClipboard.length == 0
     },
-    isWebsiteClipboardEmpty() {
-      return this.websiteClipboard === ''
+    isWebsitesClipboardEmpty() {
+      return this.websitesClipboard.length == 0
     },
     playlists() {
       return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value()
@@ -554,29 +574,40 @@ export default {
         })
       }
     },
-    // copyWebsite() {
-    //   let videoId = this.$store.getters.getSelectedVideos[0]
-    //   this.websiteClipboard = this.$store.getters.videos.find({id:videoId}).value().website
-    // },
-    // addWebsite() {
-    //   let ids = this.$store.getters.getSelectedVideos
-    //   let vids = this.$store.getters.videos
-    //   if (ids.length!==0) {
-    //     ids.map(i => {
-    //       let vid = vids.find({id:i})
-    //       vid.assign({website:this.websiteClipboard}).write()
-    //     })
-    //   }
-    // },
-    // removeWebsite() {
-    //   let ids = this.$store.getters.getSelectedVideos
-    //   let vids = this.$store.getters.videos
-    //   if (ids.length!==0) {
-    //     ids.map(i => {
-    //       vids.find({id:i}).assign({website:''}).write()
-    //     })
-    //   }
-    // },
+    copyWebsites() {
+      let videoId = this.$store.getters.getSelectedVideos[0]
+      this.websitesClipboard = this.$store.getters.videos.find({id:videoId}).value().websites
+    },
+    addWebsites() {
+      let ids = this.$store.getters.getSelectedVideos
+      let vids = this.$store.getters.videos
+      if (ids.length!==0) {
+        ids.map(i => {
+          let vid = vids.find({id:i})
+          let websites = vid.value().websites
+          websites = _.union(websites, this.websitesClipboard).sort()
+          vid.assign({websites:websites, edit:Date.now()}).write()
+        })
+      }
+    },
+    replaceWebsites() {
+      let ids = this.$store.getters.getSelectedVideos
+      let vids = this.$store.getters.videos
+      if (ids.length!==0) {
+        ids.map(i => {
+          vids.find({id:i}).assign({websites:this.websitesClipboard, edit:Date.now()}).write()
+        })
+      }
+    },
+    removeWebsites() {
+      let ids = this.$store.getters.getSelectedVideos
+      let vids = this.$store.getters.videos
+      if (ids.length!==0) {
+        ids.map(i => {
+          vids.find({id:i}).assign({websites:[], edit:Date.now()}).write()
+        })
+      }
+    },
     copyVideoPathToClipboard(){
       navigator.clipboard.writeText(this.selectedVideosPaths)
     },
