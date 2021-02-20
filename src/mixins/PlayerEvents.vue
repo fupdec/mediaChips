@@ -50,6 +50,7 @@ export default {
           video.tags.sort()
           this.$store.getters.videos.find({ id: video.id }).assign({ 
             tags: video.tags,
+            edit: Date.now(),
           }).write()
           this.$store.commit('updateVideos')
         }
@@ -59,6 +60,7 @@ export default {
           video.performers.sort()
           this.$store.getters.videos.find({ id: video.id }).assign({ 
             performers: video.performers,
+            edit: Date.now(),
           }).write()
           this.$store.commit('updateVideos')
         }
