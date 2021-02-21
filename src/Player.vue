@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main app>
-      <VideoPlayer />
+      <VideoPlayer @toggleFullscreen="toggleFullscreen"/>
     </v-main>
     
     <img 
@@ -17,8 +17,6 @@
 console.clear()
 
 const {app} = require('electron').remote
-const fs = require("fs")
-const path = require("path")
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 
@@ -37,6 +35,14 @@ export default {
   data: () => ({
   }),
   computed: {
+    fullscreen: {
+      get() {
+        return this.$store.state.fullscreen
+      },
+      set(value) {
+        this.$store.state.fullscreen = value
+      },
+    },
     hoveredImageId() {
       return this.$store.state.hoveredImageId
     },
@@ -57,6 +63,14 @@ export default {
     },
   },
   methods: {
+    toggleFullscreen() {
+      if (this.fullscreen) {
+        document.exitFullscreen()
+      } else {
+        document.getElementById('app').requestFullscreen()
+      }
+      this.fullscreen = !this.fullscreen
+    },
   },
 }
 </script>

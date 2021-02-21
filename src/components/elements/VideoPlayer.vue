@@ -1,7 +1,7 @@
 <template>
   <div class="video-player-wrapper">
-    <v-card class="video-player" :outlined="!maximized">
-      <v-card-title class="pa-0 title-bar" :class="{maximized:maximized}">
+    <v-card class="video-player" :outlined="!maximized&&!fullscreen">
+      <v-card-title class="pa-0 title-bar" :class="{maximized:maximized,fullscreen:fullscreen,}">
         <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile width="46">
@@ -130,7 +130,7 @@
         </div>
       </v-card-title>
       <div class="video-player-container">
-        <VlcPlayer ref="player" @nowPlaying="updateNowPlaying($event)"/>
+        <VlcPlayer ref="player" @toggleFullscreen="toggleFullscreen" @nowPlaying="updateNowPlaying($event)"/>
       </div>
     </v-card>
     <v-dialog v-model="dialogFileInfo" max-width="600" scrollable>
@@ -187,7 +187,7 @@
         </vuescroll>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogEditThumb" max-width="600" scrollable>
+    <!-- <v-dialog v-model="dialogEditThumb" max-width="600" scrollable>
       <v-card>
         <vuescroll>
           <v-card-text>
@@ -219,7 +219,7 @@
           </v-card-text>
         </vuescroll>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
     <!-- <v-dialog v-model="dialogAddToPlaylist" max-width="420">
       <v-card class="add-playlist">
         <v-card-title class="headline py-1">Add to playlist
@@ -314,9 +314,6 @@ export default {
     })
   },
   beforeDestroy() {
-    // if (this.player) {
-    //   this.player.dispose()
-    // }
     win.removeAllListeners()
   },
   data: () => ({
@@ -380,6 +377,9 @@ export default {
     },
     settingsDb() {
       return this.$store.state.settingsDb
+    },
+    fullscreen() {
+      return this.$store.state.fullscreen
     },
   },
   methods: {
@@ -558,6 +558,9 @@ export default {
       this.$refs.player.stop()
       ipcRenderer.send('closePlayer')
     },
+    toggleFullscreen() {
+      this.$emit("toggleFullscreen")
+    },
   },
 }
 </script>
@@ -595,6 +598,9 @@ export default {
     }
     &.maximized:before {
       top: 0;
+    }
+    &.fullscreen {
+      display: none;
     }
     .v-btn, .v-rating, .v-icon {
       -webkit-app-region: no-drag !important;

@@ -27,6 +27,7 @@ export default new Vuex.Store({
     markersDb: null,
     bookmarksDb: null,
     settingsDb: null,
+    fullscreen: false,
   }),
   getters: {
     getPathToUserData(state) {

@@ -445,22 +445,6 @@
 
 
 <script>
-// TODO
-// dont fire scroll event on media information
-
-// copy entire api from HtmlVideoElement for this
-// https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement
-// https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
-// Inherited members are still required
-
-// Fix setting src to ''
-// figure out audio device switching
-// Add fullscreen to video submenu? How will we handle this
-// Chromecast support? lmao nee
-
-// on loadeddata (when width and height of frame are known, set element size to proper dimensions,
-// (what happens for size on src change for htmlvideo?))
-// fix key press for control player
 const { ipcRenderer } = require('electron')
 const fs = require("fs")
 const path = require('path')
@@ -492,7 +476,6 @@ export default {
     this.player?.destroy?.();
     document.removeEventListener("mousemove", this.controlsMove);
     document.removeEventListener("mouseup", this.controlsUp);
-    document.removeEventListener("fullscreenchange", this.changeFullscreen);
     window.removeEventListener('resize', this.getCanvasSizes)
   },
   async mounted() {
@@ -508,7 +491,6 @@ export default {
 
     document.addEventListener("mousemove", this.controlsMove, false);
     document.addEventListener("mouseup", this.controlsUp, false);
-    document.addEventListener("fullscreenchange", this.changeFullscreen, false);
 
     ipcRenderer.on('getDataForPlayer', (event, data) => {
       this.updateVideoPlayer(data)
@@ -536,7 +518,6 @@ export default {
     moveTimeout: -1,
     showBufferTimeout: -1,
     hideControls: false,
-    fullscreen: false,
     mouseOverControls: false,
     // Video element properties //
     defaultPlaybackRate: 1,
@@ -578,6 +559,14 @@ export default {
     markersType: ['tag','performer','favorite','bookmark'],
   }),
   computed: {
+    fullscreen: {
+      get() {
+        return this.$store.state.fullscreen
+      },
+      set(value) {
+        this.$store.state.fullscreen = value
+      },
+    },
     currentSrc() {
       return this.src;
     },
@@ -849,9 +838,6 @@ export default {
         this.buffering = false;
       }, 500);
     },
-    changeFullscreen() {
-      this.fullscreen = document.fullscreenElement === this.$refs.player;
-    },
     moveOverPlayer(e) {
       if (e.movementX > 0 || e.movementY > 0) {
         this.hideControls = false;
@@ -925,12 +911,7 @@ export default {
       this.$emit("loadstart");
     },
     toggleFullscreen() {
-      if (this.fullscreen) {
-        document.exitFullscreen()
-      } else {
-        let container = this.$refs.player
-        container.requestFullscreen()
-      }
+      this.$emit("toggleFullscreen")
       setTimeout(() => {
         this.getCanvasSizes()
       }, 100)
