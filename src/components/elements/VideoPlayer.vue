@@ -115,8 +115,7 @@
           <v-btn v-else text tile small width="46" height="32" @click="maximize">
             <v-icon size="14">mdi-square-outline</v-icon>
           </v-btn>
-          <v-btn text tile small width="46" height="32" @click="close" 
-            class="close-app-btn" color="#d70000"> 
+          <v-btn text tile small width="46" height="32" @click="close" class="close-app-btn"> 
             <v-icon size="18">mdi-window-close</v-icon>
           </v-btn>
         </div>
@@ -299,9 +298,6 @@ export default {
       // if (!fs.existsSync(path.join(this.pathToUserData, 'media/markers'))){
       //   fs.mkdirSync(path.join(this.pathToUserData, 'media/markers'))
       // }
-      // include ffmpeg
-      // ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
-      // ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
     })
   },
   beforeDestroy() {
@@ -693,11 +689,11 @@ export default {
   .v-btn:not(.v-btn--round).v-size--small {
     min-width: 0;
   }
+  .v-btn.close-app-btn:before {
+    color: rgb(215, 0, 0);
+  }
   .v-btn.close-app-btn:hover::before {
     opacity: 1;
-  }
-  .v-btn.close-app-btn .v-icon {
-    color: #fff;
   }
   .v-btn.close-app-btn:hover .v-icon {
     color: #fff;

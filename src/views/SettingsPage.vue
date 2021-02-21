@@ -525,6 +525,11 @@
 
 
 <script>
+const path = require("path")
+const { spawn } = require( 'child_process' )
+const shell = require('electron').shell
+const { ipcRenderer } = require('electron')
+
 import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
@@ -532,10 +537,6 @@ import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
 import ManagePerformerParameters from '@/components/pages/settings/ManagePerformerParameters.vue'
 import EditPerformerItemsOfParameter from '@/components/pages/settings/EditPerformerItemsOfParameter.vue'
 import vuescroll from 'vuescroll'
-const fs = require('fs-extra')
-const path = require("path")
-const { spawn } = require( 'child_process' )
-const shell = require('electron').shell
 
 export default {
   name: 'SettingsPage',
@@ -688,6 +689,7 @@ export default {
       set(value) {
         this.$vuetify.theme.dark = value
         this.$store.dispatch('updateSettingsState', {key:'darkMode', value})
+        ipcRenderer.send('toggleDarkMode', value)
       },
     },
     headerGradient: {

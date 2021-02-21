@@ -261,3 +261,6 @@ ipcMain.on('addMarker', (event, marker, markerTag, video) => {
 ipcMain.on('removeMarker', (event, markerForRemove, video) => {
   win.webContents.send( 'removeMarker', markerForRemove, video )
 }) 
+ipcMain.on('toggleDarkMode', (event, value) => {
+  player.webContents.send( 'toggleDarkMode', value )
+})

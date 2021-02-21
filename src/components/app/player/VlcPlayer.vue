@@ -499,6 +499,10 @@ export default {
       this.player.stop()
     })
     window.addEventListener('resize', this.getCanvasSizes)
+    
+    // include ffmpeg
+    ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
+    ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
   },
   data: () => ({
     canvasSizes: '',

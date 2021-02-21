@@ -92,7 +92,8 @@ const win = remote.getCurrentWindow()
 const axios = require("axios")
 const cheerio = require("cheerio")
 const shell = require('electron').shell
-const chokidar = require('chokidar');
+const chokidar = require('chokidar')
+const { ipcRenderer } = require('electron')
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -156,6 +157,7 @@ export default {
         }
         if(event.altKey && event.keyCode === 68) { // alt+d
           this.darkMode = !this.$store.state.Settings.darkMode
+          ipcRenderer.send('toggleDarkMode', this.darkMode)
           return
         }
       })

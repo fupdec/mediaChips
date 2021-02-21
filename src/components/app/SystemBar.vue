@@ -309,6 +309,7 @@ export default {
       let darkModeValue = !this.$store.state.Settings.darkMode
       this.$vuetify.theme.dark = darkModeValue
       this.$store.dispatch('updateSettingsState', {key:'darkMode', value:darkModeValue})
+      ipcRenderer.send('toggleDarkMode', darkModeValue)
     },
     back() {
       this.$router.go(-1)

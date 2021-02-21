@@ -17,6 +17,7 @@
 console.clear()
 
 const {app} = require('electron').remote
+const { ipcRenderer } = require('electron')
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 
@@ -29,7 +30,9 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.$store.state.pathToUserData = app.getPath('userData')
-      this.$vuetify.theme.dark = true
+      ipcRenderer.on('toggleDarkMode', (event, value) => {
+        this.getDarkMode(value)
+      })
     })
   },
   data: () => ({
@@ -61,6 +64,9 @@ export default {
         return this.getImgWebsiteUrl(this.hoveredImageId)
       }
     },
+    settingsDb() {
+      return this.$store.state.settingsDb
+    },
   },
   methods: {
     toggleFullscreen() {
@@ -70,6 +76,19 @@ export default {
         document.getElementById('app').requestFullscreen()
       }
       this.fullscreen = !this.fullscreen
+    },
+    getDarkMode(value) {
+      if (value !== null) {
+        this.$vuetify.theme.dark = value
+      } else {
+        if (this.settingsDb===null) this.$vuetify.theme.dark = false
+        else this.$vuetify.theme.dark = this.settingsDb.darkMode 
+      }
+    },
+  },
+  watch: {
+    settingsDb() {
+      this.getDarkMode()
     },
   },
 }
