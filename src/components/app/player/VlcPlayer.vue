@@ -144,8 +144,7 @@
           <div v-if="markers.length">
             <div v-for="marker in markers" :key="marker.id">
               <div @click="jumpTo(marker.time)" v-if="(markersType.includes(marker.type.toLowerCase()))" class="marker">
-                <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb" 
-                  gradient="to bottom, rgba(0, 0, 0, 0.5), transparent">
+                <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb" :gradient="markerGradient">
                   <span class="time">{{msToTime(marker.time*1000)}}</span>
                   <div class="name">
                     <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
@@ -693,6 +692,10 @@ export default {
     },
     settingsDb() {
       return this.$store.state.settingsDb
+    },
+    markerGradient() {
+      if (this.$vuetify.theme.dark) return 'to bottom, rgba(0, 0, 0, 0.5), transparent'
+      else return 'to bottom, rgba(255, 255, 255, 0.5), transparent'
     },
   },
   methods: {
@@ -1525,6 +1528,22 @@ export default {
     bottom: 0;
     border-radius: 0 5px 0 0;
     background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+.theme--light {
+  .vlc-controls {
+    .timeline {
+      .tooltip {
+        background-color: rgba(255, 255, 255, 0.75);
+      }
+    }
+  }
+  .markers-wrapper {
+    .marker {
+      .time {
+        background-color: rgba(236, 236, 236, 0.6);
+      }
+    }
   }
 }
 .status-text {
