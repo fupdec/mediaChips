@@ -4,14 +4,6 @@
       <v-card-title class="pa-0 title-bar" :class="{maximized:maximized,fullscreen:fullscreen,}">
         <!-- <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn @click="playVideoInSystemPlayer" v-on="on" icon tile width="46">
-              <v-icon>mdi-television-play</v-icon> 
-            </v-btn>
-          </template>
-          <span>Play video in system player</span>
-        </v-tooltip> -->
-        <!-- <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
             <v-btn @click="editVideoInfo" v-on="on" icon tile>
               <v-icon>mdi-movie-edit-outline</v-icon>
             </v-btn>
@@ -133,7 +125,7 @@
         <VlcPlayer ref="player" @toggleFullscreen="toggleFullscreen" @nowPlaying="updateNowPlaying($event)"/>
       </div>
     </v-card>
-    <v-dialog v-model="dialogFileInfo" max-width="600" scrollable>
+    <!-- <v-dialog v-model="dialogFileInfo" max-width="600" scrollable>
       <v-card>
         <v-card-title class="headline">File info</v-card-title>
         <v-divider></v-divider>
@@ -186,7 +178,7 @@
           </v-card-text>
         </vuescroll>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
     <!-- <v-dialog v-model="dialogEditThumb" max-width="600" scrollable>
       <v-card>
         <vuescroll>
@@ -255,35 +247,34 @@
 
 <script>
 const _ = require("lodash")
-const fs = require("fs")
-const path = require("path")
-const ffmpeg = require('fluent-ffmpeg')
-const { spawn } = require( 'child_process' )
-const { ipcRenderer, shell } = require('electron')
+// const fs = require("fs")
+// const path = require("path")
+// const ffmpeg = require('fluent-ffmpeg')
+const { ipcRenderer } = require('electron')
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
 
-import vueFilePond from 'vue-filepond'
-import 'filepond/dist/filepond.min.css'
-import FilePondPluginFileEncode from 'filepond-plugin-file-encode'
-import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type'
-const FilePond = vueFilePond(FilePondPluginFileEncode, FilePondPluginFileValidateType)
+// import vueFilePond from 'vue-filepond'
+// import 'filepond/dist/filepond.min.css'
+// import FilePondPluginFileEncode from 'filepond-plugin-file-encode'
+// import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type'
+// const FilePond = vueFilePond(FilePondPluginFileEncode, FilePondPluginFileValidateType)
 
-import vuescroll from 'vuescroll'
-import CropImage from '@/mixins/CropImage'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
-import LabelFunctions from '@/mixins/LabelFunctions'
-import Functions from '@/mixins/Functions'
+// import vuescroll from 'vuescroll'
+// import CropImage from '@/mixins/CropImage'
+// import ShowImageFunction from '@/mixins/ShowImageFunction'
+// import LabelFunctions from '@/mixins/LabelFunctions'
+// import Functions from '@/mixins/Functions'
 import VlcPlayer from '@/components/app/player/VlcPlayer'
 
 export default {
   name: 'VideoPlayer',
   components: {
-    FilePond,
-    vuescroll,
+    // FilePond,
+    // vuescroll,
     VlcPlayer,
   },
-  mixins: [CropImage, ShowImageFunction, LabelFunctions, Functions],
+  // mixins: [CropImage, ShowImageFunction, LabelFunctions, Functions],
   async beforeCreate() {
     // get databases from main window
     await this.$store.dispatch('getDb', 'videos')
@@ -301,68 +292,68 @@ export default {
     })
   },
   created() {
-    this.$set(this.images, 'thumb', this.getImageObject())
+    // this.$set(this.images, 'thumb', this.getImageObject())
   },
   mounted() {
     this.$nextTick(function () {
-      if (!fs.existsSync(path.join(this.pathToUserData, 'media/markers'))){
-        fs.mkdirSync(path.join(this.pathToUserData, 'media/markers'))
-      }
+      // if (!fs.existsSync(path.join(this.pathToUserData, 'media/markers'))){
+      //   fs.mkdirSync(path.join(this.pathToUserData, 'media/markers'))
+      // }
       // include ffmpeg
-      ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
-      ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
+      // ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
+      // ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
     })
   },
   beforeDestroy() {
     win.removeAllListeners()
   },
   data: () => ({
-    playlist: [],
-    playIndex: 0,
-    videoWidth: 480,
-    videoHeight: 320,
-    fps: null,
-    resolution: null,
-    codec: null,
-    bitrate: null,
-    isVideoAvailable: true,
-    imgThumbLoading: null,
-    dialogFileInfo: false,
-    dialogEditThumb: false,
-    uploadedImage: null,
-    player: null,
+    // playlist: [],
+    // playIndex: 0,
+    // videoWidth: 480,
+    // videoHeight: 320,
+    // fps: null,
+    // resolution: null,
+    // codec: null,
+    // bitrate: null,
+    // isVideoAvailable: true,
+    // imgThumbLoading: null,
+    // dialogFileInfo: false,
+    // dialogEditThumb: false,
+    // uploadedImage: null,
+    // player: null,
     maximized: win.isMaximized(),
     nowPlaying: '',
   }),
   computed: {
-    playlists() {
-      if (this.playlistsDb === null) return []
-      return _.filter(this.playlistsDb, list=>(list.name!='Watch later'))
-    },
-    videoDateAdded() {
-      if (this.video === null) {
-        return ''
-      } else {
-        return new Date(this.video.date).toLocaleString()
-      }
-    },
+    // playlists() {
+    //   if (this.playlistsDb === null) return []
+    //   return _.filter(this.playlistsDb, list=>(list.name!='Watch later'))
+    // },
+    // videoDateAdded() {
+    //   if (this.video === null) {
+    //     return ''
+    //   } else {
+    //     return new Date(this.video.date).toLocaleString()
+    //   }
+    // },
     // tagsAll() {
     //   if (this.tagsDb === null) return []
     //   return _.filter(this.tagsDb, t=>(t.category.includes('video')))
     // },
-    pathToUserData() {
-      return this.$store.getters.getPathToUserData
-    },
-    isWatchLater() {
-      if (this.video === null) {
-        return false
-      } else {
-        if (this.playlistsDb === null) return false
-        let playlist = _.find(this.playlistsDb, {name:'Watch later'})
-        console.log(this.video.id)
-        return playlist.videos.includes(this.video.id)
-      }
-    },
+    // pathToUserData() {
+    //   return this.$store.getters.getPathToUserData
+    // },
+    // isWatchLater() {
+    //   if (this.video === null) {
+    //     return false
+    //   } else {
+    //     if (this.playlistsDb === null) return false
+    //     let playlist = _.find(this.playlistsDb, {name:'Watch later'})
+    //     console.log(this.video.id)
+    //     return playlist.videos.includes(this.video.id)
+    //   }
+    // },
     videosDb() {
       return this.$store.state.videosDb
     },
@@ -383,11 +374,11 @@ export default {
     },
   },
   methods: {
-    handleFile(imgType) {
-      let imgBase64 = this.$refs.pond.getFiles()[0].getFileEncodeDataURL()
-      this.images.main.display = true
-      this.images.main.file = imgBase64
-    },
+    // handleFile(imgType) {
+    //   let imgBase64 = this.$refs.pond.getFiles()[0].getFileEncodeDataURL()
+    //   this.images.main.display = true
+    //   this.images.main.file = imgBase64
+    // },
     // async getMarkers() {
     //   // console.log('get markers')
     //   // console.log(this.video)
@@ -437,44 +428,41 @@ export default {
     //   })
     // },
     // VIDEOFILE
-    getVideoMetadata() {
-      ffmpeg.ffprobe(this.video.path, (error, info) => {
-        if (error) {
-          console.error(error)
-        }
-        for(let i = 0; i < info.streams.length; i++) {
-          if (info.streams[i].height !== undefined) {
-            this.videoHeight = info.streams[i].height
-          } 
-          if (info.streams[i].width !== undefined) {
-            this.videoWidth = info.streams[i].width
-          } 
-          if (info.streams[i].codec_type == 'video') {
-            let meta = info.streams[i]
-            this.fps = eval(meta.avg_frame_rate).toFixed(0)
-            this.resolution = meta.width + 'x' + meta.height
-            this.codec = meta.codec_name
-            this.bitrate = (meta.bit_rate/1000).toFixed(0)
-          }
-        }
-      })
-    },
-    openDialogFileInfo() {
-      this.getVideoMetadata()
-      this.dialogFileInfo = true
-    },
-    getTag(tagName) {
-      return _.find(this.tagsDb, {name:tagName})
-    },
-    getTagColor(tagName) {
-      return _.find(this.tagsDb, {name:tagName}).color
-    },
-    getWebsiteColor(websiteName) {
-      return _.find(this.websitesDb, {name:websiteName}).color
-    },
-    playVideoInSystemPlayer() {
-      shell.openPath(this.video.path)
-    },
+    // getVideoMetadata() {
+    //   ffmpeg.ffprobe(this.video.path, (error, info) => {
+    //     if (error) {
+    //       console.error(error)
+    //     }
+    //     for(let i = 0; i < info.streams.length; i++) {
+    //       if (info.streams[i].height !== undefined) {
+    //         this.videoHeight = info.streams[i].height
+    //       } 
+    //       if (info.streams[i].width !== undefined) {
+    //         this.videoWidth = info.streams[i].width
+    //       } 
+    //       if (info.streams[i].codec_type == 'video') {
+    //         let meta = info.streams[i]
+    //         this.fps = eval(meta.avg_frame_rate).toFixed(0)
+    //         this.resolution = meta.width + 'x' + meta.height
+    //         this.codec = meta.codec_name
+    //         this.bitrate = (meta.bit_rate/1000).toFixed(0)
+    //       }
+    //     }
+    //   })
+    // },
+    // openDialogFileInfo() {
+    //   this.getVideoMetadata()
+    //   this.dialogFileInfo = true
+    // },
+    // getTag(tagName) {
+    //   return _.find(this.tagsDb, {name:tagName})
+    // },
+    // getTagColor(tagName) {
+    //   return _.find(this.tagsDb, {name:tagName}).color
+    // },
+    // getWebsiteColor(websiteName) {
+    //   return _.find(this.websitesDb, {name:websiteName}).color
+    // },
     // filterItemsTags(item, queryText, itemText) {
     //   const searchText = queryText.toLowerCase()
     //   const alternateNames = item.altNames
@@ -488,10 +476,10 @@ export default {
     getFileNameFromPath(videoPath) {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
-    watchLater() {
-      ipcRenderer.send('watchLater', this.video.id)
-      this.$store.dispatch('getDb', 'playlists')
-    },
+    // watchLater() {
+    //   ipcRenderer.send('watchLater', this.video.id)
+    //   this.$store.dispatch('getDb', 'playlists')
+    // },
     // PLAYER
     // play(number) {
     //   this.playIndex = number
@@ -516,32 +504,32 @@ export default {
     //     this.$refs.player.jumpTo(time)
     //   }
     // },
-    addToPlaylist() {
-      let id = this.playlists[this.selectedPlaylist].id
-      let playlist = this.$store.getters.playlists.find({id: id}).value()
-      if (!playlist.videos.includes(this.video.id)) {
-        let videosFromPlaylist = playlist.videos
-        videosFromPlaylist.push(this.video.id)
-        this.$store.getters.playlists.find({id: id}).assign({
-          videos: videosFromPlaylist,
-          edit: Date.now(),
-        }).write()
-      }
-      this.dialogAddToPlaylist = false
-    },
+    // addToPlaylist() {
+    //   let id = this.playlists[this.selectedPlaylist].id
+    //   let playlist = this.$store.getters.playlists.find({id: id}).value()
+    //   if (!playlist.videos.includes(this.video.id)) {
+    //     let videosFromPlaylist = playlist.videos
+    //     videosFromPlaylist.push(this.video.id)
+    //     this.$store.getters.playlists.find({id: id}).assign({
+    //       videos: videosFromPlaylist,
+    //       edit: Date.now(),
+    //     }).write()
+    //   }
+    //   this.dialogAddToPlaylist = false
+    // },
     updateNowPlaying(event) {
       if (event) {
         this.nowPlaying = event.mrl
       }
     },
-    editVideoInfo() {
-      this.$store.commit('updateSelectedVideos', [this.video.id])
-      this.$store.state.Videos.dialogEditVideoInfo = true
-    },
-    openDialogEditThumb() {
-      this.checkImageExist(this.getImagePath('thumb',''), 'thumb')
-      this.dialogEditThumb = true
-    },
+    // editVideoInfo() {
+    //   this.$store.commit('updateSelectedVideos', [this.video.id])
+    //   this.$store.state.Videos.dialogEditVideoInfo = true
+    // },
+    // openDialogEditThumb() {
+    //   this.checkImageExist(this.getImagePath('thumb',''), 'thumb')
+    //   this.dialogEditThumb = true
+    // },
     minimize() {
       win.minimize()
     },
@@ -622,79 +610,79 @@ export default {
     }
   }
 }
-.video-js {
-  font-size: 11px;
-  padding-top: calc(100vh - 36px) !important;
-  .vjs-control-text {
-    height: 0;
-  }
-}
-.vjs-prev {
-  width: 40px;
-  cursor: pointer;
-  &:before {
-    content: "\F04AE";
-    font-family: "Material Design Icons";
-    font-size: 2em;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-}
-.vjs-next {
-  width: 40px;
-  cursor: pointer;
-  &:before {
-    content: "\F04AD";
-    font-family: "Material Design Icons";
-    font-size: 2em;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-}
-.vjs-tip {
-  font-size: 12px;
-  bottom: 18px;
-}
-.vjs-marker {
-  &:before {
-    font-family: "Material Design Icons";
-    position: absolute;
-    left: -200%;
-    top: -120%;
-  }
-  &.marker {
-    &-tag:before {
-      content: "\F04F9";
-    }
-    &-favorite:before {
-      content: "\F02D1";
-      color: #e91e63;
-    }
-    &-bookmark:before {
-      content: "\F00C0";
-      color: #f13939;
-    }
-  }
-  &.color {
-    &-cc0e00 {color:#cc0e00;}
-    &-e8004f {color:#e8004f;}
-    &-ae0eff {color:#ae0eff;}
-    &-2041f7 {color:#2041f7;}
-    &-2196f3 {color:#2196f3;}
-    &-00bcd4 {color:#00bcd4;}
-    &-009688 {color:#009688;}
-    &-2ac530 {color:#2ac530;}
-    &-8bc34a {color:#8bc34a;}
-    &-ff9800 {color:#ff9800;}
-    &-ff5722 {color:#ff5722;}
-    &-795548 {color:#795548;}
-    &-9b9b9b {color:#9b9b9b;}
-  }
-}
+// .video-js {
+//   font-size: 11px;
+//   padding-top: calc(100vh - 36px) !important;
+//   .vjs-control-text {
+//     height: 0;
+//   }
+// }
+// .vjs-prev {
+//   width: 40px;
+//   cursor: pointer;
+//   &:before {
+//     content: "\F04AE";
+//     font-family: "Material Design Icons";
+//     font-size: 2em;
+//     height: 100%;
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
+//   }
+// }
+// .vjs-next {
+//   width: 40px;
+//   cursor: pointer;
+//   &:before {
+//     content: "\F04AD";
+//     font-family: "Material Design Icons";
+//     font-size: 2em;
+//     height: 100%;
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
+//   }
+// }
+// .vjs-tip {
+//   font-size: 12px;
+//   bottom: 18px;
+// }
+// .vjs-marker {
+//   &:before {
+//     font-family: "Material Design Icons";
+//     position: absolute;
+//     left: -200%;
+//     top: -120%;
+//   }
+//   &.marker {
+//     &-tag:before {
+//       content: "\F04F9";
+//     }
+//     &-favorite:before {
+//       content: "\F02D1";
+//       color: #e91e63;
+//     }
+//     &-bookmark:before {
+//       content: "\F00C0";
+//       color: #f13939;
+//     }
+//   }
+//   &.color {
+//     &-cc0e00 {color:#cc0e00;}
+//     &-e8004f {color:#e8004f;}
+//     &-ae0eff {color:#ae0eff;}
+//     &-2041f7 {color:#2041f7;}
+//     &-2196f3 {color:#2196f3;}
+//     &-00bcd4 {color:#00bcd4;}
+//     &-009688 {color:#009688;}
+//     &-2ac530 {color:#2ac530;}
+//     &-8bc34a {color:#8bc34a;}
+//     &-ff9800 {color:#ff9800;}
+//     &-ff5722 {color:#ff5722;}
+//     &-795548 {color:#795548;}
+//     &-9b9b9b {color:#9b9b9b;}
+//   }
+// }
 .window-controls {
   -webkit-app-region: no-drag;
   position: absolute;
@@ -717,43 +705,43 @@ export default {
 }
 </style>
 <style lang="less" scoped>
-.performers-starring-grid {
-  display: grid;
-  grid-gap: 15px;
-  grid-template-columns: repeat(auto-fill, minmax(164px, 1fr));
-}
-.performer-card {
-  &:hover {
-    .performer-ratings {
-      opacity: 1;
-    }
-  }
-}
-.performer-ratings {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 0 5px 3px;
-  opacity: 0;
-  transition: .3s all ease;
-}
-.video-details {
-  display: flex;
-  justify-content: space-between;
-  .rating-favorite {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: flex-start;
-    padding: 10px;
-  }
-}
-.marker-name {
-  margin-left: 5px;
-  &-hide {
-    display: none;
-  }
-}
+// .performers-starring-grid {
+//   display: grid;
+//   grid-gap: 15px;
+//   grid-template-columns: repeat(auto-fill, minmax(164px, 1fr));
+// }
+// .performer-card {
+//   &:hover {
+//     .performer-ratings {
+//       opacity: 1;
+//     }
+//   }
+// }
+// .performer-ratings {
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+//   width: 100%;
+//   background-color: rgba(0, 0, 0, 0.5);
+//   padding: 0 5px 3px;
+//   opacity: 0;
+//   transition: .3s all ease;
+// }
+// .video-details {
+//   display: flex;
+//   justify-content: space-between;
+//   .rating-favorite {
+//     display: flex;
+//     flex-wrap: nowrap;
+//     align-items: flex-start;
+//     padding: 10px;
+//   }
+// }
+// .marker-name {
+//   margin-left: 5px;
+//   &-hide {
+//     display: none;
+//   }
+// }
 </style>
 
