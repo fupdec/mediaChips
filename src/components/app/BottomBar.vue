@@ -22,7 +22,7 @@
 
     <v-btn v-if="isShowPerformerBtn" :to="$router.currentRoute" text color="secondary">
       <span>Performer</span>
-      <v-icon>mdi-card-account-details-outline</v-icon>
+      <v-icon>mdi-account-details</v-icon>
     </v-btn>
 
     <v-btn to="/tags/:default?tabId=default" text color="secondary">

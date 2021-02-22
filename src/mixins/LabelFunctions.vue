@@ -39,7 +39,7 @@ export default {
         name: tabName,
         link: `/performer/:${tabId}?tabId=${tabId}`,
         id: tabId,
-        icon: 'account-outline'
+        icon: 'account-details'
       }
       this.$store.dispatch('addNewTab', tab)
     },
@@ -70,7 +70,7 @@ export default {
         name: tabName,
         link: `/website/:${tabId}?tabId=${tabId}`,
         id: tabId,
-        icon: 'web'
+        icon: 'web-box'
       }
       this.$store.dispatch('addNewTab', tab)
     },

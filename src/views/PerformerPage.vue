@@ -277,10 +277,11 @@ import VideosGrid from '@/mixins/VideosGrid'
 import Countries from '@/mixins/Countries'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
+import LabelFunctions from '@/mixins/LabelFunctions'
 
 export default {
   name: 'PerformerPage',
-  mixins: [VideosGrid, Countries, ShowImageFunction],
+  mixins: [VideosGrid, Countries, ShowImageFunction, LabelFunctions],
   components: {
     CountryFlag,
     DialogEditPerformerInfo: () => import('@/components/pages/performers/DialogEditPerformerInfo.vue'),
@@ -552,42 +553,8 @@ export default {
       else value = false
       this.$store.dispatch('updateSettingsState', {key:'performerProfile', value: value})
     },
-    addNewTabPerformer() {
-      let tabId = this.performerId
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with performer "${this.performer.name}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.performer.name, 
-        link: `/performer/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     getTagId(itemName) {
       return this.$store.getters.tags.find({name: itemName}).value().id
-    },
-    addNewTabWebsite(websiteName) {
-      let tabId = this.getWebsiteId(websiteName)
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with website "${websiteName}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: websiteName,
-        link: `/website/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'web'
-      }
-      this.$store.dispatch('addNewTab', tab)
     },
     getWebsiteId(itemName) {
       return this.$store.getters.websites.find({name: itemName}).value().id

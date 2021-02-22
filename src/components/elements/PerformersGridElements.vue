@@ -48,7 +48,7 @@
     <v-menu v-model="$store.state.Performers.menuCard" :position-x="$store.state.x" 
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
-        <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer" @mouseup="addNewTab">
+        <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer" @mouseup="addNewTabPerformer(selectedPerformers())">
           <v-list-item-title>
             <v-icon left size="18">mdi-tab-plus</v-icon> Open in a New Tab
           </v-list-item-title>
@@ -180,10 +180,9 @@
 
 
 <script>
-const fs = require("fs")
-const path = require("path")
 import Selection from "@simonwep/selection-js"
 import vuescroll from 'vuescroll'
+import LabelFunctions from '@/mixins/LabelFunctions'
 
 export default {
   name: 'PerformersGridElements',
@@ -192,6 +191,7 @@ export default {
     DialogEditPerformerInfo: () => import('@/components/pages/performers/DialogEditPerformerInfo.vue'),
     DialogEditPerformerImages: () => import('@/components/pages/performers/DialogEditPerformerImages.vue'),
   },
+  mixins: [LabelFunctions],
   mounted () {
     this.$nextTick(function () {
       this.$store.state.Performers.selection = Selection.create({
@@ -275,23 +275,6 @@ export default {
     },
   },
   methods: {
-    addNewTab() {
-      let tabId = this.$store.getters.getSelectedPerformers[0]
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with performer "${this.selectedPerformers()}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.selectedPerformers(), 
-        link: `/performer/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     filterVideosByPerformers() {
       let filters = [{
         param: 'performers',

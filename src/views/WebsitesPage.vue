@@ -126,7 +126,7 @@
     <v-menu v-model="$store.state.Websites.menuCard" :position-x="$store.state.x" 
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
-        <v-list-item class="pr-1" link :disabled="!isSelectedSingleWebsite" @mouseup="addNewTab">
+        <v-list-item class="pr-1" link :disabled="!isSelectedSingleWebsite" @mouseup="addNewTabWebsite">
           <v-list-item-title>
             <v-icon left size="18">mdi-tab-plus</v-icon> Open in a new tab
           </v-list-item-title>
@@ -158,12 +158,10 @@
 
 
 <script>
-const fs = require("fs")
-const path = require("path")
-
 import WebsiteCard from "@/components/pages/websites/WebsiteCard.vue"
 import Selection from "@simonwep/selection-js";
 import vuescroll from 'vuescroll'
+import LabelFunctions from '@/mixins/LabelFunctions'
 
 export default {
   name: "WebsitesPage",
@@ -173,6 +171,7 @@ export default {
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),
   },
+  mixins: [LabelFunctions],
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
@@ -325,29 +324,6 @@ export default {
     },
   },
   methods: {
-    addNewTab() {
-      let tabId = this.$store.getters.getSelectedWebsites[0]
-      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: `Tab with website "${this.selectedWebsites()}" already exists`
-        })
-        return
-      }
-      let tab = { 
-        name: this.$store.getters.websiteFiltersForTabName, 
-        link: `/websites/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
-        sortBy: this.$store.state.Settings.websiteSortBy,
-        sortDirection: this.$store.state.Settings.websiteSortDirection,
-        page:  this.$store.state.Settings.websitePage,
-        firstChar: this.$store.state.Settings.websiteFirstChar,
-        color: this.$store.state.Settings.websiteColor,
-        icon: 'web'
-      }
-      this.$store.dispatch('addNewTab', tab)
-    },
     selectedWebsites(list) {
       let ids = this.$store.getters.getSelectedWebsites
       let websites = this.$store.getters.websites

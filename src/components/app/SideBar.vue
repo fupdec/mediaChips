@@ -34,7 +34,7 @@
         
         <v-list-item v-if="isShowPerformerBtn" link :to="$router.currentRoute" color="secondary" draggable="false">
           <v-list-item-icon>
-            <v-icon>mdi-card-account-details-outline</v-icon>
+            <v-icon>mdi-account-details</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Performer details</v-list-item-title>
         </v-list-item>
