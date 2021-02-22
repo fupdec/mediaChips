@@ -1,6 +1,6 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.3-alpha?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.4-alpha?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
 ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
@@ -132,10 +132,10 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 #### Edit images of performer
 ![alt text](https://i.ibb.co/d24KFxM/images.jpg)
 
-#### Performer details
+#### Performer
 ![alt text](https://i.ibb.co/bLXfqhr/performer.jpg)
 
-#### Performer details in dark mode with header image, context menu 
+#### Performer in dark mode with header image, context menu 
 ![alt text](https://i.ibb.co/MVskQpr/dark.jpg)
 
 ## Development

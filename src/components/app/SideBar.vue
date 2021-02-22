@@ -31,7 +31,7 @@
           <v-list-item-icon>
             <v-icon>mdi-account-details</v-icon>
           </v-list-item-icon>
-          <v-list-item-title>Performer details</v-list-item-title>
+          <v-list-item-title>Performer</v-list-item-title>
         </v-list-item>
         
         <v-list-item link to="/tags/:default?tabId=default"
@@ -54,7 +54,7 @@
           <v-list-item-icon>
             <v-icon>mdi-web-box</v-icon>
           </v-list-item-icon>
-          <v-list-item-title>Website details</v-list-item-title>
+          <v-list-item-title>Website</v-list-item-title>
         </v-list-item>
         
         <v-list-item link to="/playlists/:default?tabId=default"
