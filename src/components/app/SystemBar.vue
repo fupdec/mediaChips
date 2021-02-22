@@ -115,7 +115,7 @@
           </v-menu>
           <v-list-item class="pr-1" link @click="ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
             <v-list-item-title>
-              <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Cards
+              <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Description
             </v-list-item-title>
             <v-icon size="20" class="ml-6" :color="ratingAndFavoriteInCard?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>

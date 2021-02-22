@@ -387,7 +387,7 @@
             </v-radio-group>
           </div>
           <div class="mt-8 d-flex">
-            <span class="mr-6">Rating and favorite in card description:</span>
+            <span class="mr-6">Rating and Favorite in Card Description:</span>
             <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex">
               <template v-slot:label>
                 <span v-if="ratingAndFavoriteInCard">Yes</span>
