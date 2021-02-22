@@ -1,18 +1,8 @@
-<a href="https://github.com/fupdec/Adult-Video-Database/issues?q=is%3Aopen+is%3Aissue">
-  ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
-</a>
-<a href="https://github.com/fupdec/Adult-Video-Database/issues?q=is%3Aissue+is%3Aclosed">
-  ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-</a>
-<a href="https://github.com/fupdec/Adult-Video-Database/commits/master">
-  ![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.3-alpha?color=green)
-</a>
-<a href="https://github.com/fupdec/Adult-Video-Database/releases/tag/v0.6.3-alpha">
-  ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
-</a>
-<a href="https://github.com/fupdec/Adult-Video-Database/releases">
-  ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
-</a>
+![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.3-alpha?color=green)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
+![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
 <img align="left" width="110" height="110" src="./public/icons/icon.png">
 
