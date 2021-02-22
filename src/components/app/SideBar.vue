@@ -19,13 +19,6 @@
           <v-list-item-title>Videos</v-list-item-title>
         </v-list-item>
         
-        <v-list-item v-if="isShowVideoBtn" link :to="$router.currentRoute" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-television-play</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Video details</v-list-item-title>
-        </v-list-item>
-        
         <v-list-item link to="/performers/:default?tabId=default"
           @click.middle="addNewTabPerformers" color="secondary" draggable="false">
           <v-list-item-icon>
@@ -47,13 +40,6 @@
             <v-icon>mdi-tag-outline</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Tags</v-list-item-title>
-        </v-list-item>
-        
-        <v-list-item v-if="isShowTagBtn" link :to="$router.currentRoute" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-tag-text-outline</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Tag details</v-list-item-title>
         </v-list-item>
         
         <v-list-item link to="/websites/:default?tabId=default" 
@@ -104,10 +90,8 @@ export default {
     })
   },
   data: () => ({
-    isShowVideoBtn: false,
     isShowPerformerBtn: false,
     isShowWebsiteBtn: false,
-    isShowTagBtn: false,
     ops: {
       scrollPanel: {
         scrollingX: false
@@ -120,6 +104,9 @@ export default {
   computed: {
     navigationSide() {
       return this.$store.state.Settings.navigationSide
+    },
+    tabId() {
+      return this.$route.query.tabId
     },
   },
   methods: {
@@ -206,10 +193,8 @@ export default {
   },
   watch: {
     $route() {
-      this.isShowVideoBtn = this.$router.currentRoute.path.includes('/video/')
-      this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/')
-      this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/')
-      this.isShowTagBtn = this.$router.currentRoute.path.includes('/tag/')
+      this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
+      this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
     },
   },
 }

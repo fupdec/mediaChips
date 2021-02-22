@@ -10,11 +10,6 @@
       <v-icon>mdi-video-outline</v-icon>
     </v-btn>
 
-    <v-btn v-if="isShowVideoBtn" :to="$router.currentRoute" text color="secondary">
-      <span>Video</span>
-      <v-icon>mdi-television-play</v-icon>
-    </v-btn>
-
     <v-btn to="/performers/:default?tabId=default" @click.middle="addNewTabPerformers" text color="secondary">
       <span>Performers</span>
       <v-icon>mdi-account-outline</v-icon>
@@ -28,11 +23,6 @@
     <v-btn to="/tags/:default?tabId=default" @click.middle="addNewTabTags" text color="secondary">
       <span>Tags</span>
       <v-icon>mdi-tag-outline</v-icon>
-    </v-btn>
-
-    <v-btn v-if="isShowTagBtn" :to="$router.currentRoute" text color="secondary">
-      <span>Tag</span>
-      <v-icon>mdi-tag-text-outline</v-icon>
     </v-btn>
 
     <v-btn to="/websites/:default?tabId=default" @click.middle="addNewTabWebsites" text color="secondary">
@@ -63,14 +53,15 @@ export default {
   name: 'BottomBar',
   data: () => ({
     navigationMenu: 1,
-    isShowVideoBtn: false,
     isShowPerformerBtn: false,
     isShowWebsiteBtn: false,
-    isShowTagBtn: false,
   }),
   computed: {
     navigationSide() {
       return this.$store.state.Settings.navigationSide
+    },
+    tabId() {
+      return this.$route.query.tabId
     },
   },
   methods: {
@@ -157,10 +148,8 @@ export default {
   },
   watch: {
     $route(newValue, oldValue) {
-      this.isShowVideoBtn = this.$router.currentRoute.path.includes('/video/')
-      this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/')
-      this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/')
-      this.isShowTagBtn = this.$router.currentRoute.path.includes('/tag/')
+      this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
+      this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
     },
   },
 }
