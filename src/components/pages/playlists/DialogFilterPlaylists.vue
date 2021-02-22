@@ -33,9 +33,6 @@
               </template>
             </v-select>
 
-            <v-checkbox v-if="filters[i].param==='name'" label="Alt.names" class="mt-1 mr-2"
-              @change="setFlag($event,i)" :value="filters[i].flag" indeterminate/>
-
             <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
               @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
               label="Value" outlined dense class="val overline"/>
