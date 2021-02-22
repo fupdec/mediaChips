@@ -183,7 +183,7 @@ const Playlists = {
         getters.settings.set('playlistSortDirection', sortDirection).write()
         getters.settings.set('playlistPage', page).write()
       } else {  // for tab with playlists 
-        getters.tabsDb.find({id: route.query.tabId}).assign({
+        getters.tabsDb.find({id: +route.query.tabId}).assign({
           name: getters.playlistFiltersForTabName,
           filters: newFilters,
           sortBy: sortBy,

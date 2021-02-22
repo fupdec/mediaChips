@@ -231,7 +231,7 @@ const Videos = {
           getters.settings.set('videoSortBy', sortBy).write()
           getters.settings.set('videoPage', page).write()
         } else {
-          getters.tabsDb.find({id: route.query.tabId}).assign({
+          getters.tabsDb.find({id: +route.query.tabId}).assign({
             name: getters.videoFiltersForTabName,
             filters: newFilters,
             sortBy: sortBy,

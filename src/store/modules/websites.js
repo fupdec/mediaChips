@@ -210,7 +210,7 @@ const Websites = {
         getters.settings.set('websiteFirstChar', firstChar).write()
         getters.settings.set('websiteColor', color).write()
       } else {  // for tab with websites 
-        getters.tabsDb.find({id: route.query.tabId}).assign({
+        getters.tabsDb.find({id: +route.query.tabId}).assign({
           name: getters.websiteFiltersForTabName,
           filters: newFilters,
           sortBy: sortBy,

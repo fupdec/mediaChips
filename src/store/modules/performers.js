@@ -268,7 +268,7 @@ const Performers = {
         getters.settings.set('performerPage', page).write()
         getters.settings.set('performerFirstChar', firstChar).write()
       } else {  // for tab with performers 
-        getters.tabsDb.find({id: route.query.tabId}).assign({
+        getters.tabsDb.find({id: +route.query.tabId}).assign({
           name: getters.performerFiltersForTabName,
           filters: newFilters,
           sortBy: sortBy,

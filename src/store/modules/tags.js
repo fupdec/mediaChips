@@ -216,7 +216,7 @@ const Tags = {
         getters.settings.set('tagFirstChar', firstChar).write()
         getters.settings.set('tagColor', color).write()
       } else {  // for tab with tags 
-        getters.tabsDb.find({id: route.query.tabId}).assign({
+        getters.tabsDb.find({id: +route.query.tabId}).assign({
           name: getters.tagFiltersForTabName,
           filters: newFilters,
           sortBy: sortBy,
