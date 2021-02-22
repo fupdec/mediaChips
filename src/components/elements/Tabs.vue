@@ -12,7 +12,7 @@
           :to="tab.link" :ripple="false" class="tabs-group-item"
         >
           <div class="tab-name" :title="tab.name"> 
-            <v-icon size="13">{{`mdi-${tab.icon}`}}</v-icon> 
+            <v-icon size="16">{{`mdi-${tab.icon}`}}</v-icon> 
             {{ tab.name }} 
           </div>
           <v-btn @click="closeTab($event, tab.id)" class="close-btn" icon tile :ripple="false">
