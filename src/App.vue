@@ -233,8 +233,8 @@ export default {
     },
   },
   methods: {
-    watchDir(path) {
-      const watcher = chokidar.watch(path, {
+    watchDir(dir) {
+      const watcher = chokidar.watch(dir, {
         ignored: /^.*\.(?!3gp$|avi$|dat$|f4v$|flv$|m4v$|mkv$|mod$|mov$|mp4$|mpeg$|mpg$|mts$|rm$|rmvb$|swf$|ts$|vob$|webm$|wmv$|yuv$)[^.]+$/gm, // ignore all files not videos
         persistent: true,
         ignoreInitial: true,
@@ -244,7 +244,24 @@ export default {
       // Add event listeners.
       watcher
         .on('add', path => log(`File ${path} has been added`))
-        .on('ready', () => log('folders scanned'))
+        .on('ready', () => this.getAllFiles(watcher.getWatched(), dir))
+    },
+    getAllFiles(dirs, dir) {
+      let regexp = /\.[a-zA-Z0-9]{3,4}$/
+      let files = []
+      for (let d in dirs) {
+        if (dirs[d].length) {
+          for (let i=0; i<dirs[d].length; i++) {
+            let filePath = path.join(d, dirs[d][i])
+            if (regexp.test(filePath))
+            files.push(filePath)
+          }
+        }
+      }
+      let allFilesInDb = this.$store.getters.videos.filter(v=>v.path.includes(dir)).map('path').value()
+      let addedFiles = allFilesInDb.filter(x => files.includes(x))
+      let missedFiles = allFilesInDb.filter(x => !files.includes(x))
+      let newFiles = files.filter(x => !allFilesInDb.includes(x))
     },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
