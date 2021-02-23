@@ -30,12 +30,15 @@
               </v-list-item>
             </v-list-item-group>
           </v-list>
-          <v-btn @click="removeFolder" color="red" :disabled="selectedFolders===undefined">
-            <v-icon left>mdi-folder-remove</v-icon> Remove folder
-          </v-btn>
-          <v-btn @click="addFolder" color="green" class="ml-4">
-            <v-icon left>mdi-folder-plus</v-icon> Add folder
-          </v-btn>
+          <v-card-actions>
+            <v-btn @click="removeFolder" color="red" :disabled="selectedFolders===undefined">
+              <v-icon left>mdi-folder-remove</v-icon> Remove folder
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn @click="addFolder" color="green" class="ml-4">
+              <v-icon left>mdi-folder-plus</v-icon> Add folder
+            </v-btn>
+          </v-card-actions>
           
           <div class="pb-10 pt-16">
             <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large rounded>
@@ -881,11 +884,11 @@ export default {
         if (result.filePaths.length !== 0) {
           for (let i=0; i<result.filePaths.length; i++) {
             let folder = result.filePaths[i]
-            console.log(folder)
-            this.folders.push(folder)
-            this.folders = this.folders
+            if (!this.folders.includes(folder)) {
+              this.folders.push(folder)
+              this.folders = this.folders
+            }
           }
-          // this.folderPaths = result.filePaths.join('\n')
         }
       }).catch(err => {
         console.log(err)
