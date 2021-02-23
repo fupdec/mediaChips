@@ -74,9 +74,14 @@
       </v-list>
 
       <v-list nav dense>
-        <v-list-item v-for="(folder, i) in folders" :key="i" color="secondary">
+        <v-list-item v-for="(folder, i) in folders" :key="i"
+          @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
           <v-list-item-icon> 
             <v-icon>mdi-folder-outline</v-icon>
+            <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="green"
+              :dot="!folderHovered" :offset-x="folderHovered?35:25" :offset-y="folderHovered?35:25"/>
+            <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="red"
+              :dot="!folderHovered" :offset-x="folderHovered?35:25" :offset-y="folderHovered?12:8"/>
           </v-list-item-icon>
           <v-list-item-title>{{folder}}</v-list-item-title>
         </v-list-item>
@@ -108,7 +113,8 @@ export default {
       rail: {
         size: '4px',
       }
-    }
+    },
+    folderHovered: false,
   }),
   computed: {
     navigationSide() {
@@ -119,6 +125,9 @@ export default {
     },
     folders() {
       return this.$store.state.Settings.folders
+    },
+    foldersData() {
+      return this.$store.state.foldersData
     },
   },
   methods: {
@@ -201,6 +210,18 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
+    },
+    getLostFiles(folder) {
+      if (this.foldersData.length) {
+        const index = _.findIndex(this.foldersData, {folder})
+        return this.foldersData[index].lostFiles.length
+      } else return ''
+    },
+    getNewFiles(folder) {
+      if (this.foldersData.length) {
+        const index = _.findIndex(this.foldersData, {folder})
+        return this.foldersData[index].newFiles.length
+      } else return ''
     },
   },
   watch: {

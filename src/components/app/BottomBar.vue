@@ -50,13 +50,15 @@
     
     <v-tooltip v-for="(folder, i) in folders" :key="i" top>
       <template v-slot:activator="{ on, attrs }">
-        <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" offset-x="40" offset-y="25" color="red"/>
-        <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" offset-x="40" offset-y="48" color="green">
-          <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder">
-            <span>{{folder.substring(0, 10)}}</span>
-            <v-icon>mdi-folder-outline</v-icon>
-          </v-btn>
-        </v-badge>
+        <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="red"
+          :dot="!folderHovered" :offset-x="folderHovered?60:55" :offset-y="folderHovered?25:22"/>
+        <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="green"
+          :dot="!folderHovered" :offset-x="folderHovered?60:55" :offset-y="folderHovered?50:42"/>
+        <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder"
+          @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
+          <span>{{folder.substring(0, 10)}}</span>
+          <v-icon>mdi-folder-outline</v-icon>
+        </v-btn>
       </template>
       <span>{{folder}}</span>
     </v-tooltip>
@@ -71,7 +73,7 @@ export default {
     navigationMenu: 1,
     isShowPerformerBtn: false,
     isShowWebsiteBtn: false,
-    badges: [],
+    folderHovered: false,
   }),
   computed: {
     navigationSide() {
@@ -194,6 +196,14 @@ export default {
 <style lang="less" scoped>
 .v-btn {
   -webkit-user-drag: none !important;
+  &.folder {
+    .v-btn__content > *:not(.v-icon) {
+      opacity: 0 !important; 
+    }
+    .v-icon {
+      transform: none !important;
+    }
+  }
 }
 .v-btn.folder {
   height: 100%;
