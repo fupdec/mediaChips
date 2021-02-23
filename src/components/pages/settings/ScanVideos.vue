@@ -221,6 +221,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.ffmpegExists()
+      this.folderPaths = this.$store.state.Settings.folders.join('\n')
     })
   },
   updated() {

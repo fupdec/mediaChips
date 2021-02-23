@@ -12,7 +12,7 @@
 
     <v-tabs-items v-model="tab">
       <v-tab-item value="videos-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+        <v-card flat max-width="800" style="margin: auto;" class="pb-10">
           <div class="headline text-h5 text-center py-6">Folders
             <v-tooltip right>
               <template v-slot:activator="{ on, attrs }">
