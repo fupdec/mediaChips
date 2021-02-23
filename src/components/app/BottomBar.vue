@@ -49,10 +49,13 @@
     
     <v-tooltip v-for="(folder, i) in folders" :key="i" top>
       <template v-slot:activator="{ on, attrs }">
-        <v-btn v-bind="attrs" v-on="on" text color="secondary">
-          <span>{{folder.substring(0, 10)}}</span>
-          <v-icon>mdi-folder-outline</v-icon>
-        </v-btn>
+        <v-badge :value="getLostFiles(folder, i)" :content="getLostFiles(folder, i)" offset-x="40" offset-y="25" color="red"/>
+        <v-badge :value="getNewFiles(folder, i)" :content="getNewFiles(folder, i)" offset-x="40" offset-y="48" color="green">
+          <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder">
+            <span>{{folder.substring(0, 10)}}</span>
+            <v-icon>mdi-folder-outline</v-icon>
+          </v-btn>
+        </v-badge>
       </template>
       <span>{{folder}}</span>
     </v-tooltip>
@@ -67,6 +70,7 @@ export default {
     navigationMenu: 1,
     isShowPerformerBtn: false,
     isShowWebsiteBtn: false,
+    badges: [],
   }),
   computed: {
     navigationSide() {
@@ -77,6 +81,9 @@ export default {
     },
     folders() {
       return this.$store.state.Settings.folders
+    },
+    foldersData() {
+      return this.$store.state.foldersData
     },
   },
   methods: {
@@ -160,11 +167,24 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
     },
+    getLostFiles(folder, index) {
+      if (this.foldersData.length) {
+        return this.foldersData[index][folder].lostFiles.length
+      } else return ''
+    },
+    getNewFiles(folder, index) {
+      if (this.foldersData.length) {
+        return this.foldersData[index][folder].newFiles.length
+      } else return ''
+    },
   },
   watch: {
     $route(newValue, oldValue) {
       this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
       this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
+    },
+    foldersData(newValue, oldValue) {
+      console.log(newValue)
     },
   },
 }
@@ -174,5 +194,8 @@ export default {
 <style lang="less" scoped>
 .v-btn {
   -webkit-user-drag: none !important;
+}
+.v-btn.folder {
+  height: 100%;
 }
 </style>

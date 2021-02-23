@@ -124,6 +124,8 @@ export default {
       if(this.passwordProtection && this.phrase!=='') {
         this.disableRunApp = this.phrase !== this.password 
       }
+      // get folders data
+      this.watchDir(this.folders)
       // keyboard shortcuts
       // TODO: disable shift+enter and shift+click because that add new window
       window.addEventListener('keyup', event => {
@@ -231,6 +233,9 @@ export default {
     autoUpdateDataFromVideos() {
       return this.$store.state.Settings.autoUpdateDataFromVideos
     },
+    folders() {
+      return this.$store.state.Settings.folders
+    },
   },
   methods: {
     watchDir(dir) {
@@ -244,12 +249,15 @@ export default {
       // Add event listeners.
       watcher
         .on('add', path => log(`File ${path} has been added`))
-        .on('ready', () => this.getAllFiles(watcher.getWatched(), dir))
+        .on('change', path => log(`File ${path} has been changed`))
+        .on('unlink', path => log(`File ${path} has been removed`))
+        .on('ready', () => this.getAllFiles(watcher.getWatched()))
     },
-    getAllFiles(dirs, dir) {
+    getAllFiles(dirs) {
+      console.log(dirs)
       let regexp = /\.[a-zA-Z0-9]{3,4}$/
       let files = []
-      for (let d in dirs) {
+      for (let d in dirs) { // get all paths from watched directories
         if (dirs[d].length) {
           for (let i=0; i<dirs[d].length; i++) {
             let filePath = path.join(d, dirs[d][i])
@@ -258,10 +266,22 @@ export default {
           }
         }
       }
-      let allFilesInDb = this.$store.getters.videos.filter(v=>v.path.includes(dir)).map('path').value()
-      let addedFiles = allFilesInDb.filter(x => files.includes(x))
-      let missedFiles = allFilesInDb.filter(x => !files.includes(x))
-      let newFiles = files.filter(x => !allFilesInDb.includes(x))
+      for (let i=0; i<this.folders.length; i++) { // get compared paths
+        let filesInDb = this.$store.getters.videos.filter(v=>v.path.includes(this.folders[i])).map('path').value()
+        let filesInFolder = files.filter(x => x.includes(this.folders[i]))
+        console.log(filesInFolder)
+        let addedFiles = filesInDb.filter(x => filesInFolder.includes(x))
+        let lostFiles = filesInDb.filter(x => !filesInFolder.includes(x))
+        let newFiles = filesInFolder.filter(x => !filesInDb.includes(x))
+        let foldersData = {
+          [this.folders[i]]: {
+            addedFiles,
+            lostFiles,
+            newFiles,
+          }
+        }
+        this.$store.state.foldersData.push(foldersData) 
+      }
     },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {

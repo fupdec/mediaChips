@@ -34,6 +34,7 @@ export default new Vuex.Store({
     contextTab: '',
     videoPlayerVideoId: null,
     videoPlayerPlaylist: null,
+    foldersData: [],
   }),
   getters: {
     getNotifications(state) {
