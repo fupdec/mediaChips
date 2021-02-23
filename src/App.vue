@@ -236,6 +236,9 @@ export default {
     folders() {
       return this.$store.state.Settings.folders
     },
+    foldersData() {
+      return this.$store.state.foldersData
+    },
   },
   methods: {
     watchDir(dir) {
@@ -248,13 +251,28 @@ export default {
       const log = console.log.bind(console);
       // Add event listeners.
       watcher
-        .on('add', path => log(`File ${path} has been added`))
-        .on('change', path => log(`File ${path} has been changed`))
-        .on('unlink', path => log(`File ${path} has been removed`))
+        .on('add', path => this.addFile(path), log(`File ${path} has been added`))
+        .on('change', path => this.removeFile(path), log(`File ${path} has been changed`))
+        .on('unlink', path => this.removeFile(path), log(`File ${path} has been removed`))
         .on('ready', () => this.getAllFiles(watcher.getWatched()))
     },
+    addFile(filePath) {
+      for (let i=0; i<this.folders.length; i++) {
+        if (filePath.includes(this.folders[i])) {
+          const index = _.findIndex(this.foldersData, {folder: this.folders[i]})
+          this.$store.state.foldersData[index].newFiles.push(filePath)
+        } 
+      }
+    },
+    removeFile(filePath) {
+      for (let i=0; i<this.folders.length; i++) {
+        if (filePath.includes(this.folders[i])) {
+          const index = _.findIndex(this.foldersData, {folder: this.folders[i]})
+          this.$store.state.foldersData[index].lostFiles.push(filePath)
+        } 
+      }
+    },
     getAllFiles(dirs) {
-      console.log(dirs)
       let regexp = /\.[a-zA-Z0-9]{3,4}$/
       let files = []
       for (let d in dirs) { // get all paths from watched directories
@@ -269,18 +287,13 @@ export default {
       for (let i=0; i<this.folders.length; i++) { // get compared paths
         let filesInDb = this.$store.getters.videos.filter(v=>v.path.includes(this.folders[i])).map('path').value()
         let filesInFolder = files.filter(x => x.includes(this.folders[i]))
-        console.log(filesInFolder)
-        let addedFiles = filesInDb.filter(x => filesInFolder.includes(x))
         let lostFiles = filesInDb.filter(x => !filesInFolder.includes(x))
         let newFiles = filesInFolder.filter(x => !filesInDb.includes(x))
-        let foldersData = {
-          [this.folders[i]]: {
-            addedFiles,
-            lostFiles,
-            newFiles,
-          }
-        }
-        this.$store.state.foldersData.push(foldersData) 
+        this.$store.state.foldersData.push({
+          folder: this.folders[i],
+          lostFiles,
+          newFiles
+        })
       }
     },
     runAutoUpdateDataFromVideos() {

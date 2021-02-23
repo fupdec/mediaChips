@@ -1,5 +1,6 @@
 <template>
   <v-bottom-navigation v-if="navigationSide=='2'" absolute style="bottom:20px" shift>
+    <!-- TODO custom background color depends on current route -->
     <v-btn to="/home" text color="secondary">
       <span>Home</span>
       <v-icon>mdi-home-outline</v-icon>
@@ -49,8 +50,8 @@
     
     <v-tooltip v-for="(folder, i) in folders" :key="i" top>
       <template v-slot:activator="{ on, attrs }">
-        <v-badge :value="getLostFiles(folder, i)" :content="getLostFiles(folder, i)" offset-x="40" offset-y="25" color="red"/>
-        <v-badge :value="getNewFiles(folder, i)" :content="getNewFiles(folder, i)" offset-x="40" offset-y="48" color="green">
+        <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" offset-x="40" offset-y="25" color="red"/>
+        <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" offset-x="40" offset-y="48" color="green">
           <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder">
             <span>{{folder.substring(0, 10)}}</span>
             <v-icon>mdi-folder-outline</v-icon>
@@ -167,14 +168,16 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
     },
-    getLostFiles(folder, index) {
+    getLostFiles(folder) {
       if (this.foldersData.length) {
-        return this.foldersData[index][folder].lostFiles.length
+        const index = _.findIndex(this.foldersData, {folder})
+        return this.foldersData[index].lostFiles.length
       } else return ''
     },
-    getNewFiles(folder, index) {
+    getNewFiles(folder) {
       if (this.foldersData.length) {
-        return this.foldersData[index][folder].newFiles.length
+        const index = _.findIndex(this.foldersData, {folder})
+        return this.foldersData[index].newFiles.length
       } else return ''
     },
   },
@@ -182,9 +185,6 @@ export default {
     $route(newValue, oldValue) {
       this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
       this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
-    },
-    foldersData(newValue, oldValue) {
-      console.log(newValue)
     },
   },
 }
