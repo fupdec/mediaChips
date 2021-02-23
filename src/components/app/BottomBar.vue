@@ -44,6 +44,18 @@
       <span>Settings</span>
       <v-icon>mdi-cog-outline</v-icon>
     </v-btn>
+
+    <div v-if="folders.length" class="mx-6"></div>
+    
+    <v-tooltip v-for="(folder, i) in folders" :key="i" top>
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn v-bind="attrs" v-on="on" text color="secondary">
+          <span>{{folder.substring(0, 10)}}</span>
+          <v-icon>mdi-folder-outline</v-icon>
+        </v-btn>
+      </template>
+      <span>{{folder}}</span>
+    </v-tooltip>
   </v-bottom-navigation>
 </template>
 
@@ -62,6 +74,9 @@ export default {
     },
     tabId() {
       return this.$route.query.tabId
+    },
+    folders() {
+      return this.$store.state.Settings.folders
     },
   },
   methods: {

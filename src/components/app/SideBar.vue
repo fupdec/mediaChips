@@ -72,6 +72,15 @@
           <v-list-item-title>Settings</v-list-item-title>
         </v-list-item>
       </v-list>
+
+      <v-list nav dense>
+        <v-list-item v-for="(folder, i) in folders" :key="i" color="secondary">
+          <v-list-item-icon> 
+            <v-icon>mdi-folder-outline</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>{{folder}}</v-list-item-title>
+        </v-list-item>
+      </v-list>
     </vuescroll>
   </v-navigation-drawer>
 </template>
@@ -107,6 +116,9 @@ export default {
     },
     tabId() {
       return this.$route.query.tabId
+    },
+    folders() {
+      return this.$store.state.Settings.folders
     },
   },
   methods: {
