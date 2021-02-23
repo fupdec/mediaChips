@@ -13,7 +13,31 @@
     <v-tabs-items v-model="tab">
       <v-tab-item value="videos-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <div class="pb-10">
+          <div class="headline text-h5 text-center py-6">Folders
+            <v-tooltip right>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
+              </template>
+              <span>Add folders with your videos so that app can track
+                <br> new videos and check deleted ones</span>
+            </v-tooltip>
+          </div>
+          <v-list dense>
+            <v-list-item-group v-model="selectedFolders">
+              <v-list-item v-for="(folder, i) in folders" :key="i">
+                <v-icon left>mdi-folder</v-icon>
+                <span>{{folder}}</span>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
+          <v-btn @click="removeFolder" color="red" :disabled="selectedFolders===undefined">
+            <v-icon left>mdi-folder-remove</v-icon> Remove folder
+          </v-btn>
+          <v-btn @click="addFolder" color="green" class="ml-4">
+            <v-icon left>mdi-folder-plus</v-icon> Add folder
+          </v-btn>
+          
+          <div class="pb-10 pt-16">
             <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large rounded>
               <v-icon size="26" left>mdi-plus</v-icon> Add new videos
             </v-btn>
@@ -28,6 +52,7 @@
                 <br> The list of features will be expanded in new releases!</span>
             </v-tooltip>
             <span class="mr-10">Play video in:</span>
+            <!-- TODO add checkbox instead radio buttons -->
             <v-radio-group v-model="playerType" mandatory hide-details row class="mt-0 pt-0">
               <v-radio label="Built-in player" value="0"></v-radio>
               <v-radio label="System player" value="1"></v-radio>
@@ -529,6 +554,7 @@ const path = require("path")
 const { spawn } = require( 'child_process' )
 const shell = require('electron').shell
 const { ipcRenderer } = require('electron')
+const { dialog } = require('electron').remote
 
 import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
@@ -590,6 +616,7 @@ export default {
     videosWithSamePath: [],
     dialogResetToDefaultSettings: false,
     gradientThemeDark: null,
+    selectedFolders: undefined,
   }),
   computed: {
     updateIntervalDataFromVideos: {
@@ -757,6 +784,14 @@ export default {
     getMeterImg() {
       return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)
     },
+    folders: {
+      get() {
+        return this.$store.state.Settings.folders
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'folders', value})
+      },
+    },
   },
   methods: {
     updateDataFromVideos() {
@@ -838,6 +873,28 @@ export default {
       } else {
         return true
       }
+    },
+    addFolder() {
+      dialog.showOpenDialog(null, {
+        properties: ['openDirectory','multiSelections']
+      }).then(result => {
+        if (result.filePaths.length !== 0) {
+          for (let i=0; i<result.filePaths.length; i++) {
+            let folder = result.filePaths[i]
+            console.log(folder)
+            this.folders.push(folder)
+            this.folders = this.folders
+          }
+          // this.folderPaths = result.filePaths.join('\n')
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
+    removeFolder() {
+      let index = this.folders.indexOf(this.folders[this.selectedFolders])
+      if (index !== -1) this.folders.splice(index, 1)
+      this.folders = this.folders
     },
   },
 }

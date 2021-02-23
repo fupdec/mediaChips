@@ -123,6 +123,7 @@ dbs.defaults({
   updateIntervalDataFromVideos: 30,
   autoUpdateDataFromVideos: false,
   updateDataFromVideosOnStart: false,
+  folders: [],
 }).write()
 
 const Settings = {
@@ -249,6 +250,7 @@ const Settings = {
     updateIntervalDataFromVideos: dbs.get('updateIntervalDataFromVideos').value(),
     autoUpdateDataFromVideos: dbs.get('autoUpdateDataFromVideos').value(),
     updateDataFromVideosOnStart: dbs.get('updateDataFromVideosOnStart').value(),
+    folders: dbs.get('folders').value(),
   }),
   mutations: {
     updateSettings (state) {
