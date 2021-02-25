@@ -183,6 +183,7 @@ export default {
     updateApp: false,
     intervalUpdateDataFromVideos: null,
     folder: null,
+    watcher: null,
   }),
   computed: {
     passwordProtection() {
@@ -245,7 +246,7 @@ export default {
   },
   methods: {
     watchDir(dir) {
-      const watcher = chokidar.watch(dir, {
+      this.watcher = chokidar.watch(dir, {
         ignored: /^.*\.(?!3gp$|avi$|dat$|f4v$|flv$|m4v$|mkv$|mod$|mov$|mp4$|mpeg$|mpg$|mts$|rm$|rmvb$|swf$|ts$|vob$|webm$|wmv$|yuv$)[^.]+$/gm, // ignore all files not videos
         persistent: true,
         ignoreInitial: true,
@@ -253,11 +254,11 @@ export default {
       // Something to use when events are received.
       const log = console.log.bind(console);
       // Add event listeners.
-      watcher
+      this.watcher
         .on('add', path => this.addFile(path), log(`File ${path} has been added`))
         .on('change', path => this.removeFile(path), log(`File ${path} has been changed`))
         .on('unlink', path => this.removeFile(path), log(`File ${path} has been removed`))
-        .on('ready', () => this.getAllFiles(watcher.getWatched()))
+        .on('ready', () => this.getAllFiles(this.watcher.getWatched()))
     },
     addFile(filePath) {
       for (let i=0; i<this.folders.length; i++) {
@@ -378,6 +379,9 @@ export default {
     },
     autoUpdateDataFromVideos(n) {
       this.runAutoUpdateDataFromVideos()
+    },
+    folders() {
+      this.watcher.close().then(() => this.watchDir(this.folders))
     },
   },
 }

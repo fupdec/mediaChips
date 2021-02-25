@@ -79,9 +79,9 @@
           <v-list-item-icon> 
             <v-icon>mdi-folder-outline</v-icon>
             <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
-              :dot="!folderHovered" :offset-x="folderHovered?35:25" :offset-y="folderHovered?12:8"/>
+              :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?12:6"/>
             <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
-              :dot="!folderHovered" :offset-x="folderHovered?35:25" :offset-y="folderHovered?35:25"/>
+              :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?35:26"/>
           </v-list-item-icon>
           <v-list-item-title>{{folder}}</v-list-item-title>
         </v-list-item>

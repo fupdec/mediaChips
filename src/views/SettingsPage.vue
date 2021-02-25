@@ -31,11 +31,11 @@
             </v-list-item-group>
           </v-list>
           <v-card-actions>
-            <v-btn @click="removeFolder" color="red" :disabled="selectedFolders===undefined" dark>
+            <v-btn @click="removeFolder" color="red" :disabled="selectedFolders===undefined">
               <v-icon left>mdi-folder-remove</v-icon> Remove folder
             </v-btn>
             <v-spacer></v-spacer>
-            <v-btn @click="addFolder" color="green" class="ml-4" dark>
+            <v-btn @click="addFolder" color="green" class="ml-4">
               <v-icon left>mdi-folder-plus</v-icon> Add folder
             </v-btn>
           </v-card-actions>
