@@ -15,11 +15,15 @@
     <v-container class="profile-container" :class="{images: isHeaderImageExists}">
       <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
         <img :src="getImgUrl('avatar')">
-        <v-progress-circular :value="profileCompleteProgress" size="160" rotate="270" width="2"
-          class="profile-complete-progress" color="white"> 
-          <div class="value">{{profileCompleteProgress}}<span class="percent">%</span></div>
-        </v-progress-circular>
       </v-avatar>
+      
+      <v-tooltip left>
+        <template v-slot:activator="{ on, attrs }">
+          <v-progress-circular v-bind="attrs" v-on="on" :value="profileCompleteProgress" 
+            size="168" rotate="270" width="2" class="profile-complete-progress" color="primary"/> 
+        </template>
+        <span>Profile completed {{profileCompleteProgress}} %</span>
+      </v-tooltip>
       <div class="buttons-left">
         <v-btn @click="copyPerformerNameToClipboard" icon
           title="Copy performer name to clipboard"><v-icon>mdi-content-copy</v-icon>
@@ -813,19 +817,12 @@ export default {
     text-transform: uppercase;
   }
   .profile-complete-progress {
+    top: -74px;
+    left: 0;
+    right: 0;
+    margin: auto;
+    z-index: 3;
     position: absolute;
-    .value {
-      position: absolute;
-      bottom: 2px;
-      font-size: 12px;
-      padding: 0 3px;
-      background-color: rgba(133, 133, 133, 0.3);
-      border-radius: 10px;
-      .percent {
-        margin-left: 1px;
-        font-size: 0.7em;
-      }
-    }
   }
   .profile-complete-label {
     position: absolute;
