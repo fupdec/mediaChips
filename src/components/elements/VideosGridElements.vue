@@ -114,6 +114,13 @@
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
+
+        <v-list-item class="pr-1" link @mouseup="moveFile">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-file-move</v-icon> Move File to...
+          </v-list-item-title>
+          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+        </v-list-item>
 <!-- TODO: add function of parsing path for performer, tags, websites  -->
         <v-divider class="ma-1"></v-divider>
 
@@ -281,7 +288,7 @@
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
               <v-list-item-title> 
-                <v-icon left size="18">mdi-clipboard-text</v-icon> Copy To Clipboard 
+                <v-icon left size="18">mdi-clipboard-text</v-icon> Copy to Clipboard 
               </v-list-item-title>
               <v-icon size="22">mdi-menu-right</v-icon>
             </v-list-item>
@@ -331,7 +338,11 @@
 
 
 <script>
+const { dialog } = require('electron').remote
 const shell = require('electron').shell
+const fs = require('fs')
+const path = require('path')
+
 import Selection from "@simonwep/selection-js"
 import vuescroll from 'vuescroll'
 
@@ -480,6 +491,48 @@ export default {
       let videoId = this.$store.getters.getSelectedVideos[0]
       let videoPath = this.$store.getters.videos.find({id:videoId}).value().path
       shell.showItemInFolder(videoPath)
+    },
+    moveFile() {
+      dialog.showOpenDialog(null, {
+        properties: ['openDirectory']
+      }).then(result => {
+        if (result.filePaths.length !== 0) {
+          let filePath = result.filePaths[0]
+          let ids = this.$store.getters.getSelectedVideos
+          let vids = this.$store.getters.videos
+          const vm = this
+
+          if (ids.length!==0) {
+            ids.map(i => {
+              let oldPath = vids.find({id:i}).value().path
+              let fileName = path.basename(oldPath)
+              let newPath = path.join(filePath, fileName)
+              fs.rename(oldPath, newPath, function (err) {
+                if (err) {
+                  vm.$store.dispatch('setNotification', {
+                    type: 'error',
+                    text: `Failed to move file "${fileName}"`
+                  })
+                  throw err
+                } else {
+                  vids.find({id:i}).assign({
+                    path: newPath,
+                    edit: Date.now(),
+                  }).write()
+                  console.log('Successfully moved!')
+                  vm.$store.dispatch('setNotification', {
+                    type: 'info',
+                    text: `File "${fileName}" successfully moved!`
+                  })
+                }
+              })
+            })
+          }
+        } else return
+      }).catch(err => {
+        console.log(err)
+        return
+      })
     },
     changeRating(stars) {
       console.log('rating changed: ' +stars)
