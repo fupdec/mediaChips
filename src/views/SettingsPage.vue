@@ -5,7 +5,7 @@
       <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
       <v-tab href="#performers-settings" draggable="false">Performers<v-icon>mdi-account</v-icon></v-tab>
       <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
-      <v-tab href="#application-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
+      <v-tab href="#privacy-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
       <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
       <v-tab href="#about-settings" draggable="false">About<v-icon>mdi-information-variant</v-icon></v-tab>
     </v-tabs>
@@ -434,9 +434,36 @@
               <v-btn outlined @click="changeNumberOfPagesLimit(15)" :value="15">15</v-btn>
             </v-btn-toggle>
           </div>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn @click="dialogResetToDefaultSettings=true" rounded dark color="red" large class="pr-3">
+              <v-icon left>mdi-restore</v-icon> Reset to default</v-btn>
+            <v-spacer></v-spacer>
+          </v-card-actions>
         </v-card>
+        <v-dialog v-model="dialogResetToDefaultSettings" width="600">
+          <v-card>
+            <v-card-title class="headline">
+              Reset to default settings
+              <v-spacer></v-spacer>
+              <v-icon color="red">mdi-alert</v-icon>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="pt-6 text-center">
+              This will reset all visuals: colors, fonts, card styles and etc. <br>
+              <b>Are you sure?</b>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn @click="dialogResetToDefaultSettings=false" class="ma-4">No</v-btn>
+              <v-spacer></v-spacer>
+              <v-btn @click="resetToDefaultSettings" class="ma-4" color="red" dark>
+                <v-icon left>mdi-restore</v-icon> Yes
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-tab-item>
-      <v-tab-item value="application-settings">
+      <v-tab-item value="privacy-settings">
         <v-card flat max-width="800" class="pb-10" style="margin: auto;">
           <div class="headline text-h5 text-center pt-6">Login</div>
           <v-row>
@@ -497,52 +524,28 @@
           <ClearDatabases typeOfDB="websites" />
           <ClearDatabases typeOfDB="bookmarks" />
           <!-- TODO: delete apropriate bookmarks when deleted video, performer, tag or website -->
-          
-
-          <div class="mt-10 mb-2">Reset to default settings:</div>
-          <v-btn color="red" @click="dialogResetToDefaultSettings=true">
-            <v-icon left>mdi-restore</v-icon> Reset</v-btn>
-            
         </v-card>
-        <v-dialog v-model="dialogResetToDefaultSettings" width="600">
-          <v-card>
-            <v-card-title class="headline">
-              Reset to default settings
-              <v-spacer></v-spacer>
-              <v-icon color="orange">mdi-alert</v-icon>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text class="pt-6 text-center">
-              This will reset only visuals: colors, fonts, cards styles and etc. <br>
-              <b>Are you sure?</b>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn class="ma-4" @click="dialogResetToDefaultSettings = false">No</v-btn>
-              <v-spacer></v-spacer>
-              <v-btn class="ma-4" color="orange" @click="resetToDefaultSettings">
-                <v-icon left>mdi-restore</v-icon> Yes
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
       </v-tab-item>
       <v-tab-item value="about-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <v-row>
-            <v-col cols="4">
+          <div class="d-flex">
+            <div>
               <div>Adult Video Database 0.6.4</div>
               <p class="text--secondary">by fupdec</p>
-              <v-btn color="#eee" light rounded class="px-5" @click="openGithub">
+              <v-btn @click="openGithub" color="#eee" light rounded class="px-5">
                 <v-icon left>mdi-github</v-icon> Github
               </v-btn>
-            </v-col>
-            <v-col cols="4" class="text-center">
-              <div>2021</div>
-            </v-col>
-            <v-col cols="4" class="text-right">
-              <img src="/icons/icon.png" alt="avdb" width="82" height="82" class="mt-2">
-            </v-col>
-          </v-row>
+            </div>
+            <v-spacer></v-spacer>
+              <v-btn @click="openPatreon" color="#ff424d" class="pa-5">
+                <v-icon left>mdi-patreon</v-icon> Support development on Patreon
+              </v-btn>
+            <v-spacer></v-spacer>
+            <div class="text-center d-flex flex-column">
+              <img src="/icons/icon.png" alt="avdb" width="82" height="82">
+              <span>2021</span>
+            </div>
+          </div>
         </v-card>
       </v-tab-item>
     </v-tabs-items>
@@ -816,6 +819,9 @@ export default {
     },
     openGithub() {
       shell.openExternal('https://github.com/fupdec/Adult-Video-Database')
+    },
+    openPatreon() {
+      shell.openExternal('https://www.patreon.com/avdb')
     },
     changeNumberOfPagesLimit(number) {
       this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value: number})
