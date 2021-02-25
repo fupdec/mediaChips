@@ -10,6 +10,14 @@
         <div class="background" :style="headerColor"></div>
         <div class="website-logo">
           <v-img :src="getImgUrl(websiteId)" max-width="300" class="ma-3 logo"/>
+          <div class="mx-3">
+            <v-chip label outlined class="mb-2 d-flex">
+              <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+            </v-chip>
+            <v-chip label outlined class="d-flex">
+              <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+            </v-chip>
+          </div>
         </div>
         <div class="website-info">
           <div class="text-h2 pa-4 website-name"> {{website.name}} 
@@ -208,6 +216,14 @@ export default {
       } else network = ''
       return network
     },
+    dateAdded() {
+      let date = new Date(this.website.date)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
+    dateEdit() {
+      let date = new Date(this.website.edit)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
   },
   methods: {
     scrollToTop() {
@@ -338,6 +354,7 @@ export default {
     z-index: 2;
     font-weight: bold;
   }
+  .website-logo,
   .logo,
   .chips-performers,
   .performers-title {

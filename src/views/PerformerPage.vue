@@ -60,6 +60,14 @@
           <v-expansion-panel-content eager>
             <v-container class="pa-0">
               <v-row>
+                <v-col cols="12" class="d-flex justify-space-between pb-0">
+                  <v-chip label outlined class="mr-4">
+                    <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+                  </v-chip>
+                  <v-chip label outlined>
+                    <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+                  </v-chip>
+                </v-col>
                 <v-col cols="12" sm="4">
                   <div class="overline text-center">Main info</div>
                   <div class="param">
@@ -326,6 +334,14 @@ export default {
     activeWebsites: [],
   }),
   computed: {
+    dateAdded() {
+      let date = new Date(this.performer.date)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
+    dateEdit() {
+      let date = new Date(this.performer.edit)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
     gradient() {
       let color = this.$vuetify.theme.isDark ? '#121212' : '#fff'
       return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0) 30%)`
