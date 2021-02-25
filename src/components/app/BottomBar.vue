@@ -50,15 +50,16 @@
     
     <v-tooltip v-for="(folder, i) in folders" :key="i" top>
       <template v-slot:activator="{ on, attrs }">
-        <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="red"
-          :dot="!folderHovered" :offset-x="folderHovered?60:55" :offset-y="folderHovered?25:22"/>
-        <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="green"
-          :dot="!folderHovered" :offset-x="folderHovered?60:55" :offset-y="folderHovered?50:42"/>
-        <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder"
-          @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
-          <span>{{folder.substring(0, 10)}}</span>
-          <v-icon>mdi-folder-outline</v-icon>
-        </v-btn>
+        <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
+          <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder)" text color="secondary" class="folder">
+            <span>{{folder.substring(0, 10)}}</span>
+            <v-icon>mdi-folder-outline</v-icon>
+          </v-btn>
+          <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
+            :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?-6:-8"/>
+          <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
+            :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?18:10"/>
+        </div>
       </template>
       <span>{{folder}}</span>
     </v-tooltip>
@@ -181,6 +182,9 @@ export default {
         const index = _.findIndex(this.foldersData, {folder})
         return this.foldersData[index].newFiles.length
       } else return ''
+    },
+    openDialogFolder(folder) {
+      this.$emit('openDialogFolder', folder)
     },
   },
   watch: {

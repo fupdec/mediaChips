@@ -4,7 +4,7 @@
 
     <AppBar />
 
-    <SideBar />
+    <SideBar @openDialogFolder="openDialogFolder"/>
 
     <v-main app v-if="!disableRunApp">
       <router-view :key="$route.name + ($route.params.id || '')" />
@@ -62,7 +62,7 @@
       </v-card>
     </v-bottom-sheet>
 
-    <BottomBar />
+    <BottomBar @openDialogFolder="openDialogFolder"/>
 
     <VideosGridElements />
     <ScanVideos />
@@ -75,6 +75,7 @@
     <!-- <div class="console-log" :class="{visible: $store.state.isLogVisible}">
       {{$store.state.log}} 
     </div> -->
+    <DialogFolder v-if="$store.state.dialogFolder" :folder="folder"/>
 
     <v-footer app height="20" class="py-0 footer-app">
       <StatusBar />
@@ -106,6 +107,7 @@ export default {
     SideBar: () => import('@/components/app/SideBar.vue'),
     StatusBar: () => import('@/components/app/StatusBar.vue'),
     BottomBar: () => import('@/components/app/BottomBar.vue'),
+    DialogFolder: () => import('@/components/app/DialogFolder.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
   },
@@ -180,6 +182,7 @@ export default {
     performerPage: '/',
     updateApp: false,
     intervalUpdateDataFromVideos: null,
+    folder: null,
   }),
   computed: {
     passwordProtection() {
@@ -355,6 +358,11 @@ export default {
     },
     openPage() {
       shell.openExternal('https://github.com/fupdec/Adult-Video-Database/releases')
+    },
+    openDialogFolder(folder) {
+      const index = _.findIndex(this.foldersData, {folder})
+      this.folder = this.foldersData[index]
+      this.$store.state.dialogFolder = true
     },
   },
   watch: {

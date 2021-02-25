@@ -74,14 +74,14 @@
       </v-list>
 
       <v-list nav dense>
-        <v-list-item v-for="(folder, i) in folders" :key="i"
+        <v-list-item v-for="(folder, i) in folders" :key="i" @click="openDialogFolder(folder)"
           @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
           <v-list-item-icon> 
             <v-icon>mdi-folder-outline</v-icon>
-            <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="green"
-              :dot="!folderHovered" :offset-x="folderHovered?35:25" :offset-y="folderHovered?35:25"/>
-            <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="red"
+            <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
               :dot="!folderHovered" :offset-x="folderHovered?35:25" :offset-y="folderHovered?12:8"/>
+            <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
+              :dot="!folderHovered" :offset-x="folderHovered?35:25" :offset-y="folderHovered?35:25"/>
           </v-list-item-icon>
           <v-list-item-title>{{folder}}</v-list-item-title>
         </v-list-item>
@@ -222,6 +222,9 @@ export default {
         const index = _.findIndex(this.foldersData, {folder})
         return this.foldersData[index].newFiles.length
       } else return ''
+    },
+    openDialogFolder(folder) {
+      this.$emit('openDialogFolder', folder)
     },
   },
   watch: {
