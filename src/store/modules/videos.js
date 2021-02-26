@@ -364,6 +364,7 @@ const Videos = {
         let type = rootState.Settings.videoFilters[filter].type
         let flag = rootState.Settings.videoFilters[filter].flag
 
+        if (flag === 'lostVideos') return 'Lost Videos'
         if (val === null || val.length === 0) continue
         
         if (equals.includes(cond)) cond = '='

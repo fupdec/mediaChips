@@ -80,7 +80,29 @@ export default {
   },
   methods: {
     openTabWithLostVideos() {
-      console.log('1111')
+      console.log(this.folder.lostFiles)
+      // return
+      let tabId = Date.now()
+      let tab = { 
+        name: 'Lost videos', 
+        link: `/videos/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: [{
+          param: 'path',
+          cond: 'one of',
+          val: this.folder.lostFiles,
+          type: 'array',
+          flag: 'lostVideos',
+          lock: true,
+        }],
+        sortBy: 'path',
+        sortDirection: 'asc',
+        page: 1,
+        icon: 'video-off-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$store.state.dialogFolder = false
+      this.$router.push(tab.link)
     },
   },
   watch: {

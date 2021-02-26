@@ -320,14 +320,9 @@ export default {
           lock: true,
         }]
       } else {
-        this.$store.state.Settings.videoFilters = [{
-          param: null,
-          cond: null,
-          val: null,
-          type: null,
-          flag: null,
-          lock: false,
-        }]
+        const locked = _.filter(this.$store.state.Settings.videoFilters, {lock: true})
+        const defaults = [{param:null, cond:null, val:null, type:null, flag:null, lock:false}]
+        this.$store.state.Settings.videoFilters = _.cloneDeep([ ...locked, ...defaults])
       }
 
       this.$store.dispatch('filterVideos')
