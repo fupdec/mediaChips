@@ -10,7 +10,7 @@
       </v-card-title>
       <v-divider></v-divider>
       <v-card-actions v-if="folder.lostFiles.length" class="pa-4">
-        <v-btn @click="listLostFiles=!listLostFiles" color="orange" dark>
+        <v-btn @click="toggleListLostFiles" color="orange" dark>
           <v-icon left>mdi-format-list-numbered</v-icon> Toggle full list
         </v-btn>
         <v-alert dense text color="orange" class="mb-0 ml-6">
@@ -31,7 +31,7 @@
         </v-card-text>
       </vuescroll>
       <v-card-actions v-if="folder.newFiles.length" class="pa-4">
-        <v-btn @click="listNewFiles=!listNewFiles" color="blue" dark>
+        <v-btn @click="toggleListNewFiles" color="blue" dark>
           <v-icon left>mdi-format-list-numbered</v-icon> Toggle full list
         </v-btn>
         <v-alert dense text color="blue" class="mb-0 ml-6">
@@ -73,6 +73,8 @@ export default {
     this.$nextTick(function () {
       if (this.folder.lostFiles.length<10 && this.folder.lostFiles.length>0) this.listLostFiles = true
       if (this.folder.newFiles.length<10 && this.folder.newFiles.length>0) this.listNewFiles = true
+      if (this.folder.lostFiles.length==0 && this.folder.newFiles.length>0) this.listNewFiles = true
+      if (this.folder.newFiles.length==0 && this.folder.lostFiles.length>0) this.listNewFiles = true
     })
   },
   updated() {
@@ -84,6 +86,14 @@ export default {
   computed: {
   },
   methods: {
+    toggleListLostFiles() {
+      this.listLostFiles = !this.listLostFiles
+      this.listNewFiles = false
+    },
+    toggleListNewFiles() {
+      this.listNewFiles = !this.listNewFiles
+      this.listLostFiles = false
+    },
     openTabWithLostVideos() {
       console.log(this.folder.lostFiles)
       // return
