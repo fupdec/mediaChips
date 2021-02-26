@@ -1,80 +1,97 @@
 <template>
   <v-bottom-navigation v-if="navigationSide=='2'" absolute style="bottom:20px" shift>
     <!-- TODO custom background color depends on current route -->
-    <v-btn to="/home" text color="secondary">
-      <span>Home</span>
-      <v-icon>mdi-home-outline</v-icon>
-    </v-btn>
+    <vuescroll :ops="ops">
+      <div class="bottom-menu">
+        <v-btn to="/home" text color="secondary">
+          <span>Home</span>
+          <v-icon>mdi-home-outline</v-icon>
+        </v-btn>
 
-    <v-btn to="/videos/:default?tabId=default" @click.middle="addNewTabVideos" text color="secondary">
-      <span>Videos</span>
-      <v-icon>mdi-video-outline</v-icon>
-    </v-btn>
+        <v-btn to="/videos/:default?tabId=default" @click.middle="addNewTabVideos" text color="secondary">
+          <span>Videos</span>
+          <v-icon>mdi-video-outline</v-icon>
+        </v-btn>
 
-    <v-btn to="/performers/:default?tabId=default" @click.middle="addNewTabPerformers" text color="secondary">
-      <span>Performers</span>
-      <v-icon>mdi-account-outline</v-icon>
-    </v-btn>
+        <v-btn to="/performers/:default?tabId=default" @click.middle="addNewTabPerformers" text color="secondary">
+          <span>Performers</span>
+          <v-icon>mdi-account-outline</v-icon>
+        </v-btn>
 
-    <v-btn v-if="isShowPerformerBtn" :to="$router.currentRoute" text color="secondary">
-      <span>Performer</span>
-      <v-icon>mdi-account-details</v-icon>
-    </v-btn>
+        <v-btn v-if="isShowPerformerBtn" :to="$router.currentRoute" text color="secondary">
+          <span>Performer</span>
+          <v-icon>mdi-account-details</v-icon>
+        </v-btn>
 
-    <v-btn to="/tags/:default?tabId=default" @click.middle="addNewTabTags" text color="secondary">
-      <span>Tags</span>
-      <v-icon>mdi-tag-outline</v-icon>
-    </v-btn>
+        <v-btn to="/tags/:default?tabId=default" @click.middle="addNewTabTags" text color="secondary">
+          <span>Tags</span>
+          <v-icon>mdi-tag-outline</v-icon>
+        </v-btn>
 
-    <v-btn to="/websites/:default?tabId=default" @click.middle="addNewTabWebsites" text color="secondary">
-      <span>Websites</span>
-      <v-icon>mdi-web</v-icon>
-    </v-btn>
+        <v-btn to="/websites/:default?tabId=default" @click.middle="addNewTabWebsites" text color="secondary">
+          <span>Websites</span>
+          <v-icon>mdi-web</v-icon>
+        </v-btn>
 
-    <v-btn v-if="isShowWebsiteBtn" :to="$router.currentRoute" text color="secondary">
-      <span>Website</span>
-      <v-icon>mdi-web-box</v-icon>
-    </v-btn>
+        <v-btn v-if="isShowWebsiteBtn" :to="$router.currentRoute" text color="secondary">
+          <span>Website</span>
+          <v-icon>mdi-web-box</v-icon>
+        </v-btn>
 
-    <v-btn to="/playlists/:default?tabId=default" @click.middle="addNewTabPlaylists" text color="secondary">
-      <span>Playlists</span>
-      <v-icon>mdi-format-list-bulleted</v-icon>
-    </v-btn>
+        <v-btn to="/playlists/:default?tabId=default" @click.middle="addNewTabPlaylists" text color="secondary">
+          <span>Playlists</span>
+          <v-icon>mdi-format-list-bulleted</v-icon>
+        </v-btn>
 
-    <v-btn to="/settings" text color="secondary">
-      <span>Settings</span>
-      <v-icon>mdi-cog-outline</v-icon>
-    </v-btn>
+        <v-btn to="/settings" text color="secondary">
+          <span>Settings</span>
+          <v-icon>mdi-cog-outline</v-icon>
+        </v-btn>
 
-    <div v-if="folders.length" class="mx-6"></div>
-    
-    <v-tooltip v-for="(folder, i) in folders" :key="i" top>
-      <template v-slot:activator="{ on, attrs }">
-        <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
-          <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder)" text color="secondary" class="folder">
-            <span>{{folder.substring(0, 10)}}</span>
-            <v-icon>mdi-folder-outline</v-icon>
-          </v-btn>
-          <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
-            :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?-6:-8"/>
-          <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
-            :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?18:10"/>
-        </div>
-      </template>
-      <span>{{folder}}</span>
-    </v-tooltip>
+        <div v-if="folders.length" class="mx-6"></div>
+        
+        <v-tooltip v-for="(folder, i) in folders" :key="i" top>
+          <template v-slot:activator="{ on, attrs }">
+            <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
+              <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder)" text color="secondary" class="folder">
+                <span>{{folder.substring(0, 10)}}</span>
+                <v-icon>mdi-folder-outline</v-icon>
+              </v-btn>
+              <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
+                :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?-6:-8"/>
+              <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
+                :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?18:10"/>
+            </div>
+          </template>
+          <span>{{folder}}</span>
+        </v-tooltip>
+      </div>
+    </vuescroll>
   </v-bottom-navigation>
 </template>
 
 
 <script>
+import vuescroll from 'vuescroll'
+
 export default {
   name: 'BottomBar',
+  components: {
+    vuescroll,
+  },
   data: () => ({
     navigationMenu: 1,
     isShowPerformerBtn: false,
     isShowWebsiteBtn: false,
     folderHovered: false,
+    ops: {
+      scrollPanel: {
+        scrollingY: false
+      },
+      rail: {
+        size: '4px',
+      }
+    },
   }),
   computed: {
     navigationSide() {
@@ -211,5 +228,11 @@ export default {
 }
 .v-btn.folder {
   height: 100%;
+}
+.bottom-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 56px;
 }
 </style>
