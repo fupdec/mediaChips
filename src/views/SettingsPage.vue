@@ -12,35 +12,8 @@
 
     <v-tabs-items v-model="tab">
       <v-tab-item value="videos-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="pb-10">
-          <div class="headline text-h5 text-center py-6">Folders
-            <v-tooltip right>
-              <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
-              </template>
-              <span>Add folders with your videos so that app can track
-                <br> new videos and check deleted ones</span>
-            </v-tooltip>
-          </div>
-          <v-list dense>
-            <v-list-item-group v-model="selectedFolders">
-              <v-list-item v-for="(folder, i) in folders" :key="i">
-                <v-icon left>mdi-folder</v-icon>
-                <span>{{folder}}</span>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-          <v-card-actions>
-            <v-btn @click="removeFolder" color="red" :disabled="selectedFolders===undefined">
-              <v-icon left>mdi-folder-remove</v-icon> Remove folder
-            </v-btn>
-            <v-spacer></v-spacer>
-            <v-btn @click="addFolder" color="green" class="ml-4">
-              <v-icon left>mdi-folder-plus</v-icon> Add folder
-            </v-btn>
-          </v-card-actions>
-          
-          <div class="pb-10 pt-16">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <div class="pb-10">
             <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large rounded>
               <v-icon size="26" left>mdi-plus</v-icon> Add new videos
             </v-btn>
@@ -61,9 +34,43 @@
               <v-radio label="System player" value="1"></v-radio>
             </v-radio-group>
           </div>
+
+          <v-card outlined class="mt-10 pb-4 px-4">
+            <div class="headline text-h5 text-center my-4"> Folders
+              <v-tooltip right>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
+                </template>
+                <span>Add folders with your videos so that app can watch
+                  <br> new videos and check deleted ones</span>
+              </v-tooltip>
+            </div>
+            <v-list dense v-if="folders.length" shaped>
+              <v-list-item v-for="(folder, i) in folders" :key="i" class="folder-list-item">
+                <div class="folder-name">
+                  <v-icon left>mdi-folder</v-icon>
+                  <span>{{folder}}</span>
+                </div>
+                <v-btn @click="removeFolder(i)" class="ml-2" color="red" icon fab x-small title="Remove folder">
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
+              </v-list-item>
+            </v-list>
+            <div v-else class="text-center overline my-4">
+              <v-icon size="40">mdi-folder-outline</v-icon>
+              <div>There are no watched folders yet</div>
+            </div>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn @click="addFolder" rounded dark color="green" class="pr-4">
+                <v-icon left>mdi-plus</v-icon> Add watched folder
+              </v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
           
-          <v-card flat max-width="800" style="margin: auto;">
-            <div class="headline text-h5 text-center mt-10 mb-4"> Updating data from videos
+          <v-card outlined class="mt-10 pb-4 px-4">
+            <div class="headline text-h5 text-center my-4"> Updating data from videos
               <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
@@ -105,7 +112,7 @@
                 </div>
               </v-col>
             </v-row>
-            <v-divider class="my-6"/>
+            <v-divider class="my-4"/>
             <v-row>
               <v-col cols="12">
                 <div class="d-flex align-center">
@@ -144,6 +151,55 @@
             </v-col>
           </v-row> -->
           <!-- TODO remove this option from settings JSON -->
+          
+          <v-card outlined class="mt-10 pb-4 px-4">
+            <div class="headline text-h5 text-center py-4"> Video preview</div>
+
+            <v-row>
+              <v-col cols="12" sm="6" class="py-0">
+                <div class="d-flex align-center">
+                  <div class="mr-6">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                      </template>
+                      <span>Plays on hover</span>
+                    </v-tooltip>
+                    Video preview enabled:
+                  </div>
+                  <v-switch v-model="videoPreview" inset style="display:inline-block;">
+                    <template v-slot:label>
+                      <span v-if="videoPreview">Yes</span>
+                      <span v-else>No</span>
+                    </template>
+                  </v-switch>
+                </div>
+              </v-col>
+              <v-col cols="12" sm="6" class="py-0">
+                <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
+                  hide-details :thumb-size="24" thumb-label />
+                <div class="caption text-center">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
+              </v-col>
+            </v-row>
+
+            <v-divider class="my-4"/>
+
+            <div class="d-flex align-center">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                </template>
+                <span>Will be generated automatically when the video page is opened.</span>
+              </v-tooltip>
+              <span class="mr-6">Video preview grid 3x3:</span>
+              <v-switch v-model="videoPreviewGrid" inset style="display:inline-block;">
+                <template v-slot:label>
+                  <span v-if="videoPreviewGrid">Yes</span>
+                  <span v-else>No</span>
+                </template>
+              </v-switch>
+            </div>
+          </v-card>
         </v-card>
 
         <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
@@ -225,221 +281,182 @@
             </vuescroll>
           </v-card>
         </v-dialog>
-
-        <v-card flat max-width="800" style="margin: auto;">
-          <div class="headline text-h5 text-center mt-10 mb-4"> Video preview
-            <v-tooltip right>
-              <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
-              </template>
-              <span>Plays on hover</span>
-            </v-tooltip>
-          </div>
-
-          <v-row>
-            <v-col cols="12" sm="6">
-              <div class="d-flex align-center">
-                <div class="mr-6">Video preview enabled:</div>
-                <v-switch v-model="videoPreview" inset style="display:inline-block;">
-                  <template v-slot:label>
-                    <span v-if="videoPreview">Yes</span>
-                    <span v-else>No</span>
-                  </template>
-                </v-switch>
-              </div>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
-                hide-details :thumb-size="24" thumb-label />
-              <div class="caption text-center">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
-            </v-col>
-          </v-row>
-
-          <v-divider class="my-6"/>
-
-          <div class="d-flex align-center pb-10">
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-              </template>
-              <span>Will be generated automatically when the video page is opened.</span>
-            </v-tooltip>
-            <span class="mr-6">Video preview grid 3x3:</span>
-            <v-switch v-model="videoPreviewGrid" inset style="display:inline-block;">
-              <template v-slot:label>
-                <span v-if="videoPreviewGrid">Yes</span>
-                <span v-else>No</span>
-              </template>
-            </v-switch>
-          </div>
-        </v-card>
       </v-tab-item>
       <v-tab-item value="performers-settings">
-        <v-card flat max-width="800" style="margin: auto;">
-          <div class="headline text-h5 text-center pt-6 mb-4"> Parameters </div>
-          <v-btn @click="$store.state.Settings.dialogManagePerformerParameters=true" 
-            class="my-4" block color="primary">
-            <v-icon left>mdi-shape</v-icon> Manage custom parameters
-          </v-btn>
-          <ManagePerformerParameters v-if="$store.state.Settings.dialogManagePerformerParameters"/>
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <v-card outlined class="pb-4 px-4">
+            <div class="headline text-h5 text-center py-4"> Parameters </div>
+            <v-btn @click="$store.state.Settings.dialogManagePerformerParameters=true" 
+              class="my-4" block color="primary">
+              <v-icon left>mdi-shape</v-icon> Manage custom parameters
+            </v-btn>
+            <ManagePerformerParameters v-if="$store.state.Settings.dialogManagePerformerParameters"/>
 
-          <div class="mt-8">Edit items of parameter:</div>
-          <EditPerformerItemsOfParameter/>
-
+            <div class="mt-8">Edit items of parameter:</div>
+            <EditPerformerItemsOfParameter/>
+          </v-card>
           
-          <div class="headline text-h5 text-center pt-10 mb-4"> Meter
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
-              </template>
-              <v-card class="my-2">
-                <v-card-actions>
-                  <div class="text-center mx-4">
-                    You can use a meter to <br>see how hot the performer is. <br>
-                    The larger the tag value, <br>the more the meter will fill. <br><br>
-                    Tags from the video are used <br> in which the performer is involved. <br><br>
-                    Most likely none of your performers <br> will have a fully filled scale. <br>
-                    To increase the scale, <br>you can use a multiplier<br> in the settings -> performer.
-                  </div>
-                  <v-img :src="getMeterImg" width="165"/><br>
-                </v-card-actions>
-              </v-card>
-            </v-tooltip>
-          </div>
-          <v-row>
-            <v-col cols="12" sm="6">
-              <div class="text-center">Height</div>
-              <v-slider v-model="meterHeight" :min="1" :max="20"
-                hide-details :thumb-size="32" thumb-label />
-              <div class="caption text-center">{{meterHeight}} pixels</div>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <div class="text-center">
-                <v-tooltip top>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                  </template>
-                  <span>Change if the meter of tags shows an incorrect value</span>
-                </v-tooltip>
-                Multiplier
-              </div>
-              <v-slider v-model="meterMultiplier" :min="1" :max="100"
-                hide-details :thumb-size="32" thumb-label />
-              <div class="caption text-center">Value: {{meterMultiplier}} %</div>
-            </v-col>
-          </v-row>
+          <v-card outlined class="mt-10 px-4">
+            <div class="headline text-h5 text-center py-4"> Meter
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
+                </template>
+                <v-card class="my-2">
+                  <v-card-actions>
+                    <div class="text-center mx-4">
+                      You can use a meter to <br>see how hot the performer is. <br>
+                      The larger the tag value, <br>the more the meter will fill. <br><br>
+                      Tags from the video are used <br> in which the performer is involved. <br><br>
+                      Most likely none of your performers <br> will have a fully filled scale. <br>
+                      To increase the scale, <br>you can use a multiplier<br> in the settings -> performer.
+                    </div>
+                    <v-img :src="getMeterImg" width="165"/><br>
+                  </v-card-actions>
+                </v-card>
+              </v-tooltip>
+            </div>
+            <v-row>
+              <v-col cols="12" sm="6">
+                <div class="text-center">Height</div>
+                <v-slider v-model="meterHeight" :min="1" :max="20"
+                  hide-details :thumb-size="32" thumb-label />
+                <div class="caption text-center">{{meterHeight}} pixels</div>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <div class="text-center">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                    </template>
+                    <span>Change if the meter of tags shows an incorrect value</span>
+                  </v-tooltip>
+                  Multiplier
+                </div>
+                <v-slider v-model="meterMultiplier" :min="1" :max="100"
+                  hide-details :thumb-size="32" thumb-label />
+                <div class="caption text-center">Value: {{meterMultiplier}} %</div>
+              </v-col>
+            </v-row>
+          </v-card>
         </v-card>
       </v-tab-item>
       <v-tab-item value="appearance-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="pb-10">
-          <div class="headline text-h5 text-center pt-10">Theme</div>
-          <v-row>
-            <v-col cols="12">
-              <div class="d-flex">
-                <span class="mr-6">Dark mode:</span>
-                <v-switch v-model="darkMode" inset hide-details class="d-inline-flex mt-0 pt-0">
-                  <template v-slot:label>
-                    <span v-if="darkMode">Yes</span>
-                    <span v-else>No</span>
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <v-card outlined class="px-4">
+            <div class="headline text-h5 text-center py-4">Theme</div>
+            <v-row>
+              <v-col cols="12">
+                <div class="d-flex">
+                  <span class="mr-6">Dark mode:</span>
+                  <v-switch v-model="darkMode" inset hide-details class="d-inline-flex mt-0 pt-0">
+                    <template v-slot:label>
+                      <span v-if="darkMode">Yes</span>
+                      <span v-else>No</span>
+                    </template>
+                  </v-switch>
+                </div>
+              </v-col>
+              <v-col cols="12">
+                <div class="d-flex">
+                  <span class="mr-6">Use header gradient:</span>
+                  <v-switch v-model="headerGradient" inset hide-details class="d-inline-flex mt-0 pt-0">
+                    <template v-slot:label>
+                      <span v-if="headerGradient">Yes</span>
+                      <span v-else>No</span>
+                    </template>
+                  </v-switch>
+                </div>
+              </v-col>
+              <v-col cols="12" sm="6" v-if="headerGradient">
+                <div class="mb-2">Colors for header gradient (light theme):</div>
+                <v-btn @click="openDialogHeaderGradientLight" color="secondary">
+                  <v-icon left>mdi-palette</v-icon> Change
+                </v-btn>
+              </v-col>
+              <v-col cols="12" sm="6" v-if="headerGradient">
+                <div class="mb-2">Colors for header gradient (dark theme):</div>
+                <v-btn @click="openDialogHeaderGradientDark" color="secondary">
+                  <v-icon left>mdi-palette</v-icon> Change
+                </v-btn>
+              </v-col>
+            </v-row>
+
+            <HeaderGradient :themeDark="gradientThemeDark"/>
+
+            <ThemeColors />
+          </v-card>
+
+          <v-card outlined class="mt-10 px-4">
+            <div class="headline text-h5 text-center py-4">Fonts</div>
+            <v-row>
+              <v-col cols="12" sm="6">
+                <v-autocomplete
+                  v-model="textFont" :items="fonts" label="Text font"
+                  :style="`font-family:'${textFont}',sans-serif !important;`"
+                  outlined dense placeholder="Main content font" class="overline"
+                >
+                  <template v-slot:item="data">
+                    <div :style="`font-family:'${data.item}',sans-serif !important;`">
+                      {{data.item}}
+                    </div>
                   </template>
-                </v-switch>
-              </div>
-            </v-col>
-            <v-col cols="12">
-              <div class="d-flex">
-                <span class="mr-6">Use header gradient:</span>
-                <v-switch v-model="headerGradient" inset hide-details class="d-inline-flex mt-0 pt-0">
-                  <template v-slot:label>
-                    <span v-if="headerGradient">Yes</span>
-                    <span v-else>No</span>
+                </v-autocomplete>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-autocomplete
+                  v-model="headerFont" :items="fonts" label="Header font"
+                  :style="`font-family:'${headerFont}',sans-serif !important;`"
+                  outlined dense placeholder="Main content font" class="overline"
+                >
+                  <template v-slot:item="data">
+                    <span :style="`font-family:'${data.item}',sans-serif !important;`">
+                      {{data.item}}
+                    </span>
                   </template>
-                </v-switch>
-              </div>
-            </v-col>
-            <v-col cols="12" sm="6" v-if="headerGradient">
-              <div class="mb-2">Colors for header gradient (light theme):</div>
-              <v-btn @click="openDialogHeaderGradientLight" color="secondary">
-                <v-icon left>mdi-palette</v-icon> Change
-              </v-btn>
-            </v-col>
-            <v-col cols="12" sm="6" v-if="headerGradient">
-              <div class="mb-2">Colors for header gradient (dark theme):</div>
-              <v-btn @click="openDialogHeaderGradientDark" color="secondary">
-                <v-icon left>mdi-palette</v-icon> Change
-              </v-btn>
-            </v-col>
-          </v-row>
+                </v-autocomplete>
+              </v-col>
+            </v-row>
+          </v-card>
 
-          <HeaderGradient :themeDark="gradientThemeDark"/>
+          <v-card outlined class="mt-10 pb-4 px-4">
+            <div class="headline text-h5 text-center py-4">Application</div>
 
-          <ThemeColors />
-
-          <div class="headline text-h5 text-center my-6">Fonts</div>
-          <v-row>
-            <v-col cols="12" sm="6">
-              <v-autocomplete
-                v-model="textFont" :items="fonts" label="Text font"
-                :style="`font-family:'${textFont}',sans-serif !important;`"
-                outlined dense placeholder="Main content font" class="overline"
-              >
-                <template v-slot:item="data">
-                  <div :style="`font-family:'${data.item}',sans-serif !important;`">
-                    {{data.item}}
-                  </div>
+            <div class="d-flex">
+              <span class="mr-6">Navigation menu position:</span>
+              <v-radio-group v-model="navigationSide" mandatory row hide-details class="mt-0 pt-0">
+                <v-radio label="Side" value="1"></v-radio>
+                <v-radio label="Bottom" value="2"></v-radio>
+                <v-radio label="None" value="0"></v-radio>
+              </v-radio-group>
+            </div>
+            <div class="mt-8 d-flex">
+              <span class="mr-6">Rating and Favorite in Card Description:</span>
+              <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex">
+                <template v-slot:label>
+                  <span v-if="ratingAndFavoriteInCard">Yes</span>
+                  <span v-else>No</span>
                 </template>
-              </v-autocomplete>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-autocomplete
-                v-model="headerFont" :items="fonts" label="Header font"
-                :style="`font-family:'${headerFont}',sans-serif !important;`"
-                outlined dense placeholder="Main content font" class="overline"
-              >
-                <template v-slot:item="data">
-                  <span :style="`font-family:'${data.item}',sans-serif !important;`">
-                    {{data.item}}
-                  </span>
-                </template>
-              </v-autocomplete>
-            </v-col>
-          </v-row>
-
-          <div class="headline text-h5 text-center my-6">Application</div>
-
-          <div class="d-flex">
-            <span class="mr-6">Navigation menu position:</span>
-            <v-radio-group v-model="navigationSide" mandatory row hide-details class="mt-0 pt-0">
-              <v-radio label="Side" value="1"></v-radio>
-              <v-radio label="Bottom" value="2"></v-radio>
-              <v-radio label="None" value="0"></v-radio>
-            </v-radio-group>
-          </div>
-          <div class="mt-8 d-flex">
-            <span class="mr-6">Rating and Favorite in Card Description:</span>
-            <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex">
-              <template v-slot:label>
-                <span v-if="ratingAndFavoriteInCard">Yes</span>
-                <span v-else>No</span>
-              </template>
-            </v-switch>
-          </div>
-          <div class="py-8">
-            <span class="mr-6">Limit of pages in pagination:</span>
-            <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
-              <v-btn outlined @click="changeNumberOfPagesLimit(5)" :value="5">5</v-btn>
-              <v-btn outlined @click="changeNumberOfPagesLimit(7)" :value="7">7</v-btn>
-              <v-btn outlined @click="changeNumberOfPagesLimit(9)" :value="9">9</v-btn>
-              <v-btn outlined @click="changeNumberOfPagesLimit(11)" :value="11">11</v-btn>
-              <v-btn outlined @click="changeNumberOfPagesLimit(13)" :value="13">13</v-btn>
-              <v-btn outlined @click="changeNumberOfPagesLimit(15)" :value="15">15</v-btn>
-            </v-btn-toggle>
-          </div>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn @click="dialogResetToDefaultSettings=true" rounded dark color="red" large class="pr-3">
-              <v-icon left>mdi-restore</v-icon> Reset to default</v-btn>
-            <v-spacer></v-spacer>
-          </v-card-actions>
+              </v-switch>
+            </div>
+            <div class="py-8">
+              <span class="mr-6">Limit of pages in pagination:</span>
+              <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
+                <v-btn outlined @click="changeNumberOfPagesLimit(5)" :value="5">5</v-btn>
+                <v-btn outlined @click="changeNumberOfPagesLimit(7)" :value="7">7</v-btn>
+                <v-btn outlined @click="changeNumberOfPagesLimit(9)" :value="9">9</v-btn>
+                <v-btn outlined @click="changeNumberOfPagesLimit(11)" :value="11">11</v-btn>
+                <v-btn outlined @click="changeNumberOfPagesLimit(13)" :value="13">13</v-btn>
+                <v-btn outlined @click="changeNumberOfPagesLimit(15)" :value="15">15</v-btn>
+              </v-btn-toggle>
+            </div>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn @click="dialogResetToDefaultSettings=true" rounded dark color="red" large class="pr-3">
+                <v-icon left>mdi-restore</v-icon> Reset to default</v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
         </v-card>
         <v-dialog v-model="dialogResetToDefaultSettings" width="600">
           <v-card>
@@ -464,88 +481,96 @@
         </v-dialog>
       </v-tab-item>
       <v-tab-item value="privacy-settings">
-        <v-card flat max-width="800" class="pb-10" style="margin: auto;">
-          <div class="headline text-h5 text-center pt-6">Login</div>
-          <v-row>
-            <v-col cols="12">
-              <div class="mt-8 d-flex">
-                <span class="mr-6">Password protect entry:</span>
-                <v-switch v-model="passwordProtection" inset hide-details class="mt-0 pt-0 d-inline-flex">
-                  <template v-slot:label>
-                    <span v-if="passwordProtection">Yes</span>
-                    <span v-else>No</span>
-                  </template>
-                </v-switch>
-              </div>
-            </v-col>
-            <v-col v-if="passwordProtection" cols="12" sm="6">
-              <div class="mt-8 mb-2 text-center">Password</div>
-              <v-form ref="pass" v-model="validPass">
-                <v-text-field :disabled="!passwordProtection"
-                  v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                  :rules="[getPasswordRules]" :type="showPassword ? 'text' : 'password'" solo  
-                  @click:append="showPassword = !showPassword" validate-on-blur counter dense
-                />
-                <v-btn v-if="passwordProtection" @click="savePass" color="primary" small :disabled="!validPass">
-                  <v-icon left>mdi-content-save</v-icon> Save
-                </v-btn>
-              </v-form>
-            </v-col>
-            <v-col v-if="passwordProtection" cols="12" sm="6">
-              <div class="mt-8 mb-2 text-center">Hint for password</div>
-              <v-form ref="hint" v-model="validHint">
-                <v-text-field :disabled="!passwordProtection"
-                  v-model="hint" :rules="[getHintRules]" solo counter dense
-                  @click:append="showPassword = !showPassword" validate-on-blur
-                />
-                <v-btn v-if="passwordProtection" @click="saveHint" color="primary" small :disabled="!validHint">
-                  <v-icon left>mdi-content-save</v-icon> Save
-                </v-btn>
-              </v-form>
-            </v-col>
-          </v-row>
+        <v-card flat max-width="800" class="py-10" style="margin: auto;">
+          <v-card outlined class="pb-4 px-4">
+            <div class="headline text-h5 text-center pt-4">Login</div>
+            <v-row>
+              <v-col cols="12">
+                <div class="mt-8 d-flex">
+                  <span class="mr-6">Password protect entry:</span>
+                  <v-switch v-model="passwordProtection" inset hide-details class="mt-0 pt-0 d-inline-flex">
+                    <template v-slot:label>
+                      <span v-if="passwordProtection">Yes</span>
+                      <span v-else>No</span>
+                    </template>
+                  </v-switch>
+                </div>
+              </v-col>
+              <v-col v-if="passwordProtection" cols="12" sm="6">
+                <div class="mt-8 mb-2 text-center">Password</div>
+                <v-form ref="pass" v-model="validPass">
+                  <v-text-field :disabled="!passwordProtection"
+                    v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                    :rules="[getPasswordRules]" :type="showPassword ? 'text' : 'password'" solo  
+                    @click:append="showPassword = !showPassword" validate-on-blur counter dense
+                  />
+                  <v-btn v-if="passwordProtection" @click="savePass" color="primary" small :disabled="!validPass">
+                    <v-icon left>mdi-content-save</v-icon> Save
+                  </v-btn>
+                </v-form>
+              </v-col>
+              <v-col v-if="passwordProtection" cols="12" sm="6">
+                <div class="mt-8 mb-2 text-center">Hint for password</div>
+                <v-form ref="hint" v-model="validHint">
+                  <v-text-field :disabled="!passwordProtection"
+                    v-model="hint" :rules="[getHintRules]" solo counter dense
+                    @click:append="showPassword = !showPassword" validate-on-blur
+                  />
+                  <v-btn v-if="passwordProtection" @click="saveHint" color="primary" small :disabled="!validHint">
+                    <v-icon left>mdi-content-save</v-icon> Save
+                  </v-btn>
+                </v-form>
+              </v-col>
+            </v-row>
+          </v-card>
         </v-card>
       </v-tab-item>
       <v-tab-item value="database-settings">
-        <v-card flat max-width="900" style="margin: auto;" class="pb-10">
-          <div class="headline text-h5 text-center py-6">Backups</div>
-          <ManageBackups />
-
-          <div class="headline text-h5 text-center red--text pt-10">Clear data</div>
-          <div class="red--text">Clear data:</div>
-          <div class="caption mb-2 red--text">
-            <v-icon size="18" color="red" left>mdi-alert-outline</v-icon>
-            This will completely delete all data. Data recovery is possible only from a backup.
-            Make sure you create a backup before clearing.
-          </div>
-          <ClearDatabases typeOfDB="videos" />
-          <ClearDatabases typeOfDB="performers" />
-          <ClearDatabases typeOfDB="tags" />
-          <ClearDatabases typeOfDB="websites" />
-          <ClearDatabases typeOfDB="bookmarks" />
-          <!-- TODO: delete apropriate bookmarks when deleted video, performer, tag or website -->
+        <v-card flat max-width="1000" style="margin: auto;" class="py-10">
+          <v-card outlined class="pb-4 px-4">
+            <div class="headline text-h5 text-center py-4">Backups</div>
+            <ManageBackups />
+          </v-card>
+          
+          <v-card outlined class="mt-10 pb-4 px-4">
+            <div class="headline text-h5 text-center red--text py-4">Clear data</div>
+            <div class="red--text">Clear data:</div>
+            <div class="caption mb-2 red--text">
+              <v-icon size="18" color="red" left>mdi-alert-outline</v-icon>
+              This will completely delete all data. Data recovery is possible only from a backup.
+              Make sure you create a backup before clearing.
+            </div>
+            <ClearDatabases typeOfDB="videos" />
+            <ClearDatabases typeOfDB="performers" />
+            <ClearDatabases typeOfDB="tags" />
+            <ClearDatabases typeOfDB="websites" />
+            <ClearDatabases typeOfDB="bookmarks" />
+            <!-- TODO: delete apropriate bookmarks when deleted video, performer, tag or website -->
+          </v-card>
         </v-card>
       </v-tab-item>
       <v-tab-item value="about-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <div class="d-flex">
-            <div>
-              <div>Adult Video Database 0.6.4</div>
-              <p class="text--secondary">by fupdec</p>
-              <v-btn @click="openGithub" color="#eee" light rounded class="px-5">
-                <v-icon left>mdi-github</v-icon> Github
-              </v-btn>
+          <v-card outlined class="pa-4">
+            <div class="d-flex">
+              <div>
+                <div>Adult Video Database 0.6.4</div>
+                <p class="text--secondary">by fupdec</p>
+                <v-btn @click="openGithub" color="#eee" light rounded class="px-5">
+                  <v-icon left>mdi-github</v-icon> Github
+                </v-btn>
+              </div>
+              <v-spacer></v-spacer>
+                <v-btn @click="openPatreon" color="#ff424d" class="pa-5">
+                  <v-icon left>mdi-patreon</v-icon> Support development on Patreon
+                </v-btn>
+              <v-spacer></v-spacer>
+              <div class="text-center d-flex flex-column">
+                <img src="/icons/icon.png" alt="avdb" width="82" height="82">
+                <span>2021</span>
+              </div>
             </div>
-            <v-spacer></v-spacer>
-              <v-btn @click="openPatreon" color="#ff424d" class="pa-5">
-                <v-icon left>mdi-patreon</v-icon> Support development on Patreon
-              </v-btn>
-            <v-spacer></v-spacer>
-            <div class="text-center d-flex flex-column">
-              <img src="/icons/icon.png" alt="avdb" width="82" height="82">
-              <span>2021</span>
-            </div>
-          </div>
+          </v-card>
         </v-card>
       </v-tab-item>
     </v-tabs-items>
@@ -622,7 +647,6 @@ export default {
     videosWithSamePath: [],
     dialogResetToDefaultSettings: false,
     gradientThemeDark: null,
-    selectedFolders: undefined,
   }),
   computed: {
     updateIntervalDataFromVideos: {
@@ -900,9 +924,8 @@ export default {
         console.log(err)
       })
     },
-    removeFolder() {
-      let index = this.folders.indexOf(this.folders[this.selectedFolders])
-      if (index !== -1) this.folders.splice(index, 1)
+    removeFolder(i) {
+      this.folders.splice(i, 1)
       this.folders = this.folders
     },
   },
@@ -928,6 +951,18 @@ export default {
         }
       }
     }
+  }
+}
+.folder-list-item {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  background-color: rgba(150, 150, 150, 0.1);
+  padding-right: 3px;
+  margin-bottom: 3px;
+  .folder-name {
+    display: flex;
+    width: 100%;
   }
 }
 </style>
