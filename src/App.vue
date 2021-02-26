@@ -296,8 +296,8 @@ export default {
         let newFiles = filesInFolder.filter(x => !filesInDb.includes(x))
         this.$store.state.foldersData.push({
           folder: this.folders[i],
-          lostFiles,
-          newFiles
+          lostFiles: lostFiles.sort((a, b) => a.localeCompare(b)),
+          newFiles: newFiles.sort((a, b) => a.localeCompare(b))
         })
       }
         console.log('isWatcherReady')
