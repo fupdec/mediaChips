@@ -73,19 +73,20 @@
         </v-list-item>
       </v-list>
 
-      <v-list nav dense>
-        <v-list-item v-for="(folder, i) in folders" :key="i" @click="openDialogFolder(folder)"
-          @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
-          <v-list-item-icon> 
-            <v-icon>mdi-folder-outline</v-icon>
-            <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
-              :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?12:6"/>
-            <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
-              :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?35:26"/>
-          </v-list-item-icon>
-          <v-list-item-title>{{folder}}</v-list-item-title>
-        </v-list-item>
-      </v-list>
+      <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
+        <v-list nav dense>
+          <v-list-item v-for="(folder, i) in folders" :key="i" @click="openDialogFolder(folder)">
+            <v-list-item-icon> 
+              <v-icon>mdi-folder-outline</v-icon>
+              <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
+                :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?12:6"/>
+              <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
+                :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?35:26"/>
+            </v-list-item-icon>
+            <v-list-item-title>{{folder}}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </div>
     </vuescroll>
   </v-navigation-drawer>
 </template>
