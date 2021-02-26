@@ -63,6 +63,7 @@ export default {
   name: "DialogFolder",
   props: {
     folder: Object,
+    isWatcherReady: Boolean,
 	},
   components: {
     vuescroll,

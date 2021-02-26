@@ -4,7 +4,7 @@
 
     <AppBar />
 
-    <SideBar @openDialogFolder="openDialogFolder"/>
+    <SideBar @openDialogFolder="openDialogFolder" :isWatcherReady="isWatcherReady"/>
 
     <v-main app v-if="!disableRunApp">
       <router-view :key="$route.name + ($route.params.id || '')" />
@@ -62,7 +62,7 @@
       </v-card>
     </v-bottom-sheet>
 
-    <BottomBar @openDialogFolder="openDialogFolder"/>
+    <BottomBar @openDialogFolder="openDialogFolder" :isWatcherReady="isWatcherReady"/>
 
     <VideosGridElements />
     <ScanVideos />
@@ -75,7 +75,7 @@
     <!-- <div class="console-log" :class="{visible: $store.state.isLogVisible}">
       {{$store.state.log}} 
     </div> -->
-    <DialogFolder v-if="$store.state.dialogFolder" :folder="folder"/>
+    <DialogFolder v-if="$store.state.dialogFolder" :folder="folder" :isWatcherReady="isWatcherReady"/>
 
     <v-footer app height="20" class="py-0 footer-app">
       <StatusBar />
@@ -184,6 +184,7 @@ export default {
     intervalUpdateDataFromVideos: null,
     folder: null,
     watcher: null,
+    isWatcherReady: false,
   }),
   computed: {
     passwordProtection() {
@@ -299,6 +300,8 @@ export default {
           newFiles
         })
       }
+        console.log('isWatcherReady')
+        this.isWatcherReady = true
     },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
@@ -381,6 +384,7 @@ export default {
       this.runAutoUpdateDataFromVideos()
     },
     folders() {
+      this.isWatcherReady = false
       this.watcher.close().then(() => this.watchDir(this.folders))
     },
   },
