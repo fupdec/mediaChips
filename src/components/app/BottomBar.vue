@@ -52,7 +52,7 @@
         
         <v-tooltip v-for="(folder, i) in folders" :key="i" top>
           <template v-slot:activator="{ on, attrs }">
-            <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
+            <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false" class="folder-wrapper">
               <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder)" text color="secondary" class="folder">
                 <span>{{folder.substring(0, 10)}}</span>
                 <v-icon>mdi-folder-outline</v-icon>
@@ -227,6 +227,9 @@ export default {
   }
 }
 .v-btn.folder {
+  height: 100%;
+}
+.folder-wrapper {
   height: 100%;
 }
 .bottom-menu {
