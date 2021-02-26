@@ -24,7 +24,9 @@
       <vuescroll v-if="listLostFiles">
         <v-card-text class="py-0">
           <v-alert text dense outlined color="orange" class="ma-0 caption">
-            <span v-for="(filePath, i) in folder.lostFiles" :key="i">{{i+1}}) {{filePath}}<br></span>
+            <span v-for="(filePath, i) in folder.lostFiles" :key="i" 
+              @click="copyPath(i, 'lostFiles')" title="Copy to clipboard" class="path">
+              {{i+1}}) {{filePath}}<br> </span>
           </v-alert>
         </v-card-text>
       </vuescroll>
@@ -43,7 +45,9 @@
       <vuescroll v-if="listNewFiles">
         <v-card-text class="py-0">
           <v-alert text dense outlined color="blue" class="ma-0 caption">
-            <span v-for="(filePath, i) in folder.newFiles" :key="i">{{i+1}}) {{filePath}}<br></span>
+            <span v-for="(filePath, i) in folder.newFiles" :key="i"
+              @click="copyPath(i, 'newFiles')" title="Copy to clipboard" class="path">
+              {{i+1}}) {{filePath}}<br></span>
           </v-alert>
         </v-card-text>
       </vuescroll>
@@ -104,8 +108,18 @@ export default {
       this.$store.state.dialogFolder = false
       this.$router.push(tab.link)
     },
+    copyPath(i, type) {
+      navigator.clipboard.writeText(this.folder[type][i])
+    },
   },
   watch: {
   }
 }
 </script>
+
+
+<style lang="less" scoped>
+.path {
+  cursor: pointer;
+}
+</style>
