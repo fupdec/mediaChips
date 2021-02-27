@@ -73,7 +73,7 @@
         </v-list-item>
       </v-list>
 
-      <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
+      <div v-if="folders.length && watchFolders" @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
         <v-list nav dense>
           <v-list-item v-for="(folder, i) in folders" :key="i" @click="openDialogFolder(folder)">
             <v-list-item-icon> 
@@ -129,6 +129,9 @@ export default {
     },
     foldersData() {
       return this.$store.state.foldersData
+    },
+    watchFolders() {
+      return this.$store.state.Settings.watchFolders
     },
   },
   methods: {

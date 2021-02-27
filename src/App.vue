@@ -126,8 +126,8 @@ export default {
       if(this.passwordProtection && this.phrase!=='') {
         this.disableRunApp = this.phrase !== this.password 
       }
-      // get folders data
-      this.watchDir(this.folders)
+      // watch folders for new videos, deleted videos
+      if (this.watchFolders) this.watchDir(this.folders)
       // keyboard shortcuts
       // TODO: disable shift+enter and shift+click because that add new window
       window.addEventListener('keyup', event => {
@@ -244,6 +244,9 @@ export default {
     foldersData() {
       return this.$store.state.foldersData
     },
+    watchFolders() {
+      return this.$store.state.Settings.watchFolders
+    },
   },
   methods: {
     watchDir(dir) {
@@ -289,6 +292,8 @@ export default {
       console.log(`File ${filePath} has been removed`)
     },
     getAllFiles(dirs) {    
+      console.log('getAllFiles')
+      console.log(dirs)
       let files = []
       for (let d in dirs) { // get all paths from watched directories
         if (dirs[d].length) {
@@ -391,20 +396,14 @@ export default {
     autoUpdateDataFromVideos(n) {
       this.runAutoUpdateDataFromVideos()
     },
-    folders(folders, oldFolders) {
-      if (folders.length > oldFolders.length) {
-        let addedFolders = folders.filter(x => !oldFolders.includes(x))
-        for (let i=0; i<addedFolders.length; i++) {
-          this.watcher.add(addedFolders[i])
-        }
-      } else {
-        let removedFolders = oldFolders.filter(x => !folders.includes(x))
-        for (let i=0; i<removedFolders.length; i++) {
-          this.watcher.unwatch(removedFolders[i])
-        }
-      }
-      this.getAllFiles(this.watcher.getWatched())
-      // TODO run getallfiles after watcher is ready
+    folders(folders) {
+      if (!this.watchFolders) return
+      this.watcher.close().then(() => this.watchDir(folders))
+    },
+    watchFolders(watchFolders) {
+      console.log('watchFolders')
+      if (watchFolders) this.watchDir(this.folders)
+      else this.watcher.close()
     },
   },
 }

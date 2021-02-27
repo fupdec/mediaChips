@@ -48,23 +48,23 @@
           <v-icon>mdi-cog-outline</v-icon>
         </v-btn>
 
-        <div v-if="folders.length" class="mx-6"></div>
-        
-        <v-tooltip v-for="(folder, i) in folders" :key="i" top>
-          <template v-slot:activator="{ on, attrs }">
-            <div @mouseover="folderHovered=true" @mouseleave="folderHovered=false" class="folder-wrapper">
-              <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder)" text color="secondary" class="folder">
-                <span>{{folder.substring(0, 10)}}</span>
-                <v-icon>mdi-folder-outline</v-icon>
-              </v-btn>
-              <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
-                :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?-6:-8"/>
-              <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
-                :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?18:10"/>
-            </div>
-          </template>
-          <span>{{folder}}</span>
-        </v-tooltip>
+        <div v-if="folders.length && watchFolders" @mouseover="folderHovered=true" @mouseleave="folderHovered=false" class="ml-6 folders">
+          <v-tooltip v-for="(folder, i) in folders" :key="i" top>
+            <template v-slot:activator="{ on, attrs }">
+              <div class="folder-wrapper">
+                <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder)" text color="secondary" class="folder">
+                  <span>{{folder.substring(0, 10)}}</span>
+                  <v-icon>mdi-folder-outline</v-icon>
+                </v-btn>
+                <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
+                  :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?-6:-8"/>
+                <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
+                  :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?18:10"/>
+              </div>
+            </template>
+            <span>{{folder}}</span>
+          </v-tooltip>
+        </div>
       </div>
     </vuescroll>
   </v-bottom-navigation>
@@ -105,6 +105,9 @@ export default {
     },
     foldersData() {
       return this.$store.state.foldersData
+    },
+    watchFolders() {
+      return this.$store.state.Settings.watchFolders
     },
   },
   methods: {
@@ -226,9 +229,11 @@ export default {
     }
   }
 }
-.v-btn.folder {
+.folders {
+  display: flex;
   height: 100%;
 }
+.v-btn.folder,
 .folder-wrapper {
   height: 100%;
 }

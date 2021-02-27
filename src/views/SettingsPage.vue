@@ -61,11 +61,21 @@
               <div>There are no watched folders yet</div>
             </div>
             <v-card-actions>
-              <v-spacer></v-spacer>
               <v-btn @click="addFolder" rounded dark color="green" class="pr-4">
                 <v-icon left>mdi-plus</v-icon> Add watched folder
               </v-btn>
               <v-spacer></v-spacer>
+              <div class="d-flex align-center">
+                <div class="mr-6">
+                  Watch folders:
+                </div>
+                <v-switch v-model="watchFolders" inset class="d-inline" :disabled="folders.length==0">
+                  <template v-slot:label>
+                    <span v-if="watchFolders">Yes</span>
+                    <span v-else>No</span>
+                  </template>
+                </v-switch>
+              </div>
             </v-card-actions>
           </v-card>
           
@@ -167,7 +177,7 @@
                     </v-tooltip>
                     Video preview enabled:
                   </div>
-                  <v-switch v-model="videoPreview" inset style="display:inline-block;">
+                  <v-switch v-model="videoPreview" inset class="d-inline">
                     <template v-slot:label>
                       <span v-if="videoPreview">Yes</span>
                       <span v-else>No</span>
@@ -192,7 +202,7 @@
                 <span>Will be generated automatically when the video page is opened.</span>
               </v-tooltip>
               <span class="mr-6">Video preview grid 3x3:</span>
-              <v-switch v-model="videoPreviewGrid" inset style="display:inline-block;">
+              <v-switch v-model="videoPreviewGrid" inset class="d-inline">
                 <template v-slot:label>
                   <span v-if="videoPreviewGrid">Yes</span>
                   <span v-else>No</span>
@@ -660,6 +670,14 @@ export default {
         }, 1000)
       },
     },
+    watchFolders: {
+      get() {
+        return this.$store.state.Settings.watchFolders
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'watchFolders', value})
+      },
+    },
     autoUpdateDataFromVideos: {
       get() {
         return this.$store.state.Settings.autoUpdateDataFromVideos
@@ -926,6 +944,7 @@ export default {
     },
     removeFolder(i) {
       this.folders.splice(i, 1)
+      if (this.folders.length==0) this.watchFolders = false
       this.folders = this.folders
     },
   },

@@ -123,6 +123,7 @@ dbs.defaults({
   updateIntervalDataFromVideos: 30,
   autoUpdateDataFromVideos: false,
   updateDataFromVideosOnStart: false,
+  watchFolders: false,
   folders: [],
 }).write()
 
@@ -250,6 +251,7 @@ const Settings = {
     updateIntervalDataFromVideos: dbs.get('updateIntervalDataFromVideos').value(),
     autoUpdateDataFromVideos: dbs.get('autoUpdateDataFromVideos').value(),
     updateDataFromVideosOnStart: dbs.get('updateDataFromVideosOnStart').value(),
+    watchFolders: dbs.get('watchFolders').value(),
     folders: dbs.get('folders').value(),
   }),
   mutations: {
