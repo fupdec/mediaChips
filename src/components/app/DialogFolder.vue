@@ -51,6 +51,17 @@
           </v-alert>
         </v-card-text>
       </vuescroll>
+      <v-card-text v-if="folder.lostFiles.length==0 && folder.newFiles.length==0" class="text-center">
+        <v-icon class="mt-4" size="80" color="green">mdi-folder-sync</v-icon>
+        <div class="green--text overline">Videos in the folder and in the database are synchronized!</div>
+      </v-card-text>
+      <v-card-actions v-if="folder.lostFiles.length==0 && folder.newFiles.length==0">
+        <v-spacer></v-spacer>
+        <v-btn @click="$store.state.dialogFolder=false" color="green" dark>
+          <v-icon left>mdi-check</v-icon> Ok
+        </v-btn>
+        <v-spacer></v-spacer>
+      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
@@ -63,7 +74,6 @@ export default {
   name: "DialogFolder",
   props: {
     folder: Object,
-    isWatcherReady: Boolean,
 	},
   components: {
     vuescroll,
@@ -71,10 +81,9 @@ export default {
   mixins: [], 
   mounted () {
     this.$nextTick(function () {
-      if (this.folder.lostFiles.length<10 && this.folder.lostFiles.length>0) this.listLostFiles = true
-      if (this.folder.newFiles.length<10 && this.folder.newFiles.length>0) this.listNewFiles = true
       if (this.folder.lostFiles.length==0 && this.folder.newFiles.length>0) this.listNewFiles = true
-      if (this.folder.newFiles.length==0 && this.folder.lostFiles.length>0) this.listNewFiles = true
+      else if (this.folder.newFiles.length==0 && this.folder.lostFiles.length>0) this.listLostFiles = true
+      else if (this.folder.newFiles.length>0 && this.folder.lostFiles.length>0) this.listLostFiles = true
     })
   },
   updated() {

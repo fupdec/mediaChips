@@ -97,9 +97,6 @@ import vuescroll from 'vuescroll'
 
 export default {
   name: 'SideBar',
-  props: {
-    isWatcherReady: Boolean,
-  },
   components: {
     vuescroll,
   },
@@ -216,19 +213,19 @@ export default {
       this.$router.push(tab.link)
     },
     getLostFiles(folder) {
-      if (this.foldersData.length && this.isWatcherReady) {
+      if (_.filter(this.foldersData, {folder}).length) {
         const index = _.findIndex(this.foldersData, {folder})
         return this.foldersData[index].lostFiles.length
       } else return ''
     },
     getNewFiles(folder) {
-      if (this.foldersData.length && this.isWatcherReady) {
+      if (_.filter(this.foldersData, {folder}).length) {
         const index = _.findIndex(this.foldersData, {folder})
         return this.foldersData[index].newFiles.length
       } else return ''
     },
     openDialogFolder(folder) {
-      if (this.isWatcherReady) this.$emit('openDialogFolder', folder)
+      if (_.filter(this.foldersData, {folder}).length) this.$emit('openDialogFolder', folder)
     },
   },
   watch: {

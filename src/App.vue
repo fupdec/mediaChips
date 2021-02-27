@@ -4,7 +4,7 @@
 
     <AppBar />
 
-    <SideBar @openDialogFolder="openDialogFolder" :isWatcherReady="isWatcherReady"/>
+    <SideBar @openDialogFolder="openDialogFolder"/>
 
     <v-main app v-if="!disableRunApp">
       <router-view :key="$route.name + ($route.params.id || '')" />
@@ -62,7 +62,7 @@
       </v-card>
     </v-bottom-sheet>
 
-    <BottomBar @openDialogFolder="openDialogFolder" :isWatcherReady="isWatcherReady"/>
+    <BottomBar @openDialogFolder="openDialogFolder"/>
 
     <VideosGridElements />
     <ScanVideos />
@@ -75,7 +75,7 @@
     <!-- <div class="console-log" :class="{visible: $store.state.isLogVisible}">
       {{$store.state.log}} 
     </div> -->
-    <DialogFolder v-if="$store.state.dialogFolder" :folder="folder" :isWatcherReady="isWatcherReady"/>
+    <DialogFolder v-if="$store.state.dialogFolder" :folder="folder"/>
 
     <v-footer app height="20" class="py-0 footer-app">
       <StatusBar />
@@ -184,7 +184,7 @@ export default {
     intervalUpdateDataFromVideos: null,
     folder: null,
     watcher: null,
-    isWatcherReady: false,
+    extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
   }),
   computed: {
     passwordProtection() {
@@ -239,7 +239,7 @@ export default {
       return this.$store.state.Settings.autoUpdateDataFromVideos
     },
     folders() {
-      return this.$store.state.Settings.folders
+      return _.cloneDeep(this.$store.state.Settings.folders)
     },
     foldersData() {
       return this.$store.state.foldersData
@@ -248,43 +248,53 @@ export default {
   methods: {
     watchDir(dir) {
       this.watcher = chokidar.watch(dir, {
-        ignored: /^.*\.(?!3gp$|avi$|dat$|f4v$|flv$|m4v$|mkv$|mod$|mov$|mp4$|mpeg$|mpg$|mts$|rm$|rmvb$|swf$|ts$|vob$|webm$|wmv$|yuv$)[^.]+$/gm, // ignore all files not videos
         persistent: true,
         ignoreInitial: true,
       })
-      // Something to use when events are received.
-      const log = console.log.bind(console);
-      // Add event listeners.
       this.watcher
-        .on('add', path => this.addFile(path), log(`File ${path} has been added`))
-        .on('change', path => this.removeFile(path), log(`File ${path} has been changed`))
-        .on('unlink', path => this.removeFile(path), log(`File ${path} has been removed`))
+        .on('add', path => this.addFile(path))
+        .on('change unlink', path => this.removeFile(path))
         .on('ready', () => this.getAllFiles(this.watcher.getWatched()))
     },
     addFile(filePath) {
+      if ( !this.extensions.includes( path.extname( filePath.toLowerCase() ) ) ) return
+
+      let data = this.$store.state.foldersData 
+      for (let i=0; i<data.length; i++) { 
+        if (data[i].newFiles.includes(filePath)) return // check for duplicates
+      }
+
       for (let i=0; i<this.folders.length; i++) {
         if (filePath.includes(this.folders[i])) {
           const index = _.findIndex(this.foldersData, {folder: this.folders[i]})
           this.$store.state.foldersData[index].newFiles.push(filePath)
         } 
       }
+      console.log(`File ${filePath} has been added`)
     },
     removeFile(filePath) {
+      if ( !this.extensions.includes( path.extname( filePath.toLowerCase() ) ) ) return
+
+      let data = this.$store.state.foldersData 
+      for (let i=0; i<data.length; i++) { 
+        if (data[i].lostFiles.includes(filePath)) return // check for duplicates
+      }
+
       for (let i=0; i<this.folders.length; i++) {
         if (filePath.includes(this.folders[i])) {
           const index = _.findIndex(this.foldersData, {folder: this.folders[i]})
           this.$store.state.foldersData[index].lostFiles.push(filePath)
         } 
       }
+      console.log(`File ${filePath} has been removed`)
     },
-    getAllFiles(dirs) {
-      let regexp = /\.[a-zA-Z0-9]{3,4}$/
+    getAllFiles(dirs) {    
       let files = []
       for (let d in dirs) { // get all paths from watched directories
         if (dirs[d].length) {
           for (let i=0; i<dirs[d].length; i++) {
             let filePath = path.join(d, dirs[d][i])
-            if (regexp.test(filePath))
+            if ( this.extensions.includes( path.extname( filePath.toLowerCase() ) ) )
             files.push(filePath)
           }
         }
@@ -300,8 +310,6 @@ export default {
           newFiles: newFiles.sort((a, b) => a.localeCompare(b))
         })
       }
-        console.log('isWatcherReady')
-        this.isWatcherReady = true
     },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
@@ -383,9 +391,20 @@ export default {
     autoUpdateDataFromVideos(n) {
       this.runAutoUpdateDataFromVideos()
     },
-    folders() {
-      this.isWatcherReady = false
-      this.watcher.close().then(() => this.watchDir(this.folders))
+    folders(folders, oldFolders) {
+      if (folders.length > oldFolders.length) {
+        let addedFolders = folders.filter(x => !oldFolders.includes(x))
+        for (let i=0; i<addedFolders.length; i++) {
+          this.watcher.add(addedFolders[i])
+        }
+      } else {
+        let removedFolders = oldFolders.filter(x => !folders.includes(x))
+        for (let i=0; i<removedFolders.length; i++) {
+          this.watcher.unwatch(removedFolders[i])
+        }
+      }
+      this.getAllFiles(this.watcher.getWatched())
+      // TODO run getallfiles after watcher is ready
     },
   },
 }
