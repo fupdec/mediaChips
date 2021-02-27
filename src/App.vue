@@ -65,7 +65,11 @@
     <BottomBar @openDialogFolder="openDialogFolder"/>
 
     <VideosGridElements />
-    <ScanVideos />
+
+    <ScanVideos 
+      v-if="$store.state.Settings.dialogScanVideos" 
+      @close="closeScanVideos" :newFiles="newFiles" :stage="stage"
+    />
 
     <img 
       v-show="$store.state.hoveredImage" class="list-img-preview"
@@ -75,7 +79,7 @@
     <!-- <div class="console-log" :class="{visible: $store.state.isLogVisible}">
       {{$store.state.log}} 
     </div> -->
-    <DialogFolder v-if="$store.state.dialogFolder" :folder="folder"/>
+    <DialogFolder v-if="$store.state.dialogFolder" @addNewVideos="addNewVideos" :folder="folder"/>
 
     <v-footer app height="20" class="py-0 footer-app">
       <StatusBar />
@@ -185,6 +189,8 @@ export default {
     folder: null,
     watcher: null,
     extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
+    newFiles: [],
+    stage: 0,
   }),
   computed: {
     passwordProtection() {
@@ -292,8 +298,6 @@ export default {
       console.log(`File ${filePath} has been removed`)
     },
     getAllFiles(dirs) {    
-      console.log('getAllFiles')
-      console.log(dirs)
       let files = []
       for (let d in dirs) { // get all paths from watched directories
         if (dirs[d].length) {
@@ -380,6 +384,15 @@ export default {
       const index = _.findIndex(this.foldersData, {folder})
       this.folder = this.foldersData[index]
       this.$store.state.dialogFolder = true
+    },
+    addNewVideos() {
+      this.newFiles = this.folder.newFiles
+      this.stage = 2
+      this.$store.state.Settings.dialogScanVideos = true
+    },
+    closeScanVideos() {
+      this.stage = 0
+      this.newFiles = []
     },
   },
   watch: {

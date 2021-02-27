@@ -215,17 +215,25 @@ import fileScanProc from '@/components/pages/settings/VideoScanner'
 
 export default {
   name: 'ScanVideos',
+  props: {
+    newFiles: Array,
+    stage: Number,
+	},
   components: {
     vuescroll
 	},
   mounted() {
     this.$nextTick(function () {
+      if (this.stage>0) this.scanVideosForm = this.stage
       this.ffmpegExists()
       this.folderPaths = this.$store.state.Settings.folders.join('\n')
     })
   },
   updated() {
     this.ffmpegExists()
+  },
+  beforeDestroy() {
+    this.$emit('close')
   },
   data: () => ({
     scanVideosForm: 1,
@@ -338,8 +346,12 @@ export default {
 
       let folders = this.folderPaths.split('\n')
       let filesArray = []
-      for (const folder of folders) {
-        filesArray = filesArray.concat(vm.findInDir(folder, formats))
+      if (this.newFiles.length) {
+        filesArray = this.newFiles
+      } else {
+        for (const folder of folders) {
+          filesArray = filesArray.concat(vm.findInDir(folder, formats))
+        }
       }
 
       async function processArray(files) {
