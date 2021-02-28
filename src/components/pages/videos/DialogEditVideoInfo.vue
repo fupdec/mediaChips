@@ -587,6 +587,7 @@ export default {
 
         if (this.pathToFile && this.pathEditable) {
           newPath = this.pathToFile
+          setTimeout(() => {this.$store.state.updateFoldersData = Date.now()}, 1000)
         } else {
           newPath = video.path
         }

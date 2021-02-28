@@ -330,6 +330,7 @@ const Videos = {
       commit('updateSelectedVideos', [])
       commit('updateVideos')
       dispatch('filterVideos', true)
+      rootState.updateFoldersData = Date.now()
     },
   },
   getters: {

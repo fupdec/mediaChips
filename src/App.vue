@@ -253,6 +253,9 @@ export default {
     watchFolders() {
       return this.$store.state.Settings.watchFolders
     },
+    updateFoldersData() {
+      return this.$store.state.updateFoldersData
+    },
   },
   methods: {
     watchDir(dir) {
@@ -262,7 +265,8 @@ export default {
       })
       this.watcher
         .on('add', path => this.addFile(path))
-        .on('change unlink', path => this.removeFile(path))
+        .on('change', path => this.removeFile(path))
+        .on('unlink', path => this.removeFile(path))
         .on('ready', () => this.getAllFiles(this.watcher.getWatched()))
     },
     addFile(filePath) {
@@ -273,12 +277,7 @@ export default {
         if (data[i].newFiles.includes(filePath)) return // check for duplicates
       }
 
-      for (let i=0; i<this.folders.length; i++) {
-        if (filePath.includes(this.folders[i])) {
-          const index = _.findIndex(this.foldersData, {folder: this.folders[i]})
-          this.$store.state.foldersData[index].newFiles.push(filePath)
-        } 
-      }
+      this.getAllFiles(this.watcher.getWatched())
       console.log(`File ${filePath} has been added`)
     },
     removeFile(filePath) {
@@ -289,12 +288,7 @@ export default {
         if (data[i].lostFiles.includes(filePath)) return // check for duplicates
       }
 
-      for (let i=0; i<this.folders.length; i++) {
-        if (filePath.includes(this.folders[i])) {
-          const index = _.findIndex(this.foldersData, {folder: this.folders[i]})
-          this.$store.state.foldersData[index].lostFiles.push(filePath)
-        } 
-      }
+      this.getAllFiles(this.watcher.getWatched())
       console.log(`File ${filePath} has been removed`)
     },
     getAllFiles(dirs) {    
@@ -308,6 +302,7 @@ export default {
           }
         }
       }
+      this.$store.state.foldersData = []
       for (let i=0; i<this.folders.length; i++) { // get compared paths
         let filesInDb = this.$store.getters.videos.filter(v=>v.path.includes(this.folders[i])).map('path').value()
         let filesInFolder = files.filter(x => x.includes(this.folders[i]))
@@ -414,9 +409,12 @@ export default {
       this.watcher.close().then(() => this.watchDir(folders))
     },
     watchFolders(watchFolders) {
-      console.log('watchFolders')
       if (watchFolders) this.watchDir(this.folders)
       else this.watcher.close()
+    },
+    updateFoldersData() {
+      if (!this.watchFolders) return
+      this.getAllFiles(this.watcher.getWatched())
     },
   },
 }

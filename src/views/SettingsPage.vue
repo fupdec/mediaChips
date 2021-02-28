@@ -881,13 +881,14 @@ export default {
       let pathParts = videoPath.split(this.foundedPath)
       return pathParts.join(`<b>${this.pathForUpdate}</b>`)
     },
-    updatePath() {
-      this.$store.getters.videos.filter(video => (
+    async updatePath() {
+      await this.$store.getters.videos.filter(video => (
         video.path.includes(this.foundedPath)
       )).each(video => {
         video.path = video.path.split(this.foundedPath).join(this.pathForUpdate)
       }).write()
       this.videosWithSamePath = []
+      setTimeout(() => {this.$store.state.updateFoldersData = Date.now()}, 1000)
     },
     copyPathToUpload () {
       this.pathForUpdate = this.pathForSearch

@@ -193,6 +193,7 @@
             </vuescroll>
 
             <v-card-actions>
+              <!-- TODO add feature for pause and stop scanning proc -->
               <v-spacer></v-spacer>
               <v-btn @click="endScanProcess" :disabled="$store.state.Settings.scanProcRun" 
                 color="primary" class="ma-2"
@@ -442,6 +443,7 @@ export default {
     endScanProcess() {
       this.$store.state.Settings.dialogScanVideos = false
       this.scanVideosForm = 1
+      this.$store.state.updateFoldersData = Date.now()
     },
   },
   watch: {
