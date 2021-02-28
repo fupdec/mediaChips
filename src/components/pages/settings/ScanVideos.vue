@@ -193,7 +193,9 @@
             </vuescroll>
 
             <v-card-actions>
-              <!-- TODO add feature for pause and stop scanning proc -->
+              <v-btn v-if="$store.state.Settings.scanProcRun" @click="stop=true" color="red" dark class="ma-2"> 
+                <v-icon left>mdi-stop</v-icon> Stop scanning
+              </v-btn>
               <v-spacer></v-spacer>
               <v-btn @click="endScanProcess" :disabled="$store.state.Settings.scanProcRun" 
                 color="primary" class="ma-2"
@@ -259,6 +261,7 @@ export default {
     noNewVideosAdded: false,
     textNoVideosAdded: '',
     ffmpeg: true,
+    stop: false,
   }),
   computed: {
     errorScanFolders() {
@@ -340,6 +343,7 @@ export default {
       this.duplicateVideos = []
       this.newVideos = []
       this.noNewVideosAdded = false
+      this.stop = false
       
       let formats = /\.3gp|\.avi|\.dat|\.f4v|\.flv|\.m4v|\.mkv|\.mod|\.mov|\.mp4|\.mpeg|\.mpg|\.mts|\.rm|\.rmvb|\.swf|\.ts|\.vob|\.webm|\.wmv|\.yuv$/
 
@@ -360,6 +364,7 @@ export default {
         vm.totalNumberOfScanVideos = files.length
         // console.log(percentsPerFile)
         for (const file of files) {
+          if (vm.stop) break // stop process
           vm.currentVideoScanName = file
           let fileProcResult = await fileScanProc(file)
           if (fileProcResult.errorVideo) {
