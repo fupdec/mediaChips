@@ -35,7 +35,7 @@
             </v-radio-group>
           </div>
 
-          <v-card outlined class="mt-10 pb-4 px-4">
+          <v-card outlined class="mt-10 px-4">
             <div class="headline text-h5 text-center my-4"> Folders
               <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
@@ -45,18 +45,37 @@
                   <br> new videos and check deleted ones</span>
               </v-tooltip>
             </div>
-            <v-list dense v-if="folders.length" shaped>
+            <v-list dense v-if="folders.length" shaped class="pb-0 pl-2">
               <v-list-item v-for="(folder, i) in folders" :key="i" class="folder-list-item">
                 <div class="folder-name">
-                  <v-icon left>mdi-folder</v-icon>
-                  <span>{{folder}}</span>
+                  <div v-if="folderNameEdit==i">
+                    <v-btn @click="folderNameEdit=-1" class="mr-2" color="red" icon fab x-small title="Cancel">
+                      <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                    <v-text-field v-model="folderName" class="d-inline-flex" hide-details outlined dense />
+                    <v-btn @click="saveFolderName(i)" :disabled="folderName==''" class="ml-2" color="green" icon fab x-small title="Save folder name">
+                      <v-icon>mdi-check</v-icon>
+                    </v-btn>
+                  </div>
+                  <div v-else>
+                    <v-btn @click="folderNameEdit=i, folderName=folder.name" class="mr-2" icon fab x-small title="Edit folder name">
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
+                    <v-chip label outlined>
+                      <span>{{folder.name}}</span>
+                    </v-chip>
+                  </div>
+                  <v-chip label outlined>
+                    <v-icon left>mdi-folder</v-icon>
+                    <span>{{folder.path}}</span>
+                  </v-chip>
                 </div>
                 <v-btn @click="removeFolder(i)" class="ml-2" color="red" icon fab x-small title="Remove folder">
                   <v-icon>mdi-close</v-icon>
                 </v-btn>
               </v-list-item>
             </v-list>
-            <div v-else class="text-center overline my-4">
+            <div v-else class="text-center overline pt-2">
               <v-icon size="40">mdi-folder-outline</v-icon>
               <div>There are no watched folders yet</div>
             </div>
@@ -624,6 +643,8 @@ export default {
   },
   data: ()=>({
     tab: 'videos',
+    folderName: '',
+    folderNameEdit: -1,
     password: '',
     showPassword: false,
     validPass: false,
@@ -932,8 +953,17 @@ export default {
       }).then(result => {
         if (result.filePaths.length !== 0) {
           for (let i=0; i<result.filePaths.length; i++) {
-            let folder = result.filePaths[i]
-            if (!this.folders.includes(folder)) {
+            let folderPath = result.filePaths[i]
+            let folder = {
+              name: folderPath,
+              path: folderPath,
+            }
+            if (_.filter(this.folders, {name: folderPath}).length) {
+              this.$store.dispatch('setNotification', {
+                type: 'error',
+                text: `Folder with path "${folderPath}" already added.`
+              })
+            } else {
               this.folders.push(folder)
               this.folders = this.folders
             }
@@ -942,6 +972,11 @@ export default {
       }).catch(err => {
         console.log(err)
       })
+    },
+    saveFolderName(i) {
+      this.folders[i].name = this.folderName
+      this.folders = this.folders
+      this.folderNameEdit = -1
     },
     removeFolder(i) {
       this.folders.splice(i, 1)
@@ -978,11 +1013,17 @@ export default {
   justify-content: space-between;
   width: 100%;
   background-color: rgba(150, 150, 150, 0.1);
+  padding-left: 5px;
   padding-right: 3px;
   margin-bottom: 3px;
   .folder-name {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
+    .v-input__slot {
+      min-height: 32px !important;
+    }
   }
 }
 </style>

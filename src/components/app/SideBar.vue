@@ -75,15 +75,16 @@
 
       <div v-if="folders.length && watchFolders" @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
         <v-list nav dense>
-          <v-list-item v-for="(folder, i) in folders" :key="i" @click="openDialogFolder(folder)">
+          <v-list-item v-for="(folder, i) in folders" :key="i" @click="openDialogFolder(folder.path)">
             <v-list-item-icon> 
-              <v-icon>mdi-folder-outline</v-icon>
-              <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
+              <v-icon v-if="foldersUpdated">mdi-folder-outline</v-icon>
+              <v-icon v-else>mdi-folder-sync-outline</v-icon>
+              <v-badge :value="getLostFiles(folder.path)" :content="getLostFiles(folder.path)" color="warning"
                 :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?12:6"/>
-              <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
+              <v-badge :value="getNewFiles(folder.path)" :content="getNewFiles(folder.path)" color="info"
                 :dot="!folderHovered" :offset-x="folderHovered?35:30" :offset-y="folderHovered?35:26"/>
             </v-list-item-icon>
-            <v-list-item-title>{{folder}}</v-list-item-title>
+            <v-list-item-title>{{folder.name}}</v-list-item-title>
           </v-list-item>
         </v-list>
       </div>
@@ -97,6 +98,9 @@ import vuescroll from 'vuescroll'
 
 export default {
   name: 'SideBar',
+  props: {
+    foldersUpdated: Boolean,
+  },
   components: {
     vuescroll,
   },

@@ -52,17 +52,17 @@
           <v-tooltip v-for="(folder, i) in folders" :key="i" top>
             <template v-slot:activator="{ on, attrs }">
               <div class="folder-wrapper">
-                <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder)" text color="secondary" class="folder">
-                  <span>{{folder.substring(0, 10)}}</span>
-                  <v-icon>mdi-folder-outline</v-icon>
+                <v-btn v-bind="attrs" v-on="on" @click="openDialogFolder(folder.path)" text color="secondary" class="folder">
+                  <v-icon v-if="foldersUpdated">mdi-folder-outline</v-icon>
+                  <v-icon v-else>mdi-folder-sync-outline</v-icon>
                 </v-btn>
-                <v-badge :value="getLostFiles(folder)" :content="getLostFiles(folder)" color="warning"
+                <v-badge :value="getLostFiles(folder.path)" :content="getLostFiles(folder.path)" color="warning"
                   :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?-6:-8"/>
-                <v-badge :value="getNewFiles(folder)" :content="getNewFiles(folder)" color="info"
+                <v-badge :value="getNewFiles(folder.path)" :content="getNewFiles(folder.path)" color="info"
                   :dot="!folderHovered" :offset-x="folderHovered?70:58" :offset-y="folderHovered?18:10"/>
               </div>
             </template>
-            <span>{{folder}}</span>
+            <span>{{folder.name}}</span>
           </v-tooltip>
         </div>
       </div>
@@ -76,6 +76,9 @@ import vuescroll from 'vuescroll'
 
 export default {
   name: 'BottomBar',
+  props: {
+    foldersUpdated: Boolean,
+  },
   components: {
     vuescroll,
   },

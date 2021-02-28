@@ -4,7 +4,7 @@
 
     <AppBar />
 
-    <SideBar @openDialogFolder="openDialogFolder"/>
+    <SideBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
     <v-main app v-if="!disableRunApp">
       <router-view :key="$route.name + ($route.params.id || '')" />
@@ -62,7 +62,7 @@
       </v-card>
     </v-bottom-sheet>
 
-    <BottomBar @openDialogFolder="openDialogFolder"/>
+    <BottomBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
     <VideosGridElements />
 
@@ -131,7 +131,7 @@ export default {
         this.disableRunApp = this.phrase !== this.password 
       }
       // watch folders for new videos, deleted videos
-      if (this.watchFolders) this.watchDir(this.folders)
+      if (this.watchFolders) this.watchDir(this.folders.map(f=>f.path))
       // keyboard shortcuts
       // TODO: disable shift+enter and shift+click because that add new window
       window.addEventListener('keyup', event => {
@@ -188,6 +188,7 @@ export default {
     intervalUpdateDataFromVideos: null,
     folder: null,
     watcher: null,
+    foldersUpdated: false,
     extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
     newFiles: [],
     stage: 0,
@@ -277,6 +278,7 @@ export default {
         if (data[i].newFiles.includes(filePath)) return // check for duplicates
       }
 
+      this.foldersUpdated = false 
       this.getAllFiles(this.watcher.getWatched())
       console.log(`File ${filePath} has been added`)
     },
@@ -288,10 +290,11 @@ export default {
         if (data[i].lostFiles.includes(filePath)) return // check for duplicates
       }
 
+      this.foldersUpdated = false 
       this.getAllFiles(this.watcher.getWatched())
       console.log(`File ${filePath} has been removed`)
     },
-    getAllFiles(dirs) {    
+    getAllFiles(dirs) {
       let files = []
       for (let d in dirs) { // get all paths from watched directories
         if (dirs[d].length) {
@@ -304,16 +307,18 @@ export default {
       }
       this.$store.state.foldersData = []
       for (let i=0; i<this.folders.length; i++) { // get compared paths
-        let filesInDb = this.$store.getters.videos.filter(v=>v.path.includes(this.folders[i])).map('path').value()
-        let filesInFolder = files.filter(x => x.includes(this.folders[i]))
+        let folderPath = this.folders[i].path
+        let filesInDb = this.$store.getters.videos.filter(v=>v.path.includes(folderPath)).map('path').value()
+        let filesInFolder = files.filter(x => x.includes(folderPath))
         let lostFiles = filesInDb.filter(x => !filesInFolder.includes(x))
         let newFiles = filesInFolder.filter(x => !filesInDb.includes(x))
         this.$store.state.foldersData.push({
-          folder: this.folders[i],
+          folder: folderPath,
           lostFiles: lostFiles.sort((a, b) => a.localeCompare(b)),
           newFiles: newFiles.sort((a, b) => a.localeCompare(b))
         })
       }
+      this.foldersUpdated = true 
     },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
@@ -406,14 +411,16 @@ export default {
     },
     folders(folders) {
       if (!this.watchFolders) return
-      this.watcher.close().then(() => this.watchDir(folders))
+      this.foldersUpdated = false 
+      this.watcher.close().then(() => this.watchDir(folders.map(f=>f.path)))
     },
     watchFolders(watchFolders) {
-      if (watchFolders) this.watchDir(this.folders)
+      if (watchFolders) this.watchDir(this.folders.map(f=>f.path))
       else this.watcher.close()
     },
     updateFoldersData() {
       if (!this.watchFolders) return
+      this.foldersUpdated = false 
       this.getAllFiles(this.watcher.getWatched())
     },
   },

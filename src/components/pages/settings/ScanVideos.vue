@@ -227,7 +227,7 @@ export default {
     this.$nextTick(function () {
       if (this.stage>0) this.scanVideosForm = this.stage
       this.ffmpegExists()
-      this.folderPaths = this.$store.state.Settings.folders.join('\n')
+      this.folderPaths = this.$store.state.Settings.folders.map(f=>f.path).join('\n')
     })
   },
   updated() {
