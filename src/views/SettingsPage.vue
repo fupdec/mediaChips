@@ -583,7 +583,7 @@
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div>
-                <div>Adult Video Database 0.6.4</div>
+                <div>Adult Video Database 0.6.5</div>
                 <p class="text--secondary">by fupdec</p>
                 <v-btn @click="openGithub" color="#eee" light rounded class="px-5">
                   <v-icon left>mdi-github</v-icon> Github

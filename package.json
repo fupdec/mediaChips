@@ -1,7 +1,7 @@
 {
   "name": "avdb",
   "productName": "AVDB",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "author": "fupdec",
   "description": "Manage your ever-growing video collection - add tags, performers, websites and have fun!",
   "private": false,

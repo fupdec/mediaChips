@@ -195,7 +195,7 @@
       </v-btn>
     </div>
     <v-spacer></v-spacer>
-    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database 0.6.4</span>
+    <span class="app-system-bar-title">{{$route.name + ' - '}}Adult Video Database</span>
     <v-spacer></v-spacer>
     <div class="window-controls">
       <v-btn text tile small width="46" height="28" @click="minimize">
@@ -400,5 +400,16 @@ export default {
 }
 .v-system-bar--window .window-controls .v-icon {
   margin-right: 0;
+}
+@media (max-width: 840px)  {
+  .app-system-bar-title {
+    right: 160px;
+    position: absolute;
+  }
+}
+@media (max-width: 680px)  {
+  .app-system-bar-title {
+    display: none;
+  }
 }
 </style>
