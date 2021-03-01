@@ -6,10 +6,11 @@
       :data-id="performer.id" hover outlined height="100%" v-ripple="{ class: 'accent--text' }"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
-        <div v-if="!isNationalityHidden" class="flag-icon" 
-          @click="filterByNationality" @click.middle="addNewTabWithNationality">
-          <country-flag :country='findCountryCode(performer.nation)' 
-            size='normal' :title="performer.nation" />
+        <div v-if="!isNationalityHidden" class="nation">
+          <div v-for="nation in performer.nations" :key="nation" class="flag-icon" 
+            @click="filterByNationality(nation)" @click.middle="addNewTabWithNationality(nation)">
+            <country-flag :country='findCountryCode(nation)' size='normal' :title="nation"/>
+          </div>
         </div>
 
         <v-img @click.middle="addNewTabPerformer()"
@@ -302,7 +303,7 @@ export default {
         'start', 
         'category',
         'birthday', 
-        'nation', 
+        'nations', 
         'ethnicity',
         'eyes',
         'hair', 
@@ -349,11 +350,11 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
-    addNewTabWithNationality() {
+    addNewTabWithNationality(nation) {
       let filters = [{
-        param: 'nation',
+        param: 'nations',
         cond: 'one of',
-        val: [this.performer.nation],
+        val: [nation],
         type: 'array',
         flag: null,
         lock: false,
@@ -373,11 +374,11 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
     },
-    filterByNationality() {
+    filterByNationality(nation) {
       let filter = {
-        param: 'nation',
+        param: 'nations',
         cond: 'one of',
-        val: [this.performer.nation],
+        val: [nation],
         type: 'array',
         flag: null,
         lock: false,
@@ -683,15 +684,20 @@ export default {
     line-height: 1;
     height: auto !important;
   }
-  .flag-icon {
+  .nation {
     position: absolute;
     top: 5px;
     left: 5px;
     z-index: 1;
-    width: 24px;
-    height: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .flag-icon {
+    width: 28px;
+    height: 20px;
     overflow: hidden;
     cursor: pointer;
+    position: relative;
     .flag {
       position: absolute;
       margin: auto;

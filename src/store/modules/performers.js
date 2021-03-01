@@ -19,7 +19,7 @@ dbp.defaults({
     tags: [],
     favorite: true,
     rating: 5,
-    nation: "Australia",
+    nations: ["Australia"],
     birthday: "1985-03-04",
     start: "2003",
     end: "",

@@ -141,7 +141,7 @@ export default {
     itemName: '',
     items: [],
     validParamItem: false,
-    reservedPerformer: ['id','name','date','aliases','tags','favorite','rating','nation','birthday','start','ethnicity','hair','eyes','height','weight','boobs','cups','bookmark','bra','waist','hip','category','edit','videos','videoTags','websites'],
+    reservedPerformer: ['id','name','date','aliases','tags','favorite','rating','nations','birthday','start','ethnicity','hair','eyes','height','weight','boobs','cups','bookmark','bra','waist','hip','category','edit','videos','videoTags','websites'],
   }),
   computed: {
     customParameters() {

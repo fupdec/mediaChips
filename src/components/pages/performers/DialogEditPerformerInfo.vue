@@ -126,12 +126,17 @@
                     </v-menu>
                   </v-col>
                   <v-col cols="12" sm="9">
-                    <v-autocomplete v-model="nation" :items="countries"
+                    <v-autocomplete v-model="nations" :items="countries" clearable multiple 
                       item-text="name" item-value="name" label="Nationality" placeholder=" "
-                      class="nation-select" clearable>
+                      class=" nation-chips hidden-close nation-select"
+                      :menu-props="{contentClass:'list-with-preview'}">
                       <template v-slot:selection="data">
-                        <country-flag :country='data.item.code' size='normal'/>
-                        {{ data.item.name }}
+                        <v-chip
+                          v-bind="data.attrs" class="my-1 pl-1 pr-3" outlined close
+                          :input-value="data.selected" close-icon="mdi-close"
+                          @click="data.select" @click:close="removeChip(data.item)"
+                        > <country-flag :country='data.item.code' size='normal'/> {{ data.item.name }}
+                        </v-chip>
                       </template>
                       <template v-slot:item="data">
                         <template v-if="typeof data.item !== 'object'">
@@ -523,7 +528,7 @@ export default {
       this.aliases = filteredAliases
       this.start = this.performer.start
       this.end = this.performer.end
-      this.nation = this.performer.nation
+      this.nations = this.performer.nations
       this.birthday = this.performer.birthday
       this.ethnicity = this.performer.ethnicity
       this.eyes = this.performer.eyes
@@ -572,7 +577,7 @@ export default {
     end: '',
     category: [],
     birthday: '',
-    nation: '',
+    nations: [],
     ethnicity: [],
     eyes: [],
     hair: [],
@@ -601,7 +606,7 @@ export default {
       end: '',
       category: [],
       birthday: '',
-      nation: '',
+      nations: [],
       ethnicity: [],
       eyes: [],
       hair: [],
@@ -808,7 +813,7 @@ export default {
           }
           let countries = this.countries.map(c=>c.name)
           if ( countries.includes($('[data-test="link-country"] span').text().trim()) ) {
-            profile.nation = $('[data-test="link-country"] span').text().trim()
+            profile.nations = [$('[data-test="link-country"] span').text().trim()]
           }
           profile.birth = $('[href*="dateOfBirth"]').attr('href')
           if (profile.birth) {
@@ -886,7 +891,7 @@ export default {
               this.transfer.found.category = [profile.profession]
             } else profile.profession = undefined
           }
-          if (profile.nation != undefined) { this.transfer.found.nation = profile.nation }
+          if (profile.nations != undefined) { this.transfer.found.nations = profile.nations }
           if (profile.birth != undefined) { this.transfer.found.birthday = profile.birth }
           if (profile.ethnicity != undefined) { this.transfer.found.ethnicity = profile.ethnicity }
           if (profile.hair != undefined) { this.transfer.found.hair = profile.hair }
@@ -996,10 +1001,10 @@ export default {
           if (this.getBioString('birthplace', bio)) {
             let countries = this.countries.map(c=>c.name)
             if (countries.includes(this.getBioString('birthplace', bio))) {
-              this.transfer.found.nation = this.getBioString('birthplace', bio)
+              this.transfer.found.nations = [this.getBioString('birthplace', bio)]
             }
             if (this.getBioString('nationality', bio).toLowerCase().includes('america')) {
-              this.transfer.found.nation = 'United States'
+              this.transfer.found.nations = ['United States']
             }
           }
           this.transfer.found.category = ['Pornstar']
@@ -1036,7 +1041,7 @@ export default {
       this.transfer.current.end = this.end
       this.transfer.current.category = this.category
       this.transfer.current.birthday = this.birthday
-      this.transfer.current.nation = this.nation
+      this.transfer.current.nations = this.nations
       this.transfer.current.ethnicity = this.ethnicity
       this.transfer.current.eyes = this.eyes
       this.transfer.current.hair = this.hair
@@ -1237,7 +1242,7 @@ export default {
           rating: this.rating, 
           aliases: newAliases,
           category: this.category,
-          nation: this.nation || '',
+          nations: this.nations || [],
           birthday: this.birthday,
           start: this.start,
           end: this.end,
@@ -1275,7 +1280,7 @@ export default {
         'start', 
         'category',
         'birthday', 
-        'nation', 
+        'nations', 
         'ethnicity',
         'eyes',
         'hair', 
@@ -1364,6 +1369,11 @@ export default {
       this.values[param] = value 
       this.calcPercentComleted()
     },
+    removeChip(item) { 
+      const index = this.nations.indexOf(item.name)
+      if (index >= 0) this.nations.splice(index, 1)
+      this.$store.state.hoveredImage = false
+    },
   },
   watch: {
     menu (val) {
@@ -1375,7 +1385,7 @@ export default {
     birthday() {
       this.calcPercentComleted()
     },
-    nation() {
+    nations() {
       this.calcPercentComleted()
     },
     ethnicity() {

@@ -10,6 +10,12 @@
       </div>
       <v-row v-else>
         <v-col cols="12">
+          <div v-if="!settings.appNewVersionUpdatePerformerNationality">
+            <div class="ma-4 red--text text-center">Starting from version 0.6.6 you can assign multiple nationalities to performer.
+              <br> If you have performers just press "Update Performer Nationality" button. </div>
+            <v-btn @click="updatePerformerNationality" color="red" dark class="my-4" block> 
+              <v-icon left>mdi-auto-fix</v-icon> Update Performer Nationality </v-btn>
+          </div>
           <div v-if="!settings.appNewVersionUpdateVideoWebsite">
             <div class="ma-4 red--text text-center">Starting from version 0.6.1 you can assign multiple websites to one video.
               <br> If you have videos just press "Update video website" button. </div>
@@ -248,7 +254,6 @@ import VueApexCharts from 'vue-apexcharts'
 import scanMeta from '@/components/pages/settings/VideoMetaFix'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
-import Countries from '@/mixins/Countries'
 
 export default {
   name: 'HomePage',
@@ -256,7 +261,7 @@ export default {
     vuescroll,
     apexchart: VueApexCharts,
   },
-  mixins: [LabelFunctions, Countries], 
+  mixins: [LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
     })
@@ -362,8 +367,6 @@ export default {
       ipcRenderer.send('reload')
     },
     updatePerformerParams() {
-      let countries = this.countries.map(c=>c.name)
-      
       this.$store.getters.performers.each(p=>{
         if (typeof p.cup === 'string' && p.cup !== undefined) {
           if (p.cup.length == 0) p.cups = []
@@ -376,12 +379,6 @@ export default {
         if (typeof p.boobs === 'string') {
           if (p.boobs.length == 0) p.boobs = []
           else p.boobs = [p.boobs]
-        }
-        if (p.nation === undefined) {
-          p.nation = ''
-        }
-        if (!countries.includes(p.nation)) {
-          p.nation = ''
         }
         if (p.pussy === undefined) {
           p.pussy = ''
@@ -486,6 +483,20 @@ export default {
 
       setTimeout(() => {
         this.$store.getters.settings.set('appNewVersionUpdateVideoWebsite', true).write()
+        this.dialogRestartApp = true
+      }, 2000)
+    },
+    updatePerformerNationality() {
+      this.$store.getters.performers.each(p=>{
+        if (typeof p.nation === 'string') {
+          if (p.nation.length == 0) p.nations = []
+          else p.nations = [p.nation]
+          p.nation = undefined
+        }
+      }).write()
+
+      setTimeout(() => {
+        this.$store.getters.settings.set('appNewVersionUpdatePerformerNationality', true).write()
         this.dialogRestartApp = true
       }, 2000)
     },

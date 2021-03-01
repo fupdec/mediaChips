@@ -49,7 +49,7 @@
                 :value="filters[pickerIndex].val" no-title color="primary" full-width/>
             </v-dialog>
 
-            <v-autocomplete v-if="filters[i].param==='nation'" 
+            <v-autocomplete v-if="filters[i].param==='nations'" 
               @input="setVal($event,i)" :value="filters[i].val" :disabled="filters[i].lock"
               :items="countries" item-text="name" item-value="name" label="Nationality" 
               multiple hide-selected hide-details clearable outlined dense small-chips
@@ -216,11 +216,11 @@ export default {
   },
   data: () => ({
     filters: [],
-    params: ['name','tags','category','rating','favorite','bookmark','birthday','start','end','nation','ethnicity','hair','eyes','height','weight','boobs','cups','bra','waist','hip','date','edit'],
+    params: ['name','tags','category','rating','favorite','bookmark','birthday','start','end','nations','ethnicity','hair','eyes','height','weight','boobs','cups','bra','waist','hip','date','edit'],
     paramTypeNumber: ['rating','height','weight','bra','waist','hip','start','end',],
     paramTypeString: ['name',],
-    paramTypeArray: ['tags','category','ethnicity','hair','eyes','boobs','cups'],
-    paramTypeSelect: ['nation'],
+    paramTypeArray: ['tags','category','nations','ethnicity','hair','eyes','boobs','cups'],
+    paramTypeSelect: [],
     paramTypeBoolean: ['favorite','bookmark'],
     paramTypeDate: ['birthday','date','edit'],
     picker: false,
@@ -261,7 +261,7 @@ export default {
       if (param === 'category') return 'mdi-account-group-outline'
       if (param === 'rating') return 'mdi-star'
       if (param === 'birthday'||param === 'start'||param === 'end'||param === 'date'||param ==='edit') return 'mdi-calendar'
-      if (param === 'nation') return 'mdi-flag'
+      if (param === 'nations') return 'mdi-flag'
       if (param === 'ethnicity') return 'mdi-account-group'
       if (param === 'hair') return 'mdi-face-woman'
       if (param === 'eyes') return 'mdi-eye'

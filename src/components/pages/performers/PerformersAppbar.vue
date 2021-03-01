@@ -137,7 +137,7 @@ export default {
             favorite: false,
             bookmark: false,
             rating: 0,
-            nation: "",
+            nations: [],
             birthday: "",
             start: "",
             end: "",

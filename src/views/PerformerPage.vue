@@ -98,8 +98,9 @@
                     <div class="last"><i>Last active age</i> <span>{{getLastActiveAge}}</span></div></div>
                     <div class="birth"><i>Date birth</i> <span>{{getBirthday}}</span></div>
                   </div>
-                  <div class="nationality">
-                    <country-flag :country='nation'/> <span class="country">{{country}}</span>
+                  <div v-for="nation in performer.nations" :key="nation" class="nationality">
+                    <country-flag :country='getCountryCode(nation)'/>
+                    <span class="country">{{getCountry(nation)}}</span>
                   </div>
                 </v-col>
                 <v-col cols="12" sm="4">
@@ -369,7 +370,7 @@ export default {
         'start', 
         'category',
         'birthday', 
-        'nation', 
+        'nations', 
         'ethnicity',
         'eyes',
         'hair', 
@@ -422,16 +423,6 @@ export default {
     aliases() {      
       if (!this.performer.aliases.length) return 'none'
       return this.performer.aliases.join(', ')
-    },
-    nation() {
-      if (!this.performer.nation) return ''
-      let countryIndex = this.countries.findIndex(country => country.name === this.performer.nation)
-      return this.countries[countryIndex].code
-    },
-    country() {
-      if (!this.performer.nation) return 'Nationality unknown'
-      let countryIndex = this.countries.findIndex(country => country.name === this.performer.nation)
-      return this.countries[countryIndex].name
     },
     ethnicity() {
       if (!this.performer.ethnicity) return '??'
@@ -567,6 +558,16 @@ export default {
     },
   },
   methods: {
+    getCountryCode(nationality) {
+      if (this.performer.nations.length==0) return ''
+      let countryIndex = this.countries.findIndex(country => country.name === nationality)
+      return this.countries[countryIndex].code
+    },
+    getCountry(nationality) {
+      if (this.performer.nations.length==0) return 'Nationality unknown'
+      let countryIndex = this.countries.findIndex(country => country.name === nationality)
+      return this.countries[countryIndex].name
+    },
     toggleProfile() {
       let value
       if (this.profile.length) value = true
