@@ -565,7 +565,6 @@ export default {
   }
   .title-bar {
     padding: 0;
-    padding-right: 108px !important;
     position: relative;
     z-index: 5;
     min-height: 32px;
