@@ -713,7 +713,7 @@ export default {
     init() {
       let firstPlay = true,
           firstPause = true
-      this.player = chimera.createPlayer()
+      this.player = chimera.createPlayer() // run with param ['-vvv'] for debug
       this.player.bindCanvas(this.$refs.canvas)
       console.log("init vlc player", chimera, this.player)
 
@@ -833,7 +833,7 @@ export default {
       // console.log('update video player')
       // console.log(data)
       this.videos = data.videos
-      this.playlist = _.cloneDeep(data.videos.map(video=>'file:///'+video.path))
+      this.playlist = _.cloneDeep(data.videos.map(video=>'file:///'+video.path.replace(/#/g, '%23')))
       this.playIndex = _.findIndex(data.videos, {id: data.id})
       this.getMarkers()
     },
