@@ -4,6 +4,7 @@
     <v-tabs v-model="tab" centered icons-and-text>
       <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
       <v-tab href="#performers-settings" draggable="false">Performers<v-icon>mdi-account</v-icon></v-tab>
+      <v-tab href="#tags-settings" draggable="false">Tags<v-icon>mdi-tag</v-icon></v-tab>
       <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
       <v-tab href="#privacy-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
       <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
@@ -370,6 +371,15 @@
           </v-card>
         </v-card>
       </v-tab-item>
+      <v-tab-item value="tags-settings">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <v-card outlined class="pb-4 px-4">
+            <div class="headline text-h5 text-center py-4"> Parameters </div>
+            <div>Edit items of parameter:</div>
+            <EditTagItemsOfParameter/>
+          </v-card>
+        </v-card>
+      </v-tab-item>
       <v-tab-item value="appearance-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-card outlined class="px-4">
@@ -622,6 +632,7 @@ import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
 import ManagePerformerParameters from '@/components/pages/settings/ManagePerformerParameters.vue'
 import EditPerformerItemsOfParameter from '@/components/pages/settings/EditPerformerItemsOfParameter.vue'
+import EditTagItemsOfParameter from '@/components/pages/settings/EditTagItemsOfParameter.vue'
 import vuescroll from 'vuescroll'
 
 export default {
@@ -633,6 +644,7 @@ export default {
     ClearDatabases,
     ManagePerformerParameters,
     EditPerformerItemsOfParameter,
+    EditTagItemsOfParameter,
     vuescroll,
   },
   mounted () {

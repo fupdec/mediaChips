@@ -122,10 +122,29 @@
                         />
                       </v-col>
                       <v-col cols="12" sm="6" align="center" justify="center">
-                        <div class="mb-4">Tag type</div>
+                        <div class="mb-4">Tag type
+                          <v-tooltip top>
+                            <template v-slot:activator="{ on, attrs }">
+                              <v-icon v-bind="attrs" v-on="on" class="ml-2" с>
+                                mdi-help-circle-outline
+                              </v-icon>
+                            </template>
+                            <span>What type of cards will the tag be used for. <br>
+                              If you want to remove a type, <br>
+                              then this tag will be removed <br>
+                              from all cards of the selected type.</span>
+                          </v-tooltip>
+                        </div>
                         <v-select
                           v-model="type" :items="types" label="Types"
                           outlined multiple :rules="[getCategoryRules]"
+                        ></v-select>
+                      </v-col>
+                      <v-col cols="12" align="center" justify="center">
+                        <div class="mb-4">Tag category</div>
+                        <v-select
+                          v-model="category" :items="$store.state.Settings.tagInfoCategory" 
+                          label="Categories" outlined multiple
                         ></v-select>
                       </v-col>
                       <v-col cols="12" align="center" justify="center">
@@ -231,6 +250,7 @@ export default {
       this.checkImageExist(this.getImagePath('tag',''), 'main')
       this.newTagName = this.tag.name
       this.type = this.tag.type
+      this.category = this.tag.category
       if (this.tag.bookmark) {
         let text = this.$store.getters.bookmarks.get('tags')
                     .find({itemId:this.tag.id}).value().text
@@ -245,6 +265,7 @@ export default {
     isTagNameEditEnabled: false,
     imgMainLoading: null,
     newTagName: "",
+    category: [],
     type: [],
     favorite: null,
     tagAlternateNames: "",
@@ -439,6 +460,7 @@ export default {
         .assign({
           name: this.newTagName,
           type: this.type,
+          category: this.category,
           color: this.tag.color,
           value: this.tag.value,
           favorite: this.favorite,

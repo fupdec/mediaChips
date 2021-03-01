@@ -56,6 +56,13 @@
               :disabled="filters[i].lock" multiple
               :menu-props="{contentClass:'overline'}"/>
 
+            <v-select v-if="filters[i].param==='category'" 
+              @input="setVal($event,i)" :value="filters[i].val" 
+              :items="$store.state.Settings.tagInfoCategory" 
+              outlined dense label="Categories" class="val overline"
+              :disabled="filters[i].lock" multiple
+              :menu-props="{contentClass:'overline'}"/>
+
             <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
               class="ml-2 mt-1" color="green" outlined icon fab x-small>
               <v-icon>mdi-content-duplicate</v-icon>
@@ -102,10 +109,10 @@ export default {
   },
   data: () => ({
     filters: [],
-    params: ['name','type','favorite','bookmark','value','date','edit'],
+    params: ['name','type','category','favorite','bookmark','value','date','edit'],
     paramTypeNumber: ['value'],
     paramTypeString: ['name'],
-    paramTypeArray: ['type'],
+    paramTypeArray: ['type','category'],
     paramTypeSelect: [],
     paramTypeDate: ['date','edit'],
     paramTypeBoolean: ['favorite','bookmark'],
@@ -133,6 +140,7 @@ export default {
       if (param === 'favorite') return 'mdi-heart'
       if (param === 'bookmark') return 'mdi-bookmark'
       if (param === 'type') return 'mdi-shape'
+      if (param === 'category') return 'mdi-tag-text'
       if (param === 'value') return 'mdi-thermometer'
       return 'mdi-filter'
     },
