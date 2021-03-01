@@ -64,24 +64,24 @@
             <v-btn @click="jumpToNextMarker" small>
               <v-icon>mdi-map-marker-right</v-icon>
             </v-btn>
-            <v-menu offset-y nudge-top="20" nudge-right="282" attach=".vlc-controls">
+            <v-menu offset-y nudge-top="40" nudge-right="282" attach=".vlc-controls">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn v-bind="attrs" v-on="on" small>
                   <v-icon>mdi-map-marker-plus</v-icon>
                 </v-btn>
               </template>
               
-              <v-btn-toggle class="remove-active" dense>
-                <v-btn @click="openDialogMarkerTag" small>
-                  <v-icon size="20">mdi-tag</v-icon> 
+              <v-btn-toggle class="remove-active">
+                <v-btn @click="openDialogMarkerTag">
+                  <v-icon size="20">mdi-tag</v-icon>
                 </v-btn>
-                <v-btn small>
+                <v-btn>
                   <v-icon @click="openDialogMarkerPerformer" size="20">mdi-account</v-icon> 
                 </v-btn>
-                <v-btn @click="addMarker('favorite')" small>
+                <v-btn @click="addMarker('favorite')">
                   <v-icon size="20">mdi-heart</v-icon> 
                 </v-btn>
-                <v-btn @click="openDialogMarkerBookmark" small>
+                <v-btn @click="openDialogMarkerBookmark">
                   <v-icon size="20">mdi-bookmark</v-icon> 
                 </v-btn>
               </v-btn-toggle>
