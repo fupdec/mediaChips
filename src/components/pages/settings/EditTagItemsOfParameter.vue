@@ -95,7 +95,7 @@
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text class="pt-6 text-center">
-          Item "{{items[itemsSelected]}}" will be delete from all tag!
+          Item "{{items[itemsSelected]}}" will be delete from all tags!
         </v-card-text>
         <v-card-actions>
           <v-btn @click="dialogDeleteItem=false" class="ma-2">Cancel</v-btn>
@@ -186,22 +186,23 @@ export default {
       
       const oldName = this.items[this.itemsSelected]
       const newName = this.itemNameNew
-      let param = this.param
+
       this.items[this.itemsSelected] = newName
       this.updateParamsInSettings()
       // update param in database of tags
-      this.$store.getters.tags.filter(p=>p[param].includes(oldName)).each(p=>{
-          const i = p[param].indexOf(oldName)
-          p[param][i] = newName
+      let param = this.param.toLowerCase()
+      this.$store.getters.tags.filter(t=>t[param].includes(oldName)).each(t=>{
+          const i = t[param].indexOf(oldName)
+          t[param][i] = newName
         }).write()
       
       this.dialogRenameItem = false
     },
     deleteItem() {
-      let param = this.param
       const item = this.items[this.itemsSelected]
       this.items.splice(this.itemsSelected, 1)
       this.updateParamsInSettings()
+      let param = this.param.toLowerCase()
       // update param in database of tags
       this.$store.getters.tags.filter(p=>(p[param].includes(item))).each(p=>{
           const i = p[param].indexOf(item)
