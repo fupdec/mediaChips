@@ -228,7 +228,7 @@ export default {
   }),
   computed: {
     tags() {
-      let tags = this.$store.getters.tags.filter(t=>(t.category.includes('performer')))
+      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('performer')))
       return tags.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
     },
     tabId() {

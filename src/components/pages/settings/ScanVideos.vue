@@ -78,7 +78,7 @@
                 <v-checkbox v-model="$store.state.Settings.searchTagsInFileName" 
                   label="Checking for tags in the file name" dense />
                 <v-icon left color="blue">mdi-alert-circle-outline</v-icon>
-                Checking for tags will be only by tags with the category "video". <br>
+                Checking for tags will be only by tags with the type "video". <br>
                 This function works inaccurately, in contrast to the search for artists and websites, 
                 since the search does not match the entire string, but a part. <br>
                 For example in the file "BestCumshots.mp4" will be found and added tags "Cumshot" and "Hot".

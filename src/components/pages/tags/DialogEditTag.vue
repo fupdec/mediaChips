@@ -122,9 +122,9 @@
                         />
                       </v-col>
                       <v-col cols="12" sm="6" align="center" justify="center">
-                        <div class="mb-4">Tag category</div>
+                        <div class="mb-4">Tag type</div>
                         <v-select
-                          v-model="category" :items="categories" label="Categories"
+                          v-model="type" :items="types" label="Types"
                           outlined multiple :rules="[getCategoryRules]"
                         ></v-select>
                       </v-col>
@@ -184,7 +184,7 @@
         <v-card-text class="text-center">
           <div class="overline red--text">Warning!</div>
           <v-icon size="60" color="red" class="mb-4">mdi-alert</v-icon>
-          <div> If you cancel the marked category, <br>
+          <div> If you cancel the marked type, <br>
             it will also remove that tag <br>
             from ALL videos or performers! </div>
         </v-card-text>
@@ -230,7 +230,7 @@ export default {
       this.tagAlternateNames = this.tag.altNames.join(', ')
       this.checkImageExist(this.getImagePath('tag',''), 'main')
       this.newTagName = this.tag.name
-      this.category = this.tag.category
+      this.type = this.tag.type
       if (this.tag.bookmark) {
         let text = this.$store.getters.bookmarks.get('tags')
                     .find({itemId:this.tag.id}).value().text
@@ -245,11 +245,11 @@ export default {
     isTagNameEditEnabled: false,
     imgMainLoading: null,
     newTagName: "",
-    category: [],
+    type: [],
     favorite: null,
     tagAlternateNames: "",
     valid: false,
-    categories: ['performer', 'video'],
+    types: ['performer', 'video'],
     swatches: [
       ["#cc0e00"],
       ["#e8004f"],
@@ -338,9 +338,9 @@ export default {
         return true
       }
     },
-    getCategoryRules(categories) {
-      if (categories.length == 0) {
-        return 'Choose at least one category'
+    getCategoryRules(types) {
+      if (types.length == 0) {
+        return 'Choose at least one type'
       } else {
         return true
       }
@@ -357,8 +357,8 @@ export default {
     saveTagInfo() {
       this.validate()
       if (!this.warningAgree) {
-        if (!this.category.includes('video') && this.tag.category.includes('video') || 
-          !this.category.includes('performer') && this.tag.category.includes('performer')) {
+        if (!this.type.includes('video') && this.tag.type.includes('video') || 
+          !this.type.includes('performer') && this.tag.type.includes('performer')) {
           this.dialogWarning = true
           return
         }
@@ -389,16 +389,16 @@ export default {
           .each(marker => {marker.name = this.newTagName}).write()
       }
 
-      // remove tag from videos if category "video" was unselected
-      if (!this.category.includes('video') && this.tag.category.includes('video')) {
+      // remove tag from videos if type "video" was unselected
+      if (!this.type.includes('video') && this.tag.type.includes('video')) {
         this.$store.getters.videos.filter({'tags': [this.tag.name]}).each(video=>{
           let index = video.tags.indexOf(this.tag.name)
           if (index !== -1) video.tags.splice(index, 1)
         }).write()
       }
 
-      // remove tag from performers if category "performer" was unselected
-      if (!this.category.includes('performer') && this.tag.category.includes('performer')) {
+      // remove tag from performers if type "performer" was unselected
+      if (!this.type.includes('performer') && this.tag.type.includes('performer')) {
         this.$store.getters.performers.filter({'tags': [this.tag.name]}).each(performer=>{
           let index = performer.tags.indexOf(this.tag.name)
           if (index !== -1) performer.tags.splice(index, 1)
@@ -438,7 +438,7 @@ export default {
         .find({ id: this.tag.id })
         .assign({
           name: this.newTagName,
-          category: this.category,
+          type: this.type,
           color: this.tag.color,
           value: this.tag.value,
           favorite: this.favorite,
@@ -450,7 +450,7 @@ export default {
       info.id = this.tag.id
       info.info = true
       info.name = this.newTagName
-      info.category = this.category
+      info.type = this.type
       info.color = this.tag.color
       info.value = this.tag.value
       info.bookmark = newBookmark

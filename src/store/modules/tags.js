@@ -13,16 +13,15 @@ dbt.defaults({
   tags: [{
     id: "2222222222222222",
     name: "Anal",
-    category: [
-      "video"
-    ],
+    category: [],
     color: "#FF9800",
     value: 5,
     bookmark: false,
     altNames: [],
     date: Date.now(),
     edit: Date.now(),
-    favorite: true
+    favorite: true,
+    type: ['video'],
   },] 
 }).write()
 
@@ -276,7 +275,7 @@ const Tags = {
     },
     tagsNamesLowerVideos(state, store) {
       return store.dbt.get('tags').filter(t=>{
-        return t.category.includes('video')
+        return t.type.includes('video')
       }).map(p=>p.name.toLowerCase()).value()
     },
     tagFiltersForTabName: (state, store, rootState) => {

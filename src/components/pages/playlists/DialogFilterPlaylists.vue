@@ -47,12 +47,6 @@
                 :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
             </v-dialog>
 
-            <v-select v-if="filters[i].param==='category'" 
-              @input="setVal($event,i)" :value="filters[i].val" :items="['video','performer']" 
-              outlined dense label="Categories" class="val overline"
-              :disabled="filters[i].lock" multiple
-              :menu-props="{contentClass:'overline'}"/>
-
             <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
               class="ml-2 mt-1" color="green" outlined icon fab x-small>
               <v-icon>mdi-content-duplicate</v-icon>

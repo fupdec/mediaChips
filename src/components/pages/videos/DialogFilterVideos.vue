@@ -214,7 +214,7 @@ export default {
       return this.$store.getters.performers.orderBy([p=>p.name.toLowerCase()],['asc']).value()
     },
     tags() {
-      let tags = this.$store.getters.tags.filter(t=>(t.category.includes('video')))
+      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('video')))
       return tags.orderBy(p=>(p.name.toLowerCase()),['asc']).value()
     },
     websites() {

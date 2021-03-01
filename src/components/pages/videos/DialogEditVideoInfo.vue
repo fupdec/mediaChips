@@ -455,7 +455,7 @@ export default {
       },
     },
     tagsAll() {
-      let tags = this.$store.getters.tags.filter(t=>(t.category.includes('video')))
+      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('video')))
       return this.sortItems(tags, 'Tags')
     },
     sortButtonsTags: {

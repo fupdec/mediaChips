@@ -666,7 +666,8 @@ export default {
     // data from main window
     tagsAll() {
       if (this.tagsDb === null) return []
-      return _.filter(this.tagsDb, t=>(t.category.includes('video')))
+      let tags = _.filter(this.tagsDb, t=>(t.type.includes('video')))
+      return _.orderBy(tags, 'name', ['asc'])
     },
     performersAll() {
       if (this.performersDb === null) return []

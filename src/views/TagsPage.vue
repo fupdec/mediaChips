@@ -329,28 +329,26 @@ export default {
       let ids = this.$store.getters.getSelectedTags
       let tags = this.$store.getters.tags
       if (ids.length!==0) {
-        let categories = []
+        let types = []
         for (let i=0; i<ids.length; i++) {
-          if (tags.find({ id: ids[i], category: ['video']}).value()) {
-            categories.push(true)
-          } else categories.push(false) 
+          if (tags.find({ id: ids[i], type: ['video']}).value()) {
+            types.push(true)
+          } else types.push(false) 
         }
-        console.log(!categories.includes(false))
-        return !categories.includes(false)
+        return !types.includes(false)
       } else return false
     },
     isSelectedTagsOnlyWithPerformerCategory() {
       let ids = this.$store.getters.getSelectedTags
       let tags = this.$store.getters.tags
       if (ids.length!==0) {
-        let categories = []
+        let types = []
         for (let i=0; i<ids.length; i++) {
-          if (tags.find({ id: ids[i], category: ['performer']}).value()) {
-            categories.push(true)
-          } else categories.push(false) 
+          if (tags.find({ id: ids[i], type: ['performer']}).value()) {
+            types.push(true)
+          } else types.push(false) 
         }
-        console.log(!categories.includes(false))
-        return !categories.includes(false)
+        return !types.includes(false)
       } else return false
     },
   },

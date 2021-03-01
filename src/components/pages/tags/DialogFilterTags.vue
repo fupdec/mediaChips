@@ -50,9 +50,9 @@
                 :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
             </v-dialog>
 
-            <v-select v-if="filters[i].param==='category'" 
+            <v-select v-if="filters[i].param==='type'" 
               @input="setVal($event,i)" :value="filters[i].val" :items="['video','performer']" 
-              outlined dense label="Categories" class="val overline"
+              outlined dense label="Types" class="val overline"
               :disabled="filters[i].lock" multiple
               :menu-props="{contentClass:'overline'}"/>
 
@@ -102,10 +102,10 @@ export default {
   },
   data: () => ({
     filters: [],
-    params: ['name','category','favorite','bookmark','value','date','edit'],
+    params: ['name','type','favorite','bookmark','value','date','edit'],
     paramTypeNumber: ['value'],
     paramTypeString: ['name'],
-    paramTypeArray: ['category'],
+    paramTypeArray: ['type'],
     paramTypeSelect: [],
     paramTypeDate: ['date','edit'],
     paramTypeBoolean: ['favorite','bookmark'],
@@ -132,7 +132,7 @@ export default {
       if (param === 'edit') return 'mdi-calendar-edit'
       if (param === 'favorite') return 'mdi-heart'
       if (param === 'bookmark') return 'mdi-bookmark'
-      if (param === 'category') return 'mdi-shape'
+      if (param === 'type') return 'mdi-shape'
       if (param === 'value') return 'mdi-thermometer'
       return 'mdi-filter'
     },

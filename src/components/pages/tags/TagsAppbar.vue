@@ -361,6 +361,7 @@ export default {
             performers: [],
             websites: [],
             edit: Date.now(),
+            type: [],
           }
 
           // add tagInfo to DB

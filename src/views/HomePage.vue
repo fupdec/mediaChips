@@ -16,6 +16,12 @@
             <v-btn @click="updatePerformerNationality" color="red" dark class="my-4" block> 
               <v-icon left>mdi-auto-fix</v-icon> Update Performer Nationality </v-btn>
           </div>
+          <div v-if="!settings.appNewVersionUpdateTagsCategory">
+            <div class="ma-4 red--text text-center">Starting from version 0.6.6 you can assign category to tags.
+              <br> If you have tags just press "Update tags category" button. </div>
+            <v-btn @click="updateTagsCategory" color="red" dark class="my-4" block> 
+              <v-icon left>mdi-auto-fix</v-icon> Update tags category </v-btn>
+          </div>
           <div v-if="!settings.appNewVersionUpdateVideoWebsite">
             <div class="ma-4 red--text text-center">Starting from version 0.6.1 you can assign multiple websites to one video.
               <br> If you have videos just press "Update video website" button. </div>
@@ -497,6 +503,18 @@ export default {
 
       setTimeout(() => {
         this.$store.getters.settings.set('appNewVersionUpdatePerformerNationality', true).write()
+        this.dialogRestartApp = true
+      }, 2000)
+    },
+    updateTagsCategory() {
+      this.$store.getters.tags.each(t=>{
+        if (t.category.length == 0) t.type = []
+        else t.type = t.category
+        t.category = []
+      }).write()
+
+      setTimeout(() => {
+        this.$store.getters.settings.set('appNewVersionUpdateTagsCategory', true).write()
         this.dialogRestartApp = true
       }, 2000)
     },

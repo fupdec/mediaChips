@@ -641,7 +641,7 @@ export default {
       return this.performer.name.trim().toLowerCase().replace(/ /g, '-')
     },
     tagsAll() {
-      let tags = this.$store.getters.tags.filter(t=>(t.category.includes('performer')))
+      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('performer')))
       return this.sortItems(tags, 'Tags')
     },
     sortButtonsTags: {
