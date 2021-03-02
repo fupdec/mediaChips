@@ -4,15 +4,16 @@
     <div class="player-wrapper">
       <div class="canvas-wrapper" @click="paused ? play() : pause()" 
         @dblclick="toggleFullscreen" @click.middle="toggleFullscreen" 
-        @contextmenu="showContextMenu($event)"
-        @keydown="handleKey" @wheel="changeVolume">
+        @mousedown="handleMouseCanvas($event)" @contextmenu="showContextMenu($event)"
+        @wheel="changeVolume" @keydown="handleKey" tabindex="-1">
         <canvas ref="canvas" class="canvas" :style="canvasSizes"/>
       </div>
       <v-card class="vlc-controls" tile 
         @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
         :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:fullscreen?0.7:1}">
         <v-card-actions class="timeline py-1 px-0 mx-3">
-          <v-slider @change="seek($event)" :value="currentTime"
+          <v-slider @change="seek($event)" :value="currentTime" 
+            @mousedown="handleMouseSeek($event)"
             min="0" step="1" :max="duration" hide-details/>
           <div v-for="(marker,i) in markers" :key="i" class="marker"
             :style="{left: `${marker.time/duration*100}%`}"
@@ -856,23 +857,6 @@ export default {
         }, 1000);
       }
     },
-    controlsDown(e) {
-      this.mouseDown = true;
-      this.seekByEvent(e);
-    },
-    controlsMove(e) {
-      if (this.mouseDown) this.seekByEvent(e);
-    },
-    controlsUp(e) {
-      if (this.mouseDown) this.seekByEvent(e);
-      this.mouseDown = false;
-    },
-    seekByEvent(e) {
-      // padding 25px
-      let x = (e.pageX - 25) / (100 - 50);
-      x = Math.max(0, Math.min(1, x));
-      this.player.position = x;
-    },
     msToTime(ms, keepMs = false) {
       if (isNaN(ms)) return `00:00` + keepMs ? ".00" : "";
       let hms = new Date(ms)
@@ -945,15 +929,6 @@ export default {
     // ------------ HTMLVideoElement methods ---------- //
     addTextTrack(filePath) {
       this.player.subtitles.load(filePath);
-    },
-    captureStream() {
-      console.warn("Not implemented");
-    },
-    canPlayType(mediaType) {
-      return "probably";
-    },
-    fastSeek(t) {
-      this.player.time = t * 1000;
     },
     load() {
       // todo this doesnt work well
@@ -1071,6 +1046,7 @@ export default {
       if(event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
+      console.log(event)
     },
     increaseVolume() {
       if (this.player.volume>=100) return
@@ -1084,36 +1060,57 @@ export default {
       this.player.volume -= e.deltaY / 20;
     },
     handleKey(e) {
-      console.log(e.key);
       switch (true) {
-        case e.key === " ":
-          this.player.togglePause();
-          break;
-        case e.key === "ArrowRight":
-          this.player.time += 10000;
-          break;
-        case e.key === "ArrowLeft":
-          this.player.time -= 10000;
-          break;
-        case e.key === "ArrowUp":
-          this.player.volume += 5;
-          break;
-        case e.key === "ArrowDown":
-          this.player.volume -= 5;
-          break;
-        case e.key === "=":
-          let rateUp = this.player.input.rate * 1.25;
-          this.player.input.rate =
-            rateUp > 0.5 ? Math.round(rateUp * 4) / 4 : rateUp;
-          break;
-        case e.key === "-":
-          let rateDown = this.player.input.rate / 1.25;
-          this.player.input.rate =
-            rateDown > 0.5 ? Math.round(rateDown * 4) / 4 : rateDown;
-          break;
-        case e.key === "m":
-          this.player.mute = !this.player.mute;
-          break;
+        case e.key === ' ': this.player.togglePause()
+          break
+        case e.key === 'ArrowRight': this.player.time += 10000
+          break
+        case e.key === 'ArrowLeft': this.player.time -= 10000
+          break
+        case e.key === 'ArrowUp': this.player.volume += 5
+          break
+        case e.key === 'ArrowDown': this.player.volume -= 5
+          break
+        case e.key === 'p': this.togglePlaylist()
+          break
+        case e.key === 'm': this.toggleMarkers()
+          break
+        case e.key === '[': this.jumpToPrevMarker()
+          break
+        case e.key === ']': this.jumpToNextMarker()
+          break
+        case e.key === 'z': this.prev()
+          break
+        case e.key === 'c': this.next()
+          break
+        case e.key === 'x': this.stop()
+          break
+        case e.key === '1': this.openDialogMarkerTag()
+          break
+        case e.key === '2': this.openDialogMarkerPerformer()
+          break
+        case e.key === '3': this.addMarker('favorite')
+          break
+        case e.key === '4': this.openDialogMarkerBookmark()
+          break
+      }
+    },
+    handleMouseCanvas(e) {
+      let btnCode = e.button
+      switch (btnCode) {
+        case 3: this.prev()
+        break
+        case 4: this.next()
+        break
+      }
+    },
+    handleMouseSeek(e) {
+      let btnCode = e.button
+      switch (btnCode) {
+        case 3: this.jumpToPrevMarker()
+        break
+        case 4: this.jumpToNextMarker()
+        break
       }
     },
     // MARKERS
