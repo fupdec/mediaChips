@@ -38,13 +38,13 @@
             </v-btn>
           </v-btn-toggle>
           <v-btn-toggle class="mx-2 remove-active">
-            <v-btn @click="prev" small :disabled="playIndex==0">
+            <v-btn @click="prev" small :disabled="playIndex==0&&!playlistMode.includes('shuffle')">
               <v-icon>mdi-skip-previous</v-icon>
             </v-btn>
             <v-btn @click="stop" small>
               <v-icon>mdi-stop</v-icon>
             </v-btn>
-            <v-btn @click="next" small :disabled="playIndex+1>=playlistLength">
+            <v-btn @click="next" small :disabled="playIndex+1>=playlistLength&&!playlistMode.includes('shuffle')">
               <v-icon>mdi-skip-next</v-icon>
             </v-btn>
           </v-btn-toggle>
@@ -189,7 +189,7 @@
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn value="shuffle" v-on="on" disabled>
+              <v-btn value="shuffle" v-on="on">
                 <v-icon>mdi-shuffle-variant</v-icon>
               </v-btn>
             </template>
@@ -544,6 +544,7 @@ export default {
     selectedPlaylist: null,
     videos: null,
     playlist: [],
+    playlistShuffle: [],
     playIndex: null,
     playlistLength: 0,
     playlistMode: [],
@@ -781,7 +782,7 @@ export default {
         this.$emit("timeupdate", this.currentTime);
       });
       this.player.on("ended", () => {
-        if (this.player.playlist.items.length != this.playIndex+1) {
+        if (this.playlistLength != this.playIndex+1) {
           this.playIndex = this.playIndex + 1
         }
       })
@@ -914,6 +915,14 @@ export default {
         this.player.playlist.playItem(this.playIndex)
         this.playlistLength = this.player.playlist.items.length
         this.$emit("nowPlaying", this.player.playlist.items[this.playIndex])
+      
+        if (this.playlistMode.includes('shuffle')) {
+          let index = []
+          for (let i = 0; i < this.playlistLength; i++) {
+            index.push(i)
+          }
+          this.playlistShuffle = _.shuffle(index)
+        }
       }
       
       this.$emit("loadstart");
@@ -982,13 +991,33 @@ export default {
       this.player.time = 0
     },
     next() {
-      this.playIndex = this.playIndex + 1
-      this.player.playlist.next()
+      if (this.playlistMode.includes('shuffle')) {
+        let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
+        if (shuffleIndex == this.playlistLength-1) {
+          this.playIndex = this.playlistShuffle[0]
+        } else {
+          this.playIndex = this.playlistShuffle[shuffleIndex + 1]
+        }
+        this.player.playlist.playItem(this.playIndex)
+      } else {
+        this.playIndex = this.playIndex + 1
+        this.player.playlist.next()
+      }
       this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
     },
     prev() {
-      this.playIndex = this.playIndex - 1
-      this.player.playlist.prev()
+      if (this.playlistMode.includes('shuffle')) {
+        let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
+        if (shuffleIndex == 0) {
+          this.playIndex = this.playlistShuffle[this.playlistLength - 1]
+        } else {
+          this.playIndex = this.playlistShuffle[shuffleIndex - 1]
+        }
+        this.player.playlist.playItem(this.playIndex)
+      } else {
+        this.playIndex = this.playIndex - 1
+        this.player.playlist.prev()
+      }
       this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
     },
     seek(e) {
@@ -1240,6 +1269,13 @@ export default {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
     changePlaylistMode() {
+      if (this.playlistMode.includes('shuffle')) {
+        let index = []
+        for (let i = 0; i < this.playlistLength; i++) {
+          index.push(i)
+        }
+        this.playlistShuffle = _.shuffle(index)
+      }
       // TODO need to fix this function
       // if (this.playlistMode.includes('autoplay')) {
       //   this.player.playlist.mode = 'Normal'
