@@ -1004,6 +1004,11 @@ export default {
         this.player.playlist.next()
       }
       this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
+
+      if (this.isPlaylistVisible) { // scroll to now playing in playlist
+        const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
+        this.$refs.playlist.scrollTo({ y: height }, 50)
+      }
     },
     prev() {
       if (this.playlistMode.includes('shuffle')) {
@@ -1019,6 +1024,11 @@ export default {
         this.player.playlist.prev()
       }
       this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
+      
+      if (this.isPlaylistVisible) { // scroll to now playing in playlist
+        const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
+        this.$refs.playlist.scrollTo({ y: height }, 50)
+      }
     },
     seek(e) {
       this.player.time = e * 1000
