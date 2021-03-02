@@ -6,9 +6,9 @@
     >
       <transition-group type="transition" :name="!drag ? 'flip-tabs' : null" style="display:flex">
         <v-tab 
+          v-for="tab in tabs" :key="tab.id" :id="tab.id" exact
           @click.middle.prevent.stop="closeTab($event, tab.id)"
           @contextmenu="showContextMenu($event, tab.id)"
-          v-for="(tab, i) in tabs" :key="i" :id="tab.id" exact
           :to="tab.link" :ripple="false" class="tabs-group-item"
         >
           <div class="tab-name" :title="tab.name"> 

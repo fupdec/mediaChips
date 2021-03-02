@@ -16,10 +16,11 @@
   "main": "background.js",
   "dependencies": {
     "@simonwep/selection-js": "^1.7.0",
-    "apexcharts": "^3.22.0",
+    "apexcharts": "^3.25.0",
     "archiver": "^5.0.2",
     "axios": "^0.21.1",
     "cheerio": "^1.0.0-rc.3",
+    "chokidar": "^3.5.1",
     "core-js": "^3.6.4",
     "filepond": "^4.23.1",
     "filepond-plugin-file-encode": "^2.1.9",
