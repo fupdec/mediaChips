@@ -368,13 +368,13 @@ export default {
             color: "#9b9b9b",
             network: false,
             childWebsites: [],
-            date: Date.now(),
             favorite: false,
+            bookmark: false,
+            date: Date.now(),
+            edit: Date.now(),
             videos: 0,
             performers: [],
-            tags: [],
             videoTags: [],
-            edit: Date.now(),
           }
 
           // add websiteInfo to DB

@@ -12,16 +12,18 @@ import router from '@/router'
 dbt.defaults({ 
   tags: [{
     id: "2222222222222222",
-    name: "Anal",
+    name: "Flower",
+    altNames: [],
     category: [],
     color: "#FF9800",
     value: 5,
-    bookmark: false,
-    altNames: [],
     date: Date.now(),
     edit: Date.now(),
     favorite: true,
+    bookmark: false,
     type: ['video'],
+    videos: 0,
+    performers: [],
   },] 
 }).write()
 

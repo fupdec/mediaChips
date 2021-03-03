@@ -107,7 +107,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Sorting and filtering
 - Adding several at a time
 - Website image
-- 
+
 #### &#128209; Playlists
 - Default playlist "Watch later" 
 - Adding to favorite

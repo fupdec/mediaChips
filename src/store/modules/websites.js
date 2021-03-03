@@ -16,8 +16,13 @@ dbw.defaults({
     color: "#FF9800",
     network: false,
     childWebsites: [],
+    favorite: false,
+    bookmark: false,
     date: Date.now(),
     edit: Date.now(),
+    videos: 0,
+    performers: [],
+    videoTags: [],
   },]
 }).write()
 

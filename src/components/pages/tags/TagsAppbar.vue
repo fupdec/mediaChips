@@ -356,12 +356,12 @@ export default {
             color: "#9b9b9b",
             value: 0,
             date: Date.now(),
+            edit: Date.now(),
             favorite: false,
+            bookmark: false,
+            type: [],
             videos: 0,
             performers: [],
-            websites: [],
-            edit: Date.now(),
-            type: [],
           }
 
           // add tagInfo to DB
