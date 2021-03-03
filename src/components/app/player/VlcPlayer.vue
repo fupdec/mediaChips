@@ -1084,6 +1084,8 @@ export default {
           break
         case e.key === 'ArrowDown': this.player.volume -= 5
           break
+        case e.key === 'f': this.toggleFullscreen()
+          break
         case e.key === 'p': this.togglePlaylist()
           break
         case e.key === 'm': this.toggleMarkers()
