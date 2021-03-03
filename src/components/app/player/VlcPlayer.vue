@@ -1090,9 +1090,9 @@ export default {
           break
         case e.key === 'm': this.toggleMarkers()
           break
-        case e.key === '[': this.jumpToPrevMarker()
+        case e.key === ',': this.jumpToPrevMarker()
           break
-        case e.key === ']': this.jumpToNextMarker()
+        case e.key === '.': this.jumpToNextMarker()
           break
         case e.key === 'z': this.prev()
           break

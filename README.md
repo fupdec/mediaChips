@@ -1,6 +1,6 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.6-alpha?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.7-alpha?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
 ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
@@ -42,11 +42,11 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 
 ## Roadmap to Beta
 ~~VLC Video player~~ <br>
-~~playlists~~
-~~save state of sort, favorite, bookmark, page~~
-~~auto-update of data based on videos, performers, websites with the ability to customize the update interval~~
-- add play mode shuffle, autoplay for player
-- improve player usabilty
+~~playlists~~ <br>
+~~save state of sort, favorite, bookmark, page~~ <br>
+~~auto-update of data based on videos, performers, websites with the ability to customize the update interval~~ <br>
+~~add play mode shuffle, autoplay for player~~ <br>
+~~improve player usabilty~~
 - improve stability and fix bugs
 
 ## Features
@@ -71,7 +71,6 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Video preview with image grid 3x3
 - Adding performers, tags, websites, rating, favorite, bookmark
 - Sorting and filtering by performers, tags, websites, filesize, quality, folder, path etc.
-- Save filters and sorting to a preset that can be loaded at any time or set as default
 - Play video in app or in the system player selected by default
 - Scanning for videos in multiple folders. Information is automatically added to the video: performers, tags, websites
 - Video preview on hover (only supports formats that the HTML5 video tag can play)
@@ -89,7 +88,6 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Add custom parameter
 - Autosearch for information on the Internet and import data (Freeones, IAFD)
 - Sorting and filtering by all profile parameters
-- Save filters and sorting to a preset that can be loaded at any time or set as default
 - Ability to set 4 images for each (main, alternate, 2 custom), avatar, header image on the performer page
 - Beautiful performer page with descriptive profile information. Filtration of videos with a performer by tags from the video. A meter that is determined by the values of tags from the video.
 - Adding several at a time
@@ -98,7 +96,7 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - ... and something else
 
 #### &#127991; Tags
-- Adding alternate names (for easy search), color, value (for a meter), favorite, bookmark
+- Adding alternate names (for easy search), color, value (for a meter), favorite, bookmark, category
 - Sorting and filtering
 - Adding several at a time
 - Of course the tag image
@@ -109,6 +107,12 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 - Sorting and filtering
 - Adding several at a time
 - Website image
+- 
+#### &#128209; Playlists
+- Default playlist "Watch later" 
+- Adding to favorite
+- Sorting and filtering
+- Adding several at a time
 
 ### View of app
 
