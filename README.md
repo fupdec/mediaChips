@@ -1,6 +1,6 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.6.7-alpha?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.7.0-beta?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
 ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
@@ -117,31 +117,34 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 ### View of app
 
 #### Home 
-![alt text](https://i.ibb.co/n7YvpBb/home.jpg)
+![home](https://i.ibb.co/3p20KF6/home.png)
 
 #### Videos
-![alt text](https://i.ibb.co/svb12st/videos.jpg)
+![videos](https://i.ibb.co/fMzrzt1/videos.png)
 
 #### Edit video and hovered label
-![alt text](https://i.ibb.co/3sXK9ms/edit.jpg)
+![video-edit](https://i.ibb.co/MV8FgF4/video-edit.png)
 
 #### Performers
-![alt text](https://i.ibb.co/s6wvvTf/performers.jpg)
+![performers](https://i.ibb.co/YZvJXfm/performers.png)
 
 #### Performer profile
-![alt text](https://i.ibb.co/0GxRgWr/profile.jpg)
-
-#### Find performer info
-![alt text](https://i.ibb.co/x22DLWD/find.jpg)
+![performer-edit](https://i.ibb.co/gzLfD1n/performer-edit.png)
 
 #### Edit images of performer
-![alt text](https://i.ibb.co/d24KFxM/images.jpg)
+![performer-images](https://i.ibb.co/WHwgVSW/performer-images.png)
 
 #### Performer
-![alt text](https://i.ibb.co/bLXfqhr/performer.jpg)
+![performer-page](https://i.ibb.co/hfwJGY7/performer-page.png)
 
-#### Performer in dark mode with header image, context menu 
-![alt text](https://i.ibb.co/MVskQpr/dark.jpg)
+#### Performer in dark mode
+![performer-page-open-profile](https://i.ibb.co/0hGC0h8/performer-page-open-profile.png)
+
+#### Websites
+![websites](https://i.ibb.co/4PkHbzh/websites.png)
+
+#### Website
+![website](https://i.ibb.co/QQGxWDH/website.png)
 
 ## Development
 
