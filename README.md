@@ -122,22 +122,22 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 #### Videos
 ![videos](https://i.ibb.co/fMzrzt1/videos.png)
 
-#### Edit video and hovered label
+#### Edit video
 ![video-edit](https://i.ibb.co/MV8FgF4/video-edit.png)
 
 #### Performers
 ![performers](https://i.ibb.co/YZvJXfm/performers.png)
 
-#### Performer profile
+#### Edit performer profile
 ![performer-edit](https://i.ibb.co/gzLfD1n/performer-edit.png)
 
 #### Edit images of performer
 ![performer-images](https://i.ibb.co/WHwgVSW/performer-images.png)
 
-#### Performer
+#### Performer page
 ![performer-page](https://i.ibb.co/hfwJGY7/performer-page.png)
 
-#### Performer in dark mode
+#### Performer page in dark mode with an open profile 
 ![performer-page-open-profile](https://i.ibb.co/0hGC0h8/performer-page-open-profile.png)
 
 #### Websites
@@ -145,6 +145,9 @@ Perhaps if there are a lot of people willing, I will port it for these systems. 
 
 #### Website
 ![website](https://i.ibb.co/QQGxWDH/website.png)
+
+#### Player
+![player](https://i.ibb.co/tYPHjWz/player.png)
 
 ## Development
 
