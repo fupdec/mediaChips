@@ -27,11 +27,11 @@
               <span></span>
             </v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="restart">
+          <!-- <v-list-item link @click="restart">
             <v-list-item-title>
               <v-icon left size="18">mdi-restart</v-icon> Restart
             </v-list-item-title>
-          </v-list-item>
+          </v-list-item> -->
           <v-list-item link @click="close">
             <v-list-item-title>
               <v-icon left size="18">mdi-logout</v-icon> Exit
