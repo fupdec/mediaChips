@@ -39,13 +39,13 @@
             </v-btn>
           </v-btn-toggle>
           <v-btn-toggle class="mx-2 remove-active">
-            <v-btn @click="prev" small :disabled="playIndex==0&&!playlistMode.includes('shuffle')">
+            <v-btn @click="prev" small :disabled="isPrevDisabled">
               <v-icon>mdi-skip-previous</v-icon>
             </v-btn>
             <v-btn @click="stop" small>
               <v-icon>mdi-stop</v-icon>
             </v-btn>
-            <v-btn @click="next" small :disabled="playIndex+1>=playlistLength&&!playlistMode.includes('shuffle')">
+            <v-btn @click="next" small :disabled="isNextDisabled">
               <v-icon>mdi-skip-next</v-icon>
             </v-btn>
           </v-btn-toggle>
@@ -178,11 +178,18 @@
         </v-btn>
       </v-card-actions>
       <v-card-actions class="pa-0">
-        <v-btn-toggle v-model="playlistMode" @change="changePlaylistMode" 
-          tile dense multiple color="primary" class="toggle">
+        <v-btn-toggle v-model="playlistMode" tile dense multiple color="primary" class="toggle">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn value="autoplay" v-on="on" disabled>
+              <v-btn value="loop" v-on="on">
+                <v-icon>mdi-sync</v-icon>
+              </v-btn>
+            </template>
+            <span>Loop</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn value="autoplay" v-on="on">
                 <v-icon>mdi-play-pause</v-icon>
               </v-btn>
             </template>
@@ -524,8 +531,6 @@ export default {
     hideControls: false,
     mouseOverControls: false,
     // Video element properties //
-    defaultPlaybackRate: 1,
-    playbackRate: 1,
     duration: NaN,
     readyState: HTMLMediaElement.HAVE_NOTHING,
     volume: 1,
@@ -548,7 +553,7 @@ export default {
     playlistShuffle: [],
     playIndex: null,
     playlistLength: 0,
-    playlistMode: [],
+    playlistMode: ['autoplay'],
     // Markers
     isMarkersVisible: false,
     markers: [],
@@ -700,6 +705,18 @@ export default {
       if (this.$vuetify.theme.dark) return 'to bottom, rgba(0, 0, 0, 0.5), transparent'
       else return 'to bottom, rgba(255, 255, 255, 0.5), transparent'
     },
+    isPrevDisabled() {
+      if (this.playlistMode.includes('shuffle')) {
+        let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
+        return shuffleIndex==0 && !this.playlistMode.includes('loop')
+      } else return this.playIndex==0 && !this.playlistMode.includes('loop')
+    },
+    isNextDisabled() {
+      if (this.playlistMode.includes('shuffle')) {
+        let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
+        return shuffleIndex+1>=this.playlistLength && !this.playlistMode.includes('loop')
+      } else return this.playIndex+1>=this.playlistLength && !this.playlistMode.includes('loop')
+    },
   },
   methods: {
     getCanvasSizes() {
@@ -718,7 +735,7 @@ export default {
           firstPause = true
       this.player = chimera.createPlayer() // run with param ['-vvv'] for debug
       this.player.bindCanvas(this.$refs.canvas)
-      console.log("init vlc player", chimera, this.player)
+      // console.log("init vlc player", chimera, this.player)
 
       this.player.on("play", () => {
         this.paused = false;
@@ -755,11 +772,6 @@ export default {
           `${this.player.mute ? "🔇" : "🔊"} ${Math.round(v)}%`
         );
       });
-      this.player.input.on("rateChange", (v) => {
-        this.playbackRate = v;
-        this.$emit("ratechange", v);
-        this.showStatusText(`🐢 ${v.toFixed(2)}x`);
-      });
       this.player.on("seek", () => {
         this.$emit("seeking");
         this.$emit("seeked");
@@ -783,13 +795,13 @@ export default {
         this.$emit("timeupdate", this.currentTime);
       });
       this.player.on("ended", () => {
-        if (this.playlistLength != this.playIndex+1) {
-          this.playIndex = this.playIndex + 1
-        }
+        if (this.playlistMode.includes('autoplay')) {
+          this.isNextDisabled ? this.stop() : this.next()
+        } else this.stop()
       })
 
       this.player.on("durationChange", (duration) => {
-        console.log("durationchange", duration);
+        // console.log("durationchange", duration);
         this.$emit("durationchange", duration / 1000);
         this.duration = duration / 1000;
       });
@@ -800,7 +812,7 @@ export default {
         this.$emit("error", ["VLC error", err]);
       });
 
-      this.player.on("seekable", (v) => console.log("seekable change", v));
+      // this.player.on("seekable", (v) => console.log("seekable change", v));
 
       this.player.on("mediaChange", () => {
         firstPlay = true;
@@ -813,7 +825,7 @@ export default {
             this.readyState = HTMLMediaElement.HAVE_ENOUGH_DATA;
             this.$emit("canplaythrough");
             this.networkState = HTMLMediaElement.NETWORK_IDLE;
-            console.log("canplaythrough");
+            // console.log("canplaythrough");
           }
         };
         this.player.once("frameReady", () => {
@@ -828,7 +840,7 @@ export default {
           this.$emit("playing");
         }
         prevState = newState;
-        console.log("New state: ", newState);
+        // console.log("New state: ", newState);
         if (newState === "buffering") this.showBuffering();
       });
     },
@@ -888,8 +900,6 @@ export default {
         this.networkState = HTMLMediaElement.NETWORK_NO_SOURCE;
       }
 
-        // TODO Sometimes file opens like DVD and when error it adds all parent folder to the playlist
-        // that error occured when opened file located in directory "#unknown"
       if (this.playlist !== [] && this.playlist !== null) {
         let playlist = this.playlist
         this.player.playlist.clear()
@@ -965,41 +975,45 @@ export default {
       this.player.stop()
       this.player.time = 0
     },
-    next() {
+    prev() {
+      if (this.isPrevDisabled) return
+      let isLoopMode = this.playlistMode.includes('loop')
+
       if (this.playlistMode.includes('shuffle')) {
         let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
-        if (shuffleIndex == this.playlistLength-1) {
-          this.playIndex = this.playlistShuffle[0]
-        } else {
-          this.playIndex = this.playlistShuffle[shuffleIndex + 1]
-        }
-        this.player.playlist.playItem(this.playIndex)
+        shuffleIndex = shuffleIndex - 1
+        if (isLoopMode && shuffleIndex < 0) { // if loop mode
+          shuffleIndex = shuffleIndex = this.playlistLength-1
+        } 
+        this.playIndex = this.playlistShuffle[shuffleIndex]
       } else {
-        this.playIndex = this.playIndex + 1
-        this.player.playlist.next()
+        this.playIndex = this.playIndex - 1
+        if (isLoopMode && this.playIndex < 0) this.playIndex = this.playlistLength-1 // if loop
       }
+      this.player.playlist.playItem(this.playIndex)
       this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
-
+      
       if (this.isPlaylistVisible) { // scroll to now playing in playlist
         const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
         this.$refs.playlist.scrollTo({ y: height }, 50)
       }
     },
-    prev() {
+    next() {
+      if (this.isNextDisabled) return
+      let isLoopMode = this.playlistMode.includes('loop')
+
       if (this.playlistMode.includes('shuffle')) {
         let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
-        if (shuffleIndex == 0) {
-          this.playIndex = this.playlistShuffle[this.playlistLength - 1]
-        } else {
-          this.playIndex = this.playlistShuffle[shuffleIndex - 1]
-        }
-        this.player.playlist.playItem(this.playIndex)
+        shuffleIndex = shuffleIndex + 1
+        if (isLoopMode && shuffleIndex == this.playlistLength) shuffleIndex = 0 // if loop mode
+        this.playIndex = this.playlistShuffle[shuffleIndex]
       } else {
-        this.playIndex = this.playIndex - 1
-        this.player.playlist.prev()
+        this.playIndex = this.playIndex + 1
+        if (isLoopMode && this.playIndex > this.playlistLength-1) this.playIndex = 0 // if loop mode
       }
+      this.player.playlist.playItem(this.playIndex)
       this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
-      
+
       if (this.isPlaylistVisible) { // scroll to now playing in playlist
         const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
         this.$refs.playlist.scrollTo({ y: height }, 50)
@@ -1046,7 +1060,6 @@ export default {
       if(event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
-      console.log(event)
     },
     increaseVolume() {
       if (this.player.volume>=100) return
@@ -1248,7 +1261,23 @@ export default {
     // PLAYLIST
     playItemFromPlaylist(index) {
       // console.log(this.player.playlist.items.map(i=>i.mrl))
-      this.player.playlist.playItem(index)
+      
+      if (this.playlistMode.includes('shuffle')) {
+        let indices = []
+        for (let i = 0; i < this.playlistLength; i++) {
+          indices.push(i)
+        }
+        this.playlistShuffle = _.shuffle(indices)
+        const i = this.playlistShuffle.indexOf(index)
+        this.playlistShuffle.splice(i, 1)
+        this.playlistShuffle.unshift(index)
+        this.player.playlist.playItem(index)
+
+        if (this.isPlaylistVisible) { // scroll to now playing in playlist
+          const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
+          this.$refs.playlist.scrollTo({ y: height }, 50)
+        }
+      } else this.player.playlist.playItem(index)
       this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[index]))
     },
     togglePlaylist() {
@@ -1275,31 +1304,12 @@ export default {
     getFileNameFromPath(videoPath) {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
-    changePlaylistMode() {
-      if (this.playlistMode.includes('shuffle')) {
-        let index = []
-        for (let i = 0; i < this.playlistLength; i++) {
-          index.push(i)
-        }
-        this.playlistShuffle = _.shuffle(index)
-      }
-      // TODO need to fix this function
-      // if (this.playlistMode.includes('autoplay')) {
-      //   this.player.playlist.mode = 'Normal'
-      // } else {
-      //   this.player.playlist.mode = 'Single'
-      // }
-    },
   },
   watch: {
     currentTime(newValue, oldValue) {
       if (newValue !== oldValue && !this.dontWatchTime)
         this.player.time = this.currentTime * 1000;
       else if (this.dontWatchTime) this.dontWatchTime = false;
-    },
-    playbackRate(newValue, oldValue) {
-      console.log("playback rate", newValue, oldValue);
-      if (newValue !== oldValue) this.player.input.rate = this.playbackRate;
     },
     volume(newValue, oldValue) {
       if (newValue !== oldValue) this.player.volume = this.volume * 100;
@@ -1309,6 +1319,22 @@ export default {
     },
     playIndex() {
       this.getMarkers()
+    },
+    playlistMode(mode, oldMode) {
+      if (mode.includes('shuffle') && !oldMode.includes('shuffle')) {
+        let index = []
+        for (let i = 0; i < this.playlistLength; i++) {
+          index.push(i)
+        }
+        this.playlistShuffle = _.shuffle(index)
+        this.playIndex = this.playlistShuffle[0]
+        this.player.playlist.playItem(this.playIndex)
+
+        if (this.isPlaylistVisible) { // scroll to now playing in playlist
+          const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
+          this.$refs.playlist.scrollTo({ y: height }, 50)
+        }
+      }
     },
   },
 };
@@ -1510,7 +1536,7 @@ export default {
     width: 100%;
     .v-btn {
       min-width: 30px;
-      width: 50%;
+      width: 33.33%;
       padding: 0;
     }
   }
