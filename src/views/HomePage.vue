@@ -164,7 +164,6 @@ const shell = require('electron').shell
 
 import vuescroll from 'vuescroll'
 import VueApexCharts from 'vue-apexcharts'
-import scanMeta from '@/components/pages/settings/VideoMetaFix'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
 
