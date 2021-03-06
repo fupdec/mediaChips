@@ -12,6 +12,9 @@ Manage your porn video collection - add performers, tags, websites and have fun!
 ## Sponsorship 
 &#127828; Support app on &#128279;<a href="https://www.patreon.com/avdb">Patreon</a>
 
+## Community 
+&#129489;&#127995;&#8205;&#129309;&#8205;&#129489;&#127996; You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a>
+
 ## Install application (Windows)
 To install, run the executable file. <br>
 You can download the latest executable under &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/releases">Releases</a> on the right hand side of this page. <br>
