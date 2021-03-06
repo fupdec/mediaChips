@@ -47,6 +47,16 @@
       <span class="text-h5">({{$store.getters.filteredTagsTotal}})</span>
     </div>
     
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
+      <v-icon left>mdi-filter</v-icon>
+      <v-chip v-for="(filter, i) in filters" :key="i" class="mr-2 mb-2" color="primary" 
+        small close :disabled="filter.lock" @click:close="removeFilter(i)">
+        {{filter.param}} {{filter.cond}} 
+        <span v-if="filter.type=='array'" class="ml-1">{{filter.val.join(', ')}}</span>
+        <span v-else class="ml-1">{{filter.val}}</span>
+      </v-chip>
+    </v-container>
+    
     <v-container fluid v-if="!$store.state.Tags.filteredEmpty" class="pagination-container my-6">
       <v-overflow-btn v-model="tagsPerPage" hint="items per page" persistent-hint
         :items="tagsPerPagePreset" dense height="36" solo disable-lookup hide-no-data
@@ -351,8 +361,15 @@ export default {
         return !types.includes(false)
       } else return false
     },
+    filters() {
+      return this.$store.state.Settings.tagFilters
+    },
   },
   methods: {
+    removeFilter(i) {
+      this.filters.splice(i, 1)
+      this.$store.dispatch('filterTags')
+    },
     selectedTags(list) {
       let ids = this.$store.getters.getSelectedTags
       let tags = this.$store.getters.tags

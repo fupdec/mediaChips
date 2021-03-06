@@ -11,7 +11,7 @@
       <div class="header-gradient" :style="gradient"></div>
     </v-responsive>
 
-    <div v-if="!isHeaderImageExists" class="spacer"></div>
+    <div v-if="!isHeaderImageExists" class="profile-spacer"></div>
     <v-container class="profile-container" :class="{images: isHeaderImageExists}">
       <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
         <img :src="getImgUrl('avatar')">
@@ -222,11 +222,18 @@
         </v-expansion-panel>
       </v-expansion-panels>
     </v-container>
+    
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
+      <v-icon left>mdi-filter</v-icon>
+      <v-chip v-for="(filter, i) in filters" :key="i" class="mr-2 mb-2" color="primary" 
+        small close :disabled="filter.lock" @click:close="removeFilter(i)">
+        {{filter.param}} {{filter.cond}} 
+        <span v-if="filter.type=='array'" class="ml-1">{{filter.val.join(', ')}}</span>
+        <span v-else class="ml-1">{{filter.val}}</span>
+      </v-chip>
+    </v-container>
 
-    <v-container fluid
-      v-if="!$store.state.Videos.filteredEmpty" 
-      class="pagination-container" 
-    >
+    <v-container v-if="!$store.state.Videos.filteredEmpty" fluid class="pagination-container">
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
         :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
         class="items-per-page-dropdown"
@@ -556,8 +563,15 @@ export default {
     params() {
       return this.$store.state.Settings.customParametersPerformer
     },
+    filters() {
+      return this.$store.state.Settings.videoFilters
+    },
   },
   methods: {
+    removeFilter(i) {
+      this.filters.splice(i, 1)
+      this.$store.dispatch('filterVideos')
+    },
     getCountryCode(nationality) {
       if (this.performer.nations.length==0) return ''
       let countryIndex = this.countries.findIndex(country => country.name === nationality)
@@ -1059,7 +1073,7 @@ export default {
     justify-content: center;
   }
 }
-.spacer {
+.profile-spacer {
   height: 150px;
 }
 </style>

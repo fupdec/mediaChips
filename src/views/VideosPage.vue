@@ -4,6 +4,16 @@
     <div class="headline text-h3 text-center my-6"> Videos
       <span class="text-h5">({{$store.getters.filteredVideosTotal}})</span>
     </div>
+    
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
+      <v-icon left>mdi-filter</v-icon>
+      <v-chip v-for="(filter, i) in filters" :key="i" class="mr-2 mb-2" color="primary" 
+        small close :disabled="filter.lock" @click:close="removeFilter(i)">
+        {{filter.param}} {{filter.cond}} 
+        <span v-if="filter.type=='array'" class="ml-1">{{filter.val.join(', ')}}</span>
+        <span v-else class="ml-1">{{filter.val}}</span>
+      </v-chip>
+    </v-container>
 
     <v-container fluid v-if="!$store.state.Videos.filteredEmpty" class="pagination-container my-6">
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
@@ -97,8 +107,15 @@ export default {
         return this.$store.getters.tabsDb.find({id: +this.tabId}).value()  
       }
     },
+    filters() {
+      return this.$store.state.Settings.videoFilters
+    },
   },
   methods: {
+    removeFilter(i) {
+      this.filters.splice(i, 1)
+      this.$store.dispatch('filterVideos')
+    },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
     },
