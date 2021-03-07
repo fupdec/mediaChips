@@ -42,6 +42,7 @@ const Tags = {
     filteredEmpty: false,
     menuCard: false,
     activeTab: null,
+    markersActionOnTagDelete: 'delete',
   }),
   mutations: {
     updateTags (state) {
@@ -232,6 +233,21 @@ const Tags = {
     deleteTags({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedTags.map(id => {
         let tagName = getters.tags.find({id:id}).value().name
+        // action with markers which contains tag
+        if (state.markersActionOnTagDelete == 'delete') {
+          let markers = getters.markers.filter({type: 'tag', name: tagName}).value()
+          if (markers.length) {
+            for (let i = 0; i < markers.length; i++) {
+              dispatch('deleteMarker', markers[i])
+            }
+          }
+        } else if (state.markersActionOnTagDelete == 'favorite') {
+          getters.markers.filter({type: 'tag', name: tagName})
+            .each(marker => {marker.type = 'favorite'; marker.name = '';}).write()
+        } else if (state.markersActionOnTagDelete == 'bookmark') {
+          getters.markers.filter({type: 'tag', name: tagName})
+            .each(marker => {marker.type = 'bookmark'}).write()
+        }
         // remove tag from videos
         getters.videos.filter({'tags': [tagName]}).each(video=>{
           let index = video.tags.indexOf(tagName);

@@ -121,12 +121,20 @@
           </v-card-text>
           <!-- TODO: fix too much notifications if delete more then 1 item -->
         </vuescroll>
+        <v-card-actions v-if="isSelectedTagsHasVideoCategory">
+          <v-radio-group v-model="$store.state.Tags.markersActionOnTagDelete" 
+            label="What to do with markers?" hide-details mandatory class="mt-0 mx-2">
+            <v-radio label="Delete from database" color="#e00" value="delete" on-icon="mdi-delete-forever"/>
+            <v-radio label="Change to type Favorite" color="pink" value="favorite" on-icon="mdi-heart"/>
+            <v-radio label="Change to type Bookmark" color="red" value="bookmark" on-icon="mdi-bookmark"/>
+          </v-radio-group>
+        </v-card-actions>
         <v-card-actions>
-          <v-btn class="ma-4" @click="$store.state.Tags.dialogDeleteTag = false">
+          <v-btn class="ma-2" @click="$store.state.Tags.dialogDeleteTag = false">
             No, Keep it
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="red" class="ma-4" dark @click="deleteTags">
+          <v-btn color="red" class="ma-2" dark @click="deleteTags">
             <v-icon left>mdi-delete-alert</v-icon> Yes, delete
           </v-btn>
         </v-card-actions>
@@ -173,6 +181,8 @@
 
 
 <script>
+const { ipcRenderer } = require('electron')
+
 import TagCard from "@/components/pages/tags/TagCard.vue";
 import Selection from "@simonwep/selection-js";
 import vuescroll from 'vuescroll'
@@ -335,6 +345,17 @@ export default {
         return this.$store.getters.tabsDb.find({id: +this.tabId}).value()    
       }
     },
+    isSelectedTagsHasVideoCategory() {
+      let ids = this.$store.getters.getSelectedTags
+      let tags = this.$store.getters.tags
+      if (ids.length!==0) {
+        for (let i=0; i<ids.length; i++) {
+          let tag = tags.find(tag => tag.id == ids[i] && tag.type.includes('video') ).value()
+          if (tag) return true
+        }
+        return false
+      } else return false
+    },
     isSelectedTagsOnlyWithVideoCategory() {
       let ids = this.$store.getters.getSelectedTags
       let tags = this.$store.getters.tags
@@ -409,6 +430,7 @@ export default {
       this.previousSelection = []
       this.$store.dispatch('deleteTags')
       this.$store.state.Tags.dialogDeleteTag = false
+      ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
     },
     initFilters() {
       let newFilters
