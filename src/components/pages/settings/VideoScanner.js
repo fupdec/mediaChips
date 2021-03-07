@@ -140,7 +140,7 @@ function checkPathContainsNames(filePath) {
 var fileScanProc = async function(file) {
   let fileProcResult = {}
   // check for duplicates in database
-  let duplicate = store.getters.videos.find({ path: file }).value()
+  let duplicate = store.getters.videos.find(video => video.path.toLowerCase() == file.toLowerCase()).value()
   if (duplicate) {
     console.warn(`file ${JSON.stringify(duplicate.path)} already in DB`)
     fileProcResult.duplicate = file

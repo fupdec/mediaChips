@@ -425,7 +425,7 @@ export default {
 
         if (fileStat.isDirectory()) {
           this.findInDir(filePath, filter, fileList)
-        } else if (filter.test(filePath)) {
+        } else if (filter.test(filePath.toLowerCase())) {
           fileList.push(filePath)
         }
       })
