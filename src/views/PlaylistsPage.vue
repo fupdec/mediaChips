@@ -87,14 +87,14 @@
     <v-menu v-model="$store.state.Playlists.menuCard" :position-x="$store.state.x" 
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
-        <v-list-item link @click="$store.state.Playlists.dialogEditPlaylist = true"
+        <v-list-item link @mouseup="$store.state.Playlists.dialogEditPlaylist = true"
           :disabled="!isSelectedSinglePlaylist">
           <v-list-item-title>
             <v-icon left size="18">mdi-pencil</v-icon> Edit playlist
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @click="$store.state.Playlists.dialogDeletePlaylist = true"
+        <v-list-item link @mouseup="$store.state.Playlists.dialogDeletePlaylist = true"
           :disabled="isSelectedWatchLater">
           <v-list-item-title>
             <v-icon left size="18" color="red">mdi-delete</v-icon> Delete playlist

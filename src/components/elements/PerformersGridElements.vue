@@ -79,7 +79,7 @@
                 <v-icon left size="18">mdi-cancel</v-icon> No tags
               </v-list-item-title>
             </v-list-item>
-            <v-list-item v-for="tag in performerTags" :key="tag" @click="filterByTag(tag)" class="pr-1" link>
+            <v-list-item v-for="tag in performerTags" :key="tag" @mouseup="filterByTag(tag)" class="pr-1" link>
               <v-list-item-title>
                 <v-icon left size="18" :color="getTagColor(tag)">mdi-tag</v-icon> {{tag}}
               </v-list-item-title>

@@ -145,31 +145,31 @@
     <v-menu v-model="$store.state.Tags.menuCard" :position-x="$store.state.x" 
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
-        <v-list-item link @click="filterVideosByTag" :disabled="!isSelectedTagsOnlyWithVideoCategory">
+        <v-list-item link @mouseup="filterVideosByTag" :disabled="!isSelectedTagsOnlyWithVideoCategory">
           <v-list-item-title>
             <v-icon left size="18">mdi-video</v-icon> Filter Videos by Tag 
           </v-list-item-title>
         </v-list-item>
-        <v-list-item link @click="filterPerformersByTag" :disabled="!isSelectedTagsOnlyWithPerformerCategory">
+        <v-list-item link @mouseup="filterPerformersByTag" :disabled="!isSelectedTagsOnlyWithPerformerCategory">
           <v-list-item-title>
             <v-icon left size="18">mdi-account</v-icon> Filter Performers by Tag 
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @click="$store.state.Tags.dialogEditTag = true"
+        <v-list-item link @mouseup="$store.state.Tags.dialogEditTag = true"
           :disabled="!isSelectedSingleTag">
           <v-list-item-title>
             <v-icon left size="18">mdi-pencil</v-icon> Edit Tag
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @click="copyTagNameToClipboard">
+        <v-list-item link @mouseup="copyTagNameToClipboard">
           <v-list-item-title>
             <v-icon left size="18">mdi-clipboard-text</v-icon> Copy Tag Name
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @click="$store.state.Tags.dialogDeleteTag = true">
+        <v-list-item link @mouseup="$store.state.Tags.dialogDeleteTag = true">
           <v-list-item-title>
             <v-icon left size="18" color="red">mdi-delete</v-icon> Delete Tag
           </v-list-item-title>

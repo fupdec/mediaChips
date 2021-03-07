@@ -143,20 +143,20 @@
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @click="$store.state.Websites.dialogEditWebsite = true"
+        <v-list-item link @mouseup="$store.state.Websites.dialogEditWebsite = true"
           :disabled="!isSelectedSingleWebsite">
           <v-list-item-title>
             <v-icon left size="18">mdi-pencil</v-icon> Edit website
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @click="copyWebsiteNameToClipboard">
+        <v-list-item link @mouseup="copyWebsiteNameToClipboard">
           <v-list-item-title>
             <v-icon left size="18">mdi-clipboard-text</v-icon> Copy website name
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
-        <v-list-item link @click="$store.state.Websites.dialogDeleteWebsite = true">
+        <v-list-item link @mouseup="$store.state.Websites.dialogDeleteWebsite = true">
           <v-list-item-title>
             <v-icon left size="18" color="red">mdi-delete</v-icon> Delete website
           </v-list-item-title>
