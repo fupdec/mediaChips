@@ -264,3 +264,6 @@ ipcMain.on('removeMarker', (event, markerForRemove, video) => {
 ipcMain.on('toggleDarkMode', (event, value) => {
   player.webContents.send( 'toggleDarkMode', value )
 })
+ipcMain.on('updatePlayerDb', (event, value) => {
+  player.webContents.send( 'updateDb', value )
+})

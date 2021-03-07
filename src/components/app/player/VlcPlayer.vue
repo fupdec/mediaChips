@@ -21,7 +21,7 @@
             <div class="tooltip text-center">
               <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb"/>
               <div>
-                <v-icon v-if="marker.type.toLowerCase()=='tag'" small :color="getTag(marker.name).color">mdi-tag</v-icon>
+                <v-icon v-if="marker.type.toLowerCase()=='tag'" small :color="getTagColor(marker.name)">mdi-tag</v-icon>
                 <v-icon v-if="marker.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
                 <v-icon v-if="marker.type.toLowerCase()=='favorite'" small color="pink">mdi-heart</v-icon>
                 <v-icon v-if="marker.type.toLowerCase()=='bookmark'" small color="red">mdi-bookmark</v-icon>
@@ -148,7 +148,7 @@
                 <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb" :gradient="markerGradient">
                   <span class="time">{{msToTime(marker.time*1000)}}</span>
                   <div class="name">
-                    <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTag(marker.name).color">mdi-tag</v-icon>
+                    <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTagColor(marker.name)">mdi-tag</v-icon>
                     <v-icon v-if="marker.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
                     <v-icon v-if="marker.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
                     <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
@@ -254,7 +254,7 @@
                   @click="data.select" text-color="white" 
                   @mouseover.stop="showImage($event, data.item.id, 'tag')" 
                   @mouseleave.stop="$store.state.hoveredImage=false"
-                  :color="getTag(data.item.name).color" 
+                  :color="getTagColor(data.item.name)" 
                 > <span>{{ data.item.name }}</span>
                 </v-chip>
               </template>
@@ -373,7 +373,7 @@
           <div @click="jumpTo(markerForRemove.time)">
             <v-img :src="getMarkerImgUrl(markerForRemove.id)" :aspect-ratio="16/9" class="thumb"/>
             <div class="mt-2">
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" left small :color="getTag(markerForRemove.name).color">mdi-tag</v-icon>
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" left small :color="getTagColor(markerForRemove.name)">mdi-tag</v-icon>
               <v-icon v-if="markerForRemove.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
               <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
               <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
@@ -504,6 +504,10 @@ export default {
     })
     ipcRenderer.on('closePlayer', () => {
       this.player.stop()
+    })
+    ipcRenderer.on('updateDb', async (event, dbType) => {
+      await this.$store.dispatch('getDb', dbType)
+      if (dbType == 'tags') setTimeout(() => {this.getMarkers()}, 1000)
     })
     window.addEventListener('resize', this.getCanvasSizes)
     
@@ -1184,6 +1188,11 @@ export default {
     },
     getTag(tagName) {
       return _.find(this.tagsDb, {name:tagName})
+    },
+    getTagColor(tagName) {
+      let tag = _.find(this.tagsDb, {name:tagName})
+      if (tag) return tag.color 
+      else return ''
     },
     openDialogMarkerTag() {
       this.dialogMarkerTag = true

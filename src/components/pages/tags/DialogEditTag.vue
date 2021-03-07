@@ -223,6 +223,7 @@
 const fs = require("fs")
 const path = require("path")
 const shortid = require('shortid')
+const { ipcRenderer } = require('electron')
 
 import vueFilePond from 'vue-filepond'
 import 'filepond/dist/filepond.min.css'
@@ -405,7 +406,7 @@ export default {
           if (index !== -1) performer.videoTags.splice(index, 1, this.newTagName)
         }).write()
         // rename tag in markers
-        this.$store.getters.bookmarks.get('markers')
+        this.$store.getters.markers
           .filter(marker => (marker.type=='tag' && marker.name==this.tag.name))
           .each(marker => {marker.name = this.newTagName}).write()
       }
@@ -479,6 +480,7 @@ export default {
       this.$store.state.Tags.updateInfo = info
       this.$store.state.Tags.dialogEditTag = false
       this.$store.state.Bookmarks.bookmarkText = ''
+      ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
     },
     getImg() {
       let imgPath = this.getImgUrl(this.tag.id + '_.jpg')
