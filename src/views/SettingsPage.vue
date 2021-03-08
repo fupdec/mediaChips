@@ -600,9 +600,17 @@
                 </v-btn>
               </div>
               <v-spacer></v-spacer>
-                <v-btn @click="openPatreon" color="#ff424d" class="pa-5">
-                  <v-icon left>mdi-patreon</v-icon> Support development on Patreon
-                </v-btn>
+                <div class="d-flex flex-column">
+                  <v-btn @click="openPatreon" color="#ff424d" class="pa-5">
+                    <v-icon left>mdi-patreon</v-icon> Support development on Patreon
+                  </v-btn>
+                  <v-btn @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded class="mt-6 pa-5">
+                    <v-icon left>mdi-update</v-icon> Check for updates
+                  </v-btn>
+                  <v-btn v-if="updateApp" @click="openReleasesPage" color="pink" dark rounded class="mt-6 pa-5">
+                    <v-icon left>mdi-download</v-icon> Open page with last release
+                  </v-btn>
+                </div>
               <v-spacer></v-spacer>
               <div class="text-center d-flex flex-column">
                 <img src="/icons/icon.png" alt="avdb" width="82" height="82">
@@ -625,6 +633,9 @@ const { spawn } = require( 'child_process' )
 const shell = require('electron').shell
 const { ipcRenderer } = require('electron')
 const { dialog } = require('electron').remote
+const {app} = require('electron').remote
+const axios = require("axios")
+const cheerio = require("cheerio")
 
 import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
@@ -690,6 +701,8 @@ export default {
     videosWithSamePath: [],
     dialogResetToDefaultSettings: false,
     gradientThemeDark: null,
+    isCheckingUpdate: false,
+    updateApp: false,
   }),
   computed: {
     updateIntervalDataFromVideos: {
@@ -994,6 +1007,45 @@ export default {
       this.folders.splice(i, 1)
       if (this.folders.length==0) this.watchFolders = false
       this.folders = this.folders
+    },
+    checkForUpdates() {
+      this.isCheckingUpdate = true
+      axios.get(`https://github.com/fupdec/Adult-Video-Database/releases`).then((response) => {
+        if(response.status === 200) {
+          this.isCheckingUpdate = false
+          const html = response.data;
+          const $ = cheerio.load(html)
+          let lastVersion = $('.release-header .f1 a').eq(0).text().trim()
+          lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
+          let currentVersion = app.getVersion()
+          if (this.compareVersion(currentVersion, lastVersion)) {
+            this.updateApp = true
+            this.$store.dispatch('setNotification', {
+              type: 'info',
+              text: `New version ${lastVersion} available!`
+            })
+          } else {
+            this.$store.dispatch('setNotification', {
+              type: 'info',
+              text: `You are using the latest version of the application`
+            })
+          }
+        } else {
+          this.isCheckingUpdate = false
+          this.$store.dispatch('setNotification', {
+            type: 'error',
+            text: `An internet connection error occurred while checking for updates`
+          })
+        }
+      })
+    },
+    compareVersion(currentVersion, lastVersion) {
+      lastVersion = lastVersion.split('.').map( s => s.padStart(10) ).join('.')
+      currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
+      return lastVersion > currentVersion
+    },
+    openReleasesPage() {
+      shell.openExternal('https://github.com/fupdec/Adult-Video-Database/releases')
     },
   },
 }
