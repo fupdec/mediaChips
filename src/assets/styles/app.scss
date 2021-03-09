@@ -867,6 +867,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   &.hidden{
     display: none;
   }
+  .v-progress-linear__determinate {
+    opacity: 0;
+  }
   .v-progress-linear__buffer {
     background: linear-gradient(90deg, #0f0, #ff0 50%, #f00) !important;
   }
