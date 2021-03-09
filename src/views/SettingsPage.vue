@@ -481,12 +481,12 @@
             <div class="py-8">
               <span class="mr-6">Limit of pages in pagination:</span>
               <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
-                <v-btn outlined @click="changeNumberOfPagesLimit(5)" :value="5">5</v-btn>
-                <v-btn outlined @click="changeNumberOfPagesLimit(7)" :value="7">7</v-btn>
-                <v-btn outlined @click="changeNumberOfPagesLimit(9)" :value="9">9</v-btn>
-                <v-btn outlined @click="changeNumberOfPagesLimit(11)" :value="11">11</v-btn>
-                <v-btn outlined @click="changeNumberOfPagesLimit(13)" :value="13">13</v-btn>
-                <v-btn outlined @click="changeNumberOfPagesLimit(15)" :value="15">15</v-btn>
+                <v-btn outlined :value="5">5</v-btn>
+                <v-btn outlined :value="7">7</v-btn>
+                <v-btn outlined :value="9">9</v-btn>
+                <v-btn outlined :value="11">11</v-btn>
+                <v-btn outlined :value="13">13</v-btn>
+                <v-btn outlined :value="15">15</v-btn>
               </v-btn-toggle>
             </div>
             <v-card-actions>
@@ -773,9 +773,10 @@ export default {
     },
     numberOfPagesLimit: {
       get() {
-        return this.$store.state.Settings.getNumberOfPagesLimit
+        return this.$store.state.Settings.numberOfPagesLimit
       },
       set(number) {
+        console.log(number)
         this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value:number})
       }
     },
@@ -910,9 +911,6 @@ export default {
     },
     openPatreon() {
       shell.openExternal('https://www.patreon.com/avdb')
-    },
-    changeNumberOfPagesLimit(number) {
-      this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value: number})
     },
     searchInVideosPath() {
       this.videosWithSamePath = _.cloneDeep( this.$store.getters.videos
