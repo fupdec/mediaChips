@@ -64,7 +64,7 @@
       <v-card-actions>
         <v-btn @click="$store.state.Playlists.dialogFilterPlaylists=false" class="ma-4 mt-0">Cancel</v-btn>
         <v-spacer></v-spacer>
-        <v-btn v-if="filters.length>5" @click="removeAll" class="ma-4 mt-0" color="red" dark>
+        <v-btn v-if="filters.length>1" @click="removeAll" class="ma-4 mt-0" color="red" dark>
           <v-icon left>mdi-close</v-icon>Remove all</v-btn>
         <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
           <v-icon left>mdi-tab-plus</v-icon>Add new tab</v-btn>

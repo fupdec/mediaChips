@@ -34,9 +34,16 @@
       <span class="text-h5">({{$store.getters.filteredPerformersTotal}})</span>
     </div>
     
-    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
-      <v-icon left>mdi-filter</v-icon>
-      <v-chip v-for="(filter, i) in filters" :key="i" class="mr-2 mb-2" color="primary" 
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-center mt-6">
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="removeAllFilters" v-on="on" fab x-small dark color="red" class="mr-4">
+            <v-icon>mdi-filter-off</v-icon>
+          </v-btn>
+        </template>
+        <span>Remove All Filters</span>
+      </v-tooltip>
+      <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary" 
         small close :disabled="filter.lock" @click:close="removeFilter(i)">
         {{filter.param}} {{filter.cond}} 
         <span v-if="filter.type=='array'" class="ml-1">{{filter.val.join(', ')}}</span>
@@ -194,6 +201,10 @@ export default {
     },
   },
   methods: {
+    removeAllFilters() {
+      this.$store.state.Settings.performerFilters = []
+      this.$store.dispatch('filterPerformers')
+    },
     removeFilter(i) {
       this.filters.splice(i, 1)
       this.$store.dispatch('filterPerformers')

@@ -59,15 +59,6 @@
         <span>Filter Websites</span>
       </v-tooltip>
       
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="resetAllFilters" icon tile v-on="on"> 
-            <v-icon>mdi-filter-off</v-icon>
-          </v-btn>
-        </template>
-        <span>Reset all filters</span>
-      </v-tooltip>
-      
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
           <v-tooltip bottom>
@@ -398,17 +389,6 @@ export default {
         this.$store.commit('updateWebsites')
         this.$store.dispatch('filterWebsites', true)
       })
-    },
-    resetAllFilters() {
-      this.$store.state.Settings.websiteFilters = [{
-        param: null,
-        cond: null,
-        val: null,
-        type: null,
-        flag: null,
-        lock: false,
-      }]
-      this.$store.dispatch('filterWebsites')
     },
     toggleSortDirection() {
       this.$store.state.Settings.websiteSortDirection = this.sortDirection=='asc' ? 'desc':'asc'

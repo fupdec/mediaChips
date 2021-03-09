@@ -58,15 +58,6 @@
         </template>
         <span>Filter Playlists</span>
       </v-tooltip>
-      
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="resetAllFilters" icon tile v-on="on"> 
-            <v-icon>mdi-filter-off</v-icon>
-          </v-btn>
-        </template>
-        <span>Reset All Filters</span>
-      </v-tooltip>
 
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
@@ -294,17 +285,6 @@ export default {
         this.$store.commit('updatePlaylists')
         this.$store.dispatch('filterPlaylists', true)
       })
-    },
-    resetAllFilters() {
-      this.$store.state.Settings.playlistFilters = [{
-        param: null,
-        cond: null,
-        val: null,
-        type: null,
-        flag: null,
-        lock: false,
-      }]
-      this.$store.dispatch('filterPlaylists')
     },
     toggleSortDirection() {
       this.$store.state.Settings.playlistSortDirection = this.sortDirection=='asc' ? 'desc':'asc'

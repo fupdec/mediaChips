@@ -9,15 +9,6 @@
       </template>
       <span>Filter Performers</span>
     </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn @click="resetAllFilters" icon tile v-on="on"> 
-            <v-icon>mdi-filter-off</v-icon>
-        </v-btn>
-      </template>
-      <span>Reset Filters</span>
-    </v-tooltip>
     
     <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
       <template #activator="{ on: onMenu }">
@@ -195,18 +186,6 @@ export default {
     },
   },
   methods: {
-    resetAllFilters() {
-      this.$store.state.Settings.performerFilters = [{
-        param: null,
-        cond: null,
-        val: null,
-        type: null,
-        flag: null,
-        lock: false,
-      }]
-      this.$store.dispatch('filterPerformers')
-      // this.$store.dispatch('saveFiltersOfPerformers', this.$route)
-    },
     toggleSortDirection() {
       this.$store.state.Settings.performerSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{

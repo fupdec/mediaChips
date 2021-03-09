@@ -12,15 +12,6 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
-        <v-btn @click="resetAllFilters" icon tile v-on="on"> 
-          <v-icon>mdi-filter-off</v-icon>
-        </v-btn>
-      </template>
-      <span>Reset all filters</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
         <v-btn @click="$store.state.Videos.dialogFolderTree = true" icon tile v-on="on"> 
           <v-badge :value="!isTreeEmpty" :content="treeBadgeContent" overlap bottom style="z-index: 5;">
             <v-icon>mdi-file-tree</v-icon>
@@ -243,17 +234,8 @@ export default {
     treeBadgeContent() {
       return this.$store.state.Videos.tree.length  
     },
-    itemId() {
-      return this.$route.params.id.replace(/:/g, '')    
-    },
     tabId() {
       return this.$route.query.tabId
-    },
-    isPerformerPage() {
-      return this.$route.path.includes('/performer/:')  
-    },
-    isWebsitePage() {
-      return this.$route.path.includes('/website/:')  
     },
   },
   methods: {
@@ -274,60 +256,6 @@ export default {
     //     this.updateFiltersOfVideos('performers', perfs)
     //   }
     // },
-    getItem(itemType) {
-      return this.$store.getters[itemType].find({ id: this.itemId }).value()    
-    },
-    resetAllFilters() {
-      if (this.isPerformerPage) {
-        let item = this.getItem('performers')
-        this.$store.state.Settings.videoFilters = [{
-          param: 'performers',
-          cond: 'all',
-          val: [item.name],
-          type: 'array',
-          flag: null,
-          lock: true,
-        },{
-          param: 'tags',
-          cond: 'one of',
-          val: [],
-          type: 'array',
-          flag: null,
-          lock: true,
-        },{
-          param: 'websites',
-          cond: 'one of',
-          val: [],
-          type: 'array',
-          flag: null,
-          lock: true,
-        }]
-      } else if (this.isWebsitePage) {
-        let item = this.getItem('websites')
-        this.$store.state.Settings.videoFilters = [{
-          param: 'websites',
-          cond: 'one of',
-          val: [item.name],
-          type: 'array',
-          flag: null,
-          lock: true,
-        },{
-          param: 'performers',
-          cond: 'one of',
-          val: [],
-          type: 'array',
-          flag: null,
-          lock: true,
-        }]
-      } else {
-        const locked = _.filter(this.$store.state.Settings.videoFilters, {lock: true})
-        const defaults = [{param:null, cond:null, val:null, type:null, flag:null, lock:false}]
-        this.$store.state.Settings.videoFilters = _.cloneDeep([ ...locked, ...defaults])
-      }
-
-      this.$store.dispatch('filterVideos')
-      // this.$store.dispatch('saveFiltersOfVideos', this.$route)
-    },
     toggleSortDirection() {
       this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{

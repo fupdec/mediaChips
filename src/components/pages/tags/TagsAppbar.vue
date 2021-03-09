@@ -57,15 +57,6 @@
         <span>Filter Tags</span>
       </v-tooltip>
 
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="resetAllFilters" icon tile v-on="on"> 
-            <v-icon>mdi-filter-off</v-icon>
-          </v-btn>
-        </template>
-        <span>Reset All Filters</span>
-      </v-tooltip>
-
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
           <v-tooltip bottom>
@@ -385,17 +376,6 @@ export default {
         this.$store.commit('updateTags')
         this.$store.dispatch('filterTags', true)
       })
-    },
-    resetAllFilters() {
-      this.$store.state.Settings.tagFilters = [{
-        param: null,
-        cond: null,
-        val: null,
-        type: null,
-        flag: null,
-        lock: false,
-      }]
-      this.$store.dispatch('filterTags')
     },
     toggleSortDirection() {
       this.$store.state.Settings.tagSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
