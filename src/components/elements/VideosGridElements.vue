@@ -354,31 +354,32 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-			this.$store.state.Videos.selection = Selection.create({
+			this.$store.state.Videos.selection = new Selection({
         boundaries: ['.videos-grid'],
         selectables: ['.video-card'],
-      }).on('beforestart', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.video-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+      }).on('beforestart', ({store, event}) => {
+        // console.log('beforestart', store.changed)
+        const targetEl = event.target.closest('.video-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
-        return (oe.button !== 1);
-      }).on('start', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.video-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+        return (event.button !== 1)
+      }).on('start', ({store, event}) => {
+        const targetEl = event.target.closest('.video-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
         // Remove class if the user isn't pressing the shift or control or ⌘ keys
-        if (!oe.shiftKey && !oe.ctrlKey && !oe.metaKey) {
+        if (!event.ctrlKey && !event.metaKey) {
           // Unselect all elements
-          for (const el of selected) {
+          for (const el of store.stored) {
             el.classList.remove('selected')
-            inst.removeFromSelection(el)
+            // this.$store.state.Videos.selection.removeFromSelection(el)
           }
           // Clear previous selection
-          inst.clearSelection()
+          this.$store.state.Videos.selection.clearSelection()
         }
-      }).on('move', ({changed: {removed, added}, inst, selected, oe}) => {
+      }).on('move', ({store: {changed: {added, removed}}}) => {
         // Add a custom class to the elements that where selected.
         for (const el of added) {
           el.classList.add('selected')
@@ -388,42 +389,14 @@ export default {
         for (const el of removed) {
           el.classList.remove('selected')
         }
-      }).on('stop', ({inst, selected, oe}) => {
-        // if pressed shift or ctrl or meta
-        if (oe.shiftKey || oe.ctrlKey || oe.metaKey) {
-          // cards without duplicates
-          let mergedCards = _.union(this.previousSelection, selected)
-          // console.log(`mergedCards: ${mergedCards.map(item => (item.dataset.id))}`)
-
-          // get duplicates in selection
-          let duplicates = _.filter(selected, (v, i, it) => { return _.find(it, v, i + 1) })
-          // console.log(`duplicates: ${duplicates.map(item => (item.dataset.id))}`)
-
-          // remove duplicated from selection
-          duplicates.map(itemDuplicated=>{
-            mergedCards = _.reject(mergedCards, itemDuplicated)
-          })
-          // inst.removeFromSelection(duplicates)
-
-          selected = mergedCards
-          this.previousSelection = mergedCards
-          
-          for (const el of duplicates) {
-            inst.removeFromSelection(el)
-          }
-          // console.log(`previousSelection: ${mergedCards.map(item => (item.dataset.id))}`)
-        } 
-        inst.keepSelection()
-        this.getSelectedVideos(selected)
-        let cards = document.querySelectorAll('.videos-grid .video-card')
-        for (let i=0;i<cards.length;++i) {
-          cards[i].classList.remove("selected")
-          void cards[i].offsetWidth
+      }).on('stop', ({store, event}) => {
+        const targetEl = event.target.closest('.video-card')
+        if (event.button==0 && targetEl) {
+          this.$store.state.Videos.selection.select(targetEl)
         }
-        for (let i=0;i<selected.length;++i) {
-          selected[i].classList.add("selected")
-        }
-        // console.log(`selected: ${selected.map(item => (item.dataset.id))}`)
+        this.$store.state.Videos.selection.keepSelection()
+        this.getSelectedVideos(store.stored)
+        // console.log(`selected: ${store.stored.map(item => (item.dataset.id))}`)
         // console.log(this.$store.getters.getSelectedVideos)
       })
     })
@@ -432,7 +405,6 @@ export default {
     this.$store.state.Videos.selection.destroy()
   },
   data: () => ({
-    previousSelection: [],
     performersClipboard: [],
     tagsClipboard: [],
     websitesClipboard: [],
@@ -705,7 +677,6 @@ export default {
       // TODO add option for select join delimiter for copied text
     },
     deleteVideos() {
-      this.previousSelection = []
       this.$store.dispatch('deleteVideos')
       this.$store.state.Videos.dialogDeleteVideo = false
     },

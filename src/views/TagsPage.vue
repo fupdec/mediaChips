@@ -183,8 +183,8 @@
 <script>
 const { ipcRenderer } = require('electron')
 
-import TagCard from "@/components/pages/tags/TagCard.vue";
-import Selection from "@simonwep/selection-js";
+import TagCard from "@/components/pages/tags/TagCard.vue"
+import Selection from "@simonwep/selection-js"
 import vuescroll from 'vuescroll'
 
 export default {
@@ -198,61 +198,41 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
-      this.$store.state.Tags.selection = Selection.create({
+      this.$store.state.Tags.selection = new Selection({
         boundaries: ['.tags-grid'],
         selectables: ['.tag-card'],
-      }).on('beforestart', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.tag-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+        allowTouch: false,
+      }).on('beforestart', ({store, event}) => {
+        const targetEl = event.target.closest('.tag-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
-        return (oe.button !== 1);
-      }).on('start', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.tag-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+        return (event.button !== 1)
+      }).on('start', ({store, event}) => {
+        const targetEl = event.target.closest('.tag-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
-        // Remove class if the user isn't pressing the shift or control or ⌘ keys
-        if (!oe.shiftKey && !oe.ctrlKey && !oe.metaKey) {
-          // Unselect all elements
-          for (const el of selected) {
-              el.classList.remove('selected');
-              inst.removeFromSelection(el);
+        if (!event.ctrlKey && !event.metaKey) {
+          for (const el of store.stored) {
+            el.classList.remove('selected')
           }
-          // Clear previous selection
-          inst.clearSelection();
+          this.$store.state.Tags.selection.clearSelection()
         }
-      }).on('move', ({changed: {removed, added}, inst, selected, oe}) => {
-        // Add a custom class to the elements that where selected.
+      }).on('move', ({store: {changed: {added, removed}}}) => {
         for (const el of added) {
-          el.classList.add('selected');
+          el.classList.add('selected')
         }
-        // Remove the class from elements that where removed
-        // since the last selection
         for (const el of removed) {
-          el.classList.remove('selected');
+          el.classList.remove('selected')
         }
-      }).on('stop', ({inst, selected, oe}) => {
-        if (oe.shiftKey || oe.ctrlKey || oe.metaKey) {
-          let mergedCards = _.union(this.previousSelection, selected)
-          let duplicates = _.filter(selected,(v,i,it)=>{return _.find(it, v, i + 1)})
-          duplicates.map(duplicated=>{mergedCards = _.reject(mergedCards, duplicated)})
-          selected = mergedCards
-          this.previousSelection = mergedCards
-          for (const el of duplicates) {
-            inst.removeFromSelection(el)
-          }
-        } 
-        inst.keepSelection()
-        this.getSelectedTags(selected)
-        let cards = document.querySelectorAll('.tag-card')
-        for (let i=0;i<cards.length;++i) {
-          cards[i].classList.remove("selected")
-          void cards[i].offsetWidth
+      }).on('stop', ({store, event}) => {
+        const targetEl = event.target.closest('.tag-card')
+        if (event.button==0 && targetEl) {
+          this.$store.state.Tags.selection.select(targetEl)
         }
-        for (let i=0;i<selected.length;++i) {
-          selected[i].classList.add("selected")
-        }
+        this.$store.state.Tags.selection.keepSelection()
+        this.getSelectedTags(store.stored)
       })
     })
   },
@@ -270,7 +250,6 @@ export default {
     ],
     tagsPerPagePreset: [20,40,60,80,100,150,200],
     selection: null,
-    previousSelection: [],
     isScrollToTopVisible: false,
   }),
   computed: {
@@ -427,7 +406,6 @@ export default {
       navigator.clipboard.writeText(this.selectedTags())
     },
     deleteTags(){
-      this.previousSelection = []
       this.$store.dispatch('deleteTags')
       this.$store.state.Tags.dialogDeleteTag = false
       ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window

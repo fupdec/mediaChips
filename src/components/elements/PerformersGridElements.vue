@@ -194,61 +194,40 @@ export default {
   mixins: [LabelFunctions],
   mounted () {
     this.$nextTick(function () {
-      this.$store.state.Performers.selection = Selection.create({
+      this.$store.state.Performers.selection = new Selection({
         boundaries: ['.performers-grid'],
         selectables: ['.performer-card'],
-      }).on('beforestart', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.performer-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+      }).on('beforestart', ({store, event}) => {
+        const targetEl = event.target.closest('.performer-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
-        return (oe.button !== 1);
-      }).on('start', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.performer-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+        return (event.button !== 1)
+      }).on('start', ({store, event}) => {
+        const targetEl = event.target.closest('.performer-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
-        // Remove class if the user isn't pressing the shift or control or ⌘ keys
-        if (!oe.shiftKey && !oe.ctrlKey && !oe.metaKey) {
-          // Unselect all elements
-          for (const el of selected) {
-              el.classList.remove('selected');
-              inst.removeFromSelection(el);
+        if (!event.ctrlKey && !event.metaKey) {
+          for (const el of store.stored) {
+              el.classList.remove('selected')
           }
-          // Clear previous selection
-          inst.clearSelection();
+          this.$store.state.Performers.selection.clearSelection()
         }
-      }).on('move', ({changed: {removed, added}, inst, selected, oe}) => {
-        // Add a custom class to the elements that where selected.
+      }).on('move', ({store: {changed: {added, removed}}}) => {
         for (const el of added) {
-          el.classList.add('selected');
+          el.classList.add('selected')
         }
-        // Remove the class from elements that where removed
-        // since the last selection
         for (const el of removed) {
-          el.classList.remove('selected');
+          el.classList.remove('selected')
         }
-      }).on('stop', ({inst, selected, oe}) => {
-        if (oe.shiftKey || oe.ctrlKey || oe.metaKey) {
-          let mergedCards = _.union(this.previousSelection, selected)
-          let duplicates = _.filter(selected,(v,i,it)=>{return _.find(it, v, i + 1)})
-          duplicates.map(duplicated=>{mergedCards = _.reject(mergedCards, duplicated)})
-          selected = mergedCards
-          this.previousSelection = mergedCards
-          for (const el of duplicates) {
-            inst.removeFromSelection(el)
-          }
-        } 
-        inst.keepSelection()
-        this.getSelectedPerformers(selected)
-        let cards = document.querySelectorAll('.performer-card')
-        for (let i=0;i<cards.length;++i) {
-          cards[i].classList.remove("selected")
-          void cards[i].offsetWidth
+      }).on('stop', ({store, event}) => {
+        const targetEl = event.target.closest('.performer-card')
+        if (event.button==0 && targetEl) {
+          this.$store.state.Performers.selection.select(targetEl)
         }
-        for (let i=0;i<selected.length;++i) {
-          selected[i].classList.add("selected")
-        }
+        this.$store.state.Performers.selection.keepSelection()
+        this.getSelectedPerformers(store.stored)
       })
     })
   },
@@ -256,7 +235,6 @@ export default {
     this.$store.state.Performers.selection.destroy()
   },
   data: () => ({
-    previousSelection: [],
     deleteVideos: false,
   }),
   computed: {
@@ -312,11 +290,6 @@ export default {
         }
       }
     },
-    // getSelectedVideos(selectedVideos){
-    //   let ids = selectedVideos.map(item => (item.dataset.id))
-    //   this.$store.commit('updateSelectedVideos', ids)
-    // }, 
-    // TODO check if getSelectedVideos function needed
     getSelectedPerformers(selectedPerformers){
       let ids = selectedPerformers.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedPerformers', ids)
@@ -400,7 +373,6 @@ export default {
         this.$store.commit('updateSelectedVideos', vids)
         this.$store.dispatch('deleteVideos')
       }
-      this.previousSelection = []
       this.$store.dispatch('deletePerformers')
       this.$store.state.Performers.dialogDeletePerformer = false
     },

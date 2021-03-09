@@ -122,61 +122,40 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
-      this.$store.state.Playlists.selection = Selection.create({
+      this.$store.state.Playlists.selection = new Selection({
         boundaries: ['.playlists-grid'],
         selectables: ['.playlist-card'],
-      }).on('beforestart', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.playlist-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+      }).on('beforestart', ({store, event}) => {
+        const targetEl = event.target.closest('.playlist-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
-        return (oe.button !== 1);
-      }).on('start', ({inst, selected, oe}) => {
-        const targetEl = oe.target.closest('.playlist-card')
-        if (oe.button === 2 && selected.includes(targetEl)) {
+        return (event.button !== 1)
+      }).on('start', ({store, event}) => {
+        const targetEl = event.target.closest('.playlist-card')
+        if (event.button == 2 && store.selected.includes(targetEl)) {
           return false
         }
-        // Remove class if the user isn't pressing the shift or control or ⌘ keys
-        if (!oe.shiftKey && !oe.ctrlKey && !oe.metaKey) {
-          // Unselect all elements
-          for (const el of selected) {
-              el.classList.remove('selected');
-              inst.removeFromSelection(el);
+        if (!event.ctrlKey && !event.metaKey) {
+          for (const el of store.stored) {
+            el.classList.remove('selected')
           }
-          // Clear previous selection
-          inst.clearSelection();
+          this.$store.state.Playlists.selection.clearSelection()
         }
-      }).on('move', ({changed: {removed, added}, inst, selected, oe}) => {
-        // Add a custom class to the elements that where selected.
+      }).on('move', ({store: {changed: {added, removed}}}) => {
         for (const el of added) {
-          el.classList.add('selected');
+          el.classList.add('selected')
         }
-        // Remove the class from elements that where removed
-        // since the last selection
         for (const el of removed) {
-          el.classList.remove('selected');
+          el.classList.remove('selected')
         }
-      }).on('stop', ({inst, selected, oe}) => {
-        if (oe.shiftKey || oe.ctrlKey || oe.metaKey) {
-          let mergedCards = _.union(this.previousSelection, selected)
-          let duplicates = _.filter(selected,(v,i,it)=>{return _.find(it, v, i + 1)})
-          duplicates.map(duplicated=>{mergedCards = _.reject(mergedCards, duplicated)})
-          selected = mergedCards
-          this.previousSelection = mergedCards
-          for (const el of duplicates) {
-            inst.removeFromSelection(el)
-          }
-        } 
-        inst.keepSelection()
-        this.getSelectedPlaylists(selected)
-        let cards = document.querySelectorAll('.playlist-card')
-        for (let i=0;i<cards.length;++i) {
-          cards[i].classList.remove("selected")
-          void cards[i].offsetWidth
+      }).on('stop', ({store, event}) => {
+        const targetEl = event.target.closest('.playlist-card')
+        if (event.button==0 && targetEl) {
+          this.$store.state.Playlists.selection.select(targetEl)
         }
-        for (let i=0;i<selected.length;++i) {
-          selected[i].classList.add("selected")
-        }
+        this.$store.state.Playlists.selection.keepSelection()
+        this.getSelectedPlaylists(store.stored)
       })
     })
   },
@@ -186,7 +165,6 @@ export default {
   data: () => ({
     playlistsPerPagePreset: [20,40,60,80,100,150,200],
     selection: null,
-    previousSelection: [],
     isScrollToTopVisible: false,
   }),
   computed: {
@@ -283,7 +261,6 @@ export default {
       navigator.clipboard.writeText(this.selectedPlaylists())
     },
     deletePlaylists(){
-      this.previousSelection = []
       this.$store.dispatch('deletePlaylists'), 
       this.$store.state.Playlists.dialogDeletePlaylist = false
     },
