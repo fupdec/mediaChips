@@ -195,7 +195,7 @@ export default {
         let imgPath = path.join(this.pathToUserData, `/media/thumbs/${v.id}.jpg`)
         if (fs.existsSync(imgPath)) {
           return imgPath
-        } else return false
+        } else return ''
       })
       return imgUrls
     },
