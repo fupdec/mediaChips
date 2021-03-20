@@ -102,7 +102,6 @@
         
         <v-stepper-content step="3">
           <v-card class="file-scan-dialog">
-            <!-- TODO: ADD TIMEOUT AFTER EVERY FILE IN SCANNING. CAUSE TOO MUCH DUPLICATES FREEZE APP -->
             <v-card-title class="headline">
               {{headerText}}
               <v-spacer></v-spacer>
@@ -345,7 +344,7 @@ export default {
       this.noNewVideosAdded = false
       this.stop = false
       
-      let formats = /\.3gp|\.avi|\.dat|\.f4v|\.flv|\.m4v|\.mkv|\.mod|\.mov|\.mp4|\.mpeg|\.mpg|\.mts|\.rm|\.rmvb|\.swf|\.ts|\.vob|\.webm|\.wmv|\.yuv$/
+      let formats = /\.3gp$|\.avi$|\.dat$|\.f4v$|\.flv$|\.m4v$|\.mkv$|\.mod$|\.mov$|\.mp4$|\.mpeg$|\.mpg$|\.mts$|\.rm$|\.rmvb$|\.swf$|\.ts$|\.vob$|\.webm$|\.wmv$|\.yuv$/
 
       const vm = this
 
@@ -357,6 +356,9 @@ export default {
         for (const folder of folders) {
           filesArray = filesArray.concat(vm.findInDir(folder, formats))
         }
+      }
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
       }
 
       async function processArray(files) {
@@ -386,6 +388,7 @@ export default {
           }
           // console.log(vm.videoScanProgressBar)
           console.log(fileProcResult)
+          await sleep(10)
         }
         vm.isVideoScanFinished = true
         // console.log(vm.updateVideosInStore);
@@ -421,7 +424,13 @@ export default {
 
       files.forEach((file) => {
         const filePath = path.join(dir, file)
-        const fileStat = fs.lstatSync(filePath)
+        let fileStat
+        try {
+          fileStat = fs.lstatSync(filePath)
+        } catch (error) {
+          console.log(error)
+          return
+        }
 
         if (fileStat.isDirectory()) {
           this.findInDir(filePath, filter, fileList)

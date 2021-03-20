@@ -6,8 +6,7 @@ import store from '@/store/index.js'
 const ffmpeg = require('fluent-ffmpeg')
 ffmpeg.setFfmpegPath(path.join(store.getters.getPathToUserData, '/ffmpeg/ffmpeg.exe')) 
 ffmpeg.setFfprobePath(path.join(store.getters.getPathToUserData, '/ffmpeg/ffprobe.exe'))
-
-
+// TODO add ffmpeg for all OS
 let fileInfo = {}
 
 // get meta from file
@@ -19,6 +18,9 @@ function getVideoMetadata (pathToFile) {
       }
       // console.log(`getVideoMetadata: ` + JSON.stringify(videoInfo.format))
       fileInfo.meta = info
+      if (fileInfo.meta.streams[0].duration < 1) {
+        return reject('duration less than 1 sec.')
+      } 
       return resolve()
     })
   })
@@ -72,7 +74,8 @@ function createInfoForDb() {
       .input(pathToFile)
       .screenshots({
         count: 1, 
-        filename: `${outputPathThumbs + fileInfo.id}.jpg`,
+        filename: `${fileInfo.id}.jpg`,
+        folder: outputPathThumbs,
         size: '?x320' 
       })
       .on('end', () => {
@@ -155,10 +158,8 @@ var fileScanProc = async function(file) {
     .catch((err) => { 
       console.log(err)
       fileProcResult.errorVideo = file
+      return fileProcResult
     })
-  if (fileProcResult.errorVideo) {
-    return fileProcResult
-  }
 
   // add videoinfo to DB
   await createInfoForDb()
