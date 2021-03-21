@@ -174,14 +174,27 @@ export default {
       return backupsFixedSize
     },
     clearFiles(directory) {
-      fs.readdir(directory, (err, files) => {
-        if (err) throw err
+      return new Promise((resolve, reject) => {
+         fs.readdir(directory, (err, files) => {
+          console.log(directory,files)
+          if (err) return reject(err)
+          if (files.length == 0) return resolve()
+          
+          async function unlinkFiles(files) {
+            for (const file of files) {
+              const filePath = path.join(directory, file)
+              try {
+                fs.promises.unlink(filePath)
+              } catch (error) {
+                return reject(err)
+              }
+            }
+          }
 
-        for (const file of files) {
-          fs.unlink(path.join(directory, file), err => {
-            if (err) throw err
+          unlinkFiles(files).then(() => {
+            return resolve()
           })
-        }
+        })
       })
     },
     getRestoreBackupRules(name) {
@@ -257,18 +270,29 @@ export default {
     async restoreBackup() {
       this.isRestoringBackupRun = true
       let date = this.selectedBackup[0].date,
-          appDb = path.join(this.pathToUserData, '/databases/'),
           appFiles = path.join(this.pathToUserData, '/media/')
       // clear folders with media
-      await this.clearFiles(appFiles + 'thumbs/')
-      await this.clearFiles(appFiles + 'previews/')
-      await this.clearFiles(appFiles + 'performers/')
-      await this.clearFiles(appFiles + 'tags/')
-      await this.clearFiles(appFiles + 'websites/')
-      await this.clearFiles(appDb)
+      await this.clearFiles(path.join(appFiles, 'thumbs/'))
+      await this.clearFiles(path.join(appFiles, 'previews/'))
+      await this.clearFiles(path.join(appFiles, 'performers/'))
+      await this.clearFiles(path.join(appFiles, 'tags/'))
+      await this.clearFiles(path.join(appFiles, 'websites/'))
+      await this.clearFiles(path.join(appFiles, 'markers/'))
+      await this.clearFiles(path.join(this.pathToUserData, '/databases/'))
+      
       let backupPath = path.join(this.pathToUserData, '/backups/'+date+'.zip')
       let backupDestinationPath = path.join(this.pathToUserData)
 
+      if (!fs.existsSync(backupPath)) {
+        this.isRestoringBackupRun = false
+        this.isBackupRestoredError = true
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: 'Archive with this backup does not exist'
+        })
+      }
+      // TODO hide error message in restore dialog after close dialog
+      
       const zip = new StreamZip({
         file: backupPath,
         storeEntries: true
@@ -278,7 +302,7 @@ export default {
           if (err) {
             this.isRestoringBackupRun = false
             this.isBackupRestoredError = true
-            console.log(err);
+            console.log(err)
           } else {
             let backupInfoPath = path.join(this.pathToUserData, '/info.json')
             fs.unlink(backupInfoPath)
@@ -289,10 +313,15 @@ export default {
             })
             this.isRestoringBackupRun = false
             this.isBackupRestoredSuccessfully = true
-            console.log(`Extracted ${count} entries`);
+            console.log(`Extracted ${count} entries`)
           }
-          zip.close();
+          zip.close()
         })
+      })
+      zip.on('error', err => {
+        this.isRestoringBackupRun = false
+        this.isBackupRestoredError = true
+        console.log(err)
       })
     },
     importBackup() {
