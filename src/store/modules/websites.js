@@ -260,11 +260,11 @@ const Websites = {
     dbw(state) {
       return state.lastChanged, dbw
     },
-    websitesDataBase(state, store) {
-      return store.dbw
-    },
     websites(state, store) {
       return store.dbw.get('websites')
+    },
+    websitesDatabase(state, store) {
+      return store.dbw
     },
     websitesNames(state, store) {
       return store.dbw.get('websites').map('name').value()

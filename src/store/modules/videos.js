@@ -296,7 +296,7 @@ const Videos = {
             }
           })
         }
-        getters.markers.remove({videoId: id}).write()
+        if (markers.length) getters.markers.remove({videoId: id}).write()
         // remove thumb, grid and preview of video
         let thumbPath = path.join(getters.getPathToUserData, `/media/thumbs/${id}.jpg`)
         fs.unlink(thumbPath, (err) => {
@@ -304,14 +304,6 @@ const Videos = {
             console.log("failed to delete thumb:"+err)
           } else {
             console.log('successfully deleted thumb')
-          }
-        })
-        let previewPath = path.join(getters.getPathToUserData, `/media/previews/${id}.mp4`)
-        fs.unlink(previewPath, (err) => {
-          if (err) {
-            console.log("failed to delete preview:"+err)
-          } else {
-            console.log('successfully deleted preview')
           }
         })
         let gridPath = path.join(getters.getPathToUserData, `/media/previews/${id}.jpg`)
@@ -339,6 +331,9 @@ const Videos = {
     },
     videos(state, store) {
       return store.dbv.get('videos')
+    },
+    videosDatabase(state, store) {
+      return store.dbv
     },
     filteredVideos(state, store) {
       let videos 

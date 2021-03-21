@@ -33,7 +33,7 @@ const Markers = {
     dbm(state) {
       return state.lastChanged, dbm
     },
-    markersDataBase(state, store) {
+    markersDatabase(state, store) {
       return store.dbm
     },
     markers(state, store) {

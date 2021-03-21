@@ -584,7 +584,7 @@
             <ClearDatabases typeOfDB="tags" />
             <ClearDatabases typeOfDB="websites" />
             <ClearDatabases typeOfDB="bookmarks" />
-            <!-- TODO: delete apropriate bookmarks when deleted video, performer, tag or website -->
+            <ClearDatabases typeOfDB="markers" />
           </v-card>
         </v-card>
       </v-tab-item>

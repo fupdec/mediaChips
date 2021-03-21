@@ -279,11 +279,11 @@ const Tags = {
     dbt(state) {
       return state.lastChanged, dbt
     },
-    tagsDataBase(state, store) {
-      return store.dbt
-    },
     tags(state, store) {
       return store.dbt.get('tags')
+    },
+    tagsDatabase(state, store) {
+      return store.dbt
     },
     tagsNames(state, store) {
       return store.dbt.get('tags').map('name').value()

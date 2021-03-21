@@ -319,6 +319,9 @@ const Performers = {
     performers(state, store) {
       return store.dbp.get('performers')
     },
+    performersDatabase(state, store) {
+      return store.dbp
+    },
     performersNames(state, store) {
       return store.dbp.get('performers').map('name').value()
     },
@@ -382,9 +385,6 @@ const Performers = {
         // console.log(state.filteredPerformers.value().length)
         return state.filteredPerformers.value().length
       }
-    },
-    performersDataBase(state, store) {
-      return store.dbp
     },
     performersTotal: (state, store) => {
       return store.performers.value().length;

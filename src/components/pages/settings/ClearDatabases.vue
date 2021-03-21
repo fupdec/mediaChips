@@ -42,6 +42,8 @@
 <script>
 const fs = require('fs-extra')
 const path = require("path")
+const { ipcRenderer } = require('electron')
+
 export default {
   name: 'ClearDatabases',
   props: {
@@ -64,92 +66,104 @@ export default {
   },
   methods: {
     clearDB(db) {
-      if (db === "videos") {
-        this.$store.getters.videosDataBase
-          .set('videos', [])
-          .write()
-        this.clearFiles(path.join(this.pathToUserData, '/media/thumbs/'))
-        this.clearFiles(path.join(this.pathToUserData, '/media/previews/'))
-        this.$store.commit('updateVideos')
-        // TODO: make reactive update after clear
-        this.$store.dispatch('setNotification', {
-          type: 'info',
-          text: 'Videos was cleared'
-        })
+      switch (db) {
+        case 'videos': this.clearVideosDb()
+          break
+        case 'performers': this.clearPerformersDb()
+          break
+        case 'tags': this.clearTagsDb()
+          break
+        case 'websites': this.clearWebsitesDb()
+          break
+        case 'bookmarks': this.clearBookmarksDb()
+          break
+        case 'markers': this.clearMarkersDb()
+          break
       }
-      if (db === "performers") {
-        this.$store.getters.performersDataBase
-          .set('performers', [])
-          .write()
-        this.$store.getters.videos
-          .each((videos) => videos.performers = [])
-          .write()
-        this.clearFiles(path.join(this.pathToUserData, '/media/performers/'))
-        this.$store.commit('updatePerformers')
-        this.$store.dispatch('setNotification', {
-          type: 'info',
-          text: 'Performers was cleared'
-        })
-      }
-      if (db === "tags") {
-        this.$store.getters.tagsDataBase
-          .set('tags', [])
-          .write()
-        this.$store.getters.videos
-          .each((video) => video.tags = [])
-          .write()
-        this.$store.getters.performers
-          .each((performer) => performer.tags = [])
-          .write()
-        this.clearFiles(path.join(this.pathToUserData, '/media/tags/'))
-        this.$store.commit('updateTags')
-        this.$store.dispatch('setNotification', {
-          type: 'info',
-          text: 'Tags was cleared'
-        })
-      }
-      if (db === "websites") {
-        this.$store.getters.websitesDataBase
-          .set('websites', [])
-          .write()
-        this.$store.getters.videos
-          .each((video) => video.websites = [])
-          .write()
-        this.clearFiles(path.join(this.pathToUserData, '/media/websites/'))
-        this.$store.commit('updateWebsites')
-        this.$store.dispatch('setNotification', {
-          type: 'info',
-          text: 'Websites was cleared'
-        })
-      }
-      if (db === "bookmarks") {
-        this.$store.getters.bookmarksDataBase
-          .set('bookmarks', {
-            videos: [],
-            performers: [],
-            tags: [],
-            websites: []
-          })
-          .write()
-        this.$store.getters.videos
-          .each((video) => video.bookmark = false)
-          .write()
-        this.$store.getters.performers
-          .each((performer) => performer.bookmark = false)
-          .write()
-        this.$store.getters.tags
-          .each((tag) => tag.bookmark = false)
-          .write()
-        this.$store.getters.websites
-          .each((website) => website.bookmark = false)
-          .write()
-        this.$store.dispatch('setNotification', {
-          type: 'info',
-          text: 'Bookmarks was cleared'
-        })
-      }
+      this.$store.dispatch('setNotification', {
+        type: 'info',
+        text: `${db} was cleared`
+      })
       this.dialogConfirmClearAllFiles = false
       this.dialogDatabaseCleared = true
+    },
+    clearVideosDb() {
+      this.$store.getters.videosDatabase.set('videos', []).write()
+      this.$store.getters.markersDatabase.set('markers', []).write() // clear markers
+      this.$store.getters.performers.each(i => { i.videos = 0, i.videoTags = [], i.websites = [] }).write()
+      this.$store.getters.tags.each(i => { i.videos = 0, i.performers = [], i.websites = [] }).write()
+      this.$store.getters.websites.each(i => { i.videos = 0, i.performers = [], i.videoTags = [] }).write()
+      this.$store.getters.playlists.each(i => i.videos = []).write()
+      this.$store.getters.bookmarks.set('videos', []).write() // clear bookmarks
+      this.clearFiles(path.join(this.pathToUserData, '/media/thumbs/'))
+      this.clearFiles(path.join(this.pathToUserData, '/media/previews/'))
+      this.clearFiles(path.join(this.pathToUserData, '/media/markers/'))
+      ipcRenderer.send('updatePlayerDb', 'videos') // update markers in player window
+      ipcRenderer.send('closePlayer') // stop playing video in separated window
+      this.$store.commit('updateVideos')
+    },
+    clearPerformersDb() {
+      this.$store.getters.performersDatabase.set('performers', []).write()
+      this.$store.getters.videos.each(i => i.performers = []).write()
+      this.$store.getters.tags.each(i => i.performers = []).write()
+      this.$store.getters.websites.each(i => i.performers = []).write()
+      this.$store.getters.bookmarks.set('performers', []).write() // clear bookmarks
+      // change type for markers
+      let markers = this.$store.getters.markers.filter(marker => marker.type == 'performer')
+      if (markers.value().length) markers.each(marker => marker.type = 'bookmark').write()
+      this.clearFiles(path.join(this.pathToUserData, '/media/performers/'))
+      // close tabs with performer type
+      this.$store.getters.tabsDb.filter(tab => tab.link.includes('performer'))
+        .each(tab => this.$store.dispatch('closeTab', tab.id)).value()
+      ipcRenderer.send('updatePlayerDb', 'performers') // update markers in player window
+      this.$store.commit('updatePerformers')
+    },
+    clearTagsDb() {
+      this.$store.getters.tagsDatabase.set('tags', []).write()
+      this.$store.getters.videos.each(i => i.tags = []).write()
+      this.$store.getters.performers.each(i => {i.tags = [], i.videoTags = []}).write()
+      this.$store.getters.websites.each(i => i.videoTags = []).write()
+      this.$store.getters.bookmarks.set('tags', []).write() // clear bookmarks
+      this.clearFiles(path.join(this.pathToUserData, '/media/tags/'))
+      // change type for markers
+      let markers = this.$store.getters.markers.filter(marker => marker.type == 'tag')
+      if (markers.value().length) markers.each(marker => marker.type = 'bookmark').write()
+      ipcRenderer.send('updatePlayerDb', 'tags') // update tags in player window
+      this.$store.commit('updateTags')
+    },
+    clearWebsitesDb() {
+      this.$store.getters.websitesDatabase.set('websites', []).write()
+      this.$store.getters.videos.each(i => i.websites = []).write()
+      this.$store.getters.performers.each(i => i.websites = []).write()
+      this.$store.getters.bookmarks.set('websites', []).write() // clear bookmarks
+      this.clearFiles(path.join(this.pathToUserData, '/media/websites/'))
+      // close tabs with website type
+      this.$store.getters.tabsDb.filter(tab => tab.link.includes('website'))
+        .each(tab => this.$store.dispatch('closeTab', tab.id)).value()
+      this.$store.commit('updateWebsites')
+    },
+    clearBookmarksDb() {
+      this.$store.getters.bookmarksDatabase
+        .set('bookmarks', {
+          videos: [],
+          performers: [],
+          tags: [],
+          websites: []
+        }).set('filtersPresets', {
+          videos: [],
+          performers: [],
+          tags: [],
+          websites: []
+        }).write()
+      this.$store.getters.videos.each(i => i.bookmark = false).write()
+      this.$store.getters.performers.each(i => i.bookmark = false).write()
+      this.$store.getters.tags.each(i => i.bookmark = false).write()
+      this.$store.getters.websites.each(i => i.bookmark = false).write()
+    },
+    clearMarkersDb() {
+      this.$store.getters.markersDatabase.set('markers', []).write()
+      this.clearFiles(path.join(this.pathToUserData, '/media/markers/'))
+      ipcRenderer.send('updatePlayerDb', 'markers') // update markers in player window
     },
     clearFiles(directory) {
       fs.readdir(directory, (err, files) => {

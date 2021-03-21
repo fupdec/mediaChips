@@ -65,11 +65,11 @@ const Bookmarks = {
     dbb(state) {
       return state.lastChanged, dbb
     },
-    bookmarksDataBase(state, store) {
-      return store.dbb
-    },
     bookmarks(state, store) {
       return store.dbb.get('bookmarks')
+    },
+    bookmarksDatabase(state, store) {
+      return store.dbb
     },
     filtersPresets(state, store) {
       return store.dbb.get('filtersPresets')

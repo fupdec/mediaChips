@@ -209,6 +209,9 @@ const Playlists = {
     playlists(state, store) {
       return store.dbpl.get('playlists')
     },
+    playlistsDatabase(state, store) {
+      return store.dbpl
+    },
     playlistFiltersForTabName: (state, store, rootState) => {
       let filters = []
       let equals = ['equal', 'including', 'all', 'one of']
