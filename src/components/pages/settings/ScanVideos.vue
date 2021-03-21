@@ -17,7 +17,7 @@
 
       <v-stepper-items>
         <v-stepper-content step="1">
-          <v-card v-if="ffmpeg">
+          <v-card v-if="ffmpegExecutables">
             <vuescroll>
               <v-card-text class="text-center">
                 <v-textarea v-model="folderPaths" outlined 
@@ -211,9 +211,10 @@
 const { dialog } = require('electron').remote
 const fs = require('fs')
 const path = require('path')
+const shortid = require('shortid')
+const ffmpeg = require('fluent-ffmpeg')
 
 import vuescroll from 'vuescroll'
-import fileScanProc from '@/components/pages/settings/VideoScanner'
 
 export default {
   name: 'ScanVideos',
@@ -230,9 +231,6 @@ export default {
       this.ffmpegExists()
       this.folderPaths = this.$store.state.Settings.folders.map(f=>f.path).join('\n')
     })
-  },
-  updated() {
-    this.ffmpegExists()
   },
   beforeDestroy() {
     this.$emit('close')
@@ -259,8 +257,9 @@ export default {
     newVideos: [],
     noNewVideosAdded: false,
     textNoVideosAdded: '',
-    ffmpeg: true,
+    ffmpegExecutables: true,
     stop: false,
+    fileInfo: {},
   }),
   computed: {
     errorScanFolders() {
@@ -290,8 +289,10 @@ export default {
       let ffmpegPath = path.join(this.pathToUserData, `/ffmpeg/ffmpeg.exe`)
       let ffprobePath = path.join(this.pathToUserData, `/ffmpeg/ffprobe.exe`)
       if (fs.existsSync(ffmpegPath) || fs.existsSync(ffprobePath)) {
-        this.ffmpeg = true
-      } else this.ffmpeg = false
+        this.ffmpegExecutables = true
+        ffmpeg.setFfmpegPath(path.join(this.$store.getters.getPathToUserData, '/ffmpeg/ffmpeg.exe')) 
+        ffmpeg.setFfprobePath(path.join(this.$store.getters.getPathToUserData, '/ffmpeg/ffprobe.exe'))
+      } else this.ffmpegExecutables = false
     },
     alertScanErrorHeightChange() {
       if (this.alertScanErrorHeight == 100) {
@@ -368,7 +369,7 @@ export default {
         for (const file of files) {
           if (vm.stop) break // stop process
           vm.currentVideoScanName = file
-          let fileProcResult = await fileScanProc(file)
+          let fileProcResult = await vm.fileScanProc(file)
           if (fileProcResult.errorVideo) {
             vm.alertScanError = true
             vm.errorVideos.unshift(fileProcResult.errorVideo)
@@ -440,6 +441,170 @@ export default {
       })
 
       return fileList
+    },
+    async fileScanProc(file) {
+      let fileProcResult = {}
+      // check for duplicates in database
+      let duplicate = this.$store.getters.videos.find(video => video.path.toLowerCase() == file.toLowerCase()).value()
+      if (duplicate) {
+        console.warn(`file ${JSON.stringify(duplicate.path)} already in DB`)
+        fileProcResult.duplicate = file
+        fileProcResult.success = false
+        return fileProcResult
+      }
+
+      this.fileInfo.id = shortid.generate() 
+
+      console.log('1) start getting meta')
+      try {
+        await this.getVideoMetadata(file)
+      } catch (error) {
+        console.log(error)
+        fileProcResult.errorVideo = file
+        return fileProcResult
+      }
+
+      // add videoinfo to DB
+      await this.createInfoForDb()
+        .then(async (videoMetadata) => {
+          await this.$store.getters.videos.push(videoMetadata).write()
+          console.log(`2) video added`)
+          fileProcResult.duplicate = false
+          fileProcResult.success = videoMetadata
+          return(fileProcResult)
+        })
+        .catch(err => {
+          console.log(err)
+          fileProcResult.errorVideo = file
+        })
+      return fileProcResult
+    },
+    getVideoMetadata (pathToFile) {
+      return new Promise((resolve, reject) => {
+        return ffmpeg.ffprobe(pathToFile, (error, info) => {
+          if (error) {
+            return reject(error)
+          }
+          // console.log(`getVideoMetadata: ` + JSON.stringify(videoInfo.format))
+          this.fileInfo.meta = info
+          if (this.fileInfo.meta.streams[0].duration < 1) {
+            return reject('duration less than 1 sec.')
+          } 
+          return resolve()
+        })
+      })
+    },
+    createInfoForDb() { // create info of videofile, generating thumb.jpg and return object with videofile info
+      return new Promise ((resolve, reject) => {
+        let duration = Math.floor(this.fileInfo.meta.format.duration)
+        
+        let resolution
+        for(let i = 0; i < this.fileInfo.meta.streams.length; i++) {
+          if (this.fileInfo.meta.streams[i].codec_type === 'video') {
+            resolution = this.fileInfo.meta.streams[i].width + 'x' + this.fileInfo.meta.streams[i].height
+          } 
+        }
+
+        let pathToFile = this.fileInfo.meta.format.filename
+        // parse file path for contains performer name or website
+        let names = this.checkPathContainsNames(pathToFile)
+        let performers = []
+        if (names.performer) {
+          performers.push(names.performer)
+        }
+        let websites = []
+        if (names.website) {
+          websites.push(names.website)
+        }
+            
+        // get file info 
+        let videoMetadata = {
+          id: this.fileInfo.id,
+          path: pathToFile,
+          duration: duration,
+          size: this.fileInfo.meta.format.size,
+          resolution: resolution,
+          tags: names.tags,
+          performers: performers,
+          websites: websites,
+          rating: 0,
+          favorite: false,
+          bookmark: false,
+          date: Date.now(),
+          edit: Date.now(),
+          viewed: 0,
+        }
+        console.log('111111')
+        
+        let outputPathThumbs = path.join(this.$store.getters.getPathToUserData, '/media/thumbs/')
+        // creating the thumb of the video
+        ffmpeg()
+          .input(pathToFile)
+          .screenshots({
+            count: 1, 
+            filename: `${this.fileInfo.id}.jpg`,
+            folder: outputPathThumbs,
+            size: '?x320' 
+          })
+          .on('end', () => {
+            console.log(`thumb created: ${outputPathThumbs + this.fileInfo.id}.jpg`)
+            resolve(videoMetadata)
+          })
+          .on('error', (err) => {
+            reject(err.message)
+          })
+      })
+    },
+    checkPathContainsNames(filePath) {
+      let folders = filePath.split('\\')
+      let names = {}
+
+      // search for performer name and website name
+      for (let i=0; i<folders.length; i++) {
+        let dirName = folders[i].toLowerCase()
+        if (this.$store.getters.performersNamesLower.includes(dirName)) {
+          names.performer = dirName
+        }
+        if (this.$store.getters.websitesNamesLower.includes(dirName)) {
+          names.website = dirName
+        }
+      }
+
+      // search for tag names
+      let foundTags = []
+      if (this.$store.getters.getSearchTagsInFileName) {
+        let fileName = folders[folders.length-1].toLowerCase()
+        for (let i=0; i<this.$store.getters.tagsNamesLowerVideos.length; i++) {
+          let tag = this.$store.getters.tagsNamesLowerVideos[i]
+          if (fileName.includes(tag)) {
+            foundTags.push(tag)
+          }
+        }
+      }
+      // TODO if duplicated item in path than remove duplicates
+      // create more powerful search in string
+      // maybe remove all spaces, split by ,.-_
+
+      // add performer if found 
+      if (names.performer) {
+        names.performer = this.$store.getters.performers.find(p=>
+          p.name.toLowerCase()===names.performer).value().name
+      }
+      // add website if found 
+      if (names.website) {
+        names.website = this.$store.getters.websites.find(w=>
+          w.name.toLowerCase()===names.website).value().name
+      }
+      // add tags if found or return empty array
+      names.tags = []
+      if (foundTags.length) {
+        for (let i=0; i<foundTags.length; i++) {
+          let tag = this.$store.getters.tags.find(t=>(t.name.toLowerCase()===foundTags[i])).value().name
+          names.tags.push(tag)
+        }
+      }
+
+      return names
     },
     getPathRules(path) {
       if (path.length===0) {
