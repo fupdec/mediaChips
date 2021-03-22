@@ -201,7 +201,7 @@ export default {
       let imgUrls = this.videosOfWebsite.orderBy('rating',['desc']).take(40).value().map(v=>{
         let imgPath = path.join(this.pathToUserData, `/media/thumbs/${v.id}.jpg`)
         if (fs.existsSync(imgPath)) {
-          return imgPath
+          return 'file://' + imgPath
         } else return ''
       })
       return imgUrls
@@ -308,7 +308,7 @@ export default {
     },
     getImgUrl(websiteId) {
       let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
-      return this.checkImageExist(imgPath)
+      return 'file://' + this.checkImageExist(imgPath)
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {

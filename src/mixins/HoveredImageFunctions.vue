@@ -21,29 +21,29 @@ export default {
       let imgMainPerformer = path.join(this.pathToUserData, `/media/performers/${performerId}_main.jpg`)
       let imgMainChecked = this.checkImageExist(imgMainPerformer)
       if (imgAvatarChecked) {
-        return imgAvatarChecked
+        return 'file://' + imgAvatarChecked
       } else if (imgMainChecked) {
-        return imgMainChecked
+        return 'file://' + imgMainChecked
       } else {
-        return path.join(this.pathToUserData, '/img/templates/performer.png')
+        return 'file://' + path.join(this.pathToUserData, '/img/templates/performer.png')
       }
     },
     getImgTagsUrl(tagId) {
       let imgTag = path.join(this.pathToUserData, `/media/tags/${tagId}_.jpg`)
       let imgChecked = this.checkImageExist(imgTag)
       if (imgChecked) {
-        return imgChecked
+        return 'file://' + imgChecked
       } else {
-        return path.join(this.pathToUserData, '/img/templates/tag.png')
+        return 'file://' + path.join(this.pathToUserData, '/img/templates/tag.png')
       }
     },
     getImgWebsiteUrl(websiteId) {
       let imgWebsite = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
       let imgChecked = this.checkImageExist(imgWebsite)
       if (imgChecked) {
-        return imgChecked
+        return 'file://' + imgChecked
       } else {
-        return path.join(this.pathToUserData, '/img/templates/website.png')
+        return 'file://' + path.join(this.pathToUserData, '/img/templates/website.png')
       }
     },
     checkImageExist(imgPath) {

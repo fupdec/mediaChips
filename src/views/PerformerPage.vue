@@ -683,7 +683,7 @@ export default {
     },
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_${imgType}.jpg`)
-      return this.checkHeaderImageExist(imgPath, imgType)
+      return 'file://' + this.checkHeaderImageExist(imgPath, imgType)
     },
     checkHeaderImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {

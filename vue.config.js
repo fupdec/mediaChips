@@ -11,7 +11,7 @@ module.exports = {
         })
       },
       nodeIntegration: true,
-      externals: ['archiver', 'wcjs-prebuilt'],
+      externals: ['archiver', 'wcjs-prebuilt', 'fluent-ffmpeg', 'chokidar', 'sharp'],
       builderOptions: {
         win: {
           icon: './icon.ico'

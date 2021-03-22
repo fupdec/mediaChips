@@ -192,7 +192,7 @@ export default {
       return this.$store.getters.settings.value()
     },
     logoPath() {
-      return path.join(__static, '/icons/icon.png')
+      return 'file://' + path.join(__static, '/icons/icon.png')
     },
     recentVideos() {
       let qnt = this.$store.state.quantityRecentVideos
@@ -282,11 +282,7 @@ export default {
     },
     getVideoThumbUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
-      return this.checkVideoImageExist(imgPath)
-    },
-    getVideoUrl(videoId) {
-      let videoPath = path.join(this.pathToUserData, `/media/previews/${videoId}.mp4`)
-      return this.checkVideoExist(videoPath)
+      return 'file://' + this.checkVideoImageExist(imgPath)
     },
     checkVideoImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -312,10 +308,10 @@ export default {
     getPerformerImg(id) {
       let imgAvaPath = this.getPerformerImgUrl(id + '_avatar.jpg')
       let imgMainPath = this.getPerformerImgUrl(id + '_main.jpg')
-      return this.checkAvatarImageExist(imgAvaPath, imgMainPath)
+      return 'file://' + this.checkAvatarImageExist(imgAvaPath, imgMainPath)
     },
     getPerformerImgUrl(img) {
-      return  path.join(this.pathToUserData, `/media/performers/${img}`)
+      return path.join(this.pathToUserData, `/media/performers/${img}`)
     },
     checkAvatarImageExist(imgAvaPath, imgMainPath) {
       if (fs.existsSync(imgAvaPath)) {

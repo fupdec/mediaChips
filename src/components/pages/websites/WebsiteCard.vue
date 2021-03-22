@@ -114,7 +114,7 @@ export default {
     },
     getImgUrl(websiteId) {
       let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
-      return this.checkImageExist(imgPath)
+      return 'file://' + this.checkImageExist(imgPath)
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {

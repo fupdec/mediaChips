@@ -311,7 +311,7 @@ export default {
     getImgUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
       let gridPath = path.join(this.pathToUserData, `/media/previews/${videoId}.jpg`)
-      return this.checkImageExist(imgPath, gridPath)
+      return 'file://' + this.checkImageExist(imgPath, gridPath)
     },
     checkImageExist(imgPath, gridPath) {
       if (this.videoPreviewGridEnabled && fs.existsSync(gridPath)) {

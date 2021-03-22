@@ -2,14 +2,18 @@
   "name": "avdb",
   "productName": "AVDB",
   "version": "0.7.1",
-  "author": "fupdec",
+  "author": {
+    "name": "fupdec",
+    "email": "fupdec@gmail.com"
+  },
+  "homepage": "https://github.com/fupdec/Adult-Video-Database",
   "description": "Manage your ever-growing video collection - add tags, performers, websites and have fun!",
   "private": false,
   "license": "GPLv3",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "electron:build": "vue-cli-service electron:build --linux deb",
+    "electron:build": "vue-cli-service electron:build",
     "electron:build_portable": "vue-cli-service electron:build --win portable",
     "electron:serve": "vue-cli-service electron:serve"
   },
@@ -58,7 +62,7 @@
     "@vue/cli-service": "^4.5.11",
     "@vue/devtools": "^5.3.3",
     "css-loader": "^5.0.2",
-    "electron": "^11.1.0",
+    "electron": "^12.0.1",
     "less": "^3.13.1",
     "less-loader": "^5.0.0",
     "sass": "^1.32.8",

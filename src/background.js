@@ -34,7 +34,7 @@ function createLoadingWindow () {
         loading.hide()
       })
     })
-    loading.loadURL(path.join(__static, 'loading.html'))
+    loading.loadURL('file://' + path.join(__static, 'loading.html'))
     loading.webContents.on('did-finish-load', () => {
       loading.show()
     })
@@ -69,6 +69,7 @@ function createPlayerWindow(devPath, prodPath) {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
       webSecurity: false,
       enableRemoteModule: true,
+      contextIsolation: false
     }
   })
 
@@ -102,6 +103,7 @@ function createMainWindow(devPath, prodPath) {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
       webSecurity: false,
       enableRemoteModule: true,
+      contextIsolation: false
     }
   })
 

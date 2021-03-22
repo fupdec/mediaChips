@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title class="edit-card-title">
         <v-img v-if="isSelectedSingleVideo" class="image-video"
-          :src="getImg()" height="100%" max-width="160" max-height="84"
+          :src="'file://' + getImg()" height="100%" max-width="160" max-height="84"
           gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top">
           <v-btn @click="playVideo" class="button-play" dark outlined :disabled="!videoExists">
             <v-icon>mdi-play</v-icon>

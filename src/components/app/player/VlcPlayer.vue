@@ -1177,7 +1177,7 @@ export default {
     },
     getMarkerImgUrl(markerId) {
       let imgPath = path.join(this.pathToUserData, `/media/markers/${markerId}.jpg`)
-      return this.checkMarkerImageExist(imgPath)
+      return 'file://' + this.checkMarkerImageExist(imgPath)
     },
     checkMarkerImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -1302,7 +1302,7 @@ export default {
     },
     getPlaylistImgUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
-      return this.checkPlaylistImageExist(imgPath)
+      return 'file://' + this.checkPlaylistImageExist(imgPath)
     },
     checkPlaylistImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {

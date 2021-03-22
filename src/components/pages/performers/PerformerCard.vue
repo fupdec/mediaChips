@@ -441,7 +441,7 @@ export default {
     },
     getImg(performerId, imageType) {
       let imgMainPath = this.getImgUrl(performerId) + `_${imageType}.jpg`
-      return this.checkImageExist(imgMainPath, imageType)
+      return 'file://' + this.checkImageExist(imgMainPath, imageType)
     },
     checkImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {
@@ -455,7 +455,7 @@ export default {
       }
     },
     getImgUrl(img) {
-      return  path.join(this.pathToUserData, `/media/performers/${img}`)
+      return path.join(this.pathToUserData, `/media/performers/${img}`)
     },
     addTag(tagName, videoID) {
       console.log(tagName, videoID);

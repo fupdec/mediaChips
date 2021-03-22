@@ -4,7 +4,7 @@
       <v-card>
         <v-card-title class="edit-card-title">
           <v-img 
-            :src="getImg()" :aspect-ratio="1" max-width="84" height="84" class="mr-6"
+            :src="'file://' + getImg()" :aspect-ratio="1" max-width="84" height="84" class="mr-6"
             gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
           />
           <div>

@@ -355,7 +355,7 @@ export default {
     getImg() {
       let imgAvaPath = this.getImgUrl(this.performer.id + '_avatar.jpg')
       let imgMainPath = this.getImgUrl(this.performer.id + '_main.jpg')
-      return this.checkAvatarImageExist(imgAvaPath, imgMainPath)
+      return 'file://' + this.checkAvatarImageExist(imgAvaPath, imgMainPath)
     },
     getImgUrl(img) {
       return  path.join(this.pathToUserData, `/media/performers/${img}`)

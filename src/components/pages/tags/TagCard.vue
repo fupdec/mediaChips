@@ -3,7 +3,7 @@
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
       :data-id="tag.id" class="tag-card" outlined hover 
       :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
-      <v-img class="tag-card-img" :src="imgMain" :aspect-ratio="1">
+      <v-img class="tag-card-img" :src="'file://' + imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>
         <v-icon v-if="tag.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
           mdi-bookmark
