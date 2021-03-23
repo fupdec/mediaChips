@@ -9,7 +9,7 @@
         <v-divider class="my-10"></v-divider>
       </div>
       <v-row v-else>
-        <v-col cols="12" sm="6">
+        <v-col cols="12">
           <v-card>
             <v-list-item>
               <v-list-item-content>
@@ -43,7 +43,7 @@
             </v-card-actions>
           </v-card>
         </v-col>
-        <v-col cols="12" sm="6">
+        <v-col cols="12">
           <v-card>
             <v-list-item>
               <v-list-item-content>
@@ -72,6 +72,36 @@
                   </v-img>
                 </template>
               </v-hover>
+            </div>
+            <div v-if="$store.getters.settings.get('appNewVersionUpdatePerformerViews').value()">
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-subtitle class="caption">
+                    Top {{$store.state.quantityRecentVideos}} most viewed performers
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <div class="top-performers-grid views" @mousedown="stopSmoothScroll($event)"> 
+                <v-hover v-for="perf in topViewedPerformers" :key="perf.id">
+                  <template v-slot:default="{ hover }">
+                    <v-img :src="getPerformerImg(perf.id)" aspect-ratio="1"
+                      @click="openPerformerPage(perf.id)" position="top"
+                      @click.middle="addNewTabPerformer(perf.name)"
+                    >
+                      <v-fade-transition>
+                        <v-overlay v-if="hover" absolute color="secondary">
+                          <v-btn x-small height="auto" width="auto" class="pa-1" outlined>
+                            {{perf.name}}
+                          </v-btn>
+                        </v-overlay>
+                      </v-fade-transition>
+                      <div class="views-wrapper">
+                        <span><v-icon size="12" class="mr-1">mdi-eye-outline</v-icon>{{perf.views}}</span>
+                      </div>
+                    </v-img>
+                  </template>
+                </v-hover>
+              </div>
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -176,6 +206,10 @@ export default {
   mixins: [LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
+      if (!this.$store.getters.settings.get('appNewVersionUpdatePerformerViews').value()) {
+        this.$store.getters.performers.each(p => p.views = 0).write()
+        this.$store.getters.settings.set('appNewVersionUpdatePerformerViews', true).write()
+      } // remove this in the next version (0.7.3)
     })
   },
   data: ()=>({
@@ -194,19 +228,17 @@ export default {
     logoPath() {
       return 'file://' + path.join(__static, '/icons/icon.png')
     },
+    previewsNumber() {
+      return this.$store.state.quantityRecentVideos
+    },
     recentVideos() {
-      let qnt = this.$store.state.quantityRecentVideos
-      return this.$store.getters.videos
-        .orderBy('date', ['desc'])
-        .take(qnt)
-        .value()
+      return this.$store.getters.videos.orderBy('date', ['desc']).take(this.previewsNumber).value()
     },
     topPerformers() {
-      let qnt = this.$store.state.quantityRecentVideos
-      return this.$store.getters.performers
-        .orderBy('rating', ['desc'])
-        .take(qnt)
-        .value()
+      return this.$store.getters.performers.orderBy('rating', ['desc']).take(this.previewsNumber).value()
+    },
+    topViewedPerformers() {
+      return this.$store.getters.performers.orderBy('name', ['asc']).orderBy('views', ['desc']).take(this.previewsNumber).value()
     },
     topTags() {
       return this.$store.getters.tags.orderBy(['videos'], ['desc']).value().slice(0,9)
@@ -336,14 +368,14 @@ export default {
 }
 .recent-videos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12%, 20%));
+  grid-template-columns: repeat(auto-fill, minmax(10%, 10%));
   .v-image {
     cursor: pointer;
   }
 }
 .top-performers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15%, 20%));
+  grid-template-columns: repeat(auto-fill, minmax(10%, 10%));
   .v-image {
     cursor: pointer;
   }
@@ -355,6 +387,20 @@ export default {
     white-space: normal;
     max-width: 100%;
     font-size: 8px;
+  }
+  .views-wrapper {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    height: 100%;
+    span {
+      background-color: rgba(17, 17, 17, 0.5);
+      padding-left: 3px;
+      padding-right: 3px;
+      border-radius: 0 3px 0 0;
+      display: flex;
+      font-size: 12px;
+    }
   }
 }
 </style>

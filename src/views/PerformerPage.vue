@@ -65,6 +65,9 @@
                     <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
                   </v-chip>
                   <v-chip label outlined>
+                    <v-icon left size="20">mdi-eye</v-icon> Views: {{performer.views}}
+                  </v-chip>
+                  <v-chip label outlined>
                     <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
                   </v-chip>
                 </v-col>
@@ -321,6 +324,7 @@ export default {
       if (this.$store.state.Settings.performerProfile) this.profile.push(0)
       this.initFilters()
       this.updateMeter()
+      this.updateViews()
     })
   },
   data: () => ({
@@ -719,6 +723,11 @@ export default {
         }
         this.meter = this.meter * (1 + this.meterMultiplier / 50)
       }
+    },
+    updateViews() {
+      this.$store.getters.performers.filter({id: this.performerId}).each(p=>{
+        p.views = p.views + 1
+      }).write()
     },
     getTagValue(tagName) {
       return this.$store.getters.tags.find({name:tagName}).value().value

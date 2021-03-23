@@ -97,6 +97,20 @@
             </template>
             <span>Sort by Number of Videos</span>
           </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn outlined @click="toggleSortDirection" value="views" v-on="on">
+                <v-icon>mdi-eye</v-icon>
+                <v-icon right size="14" v-if="sortButtons=='views' && sortDirection=='desc'">
+                  mdi-arrow-up-thick
+                </v-icon>
+                <v-icon right size="14" v-if="sortButtons=='views' && sortDirection=='asc'">
+                  mdi-arrow-down-thick
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>Sort by Number of Views</span>
+          </v-tooltip>
         </v-btn-toggle>
       </v-card>
     </v-menu>
@@ -168,6 +182,7 @@ export default {
       if (this.sortButtons=='date') return 'mdi-calendar-plus'
       if (this.sortButtons=='edit') return 'mdi-calendar-edit'
       if (this.sortButtons=='videos') return 'mdi-video-outline'
+      if (this.sortButtons=='views') return 'mdi-eye'
       return 'mdi-help'
     },
     sortButtons: {
