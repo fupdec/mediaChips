@@ -1,20 +1,35 @@
 <template>
   <div ref="player" class="vlc-player" :class="{fullscreen}"
     @mousedown="stopSmoothScroll($event)" @mousemove="moveOverPlayer">
-    <div class="player-wrapper">
+    <div class="player-wrapper" :class="{markers:isMarkersVisible, playlist:isPlaylistVisible}">
       <div class="canvas-wrapper" @click="paused ? play() : pause()" 
         @dblclick="toggleFullscreen" @click.middle="toggleFullscreen" 
         @mousedown="handleMouseCanvas($event)" @contextmenu="showContextMenu($event)"
         @wheel="changeVolume" @keydown="handleKey" tabindex="-1">
-        <canvas ref="canvas" class="canvas" :style="canvasSizes"/>
+        <video ref="videoPlayer" class="video-player"></video>
+        <div v-if="isVideoFormatNotSupported" class="video-error">
+          <v-icon size="60" color="red">mdi-alert</v-icon>
+          <div>{{getFileFromPath(videos[playIndex].path)}}</div>
+          <div class="mb-4">Video format not supported.</div>
+          <v-btn @click="playVideoInSystemPlayer" color="primary" small>
+            <v-icon left>mdi-television-play</v-icon>
+            <span>Play in the system player</span>
+          </v-btn>
+        </div>
+        <div v-if="isVideoNotExist" class="video-error">
+          <v-icon size="60" color="red">mdi-alert</v-icon>
+          <div>{{getFileFromPath(videos[playIndex].path)}}</div>
+          <div class="mb-4">The video file is missing.</div>
+        </div>
+        <div class="status-text">{{statusText}}</div>
       </div>
       <v-card class="vlc-controls" tile 
         @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
         :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:fullscreen?0.7:1}">
         <v-card-actions class="timeline py-1 px-0 mx-3">
           <v-slider @change="seek($event)" :value="currentTime" 
-            @mousedown="handleMouseSeek($event)"
-            min="0" step="1" :max="duration" hide-details/>
+            @mousedown="handleMouseSeek($event)" @mouseup="trackCurrentTime"
+            min="0" step="0.1" :max="duration" hide-details/>
           <div v-for="(marker,i) in markers" :key="i" class="marker"
             :style="{left: `${marker.time/duration*100}%`}"
             @mouseup="jumpTo(marker.time)">
@@ -55,14 +70,14 @@
               <v-icon v-else>mdi-fullscreen</v-icon>
             </v-btn>
           </v-btn-toggle>
-          <v-btn-toggle class="mx-2 remove-active">
+          <v-btn-toggle class="mx-2 remove-active marker-buttons">
             <v-btn @click="toggleMarkers" :color="isMarkersVisible? 'primary':''" small>
               <v-icon>mdi-map-marker</v-icon>
             </v-btn>
-            <v-btn @click="jumpToPrevMarker" small>
+            <v-btn @click="jumpToPrevMarker" small class="marker-prev">
               <v-icon>mdi-map-marker-left</v-icon>
             </v-btn>
-            <v-btn @click="jumpToNextMarker" small>
+            <v-btn @click="jumpToNextMarker" small class="marker-next">
               <v-icon>mdi-map-marker-right</v-icon>
             </v-btn>
             <v-menu offset-y nudge-top="40" nudge-right="282" attach=".vlc-controls">
@@ -109,8 +124,8 @@
             <span class="mx-1">/</span>
             <div class="time-end">{{ msToTime(duration * 1000) }}</div>
           </div>
-          <v-slider v-model="volume" value="1" min="0" step="0.01" max="1" hide-details 
-            :prepend-icon="volumeIcon" @click:prepend="player.toggleMute()" class="volume"/>
+          <v-slider v-model="volume" value="1" min="0" step="0.1" max="1" hide-details 
+            :prepend-icon="volumeIcon" @click:prepend="toggleMute" class="volume"/>
         </v-card-actions>
       </v-card>
     </div>
@@ -231,7 +246,7 @@
     <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
       <v-card>
         <v-card-title class="headline">
-          Marker with tag on {{msToTime(seekTime)}}
+          Marker with tag on {{msToTime(seekTime*1000)}}
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerTag=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -286,7 +301,7 @@
     <v-dialog v-model="dialogMarkerPerformer" max-width="500" scrollable eager>
       <v-card>
         <v-card-title class="headline">
-          Marker with performer on {{msToTime(seekTime)}}
+          Marker with performer on {{msToTime(seekTime*1000)}}
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerPerformer=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -342,7 +357,7 @@
     <v-dialog v-model="dialogMarkerBookmark" max-width="550" scrollable eager>
       <v-card>
         <v-card-title class="headline">
-          Marker with bookmark on {{msToTime(seekTime)}}
+          Marker with bookmark on {{msToTime(seekTime*1000)}}
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerBookmark=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -369,16 +384,21 @@
           <v-spacer></v-spacer>
           <v-icon color="red">mdi-delete</v-icon>
         </v-card-title>
-        <v-card-text class="mt-6 text-center" v-if="markerForRemove.time">
+        <v-card-text class="text-center" v-if="markerForRemove.time">
           <div @click="jumpTo(markerForRemove.time)">
+            <v-chip outlined class="my-2">
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" small :color="getTagColor(markerForRemove.name)">mdi-tag</v-icon>
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" small color="pink">mdi-heart</v-icon>
+              <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" small color="red">mdi-bookmark</v-icon>
+              <span class="ml-2">{{markerForRemove.name}}</span>
+            </v-chip> 
             <v-img :src="getMarkerImgUrl(markerForRemove.id)" :aspect-ratio="16/9" class="thumb"/>
             <div class="mt-2">
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" left small :color="getTagColor(markerForRemove.name)">mdi-tag</v-icon>
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
-              <span>{{markerForRemove.name}}</span> at 
-              <span>{{msToTime(markerForRemove.time*1000)}}</span>
+              <span class="mr-2">at time</span> 
+              <v-chip outlined label>
+                <b>{{msToTime(markerForRemove.time*1000)}}</b>
+              </v-chip>
             </div>
           </div>
         </v-card-text>
@@ -427,26 +447,6 @@
         </v-list-item>
       </v-list>
     </v-menu>
-    <div v-html="statusText" class="status-text"
-      :style="{opacity: statusOpacity,transitionDuration: statusAnimationDuration,}"
-    />
-    <div v-if="buffering" class="lds-ring">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-    <div v-if="showInformation" class="media-information"
-      :style="{
-        backgroundColor: '#333333ee',
-        color: '#aaaaaaee',
-      }"
-    >
-      <div class="toolbar">
-        <div class="close" @click="showInformation = false">x</div>
-      </div>
-      <div class="content" v-html="informationContent" />
-    </div>
   </div>
 </template>
 
@@ -457,8 +457,9 @@ const fs = require("fs")
 const path = require('path')
 const ffmpeg = require('fluent-ffmpeg')
 const shortid = require('shortid')
+const shell = require('electron').shell
 
-import { chimera } from './webchimera/wrapper'
+// import { chimera } from './webchimera/wrapper'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
@@ -469,35 +470,16 @@ export default {
     vuescroll,
   },
   mixins: [ShowImageFunction, LabelFunctions],
-  props: {
-    src: {
-      type: String,
-      default: "",
-    },
-  },
   beforeDestroy() {
-    clearInterval(this.interval);
-    clearTimeout(this.statusTimeout);
-    clearTimeout(this.moveTimeout);
-    clearTimeout(this.showBufferTimeout);
-    this.player?.destroy?.();
-    document.removeEventListener("mousemove", this.controlsMove);
-    document.removeEventListener("mouseup", this.controlsUp);
+    document.removeEventListener("mousemove", this.controlsMove)
+    document.removeEventListener("mouseup", this.controlsUp)
     window.removeEventListener('resize', this.getCanvasSizes)
   },
   async mounted() {
-    this.init();
+    this.initPlayer()
 
-    this.interval = setInterval(() => {
-      if (this.player.state === "buffering") this.showBuffering();
-    });
-
-    this.moveTimeout = setTimeout(() => {
-      this.hideControls = true;
-    }, 1000);
-
-    document.addEventListener("mousemove", this.controlsMove, false);
-    document.addEventListener("mouseup", this.controlsUp, false);
+    document.addEventListener("mousemove", this.controlsMove, false)
+    document.addEventListener("mouseup", this.controlsUp, false)
 
     ipcRenderer.on('getDataForPlayer', (event, data) => {
       this.updateVideoPlayer(data)
@@ -520,43 +502,33 @@ export default {
     menu: false,
     player: null,
     interval: null,
-    showInformation: false,
-    buffering: false,
-    preventStatusUpdate: false,
-    informationContent: "",
-    statusText: "",
-    statusAnimationDuration: "0s",
-    statusOpacity: 0,
-    statusTimeout: -1,
-    volumeInput: 1,
-    dontWatchTime: false,
     moveTimeout: -1,
-    showBufferTimeout: -1,
     hideControls: false,
     mouseOverControls: false,
+    statusText: '',
+    statusTextTimeout: null,
     // Video element properties //
-    duration: NaN,
-    readyState: HTMLMediaElement.HAVE_NOTHING,
+    duration: 1,
     volume: 1,
     muted: false,
     paused: false,
     currentTime: 0,
+    currentTimeTracker: null,
     controlsList: [],
     crossOrigin: "",
     defaultMuted: false,
-    error: null,
-    networkState: HTMLMediaElement.NETWORK_EMPTY,
+    isVideoFormatNotSupported: null,
+    isVideoNotExist: null,
     seeking: false,
     srcObject: null,
     seekTime: 0,
     // Playlist
     isPlaylistVisible: false,
     selectedPlaylist: null,
-    videos: null,
+    videos: [],
     playlist: [],
     playlistShuffle: [],
     playIndex: null,
-    playlistLength: 0,
     playlistMode: ['autoplay'],
     // Markers
     isMarkersVisible: false,
@@ -595,84 +567,6 @@ export default {
         return 'mdi-volume-medium'
       }
       return 'mdi-volume-low'
-    },
-    audioTracks: {
-      cache: false,
-      get() {
-        let audio = this.player.audio;
-        return audio.tracks.slice(1).map((track, i) => ({
-          get enabled() {
-            return audio.track === i + 1;
-          },
-          set enabled(v) {
-            if (v) audio.track = i + 1;
-            else audio.track = 0;
-          },
-          id: i,
-          kind: i === 0 ? "main" : "alternative",
-          label: track,
-          language: "",
-          sourceBuffer: null,
-        }));
-      },
-    },
-    textTracks: {
-      cache: false,
-      get() {
-        let subtitles = this.player.subtitles;
-        return subtitles.tracks.slice(1).map((track, i) => ({
-          get enabled() {
-            return subtitles.track === i + 1;
-          },
-          set enabled(v) {
-            if (v) subtitles.track = i + 1;
-            else subtitles.track = 0;
-          },
-          id: i,
-          kind: i === 0 ? "main" : "alternative",
-          label: track,
-          language: "",
-          sourceBuffer: null,
-        }));
-      },
-    },
-    videoTracks: {
-      cache: false,
-      get() {
-        let video = this.player.video;
-        return video.tracks.slice(1).map((track, i) => ({
-          get selected() {
-            return video.track === i + 1;
-          },
-          set selected(v) {
-            if (v) video.track = i + 1;
-            else video.track = 0;
-          },
-          id: i,
-          kind: i === 0 ? "main" : "alternative",
-          label: track.name,
-          size: {
-            width: track.width,
-            height: track.height,
-          },
-          language: "",
-          sourceBuffer: null,
-        }));
-      },
-    },
-    buffered: {
-      cache: false,
-      get() {
-        return {
-          length: 1,
-          start: () => {
-            return 0;
-          },
-          end: () => {
-            return this.duration;
-          },
-        };
-      },
     },
     // data from main window
     tagsAll() {
@@ -718,11 +612,34 @@ export default {
     isNextDisabled() {
       if (this.playlistMode.includes('shuffle')) {
         let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
-        return shuffleIndex+1>=this.playlistLength && !this.playlistMode.includes('loop')
-      } else return this.playIndex+1>=this.playlistLength && !this.playlistMode.includes('loop')
+        return shuffleIndex+1>=this.videos.length && !this.playlistMode.includes('loop')
+      } else return this.playIndex+1>=this.videos.length && !this.playlistMode.includes('loop')
     },
   },
   methods: {
+    initPlayer() {
+      this.player = this.$refs.videoPlayer
+      this.player.addEventListener('loadedmetadata', (event) => {
+        this.loadSrc()
+        console.log('loadedmetadata')
+      })
+      this.player.addEventListener('ended', (event) => {
+        if (this.playlistMode.includes('autoplay')) {
+          this.next()
+        }
+        console.log('ended')
+      })
+      this.player.addEventListener('error', (event) => {
+        this.$emit("nowPlaying", _.cloneDeep(this.videos[this.playIndex]))
+        if (fs.existsSync(this.videos[this.playIndex].path)) {
+          this.isVideoFormatNotSupported = true
+          this.isVideoNotExist = false
+        } else {
+          this.isVideoFormatNotSupported = false
+          this.isVideoNotExist = true
+        }
+      })
+    },
     getCanvasSizes() {
       let windowWidth = document.documentElement.clientWidth
       let windowHeight = document.documentElement.clientHeight
@@ -734,135 +651,25 @@ export default {
         this.canvasSizes = canvasRatio > windowRatio ? '':'width:auto;height:100%;'
       } else this.canvasSizes = ''
     },
-    init() {
-      let firstPlay = true,
-          firstPause = true
-      this.player = chimera.createPlayer() // run with param ['-vvv'] for debug
-      this.player.bindCanvas(this.$refs.canvas)
-      // console.log("init vlc player", chimera, this.player)
-
-      this.player.on("play", () => {
-        this.paused = false;
-        if (firstPlay) {
-          firstPlay = false;
-          this.$emit("play");
-        }
-        this.showStatusText("▶");
-      });
-      this.player.on("pause", () => {
-        this.paused = true;
-        if (firstPause) {
-          firstPause = false;
-          this.$emit("pause");
-        }
-        this.showStatusText("⏸");
-      });
-      this.player.on("stop", () => {
-        this.paused = true;
-        this.showStatusText("⏹");
-      });
-      this.player.on("mute", () => {
-        this.muted = true;
-        this.showStatusText("🔇");
-      });
-      this.player.on("unmute", () => {
-        this.muted = false;
-        this.showStatusText(`🔊 ${Math.round(this.player.volume)}%`);
-      });
-      this.player.on("volumeChange", (v) => {
-        this.volume = v / 100;
-        this.$emit("volumechange", v / 100);
-        this.showStatusText(
-          `${this.player.mute ? "🔇" : "🔊"} ${Math.round(v)}%`
-        );
-      });
-      this.player.on("seek", () => {
-        this.$emit("seeking");
-        this.$emit("seeked");
-        this.showStatusText(
-          `${this.msToTime(this.player.time)} / ${this.msToTime(
-            this.player.duration
-          )}`
-        );
-      });
-      this.player.on("load", () => {
-        this.readyState = HTMLMediaElement.HAVE_CURRENT_DATA;
-        this.duration = this.player.duration / 1000;
-
-        this.$emit("loadedmetadata");
-        this.$emit("loadeddata");
-        // console.log("loadeddata", this.player.duration);
-      });
-      this.player.on("time", () => {
-        this.dontWatchTime = true;
-        this.currentTime = this.player.time / 1000;
-        this.$emit("timeupdate", this.currentTime);
-      });
-      this.player.on("ended", () => {
-        if (this.playlistMode.includes('autoplay')) {
-          this.isNextDisabled ? this.stop() : this.next()
-        } else this.stop()
-      })
-
-      this.player.on("durationChange", (duration) => {
-        // console.log("durationchange", duration);
-        this.$emit("durationchange", duration / 1000);
-        this.duration = duration / 1000;
-      });
-
-      this.player.on("error", (err) => {
-        this.error = "VLC error" + err;
-        this.$emit("stalled");
-        this.$emit("error", ["VLC error", err]);
-      });
-
-      // this.player.on("seekable", (v) => console.log("seekable change", v));
-
-      this.player.on("mediaChange", () => {
-        firstPlay = true;
-        firstPause = true;
-        let onStateChange = (newState) => {
-          if (newState === "play" || newState === "pause") {
-            this.player.off("stateChange", onStateChange);
-            this.readyState = HTMLMediaElement.HAVE_FUTURE_DATA;
-            this.$emit("canplay");
-            this.readyState = HTMLMediaElement.HAVE_ENOUGH_DATA;
-            this.$emit("canplaythrough");
-            this.networkState = HTMLMediaElement.NETWORK_IDLE;
-            // console.log("canplaythrough");
-          }
-        };
-        this.player.once("frameReady", () => {
-          this.getCanvasSizes()
-        })
-        this.player.on("stateChange", onStateChange);
-      });
-
-      let prevState = this.player.state;
-      this.player.on("stateChange", (newState) => {
-        if (prevState === "buffering" && newState === "play") {
-          this.$emit("playing");
-        }
-        prevState = newState;
-        // console.log("New state: ", newState);
-        if (newState === "buffering") this.showBuffering();
-      });
-    },
     updateVideoPlayer(data) {
       // console.log('update video player')
       // console.log(data)
       this.videos = data.videos
-      this.playlist = _.cloneDeep(data.videos.map(video=>'file:///'+video.path.replace(/#/g, '%23')))
       this.playIndex = _.findIndex(data.videos, {id: data.id})
+      
+      this.player.src = this.videos[this.playIndex].path
+      this.player.play()
+    }, 
+    loadSrc() {
+      clearTimeout(this.statusTextTimeout)
+      this.statusText = `${this.playIndex+1}. ${this.getFileNameFromPath(this.videos[this.playIndex].path)}`
+      this.statusTextTimeout = setTimeout(() => {this.statusText = ''}, 3000)
+      this.$emit("nowPlaying", _.cloneDeep(this.videos[this.playIndex]))
+      this.isVideoFormatNotSupported = false
+      this.isVideoNotExist = false
+      this.duration = this.player.duration
+      this.trackCurrentTime()
       this.getMarkers()
-    },
-    showBuffering() {
-      this.$emit("waiting");
-      clearTimeout(this.showBufferTimeout);
-      this.buffering = true;
-      this.showBufferTimeout = setTimeout(() => {
-        this.buffering = false;
-      }, 500);
     },
     moveOverPlayer(e) {
       if (e.movementX > 0 || e.movementY > 0) {
@@ -882,27 +689,10 @@ export default {
       hms = hms.startsWith(":") ? hms.substr(1) : hms;
       return hms.startsWith("00") ? hms.substr(1) : hms;
     },
-    showStatusText(text, timeout = 2000) {
-      if (this.preventStatusUpdate) return;
-      clearTimeout(this.statusTimeout);
-      this.statusAnimationDuration = "0.1s";
-      this.statusOpacity = 1;
-      this.statusText = text;
-      this.statusTimeout = setTimeout(() => {
-        this.statusOpacity = 0;
-        this.statusAnimationDuration = "0.4s";
-      }, timeout);
-    },
     loadPlaylist() {
-      this.preventStatusUpdate = true
-      this.duration = NaN
-      this.readyState = HTMLMediaElement.HAVE_NOTHING
-      this.networkState = HTMLMediaElement.NETWORK_LOADING
+      return
       this.currentTime = 0
       this.error = null
-      if (this.src === "") {
-        this.networkState = HTMLMediaElement.NETWORK_NO_SOURCE;
-      }
 
       if (this.playlist !== [] && this.playlist !== null) {
         let playlist = this.playlist
@@ -911,12 +701,12 @@ export default {
           this.player.playlist.add(playlist[i])
         }
         this.player.playlist.playItem(this.playIndex)
-        this.playlistLength = this.player.playlist.items.length
+        this.videos.length = this.player.playlist.items.length
         this.$emit("nowPlaying", this.player.playlist.items[this.playIndex])
       
         if (this.playlistMode.includes('shuffle')) {
           let index = []
-          for (let i = 0; i < this.playlistLength; i++) {
+          for (let i = 0; i < this.videos.length; i++) {
             index.push(i)
           }
           this.playlistShuffle = _.shuffle(index)
@@ -940,20 +730,6 @@ export default {
     iconUrl(icon) {
       return `https://fonts.gstatic.com/s/i/materialicons/${icon}/v6/24px.svg?download=true`;
     },
-    // ------------ HTMLVideoElement methods ---------- //
-    addTextTrack(filePath) {
-      this.player.subtitles.load(filePath);
-    },
-    load() {
-      // todo this doesnt work well
-      if (this.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
-        this.$emit("abort");
-      } else {
-        this.$emit("emptied");
-      }
-      this.player.destroy();
-      this.init();
-    },
     setAsThumb() {
       let video = this.videos[this.playIndex]
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${video.id}.jpg`)
@@ -966,18 +742,32 @@ export default {
           console.log(error)
         })
     },
+    trackCurrentTime() {
+      let timeout = 100
+      if (this.duration > 200) timeout = 1000
+      this.currentTimeTracker = setInterval(() => {
+        this.currentTime = this.player.currentTime
+      }, timeout)
+    },
+    playVideoInSystemPlayer() {
+      shell.openPath(this.videos[this.playIndex].path)
+    },
     // CONTROLS
-    async play() {
+    play() {
       this.player.play()
-      if (this.player.state === "Playing") return
-      return new Promise((resolve) => this.player.once("play", resolve))
+      this.paused = false
+      this.trackCurrentTime()
     },
     pause() {
       this.player.pause()
+      this.paused = true
+      clearInterval(this.currentTimeTracker)
     },
     stop() {
-      this.player.stop()
-      this.player.time = 0
+      this.player.pause()
+      this.player.currentTime = 0
+      this.paused = true
+      clearInterval(this.currentTimeTracker)
     },
     prev() {
       if (this.isPrevDisabled) return
@@ -987,15 +777,15 @@ export default {
         let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
         shuffleIndex = shuffleIndex - 1
         if (isLoopMode && shuffleIndex < 0) { // if loop mode
-          shuffleIndex = shuffleIndex = this.playlistLength-1
+          shuffleIndex = shuffleIndex = this.videos.length-1
         } 
         this.playIndex = this.playlistShuffle[shuffleIndex]
       } else {
         this.playIndex = this.playIndex - 1
-        if (isLoopMode && this.playIndex < 0) this.playIndex = this.playlistLength-1 // if loop
+        if (isLoopMode && this.playIndex < 0) this.playIndex = this.videos.length-1 // if loop
       }
-      this.player.playlist.playItem(this.playIndex)
-      this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
+      this.player.src = this.videos[this.playIndex].path
+      this.player.play()
       
       if (this.isPlaylistVisible) { // scroll to now playing in playlist
         const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
@@ -1009,14 +799,14 @@ export default {
       if (this.playlistMode.includes('shuffle')) {
         let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
         shuffleIndex = shuffleIndex + 1
-        if (isLoopMode && shuffleIndex == this.playlistLength) shuffleIndex = 0 // if loop mode
+        if (isLoopMode && shuffleIndex == this.videos.length) shuffleIndex = 0 // if loop mode
         this.playIndex = this.playlistShuffle[shuffleIndex]
       } else {
         this.playIndex = this.playIndex + 1
-        if (isLoopMode && this.playIndex > this.playlistLength-1) this.playIndex = 0 // if loop mode
+        if (isLoopMode && this.playIndex > this.videos.length-1) this.playIndex = 0 // if loop mode
       }
-      this.player.playlist.playItem(this.playIndex)
-      this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[this.playIndex]))
+      this.player.src = this.videos[this.playIndex].path
+      this.player.play()
 
       if (this.isPlaylistVisible) { // scroll to now playing in playlist
         const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
@@ -1024,35 +814,35 @@ export default {
       }
     },
     seek(e) {
-      this.player.time = e * 1000
+      console.log(e)
+      this.player.currentTime = e
+      this.currentTime = e
     },
     jumpTo(e) {
-      this.player.time = e * 1000
+      this.player.currentTime = e
+      this.currentTime = e
     },
     jumpToPrevMarker() {
       let markers = _.orderBy(this.markers, 'time', ['desc'])
-      let currentTime = this.player.time - 5000
+      let currentTime = this.player.currentTime - 5
       for (let i=0; i<markers.length; i++) {
-        let markerTime = markers[i].time*1000
+        let markerTime = markers[i].time
         if (markerTime < currentTime) {
-          this.player.time = markerTime
+          this.player.currentTime = markerTime
           break
         }
       }
     },
     jumpToNextMarker() {
       let markers = this.markers
-      let currentTime = this.player.time
+      let currentTime = this.player.currentTime
       for (let i=0; i<markers.length; i++) {
-        let markerTime = markers[i].time*1000
+        let markerTime = markers[i].time
         if (markerTime > currentTime) {
-          this.player.time = markerTime
+          this.player.currentTime = markerTime
           break
         }
       }
-    },
-    seekToNextFrame(n = 1) {
-      this.player.time += (1000 * n) / this.player.input.fps;
     },
     showContextMenu(e) {
       e.preventDefault()
@@ -1065,28 +855,40 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
+    toggleMute() {
+      this.player.muted = !this.player.muted
+      this.muted = this.player.muted
+    },
     increaseVolume() {
-      if (this.player.volume>=100) return
-      this.player.volume += 10
+      if (this.player.volume >= 1) return
+      this.player.volume += 0.1
+      this.volume = this.player.volume
     },
     decreaseVolume() {
-      if (this.player.volume==0) return
-      this.player.volume -= 10
+      if (this.player.volume == 0) return
+      this.player.volume -= 0.1
+      this.volume = this.player.volume
     },
     changeVolume(e) {
-      this.player.volume -= e.deltaY / 20;
+      if (e.deltaY>0) {
+        if (this.player.volume == 0) return
+      } else {
+        if (this.player.volume >= 1) return
+      }
+      this.player.volume = (this.player.volume - e.deltaY / 1000).toFixed(1)
+      this.volume = this.player.volume
     },
     handleKey(e) {
       switch (true) {
         case e.key === ' ': this.player.togglePause()
           break
-        case e.key === 'ArrowRight': this.player.time += 10000
+        case e.key === 'ArrowRight': this.player.currentTime += 10
           break
-        case e.key === 'ArrowLeft': this.player.time -= 10000
+        case e.key === 'ArrowLeft': this.player.currentTime -= 10
           break
-        case e.key === 'ArrowUp': this.player.volume += 5
+        case e.key === 'ArrowUp': this.changeVolume({deltaY:-100})
           break
-        case e.key === 'ArrowDown': this.player.volume -= 5
+        case e.key === 'ArrowDown': this.changeVolume({deltaY:+100})
           break
         case e.key === 'f': this.toggleFullscreen()
           break
@@ -1126,10 +928,16 @@ export default {
     handleMouseSeek(e) {
       let btnCode = e.button
       switch (btnCode) {
+        case 0: clearInterval(this.currentTimeTracker)
+          break
+        case 1: clearInterval(this.currentTimeTracker)
+          break
+        case 2: clearInterval(this.currentTimeTracker)
+          break
         case 3: this.jumpToPrevMarker()
-        break
+          break
         case 4: this.jumpToNextMarker()
-        break
+          break
       }
     },
     // MARKERS
@@ -1196,19 +1004,19 @@ export default {
     },
     openDialogMarkerTag() {
       this.dialogMarkerTag = true
-      this.seekTime = this.player.time
+      this.seekTime = this.player.currentTime
     },
     openDialogMarkerPerformer() {
       this.dialogMarkerPerformer = true
-      this.seekTime = this.player.time
+      this.seekTime = this.player.currentTime
     },
     openDialogMarkerBookmark() {
       this.dialogMarkerBookmark = true
-      this.seekTime = this.player.time
+      this.seekTime = this.player.currentTime
     },
     addMarker(type) { 
       let text = ''
-      let time = Math.floor(this.seekTime / 1000)
+      let time = Math.floor(this.seekTime)
       if (type === 'tag') {
         text = this.markerTag
         this.dialogMarkerTag = false
@@ -1275,7 +1083,7 @@ export default {
       
       if (this.playlistMode.includes('shuffle')) {
         let indices = []
-        for (let i = 0; i < this.playlistLength; i++) {
+        for (let i = 0; i < this.videos.length; i++) {
           indices.push(i)
         }
         this.playlistShuffle = _.shuffle(indices)
@@ -1288,8 +1096,8 @@ export default {
           const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
           this.$refs.playlist.scrollTo({ y: height }, 50)
         }
-      } else this.player.playlist.playItem(index)
-      this.$emit("nowPlaying", _.cloneDeep(this.player.playlist.items[index]))
+      } else this.player.src = this.videos[index].path
+      this.player.play()
     },
     togglePlaylist() {
       this.isPlaylistVisible=!this.isPlaylistVisible
@@ -1315,31 +1123,29 @@ export default {
     getFileNameFromPath(videoPath) {
       return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
     },
+    getFileFromPath(videoPath) {
+      return path.basename(videoPath)
+    },
   },
   watch: {
-    currentTime(newValue, oldValue) {
-      if (newValue !== oldValue && !this.dontWatchTime)
-        this.player.time = this.currentTime * 1000;
-      else if (this.dontWatchTime) this.dontWatchTime = false;
-    },
     volume(newValue, oldValue) {
-      if (newValue !== oldValue) this.player.volume = this.volume * 100;
+      if (newValue !== oldValue) this.player.volume = newValue
     },
-    playlist() {
-      this.loadPlaylist()
-    },
+    // playlist() {
+    //   this.loadPlaylist()
+    // },
     playIndex() {
       this.getMarkers()
     },
     playlistMode(mode, oldMode) {
       if (mode.includes('shuffle') && !oldMode.includes('shuffle')) {
         let index = []
-        for (let i = 0; i < this.playlistLength; i++) {
+        for (let i = 0; i < this.videos.length; i++) {
           index.push(i)
         }
         this.playlistShuffle = _.shuffle(index)
         this.playIndex = this.playlistShuffle[0]
-        this.player.playlist.playItem(this.playIndex)
+        this.player.src = this.videos[this.playIndex].path
 
         if (this.isPlaylistVisible) { // scroll to now playing in playlist
           const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
@@ -1385,6 +1191,15 @@ export default {
     width: 100%;
     display: flex;
     flex-direction: column;
+    &.markers {
+      width: calc(100% - 18vw);
+    }
+    &.playlist {
+      width: calc(100% - 18vw);
+    }
+    &.markers.playlist {
+      width: calc(100% - 36vw);
+    }
   }
   .remove-active {
     .v-btn {
@@ -1408,6 +1223,15 @@ export default {
     width: 100%;
     height: auto;
   }
+}
+.video-error {
+  position: absolute;
+  color: rgb(255, 50, 50);
+  margin: auto;
+  left: calc(50% - 150px);
+  top: 30%;
+  width: 300px;
+  text-align: center;
 }
 .vlc-controls {
   position: relative;
@@ -1444,7 +1268,6 @@ export default {
       left: -4vw;
       display: none;
       background-color: rgba(10, 10, 10, 0.75);
-      padding: 5px;
       border-radius: 2px 2px 0 0;
       font-size: 12px;
     }
@@ -1628,56 +1451,24 @@ export default {
   }
 }
 .status-text {
-  font-family: "Segoe UI Symbol", Symbol, sans-serif;
   position: absolute;
   top: 0;
   left: 0;
-  font-size: calc(var(--width) / 18);
-  width: calc(var(--width) * 0.95);
-  text-align: right;
+  padding: 0 5px;
+  font-size: 1.5vw;
   color: white;
-  text-shadow: 0 0 calc(var(--width) / 100) black;
+  background-color: rgba(0, 0, 0, 0.363);
 }
-.lds-ring {
-  position: absolute;
-  z-index: 3;
-  display: inline-block;
-  width: calc(var(--width) / 19);
-  height: calc(var(--width) / 19);
-}
-
-.lds-ring div {
-  /*box-shadow: inset 0 0 calc(var(--width) / 20) 0 rgba(0, 0, 0, 0.1), 0 0 calc(var(--width) / 20) rgba(0, 0, 0, 0.4);*/
-  box-sizing: border-box;
-  display: block;
-  position: absolute;
-  width: calc(var(--width) / 20);
-  height: calc(var(--width) / 20);
-  margin: calc(var(--width) / 100);
-  border: calc(var(--width) / 100) solid #fff;
-  border-radius: 50%;
-  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #fff transparent transparent transparent;
-}
-
-.lds-ring div:nth-child(1) {
-  animation-delay: -0.45s;
-}
-
-.lds-ring div:nth-child(2) {
-  animation-delay: -0.3s;
-}
-
-.lds-ring div:nth-child(3) {
-  animation-delay: -0.15s;
-}
-
-@keyframes lds-ring {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
+@media (max-width: 920px) {
+  .player-wrapper {
+    &.markers {
+      .marker-buttons {
+        .marker-prev,
+        .marker-next {
+          display: none;
+        }
+      }
+    }
   }
 }
 </style>

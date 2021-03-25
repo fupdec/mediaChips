@@ -513,9 +513,9 @@ export default {
     //   }
     //   this.dialogAddToPlaylist = false
     // },
-    updateNowPlaying(event) {
-      if (event) {
-        this.nowPlaying = event.mrl
+    updateNowPlaying(video) {
+      if (video) {
+        this.nowPlaying = video.path
       }
     },
     // editVideoInfo() {
