@@ -41,6 +41,7 @@ dbp.defaults({
     tags: [],
     videoTags: [],
     websites: [],
+    views: 0,
   }]
 }).write()
 

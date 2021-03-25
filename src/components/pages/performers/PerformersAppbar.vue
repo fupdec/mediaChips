@@ -156,6 +156,7 @@ export default {
             tags: [],
             videoTags: [],
             websites: [],
+            views: 0,
           }
 
           for (let param in params) {
