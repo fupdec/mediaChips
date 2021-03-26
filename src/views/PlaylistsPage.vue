@@ -343,7 +343,7 @@ export default {
     top: -4px;
     border-radius: 7px;
     pointer-events: none;
-    border: 1.5px solid rgb(122, 122, 122);
+    border: 2px solid var(--v-secondary-base);
   }
 }
 </style>

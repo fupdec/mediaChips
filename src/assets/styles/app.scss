@@ -615,7 +615,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   top: -4px;
   border-radius: 7px;
   pointer-events: none;
-  border: 1.5px solid rgb(122, 122, 122);
+  border: 2px solid var(--v-secondary-base);
 }
 .videos-grid {
   display: grid;
@@ -860,7 +860,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     top: -4px;
     border-radius: 7px;
     pointer-events: none;
-    border: 1.5px solid rgb(122, 122, 122);
+    border: 2px solid var(--v-secondary-base);
   }
 }
 .performer-meter {
