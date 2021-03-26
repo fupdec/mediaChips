@@ -1,29 +1,29 @@
 <template> 
-  <v-dialog v-model="$store.state.Settings.dialogScanVideos" scrollable persistent>
+  <v-dialog v-model="$store.state.Settings.dialogScanVideos" scrollable persistent max-width="1200">
     <v-stepper v-model="scanVideosForm">
-      <v-stepper-header>
-        <v-stepper-step :complete="scanVideosForm > 1" step="1">
+      <v-stepper-header style="height: 50px;">
+        <v-stepper-step :complete="scanVideosForm > 1" step="1" class="py-0">
           Choose folders
         </v-stepper-step>
         <v-divider></v-divider>
-        <v-stepper-step :complete="scanVideosForm > 2" step="2">
-          Confirmation
+        <v-stepper-step :complete="scanVideosForm > 2" step="2" class="py-0">
+          Parse settings
         </v-stepper-step>
         <v-divider></v-divider>
-        <v-stepper-step step="3">
+        <v-stepper-step step="3" class="py-0">
           Scanning process
         </v-stepper-step>
       </v-stepper-header>
-
+      <v-divider></v-divider>
       <v-stepper-items>
-        <v-stepper-content step="1">
+        <v-stepper-content step="1" class="pa-0">
           <v-card v-if="ffmpegExecutables">
             <vuescroll>
               <v-card-text class="text-center">
-                <v-textarea v-model="folderPaths" outlined 
+                <v-textarea v-model="folderPaths" outlined no-resize
                   label="Path to folder with videos"
                   hint="each path starts on a new line"
-                ></v-textarea>
+                />
 
                 <v-btn @click="chooseMultipleDir" outlined>
                   <v-icon left>mdi-folder-open</v-icon>Choose folders
@@ -32,12 +32,11 @@
             </vuescroll>
             <v-card-actions>
               <v-btn @click="$store.state.Settings.dialogScanVideos=false" class="ma-2">
-                Cancel
+                <v-icon left>mdi-cancel</v-icon> Cancel
               </v-btn>
               <v-spacer></v-spacer>
-              <v-btn @click="scanVideosForm = 2" :disabled="folderPaths.length===0"
-                color="primary" class="ma-2">
-                Continue <v-icon large right>mdi-chevron-right</v-icon>
+              <v-btn @click="scanVideosForm = 2" :disabled="folderPaths.length===0" color="primary" class="ma-2">
+                <v-icon left>mdi-video-check</v-icon> Next: parse settings <v-icon large right>mdi-chevron-right</v-icon>
               </v-btn>
             </v-card-actions>
           </v-card>
@@ -56,43 +55,58 @@
           </v-card>
         </v-stepper-content>
 
-        <v-stepper-content step="2">
+        <v-stepper-content step="2" class="pa-0">
           <v-card>
             <!-- TODO: ADD VALIDATION FOR PATH. MAYBE CHECKOUT WITH FS EVERY PATH -->
             <vuescroll>
               <v-card-text>
                 <div class="text-center">
-                  <v-icon large left color="blue">mdi-alert-circle-outline</v-icon>
-                  The file information will be automatically added during the scan.
+                  <v-icon left color="info">mdi-alert-circle-outline</v-icon>
+                  Metadata will be automatically added during the scan.
                   It is recommended to add performers (<v-icon small>mdi-account</v-icon>)
                   , tags (<v-icon size="14">mdi-tag</v-icon>)
                   and websites (<v-icon small>mdi-web</v-icon>) before scanning.<br>
+                  
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-icon v-on="on">mdi-help-circle</v-icon> How it works
+                    </template>
+                    <span>The file path and all meta items (performer, tag, website) are filtered first. <br>
+                      The filter removes all characters except numbers and letters and converts them to lower case. <br>
+                      The filtered file path is searched for a match with any of the meta items. <br> <br>
+                      Parsing works inaccurately, since the search does not match the entire string, but a part. <br>
+                      For example in the file path "BestCumshots.mp4" will be found and added tags "Cumshot" and "Hot". <br> <br>
+                      * Only tags with the "video" type are parsed.
+                    </span>
+                  </v-tooltip>
                 </div>
-                <v-divider class="my-4"></v-divider>
-                During the scan, the path to the file is checked against the names.<br>
-                If the file is in a folder that has the name of a performer or a website, 
-                then it will be automatically added to the video.<br>
-                <br>
-                Recommended folder structure "performer\website\video"
-
-                <v-checkbox v-model="$store.state.Settings.searchTagsInFileName" 
-                  label="Checking for tags in the file name" dense />
-                <v-icon left color="blue">mdi-alert-circle-outline</v-icon>
-                Checking for tags will be only by tags with the type "video". <br>
-                This function works inaccurately, in contrast to the search for artists and websites, 
-                since the search does not match the entire string, but a part. <br>
-                For example in the file "BestCumshots.mp4" will be found and added tags "Cumshot" and "Hot".
               </v-card-text>
             </vuescroll>
+            <v-card-actions class="px-6 pb-6">
+              <v-spacer></v-spacer>
+              <div class="d-flex flex-column mx-10">
+                <v-checkbox v-model="parsePerformers" label="Parse Performers" class="mt-0" hide-details prepend-icon="mdi-account" />
+                <v-checkbox v-model="parsePerformersAliases" :disabled="!parsePerformers" class="ml-8" label="Include aliases" hide-details />
+              </div>
+              <div class="d-flex flex-column mx-10">
+                <v-checkbox v-model="parseTags" label="Parse Tags" class="mt-0" hide-details prepend-icon="mdi-tag" />
+                <v-checkbox v-model="parseTagsAltNames" :disabled="!parseTags" class="ml-8" label="Include alternate names" hide-details />
+              </div>
+              <div class="d-flex flex-column mx-10">
+                <v-checkbox v-model="parseWebsites" label="Parse Websites" class="mt-0" hide-details prepend-icon="mdi-web" />
+                <v-checkbox v-model="parseWebsitesAltNames" :disabled="!parseWebsites" class="ml-8" label="Include alternate names" hide-details />
+              </div>
+              <v-spacer></v-spacer>
+            </v-card-actions>
             <v-card-actions>
               <v-btn @click="$store.state.Settings.dialogScanVideos = false" class="ma-2">
-                Cancel
+                <v-icon left>mdi-cancel</v-icon> Cancel
               </v-btn>
               <v-spacer></v-spacer>
-              <v-btn @click="scanVideosForm = 1" class="ma-2">
+              <v-btn @click="scanVideosForm = 1" class="my-2 mr-6">
                 <v-icon large left>mdi-chevron-left</v-icon> Back
               </v-btn>
-              <v-btn @click="startScanProcess" color="primary" class="ma-2">
+              <v-btn @click="startScanProcess" color="primary" class="my-2 mr-2">
                 <v-icon left>mdi-movie-search</v-icon>
                 Start scanning process <v-icon large right>mdi-chevron-right</v-icon>
               </v-btn>
@@ -100,7 +114,7 @@
           </v-card>
         </v-stepper-content>
         
-        <v-stepper-content step="3">
+        <v-stepper-content step="3" class="pa-0">
           <v-card class="file-scan-dialog">
             <v-card-title class="headline">
               {{headerText}}
@@ -110,11 +124,9 @@
               </span>
             </v-card-title>
 
-            <v-card-actions>
-              <v-progress-linear
-              height="20" rounded class="progress-striped" 
-              :class="{active: isProcessRun}"
-              v-model="videoScanProgressBar">
+            <v-card-actions class="px-4">
+              <v-progress-linear v-model="videoScanProgressBar" :class="{active: isProcessRun}" 
+                height="20" rounded class="progress-striped">
                 <template v-slot="{ value }">
                   <strong class="process-percents">{{ Math.ceil(value) }}%</strong>
                 </template>
@@ -260,6 +272,13 @@ export default {
     ffmpegExecutables: true,
     stop: false,
     fileInfo: {},
+    // parsing
+    parsePerformers: true,
+    parseTags: true,
+    parseWebsites: true,
+    parsePerformersAliases: false,
+    parseTagsAltNames: false,
+    parseWebsitesAltNames: false,
   }),
   computed: {
     errorScanFolders() {
@@ -507,15 +526,7 @@ export default {
 
         let pathToFile = this.fileInfo.meta.format.filename
         // parse file path for contains performer name or website
-        let names = this.checkPathContainsNames(pathToFile)
-        let performers = []
-        if (names.performer) {
-          performers.push(names.performer)
-        }
-        let websites = []
-        if (names.website) {
-          websites.push(names.website)
-        }
+        let parsed = this.parsePathForMeta(pathToFile)
             
         // get file info 
         let videoMetadata = {
@@ -524,15 +535,15 @@ export default {
           duration: duration,
           size: this.fileInfo.meta.format.size,
           resolution: resolution,
-          tags: names.tags,
-          performers: performers,
-          websites: websites,
+          tags: parsed.tags,
+          performers: parsed.performers,
+          websites: parsed.websites,
           rating: 0,
           favorite: false,
           bookmark: false,
           date: Date.now(),
           edit: Date.now(),
-          viewed: 0,
+          views: 0,
         }
         console.log('111111')
         
@@ -555,56 +566,70 @@ export default {
           })
       })
     },
-    checkPathContainsNames(filePath) {
-      let folders = filePath.split('\\')
-      let names = {}
+    parsePathForMeta(filePath) {
+      function filterString(string) {
+        return string.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, "").toLowerCase()
+      }
+      const string = filterString(filePath)
 
-      // search for performer name and website name
-      for (let i=0; i<folders.length; i++) {
-        let dirName = folders[i].toLowerCase()
-        if (this.$store.getters.performersNamesLower.includes(dirName)) {
-          names.performer = dirName
-        }
-        if (this.$store.getters.websitesNamesLower.includes(dirName)) {
-          names.website = dirName
-        }
-      }
-
-      // search for tag names
-      let foundTags = []
-      if (this.$store.getters.getSearchTagsInFileName) {
-        let fileName = folders[folders.length-1].toLowerCase()
-        for (let i=0; i<this.$store.getters.tagsNamesLowerVideos.length; i++) {
-          let tag = this.$store.getters.tagsNamesLowerVideos[i]
-          if (fileName.includes(tag)) {
-            foundTags.push(tag)
-          }
-        }
-      }
-      // TODO if duplicated item in path than remove duplicates
-      // create more powerful search in string
-      // maybe remove all spaces, split by ,.-_
-
-      // add performer if found 
-      if (names.performer) {
-        names.performer = this.$store.getters.performers.find(p=>
-          p.name.toLowerCase()===names.performer).value().name
-      }
-      // add website if found 
-      if (names.website) {
-        names.website = this.$store.getters.websites.find(w=>
-          w.name.toLowerCase()===names.website).value().name
-      }
-      // add tags if found or return empty array
-      names.tags = []
-      if (foundTags.length) {
-        for (let i=0; i<foundTags.length; i++) {
-          let tag = this.$store.getters.tags.find(t=>(t.name.toLowerCase()===foundTags[i])).value().name
-          names.tags.push(tag)
-        }
+      let performers = []
+      if (this.parsePerformers && !this.parsePerformersAliases) {
+        performers = this.$store.getters.performers.filter(i => 
+          string.includes(filterString(i.name))
+        ).value().map(i => i.name)
+        performers = [...new Set(performers)] // remove duplicates
+      } else if (this.parsePerformers && this.parsePerformersAliases) {
+        performers = this.$store.getters.performers.filter(i => {
+          let foundName = string.includes(filterString(i.name))
+          let foundAliases 
+          if (i.aliases.length) {
+            let aliases = filterString(i.aliases.join())
+            foundAliases = string.includes(aliases)
+          } else foundAliases = false 
+          return foundName || foundAliases
+        }).value().map(i => i.name)
+        performers = [...new Set(performers)] // remove duplicates
       }
 
-      return names
+      let tags = []
+      if (this.parseTags && !this.parseTagsAltNames) {
+        tags = this.$store.getters.tags.filter({type: ['video']}).filter(i => 
+          string.includes(filterString(i.name))
+        ).value().map(i => i.name)
+        tags = [...new Set(tags)] // remove duplicates
+      } else if (this.parseTags && this.parseTagsAltNames) {
+        tags = this.$store.getters.tags.filter({type: ['video']}).filter(i => {
+          let foundName = string.includes(filterString(i.name))
+          let foundAltName 
+          if (i.altNames.length) {
+            let altNames = filterString(i.altNames.join())
+            foundAltName = string.includes(altNames)
+          } else foundAltName = false 
+          return foundName || foundAltName
+        }).value().map(i => i.name)
+        tags = [...new Set(tags)] // remove duplicates
+      }
+
+      let websites = []
+      if (this.parseWebsites && !this.parseWebsitesAltNames) {
+        websites = this.$store.getters.websites.filter(i => 
+          string.includes(filterString(i.name))
+        ).value().map(i => i.name)
+        websites = [...new Set(websites)] // remove duplicates
+      } else if (this.parseWebsites && this.parseWebsitesAltNames) {
+        websites = this.$store.getters.websites.filter(i => {
+          let foundName = string.includes(filterString(i.name))
+          let foundAltName 
+          if (i.altNames.length) {
+            let altNames = filterString(i.altNames.join())
+            foundAltName = string.includes(altNames)
+          } else foundAltName = false 
+          return foundName || foundAltName
+        }).value().map(i => i.name)
+        websites = [...new Set(websites)] // remove duplicates
+      }
+
+      return { performers, tags, websites }
     },
     getPathRules(path) {
       if (path.length===0) {
