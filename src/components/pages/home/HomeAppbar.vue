@@ -1,5 +1,18 @@
 <template>
   <div class="app-bar-container">
+    <div>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn icon tile @click="$store.state.Settings.dialogScanVideos=true" v-on="on">
+            <v-icon>mdi-video-plus</v-icon>
+          </v-btn>
+        </template>
+        <span>Add new videos</span>
+      </v-tooltip>
+    </div>
+    
+    <v-spacer></v-spacer>
+    
     <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
       <template v-slot:activator="{ on, attrs }">
         <v-btn v-bind="attrs"  v-on="on" icon tile>
