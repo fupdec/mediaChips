@@ -394,6 +394,13 @@ export default {
     max-width: 100%;
     font-size: 8px;
   }
+  .theme--light {
+    .views-wrapper {
+      span {
+        background-color: rgba(255, 255, 255, 0.6);
+      }
+    }
+  }
   .views-wrapper {
     display: flex;
     align-items: flex-end;
@@ -406,6 +413,7 @@ export default {
       border-radius: 0 3px 0 0;
       display: flex;
       font-size: 12px;
+      font-weight: bold;
     }
   }
 }
