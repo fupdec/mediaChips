@@ -130,6 +130,14 @@
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
+
+        <v-list-item class="pr-1" link @mouseup="parseMetadata">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-movie-search</v-icon> Parse Metadata
+          </v-list-item-title>
+          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+        </v-list-item>
+
         <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
@@ -445,8 +453,8 @@ export default {
       let vids = this.$store.getters.videos
       if (ids.length!==0) {
         let paths = ids.map(i => {
-          let filename = vids.find({id:i}).value().path.split("\\").pop()
-          return filename.split('.').slice(0, -1).join('.')
+          let filePath = vids.find({id:i}).value().path
+          return path.parse(filePath).name
         })
         if (list) {
           return paths.map((v,i) => (`${i+1}) ${v}`)).join('\r\n')
@@ -707,6 +715,60 @@ export default {
       this.$store.getters.playlists.find({name:'Watch later'}).assign({
         videos: videosFromPlaylist,
         edit: Date.now(),
+      }).write()
+    },
+    parseMetadata() {
+      function filterString(string) {
+        return string.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, "").toLowerCase()
+      }
+
+      const vm = this
+      function parseFilePath(filePath) {
+        const string = filterString(filePath)
+
+        let performers = vm.$store.getters.performers.filter(i => {
+          let foundName = string.includes(filterString(i.name))
+          let foundAliases 
+          if (i.aliases.length) {
+            let aliases = filterString(i.aliases.join())
+            foundAliases = string.includes(aliases)
+          } else foundAliases = false 
+          return foundName || foundAliases
+        }).value().map(i => i.name)
+        performers = [...new Set(performers)] // remove duplicates
+
+        let tags = vm.$store.getters.tags.filter({type: ['video']}).filter(i => {
+          let foundName = string.includes(filterString(i.name))
+          let foundAltName 
+          if (i.altNames.length) {
+            let altNames = filterString(i.altNames.join())
+            foundAltName = string.includes(altNames)
+          } else foundAltName = false 
+          return foundName || foundAltName
+        }).value().map(i => i.name)
+        tags = [...new Set(tags)] // remove duplicates
+
+        let websites = vm.$store.getters.websites.filter(i => {
+          let foundName = string.includes(filterString(i.name))
+          let foundAltName 
+          if (i.altNames.length) {
+            let altNames = filterString(i.altNames.join())
+            foundAltName = string.includes(altNames)
+          } else foundAltName = false 
+          return foundName || foundAltName
+        }).value().map(i => i.name)
+        websites = [...new Set(websites)] // remove duplicates
+
+        return { performers, tags, websites }
+      }
+
+      let ids = this.$store.getters.getSelectedVideos
+
+      this.$store.getters.videos.filter(i=>ids.includes(i.id)).each(video => {
+        const meta = parseFilePath(video.path)
+        video.performers = meta.performers
+        video.tags = meta.tags
+        video.websites = meta.websites
       }).write()
     },
   },
