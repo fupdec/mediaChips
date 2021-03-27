@@ -9,24 +9,50 @@
         <div class="gradient" :style="gradient"></div>
         <div class="background" :style="headerColor"></div>
         <div class="website-logo">
-          <v-img :src="getImgUrl(websiteId)" max-width="300" class="ma-3 logo"/>
+          <v-img :src="getImgUrl(websiteId)" max-width="300" class="ma-3 logo">
+            <div v-if="website.favorite" class="favorite">
+              <v-icon color="white">mdi-heart</v-icon>
+            </div>
+          </v-img>
           <div class="mx-3">
             <v-chip label outlined class="mb-2 d-flex">
               <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
             </v-chip>
+            <v-chip label outlined class="mb-2 d-flex">
+              <v-icon left size="20">mdi-calendar-edit</v-icon> Last Edit: {{dateEdit}}
+            </v-chip>
             <v-chip label outlined class="d-flex">
-              <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+              <v-icon left size="20">mdi-eye</v-icon>Number of Views: {{website.views}}
             </v-chip>
           </div>
         </div>
         <div class="website-info">
-          <div class="text-h2 pa-4 website-name"> {{website.name}} 
-            <span class="text-h4">{{website.network?'(network)':''}}</span>
-            <span v-if="isChildWebsite" class="body-2">is a child of
-              <span @click="$router.push(websiteLink(isChildWebsite))" 
-                @click.middle="addNewTabWebsite(isChildWebsite)" class="network-title">
-                {{isChildWebsite}}</span> network
-            </span>
+          <div class="text-h2 pa-4 website-name">
+            <v-tooltip v-if="website.network" bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" large class="mb-2 mr-4">mdi-wan</v-icon>
+              </template>
+              <span>Network</span>
+            </v-tooltip>
+            <v-tooltip v-if="childWebsite" bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" large class="mb-2 mr-4">mdi-lan</v-icon>
+              </template>
+              <span>Child Website</span>
+            </v-tooltip>
+            <span>{{website.name}}</span> 
+            <span v-if="childWebsite" class="ml-2 body-2">is a child of</span>
+          </div>
+          
+          <div v-if="childWebsite" class="px-4 mb-6">
+            <v-card @click.middle="addNewTabWebsite(childWebsite)" :to="websiteLink(childWebsite)"
+              class="network-card" hover>
+              <v-img :src="getImgUrl(getWebsiteId(childWebsite))" aspect-ratio="3"/>
+              <v-card-title>
+                <v-icon small left>mdi-wan</v-icon>
+                  {{ childWebsite }}
+                </v-card-title>
+            </v-card>
           </div>
           
           <div v-if="website.network && website.childWebsites.length" class="child-websites px-4">
@@ -142,7 +168,6 @@ import VideosGrid from '@/mixins/VideosGrid'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
-// TODO maybe make website type array instead string. than you can add multiple websites to each video
 
 export default {
   name: 'WebsitePage',
@@ -155,6 +180,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
+      this.updateViews()
     })
   },
   data: () => ({
@@ -222,7 +248,7 @@ export default {
     gapSize() {
       return `gap-size-${this.$store.state.Settings.gapSize}`
     },
-    isChildWebsite() {
+    childWebsite() {
       let network = this.$store.getters.websites.filter(web=>
           (web.network&&web.childWebsites.includes(this.website.name))).value()
       if (network.length) {
@@ -352,6 +378,11 @@ export default {
       // }
       this.$store.dispatch('filterVideos')
     },
+    updateViews() {
+      this.$store.getters.websites.filter({id: this.website.id}).each(i=>{
+        i.views = i.views + 1
+      }).write()
+    },
   },
   watch: {
     activePerformers() {
@@ -393,6 +424,23 @@ export default {
   .website-name {
     z-index: 2;
     font-weight: bold;
+  }
+  .website-logo {
+    .favorite {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 45px 45px 0;
+      border-color: transparent rgba(255, 0, 76, 0.8)  transparent transparent;
+      .v-icon {
+        position: absolute;
+        right: -42px;
+        top: 2px;
+      }
+    }
   }
   .website-logo,
   .logo,
@@ -438,9 +486,11 @@ export default {
   width: 100%;
   pointer-events: none;
 }
-.network-title {
-  font-weight: bold;
-  font-size: 2rem;
-  cursor: pointer;
+.network-card {
+  .v-card__title {
+    padding: 0 5px;
+    font-size: 14px;
+    line-height: 2;
+  }
 }
 </style>
