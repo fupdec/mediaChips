@@ -29,7 +29,7 @@
 
       <vuescroll>
         <v-card-text>
-          <v-container fluid class="py-0">
+          <v-container fluid class="py-6">
             <v-row>
               <v-col cols="12" md="8" class="pt-0">
                 <v-form ref="form" v-model="valid">
@@ -37,6 +37,9 @@
                     <v-col cols="12" class="py-0 d-flex justify-space-between">
                       <v-chip label outlined class="mr-4">
                         <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+                      </v-chip>
+                      <v-chip label outlined>
+                        <v-icon left size="20">mdi-eye</v-icon> Views: {{website.views}}
                       </v-chip>
                       <v-chip label outlined>
                         <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
@@ -70,6 +73,30 @@
                         <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
                         <v-icon v-else color="grey">mdi-heart-outline</v-icon>
                       </v-btn>
+                    </v-col>
+                    <v-col cols="12" align="center" justify="center">
+                      <div>
+                        <span>Alternate website names</span>
+                        <v-tooltip bottom>
+                          <template v-slot:activator="{ on, attrs }">
+                            <v-icon v-bind="attrs" v-on="on" class="ml-2">
+                              mdi-help-circle-outline
+                            </v-icon>
+                          </template>
+                          <span>
+                            This is useful if the website was known by a different name.
+                            <br>Each name must be separated by a comma or semicolon. 
+                            <br>e.g. Videos, Favorite; Best
+                          </span>
+                        </v-tooltip>
+                      </div>
+                      <div class="editable-text-field">
+                        <v-text-field
+                          v-model="websiteAlternateNames" 
+                          :rules="[getAlternateNamesRules]" validate-on-blur
+                          placeholder="Alternate website names"
+                        ></v-text-field>
+                      </div>
                     </v-col>
                     <v-col cols="12" align="center" justify="center">
                       <span>Website color</span> 
@@ -189,6 +216,7 @@ export default {
       this.favorite = this.website.favorite
       this.checkImageExist(this.getImagePath('website',''), 'main')
       this.websiteName = this.website.name
+      this.websiteAlternateNames = this.website.altNames.join(', ')
       if (this.website.network !== undefined) {
         this.isNetwork = this.website.network 
       }
@@ -206,6 +234,7 @@ export default {
     isWebsiteNameEditEnabled: false,
     imgMainLoading: null,
     websiteName: '',
+    websiteAlternateNames: '',
     favorite: null,
     valid: false,
     swatches: [
@@ -242,7 +271,7 @@ export default {
     childWebsitesList() {
       return this.$store.getters.websites.filter(website=>(
         website.id != this.website.id && website.network != true
-      )).value()
+      )).sortBy('name').value()
     },
     childWebsites: {
       get(){
@@ -296,6 +325,29 @@ export default {
         return true
       }
     },
+    getAlternateNamesRules(names) {
+      if (names.length > 300) {
+        return 'Names must be less than 300 characters'
+      } else if (/[\\\/\%"?<>{}\[\]]/g.test(names)) {
+        return 'Names must not content \\/\%\"<>{}\[\]'
+      } else if (this.parseStringToArray(names).filter((x,i,a)=>a.indexOf(x)===i).length
+          !== this.parseStringToArray(names).length) {
+        return 'Duplicates in names'
+      } else if (this.parseStringToArray(names).includes(this.websiteName)) {
+        return 'Names must not include a website name'
+      } else {
+        return true
+      }
+    },
+    parseStringToArray(string) {
+      string = string.trim()
+      string = string.replace(/[\\\/\%"<>{}\[\]]/g, '')
+      string = string.replace(/ +(?= )/g,'') // remove multiple spaces
+      string = string.split(/[,;]/)
+      string = string.filter((el)=>(el != '' && el != ' '))
+      string = string.map(s => s.trim())
+      return string
+    },
     saveWebsiteInfo () {
       this.validate()
       if (this.websiteName) {
@@ -323,6 +375,12 @@ export default {
           if (index !== -1) website.childWebsites.splice(index, 1, this.websiteName)
         }).write()
       }
+      
+      let altNames = JSON.stringify(this.websiteAlternateNames)
+      if (altNames !== '' && typeof altNames === 'string') {
+        altNames = this.parseStringToArray(altNames)
+      }
+
       let isNetwork = this.isNetwork
       let childWebsites
       if (isNetwork) {
@@ -364,6 +422,7 @@ export default {
           childWebsites: childWebsites,
           bookmark: newBookmark,
           edit: Date.now(),
+          altNames: altNames,
         }).write()
       let info = {}
       info.info = true
