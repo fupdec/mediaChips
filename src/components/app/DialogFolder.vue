@@ -18,7 +18,7 @@
         </v-alert>
         <v-spacer></v-spacer>
         <v-btn @click="openTabWithLostVideos" color="secondary">
-          <v-icon left>mdi-tab-plus</v-icon> Open tab with lost videos
+          <v-icon left>mdi-open-in-new</v-icon> Open tab with lost videos
         </v-btn>
       </v-card-actions>
       <vuescroll v-if="listLostFiles">

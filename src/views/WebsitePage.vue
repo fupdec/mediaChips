@@ -41,6 +41,14 @@
               <span>Child Website</span>
             </v-tooltip>
             <span>{{website.name}}</span> 
+            <v-tooltip v-if="website.url" bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn @click="openLink" v-on="on" large icon class="ma-2">
+                  <v-icon>mdi-link-variant</v-icon>
+                </v-btn>
+              </template>
+              <span>Open Website in Browser<br>URL: {{website.url}}</span>
+            </v-tooltip>
             <span v-if="childWebsite" class="ml-2 body-2">is a child of</span>
           </div>
           
@@ -164,6 +172,8 @@
 <script>
 const fs = require("fs")
 const path = require("path")
+const shell = require('electron').shell
+
 import VideosGrid from '@/mixins/VideosGrid'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
@@ -382,6 +392,9 @@ export default {
       this.$store.getters.websites.filter({id: this.website.id}).each(i=>{
         i.views = i.views + 1
       }).write()
+    },
+    openLink() {
+      shell.openExternal(this.website.url)
     },
   },
   watch: {

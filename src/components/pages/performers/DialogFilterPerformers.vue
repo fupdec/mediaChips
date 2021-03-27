@@ -176,7 +176,7 @@
         <v-btn v-if="filters.length>1" @click="removeAll" class="ma-4 mt-0" color="red" dark>
           <v-icon left>mdi-close</v-icon>Remove all</v-btn>
         <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
-          <v-icon left>mdi-tab-plus</v-icon>Add new tab</v-btn>
+          <v-icon left>mdi-open-in-new</v-icon>Add new tab</v-btn>
         <v-btn @click="applyFilters" class="ma-4 mt-0" color="primary">
           <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
       </v-card-actions>

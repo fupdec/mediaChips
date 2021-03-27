@@ -143,9 +143,15 @@
     <v-menu v-model="$store.state.Websites.menuCard" :position-x="$store.state.x" 
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
       <v-list dense class="context-menu">
-        <v-list-item class="pr-1" link :disabled="!isSelectedSingleWebsite" @mouseup="addNewTabWebsite">
+        <v-list-item class="pr-1" link :disabled="!isSelectedSingleWebsite" @mouseup="addNewTabWebsite(selectedWebsites())">
           <v-list-item-title>
-            <v-icon left size="18">mdi-tab-plus</v-icon> Open in a new tab
+            <v-icon left size="18">mdi-open-in-new</v-icon> Open in a New Tab
+          </v-list-item-title>
+          <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
+        </v-list-item>
+        <v-list-item class="pr-1" link :disabled="!isUrlAvailable" @mouseup="openLink">
+          <v-list-item-title>
+            <v-icon left size="18">mdi-link-variant</v-icon> Open Website in Browser
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
@@ -153,19 +159,19 @@
         <v-list-item link @mouseup="$store.state.Websites.dialogEditWebsite = true"
           :disabled="!isSelectedSingleWebsite">
           <v-list-item-title>
-            <v-icon left size="18">mdi-pencil</v-icon> Edit website
+            <v-icon left size="18">mdi-pencil</v-icon> Edit Website
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
         <v-list-item link @mouseup="copyWebsiteNameToClipboard">
           <v-list-item-title>
-            <v-icon left size="18">mdi-clipboard-text</v-icon> Copy website name
+            <v-icon left size="18">mdi-clipboard-text</v-icon> Copy Website Name
           </v-list-item-title>
         </v-list-item>
         <v-divider class="ma-1"></v-divider>
         <v-list-item link @mouseup="$store.state.Websites.dialogDeleteWebsite = true">
           <v-list-item-title>
-            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete website
+            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete Website
           </v-list-item-title>
         </v-list-item>
       </v-list>
@@ -175,6 +181,8 @@
 
 
 <script>
+const shell = require('electron').shell
+
 import WebsiteCard from "@/components/pages/websites/WebsiteCard.vue"
 import Selection from "@simonwep/selection-js"
 import vuescroll from 'vuescroll'
@@ -320,6 +328,17 @@ export default {
     filters() {
       return this.$store.state.Settings.websiteFilters
     },
+    url() {
+      let url = ''
+      if (this.$store.getters.getSelectedWebsites.length) {
+        let id = this.$store.getters.getSelectedWebsites[0]
+        url = this.$store.getters.websites.find({id}).value().url
+      } 
+      return url
+    },
+    isUrlAvailable() {
+      return this.url && this.isSelectedSingleWebsite
+    },
   },
   methods: {
     removeAllFilters() {
@@ -388,6 +407,9 @@ export default {
       }
       this.$store.state.Settings.websiteFilters = newFilters
       this.$store.dispatch('filterWebsites', true)
+    },
+    openLink() {
+      shell.openExternal(this.url)
     },
   },
   watch: {

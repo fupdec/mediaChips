@@ -216,6 +216,11 @@ export default {
         this.$store.getters.videos.each(i => {i.views = 0; i.viewed = undefined}).write()
         this.$store.getters.settings.set('appNewVersionUpdateWebsitesAltNames', true).write()
       } // remove this in the next version (0.7.4), added in v0.7.3
+
+      if (!this.$store.getters.settings.get('appNewVersionUpdateWebsitesUrl').value()) {
+        this.$store.getters.websites.each(i => i.url = '').write()
+        this.$store.getters.settings.set('appNewVersionUpdateWebsitesUrl', true).write()
+      } // remove this in the next version (0.7.4), added in v0.7.3
     })
   },
   data: ()=>({

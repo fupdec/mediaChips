@@ -50,7 +50,7 @@
       <v-list dense class="context-menu">
         <v-list-item class="pr-1" link :disabled="!isSelectedSinglePerformer" @mouseup="addNewTabPerformer(selectedPerformers())">
           <v-list-item-title>
-            <v-icon left size="18">mdi-tab-plus</v-icon> Open in a New Tab
+            <v-icon left size="18">mdi-open-in-new</v-icon> Open in a New Tab
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>

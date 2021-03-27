@@ -39,7 +39,7 @@
           </v-badge>
         </v-btn>
         <v-btn v-if="tabId==='default'" @click="addNewTabPerformer" icon
-          title="Open performer in a new tab"><v-icon>mdi-tab-plus</v-icon>
+          title="Open performer in a new tab"><v-icon>mdi-open-in-new</v-icon>
         </v-btn>
       </div>
       <div class="buttons-right">

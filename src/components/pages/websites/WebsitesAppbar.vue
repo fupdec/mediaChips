@@ -366,6 +366,9 @@ export default {
             videos: 0,
             performers: [],
             videoTags: [],
+            views: 0,
+            altNames: [],
+            url: '',
           }
 
           // add websiteInfo to DB
