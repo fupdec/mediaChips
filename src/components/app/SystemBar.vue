@@ -113,6 +113,27 @@
               </v-list-item>
             </v-list>
           </v-menu>
+          <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+            <template v-slot:activator="{ on, attrs }">
+              <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
+                <v-list-item-title> 
+                  <v-icon left size="18">mdi-magnify</v-icon> Zoom
+                </v-list-item-title>
+                <v-icon size="22">mdi-menu-right</v-icon>
+              </v-list-item>
+            </template>
+            
+            <v-list dense class="context-menu">
+              <v-list-item class="pr-1" link>
+                <v-slider v-model="zoom" min="0.5" step="0.1" max="2" hide-details />
+              </v-list-item>
+              <v-list-item @click="zoom=1" class="pr-5" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
           <v-list-item class="pr-1" link @click="ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
             <v-list-item-title>
               <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Description
@@ -220,6 +241,7 @@
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
 const { ipcRenderer } = require('electron')
+const { webFrame } = require('electron')
 
 export default {
   name: 'SystemBar',
@@ -280,6 +302,14 @@ export default {
       },
       set(value) {
         this.$store.dispatch('updateSettingsState', {key:'playerType', value})
+      },
+    },
+    zoom: {
+      get() {
+        return webFrame.getZoomFactor()
+      },
+      set(value) {
+        webFrame.setZoomFactor(value)
       },
     },
   },
