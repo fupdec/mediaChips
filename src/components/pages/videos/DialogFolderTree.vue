@@ -233,17 +233,3 @@ export default {
   }
 }
 </style>
-
-<style lang="less" scoped>
-.loading-animation {
-  animation: rotate 0.5s infinite linear;
-}
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-</style>

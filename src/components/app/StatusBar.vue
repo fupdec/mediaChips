@@ -31,6 +31,11 @@
 
       <v-spacer></v-spacer>
 
+      <div v-if="$store.state.backgroundProcesses" class="d-flex align-center worker">
+        <v-icon size="20" class="loading-animation">mdi-loading</v-icon>
+        <span class="caption val" v-text="$store.state.backgroundProcesses"/>
+      </div>
+
       <v-divider class="mx-4" vertical></v-divider>
 
       <div class="d-flex align-center">
@@ -267,6 +272,16 @@ export default {
 .notifications-badge {
   .v-badge__badge {
     pointer-events: none;
+  }
+}
+.worker {
+  position: relative;
+  .val {
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    text-align: center;
   }
 }
 </style>

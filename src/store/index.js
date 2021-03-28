@@ -37,6 +37,7 @@ export default new Vuex.Store({
     foldersData: [],
     dialogFolder: false,
     updateFoldersData: 0,
+    backgroundProcesses: 0,
   }),
   getters: {
     getNotifications(state) {

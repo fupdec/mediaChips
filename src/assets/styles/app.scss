@@ -1399,6 +1399,17 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   align-items: center;
 }
 // end console status bar
+.loading-animation {
+  animation: rotate 0.5s infinite linear;
+}
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 @keyframes glow {
   0% {
     box-shadow: 0 0 0 2px var(--v-secondary-base);

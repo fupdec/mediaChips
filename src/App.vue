@@ -124,7 +124,11 @@ export default {
       this.initTheme()
       this.runAutoUpdateDataFromVideos()
       if (this.$store.state.Settings.updateDataFromVideosOnStart) {
-        this.$store.dispatch('updateDataFromVideos')
+        ++this.$store.state.backgroundProcesses
+        setTimeout(() => {
+          this.$store.dispatch('updateDataFromVideos')
+          --this.$store.state.backgroundProcesses
+        }, 1000)
       }
       // password
       if(this.passwordProtection && this.phrase!=='') {
@@ -260,6 +264,7 @@ export default {
   },
   methods: {
     watchDir(dir) {
+      ++this.$store.state.backgroundProcesses
       this.watcher = chokidar.watch(dir, {
         persistent: true,
         ignoreInitial: true,
@@ -318,7 +323,8 @@ export default {
           newFiles: newFiles.sort((a, b) => a.localeCompare(b))
         })
       }
-      this.foldersUpdated = true 
+      this.foldersUpdated = true
+      --this.$store.state.backgroundProcesses
     },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
@@ -326,7 +332,11 @@ export default {
           clearInterval(this.intervalUpdateDataFromVideos) 
         }
         this.intervalUpdateDataFromVideos = setInterval(()=>{
-          this.$store.dispatch('updateDataFromVideos')
+          ++this.$store.state.backgroundProcesses
+          setTimeout(() => {
+            this.$store.dispatch('updateDataFromVideos')
+            --this.$store.state.backgroundProcesses
+          }, 1000)
         }, this.updateIntervalDataFromVideos * 60 * 1000)
       } else clearInterval(this.intervalUpdateDataFromVideos) 
     },

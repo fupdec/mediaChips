@@ -57,6 +57,7 @@ export default {
   methods: {
     async processArray(videos) {
       // console.log('Start to creating grids')
+      ++this.$store.state.backgroundProcesses
       this.isProcessRun = true
       const vm = this
       for (let index = 0; index < videos.length; index++) {
@@ -74,6 +75,7 @@ export default {
       if (this.numberOfCreatedGrid) this.$store.state.Videos.updateCard = Date.now()
       this.numberOfCreatedGrid = 0
       this.isProcessRun = false
+      --this.$store.state.backgroundProcesses
       // console.log('End of creating grids')
     },
     async createVideoGrid(inputVideoPath, videoId) {
