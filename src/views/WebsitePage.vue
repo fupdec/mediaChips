@@ -465,6 +465,7 @@ export default {
     display: flex;
     flex-direction: column;
     z-index: 2;
+    width: 100%;
   }
   .background {
     position: absolute;
@@ -500,6 +501,7 @@ export default {
   pointer-events: none;
 }
 .network-card {
+  max-width: 300px;
   .v-card__title {
     padding: 0 5px;
     font-size: 14px;

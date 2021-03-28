@@ -155,7 +155,6 @@ const Settings = {
     lastChanged: Date.now(),
     numberOfPagesLimit: dbs.get('numberOfPagesLimit').value(),
     dialogScanVideos: false,
-    searchTagsInFileName: false,
     scanProcRun: false,
     ratingAndFavoriteInCard: dbs.get('ratingAndFavoriteInCard').value(),
     selectedDisk: dbs.get('selectedDisk').value() || '',
@@ -457,9 +456,6 @@ const Settings = {
     },
     settings(state, store) {
       return store.dbs
-    },
-    getSearchTagsInFileName(state) {
-      return state.searchTagsInFileName
     },
     backups(state, store) {
       return store.dbs.get('backups').value()

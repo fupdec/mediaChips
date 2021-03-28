@@ -93,9 +93,9 @@
 </template>
 
 <script>
+const { clipboard } = require('electron')
 const fs = require("fs")
 const path = require("path")
-const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
@@ -203,21 +203,13 @@ export default {
           edit: Date.now(),
           videos: _.cloneDeep(this.videosList.map(video=>(video.id))),
         }).write()
-      // let info = {}
-      // info.info = true
-      // info.name = this.websiteName
-      // this.$store.state.Websites.updateInfo = info
       this.$store.state.Playlists.dialogEditPlaylist = false
       this.$store.commit('updatePlaylists')
       this.$store.dispatch('filterPlaylists', true)
     },
     copyPlaylistNameToClipboard() {
       let playlistName = this.playlist.name
-      navigator.clipboard.writeText(playlistName).then(function() {
-        console.log('Async: Copying to clipboard was successful!');
-      }, function(err) {
-        console.error('Async: Could not copy text: ', err);
-      });
+      clipboard.writeText(playlistName)
     },
     getImgUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
@@ -232,7 +224,7 @@ export default {
       }
     },
     getFileName(videoPath) {
-      return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
+      return path.parse(videoPath).name
     },
     remove(videoId) {
       this.videosList = _.filter(this.videosList, video=>(video.id!==videoId))

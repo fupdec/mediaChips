@@ -181,6 +181,7 @@
 
 
 <script>
+const { clipboard } = require('electron')
 const shell = require('electron').shell
 
 import WebsiteCard from "@/components/pages/websites/WebsiteCard.vue"
@@ -382,7 +383,7 @@ export default {
       this.$store.commit('updateSelectedWebsites', ids)
     },
     copyWebsiteNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedWebsites())
+      clipboard.writeText(this.selectedWebsites())
     },
     deleteWebsites(){
       this.$store.dispatch('deleteWebsites'), 

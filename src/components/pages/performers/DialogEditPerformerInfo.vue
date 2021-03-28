@@ -498,6 +498,7 @@
 
 
 <script>
+const { clipboard } = require('electron')
 const fs = require("fs")
 const path = require("path")
 const axios = require("axios")
@@ -668,14 +669,14 @@ export default {
     },
   },
   methods: {
-    async pastePerformerName() {
-      this.performerName = await navigator.clipboard.readText()
+    pastePerformerName() {
+      this.performerName = clipboard.readText()
     },
-    async pasteAliases() {
-      this.aliases = await navigator.clipboard.readText()
+    pasteAliases() {
+      this.aliases = clipboard.readText()
     },
-    async pasteQueryString() {
-      this.queryString = await navigator.clipboard.readText()
+    pasteQueryString() {
+      this.queryString = clipboard.readText()
     },
     sortItems(items, type) {
       const sortBy = this[`sortButtons${type}`]
@@ -1337,11 +1338,7 @@ export default {
         this.tooltipCopyName = false
         this.tooltipCopyPerformerName = false
       },3000)
-      navigator.clipboard.writeText(this.performer.name).then(function() {
-        console.log('Async: Copying to clipboard was successful!');
-      }, function(err) {
-        console.error('Async: Could not copy text: ', err);
-      });
+      clipboard.writeText(this.performer.name)
     },
     removeTag(item) { 
       const index = this.tags.indexOf(item.name)

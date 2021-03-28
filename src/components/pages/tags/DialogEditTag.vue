@@ -223,7 +223,7 @@
 const fs = require("fs")
 const path = require("path")
 const shortid = require('shortid')
-const { ipcRenderer } = require('electron')
+const { ipcRenderer, clipboard } = require('electron')
 
 import vueFilePond from 'vue-filepond'
 import 'filepond/dist/filepond.min.css'
@@ -497,12 +497,7 @@ export default {
       }
     },
     copyTagNameToClipboard() {
-      let tagName = this.tag.name
-      navigator.clipboard.writeText(tagName).then(function() {
-        console.log('Async: Copying to clipboard was successful!');
-      }, function(err) {
-        console.error('Async: Could not copy text: ', err);
-      });
+      clipboard.writeText(this.tag.name)
     },
   },
 };

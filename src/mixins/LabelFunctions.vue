@@ -1,10 +1,6 @@
 <script>
 export default {
   methods: {
-    getVideoFileName(videoPath) {
-      let filename = videoPath.split("\\").pop()
-      return filename.split('.').slice(0, -1).join('.')
-    },
     videoLink(videoPath) {
       return `/video/:${this.getVideoId(videoPath)}?tabId=default`
     },

@@ -300,8 +300,10 @@
 
 
 <script>
+const { clipboard } = require('electron')
 const fs = require("fs")
 const path = require("path")
+
 import CountryFlag from 'vue-country-flag'
 import VideosGrid from '@/mixins/VideosGrid'
 import Countries from '@/mixins/Countries'
@@ -633,11 +635,7 @@ export default {
       return this.$store.getters.websites.find({name: itemName}).value().id
     },
     copyPerformerNameToClipboard() {
-      navigator.clipboard.writeText(this.performer.name).then(function() {
-        console.log('Async: Copying to clipboard was successful!');
-      }, function(err) {
-        console.error('Async: Could not copy text: ', err);
-      });
+      clipboard.writeText(this.performer.name)
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")

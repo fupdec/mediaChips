@@ -114,6 +114,8 @@
 
 
 <script>
+const { clipboard } = require('electron')
+
 import PlaylistCard from "@/components/pages/playlists/PlaylistCard.vue"
 import Selection from "@simonwep/selection-js";
 import vuescroll from 'vuescroll'
@@ -269,7 +271,7 @@ export default {
       this.$store.commit('updateSelectedPlaylists', ids)
     },
     copyPlaylistNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedPlaylists())
+      clipboard.writeText(this.selectedPlaylists())
     },
     deletePlaylists(){
       this.$store.dispatch('deletePlaylists'), 

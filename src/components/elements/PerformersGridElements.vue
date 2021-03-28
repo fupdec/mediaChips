@@ -180,6 +180,8 @@
 
 
 <script>
+const { clipboard } = require('electron')
+
 import Selection from "@simonwep/selection-js"
 import vuescroll from 'vuescroll'
 import LabelFunctions from '@/mixins/LabelFunctions'
@@ -350,11 +352,7 @@ export default {
       this.$store.commit('updatePerformers')
     },
     copyPerformerNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedPerformers()).then(function() {
-        console.log('Async: Copying to clipboard was successful!');
-      }, function(err) {
-        console.error('Async: Could not copy text: ', err);
-      })
+      clipboard.writeText(this.selectedPerformers())
     },
     deletePerformers() {
       if (this.deleteVideos) {

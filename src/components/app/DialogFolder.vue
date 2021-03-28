@@ -68,6 +68,8 @@
 
 
 <script>
+const { clipboard } = require('electron')
+
 import vuescroll from 'vuescroll'
 
 export default {
@@ -129,7 +131,7 @@ export default {
       this.$router.push(tab.link)
     },
     copyPath(i, type) {
-      navigator.clipboard.writeText(this.folder[type][i])
+      clipboard.writeText(this.folder[type][i])
     },
     addNewVideos() {
       this.$emit('addNewVideos')

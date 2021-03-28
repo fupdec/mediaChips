@@ -188,7 +188,7 @@
 
 
 <script>
-const { ipcRenderer } = require('electron')
+const { ipcRenderer, clipboard } = require('electron')
 
 import TagCard from "@/components/pages/tags/TagCard.vue"
 import Selection from "@simonwep/selection-js"
@@ -409,12 +409,12 @@ export default {
         this.isScrollToTopVisible = true
       } else this.isScrollToTopVisible = false
     },
-    getSelectedTags(selectedTags){
+    getSelectedTags(selectedTags) {
       let ids = selectedTags.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedTags', ids)
     },
-    copyTagNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedTags())
+    copyTagNameToClipboard() {
+      clipboard.writeText(this.selectedTags())
     },
     deleteTags(){
       this.$store.dispatch('deleteTags')

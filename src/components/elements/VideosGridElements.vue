@@ -346,6 +346,7 @@
 
 
 <script>
+const { clipboard } = require('electron')
 const { dialog } = require('electron').remote
 const shell = require('electron').shell
 const fs = require('fs')
@@ -657,19 +658,19 @@ export default {
       }
     },
     copyVideoPathToClipboard(){
-      navigator.clipboard.writeText(this.selectedVideosPaths)
+      clipboard.writeText(this.selectedVideosPaths)
     },
     copyVideoNameToClipboard(){
-      navigator.clipboard.writeText(this.selectedVideos())
+      clipboard.writeText(this.selectedVideos())
     },
     copyVideoPerformersToClipboard(){
-      navigator.clipboard.writeText(this.getTextFromSelectedVideos('performers'))
+      clipboard.writeText(this.getTextFromSelectedVideos('performers'))
     },
     copyVideoTagsToClipboard(){
-      navigator.clipboard.writeText(this.getTextFromSelectedVideos('tags'))
+      clipboard.writeText(this.getTextFromSelectedVideos('tags'))
     },
     copyVideoWebsitesToClipboard(){
-      navigator.clipboard.writeText(this.getTextFromSelectedVideos('websites'))
+      clipboard.writeText(this.getTextFromSelectedVideos('websites'))
     },
 		getTextFromSelectedVideos(textType) {
       let ids = this.$store.getters.getSelectedVideos
