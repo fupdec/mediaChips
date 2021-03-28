@@ -1,6 +1,6 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.7.1-beta?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.7.2-beta?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
 ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
@@ -9,11 +9,11 @@
 # Adult Video Database
 Manage your porn video collection - add performers, tags, websites and have fun!
 
-## Sponsorship 
-&#127828; Support app on &#128279;<a href="https://www.patreon.com/avdb">Patreon</a>
+## Sponsorship and New Releases
+Subscribe to &#128279;<a href="https://www.patreon.com/avdb">Patreon</a> to receive new releases and to support the development of the application.
 
 ## Community 
-&#129489;&#127995;&#8205;&#129309;&#8205;&#129489;&#127996; You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a>
+&#129489;&#127995;&#8205;&#129309;&#8205;&#129489;&#127996; You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a> and &#128279;<a href="https://discord.gg/QSnXFvXZVh">Discord</a>
 
 ## Install application (Windows)
 1) To install, run the executable file. <br>
@@ -29,6 +29,9 @@ Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\u
 After the first launch, a folder "userdata" will be created in the folder with the executable file. <br>
 Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
 
+## Linux and macOS support
+Will be in the near future. You can follow the news in any of the communities above.
+
 ## Built-in video player
 You can play videos inside the app, add markers to videos, open playlists and more. <br>
 !!! Important note: I had to abandon the VLC player, since to launch it I used the WebChimera.js framework, which does not work on Linux and Mac OS. <br>
@@ -36,14 +39,12 @@ If you used VLC player only for this application, then you can uninstall it from
 Now, to play video inside the application, HTML5 video player is used, which does not support some formats. <br>
 Support for all formats will be in the near future.
 
-### Linux and macOS support
-Will be in the near future
-
 ## Features
 
 #### &#128421; App
 - Video player with time markers
 - Tabs for easy browsing
+- Parsing metadata from videos
 - Flexible and convenient filter system for any parameter
 - Watching folders for new and lost videos
 - Password protection
@@ -135,27 +136,3 @@ Will be in the near future
 
 #### Player
 ![player](https://i.ibb.co/tYPHjWz/player.png)
-
-## Development
-
-### Project setup
-```
-npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run electron:serve
-```
-
-### Compiles and minifies for production
-```
-npm run electron:build
-```
-
-### Compiles and minifies for production (portable version)
-```
-npm run electron:build_portable
-```
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/)
