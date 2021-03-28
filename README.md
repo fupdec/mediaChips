@@ -41,7 +41,7 @@ Support for all formats will be in the near future.
 
 ## Features
 
-#### &#128421; App
+### &#128421; App
 - Video player with time markers
 - Tabs for easy browsing
 - Parsing metadata from videos
@@ -56,7 +56,7 @@ Support for all formats will be in the near future.
 - Checking for updates on start and manual check in settings tab "about"
 - The app does not track your personal data and does not send any personal data!
 
-#### &#128249; Videos
+### &#128249; Videos
 - Playlists
 - Video preview with image grid 3x3
 - Adding performers, tags, websites, rating, favorite, bookmark
@@ -70,7 +70,7 @@ Support for all formats will be in the near future.
 - Change paths of the videos
 - ... and more
 
-#### &#128110; Performers
+### &#128110; Performers
 - Adding tags, rating, favorite, bookmark
 - Detailed profile: aliases, category, career, age, country and many other parameters
 - Add custom parameter, edit default parameters in settings 
@@ -83,56 +83,56 @@ Support for all formats will be in the near future.
 - A meter that is determined by the values of tags from the video
 - ... and something else
 
-#### &#127991; Tags
+### &#127991; Tags
 - Adding alternate names (for easy search), color, value (for a meter), favorite, bookmark, category
 - Sorting and filtering
 - Adding several at a time
 - Of course the tag image
 
-#### &#127760; Websites
+### &#127760; Websites
 - Subnetting websites
 - Adding color, favorite, bookmark
 - Sorting and filtering
 - Adding several at a time
 - Website image
 
-#### &#128209; Playlists
+### &#128209; Playlists
 - Default playlist "Watch later" 
 - Adding to favorite
 - Sorting and filtering
 - Adding several at a time
 
-### View of app
+## View of app
 
-#### Home 
+### Home 
 ![home](https://i.ibb.co/3p20KF6/home.png)
 
-#### Videos
+### Videos
 ![videos](https://i.ibb.co/fMzrzt1/videos.png)
 
-#### Edit video
+### Edit video
 ![video-edit](https://i.ibb.co/MV8FgF4/video-edit.png)
 
-#### Performers
+### Performers
 ![performers](https://i.ibb.co/YZvJXfm/performers.png)
 
-#### Edit performer profile
+### Edit performer profile
 ![performer-edit](https://i.ibb.co/gzLfD1n/performer-edit.png)
 
-#### Edit images of performer
+### Edit images of performer
 ![performer-images](https://i.ibb.co/WHwgVSW/performer-images.png)
 
-#### Performer page
+### Performer page
 ![performer-page](https://i.ibb.co/hfwJGY7/performer-page.png)
 
-#### Performer page in dark mode with an open profile 
+### Performer page in dark mode with an open profile 
 ![performer-page-open-profile](https://i.ibb.co/0hGC0h8/performer-page-open-profile.png)
 
-#### Websites
+### Websites
 ![websites](https://i.ibb.co/4PkHbzh/websites.png)
 
-#### Website
+### Website
 ![website](https://i.ibb.co/QQGxWDH/website.png)
 
-#### Player
+### Player
 ![player](https://i.ibb.co/tYPHjWz/player.png)
