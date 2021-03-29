@@ -38,6 +38,12 @@ You can play videos inside the app, add markers to videos, open playlists and mo
 If you used VLC player only for this application, then you can uninstall it from the system. <br> 
 Now, to play video inside the application, HTML5 video player is used, which does not support some formats. <br>
 Support for all formats will be in the near future.
+### Guide for configuring the VLC player for releases v0.7.1 and older: <br>
+1) download and install VLC player. &#128279;<a href="https://www.videolan.org/vlc/">Official page</a> <br>
+2) a system variable must be registered in Windows Path. <br>
+In the variable you need to register the path to the folder of the VLC player. <br>
+By default it will be like "C:\Program Files\VideoLAN\VLC". <br>
+This &#128279;<a href="https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/">guide</a> can help you <br>
 
 ## Features
 
