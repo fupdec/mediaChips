@@ -440,8 +440,7 @@ export default {
       return this.$store.getters.videos.find({id:videoId}).value()
     },
     fileName() {
-      let filename = this.video.path.split("\\").pop()
-      return filename.split('.').slice(0, -1).join('.')
+      return path.parse(this.video.path).name
     },
     performersAll() {
       return this.sortItems(this.$store.getters.performers, 'Performers')

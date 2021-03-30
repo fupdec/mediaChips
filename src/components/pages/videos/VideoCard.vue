@@ -66,7 +66,7 @@
         </div>
         <div label outlined class="prop">
           <v-icon left class="mr-1" size="16">mdi-file-video</v-icon>
-          {{getFileExtension()}}
+          {{fileExtension}}
         </div>
         <div label outlined class="prop">
           <v-icon left class="mr-1" size="16">mdi-harddisk</v-icon>
@@ -227,8 +227,10 @@ export default {
       return path.parse(this.video.path).dir
     },
     fileName() {
-      let filename = this.video.path.split("\\").pop()
-      return filename.split('.').slice(0, -1).join('.')
+      return path.parse(this.video.path).name
+    },
+    fileExtension() {
+      return path.parse(this.video.path).ext.replace('.', '').toLowerCase()
     },
     isFavorite: {
       get() {
@@ -303,10 +305,6 @@ export default {
         clearTimeout(this.timeouts[timeout])
       }
       this.$refs.video.src = ''
-    },
-    getFileExtension() {
-      let filename = this.video.path.split("\\").pop()
-      return filename.split('.').pop()
     },
     getImgUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)

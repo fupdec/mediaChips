@@ -247,7 +247,7 @@
 <script>
 const _ = require("lodash")
 // const fs = require("fs")
-// const path = require("path")
+const path = require("path")
 // const ffmpeg = require('fluent-ffmpeg')
 const { ipcRenderer } = require('electron')
 const remote = require('electron').remote
@@ -470,7 +470,7 @@ export default {
     //   return found
     // },
     getFileNameFromPath(videoPath) {
-      return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
+      return path.parse(videoPath).name
     },
     // watchLater() {
     //   ipcRenderer.send('watchLater', this.video.id)

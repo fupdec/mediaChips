@@ -12,6 +12,7 @@ export default {
     },
     getPerformerId(itemName) {
       return this.$store.getters.performers.find({name: itemName}).value().id
+      // TODO fix open new tab with performer from performers tab, not from page with perfs
     },
     addNewTabPerformer(performerName) {
       let tabId, tabName

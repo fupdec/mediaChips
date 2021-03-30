@@ -74,7 +74,7 @@
                         <v-icon v-else color="grey">mdi-heart-outline</v-icon>
                       </v-btn>
                     </v-col>
-                    <v-col cols="12" align="center" justify="center">
+                    <v-col cols="12" sm="6" align="center" justify="center">
                       <div>
                         <span>Alternate website names</span>
                         <v-tooltip bottom>
@@ -94,9 +94,13 @@
                         <v-text-field
                           v-model="websiteAlternateNames" 
                           :rules="[getAlternateNamesRules]" validate-on-blur
-                          placeholder="Alternate website names"
+                          placeholder="e.g. Videos, Favorite; Best"
                         ></v-text-field>
                       </div>
+                    </v-col>
+                    <v-col cols="12" sm="6" align="center" justify="center">
+                      <span>URL (Internet address)</span>
+                      <v-text-field v-model="url" placeholder="e.g. https://new.videos.com/" />
                     </v-col>
                     <v-col cols="12" align="center" justify="center">
                       <span>Website color</span> 
@@ -188,6 +192,7 @@
 </template>
 
 <script>
+const { clipboard } = require('electron')
 const fs = require("fs")
 const path = require("path")
 const shortid = require('shortid')
@@ -216,6 +221,7 @@ export default {
       this.favorite = this.website.favorite
       this.checkImageExist(this.getImagePath('website',''), 'main')
       this.websiteName = this.website.name
+      this.url = this.website.url
       this.websiteAlternateNames = this.website.altNames.join(', ')
       if (this.website.network !== undefined) {
         this.isNetwork = this.website.network 
@@ -235,6 +241,7 @@ export default {
     imgMainLoading: null,
     websiteName: '',
     websiteAlternateNames: '',
+    url: '',
     favorite: null,
     valid: false,
     swatches: [
@@ -423,6 +430,7 @@ export default {
           bookmark: newBookmark,
           edit: Date.now(),
           altNames: altNames,
+          url: this.url,
         }).write()
       let info = {}
       info.info = true
@@ -440,7 +448,7 @@ export default {
       return 'file://' + this.checkWebsiteImageExist(imgPath)
     },
     getImgUrl(img) {
-      return 'file://' + path.join(this.pathToUserData, `/media/websites/${img}`)
+      return path.join(this.pathToUserData, `/media/websites/${img}`)
     },
     checkWebsiteImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -450,16 +458,11 @@ export default {
       }
     },
     copyWebsiteNameToClipboard() {
-      let websiteName = this.website.name
-      navigator.clipboard.writeText(websiteName).then(function() {
-        console.log('Async: Copying to clipboard was successful!');
-      }, function(err) {
-        console.error('Async: Could not copy text: ', err);
-      });
+      clipboard.writeText(this.website.name)
     },
-    getImgWebsitesUrl(websiteId){
+    getImgWebsitesUrl(websiteId) {
       let imgPath = this.getImgUrl(websiteId + '_.jpg')
-      return this.checkWebsiteImageExist(imgPath)
+      return 'file://' + this.checkWebsiteImageExist(imgPath)
     },
     sort(items) {
       this[items] = this[items].sort((a, b) => a.localeCompare(b))
