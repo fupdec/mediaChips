@@ -15,7 +15,12 @@ module.exports = {
       builderOptions: {
         win: {
           icon: './icon.ico'
-        }
+        },
+        linux: {
+          icon: 'public/icons/256x256.png',
+          target: ['AppImage'],
+          category: 'Utility',
+        },
       },
     }
   },
