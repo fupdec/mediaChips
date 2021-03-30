@@ -725,7 +725,6 @@ export default {
           const $ = cheerio.load(html)
           $('.grid-item').each((i,e) => {
             let p = {}
-            p.link = $(e).find('a').attr('href').replace(/\//g, '')
             p.img = $(e).find('.image-content').attr('src')
             if (p.img == undefined) {
               p.img = $(e).find('.image-content').attr('data-src')
@@ -734,6 +733,7 @@ export default {
               p.img = path.join(this.pathToUserData, '/img/templates/performer.png')
             }
             p.name = $(e).find('[data-test="subject-name"]').text().trim()
+            p.link = p.name.replace(' ', '-').toLowerCase()
             p.country = $(e).find('.flag-icon').attr('title').trim()
             // console.log(p)
             this.foundPerformers.push(p)
@@ -792,7 +792,7 @@ export default {
     getPerformerInfoFreeonce(performer) {
       this.searchInProgress = true
       this.foundPerformers = []
-      axios.get(`https://www.freeones.com/${performer}/profile`).then((response)=>{
+      axios.get(`https://www.freeones.com/${performer}/bio`).then((response)=>{
         if (response.status === 200) {
           this.searchInProgress = false
           this.clearPreviouslyFound()
