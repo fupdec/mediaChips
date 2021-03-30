@@ -27,8 +27,8 @@
         @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
         :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:fullscreen?0.7:1}">
         <v-card-actions class="timeline py-1 px-0 mx-3">
-          <v-slider @change="seek($event)" :value="currentTime" 
-            @mousedown="handleMouseSeek($event)" @mouseup="trackCurrentTime"
+          <v-slider @start="seek($event)" :value="currentTime" 
+            @mousedown="handleMouseSeek($event)" 
             min="0" step="0.1" :max="duration" hide-details/>
           <div v-for="(marker,i) in markers" :key="i" class="marker"
             :style="{left: `${marker.time/duration*100}%`}"
@@ -657,7 +657,7 @@ export default {
       this.videos = data.videos
       this.playIndex = _.findIndex(data.videos, {id: data.id})
       
-      this.player.src = this.videos[this.playIndex].path
+      this.player.src = path.join('file://', this.videos[this.playIndex].path)
       this.player.play()
     }, 
     loadSrc() {
@@ -784,7 +784,7 @@ export default {
         this.playIndex = this.playIndex - 1
         if (isLoopMode && this.playIndex < 0) this.playIndex = this.videos.length-1 // if loop
       }
-      this.player.src = this.videos[this.playIndex].path
+      this.player.src = path.join('file://', this.videos[this.playIndex].path)
       this.player.play()
       
       if (this.isPlaylistVisible) { // scroll to now playing in playlist
@@ -805,7 +805,7 @@ export default {
         this.playIndex = this.playIndex + 1
         if (isLoopMode && this.playIndex > this.videos.length-1) this.playIndex = 0 // if loop mode
       }
-      this.player.src = this.videos[this.playIndex].path
+      this.player.src = path.join('file://', this.videos[this.playIndex].path)
       this.player.play()
 
       if (this.isPlaylistVisible) { // scroll to now playing in playlist
@@ -928,12 +928,12 @@ export default {
     handleMouseSeek(e) {
       let btnCode = e.button
       switch (btnCode) {
-        case 0: clearInterval(this.currentTimeTracker)
-          break
-        case 1: clearInterval(this.currentTimeTracker)
-          break
-        case 2: clearInterval(this.currentTimeTracker)
-          break
+        // case 0: // clearInterval(this.currentTimeTracker)
+        //   break
+        // case 1: // clearInterval(this.currentTimeTracker)
+        //   break
+        // case 2: // clearInterval(this.currentTimeTracker)
+        //   break
         case 3: this.jumpToPrevMarker()
           break
         case 4: this.jumpToNextMarker()
@@ -1121,7 +1121,7 @@ export default {
       }
     },
     getFileNameFromPath(videoPath) {
-      return videoPath.split("\\").pop().split('.').slice(0, -1).join('.')
+      return path.parse(videoPath).name
     },
     getFileFromPath(videoPath) {
       return path.basename(videoPath)
@@ -1145,7 +1145,7 @@ export default {
         }
         this.playlistShuffle = _.shuffle(index)
         this.playIndex = this.playlistShuffle[0]
-        this.player.src = this.videos[this.playIndex].path
+        this.player.src = path.join('file://', this.videos[this.playIndex].path)
 
         if (this.isPlaylistVisible) { // scroll to now playing in playlist
           const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
