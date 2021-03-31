@@ -48,7 +48,7 @@
       <v-card class="pb-8">
         <v-card-text class="text-center">
           <div class="overline py-4">New version AVDB is available!</div>
-          <img alt="AMDB" width="100" height="100" :src="logoPath">
+          <img alt="AMDB" width="100" height="100" src="/icons/icon.png">
         </v-card-text>
         <v-card-actions>
           <v-btn @click="updateApp=false" small class="mx-4">
@@ -239,9 +239,6 @@ export default {
       if (imgType === 'website') {
         return this.getImgWebsiteUrl(this.hoveredImageId)
       }
-    },
-    logoPath() {
-      return path.join(__static, '/icons/icon.png')
     },
     updateIntervalDataFromVideos() {
       return this.$store.state.Settings.updateIntervalDataFromVideos

@@ -12,8 +12,6 @@
   "license": "GPL-3.0",
   "repository": "github:fupdec/Adult-Video-Database",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
     "electron:build": "vue-cli-service electron:build",
     "electron:build_portable": "vue-cli-service electron:build --win portable",
     "electron:serve": "vue-cli-service electron:serve"
