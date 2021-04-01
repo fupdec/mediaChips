@@ -3,12 +3,16 @@
     <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
       :class="{favorite: isFavorite}" class="video-card" height="100%"
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
-      :key="cardKey"
+      :key="cardKey" :disabled="demo && i>3"
     >
       <v-responsive 
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
+        <div v-if="demo && i>3" class="demo-block">
+          <div class="title">Demo Mode</div>
+          <div class="sm">limited number of videos</div>
+        </div>
         <v-img :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb" contain/>
         <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
           <v-icon size="40">mdi-play</v-icon>
@@ -182,6 +186,7 @@ export default {
     isVideoHovered: false,
     timeouts: {},
     cardKey: '',
+    demo: false,
   }),
   computed: {
     updateCard() {
@@ -386,6 +391,27 @@ export default {
   cursor: default;
   .v-image {
     cursor: pointer;
+  }
+  .demo-block {
+    position: absolute;
+    z-index: 3;
+    background-color: hsla(335, 100%, 50%, 0.7);
+    text-transform: uppercase;
+    text-align: center;
+    padding: 5px;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 200px;
+    height: 70px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    .sm {
+      font-size: 10px;
+    }
   }
   &:hover {
     .bookmark {

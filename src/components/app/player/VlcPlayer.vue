@@ -16,6 +16,10 @@
             <span>Play in the system player</span>
           </v-btn>
         </div>
+        <div v-if="demo && playIndex>3" class="demo-block">
+          <div class="ma-4 title">demo mode</div>
+          <div class="caption">limited number of videos</div>
+        </div>
         <div v-if="isVideoNotExist" class="video-error">
           <v-icon size="60" color="red">mdi-alert</v-icon>
           <div>{{getFileFromPath(videos[playIndex].path)}}</div>
@@ -507,6 +511,7 @@ export default {
     mouseOverControls: false,
     statusText: '',
     statusTextTimeout: null,
+    demo: false,
     // Video element properties //
     duration: 1,
     volume: 1,
@@ -670,6 +675,9 @@ export default {
       this.duration = this.player.duration
       this.trackCurrentTime()
       this.getMarkers()
+      if (this.demo && this.playIndex>3) {
+        this.player.src = ''
+      }
     },
     moveOverPlayer(e) {
       if (e.movementX > 0 || e.movementY > 0) {
@@ -1222,6 +1230,16 @@ export default {
     background: #fff;
     width: 100%;
     height: auto;
+  }
+  .demo-block {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    z-index: 3;
+    background-color: hsla(335, 100%, 50%, 0.7);
+    text-transform: uppercase;
+    text-align: center;
+    padding: 5px;
   }
 }
 .video-error {

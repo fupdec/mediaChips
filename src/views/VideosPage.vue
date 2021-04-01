@@ -58,7 +58,7 @@
 
     <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
-      <VideoCard v-for="(video) in videosOnPage" :key="video.id" :video="video"/>
+      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i"/>
     </v-container>
 
     <v-pagination
