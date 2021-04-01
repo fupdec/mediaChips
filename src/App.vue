@@ -56,9 +56,10 @@
             <v-icon left>mdi-close</v-icon> Close
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="openPage" color="primary" class="ma-4">
-            <v-icon left>mdi-download</v-icon> Open page with downloads
-          </v-btn>
+          <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database/releases')" color="#eee" light rounded class="mr-4 pa-4">
+            <v-icon left>mdi-github</v-icon> Demo version </v-btn>
+          <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" rounded class="mr-4 pa-4">
+            <v-icon left>mdi-patreon</v-icon> Full version </v-btn>
         </v-card-actions>
       </v-card>
     </v-bottom-sheet>
@@ -387,8 +388,8 @@ export default {
       this.appVersion = lastVersion
       return lastVersion > currentVersion
     },
-    openPage() {
-      shell.openExternal('https://github.com/fupdec/Adult-Video-Database/releases')
+    openLink(link) {
+      shell.openExternal(link)
     },
     openDialogFolder(folder) {
       const index = _.findIndex(this.foldersData, {folder})

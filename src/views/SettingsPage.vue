@@ -593,25 +593,28 @@
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-card outlined class="pa-4">
             <div class="d-flex">
-              <div>
-                <div>Adult Video Database 0.7.3</div>
+              <div class="d-flex flex-column">
+                <div>Adult Video Database 0.7.4</div>
                 <p class="text--secondary">by fupdec</p>
-                <v-btn @click="openGithub" color="#eee" light rounded class="px-5">
-                  <v-icon left>mdi-github</v-icon> Github
-                </v-btn>
+                <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database')" color="#eee" light rounded class="px-5 mb-4">
+                  <v-icon left>mdi-github</v-icon> Github </v-btn>
+                <v-btn @click="openLink('https://reddit.com/r/avdb/')" color="#ff4500" rounded class="px-5 mb-4">
+                  <v-icon left>mdi-reddit</v-icon> Reddit </v-btn>
+                <v-btn @click="openLink('https://discord.gg/QSnXFvXZVh')" color="#7289DA" rounded class="px-5 mb-4">
+                  <v-icon left>mdi-discord</v-icon> Discord </v-btn>
               </div>
               <v-spacer></v-spacer>
-                <div class="d-flex flex-column">
-                  <v-btn @click="openPatreon" color="#ff424d" class="pa-5">
-                    <v-icon left>mdi-patreon</v-icon> Support development on Patreon
-                  </v-btn>
-                  <v-btn @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded class="mt-6 pa-5">
-                    <v-icon left>mdi-update</v-icon> Check for updates
-                  </v-btn>
-                  <v-btn v-if="updateApp" @click="openReleasesPage" color="pink" dark rounded class="mt-6 pa-5">
-                    <v-icon left>mdi-download</v-icon> Open page with last release
-                  </v-btn>
-                </div>
+              <div class="d-flex flex-column">
+                <div>Support development and full version</div>
+                <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" class="pa-5">
+                  <v-icon left>mdi-patreon</v-icon> Patreon </v-btn>
+                <v-btn v-if="!updateApp" @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded class="mt-4 pa-5">
+                  <v-icon left>mdi-update</v-icon> Check for updates </v-btn>
+                <v-btn v-if="updateApp" @click="openLink('https://github.com/fupdec/Adult-Video-Database/releases')" color="#eee" light rounded class="mt-4 pa-5">
+                  <v-icon left>mdi-github</v-icon> Demo version </v-btn>
+                <v-btn v-if="updateApp" @click="openLink('https://patreon.com/avdb')" color="#ff424d" rounded class="mt-4 pa-5">
+                  <v-icon left>mdi-patreon</v-icon> Full version </v-btn>
+              </div>
               <v-spacer></v-spacer>
               <div class="text-center d-flex flex-column">
                 <img src="/icons/icon.png" alt="avdb" width="82" height="82">
@@ -907,11 +910,8 @@ export default {
       this.gradientThemeDark = true
       this.$store.state.Settings.dialogHeaderGradient = true
     },
-    openGithub() {
-      shell.openExternal('https://github.com/fupdec/Adult-Video-Database')
-    },
-    openPatreon() {
-      shell.openExternal('https://www.patreon.com/avdb')
+    openLink(link) {
+      shell.openExternal(link)
     },
     searchInVideosPath() {
       this.videosWithSamePath = _.cloneDeep( this.$store.getters.videos
@@ -1042,9 +1042,6 @@ export default {
       lastVersion = lastVersion.split('.').map( s => s.padStart(10) ).join('.')
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
       return lastVersion > currentVersion
-    },
-    openReleasesPage() {
-      shell.openExternal('https://github.com/fupdec/Adult-Video-Database/releases')
     },
   },
 }
