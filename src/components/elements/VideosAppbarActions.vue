@@ -146,10 +146,18 @@
 					<v-icon>mdi-select-all</v-icon>
 				</v-btn>
 			</template>
-			<span>Select all videos</span>
+			<span>Select All Videos</span>
 		</v-tooltip>
 
-    <FiltersPresets v-if="$store.state.Bookmarks.dialogFiltersPresets" typeOfPresets="videos"/>
+		<v-tooltip bottom>
+			<template v-slot:activator="{ on }">
+				<v-btn @click="addNewTab" icon tile v-on="on">
+					<v-icon>mdi-tab-plus</v-icon>
+				</v-btn>
+			</template>
+			<span>Add New Tab</span>
+		</v-tooltip>
+
     <DialogFolderTree v-if="$store.state.Videos.dialogFolderTree"/>
     <DialogFilterVideos v-if="$store.state.Videos.dialogFilterVideos"/>
   </div>
@@ -162,7 +170,6 @@ import vuescroll from 'vuescroll'
 export default {
   name: 'VideosAppbarActions',
   components: {
-    FiltersPresets: () => import('@/components/elements/FiltersPresets.vue'),
     DialogFolderTree: () => import('@/components/pages/videos/DialogFolderTree.vue'),
     DialogFilterVideos: () => import('@/components/pages/videos/DialogFilterVideos.vue'),
     vuescroll,
@@ -275,6 +282,21 @@ export default {
     getSelectedVideos(selectedVideos){
       let ids = selectedVideos.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedVideos', ids)
+    },
+    addNewTab() {
+      let tabId = Date.now()
+      let tab = { 
+        name: this.$store.getters.videoFiltersForTabName, 
+        link: `/videos/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
+        sortBy: this.$store.state.Settings.videoSortBy,
+        sortDirection: this.$store.state.Settings.videoSortDirection,
+        page: 1,
+        icon: 'video-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
     },
   },
 }

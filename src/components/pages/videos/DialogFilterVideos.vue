@@ -1,184 +1,189 @@
 <template>
-  <v-dialog v-model="$store.state.Videos.dialogFilterVideos" scrollable width="1000">
-    <v-card>
-      <v-card-title>
-        <span class="headline">Filter videos</span>
-        <v-spacer></v-spacer>
-        <v-icon>mdi-filter</v-icon>
-      </v-card-title>
-      <v-divider></v-divider>
-      <vuescroll>
-        <v-card-text class="text-center">
-          <div v-for="(filter,i) in filters" :key="i" class="filter-row">
-            <v-select @input="setParam($event,i)" :value="filters[i].param" 
-              :items="params" label="Parameter" outlined dense class="param overline"
-              :prepend-icon="getIconParam(filters[i].param)"
-              :disabled="filters[i].lock">
-              <template v-slot:item="data">
-                <div class="list-item"> 
-                  <v-icon left>{{getIconParam(data.item)}}</v-icon>
-                  <span class="overline">{{data.item}}</span>
-                </div>
-              </template>
-            </v-select>
+  <div>
+    <v-dialog v-model="$store.state.Videos.dialogFilterVideos" scrollable width="1000">
+      <v-card>
+        <v-card-title class="py-1 px-4">
+          <span class="headline">Filter videos</span>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-filter</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text class="text-center">
+            <div v-for="(filter,i) in filters" :key="i" class="filter-row">
+              <v-select @input="setParam($event,i)" :value="filters[i].param" 
+                :items="params" label="Parameter" outlined dense class="param overline"
+                :prepend-icon="getIconParam(filters[i].param)"
+                :disabled="filters[i].lock">
+                <template v-slot:item="data">
+                  <div class="list-item"> 
+                    <v-icon left>{{getIconParam(data.item)}}</v-icon>
+                    <span class="overline">{{data.item}}</span>
+                  </div>
+                </template>
+              </v-select>
 
-            <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
-              :items="getConditions(filters[i].type)" outlined dense label="Condition"
-              :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
-              <template v-slot:item="data">
-                <div class="list-item"> 
-                  <v-icon left>{{getIconCond(data.item)}}</v-icon>
-                  <span class="overline">{{data.item}}</span>
-                </div>
-              </template>
-            </v-select>
+              <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
+                :items="getConditions(filters[i].type)" outlined dense label="Condition"
+                :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
+                <template v-slot:item="data">
+                  <div class="list-item"> 
+                    <v-icon left>{{getIconCond(data.item)}}</v-icon>
+                    <span class="overline">{{data.item}}</span>
+                  </div>
+                </template>
+              </v-select>
 
-            <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
-              @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-              label="Value" outlined dense class="val overline"/>
+              <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
+                @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
+                label="Value" outlined dense class="val overline"/>
 
-            <v-text-field v-if="filters[i].type==='date'" 
-              :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
-              label="Date" outlined dense readonly class="val overline"/>
-            <v-dialog v-model="datePicker" width="300px">
-              <v-date-picker v-if="filters[i].type==='date'"
-                @change="setVal($event,datePickerIndex), datePicker=false"
-                :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
-                :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
-            </v-dialog>
-              
-            <v-autocomplete v-if="filters[i].param==='performers'"
-              @input="setVal($event,i)" :value="filters[i].val" :items="performers"
-              item-text="name" item-value="name" no-data-text="No more performers"
-              class="mb-4 select-small-chips hidden-close val overline" label="Performers" 
-              multiple hide-selected hide-details clearable dense outlined
-              :menu-props="{contentClass:'list-with-preview'}"
-              :filter="filterItemsPerformers" :disabled="filters[i].lock"
-            >
-              <template v-slot:selection="data">
-                <v-chip close small label class="my-1" close-icon="mdi-close"
-                  v-bind="data.attrs" :input-value="data.selected" 
-                  @click="data.select" @click:close="removeChip(data.item, i)"
-                  @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                > <span> <v-icon v-if="data.item.favorite" small color="pink">
-                    mdi-heart </v-icon> {{ data.item.name }}</span>
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <div class="list-item"
-                  @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                > 
-                  <v-icon 
-                    left size="12" 
-                    :color="data.item.favorite===false ? 'grey' : 'pink'"
-                  > mdi-heart </v-icon>
-                  <v-rating 
-                    class="rating-inline small mr-2"
-                    v-model="data.item.rating"
-                    color="yellow darken-3"
-                    background-color="grey darken-1"
-                    empty-icon="$ratingFull" 
-                    half-icon="mdi-star-half-full"
-                    dense half-increments readonly size="10"
-                  />
-                  <span>{{data.item.name}}</span>
-                  <span v-if="data.item.aliases.length" class="aliases"> 
-                    aka {{data.item.aliases.join(', ').slice(0,50)}}
-                  </span>
-                </div>
-              </template>
-            </v-autocomplete>
-              
-            <v-autocomplete v-if="filters[i].param==='tags'"
-              @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
-              class="mb-4 select-small-chips hidden-close val overline"
-              item-text="name" dense label="Tags"
-              item-value="name" no-data-text="No more tags" 
-              multiple hide-selected hide-details clearable outlined
-              :menu-props="{contentClass:'list-with-preview'}"
-              :filter="filterItemsTags" :disabled="filters[i].lock"
-            >
-              <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs" small class="my-1" close-icon="mdi-close"
-                  @click="data.select" @click:close="removeChip(data.item, i)"
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                  :input-value="data.selected" outlined close
-                  :color="data.item.color" 
-                ><span>{{ data.item.name }}</span>
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <div class="list-item"
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                > <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
-                  <span>{{data.item.name}}</span>
-                  <span v-if="data.item.altNames.length" class="aliases"> 
-                    {{data.item.altNames.join(', ').slice(0,50)}}
-                  </span>
-                </div>
-              </template>
-            </v-autocomplete>
+              <v-text-field v-if="filters[i].type==='date'" 
+                :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
+                label="Date" outlined dense readonly class="val overline"/>
+              <v-dialog v-model="datePicker" width="300px">
+                <v-date-picker v-if="filters[i].type==='date'"
+                  @change="setVal($event,datePickerIndex), datePicker=false"
+                  :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
+                  :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
+              </v-dialog>
+                
+              <v-autocomplete v-if="filters[i].param==='performers'"
+                @input="setVal($event,i)" :value="filters[i].val" :items="performers"
+                item-text="name" item-value="name" no-data-text="No more performers"
+                class="mb-4 select-small-chips hidden-close val overline" label="Performers" 
+                multiple hide-selected hide-details clearable dense outlined
+                :menu-props="{contentClass:'list-with-preview'}"
+                :filter="filterItemsPerformers" :disabled="filters[i].lock"
+              >
+                <template v-slot:selection="data">
+                  <v-chip close small label class="my-1" close-icon="mdi-close"
+                    v-bind="data.attrs" :input-value="data.selected" 
+                    @click="data.select" @click:close="removeChip(data.item, i)"
+                    @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                  > <span> <v-icon v-if="data.item.favorite" small color="pink">
+                      mdi-heart </v-icon> {{ data.item.name }}</span>
+                  </v-chip>
+                </template>
+                <template v-slot:item="data">
+                  <div class="list-item"
+                    @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                  > 
+                    <v-icon 
+                      left size="12" 
+                      :color="data.item.favorite===false ? 'grey' : 'pink'"
+                    > mdi-heart </v-icon>
+                    <v-rating 
+                      class="rating-inline small mr-2"
+                      v-model="data.item.rating"
+                      color="yellow darken-3"
+                      background-color="grey darken-1"
+                      empty-icon="$ratingFull" 
+                      half-icon="mdi-star-half-full"
+                      dense half-increments readonly size="10"
+                    />
+                    <span>{{data.item.name}}</span>
+                    <span v-if="data.item.aliases.length" class="aliases"> 
+                      aka {{data.item.aliases.join(', ').slice(0,50)}}
+                    </span>
+                  </div>
+                </template>
+              </v-autocomplete>
+                
+              <v-autocomplete v-if="filters[i].param==='tags'"
+                @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
+                class="mb-4 select-small-chips hidden-close val overline"
+                item-text="name" dense label="Tags"
+                item-value="name" no-data-text="No more tags" 
+                multiple hide-selected hide-details clearable outlined
+                :menu-props="{contentClass:'list-with-preview'}"
+                :filter="filterItemsTags" :disabled="filters[i].lock"
+              >
+                <template v-slot:selection="data">
+                  <v-chip
+                    v-bind="data.attrs" small class="my-1" close-icon="mdi-close"
+                    @click="data.select" @click:close="removeChip(data.item, i)"
+                    @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                    :input-value="data.selected" outlined close
+                    :color="data.item.color" 
+                  ><span>{{ data.item.name }}</span>
+                  </v-chip>
+                </template>
+                <template v-slot:item="data">
+                  <div class="list-item"
+                    @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                  > <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
+                    <span>{{data.item.name}}</span>
+                    <span v-if="data.item.altNames.length" class="aliases"> 
+                      {{data.item.altNames.join(', ').slice(0,50)}}
+                    </span>
+                  </div>
+                </template>
+              </v-autocomplete>
 
-            <v-autocomplete v-if="filters[i].param==='websites'"
-              @input="setVal($event,i)" :value="filters[i].val" :items="websites" 
-              class="mb-4 select-small-chips hidden-close val overline"
-              item-text="name" dense label="Websites"
-              item-value="name" no-data-text="No more websites" 
-              multiple hide-selected hide-details clearable outlined
-              :menu-props="{contentClass:'list-with-preview'}" :disabled="filters[i].lock"
-            >
-              <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs" small close class="my-1" close-icon="mdi-close"
-                  @click="data.select" @click:close="removeChip(data.item, i)"
-                  @mouseover.stop="showImage($event, data.item.id, 'website')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                  :input-value="data.selected" outlined label
-                  :color="data.item.color"
-                ><span>{{ data.item.name }}</span>
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <div class="list-item"
-                  @mouseover.stop="showImage($event, data.item.id, 'website')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                > <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
-                  {{data.item.name}}
-                </div>
-              </template>
-            </v-autocomplete>
+              <v-autocomplete v-if="filters[i].param==='websites'"
+                @input="setVal($event,i)" :value="filters[i].val" :items="websites" 
+                class="mb-4 select-small-chips hidden-close val overline"
+                item-text="name" dense label="Websites"
+                item-value="name" no-data-text="No more websites" 
+                multiple hide-selected hide-details clearable outlined
+                :menu-props="{contentClass:'list-with-preview'}" :disabled="filters[i].lock"
+              >
+                <template v-slot:selection="data">
+                  <v-chip
+                    v-bind="data.attrs" small close class="my-1" close-icon="mdi-close"
+                    @click="data.select" @click:close="removeChip(data.item, i)"
+                    @mouseover.stop="showImage($event, data.item.id, 'website')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                    :input-value="data.selected" outlined label
+                    :color="data.item.color"
+                  ><span>{{ data.item.name }}</span>
+                  </v-chip>
+                </template>
+                <template v-slot:item="data">
+                  <div class="list-item"
+                    @mouseover.stop="showImage($event, data.item.id, 'website')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                  > <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
+                    {{data.item.name}}
+                  </div>
+                </template>
+              </v-autocomplete>
 
-            <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
-              class="ml-2 mt-1" color="green" outlined icon fab x-small>
-              <v-icon>mdi-content-duplicate</v-icon>
-            </v-btn>
-            <v-btn @click="removeFilter(i)" :disabled="filters[i].lock"
-              class="ml-2 mt-1" color="red" outlined icon fab x-small title="Remove filter">
-              <v-icon>mdi-close</v-icon>
-            </v-btn>
-          </div>
-          <v-btn @click="addFilter" color="green" outlined rounded>
-            <v-icon left>mdi-plus</v-icon> Add filter
+              <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
+                class="ml-2 mt-1" color="green" outlined icon fab x-small>
+                <v-icon>mdi-content-duplicate</v-icon>
+              </v-btn>
+              <v-btn @click="removeFilter(i)" :disabled="filters[i].lock"
+                class="ml-2 mt-1" color="red" outlined icon fab x-small title="Remove filter">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </div>
+            <v-btn @click="addFilter" color="green" outlined rounded>
+              <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
+            <v-btn v-if="filters.length" @click="removeAll" class="ml-4" color="red" outlined rounded>
+              <v-icon left>mdi-close</v-icon>Remove all</v-btn>
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions class="pa-0">
+          <v-btn @click="$store.state.Videos.dialogFilterVideos=false" class="ma-4 mt-0">
+            <v-icon left>mdi-cancel</v-icon> Cancel
           </v-btn>
-        </v-card-text>
-      </vuescroll>
-      <v-card-actions>
-        <v-btn @click="$store.state.Videos.dialogFilterVideos=false" class="ma-4 mt-0">Cancel</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn v-if="filters.length>1" @click="removeAll" class="ma-4 mt-0" color="red" dark>
-          <v-icon left>mdi-close</v-icon>Remove all</v-btn>
-        <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
-          <v-icon left>mdi-open-in-new</v-icon>Add new tab</v-btn>
-        <v-btn @click="applyFilters" class="ma-4 mt-0" color="primary">
-          <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+          <v-spacer></v-spacer>
+          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters = true" class="ma-4" color="secondary">
+            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
+          <v-btn @click="applyFilters" class="ma-4" color="primary">
+            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="videos" :filters="filters"/>
+  </div>
 </template>
 
 
@@ -190,6 +195,7 @@ export default {
   name: 'DialogFilterVideos',
   components: {
     vuescroll,
+    SavedFilters: () => import('@/components/elements/SavedFilters.vue'),
   },
   mixins: [ShowImageFunction], 
   mounted() {
@@ -353,21 +359,8 @@ export default {
       if (index >= 0) this.filters[i].val.splice(index, 1)
       this.$store.state.hoveredImage = false
     },
-    addNewTab() {
-      let tabId = Date.now()
-      let tab = { 
-        name: this.$store.getters.videoFiltersForTabName, 
-        link: `/videos/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
-        sortBy: this.$store.state.Settings.videoSortBy,
-        sortDirection: this.$store.state.Settings.videoSortDirection,
-        page: 1,
-        icon: 'video-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$store.state.Videos.dialogFilterVideos = false
-      this.$router.push(tab.link)
+    loadFilters(filters) {
+      this.filters = filters
     },
   },
 }

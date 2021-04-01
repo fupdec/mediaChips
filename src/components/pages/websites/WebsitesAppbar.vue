@@ -161,6 +161,15 @@
 
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
+          <v-btn @click="addNewTab" icon tile v-on="on">
+            <v-icon>mdi-tab-plus</v-icon>
+          </v-btn>
+        </template>
+        <span>Add New Tab</span>
+      </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
           <v-btn @click="openRandomWebsite" icon tile v-on="on"> 
               <v-icon>mdi-dice-5</v-icon>
           </v-btn>
@@ -424,6 +433,24 @@ export default {
     },
     openWebsitePage(websiteId) {
       this.$router.push(`/website/:${websiteId}?tabId=default`)
+    },
+    addNewTab() {
+      let tabId = Date.now()
+      let tab = {
+        name: this.$store.getters.websiteFiltersForTabName, 
+        link: `/websites/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
+        sortBy: this.$store.state.Settings.websiteSortBy,
+        sortDirection: this.$store.state.Settings.websiteSortDirection,
+        page: 1,
+        firstChar: this.$store.state.Settings.websiteFirstChar,
+        color: this.$store.state.Settings.websiteColor,
+        icon: 'web'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$store.state.Websites.dialogFilterWebsites = false
+      this.$router.push(tab.link)
     },
   },
   watch: {

@@ -584,6 +584,7 @@
             <ClearDatabases typeOfDB="tags" />
             <ClearDatabases typeOfDB="websites" />
             <ClearDatabases typeOfDB="bookmarks" />
+            <ClearDatabases typeOfDB="saved filters" />
             <ClearDatabases typeOfDB="markers" />
           </v-card>
         </v-card>

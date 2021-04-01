@@ -7,6 +7,7 @@ import Performers from './modules/performers.js'
 import Tags from './modules/tags.js'
 import Websites from './modules/websites.js'
 import Bookmarks from './modules/bookmarks.js'
+import SavedFilters from './modules/savedFilters.js'
 import Playlists from './modules/playlists.js'
 import Markers from './modules/markers.js'
 import Settings from './modules/settings.js'
@@ -141,6 +142,7 @@ export default new Vuex.Store({
     Tags,
     Websites,
     Bookmarks,
+    SavedFilters,
     Playlists,
     Markers,
     Settings,

@@ -139,16 +139,6 @@ export default {
     initFilters() {
       let newFilters
       if (this.tabId === 'default' || typeof this.tab.filters === 'undefined') {
-        // const presetDefault = this.$store.state.Settings.videosFiltersPresetDefault
-        // const presetLoaded = this.$store.state.Bookmarks.videosDefaultPresetLoaded
-        // if (presetDefault && !presetLoaded) {
-        //   const presets = this.$store.state.Bookmarks.filtersPresets.videos
-        //   const presetFilters = _.find(presets, {default: true}).filters
-        //   newFilters = _.cloneDeep(presetFilters)
-        //   this.$store.state.Bookmarks.videosDefaultPresetLoaded = true
-        // } else {
-          // TODO: create function for saving filters in separated database
-        //   }
         newFilters = _.cloneDeep(this.$store.getters.settings.get('videoFilters').value())
         this.$store.state.Settings.videoSortBy = this.$store.getters.settings.get('videoSortBy').value()
         this.$store.state.Settings.videoSortDirection = this.$store.getters.settings.get('videoSortDirection').value()

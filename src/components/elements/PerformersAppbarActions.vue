@@ -121,10 +121,18 @@
           <v-icon>mdi-select-all</v-icon>
         </v-btn>
       </template>
-      <span>Select all performers</span>
+      <span>Select All Performers</span>
     </v-tooltip>
 
-    <FiltersPresets v-if="$store.state.Bookmarks.dialogFiltersPresets" typeOfPresets="performers"/>
+		<v-tooltip bottom>
+			<template v-slot:activator="{ on }">
+				<v-btn @click="addNewTab" icon tile v-on="on">
+					<v-icon>mdi-tab-plus</v-icon>
+				</v-btn>
+			</template>
+			<span>Add New Tab</span>
+		</v-tooltip>
+
     <DialogFilterPerformers v-if="$store.state.Performers.dialogFilterPerformers"/>
 	</div>
 </template>
@@ -136,7 +144,6 @@ import ShowImageFunction from '@/mixins/ShowImageFunction'
 export default {
   name: 'PerformersAppbarActions',
   components: {
-    FiltersPresets: () => import('@/components/elements/FiltersPresets.vue'),
     DialogFilterPerformers: () => import('@/components/pages/performers/DialogFilterPerformers.vue'),
   },
   mixins: [
@@ -220,6 +227,23 @@ export default {
     getSelectedPerformers(selectedPerformers){
       let ids = selectedPerformers.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedPerformers', ids)
+    },
+    addNewTab() {
+      let tabId = Date.now()
+      let tab = { 
+        name: this.$store.getters.performerFiltersForTabName, 
+        link: `/performers/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
+        sortBy: this.$store.state.Settings.performerSortBy,
+        sortDirection: this.$store.state.Settings.performerSortDirection,
+        page: 1,
+        firstChar: this.$store.state.Settings.performerFirstChar,
+        icon: 'account-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$store.state.Performers.dialogFilterPerformers = false
+      this.$router.push(tab.link)
     },
   },
 }

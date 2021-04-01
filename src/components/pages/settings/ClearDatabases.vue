@@ -77,6 +77,8 @@ export default {
           break
         case 'bookmarks': this.clearBookmarksDb()
           break
+        case 'saved filters': this.clearSavedFiltersDb()
+          break
         case 'markers': this.clearMarkersDb()
           break
       }
@@ -149,16 +151,21 @@ export default {
           performers: [],
           tags: [],
           websites: []
-        }).set('filtersPresets', {
-          videos: [],
-          performers: [],
-          tags: [],
-          websites: []
         }).write()
       this.$store.getters.videos.each(i => i.bookmark = false).write()
       this.$store.getters.performers.each(i => i.bookmark = false).write()
       this.$store.getters.tags.each(i => i.bookmark = false).write()
       this.$store.getters.websites.each(i => i.bookmark = false).write()
+    },
+    clearSavedFiltersDb() {
+      this.$store.getters.filtersDatabase
+        .set('savedFilters', {
+          videos: [],
+          performers: [],
+          tags: [],
+          websites: [],
+          playlists: [],
+        }).write()
     },
     clearMarkersDb() {
       this.$store.getters.markersDatabase.set('markers', []).write()

@@ -1,187 +1,190 @@
 <template>
-  <v-dialog v-model="$store.state.Performers.dialogFilterPerformers" scrollable width="1000">
-    <v-card>
-      <v-card-title>
-        <span class="headline">Filter performers</span>
-        <v-spacer></v-spacer>
-        <v-icon>mdi-filter</v-icon>
-      </v-card-title>
-      <v-divider></v-divider>
-      <vuescroll>
-        <v-card-text class="text-center">
-          <div v-for="(filter,i) in filters" :key="i" class="filter-row">
-            <v-select @input="setParam($event,i)" :value="filters[i].param" 
-              :items="params" label="Parameter" outlined dense class="param overline"
-              :prepend-icon="getIconParam(filters[i].param)" :disabled="filters[i].lock">
-              <template v-slot:item="data">
-                <div class="list-item"> 
-                  <v-icon left>{{getIconParam(data.item)}}</v-icon>
-                  <span class="overline">{{data.item}}</span>
-                </div>
-              </template>
-            </v-select>
-
-            <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
-              :items="getConditions(filters[i].type)" outlined dense label="Condition"
-              :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
-              <template v-slot:item="data">
-                <div class="list-item"> 
-                  <v-icon left>{{getIconCond(data.item)}}</v-icon>
-                  <span class="overline">{{data.item}}</span>
-                </div>
-              </template>
-            </v-select>
-
-            <v-checkbox v-if="filters[i].param==='name'" label="Aliases" class="mt-1 mr-2"
-              @change="setFlag($event,i)" :value="filters[i].flag" indeterminate/>
-            
-            <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
-              @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-              :disabled="filters[i].lock" label="Value" outlined dense class="val overline"/>
-              
-            <v-text-field v-if="filters[i].type==='date'" 
-              :value="filters[i].val" @focus="picker=true, pickerIndex=i"
-              label="Date" outlined dense readonly class="val overline"/>
-            <v-dialog v-model="picker" width="300px">
-              <v-date-picker v-if="filters[i].type==='date'"
-                @change="setVal($event,pickerIndex), picker=false"
-                :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
-                :value="filters[pickerIndex].val" no-title color="primary" full-width/>
-            </v-dialog>
-
-            <v-autocomplete v-if="filters[i].param==='nations'" 
-              @input="setVal($event,i)" :value="filters[i].val" :disabled="filters[i].lock"
-              :items="countries" item-text="name" item-value="name" label="Nationality" 
-              multiple hide-selected hide-details clearable outlined dense small-chips
-              class="select-small-chips nation-chips hidden-close val overline"
-              :menu-props="{contentClass:'list-with-preview'}">
-              <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs" small class="my-1" close
-                  :input-value="data.selected" label close-icon="mdi-close"
-                  @click="data.select" @click:close="removeChip(data.item, i)"
-                > <country-flag :country='data.item.code' size='normal'/> {{ data.item.name }}
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <template v-if="typeof data.item !== 'object'">
-                  <v-list-item-content v-text="data.item"></v-list-item-content>
+  <div>
+    <v-dialog v-model="$store.state.Performers.dialogFilterPerformers" scrollable width="1000">
+      <v-card>
+        <v-card-title class="py-1 px-4">
+          <span class="headline">Filter performers</span>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-filter</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text class="text-center">
+            <div v-for="(filter,i) in filters" :key="i" class="filter-row">
+              <v-select @input="setParam($event,i)" :value="filters[i].param" 
+                :items="params" label="Parameter" outlined dense class="param overline"
+                :prepend-icon="getIconParam(filters[i].param)" :disabled="filters[i].lock">
+                <template v-slot:item="data">
+                  <div class="list-item"> 
+                    <v-icon left>{{getIconParam(data.item)}}</v-icon>
+                    <span class="overline">{{data.item}}</span>
+                  </div>
                 </template>
-                <template v-else>
-                  <country-flag :country='data.item.code' size='normal'/>
-                  <v-list-item-content>
-                    <v-list-item-title v-html="data.item.name"></v-list-item-title>
-                  </v-list-item-content>
+              </v-select>
+
+              <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
+                :items="getConditions(filters[i].type)" outlined dense label="Condition"
+                :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
+                <template v-slot:item="data">
+                  <div class="list-item"> 
+                    <v-icon left>{{getIconCond(data.item)}}</v-icon>
+                    <span class="overline">{{data.item}}</span>
+                  </div>
                 </template>
-              </template>
-            </v-autocomplete>
+              </v-select>
+
+              <v-checkbox v-if="filters[i].param==='name'" label="Aliases" class="mt-1 mr-2"
+                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate/>
               
-            <v-autocomplete v-if="filters[i].param==='tags'"
-              @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
-              class="mb-4 select-small-chips hidden-close val overline" label="Tags" 
-              item-text="name" item-value="name" no-data-text="No more tags" 
-              multiple hide-selected hide-details clearable outlined dense
-              :menu-props="{contentClass:'list-with-preview'}"
-              :filter="filterItemsTags" :disabled="filters[i].lock"
-            >
-              <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs" small class="my-1" close-icon="mdi-close"
-                  @click="data.select" @click:close="removeChip(data.item, i)"
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                  :input-value="data.selected" outlined close
-                  :color="data.item.color" 
-                ><span>{{ data.item.name }}</span>
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <div class="list-item"
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                > <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
-                  <span>{{data.item.name}}</span>
-                  <span v-if="data.item.altNames.length" class="aliases"> 
-                    {{data.item.altNames.join(', ').slice(0,50)}}
-                  </span>
-                </div>
-              </template>
-            </v-autocomplete>
+              <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
+                @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
+                :disabled="filters[i].lock" label="Value" outlined dense class="val overline"/>
+                
+              <v-text-field v-if="filters[i].type==='date'" 
+                :value="filters[i].val" @focus="picker=true, pickerIndex=i"
+                label="Date" outlined dense readonly class="val overline"/>
+              <v-dialog v-model="picker" width="300px">
+                <v-date-picker v-if="filters[i].type==='date'"
+                  @change="setVal($event,pickerIndex), picker=false"
+                  :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
+                  :value="filters[pickerIndex].val" no-title color="primary" full-width/>
+              </v-dialog>
 
-            <v-select v-if="filters[i].type==='array' && namesOfCustomParams.includes(filters[i].param)" 
-              @input="setVal($event,i)" :value="filters[i].val" class="val overline"
-              :items="getCustomItems(filters[i].param)" label="Values"
-              :disabled="filters[i].lock" outlined dense multiple 
-              :menu-props="{contentClass:'overline'}"/>
+              <v-autocomplete v-if="filters[i].param==='nations'" 
+                @input="setVal($event,i)" :value="filters[i].val" :disabled="filters[i].lock"
+                :items="countries" item-text="name" item-value="name" label="Nationality" 
+                multiple hide-selected hide-details clearable outlined dense small-chips
+                class="select-small-chips nation-chips hidden-close val overline"
+                :menu-props="{contentClass:'list-with-preview'}">
+                <template v-slot:selection="data">
+                  <v-chip
+                    v-bind="data.attrs" small class="my-1" close
+                    :input-value="data.selected" label close-icon="mdi-close"
+                    @click="data.select" @click:close="removeChip(data.item, i)"
+                  > <country-flag :country='data.item.code' size='normal'/> {{ data.item.name }}
+                  </v-chip>
+                </template>
+                <template v-slot:item="data">
+                  <template v-if="typeof data.item !== 'object'">
+                    <v-list-item-content v-text="data.item"></v-list-item-content>
+                  </template>
+                  <template v-else>
+                    <country-flag :country='data.item.code' size='normal'/>
+                    <v-list-item-content>
+                      <v-list-item-title v-html="data.item.name"></v-list-item-title>
+                    </v-list-item-content>
+                  </template>
+                </template>
+              </v-autocomplete>
+                
+              <v-autocomplete v-if="filters[i].param==='tags'"
+                @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
+                class="mb-4 select-small-chips hidden-close val overline" label="Tags" 
+                item-text="name" item-value="name" no-data-text="No more tags" 
+                multiple hide-selected hide-details clearable outlined dense
+                :menu-props="{contentClass:'list-with-preview'}"
+                :filter="filterItemsTags" :disabled="filters[i].lock"
+              >
+                <template v-slot:selection="data">
+                  <v-chip
+                    v-bind="data.attrs" small class="my-1" close-icon="mdi-close"
+                    @click="data.select" @click:close="removeChip(data.item, i)"
+                    @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                    :input-value="data.selected" outlined close
+                    :color="data.item.color" 
+                  ><span>{{ data.item.name }}</span>
+                  </v-chip>
+                </template>
+                <template v-slot:item="data">
+                  <div class="list-item"
+                    @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                    @mouseleave.stop="$store.state.hoveredImage=false"
+                  > <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
+                    <span>{{data.item.name}}</span>
+                    <span v-if="data.item.altNames.length" class="aliases"> 
+                      {{data.item.altNames.join(', ').slice(0,50)}}
+                    </span>
+                  </div>
+                </template>
+              </v-autocomplete>
 
-            <v-select v-if="filters[i].param==='category'" 
-              @input="setVal($event,i)" :value="filters[i].val" 
-              :items="$store.state.Settings.performerInfoCategory" 
-              outlined dense label="Categories" class="val overline"
-              :disabled="filters[i].lock" multiple
-              :menu-props="{contentClass:'overline'}"/>
+              <v-select v-if="filters[i].type==='array' && namesOfCustomParams.includes(filters[i].param)" 
+                @input="setVal($event,i)" :value="filters[i].val" class="val overline"
+                :items="getCustomItems(filters[i].param)" label="Values"
+                :disabled="filters[i].lock" outlined dense multiple 
+                :menu-props="{contentClass:'overline'}"/>
 
-            <v-select v-if="filters[i].param==='ethnicity'" 
-              @input="setVal($event,i)" :value="filters[i].val" 
-              :items="$store.state.Settings.performerInfoEthnicity" 
-              outlined dense label="Ethnicity" class="val overline"
-              :disabled="filters[i].lock" multiple
-              :menu-props="{contentClass:'overline'}"/>
+              <v-select v-if="filters[i].param==='category'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoCategory" 
+                outlined dense label="Categories" class="val overline"
+                :disabled="filters[i].lock" multiple
+                :menu-props="{contentClass:'overline'}"/>
 
-            <v-select v-if="filters[i].param==='hair'" 
-              @input="setVal($event,i)" :value="filters[i].val" 
-              :items="$store.state.Settings.performerInfoHair" 
-              outlined dense label="Hair" class="val overline"
-              :disabled="filters[i].lock" multiple
-              :menu-props="{contentClass:'overline'}"/>
+              <v-select v-if="filters[i].param==='ethnicity'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoEthnicity" 
+                outlined dense label="Ethnicity" class="val overline"
+                :disabled="filters[i].lock" multiple
+                :menu-props="{contentClass:'overline'}"/>
 
-            <v-select v-if="filters[i].param==='eyes'" 
-              @input="setVal($event,i)" :value="filters[i].val" 
-              :items="$store.state.Settings.performerInfoEyes" 
-              outlined dense label="Eyes" class="val overline"
-              :disabled="filters[i].lock" multiple
-              :menu-props="{contentClass:'overline'}"/>
+              <v-select v-if="filters[i].param==='hair'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoHair" 
+                outlined dense label="Hair" class="val overline"
+                :disabled="filters[i].lock" multiple
+                :menu-props="{contentClass:'overline'}"/>
 
-            <v-select v-if="filters[i].param==='cups'" 
-              @input="setVal($event,i)" :value="filters[i].val" 
-              :items="$store.state.Settings.performerInfoCups" 
-              outlined dense label="Cups" class="val overline"
-              :disabled="filters[i].lock" multiple
-              :menu-props="{contentClass:'overline'}"/>
+              <v-select v-if="filters[i].param==='eyes'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoEyes" 
+                outlined dense label="Eyes" class="val overline"
+                :disabled="filters[i].lock" multiple
+                :menu-props="{contentClass:'overline'}"/>
 
-            <v-select v-if="filters[i].param==='boobs'" 
-              @input="setVal($event,i)" :value="filters[i].val" 
-              :items="$store.state.Settings.performerInfoBoobs" 
-              outlined dense label="Boobs" class="val overline"
-              :disabled="filters[i].lock" multiple
-              :menu-props="{contentClass:'overline'}"/>
+              <v-select v-if="filters[i].param==='cups'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoCups" 
+                outlined dense label="Cups" class="val overline"
+                :disabled="filters[i].lock" multiple
+                :menu-props="{contentClass:'overline'}"/>
 
-            <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
-              class="ml-2 mt-1" color="green" outlined icon fab x-small>
-              <v-icon>mdi-content-duplicate</v-icon>
-            </v-btn>
-            <v-btn @click="removeFilter(i)" :disabled="filters[i].lock"
-              class="ml-2 mt-1" color="red" outlined icon fab x-small title="Remove filter">
-              <v-icon>mdi-close</v-icon>
-            </v-btn>
-          </div>
-          <v-btn @click="addFilter" color="green" outlined rounded>
-            <v-icon left>mdi-plus</v-icon> Add filter
-          </v-btn>
-        </v-card-text>
-      </vuescroll>
-      <v-card-actions>
-        <v-btn @click="$store.state.Performers.dialogFilterPerformers=false" class="ma-4 mt-0">Cancel</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn v-if="filters.length>1" @click="removeAll" class="ma-4 mt-0" color="red" dark>
-          <v-icon left>mdi-close</v-icon>Remove all</v-btn>
-        <v-btn @click="addNewTab" class="ma-4 mt-0" color="secondary">
-          <v-icon left>mdi-open-in-new</v-icon>Add new tab</v-btn>
-        <v-btn @click="applyFilters" class="ma-4 mt-0" color="primary">
-          <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+              <v-select v-if="filters[i].param==='boobs'" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :items="$store.state.Settings.performerInfoBoobs" 
+                outlined dense label="Boobs" class="val overline"
+                :disabled="filters[i].lock" multiple
+                :menu-props="{contentClass:'overline'}"/>
+
+              <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
+                class="ml-2 mt-1" color="green" outlined icon fab x-small>
+                <v-icon>mdi-content-duplicate</v-icon>
+              </v-btn>
+              <v-btn @click="removeFilter(i)" :disabled="filters[i].lock"
+                class="ml-2 mt-1" color="red" outlined icon fab x-small title="Remove filter">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </div>
+            <v-btn @click="addFilter" color="green" outlined rounded>
+              <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
+            <v-btn v-if="filters.length" @click="removeAll" class="ml-4" color="red" outlined rounded>
+              <v-icon left>mdi-close</v-icon>Remove all</v-btn>
+          </v-card-text>
+        </vuescroll>
+        <v-card-actions class="pa-0">
+          <v-btn @click="$store.state.Performers.dialogFilterPerformers=false" class="ma-4">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters = true" class="ma-4" color="secondary">
+            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
+          <v-btn @click="applyFilters" class="ma-4" color="primary">
+            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="performers" :filters="filters"/>
+  </div>
 </template>
 
 
@@ -196,6 +199,7 @@ export default {
   components: {
     CountryFlag, 
     vuescroll, 
+    SavedFilters: () => import('@/components/elements/SavedFilters.vue'),
   },
   mixins: [ShowImageFunction, Countries], 
   mounted() {
@@ -372,22 +376,8 @@ export default {
     removeAll() { 
       this.filters = _.filter(this.filters, {lock: true})
     },
-    addNewTab() {
-      let tabId = Date.now()
-      let tab = { 
-        name: this.$store.getters.performerFiltersForTabName, 
-        link: `/performers/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
-        sortBy: this.$store.state.Settings.performerSortBy,
-        sortDirection: this.$store.state.Settings.performerSortDirection,
-        page: 1,
-        firstChar: this.$store.state.Settings.performerFirstChar,
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$store.state.Performers.dialogFilterPerformers = false
-      this.$router.push(tab.link)
+    loadFilters(filters) {
+      this.filters = filters
     },
   },
 }

@@ -156,6 +156,15 @@
         </template>
         <span>Select All Tags</span>
       </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="addNewTab" icon tile v-on="on">
+            <v-icon>mdi-tab-plus</v-icon>
+          </v-btn>
+        </template>
+        <span>Add New Tab</span>
+      </v-tooltip>
     </div>
 
     <v-spacer></v-spacer>
@@ -395,6 +404,24 @@ export default {
     getSelectedTags(selectedTags){
       let ids = selectedTags.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedTags', ids)
+    },
+    addNewTab() {
+      let tabId = Date.now()
+      let tab = {
+        name: this.$store.getters.tagFiltersForTabName, 
+        link: `/tags/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.tagFilters),
+        sortBy: this.$store.state.Settings.tagSortBy,
+        sortDirection: this.$store.state.Settings.tagSortDirection,
+        page: 1,
+        firstChar: this.$store.state.Settings.tagFirstChar,
+        color: this.$store.state.Settings.tagColor,
+        icon: 'tag-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$store.state.Tags.dialogFilterTags = false
+      this.$router.push(tab.link)
     },
   },
   watch: {

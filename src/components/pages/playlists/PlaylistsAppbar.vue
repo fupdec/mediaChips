@@ -144,6 +144,15 @@
         </template>
         <span>Select All Playlists</span>
       </v-tooltip>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="addNewTab" icon tile v-on="on">
+            <v-icon>mdi-tab-plus</v-icon>
+          </v-btn>
+        </template>
+        <span>Add New Tab</span>
+      </v-tooltip>
 	  </div>
     <DialogFilterPlaylists v-if="$store.state.Playlists.dialogFilterPlaylists"/>
 	</div>
@@ -304,6 +313,22 @@ export default {
     getSelectedPlaylists(selectedPlaylists){
       let ids = selectedPlaylists.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedPlaylists', ids)
+    },
+    addNewTab() {
+      let tabId = Date.now()
+      let tab = {
+        name: this.$store.getters.playlistFiltersForTabName, 
+        link: `/playlists/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: _.cloneDeep(this.$store.state.Settings.playlistFilters),
+        sortBy: this.$store.state.Settings.playlistSortBy,
+        sortDirection: this.$store.state.Settings.playlistSortDirection,
+        page: 1,
+        icon: 'format-list-bulleted'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$store.state.Playlists.dialogFilterPlaylists = false
+      this.$router.push(tab.link)
     },
   },
   watch: {
