@@ -45,17 +45,18 @@
     </v-dialog>
 
     <v-bottom-sheet v-model="updateApp" hide-overlay no-click-animation persistent width="600">
-      <v-card class="pb-8">
-        <v-card-text class="text-center">
-          <div class="overline py-4">New version AVDB is available!</div>
-          <img alt="AMDB" width="100" height="100" src="/icons/icon.png">
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="updateApp=false" small class="mx-4">
-            <v-icon left>mdi-close</v-icon> Ok
+      <v-card class="pb-6">
+        <v-card-title>
+          <span>New version {{appVersion.replace(/ /gm,'')}} is available!</span>
+          <v-spacer></v-spacer>
+          <img alt="AMDB" width="60" height="60" src="/icons/icon.png">
+        </v-card-title>
+        <v-card-actions class="pa-0">
+          <v-btn @click="updateApp=false" class="ma-4">
+            <v-icon left>mdi-close</v-icon> Close
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="openPage" color="primary" small class="mx-4">
+          <v-btn @click="openPage" color="primary" class="ma-4">
             <v-icon left>mdi-download</v-icon> Open page with downloads
           </v-btn>
         </v-card-actions>
@@ -189,6 +190,7 @@ export default {
     videoPage: '/',
     performerPage: '/',
     updateApp: false,
+    appVersion: '',
     intervalUpdateDataFromVideos: null,
     folder: null,
     watcher: null,
@@ -369,8 +371,8 @@ export default {
     },
     checkForUpdates() {
       axios.get(`https://github.com/fupdec/Adult-Video-Database/releases`).then((response) => {
-        if(response.status === 200) {
-          const html = response.data;
+        if (response.status === 200) {
+          const html = response.data
           const $ = cheerio.load(html)
           let lastVersion = $('.release-header .f1 a').eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
@@ -382,6 +384,7 @@ export default {
     compareVersion(currentVersion, lastVersion) {
       lastVersion = lastVersion.split('.').map( s => s.padStart(10) ).join('.')
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
+      this.appVersion = lastVersion
       return lastVersion > currentVersion
     },
     openPage() {
