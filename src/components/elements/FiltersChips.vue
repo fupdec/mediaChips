@@ -29,7 +29,6 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      console.log(this.$route.name)
     })
   },
   computed: {

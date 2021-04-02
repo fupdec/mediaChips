@@ -1,17 +1,17 @@
 <template>
 	<div>
     <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
-      <template v-slot:activator="{ on, attrs }">
-        <v-badge :content="getCardSizeIcon()" class="text-uppercase" color="secondary" overlap offset-x="25" offset-y="25">
-          <v-btn v-bind="attrs" v-on="on" icon tile>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on">mdi-card-bulleted</v-icon>
-              </template>
-              <span>Card size</span>
-            </v-tooltip>
-          </v-btn>
-        </v-badge>
+      <template #activator="{ on: onMenu }">
+        <v-tooltip bottom>
+          <template #activator="{ on: onTooltip }">
+            <v-badge :content="getCardSizeIcon()" class="text-uppercase" color="secondary" overlap offset-x="25" offset-y="25">
+              <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                <v-icon>mdi-card-bulleted</v-icon>
+              </v-btn>
+            </v-badge>
+          </template>
+          <span>Card size</span>
+        </v-tooltip>
       </template>
       <v-card width="300">
         <v-card-title class="py-1">
