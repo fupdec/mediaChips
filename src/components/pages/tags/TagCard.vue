@@ -43,7 +43,7 @@
       @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       @mouseover.stop="showImage($event, tag.id, 'tag')" 
       @mouseleave.stop="$store.state.hoveredImage=false"
-      :data-id="tag.id" :color="tag.color" class="tag-card"
+      :data-id="tag.id" :color="tag.color" dark class="tag-card"
     >
       <v-avatar left>
         <img :src="'file://' + imgMain"/>

@@ -51,7 +51,7 @@
       @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       @mouseover.stop="showImage($event, website.id, 'website')" 
       @mouseleave.stop="$store.state.hoveredImage=false"
-      :data-id="website.id" :color="website.color" class="website-card"
+      :data-id="website.id" :color="website.color" dark class="website-card"
     >
       <v-avatar left>
         <img :src="imgMain"/>
