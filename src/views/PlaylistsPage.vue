@@ -5,20 +5,7 @@
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
-      <v-tooltip top>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="removeAllFilters" v-on="on" fab x-small dark color="red" class="mr-4">
-            <v-icon>mdi-filter-off</v-icon>
-          </v-btn>
-        </template>
-        <span>Remove All Filters</span>
-      </v-tooltip>
-      <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary"
-        small close :disabled="filter.lock" @click:close="removeFilter(i)">
-        {{filter.param}} {{filter.cond}} 
-        <span v-if="filter.type=='array'" class="ml-1">{{filter.val.join(', ')}}</span>
-        <span v-else class="ml-1">{{filter.val}}</span>
-      </v-chip>
+      <FiltersChips :filters="filters" type="Playlist" />
     </v-container>
       
     <v-container fluid v-if="!$store.state.Playlists.filteredEmpty" class="pagination-container my-6">
@@ -127,6 +114,7 @@ export default {
     DialogEditPlaylist: () => import("@/components/pages/playlists/DialogEditPlaylist.vue"),
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),
+    FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -238,14 +226,6 @@ export default {
     },
   },
   methods: {
-    removeAllFilters() {
-      this.$store.state.Settings.playlistFilters = []
-      this.$store.dispatch('filterPlaylists')
-    },
-    removeFilter(i) {
-      this.filters.splice(i, 1)
-      this.$store.dispatch('filterPlaylists')
-    },
     selectedPlaylists(list) {
       let ids = this.$store.getters.getSelectedPlaylists
       let playlists = this.$store.getters.playlists

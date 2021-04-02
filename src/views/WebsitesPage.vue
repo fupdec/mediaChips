@@ -48,20 +48,7 @@
     </div>
 
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
-      <v-tooltip top>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="removeAllFilters" v-on="on" fab x-small dark color="red" class="mr-4">
-            <v-icon>mdi-filter-off</v-icon>
-          </v-btn>
-        </template>
-        <span>Remove All Filters</span>
-      </v-tooltip>
-      <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary" 
-        small close :disabled="filter.lock" @click:close="removeFilter(i)">
-        {{filter.param}} {{filter.cond}} 
-        <span v-if="filter.type=='array'" class="ml-1">{{filter.val.join(', ')}}</span>
-        <span v-else class="ml-1">{{filter.val}}</span>
-      </v-chip>
+      <FiltersChips :filters="filters" type="Website" />
     </v-container>
       
     <v-container fluid v-if="!$store.state.Websites.filteredEmpty" class="pagination-container my-6">
@@ -196,6 +183,7 @@ export default {
     DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue"),
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),
+    FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
   mixins: [LabelFunctions],
   mounted() {
@@ -342,14 +330,6 @@ export default {
     },
   },
   methods: {
-    removeAllFilters() {
-      this.$store.state.Settings.websiteFilters = []
-      this.$store.dispatch('filterWebsites')
-    },
-    removeFilter(i) {
-      this.filters.splice(i, 1)
-      this.$store.dispatch('filterWebsites')
-    },
     selectedWebsites(list) {
       let ids = this.$store.getters.getSelectedWebsites
       let websites = this.$store.getters.websites

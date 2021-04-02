@@ -95,20 +95,7 @@
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
-      <v-tooltip top>
-        <template v-slot:activator="{ on }">
-          <v-btn @click="removeAllFilters" v-on="on" fab x-small dark color="red" class="mr-4">
-            <v-icon>mdi-filter-off</v-icon>
-          </v-btn>
-        </template>
-        <span>Remove All Filters</span>
-      </v-tooltip>
-      <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary"
-        small close :disabled="filter.lock" @click:close="removeFilter(i)">
-        {{filter.param}} {{filter.cond}} 
-        <span v-if="filter.type=='array'" class="ml-1">{{filter.val.join(', ')}}</span>
-        <span v-else class="ml-1">{{filter.val}}</span>
-      </v-chip>
+      <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
     </v-container>
 
     <v-container v-if="!$store.state.Videos.filteredEmpty" fluid class="pagination-container my-6">
@@ -185,6 +172,7 @@ export default {
     vuescroll,
     DialogEditWebsite: () => import("@/components/pages/websites/DialogEditWebsite.vue"),
     Loading: () => import('@/components/elements/Loading.vue'),
+    FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
   mixins: [VideosGrid, ShowImageFunction, LabelFunctions],
   mounted() {
@@ -296,10 +284,6 @@ export default {
         lock: true,
       }]
       this.activePerformers = []
-      this.$store.dispatch('filterVideos')
-    },
-    removeFilter(i) {
-      this.filters.splice(i, 1)
       this.$store.dispatch('filterVideos')
     },
     scrollToTop() {
