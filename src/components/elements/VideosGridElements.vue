@@ -115,13 +115,41 @@
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
 
+        <v-divider class="ma-1"></v-divider>
+
+        <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+          <template v-slot:activator="{ on, attrs }">
+            <v-list-item class="pr-1" link v-bind="attrs" v-on="on" :disabled="!isSelectedSingleVideo">
+              <v-list-item-title> 
+                <v-icon left size="18">mdi-filter</v-icon> Filter Videos by Tag 
+              </v-list-item-title>
+              <v-icon size="22">mdi-menu-right</v-icon>
+            </v-list-item>
+          </template>
+          
+          <v-list dense class="context-menu">
+            <v-list-item v-if="videoTags.length===0" class="pr-1" link>
+              <v-list-item-title>
+                <v-icon left size="18">mdi-cancel</v-icon> No tags
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item v-for="tag in videoTags" :key="tag" @mouseup="filterByTag(tag)" class="pr-1" link>
+              <v-list-item-title>
+                <v-icon left size="18" :color="getTagColor(tag)">mdi-tag</v-icon> {{tag}}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <v-divider class="ma-1"></v-divider>
+
         <v-list-item class="pr-1" link @mouseup="moveFile">
           <v-list-item-title>
             <v-icon left size="18">mdi-file-move</v-icon> Move File to...
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
-<!-- TODO: add function of parsing path for performer, tags, websites  -->
+
         <v-divider class="ma-1"></v-divider>
 
         <v-list-item class="pr-1" link @mouseup="$store.state.Videos.dialogEditVideoInfo = true">
@@ -447,6 +475,13 @@ export default {
     playlists() {
       return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value()
     },
+    videoTags() {
+      if (this.$store.getters.getSelectedVideos.length>0) {
+        let id = this.$store.getters.getSelectedVideos[0]
+        let videos = this.$store.getters.videos
+        return videos.find({id}).value().tags
+      } else return []
+    },
   },
   methods: {
 		selectedVideos(list) {
@@ -771,6 +806,21 @@ export default {
         video.tags = meta.tags
         video.websites = meta.websites
       }).write()
+    },
+    filterByTag(tag) {
+      let filter = {
+        param: 'tags',
+        cond: 'one of',
+        val: [tag],
+        type: 'array',
+        flag: null,
+        lock: false,
+      }
+      this.$store.state.Settings.videoFilters.push(filter)
+      this.$store.dispatch('filterVideos')
+    },
+    getTagColor(tag) {
+      return this.$store.getters.tags.find({name: tag}).value().color
     },
   },
   watch: {

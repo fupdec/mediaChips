@@ -114,7 +114,7 @@
       <v-card-actions class="px-1 py-0 video-tags" :class="{hidden: isTagsHidden}">
         <v-chip-group column>
           <v-icon left>mdi-tag-outline</v-icon>
-          <v-chip v-for="tag in video.tags" :key="tag"
+          <v-chip v-for="tag in video.tags" :key="tag" @click="filterByTag(tag)"
             :outlined="isChipsColored" :color="colorTag(tag)"
             @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
             @mouseleave.stop="$store.state.hoveredImage=false"
@@ -375,6 +375,18 @@ export default {
       this.$nextTick(() => {
         this.$store.state.Videos.menuCard = true
       })
+    },
+    filterByTag(tag) {
+      let filter = {
+        param: 'tags',
+        cond: 'one of',
+        val: [tag],
+        type: 'array',
+        flag: null,
+        lock: false,
+      }
+      this.$store.state.Settings.videoFilters.push(filter)
+      this.$store.dispatch('filterVideos')
     },
   },
   watch: {
