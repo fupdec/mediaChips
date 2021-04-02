@@ -1,6 +1,6 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
+    <v-card v-if="websiteViewDefault" @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
       :data-id="website.id" class="website-card" outlined hover 
       :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
       <v-img @click="openWebsitePage" @click.middle="addNewTabWebsite()" :title='`Open website "${websiteName}"`' 
@@ -46,6 +46,18 @@
         <v-icon>mdi-pencil</v-icon>
       </v-btn>
     </v-card>
+
+    <v-chip v-else 
+      @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
+      @mouseover.stop="showImage($event, website.id, 'website')" 
+      @mouseleave.stop="$store.state.hoveredImage=false"
+      :data-id="website.id" :color="website.color" class="website-card"
+    >
+      <v-avatar left>
+        <img :src="imgMain"/>
+      </v-avatar>
+      <span>{{website.name}}</span>
+    </v-chip>
   </v-lazy>
 </template>
 
@@ -101,6 +113,9 @@ export default {
     },
     isPerformersHidden() {
       return this.$store.state.Settings.websitePerformersHidden
+    },
+    websiteViewDefault() {
+      return this.$store.state.Settings.websiteView == 'default'
     },
   },
   methods: {

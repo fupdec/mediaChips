@@ -217,8 +217,17 @@
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
+          <v-btn icon tile @click="toggleWebsiteView" v-on="on">
+            <v-icon v-if="websiteView=='default'">mdi-image</v-icon>
+            <v-icon v-if="websiteView=='compact'">mdi-label</v-icon>
+          </v-btn>
+        </template>
+        <span>Website View: {{websiteView}}</span>
+      </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
           <v-badge :value="isEditBtnHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-            <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
+            <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on" :disabled="websiteView=='compact'">
               <v-icon>mdi-circle-edit-outline</v-icon>
             </v-btn>
           </v-badge>
@@ -229,7 +238,7 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-badge :value="isVideoTagsHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-            <v-btn icon tile @click="toggleVideoTagsVisibilty()" v-on="on">
+            <v-btn icon tile @click="toggleVideoTagsVisibilty()" v-on="on" :disabled="websiteView=='compact'">
               <v-icon>mdi-tag-outline</v-icon>
             </v-btn>
           </v-badge>
@@ -240,7 +249,7 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-badge :value="isPerformersHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-            <v-btn icon tile @click="togglePerformersVisibilty()" v-on="on">
+            <v-btn icon tile @click="togglePerformersVisibilty()" v-on="on" :disabled="websiteView=='compact'">
               <v-icon>mdi-account</v-icon>
             </v-btn>
           </v-badge>
@@ -331,6 +340,14 @@ export default {
     tabId() {
       return this.$route.query.tabId
     },
+    websiteView: {
+      get() {
+        return this.$store.state.Settings.websiteView
+      },
+      set (value) {
+        this.$store.dispatch('updateSettingsState', {key:'websiteView', value})
+      },
+    },
     isPerformersHidden: {
       get () {
         return this.$store.state.Settings.websitePerformersHidden
@@ -410,6 +427,9 @@ export default {
     },
     changeSearchString(e) {
       this.searchString = e
+    },
+    toggleWebsiteView() {
+      this.websiteView == 'default' ? this.websiteView = 'compact' : this.websiteView = 'default'
     },
     togglePerformersVisibilty() {
       this.isPerformersHidden = !this.isPerformersHidden

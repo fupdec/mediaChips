@@ -85,7 +85,7 @@
     
     <Loading />
 
-    <v-container fluid class="websites-grid" :class="gapSize">
+    <v-container fluid class="websites-grid" :class="[gapSize, websiteViewClass]">
       <WebsiteCard v-for="(website) in websitesOnPage" :key="website.id" :website="website"/>
     </v-container>
 
@@ -327,6 +327,10 @@ export default {
     isUrlAvailable() {
       return this.url && this.isSelectedSingleWebsite
     },
+    websiteViewClass() {
+      if (this.$store.state.Settings.websiteView == 'compact') return 'compact'
+      else return ''
+    },
   },
   methods: {
     selectedWebsites(list) {
@@ -409,6 +413,10 @@ export default {
   grid-gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   grid-auto-rows: minmax(260px, auto);
+  &.compact {
+    display: flex;
+    flex-wrap: wrap;
+  }
   &.gap-size {
     &-xs {
       grid-gap: 10px;
