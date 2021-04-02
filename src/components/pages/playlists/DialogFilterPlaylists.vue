@@ -12,13 +12,13 @@
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
               <v-select @input="setParam($event,i)" :value="filters[i].param" 
-                :items="params" label="Parameter" outlined dense class="param overline"
-                :prepend-icon="getIconParam(filters[i].param)"
-                :disabled="filters[i].lock">
+                :items="computedParams" label="Parameter" outlined dense class="param overline"
+                :prepend-icon="getIconParam(filters[i].param)" :disabled="filters[i].lock"
+                item-value="name" item-text="name">
                 <template v-slot:item="data">
                   <div class="list-item"> 
-                    <v-icon left>{{getIconParam(data.item)}}</v-icon>
-                    <span class="overline">{{data.item}}</span>
+                    <v-icon left>{{getIconParam(data.item.name)}}</v-icon>
+                    <span class="overline">{{data.item.name}}</span>
                   </div>
                 </template>
               </v-select>
@@ -48,8 +48,9 @@
                   :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
               </v-dialog>
 
-              <v-btn @click="duplicateFilter(i)" title="Duplicate filter"
-                class="ml-2 mt-1" color="green" outlined icon fab x-small>
+              <v-btn @click="duplicateFilter(i)" title="Duplicate filter" 
+                class="ml-2 mt-1" color="green" outlined icon fab x-small
+                :disabled="filters[i].type=='boolean'">
                 <v-icon>mdi-content-duplicate</v-icon>
               </v-btn>
               <v-btn @click="removeFilter(i)" :disabled="filters[i].lock"
@@ -110,6 +111,15 @@ export default {
   computed: {
     tabId() {
       return this.$route.query.tabId
+    },
+    computedParams() {
+      let filtersBoolean = _.filter(this.filters, {type: 'boolean'}).map(i=>i.param)
+      return this.params.map(param => {
+        return {
+          name: param, 
+          disabled: filtersBoolean.includes(param)
+        }
+      })
     },
   },
   methods: {
