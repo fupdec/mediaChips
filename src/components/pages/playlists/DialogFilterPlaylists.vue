@@ -36,7 +36,7 @@
 
               <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-                label="Value" outlined dense class="val overline"/>
+                label="Value" outlined dense class="val overline" :disabled="filters[i].lock"/>
 
               <v-text-field v-if="filters[i].type==='date'" 
                 :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
@@ -65,7 +65,8 @@
           </v-card-text>
         </vuescroll>
         <v-card-actions class="pa-0">
-          <v-btn @click="$store.state.Playlists.dialogFilterPlaylists=false" class="ma-4">Cancel</v-btn>
+          <v-btn @click="$store.state.Playlists.dialogFilterPlaylists=false" class="ma-4">
+            <v-icon left>mdi-cancel</v-icon> Cancel </v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="$store.state.SavedFilters.dialogSavedFilters = true" class="ma-4" color="secondary">
             <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>

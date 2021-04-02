@@ -175,7 +175,8 @@
           </v-card-text>
         </vuescroll>
         <v-card-actions class="pa-0">
-          <v-btn @click="$store.state.Performers.dialogFilterPerformers=false" class="ma-4">Cancel</v-btn>
+          <v-btn @click="$store.state.Performers.dialogFilterPerformers=false" class="ma-4">
+            <v-icon left>mdi-cancel</v-icon> Cancel</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="$store.state.SavedFilters.dialogSavedFilters = true" class="ma-4" color="secondary">
             <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>

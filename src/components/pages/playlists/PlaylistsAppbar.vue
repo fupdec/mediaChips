@@ -58,6 +58,40 @@
         </template>
         <span>Filter Playlists</span>
       </v-tooltip>
+    
+      <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
+        <template #activator="{ on: onMenu }">
+          <v-tooltip bottom>
+            <template #activator="{ on: onTooltip }">
+              <v-badge :value="searchStringComputed" icon="mdi-format-letter-case" overlap offset-x="23" offset-y="44">
+                <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                  <v-icon>mdi-magnify</v-icon>
+                </v-btn>
+              </v-badge>
+            </template>
+            <span>Search</span>
+          </v-tooltip>
+        </template>
+        <v-card width="350">
+          <div class="pa-2 d-flex">
+            <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" 
+              @click:clear="clearSearch" outlined dense hide-details clearable class="pt-0"/>
+            <v-btn @click="search" class="ml-2" color="primary" depressed height="40">
+              <v-icon>mdi-magnify</v-icon>
+            </v-btn>
+          </div>
+        </v-card>
+      </v-menu>
+      
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="toggleFavorites" v-on="on" icon tile>
+            <v-icon v-if="favoritesFilterExist">mdi-heart</v-icon>
+            <v-icon v-else>mdi-heart-outline</v-icon>
+          </v-btn>
+        </template>
+        <span>Toggle Favorites</span>
+      </v-tooltip>
 
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
@@ -180,9 +214,10 @@ export default {
     ],
     alertDuplicatePlaylists: false,
     alertAddNewPlaylists: false,
-    duplicatePlaylists: "",
-    newPlaylists: "",
-    playlistName: "",
+    duplicatePlaylists: '',
+    newPlaylists: '',
+    playlistName: '',
+    searchString: '',
   }),
   computed: {
     filterBadge() {
@@ -231,8 +266,62 @@ export default {
     sortDirection() {
       return this.$store.state.Settings.playlistSortDirection
     },
+    searchStringComputed() {
+      let filters = this.$store.state.Settings.playlistFilters
+      let search = _.find(filters, {param: 'name', flag: 'search'})
+      if (search) return search.val
+      else return ''
+    },
+    favoritesFilterExist() {
+      let filters = this.$store.state.Settings.playlistFilters
+      let index = _.findIndex(filters, {param: 'favorite'})
+      if (index >= 0) return true 
+      else return false
+    },
   },
   methods: {
+    search() {
+      if (this.searchString == null || this.searchString.length == 0) return
+      let filters = this.$store.state.Settings.playlistFilters
+      let index = _.findIndex(filters, {param: 'name', flag: 'search'})
+      if (index >= 0) filters.splice(index, 1)
+      this.$store.state.Settings.playlistFilters.push({
+        param: 'name',
+        cond: 'includes',
+        val: this.searchString,
+        type: 'string',
+        flag: 'search',
+        lock: true
+      })
+      this.$store.dispatch('filterPlaylists')
+    },
+    clearSearch() {
+      let filters = this.$store.state.Settings.playlistFilters
+      let index = _.findIndex(filters, {param: 'name', flag: 'search'})
+      if (index >= 0) filters.splice(index, 1)
+      else return
+      this.$store.dispatch('filterPlaylists')
+    },
+    toggleFavorites() {
+      let filters = this.$store.state.Settings.playlistFilters
+      let index = _.findIndex(filters, {param: 'favorite'})
+      if (index >= 0) {
+        filters.splice(index, 1)
+      } else {
+        this.$store.state.Settings.playlistFilters.push({
+          param: 'favorite',
+          cond: 'yes',
+          val: '',
+          type: 'boolean',
+          flag: null,
+          lock: true
+        })
+      }
+      this.$store.dispatch('filterPlaylists')
+    },
+    changeSearchString(e) {
+      this.searchString = e
+    },
     async pasteText() {
       let text = await navigator.clipboard.readText()
       if (this.playlistName) {
