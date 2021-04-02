@@ -182,7 +182,6 @@ export default {
   },
   data: () => ({
     errorThumb: false,
-    errorPreview: false,
     isVideoHovered: false,
     timeouts: {},
     cardKey: '',
@@ -282,17 +281,6 @@ export default {
       if (this.isVideoHovered || !this.videoPreviewEnabled) return
       this.isVideoHovered = true
       this.timeouts.z = setTimeout(()=>{
-        if (!this.errorPreview) {
-          // play preview
-          let videoPath = path.join(this.pathToUserData, `/media/previews/${this.video.id}.mp4`)
-          if (fs.existsSync(videoPath)) {
-            this.$refs.video.src = videoPath
-            return
-          } else {
-            this.errorPreview = true
-          }
-        }
-
         // play original video
         if (!fs.existsSync(this.video.path)) return
         this.$refs.video.src = this.video.path
