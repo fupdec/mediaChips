@@ -448,7 +448,7 @@ export default {
             edit: Date.now(),
             favorite: false,
             bookmark: false,
-            type: [],
+            type: ['video', 'performer'],
             videos: 0,
             performers: [],
           }
