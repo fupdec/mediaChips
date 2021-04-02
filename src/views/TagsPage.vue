@@ -85,7 +85,7 @@
 
     <Loading/>
 
-    <v-container fluid class="tags-grid" :class="gapSize">
+    <v-container fluid class="tags-grid" :class="[gapSize, tagViewClass]">
       <TagCard :tag=tag v-for="(tag) in tagsOnPage" :key="tag.id"/>
     </v-container>
 
@@ -359,6 +359,10 @@ export default {
     filters() {
       return this.$store.state.Settings.tagFilters
     },
+    tagViewClass() {
+      if (this.$store.state.Settings.tagView == 'compact') return 'compact'
+      else return ''
+    },
   },
   methods: {
     selectedTags(list) {
@@ -487,6 +491,10 @@ export default {
   grid-gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   grid-auto-rows: minmax(260px, auto);
+  &.compact {
+    display: flex;
+    flex-wrap: wrap;
+  }
   &.gap-size {
     &-xs {
       grid-gap: 10px;

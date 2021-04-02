@@ -1,6 +1,6 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
+    <v-card v-if="tagViewDefault" @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
       :data-id="tag.id" class="tag-card" outlined hover 
       :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
       <v-img class="tag-card-img" :src="'file://' + imgMain" :aspect-ratio="1">
@@ -38,6 +38,18 @@
         <v-icon>mdi-pencil</v-icon>
       </v-btn>
     </v-card>
+
+    <v-chip v-else 
+      @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
+      @mouseover.stop="showImage($event, tag.id, 'tag')" 
+      @mouseleave.stop="$store.state.hoveredImage=false"
+      :data-id="tag.id" :color="tag.color" class="tag-card"
+    >
+      <v-avatar left>
+        <img :src="'file://' + imgMain"/>
+      </v-avatar>
+      <span>{{tag.name}}</span>
+    </v-chip>
   </v-lazy>
 </template>
 
@@ -96,6 +108,9 @@ export default {
     },
     isPerformersHidden() {
       return this.$store.state.Settings.tagPerformersHidden
+    },
+    tagViewDefault() {
+      return this.$store.state.Settings.tagView == 'default'
     },
   },
   methods: {

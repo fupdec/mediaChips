@@ -206,8 +206,17 @@
     <div>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
+          <v-btn icon tile @click="toggleTagView" v-on="on">
+            <v-icon v-if="tagView=='default'">mdi-image</v-icon>
+            <v-icon v-if="tagView=='compact'">mdi-label</v-icon>
+          </v-btn>
+        </template>
+        <span>Tag View: {{tagView}}</span>
+      </v-tooltip>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
           <v-badge :value="isAltNamesHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-            <v-btn icon tile @click="toggleAltNamesVisibilty()" v-on="on">
+            <v-btn icon tile @click="toggleAltNamesVisibilty()" v-on="on" :disabled="tagView=='compact'">
               <v-icon>mdi-alphabetical</v-icon>
             </v-btn>
           </v-badge>
@@ -218,7 +227,7 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-badge :value="isEditBtnHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-            <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on">
+            <v-btn icon tile @click="toggleEditBtnVisibilty()" v-on="on" :disabled="tagView=='compact'">
               <v-icon>mdi-circle-edit-outline</v-icon>
             </v-btn>
           </v-badge>
@@ -229,7 +238,7 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-badge :value="isPerformersHidden" icon="mdi-close" color="secondary" overlap offset-x="25" offset-y="25">
-            <v-btn icon tile @click="togglePerformersVisibilty()" v-on="on">
+            <v-btn icon tile @click="togglePerformersVisibilty()" v-on="on" :disabled="tagView=='compact'">
               <v-icon>mdi-account</v-icon>
             </v-btn>
           </v-badge>
@@ -317,6 +326,14 @@ export default {
     sortDirection() {
       return this.$store.state.Settings.tagSortDirection
     },
+    tagView: {
+      get() {
+        return this.$store.state.Settings.tagView
+      },
+      set (value) {
+        this.$store.dispatch('updateSettingsState', {key:'tagView', value})
+      },
+    },
     isAltNamesHidden: {
       get () {
         return this.$store.state.Settings.tagAltNamesHidden
@@ -399,6 +416,9 @@ export default {
     },
     toggleAltNamesVisibilty() {
       this.isAltNamesHidden = !this.isAltNamesHidden
+    },
+    toggleTagView() {
+      this.tagView == 'default' ? this.tagView = 'compact' : this.tagView = 'default'
     },
     togglePerformersVisibilty() {
       this.isPerformersHidden = !this.isPerformersHidden
