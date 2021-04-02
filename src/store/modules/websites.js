@@ -293,15 +293,15 @@ const Websites = {
         if (notEquals.includes(cond)) cond = '!='
         
         if (type === 'array') {
-          let arr = param+' '+cond+' '
-          arr += val.join(';')
+          let arr = `"${param}" ${cond}`
+          arr = `${arr} "${val.join(',')}"` 
           filters.push(arr)
         } else {
-          filters.push(param+' '+cond+' '+val)
+          filters.push(`"${param}" ${cond} "${val}"`)
         }
       }
       // TODO show first char and color in tab name
-      return 'Websites' + (filters.length ? ' with ': ' ') + filters.join(', ')
+      return 'Websites' + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
     filteredWebsites(state, store) {
       let websites 

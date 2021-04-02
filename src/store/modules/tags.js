@@ -314,15 +314,15 @@ const Tags = {
         if (notEquals.includes(cond)) cond = '!='
         
         if (type === 'array') {
-          let arr = param+' '+cond+' '
-          arr += val.join(';')
+          let arr = `"${param}" ${cond}`
+          arr = `${arr} "${val.join(',')}"` 
           filters.push(arr)
         } else {
-          filters.push(param+' '+cond+' '+val)
+          filters.push(`"${param}" ${cond} "${val}"`)
         }
       }
       // TODO show first char and color in tab name
-      return 'Tags' + (filters.length ? ' with ': ' ') + filters.join(', ')
+      return 'Tags' + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
     filteredTags(state, store) {
       let tags 

@@ -347,11 +347,11 @@ const Performers = {
         if (notEquals.includes(cond)) cond = '!='
         
         if (type === 'array') {
-          let arr = param+' '+cond+' '
-          arr += val.join(';')
+          let arr = `"${param}" ${cond}`
+          arr = `${arr} "${val.join(',')}"` 
           filters.push(arr)
         } else {
-          filters.push(param+' '+cond+' '+val)
+          filters.push(`"${param}" ${cond} "${val}"`)
         }
       }
       // TODO add first char to name of tab
@@ -362,7 +362,7 @@ const Performers = {
       //   filterChars += chars.join(';')
       //   filters.push(filterChars)
       // }
-      return 'Performers' + (filters.length ? ' with ': ' ') + filters.join(', ')
+      return 'Performers' + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
     filteredPerformers(state, store) {
       // console.log(state.filteredPerformers.length)
