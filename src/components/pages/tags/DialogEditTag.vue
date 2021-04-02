@@ -275,11 +275,23 @@ export default {
     uploadedImage: null,
     dialogWarning: false,
     warningAgree: false,
+    swatches: [
+      ["#cc0e00"],
+      ["#e8004f"],
+      ["#ae0eff"],
+      ["#2041f7"],
+      ["#2196f3"],
+      ["#00bcd4"],
+      ["#009688"],
+      ["#2ac530"],
+      ["#8bc34a"],
+      ["#ff9800"],
+      ["#ff5722"],
+      ["#795548"],
+      ["#9b9b9b"]
+    ],
   }),
   computed: {
-    swatches() {
-      return this.$store.state.swatches
-    },
     tag() {
       let ids = this.$store.getters.getSelectedTags
       let tags = this.$store.getters.tags
