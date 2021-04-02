@@ -178,8 +178,9 @@ const Websites = {
       // sort websites
       if (rootState.Settings.websiteSortBy === 'name') {
         websites = websites.orderBy(website=>website.name.toLowerCase(), [rootState.Settings.websiteSortDirection])
+      } else if (rootState.Settings.websiteSortBy === 'color') {
+        websites = websites.orderBy(website=>rootState.swatches.indexOf(website.color.toLowerCase()), [rootState.Settings.websiteSortDirection])
       } else {
-        // TODO add correct sort for colors based on swatches array
         websites = websites.orderBy(rootState.Settings.websiteSortBy, [rootState.Settings.websiteSortDirection])
       }
 

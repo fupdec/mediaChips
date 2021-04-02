@@ -239,15 +239,14 @@ export default {
       'a','b','c','d','e','f','g','h','i','j','k','l','m','n',
       'o','p','q','r','s','t','u','v','w','x','y','z'
     ],
-    swatches: [
-      "#cc0e00", "#e8004f", "#ae0eff", "#2041f7", "#2196f3", "#00bcd4", "#009688", 
-      "#2ac530", "#8bc34a", "#ff9800", "#ff5722", "#795548", "#9b9b9b"
-    ],
     tagsPerPagePreset: [20,40,60,80,100,150,200],
     selection: null,
     isScrollToTopVisible: false,
   }),
   computed: {
+    swatches() {
+      return this.$store.state.swatches
+    },
     chars: {
       get () {
         return this.$store.state.Settings.tagFirstChar

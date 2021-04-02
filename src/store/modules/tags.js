@@ -178,8 +178,9 @@ const Tags = {
       // sort tags
       if (rootState.Settings.tagSortBy === 'name') {
         tags = tags.orderBy(tag=>tag.name.toLowerCase(), [rootState.Settings.tagSortDirection])
+      } else if (rootState.Settings.tagSortBy === 'color') {
+        tags = tags.orderBy(tag=>rootState.swatches.indexOf(tag.color.toLowerCase()), [rootState.Settings.tagSortDirection])
       } else {
-        // TODO add correct sort for colors based on swatches array
         tags = tags.orderBy(rootState.Settings.tagSortBy, [rootState.Settings.tagSortDirection])
       }
       
