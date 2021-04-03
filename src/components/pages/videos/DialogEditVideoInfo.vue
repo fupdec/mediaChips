@@ -1,42 +1,27 @@
 <template>
-  <v-dialog v-model="$store.state.Videos.dialogEditVideoInfo" scrollable persistent max-width="1200">
-    <v-card>
-      <v-card-title class="edit-card-title">
-        <v-img v-if="isSelectedSingleVideo" class="image-video"
-          :src="'file://' + getImg()" height="100%" max-width="160" max-height="84"
-          gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top">
-          <v-btn @click="playVideo" class="button-play" dark outlined :disabled="!videoExists">
-            <v-icon>mdi-play</v-icon>
-          </v-btn>
-        </v-img>
-        <div class="ml-6">
-          <div class="font-weight-regular headline body-1">
-            Edit video{{isSelectedSingleVideo ? '':'s'}} info 
-            <!-- TODO add help tooltip for understood how works writing when you edit multiple videos.
-              for multiple videos new data not replaced old values, it just add new data. -->
+  <div v-if="$store.state.Videos.dialogEditVideoInfo">
+    <v-dialog v-model="dialog" scrollable persistent max-width="1200">
+      <v-card>
+        <v-card-title class="edit-card-title">
+          <div class="headline">
+            <span class="ml-4">Edit videos info </span>
+            <v-tooltip right>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" class="mb-4" small dark>mdi-help-circle-outline</v-icon>
+              </template>
+              <span>Performers, tags, and websites added in this dialog will be added to the existing ones. <br>
+                Clearing information will affect the selected videos! Use this option carefully. </span>
+            </v-tooltip>
           </div>
-          <div v-if="isSelectedSingleVideo" class="font-weight-light headline body-1">
-            {{fileName}}
-          </div>
-        </div>
-        <v-spacer></v-spacer>
-        <v-btn class="mx-2 my-4" dark @click="close" outlined>Cancel</v-btn>
-        <v-btn color="primary mx-2 my-4" @click="saveVideoInfo" :disabled="!valid"
-        ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
-      </v-card-title>
-      <vuescroll>
-        <v-card-text class="py-0">
-          <v-form ref="form" v-model="valid">
+          <v-spacer></v-spacer>
+          <v-btn @click="close" class="ma-4" dark outlined> Cancel </v-btn>
+          <v-btn @click="saveVideoInfo" color="primary">
+            <v-icon left>mdi-content-save-outline</v-icon> Save </v-btn>
+        </v-card-title>
+        <vuescroll>
+          <v-card-text class="py-0">
             <v-container fluid>
               <v-row>
-                <v-col cols="12" class="py-0 d-flex justify-space-between" v-if="isSelectedSingleVideo">
-                  <v-chip label outlined>
-                    <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{added}}
-                  </v-chip>
-                  <v-chip label outlined>
-                    <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{edit}}
-                  </v-chip>
-                </v-col>
                 <v-col cols="12" md="6">
                   <v-card-actions>
                     <v-spacer></v-spacer>
@@ -45,7 +30,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="name" v-on="on">
-                            <v-icon>mdi-alphabetical-variant</v-icon>
+                            <v-icon color="grey">mdi-alphabetical-variant</v-icon>
                           </v-btn>
                         </template>
                         <span>name</span>
@@ -53,7 +38,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="favorite" v-on="on">
-                            <v-icon>mdi-heart-outline</v-icon>
+                            <v-icon color="grey">mdi-heart-outline</v-icon>
                           </v-btn>
                         </template>
                         <span>favorite</span>
@@ -61,7 +46,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="rating" v-on="on">
-                            <v-icon>mdi-star-outline</v-icon>
+                            <v-icon color="grey">mdi-star-outline</v-icon>
                           </v-btn>
                         </template>
                         <span>rating</span>
@@ -69,7 +54,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="date" v-on="on">
-                            <v-icon>mdi-calendar-plus</v-icon>
+                            <v-icon color="grey">mdi-calendar-plus</v-icon>
                           </v-btn>
                         </template>
                         <span>date added</span>
@@ -132,7 +117,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="name" v-on="on">
-                            <v-icon>mdi-alphabetical-variant</v-icon>
+                            <v-icon color="grey">mdi-alphabetical-variant</v-icon>
                           </v-btn>
                         </template>
                         <span>name</span>
@@ -140,7 +125,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="favorite" v-on="on">
-                            <v-icon>mdi-heart-outline</v-icon>
+                            <v-icon color="grey">mdi-heart-outline</v-icon>
                           </v-btn>
                         </template>
                         <span>favorite</span>
@@ -148,7 +133,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="color" v-on="on">
-                            <v-icon>mdi-palette</v-icon>
+                            <v-icon color="grey">mdi-palette</v-icon>
                           </v-btn>
                         </template>
                         <span>color</span>
@@ -156,7 +141,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="date" v-on="on">
-                            <v-icon>mdi-calendar-plus</v-icon>
+                            <v-icon color="grey">mdi-calendar-plus</v-icon>
                           </v-btn>
                         </template>
                         <span>date added</span>
@@ -208,7 +193,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="name" v-on="on">
-                            <v-icon>mdi-alphabetical-variant</v-icon>
+                            <v-icon color="grey">mdi-alphabetical-variant</v-icon>
                           </v-btn>
                         </template>
                         <span>name</span>
@@ -216,7 +201,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="favorite" v-on="on">
-                            <v-icon>mdi-heart-outline</v-icon>
+                            <v-icon color="grey">mdi-heart-outline</v-icon>
                           </v-btn>
                         </template>
                         <span>favorite</span>
@@ -224,7 +209,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="color" v-on="on">
-                            <v-icon>mdi-palette</v-icon>
+                            <v-icon color="grey">mdi-palette</v-icon>
                           </v-btn>
                         </template>
                         <span>color</span>
@@ -232,7 +217,7 @@
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-btn small outlined value="date" v-on="on">
-                            <v-icon>mdi-calendar-plus</v-icon>
+                            <v-icon color="grey">mdi-calendar-plus</v-icon>
                           </v-btn>
                         </template>
                         <span>date added</span>
@@ -283,13 +268,12 @@
                 </v-col>
                 <v-col cols="4" md="2" align="center" justify="center">
                   <div class="overline mb-3">Favorite</div>
-                  <v-btn @click="favorite=!favorite" :disabled="clearFavorite"
-                    :color="favorite===false ? 'white' : 'pink'" icon x-large 
-                  > <v-icon size="36" v-if="favorite===false" color="grey">mdi-heart-outline</v-icon>
+                  <v-btn @click="favorite=!favorite" :disabled="clearFavorite" color="pink" icon x-large>
+                    <v-icon size="36" v-if="favorite===false" color="grey">mdi-heart-outline</v-icon>
                     <v-icon size="36" v-else color="pink">mdi-heart</v-icon>
                   </v-btn>
                 </v-col>
-                <v-col cols="12" class="mt-6 py-0" v-if="!isSelectedSingleVideo">
+                <v-col cols="12" class="mt-6 py-0">
                   <div class="overline text-center">Clear Information</div>
                   <div cols="12" class="d-flex justify-space-between">
                     <v-switch inset v-model="clearPerformers" color="red">
@@ -344,28 +328,319 @@
                     </v-switch>
                   </div>
                 </v-col>
-                <v-col cols="12" v-if="isSelectedSingleVideo">
-                  <div class="overline text-center mb-4">Bookmark</div>
-                  <v-textarea clearable auto-grow outlined placeholder="Write bookmark text here" 
-                    v-model="$store.state.Bookmarks.bookmarkText" hide-details />
-                </v-col>
-                <v-col cols="12" v-if="isSelectedSingleVideo">
-                  <div class="overline mb-4 edit-path-title">
-                    <span>Path</span>
-                    <v-checkbox v-model="pathEditable" hide-details class="edit-path-chkbx"
-                    off-icon="mdi-pencil-off" on-icon="mdi-pencil"/>
-                  </div>
-                  <v-text-field 
-                    v-model="pathToFile" :rules="[getPathRules]" :disabled="!pathEditable"
-                    outlined placeholder="Write file path here" label="File path" />
-                </v-col>
               </v-row>
             </v-container>
-          </v-form>
-        </v-card-text>
-      </vuescroll>
-    </v-card>
-  </v-dialog>
+          </v-card-text>
+        </vuescroll>
+      </v-card>
+    </v-dialog>
+
+    <v-bottom-sheet v-model="sheet" inset scrollable persistent>
+      <v-card class="preview-sheet">
+        <vuescroll>
+          <v-card-text class="pa-0">
+            <v-btn @click="$store.state.Videos.dialogEditVideoInfo=false" class="close-btn" fab small>
+              <v-icon>mdi-close</v-icon></v-btn>
+            <div class="video-wrapper">
+              <video ref="video" autoplay loop :poster="'file://' + getImg()" muted></video>
+              <div class="gradient" :style="gradient"></div>
+
+              <v-card-actions class="actions">
+                <v-btn @click="playVideo" large outlined :disabled="!videoExists">
+                  <v-icon left large>mdi-play</v-icon> play </v-btn>
+                <v-btn @click="toggleMuted" small outlined fab class="mr-4">
+                  <v-icon v-if="muted">mdi-volume-off</v-icon>
+                  <v-icon v-else>mdi-volume-high</v-icon>
+                </v-btn>
+                <v-rating v-model="rating" clearable hover half-increments size="30"
+                  :color="darkMode?'#fff':'#000'" :background-color="darkMode?'#fff':'#000'" 
+                  empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/>
+                <v-btn @click="favorite=!favorite" class="mx-2" :color="darkMode?'#fff':'#000'" icon large> 
+                  <v-icon size="25">mdi-heart{{favorite? '':'-outline'}}</v-icon>
+                </v-btn>
+                <v-spacer></v-spacer>
+                <v-btn @click="saveVideoInfo" large outlined>
+                  <v-icon left>mdi-content-save</v-icon> save
+                </v-btn>
+              </v-card-actions>
+              
+              <v-btn class="file-info-icon" fab x-small>
+                <v-icon>mdi-information-variant</v-icon>
+              </v-btn>
+              <v-card class="file-info">
+                <div>
+                  <v-icon left size="18">mdi-monitor-screenshot</v-icon>
+                  Resolution: {{video.resolution}}
+                </div>
+                <div>
+                  <v-icon left size="18">mdi-file-video</v-icon>
+                  File extension: .{{fileExtension}}
+                </div>
+                <div>
+                  <v-icon left size="18">mdi-harddisk</v-icon>
+                  File size: {{calcSize(video.size)}}
+                </div>
+                <div>
+                  <v-icon left size="18">mdi-calendar-plus</v-icon>
+                  Added: {{added}}
+                </div>
+                <div>
+                  <v-icon left size="18">mdi-calendar-edit</v-icon>
+                  Last edit: {{edit}}
+                </div>
+              </v-card>
+            </div>
+            <v-row class="mx-2">
+              <v-col cols="12" class="headline text-h4 mt-6">
+                {{fileName}}
+              </v-col>
+              <v-col cols="12">
+                <v-card-actions>
+                  <span class="overline"><v-icon left>mdi-tag-outline</v-icon> tags</span>
+                  <v-spacer></v-spacer>
+                  <span class="caption mr-2">Sort list by</span>
+                  <v-btn-toggle v-model="sortButtonsTags" mandatory color="primary">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="name" v-on="on">
+                          <v-icon color="grey">mdi-alphabetical-variant</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>name</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="favorite" v-on="on">
+                          <v-icon color="grey">mdi-heart-outline</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>favorite</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="color" v-on="on">
+                          <v-icon color="grey">mdi-palette</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>color</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="date" v-on="on">
+                          <v-icon color="grey">mdi-calendar-plus</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>date added</span>
+                    </v-tooltip>
+                  </v-btn-toggle>
+                </v-card-actions>
+                <v-autocomplete v-model="tags" :disabled="clearTags" clearable
+                  :items="tagsAll" item-text="name" class="hidden-close pt-0 mt-0"
+                  item-value="name" no-data-text="No more tags"
+                  multiple hide-selected hide-details
+                  @blur="sort('tags')" :menu-props="{contentClass:'list-with-preview'}"
+                  :filter="filterItemsTags"
+                >
+                  <template v-slot:selection="data">
+                    <v-chip v-bind="data.attrs" close outlined :input-value="data.selected" 
+                      @click="data.select" @click:close="removeItem(data.item, 'tags')" close-icon="mdi-close"
+                      @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                      :color="getTag(data.item.name).color" 
+                    > <span>{{ data.item.name }}</span>
+                    </v-chip>
+                  </template>
+                  <template v-slot:item="data">
+                    <div class="list-item"
+                      @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                    > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
+                        left size="14"> mdi-heart </v-icon>
+                      <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
+                      <span>{{data.item.name}}</span>
+                      <span v-if="data.item.altNames.length" class="aliases"> 
+                        {{data.item.altNames.join(', ').slice(0,50)}}
+                      </span>
+                    </div>
+                  </template>
+                </v-autocomplete>
+              </v-col>
+              <v-col cols="12" lg="6">
+                <v-card-actions>
+                  <span class="overline"><v-icon left>mdi-account-outline</v-icon> performers</span>
+                  <v-spacer></v-spacer>
+                  <span class="caption mr-2">Sort list by</span>
+                  <v-btn-toggle v-model="sortButtonsPerformers" mandatory color="primary">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="name" v-on="on">
+                          <v-icon color="grey">mdi-alphabetical-variant</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>name</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="favorite" v-on="on">
+                          <v-icon color="grey">mdi-heart-outline</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>favorite</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="rating" v-on="on">
+                          <v-icon color="grey">mdi-star-outline</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>rating</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="date" v-on="on">
+                          <v-icon color="grey">mdi-calendar-plus</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>date added</span>
+                    </v-tooltip>
+                  </v-btn-toggle>
+                </v-card-actions>
+                <v-autocomplete v-model="performers" :disabled="clearPerformers" clearable
+                  :items="performersAll" item-text="name" class="hidden-close pt-0 mt-0"
+                  item-value="name" no-data-text="No more performers"
+                  multiple hide-selected hide-details @blur="sort('performers')" 
+                  :menu-props="{contentClass:'list-with-preview'}" :filter="filterItemsPerformers"
+                >
+                  <template v-slot:selection="data">
+                    <v-chip v-bind="data.attrs" close close-icon="mdi-close"
+                      :input-value="data.selected" label class="px-2" outlined
+                      @click="data.select" @click:close="removeItem(data.item, 'performers')"
+                      @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                    > <span> <v-icon v-if="data.item.favorite" small color="pink">
+                      mdi-heart </v-icon> {{ data.item.name }}</span>
+                    </v-chip>
+                  </template>
+                  <template v-slot:item="data">
+                    <div class="list-item"
+                      @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                    > 
+                      <v-icon 
+                        left size="14" 
+                        :color="data.item.favorite===false ? 'grey' : 'pink'"
+                      >
+                        mdi-heart
+                      </v-icon>
+                      <v-rating 
+                        class="rating-inline small mr-2"
+                        v-model="data.item.rating"
+                        color="yellow darken-3"
+                        background-color="grey darken-1"
+                        empty-icon="$ratingFull" 
+                        half-icon="mdi-star-half-full"
+                        dense half-increments readonly size="12"
+                      />
+                      <span>{{data.item.name}}</span>
+                      <span v-if="data.item.aliases.length" class="aliases"> 
+                        aka {{data.item.aliases.join(', ').slice(0,50)}}
+                      </span>
+                    </div>
+                  </template>
+                </v-autocomplete>
+              </v-col>
+              <v-col cols="12" lg="6">
+                <v-card-actions>
+                  <span class="overline"><v-icon left>mdi-web</v-icon> websites</span>
+                  <v-spacer></v-spacer>
+                  <span class="caption mr-2">Sort list by</span>
+                  <v-btn-toggle v-model="sortButtonsWebsites" mandatory color="primary">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="name" v-on="on">
+                          <v-icon color="grey">mdi-alphabetical-variant</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>name</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="favorite" v-on="on">
+                          <v-icon color="grey">mdi-heart-outline</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>favorite</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="color" v-on="on">
+                          <v-icon color="grey">mdi-palette</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>color</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on }">
+                        <v-btn small outlined value="date" v-on="on">
+                          <v-icon color="grey">mdi-calendar-plus</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>date added</span>
+                    </v-tooltip>
+                  </v-btn-toggle>
+                </v-card-actions>
+                <v-autocomplete v-model="websites" :disabled="clearWebsites" clearable
+                  :items="websitesAll" item-text="name" class="hidden-close pt-0 mt-0" 
+                  item-value="name" multiple hide-selected hide-details
+                  no-data-text="No more websites" :menu-props="{contentClass:'list-with-preview'}"
+                >
+                  <template v-slot:selection="data">
+                    <v-chip v-bind="data.attrs" label close close-icon="mdi-close"
+                      @click="data.select" @click:close="removeItem(data.item, 'websites')" 
+                      @mouseover.stop="showImage($event, data.item.id, 'website')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                      :input-value="data.selected" outlined :color="data.item.color"
+                    > <span>{{ data.item.name }}</span>
+                    </v-chip>
+                  </template>
+                  <template v-slot:item="data">
+                    <div class="list-item"
+                      @mouseover.stop="showImage($event, data.item.id, 'website')" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                    > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
+                        left size="14"> mdi-heart </v-icon>
+                      <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
+                      {{data.item.name}}
+                    </div>
+                  </template>
+                </v-autocomplete>
+              </v-col>
+              <v-col cols="12" class="d-flex mt-10">
+                <div class="overline edit-path-title">
+                  <v-checkbox v-model="pathEditable" hide-details class="mt-0 mr-2"
+                  off-icon="mdi-pencil" on-icon="mdi-pencil-off"/>
+                </div>
+                <v-form ref="form" v-model="valid" style="width: 100%;">
+                  <v-text-field 
+                    v-model="pathToFile" :rules="[getPathRules]" :disabled="!pathEditable"
+                    placeholder="Write file path here" label="File path" class="pt-0 mt-0" />
+                </v-form>
+              </v-col>
+              <v-col cols="12">
+                <div class="overline text-center">Bookmark</div>
+                <v-textarea clearable auto-grow outlined placeholder="Write bookmark text here" 
+                  v-model="$store.state.Bookmarks.bookmarkText" hide-details />
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </vuescroll>
+      </v-card>
+    </v-bottom-sheet>
+
+    <v-btn v-if="sheet" @click="saveVideoInfo" fab large class="save-btn">
+      <v-icon large>mdi-content-save</v-icon>
+    </v-btn>
+  </div>
 </template>
 
 
@@ -378,17 +653,19 @@ const shell = require('electron').shell
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import { ipcRenderer } from 'electron'
+import Functions from '@/mixins/Functions'
 
 export default {
   name: "DialogEditPerformer",
   components: {
     vuescroll,
   },
-  mixins: [ShowImageFunction],
+  mixins: [ShowImageFunction, Functions],
   mounted () {
     this.$nextTick(function () {
       // get info of video
       if (this.isSelectedSingleVideo) {
+        this.sheet = true
         let video = _.cloneDeep(this.video)
         this.performers = video.performers.sort()
         this.tags = video.tags.sort()
@@ -410,8 +687,22 @@ export default {
         this.added = dateAdded.toLocaleDateString() + ' ' + dateAdded.toLocaleTimeString()
         let dateEdit = new Date(video.edit)
         this.edit = dateEdit.toLocaleDateString() + ' ' + dateEdit.toLocaleTimeString()
-      }
+        setTimeout(() => {
+          this.playPreview()
+        }, 300)
+      } else this.dialog = true
     })
+  },
+  beforeDestroy() {
+    try {
+      this.$refs.video.src = ''
+    } catch (error) {}
+  },
+  destroyed() {
+    for (const timeout in this.timeouts) {
+      clearTimeout(this.timeouts[timeout])
+    }
+    clearInterval(this.timeouts.z)
   },
   data: () => ({
     valid: false,
@@ -430,6 +721,10 @@ export default {
     videoExists: true,
     edit: '',
     added: '',
+    timeouts: {},
+    muted: true,
+    dialog: false,
+    sheet: false,
   }),
   computed: {
     isSelectedSingleVideo() {
@@ -476,13 +771,63 @@ export default {
         this.$store.dispatch('updateSettingsState', {key:'videoEditWebsitesSortBy', value})
       },
     },
+    darkMode() {
+      return this.$vuetify.theme.isDark
+    },
+    gradient() {
+      let color = this.darkMode ? 'rgb(30 30 30)' : 'rgb(255 255 255)'
+      let colorMiddle = this.darkMode ? 'rgb(30 30 30 / 75%)' : 'rgb(255 255 255 / 75%)'
+      return `background: linear-gradient(to top, ${color}, ${colorMiddle}, rgba(0,0,0,.0))`
+    },
+    fileExtension() {
+      return path.parse(this.video.path).ext.replace('.', '').toLowerCase()
+    },
   },
   methods: {
+    playPreview() {
+      if (!fs.existsSync(this.video.path)) return
+      this.$refs.video.src = this.video.path
+      if (this.video.duration > 65) {
+        this.setVideoProgress(0.1)
+        this.timeouts.a = setTimeout(this.setVideoProgress, 5000, 0.2)
+        this.timeouts.b = setTimeout(this.setVideoProgress, 10000, 0.3)
+        this.timeouts.c = setTimeout(this.setVideoProgress, 15000, 0.4)
+        this.timeouts.d = setTimeout(this.setVideoProgress, 20000, 0.5)
+        this.timeouts.e = setTimeout(this.setVideoProgress, 25000, 0.6)
+        this.timeouts.f = setTimeout(this.setVideoProgress, 30000, 0.7)
+        this.timeouts.g = setTimeout(this.setVideoProgress, 35000, 0.8)
+        this.timeouts.h = setTimeout(this.setVideoProgress, 40000, 0.9)
+        this.timeouts.i = setTimeout(this.setVideoProgress, 45000, 0.95)
+        this.timeouts.z = setInterval(() => {
+          for (const timeout in this.timeouts) {
+            clearTimeout(this.timeouts[timeout])
+          }
+          this.setVideoProgress(0.1)
+          this.timeouts.a = setTimeout(this.setVideoProgress, 5000, 0.2)
+          this.timeouts.b = setTimeout(this.setVideoProgress, 10000, 0.3)
+          this.timeouts.c = setTimeout(this.setVideoProgress, 15000, 0.4)
+          this.timeouts.d = setTimeout(this.setVideoProgress, 20000, 0.5)
+          this.timeouts.e = setTimeout(this.setVideoProgress, 25000, 0.6)
+          this.timeouts.f = setTimeout(this.setVideoProgress, 30000, 0.7)
+          this.timeouts.g = setTimeout(this.setVideoProgress, 35000, 0.8)
+          this.timeouts.h = setTimeout(this.setVideoProgress, 40000, 0.9)
+          this.timeouts.i = setTimeout(this.setVideoProgress, 45000, 0.95)
+        }, 50000)
+      }
+    },
+    setVideoProgress(percent) {
+      this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
+    },
     sortItems(items, type) {
       const sortBy = this[`sortButtons${type}`]
-      let itemsSorted = items.orderBy(i=>(i.name.toLowerCase()),['asc'])
+      let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
       if (sortBy !== 'name') {
-        itemsSorted = itemsSorted.orderBy(i=>(i[sortBy]),['desc']).value()
+        if (sortBy == 'color') {
+          let swatches = this.$store.state.swatches
+          itemsSorted = itemsSorted.orderBy(i=>swatches.indexOf(i.color.toLowerCase()),['asc']).value()
+        } else {
+          itemsSorted = itemsSorted.orderBy(i=>i[sortBy],['desc']).value()
+        }
         return itemsSorted
       } else return itemsSorted.value()
     },
@@ -514,9 +859,9 @@ export default {
       this.$refs.form.validate()
     },
     saveVideoInfo() {
-      this.validate()
-      if (this.valid === false) {
-        return false
+      if (this.isSelectedSingleVideo) {
+        this.validate()
+        if (this.valid === false) return false
       }
       let videos = this.$store.getters.getSelectedVideos
       videos.map(videoId => {
@@ -646,6 +991,10 @@ export default {
         setTimeout(() => { this.videoExists = true }, 1500)
       } else this.videoExists = false
     },
+    toggleMuted() {
+      this.muted = !this.muted
+      this.$refs.video.muted = this.muted
+    },
   },
   watch: {
     clearRating(newValue) {
@@ -664,6 +1013,61 @@ export default {
 
 
 <style lang="less">
+.preview-sheet {
+  padding-bottom: 20px;
+  .close-btn {
+    top: 10px;
+    right: 10px;
+    position: absolute;
+    z-index: 3;
+  }
+  .video-wrapper {
+    position: relative;
+    video {
+      width: 100%;
+      max-height: calc(100vh - 200px);
+    }
+  }
+  .gradient {
+    position: absolute;
+    height: 100px;
+    width: 100%;
+    bottom: 0;
+    z-index: 1;
+  }
+  .actions {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+    .v-rating {
+      display: inline-flex;
+      .v-icon {
+        padding: 0;
+      }
+    }
+  }
+  .file-info-icon {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    z-index: 3;
+    &:hover + .file-info {
+      opacity: 1;
+    }
+  }
+  .file-info {
+    opacity: 0;
+    transition: .3s all;
+    position: absolute;
+    left: 50px;
+    top: 10px;
+    padding: 10px;
+  }
+}
 .rating-favorite {
   display: flex;
   align-items: center;
@@ -673,25 +1077,10 @@ export default {
   display: flex;
   justify-content: center;
 }
-.edit-path-chkbx {
-  display: inline-flex;
-  margin-top: 0;
-  margin-left: 20px;
-}
-.image-video {
-  .v-responsive__content {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .button-play {
-    opacity: 0;
-  }
-  &:hover {
-    .button-play {
-      opacity: 1;
-    }
-  }
+.save-btn {
+  position: fixed;
+  right: 50px;
+  bottom: 50px;
+  z-index: 500;
 }
 </style> 
