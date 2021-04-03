@@ -29,9 +29,9 @@
 
       <vuescroll>
         <v-card-text>
-          <v-container fluid class="py-6">
+          <v-container fluid>
             <v-row>
-              <v-col cols="12" md="8" class="pt-0">
+              <v-col cols="12" md="8" class="pt-3">
                 <v-form ref="form" v-model="valid">
                   <v-row>
                     <v-col cols="12" class="py-0 d-flex justify-space-between">
@@ -159,7 +159,7 @@
               <v-col cols="12" md="4" class="py-0">
                 <v-col cols="12" class="mb-6 cropper-wrapper" align="center" justify="center">
                   <div>Website image</div>
-                  <div class="caption text-center font-italic"> (saves separate) </div>
+                  <div class="caption text-center"> (saves separate) </div>
                   <img id="clipboard" class="img-clipboard-temporary">
                   <Cropper :src="images.main.file" ref="main" class="cropper cropper-website"
                     :stencil-props="{minAspectRatio: 2/2, maxAspectRatio: 3/3 }" :min-height="20"/>

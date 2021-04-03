@@ -709,7 +709,7 @@ export default {
   }
   .aka {
     font-size: 12px;
-    font-style: italic;
+    text-transform: uppercase;
     margin-left: 7px;
     margin-right: 10px;
   }

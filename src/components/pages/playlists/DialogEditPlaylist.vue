@@ -25,7 +25,7 @@
 
       <vuescroll>
         <v-card-text>
-          <v-container fluid class="py-0">
+          <v-container fluid>
             <v-row>
               <v-col cols="12" class="py-0 d-flex justify-space-between">
                 <v-chip label outlined class="mr-4">

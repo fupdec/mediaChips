@@ -12,7 +12,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 let win, loading, player
 
 // Scheme must be registered before the app is ready
-protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
+// protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
 function createLoadingWindow () {
   loading = new BrowserWindow({
@@ -24,6 +24,12 @@ function createLoadingWindow () {
     alwaysOnTop: true, 
     backgroundColor: '#333',
     icon: __static + `/icons/icon.png`,
+    webPreferences: {
+      nodeIntegration: true,
+      nodeIntegrationInWorker: true,
+      webSecurity: false,
+      contextIsolation: false
+    },
   })
   
   if (isDevelopment) {
@@ -67,6 +73,7 @@ function createPlayerWindow(devPath, prodPath) {
     show: false, 
     webPreferences: {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
+      nodeIntegrationInWorker: true,
       webSecurity: false,
       enableRemoteModule: true,
       contextIsolation: false
@@ -101,6 +108,7 @@ function createMainWindow(devPath, prodPath) {
     show: false, 
     webPreferences: {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
+      nodeIntegrationInWorker: true,
       webSecurity: false,
       enableRemoteModule: true,
       contextIsolation: false
@@ -184,7 +192,7 @@ app.on('ready', async () => {
 // local file support
 app.whenReady().then(() => {
   protocol.registerFileProtocol('file', (request, callback) => {
-    const pathname = decodeURI(request.url.replace('file:///', ''))
+    const pathname = decodeURIComponent(request.url.replace('file://', ''))
     callback(pathname)
   })
 })
