@@ -14,7 +14,7 @@
             </v-tooltip>
           </div>
           <v-spacer></v-spacer>
-          <v-btn @click="close" class="ma-4" dark outlined> Cancel </v-btn>
+          <v-btn @click="$store.state.Videos.dialogEditVideoInfo=false" class="ma-4" dark outlined> Cancel </v-btn>
           <v-btn @click="saveVideoInfo" color="primary">
             <v-icon left>mdi-content-save-outline</v-icon> Save </v-btn>
         </v-card-title>
@@ -335,16 +335,17 @@
       </v-card>
     </v-dialog>
 
-    <v-bottom-sheet v-model="sheet" inset scrollable persistent>
-      <v-card class="preview-sheet">
+    <v-bottom-sheet v-model="sheet" inset scrollable persistent content-class="video-sheet">
+      <v-card>
         <vuescroll>
           <v-card-text class="pa-0">
-            <v-btn @click="$store.state.Videos.dialogEditVideoInfo=false" class="close-btn" fab small>
+            <v-btn @click="close" class="close-btn" fab small>
               <v-icon>mdi-close</v-icon></v-btn>
-            <div class="video-wrapper">
-              <video ref="video" autoplay loop :poster="'file://' + getImg()" muted></video>
+            <v-responsive :aspect-ratio="16/9">
+              <div class="video-container">
+                <video ref="video" autoplay loop :poster="'file://' + getImg()" muted></video>
+              </div>
               <div class="gradient" :style="gradient"></div>
-
               <v-card-actions class="actions">
                 <v-btn @click="playVideo" large outlined :disabled="!videoExists">
                   <v-icon left large>mdi-play</v-icon> play </v-btn>
@@ -363,7 +364,7 @@
                   <v-icon left>mdi-content-save</v-icon> save
                 </v-btn>
               </v-card-actions>
-              
+              <div class="headline video-title text-h4">{{fileName}}</div>
               <v-btn class="file-info-icon" fab x-small>
                 <v-icon>mdi-information-variant</v-icon>
               </v-btn>
@@ -389,12 +390,9 @@
                   Last edit: {{edit}}
                 </div>
               </v-card>
-            </div>
+            </v-responsive>
             <v-row class="mx-2">
-              <v-col cols="12" class="headline text-h4 mt-6">
-                {{fileName}}
-              </v-col>
-              <v-col cols="12">
+              <v-col cols="12" class="mt-6">
                 <v-card-actions>
                   <span class="overline"><v-icon left>mdi-tag-outline</v-icon> tags</span>
                   <v-spacer></v-spacer>
@@ -637,7 +635,7 @@
       </v-card>
     </v-bottom-sheet>
 
-    <v-btn v-if="sheet" @click="$store.state.Videos.dialogEditVideoInfo=false" fab class="close-btn-float">
+    <v-btn v-if="sheet" @click="close" fab class="close-btn-float">
       <v-icon large>mdi-close</v-icon>
     </v-btn>
 
@@ -780,8 +778,7 @@ export default {
     },
     gradient() {
       let color = this.darkMode ? 'rgb(30 30 30)' : 'rgb(255 255 255)'
-      let colorMiddle = this.darkMode ? 'rgb(30 30 30 / 75%)' : 'rgb(255 255 255 / 75%)'
-      return `background: linear-gradient(to top, ${color}, ${colorMiddle}, rgba(0,0,0,.0))`
+      return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0))`
     },
     fileExtension() {
       return path.parse(this.video.path).ext.replace('.', '').toLowerCase()
@@ -856,8 +853,11 @@ export default {
       return found
     },
     close() {
-      this.$store.state.Videos.dialogEditVideoInfo = false
+      this.sheet = false
       this.$store.state.Bookmarks.bookmarkText = ''
+      setTimeout(() => {
+        this.$store.state.Videos.dialogEditVideoInfo = false
+      }, 300)
     },
     validate () {
       this.$refs.form.validate()
@@ -1017,24 +1017,38 @@ export default {
 
 
 <style lang="less">
-.preview-sheet {
+.video-sheet {
   padding-bottom: 20px;
+  .v-sheet.v-card {
+    border-radius: 10px 10px 0 0;
+  }
   .close-btn {
     top: 10px;
     right: 10px;
     position: absolute;
     z-index: 3;
   }
-  .video-wrapper {
-    position: relative;
+  .video-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+    position: absolute;
     video {
-      width: 100%;
-      max-height: calc(100vh - 200px);
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: contain;
     }
+  }
+  .video-title {
+    position: absolute;
+    bottom: 80px;
+    z-index: 3;
+    margin: 0 20px;
   }
   .gradient {
     position: absolute;
-    height: 100px;
+    height: 100%;
     width: 100%;
     bottom: 0;
     z-index: 1;
@@ -1071,6 +1085,13 @@ export default {
     top: 10px;
     padding: 10px;
   }
+  &.v-bottom-sheet.v-dialog.v-bottom-sheet--inset {
+    max-width: 55% !important;
+    min-width: 600px;
+  }
+  &.v-dialog:not(.v-dialog--fullscreen) {
+    max-height: calc(100% - 60px) !important;
+  }
 }
 .rating-favorite {
   display: flex;
@@ -1083,14 +1104,14 @@ export default {
 }
 .close-btn-float {
   position: fixed;
-  right: 55px;
-  bottom: 140px;
+  right: 35px;
+  bottom: 120px;
   z-index: 500;
 }
 .save-btn {
   position: fixed;
-  right: 50px;
-  bottom: 50px;
+  right: 30px;
+  bottom: 40px;
   z-index: 500;
 }
 </style> 
