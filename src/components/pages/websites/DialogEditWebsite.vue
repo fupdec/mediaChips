@@ -247,19 +247,19 @@ export default {
     isNetwork: false,
     uploadedImage: null,
     swatches: [
-      ["#cc0e00"],
-      ["#e8004f"],
-      ["#ae0eff"],
-      ["#2041f7"],
-      ["#2196f3"],
-      ["#00bcd4"],
-      ["#009688"],
-      ["#2ac530"],
-      ["#8bc34a"],
-      ["#ff9800"],
-      ["#ff5722"],
-      ["#795548"],
-      ["#9b9b9b"]
+      ["#cc0e00"], // red
+      ["#ff5722"], // orange
+      ["#ff9800"], // yellow
+      ["#8bc34a"], // dark green
+      ["#2ac530"], // green
+      ["#009688"], // dark cyan
+      ["#00bcd4"], // cyan
+      ["#2196f3"], // light blue
+      ["#2041f7"], // blue
+      ["#ae0eff"], // purple
+      ["#e8004f"], // pink 
+      ["#795548"], // brown
+      ["#9b9b9b"], // grey
     ],
   }),
   computed: {

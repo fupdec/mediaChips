@@ -680,9 +680,14 @@ export default {
     },
     sortItems(items, type) {
       const sortBy = this[`sortButtons${type}`]
-      let itemsSorted = items.orderBy(i=>(i.name.toLowerCase()),['asc'])
+      let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
       if (sortBy !== 'name') {
-        itemsSorted = itemsSorted.orderBy(i=>(i[sortBy]),['desc']).value()
+        if (sortBy == 'color') {
+          let swatches = this.$store.state.swatches
+          itemsSorted = itemsSorted.orderBy(i=>swatches.indexOf(i.color.toLowerCase()),['asc']).value()
+        } else {
+          itemsSorted = itemsSorted.orderBy(i=>i[sortBy],['desc']).value()
+        }
         return itemsSorted
       } else return itemsSorted.value()
     },
