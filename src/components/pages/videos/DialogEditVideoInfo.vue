@@ -637,6 +637,10 @@
       </v-card>
     </v-bottom-sheet>
 
+    <v-btn v-if="sheet" @click="$store.state.Videos.dialogEditVideoInfo=false" fab class="close-btn-float">
+      <v-icon large>mdi-close</v-icon>
+    </v-btn>
+
     <v-btn v-if="sheet" @click="saveVideoInfo" fab large class="save-btn">
       <v-icon large>mdi-content-save</v-icon>
     </v-btn>
@@ -1076,6 +1080,12 @@ export default {
 .edit-path-title {
   display: flex;
   justify-content: center;
+}
+.close-btn-float {
+  position: fixed;
+  right: 55px;
+  bottom: 140px;
+  z-index: 500;
 }
 .save-btn {
   position: fixed;
