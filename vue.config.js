@@ -14,10 +14,10 @@ module.exports = {
       externals: ['archiver', 'fluent-ffmpeg', 'chokidar', 'sharp'],
       builderOptions: {
         win: {
-          icon: './icon.ico'
+          icon: 'public/icons/icon.png'
         },
         linux: {
-          icon: 'public/icons/256x256.png',
+          icon: 'public/icons/icons.icns',
           target: ['AppImage'],
           category: 'Utility',
         },
