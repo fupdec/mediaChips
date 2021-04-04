@@ -49,7 +49,7 @@
         <v-card-title>
           <span>New version {{appVersion.replace(/ /gm,'')}} is available!</span>
           <v-spacer></v-spacer>
-          <img alt="AMDB" width="60" height="60" src="/icons/icon.png">
+          <img alt="AMDB" width="60" height="60" :src="logoPath">
         </v-card-title>
         <v-card-actions class="pa-0">
           <v-btn @click="updateApp=false" class="ma-4">
@@ -242,6 +242,9 @@ export default {
       if (imgType === 'website') {
         return this.getImgWebsiteUrl(this.hoveredImageId)
       }
+    },
+    logoPath() {
+      return 'file://' + path.join(__static, '/icons/icon.png')
     },
     updateIntervalDataFromVideos() {
       return this.$store.state.Settings.updateIntervalDataFromVideos

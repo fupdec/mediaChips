@@ -4,7 +4,7 @@
 
     <v-container class="text-center">
       <div v-if="$store.getters.videosTotal==0">
-        <img alt="AMDB" width="200" height="200" src="/icons/icon.png">
+        <img alt="AMDB" width="200" height="200" :src="logoPath">
         <h2 class="mt-8">Welcome to Adult Video Database application!</h2>
         <v-divider class="my-10"></v-divider>
       </div>
@@ -312,6 +312,9 @@ export default {
     },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
+    },
+    logoPath() {
+      return 'file://' + path.join(__static, '/icons/icon.png')
     },
   },
   methods: {

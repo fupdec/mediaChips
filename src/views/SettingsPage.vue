@@ -617,7 +617,7 @@
               </div>
               <v-spacer></v-spacer>
               <div class="text-center d-flex flex-column">
-                <img src="/icons/icon.png" alt="avdb" width="82" height="82">
+                <img :src="logoPath" alt="avdb" width="82" height="82">
                 <span>2021</span>
               </div>
             </div>
@@ -890,6 +890,9 @@ export default {
       set(value) {
         this.$store.dispatch('updateSettingsState', {key:'folders', value})
       },
+    },
+    logoPath() {
+      return 'file://' + path.join(__static, '/icons/icon.png')
     },
   },
   methods: {

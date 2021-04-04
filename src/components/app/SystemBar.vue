@@ -1,6 +1,6 @@
 <template>   
   <v-system-bar window app :class="{maximized:maximized}" :style="{background: headerColor}">
-    <img src="/icons/icon.png" alt="avdb" width="16" height="16">
+    <img :src="logoPath" alt="avdb" width="16" height="16">
     <div class="app-menu-container">
       <v-menu bottom offset-y min-width="160">
         <template v-slot:activator="{ on, attrs }">
@@ -242,6 +242,7 @@ const remote = require('electron').remote
 const win = remote.getCurrentWindow()
 const { ipcRenderer } = require('electron')
 const { webFrame } = require('electron')
+const path = require('path')
 
 export default {
   name: 'SystemBar',
@@ -311,6 +312,9 @@ export default {
       set(value) {
         webFrame.setZoomFactor(value)
       },
+    },
+    logoPath() {
+      return 'file://' + path.join(__static, '/icons/icon.png')
     },
   },
   methods: {
