@@ -58,7 +58,7 @@
             <div class="profile-name text-center">{{performer.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
-            <v-container class="pa-0">
+            <v-container class="px-0">
               <v-row>
                 <v-col cols="12" class="d-flex justify-space-between pb-0">
                   <v-chip label outlined class="mr-4">
