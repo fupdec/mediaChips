@@ -21,6 +21,9 @@ module.exports = {
           target: ['AppImage'],
           category: 'Utility',
         },
+        mac: {
+          icon: 'public/icons/icons.icns',
+        },
       },
     }
   },
