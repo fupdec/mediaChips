@@ -11,7 +11,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // be closed automatically when the JavaScript object is garbage collected.
 let win, loading, player
 
-// Scheme must be registered before the app is ready
 // protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
 function createLoadingWindow () {
@@ -46,23 +45,22 @@ function createLoadingWindow () {
     })
   } else {
     createProtocol('app')
-    // Load the index.html when not in development
     loading.once('show', () => {
       win.webContents.on('did-finish-load', () => {
         console.log('app loaded')
         win.show()
         loading.hide() 
-        loading= null
+        loading = null
       })
     })
-    loading.loadURL(path.join(__static, 'loading.html'))
+    loading.loadURL('file://' + path.join(__static, 'loading.html'))
     loading.webContents.on('did-finish-load', () => {
       loading.show()
     })
   }
 } 
 
-function createPlayerWindow(devPath, prodPath) {
+function createPlayerWindow() {
   // Create the browser window.
   let window = new BrowserWindow({
     width: 1200,
@@ -81,12 +79,10 @@ function createPlayerWindow(devPath, prodPath) {
   })
 
   if (isDevelopment) {
-    // Load the url of the dev server if in development mode
-    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
+    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'player.html')
     if (!process.env.IS_TEST) window.webContents.openDevTools()
   } else {
-    // Load the index.html when not in development
-    window.loadURL(`app://./${prodPath}`)
+    window.loadURL('file://' + path.join(__static, 'player.html'))
   }
 
   window.on('close', (e) => {
@@ -97,7 +93,7 @@ function createPlayerWindow(devPath, prodPath) {
   return window
 }
 
-function createMainWindow(devPath, prodPath) {
+function createMainWindow() {
   // Create the browser window.
   let window = new BrowserWindow({
     width: 1200,
@@ -116,12 +112,10 @@ function createMainWindow(devPath, prodPath) {
   })
 
   if (isDevelopment) {
-    // Load the url of the dev server if in development mode
-    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
+    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'index.html')
     if (!process.env.IS_TEST) window.webContents.openDevTools()
   } else {
-    // Load the index.html when not in development
-    window.loadURL(`app://./${prodPath}`)
+    window.loadURL('file://' + path.join(__static, 'index.html'))
   }
   
   window.on('closed', () => {
@@ -184,8 +178,8 @@ app.on('ready', async () => {
   if (!isDevelopment) {
     createProtocol('app')
   }
-  win = createMainWindow('index', 'index.html')
-  player = createPlayerWindow('player', 'player.html')
+  win = createMainWindow()
+  player = createPlayerWindow()
   createLoadingWindow()
 })
 
