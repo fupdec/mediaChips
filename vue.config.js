@@ -11,10 +11,22 @@ module.exports = {
         })
       },
       nodeIntegration: true,
-      externals: ['archiver', 'fluent-ffmpeg', 'chokidar', 'sharp'],
+      externals: [
+        'archiver', 
+        'fluent-ffmpeg', 
+        'chokidar', 
+        'sharp',
+        'ffmpeg-static',
+        'ffprobe-static',
+      ],
       builderOptions: {
         win: {
-          icon: 'public/icons/icon.png'
+          icon: 'public/icons/icon.png',
+          asar: true,
+          asarUnpack: [
+            "node_modules/@ffmpeg-installer",
+            "node_modules/@ffprobe-installer"
+          ],
         },
         linux: {
           icon: 'public/icons/icons.icns',
@@ -23,6 +35,11 @@ module.exports = {
         },
         mac: {
           icon: 'public/icons/icons.icns',
+          asar: true,
+          asarUnpack: [
+            "node_modules/@ffmpeg-installer",
+            "node_modules/@ffprobe-installer"
+          ],
         },
       },
     }

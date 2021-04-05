@@ -459,9 +459,13 @@
 const { ipcRenderer } = require('electron')
 const fs = require("fs")
 const path = require('path')
-const ffmpeg = require('fluent-ffmpeg')
 const shortid = require('shortid')
 const shell = require('electron').shell
+const ffmpeg = require('fluent-ffmpeg')
+const pathToFfmpeg = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
+const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
+ffmpeg.setFfmpegPath(pathToFfmpeg)
+ffmpeg.setFfprobePath(pathToFfprobe)
 
 // import { chimera } from './webchimera/wrapper'
 import vuescroll from 'vuescroll'
@@ -496,10 +500,6 @@ export default {
       if (dbType == 'tags') setTimeout(() => {this.getMarkers()}, 1000)
     })
     window.addEventListener('resize', this.getCanvasSizes)
-    
-    // include ffmpeg
-    ffmpeg.setFfmpegPath(path.join(this.pathToUserData, '/ffmpeg/ffmpeg.exe')) 
-    ffmpeg.setFfprobePath(path.join(this.pathToUserData, '/ffmpeg/ffprobe.exe'))
   },
   data: () => ({
     canvasSizes: '',

@@ -156,7 +156,6 @@ app.on('ready', async () => {
     fs.mkdirSync(destUserDataFolder)
     fs.mkdirSync(path.join(destUserDataFolder, 'backups'))
     fs.mkdirSync(path.join(destUserDataFolder, 'databases'))
-    fs.mkdirSync(path.join(destUserDataFolder, 'ffmpeg'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/performers'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/previews'))
@@ -168,11 +167,7 @@ app.on('ready', async () => {
     fs.mkdirSync(path.join(destUserDataFolder, 'media/websites'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/markers'))
     fs.copy(srcUserDataFolder, destUserDataFolder, function (err) {
-      if (err) {
-        console.error(err);
-      } else {
-        console.log("user data folder created successfully!\nDon't forget to copy ffmpeg files");
-      } 
+      if (err) console.error(err)
     }) 
   }
   if (!isDevelopment) {

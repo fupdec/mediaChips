@@ -17,7 +17,7 @@
       <v-divider></v-divider>
       <v-stepper-items>
         <v-stepper-content step="1" class="pa-0">
-          <v-card v-if="ffmpegExecutables">
+          <v-card>
             <vuescroll>
               <v-card-text class="text-center">
                 <v-textarea v-model="folderPaths" outlined no-resize
@@ -38,19 +38,6 @@
               <v-btn @click="scanVideosForm = 2" :disabled="folderPaths.length===0" color="primary" class="ma-2">
                 <v-icon left>mdi-video-check</v-icon> Next: parse settings <v-icon large right>mdi-chevron-right</v-icon>
               </v-btn>
-            </v-card-actions>
-          </v-card>
-          <v-card v-else>
-            <v-card-text class="text-center">
-              <v-icon color="red" size="100" class="ma-4">mdi-alert-outline</v-icon>
-              <div>ERROR: ffmpeg.exe or ffprobe.exe not found on path:<br>{{ffmpegDirectory}}</div>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn @click="$store.state.Settings.dialogScanVideos=false" class="ma-4">
-                OK
-              </v-btn>
-              <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
         </v-stepper-content>
@@ -137,7 +124,7 @@
               {{currentVideoScanName}}
             </v-card-actions>
 
-            <v-card-actions v-if="$store.state.Settings.scanProcRun" class="py-1">
+            <v-card-actions v-if="$store.state.Settings.scanProcRun" class="py-1 px-4">
               <v-progress-linear v-if="$store.state.Settings.scanProcRun"
                 height="4" indeterminate reverse class="my-2">
               </v-progress-linear>
@@ -225,6 +212,10 @@ const fs = require('fs')
 const path = require('path')
 const shortid = require('shortid')
 const ffmpeg = require('fluent-ffmpeg')
+const pathToFfmpeg = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
+const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
+ffmpeg.setFfmpegPath(pathToFfmpeg)
+ffmpeg.setFfprobePath(pathToFfprobe)
 
 import vuescroll from 'vuescroll'
 
@@ -240,7 +231,6 @@ export default {
   mounted() {
     this.$nextTick(function () {
       if (this.stage>0) this.scanVideosForm = this.stage
-      this.ffmpegExists()
       this.folderPaths = this.$store.state.Settings.folders.map(f=>f.path).join('\n')
     })
   },
@@ -269,7 +259,6 @@ export default {
     newVideos: [],
     noNewVideosAdded: false,
     textNoVideosAdded: '',
-    ffmpegExecutables: true,
     stop: false,
     fileInfo: {},
     // parsing
@@ -299,20 +288,8 @@ export default {
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
-    ffmpegDirectory() {
-      return path.join(this.pathToUserData, `/ffmpeg`)
-    },
   },
   methods: {
-    ffmpegExists() {
-      let ffmpegPath = path.join(this.pathToUserData, `/ffmpeg/ffmpeg.exe`)
-      let ffprobePath = path.join(this.pathToUserData, `/ffmpeg/ffprobe.exe`)
-      if (fs.existsSync(ffmpegPath) || fs.existsSync(ffprobePath)) {
-        this.ffmpegExecutables = true
-        ffmpeg.setFfmpegPath(path.join(this.$store.getters.getPathToUserData, '/ffmpeg/ffmpeg.exe')) 
-        ffmpeg.setFfprobePath(path.join(this.$store.getters.getPathToUserData, '/ffmpeg/ffprobe.exe'))
-      } else this.ffmpegExecutables = false
-    },
     alertScanErrorHeightChange() {
       if (this.alertScanErrorHeight == 100) {
         this.alertScanErrorHeight = undefined
