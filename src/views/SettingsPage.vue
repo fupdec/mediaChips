@@ -621,6 +621,40 @@
                 <span>2021</span>
               </div>
             </div>
+            <v-divider class="my-4"></v-divider>
+            <div class="d-flex flex-column">
+              <div>Thanks to the people who worked on these wonderful libraries:</div>
+              <div class="d-flex flex-wrap">
+                <span @click="openLink('https://github.com/electron')" class="link">Electron</span>
+                <span @click="openLink('https://github.com/vuejs/vue')" class="link">vue</span>
+                <span @click="openLink('https://github.com/vuetifyjs/vuetify')" class="link">vuetify</span>
+                <span @click="openLink('https://github.com/vuejs/vuex')" class="link">vuex</span>
+                <span @click="openLink('https://www.ffmpeg.org/')" class="link">FFmpeg</span>
+                <span @click="openLink('https://github.com/whyboris/Video-Hub-App')" class="link">Video Hub App</span>
+                <span @click="openLink('https://github.com/apexcharts')" class="link">apexcharts</span>
+                <span @click="openLink('https://github.com/archiverjs/node-archiver')" class="link">archiver</span>
+                <span @click="openLink('https://github.com/axios/axios')" class="link">axios</span>
+                <span @click="openLink('https://github.com/cheeriojs/cheerio')" class="link">cheerio</span>
+                <span @click="openLink('https://github.com/zloirock/core-js')" class="link">core-js</span>
+                <span @click="openLink('https://github.com/eugeneware/ffmpeg-static')" class="link">ffmpeg-static</span>
+                <span @click="openLink('https://github.com/joshwnj/ffprobe-static')" class="link">ffprobe-static</span>
+                <span @click="openLink('https://github.com/pqina/filepond')" class="link">filepond</span>
+                <span @click="openLink('https://github.com/fluent-ffmpeg/node-fluent-ffmpeg')" class="link">fluent-ffmpeg</span>
+                <span @click="openLink('https://github.com/jprichardson/node-fs-extra')" class="link">fs-extra</span>
+                <span @click="openLink('https://github.com/typicode/lowdb')" class="link">lowdb</span>
+                <span @click="openLink('https://github.com/cristiammercado/node-disk-info')" class="link">node-disk-info</span>
+                <span @click="openLink('https://github.com/antelle/node-stream-zip')" class="link">node-stream-zip</span>
+                <span @click="openLink('https://github.com/lovell/sharp')" class="link">sharp</span>
+                <span @click="openLink('https://github.com/dylang/shortid')" class="link">shortid</span>
+                <span @click="openLink('https://github.com/Norserium/vue-advanced-cropper')" class="link">vue-advanced-cropper</span>
+                <span @click="openLink('https://github.com/P3trur0/vue-country-flag')" class="link">vue-country-flag</span>
+                <span @click="openLink('https://github.com/vuejs/vue-router')" class="link">vue-router</span>
+                <span @click="openLink('https://www.npmjs.com/package/vue-the-mask')" class="link">vue-the-mask</span>
+                <span @click="openLink('https://github.com/SortableJS/Vue.Draggable')" class="link">vuedraggable</span>
+                <span @click="openLink('https://github.com/YvesCoding/vuescroll')" class="link">vuescroll</span>
+                <span @click="openLink('https://github.com/Simonwep/selection')" class="link">selection</span>
+              </div>
+            </div>
           </v-card>
         </v-card>
       </v-tab-item>
@@ -1088,5 +1122,9 @@ export default {
       min-height: 32px !important;
     }
   }
+}
+.link {
+  margin-right: 15px;
+  cursor: pointer;
 }
 </style>
