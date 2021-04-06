@@ -2,39 +2,22 @@
   <vuescroll ref="mainContainer">
 
     <v-tabs v-model="tab" centered icons-and-text>
+      <v-tab href="#app-settings" draggable="false">App<v-icon>mdi-application</v-icon></v-tab>
+      <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
       <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
       <v-tab href="#performers-settings" draggable="false">Performers<v-icon>mdi-account</v-icon></v-tab>
       <v-tab href="#tags-settings" draggable="false">Tags<v-icon>mdi-tag</v-icon></v-tab>
-      <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
       <v-tab href="#privacy-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
       <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
       <v-tab href="#about-settings" draggable="false">About<v-icon>mdi-information-variant</v-icon></v-tab>
     </v-tabs>
 
     <v-tabs-items v-model="tab">
-      <v-tab-item value="videos-settings">
+      <v-tab-item value="app-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <div class="pb-10">
-            <v-btn @click="$store.state.Settings.dialogScanVideos=true" block color="primary" x-large rounded>
-              <v-icon size="26" left>mdi-plus</v-icon> Add new videos
-            </v-btn>
-          </div>
-          <div class="d-flex justify-center">
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-              </template>
-              <span>The built-in player does not support all videos, <br>
-                BUT it has additional features: markers, playlists, information editing. 
-                <br> The list of features will be expanded in new releases!</span>
-            </v-tooltip>
-            <span class="mr-10">Play video in:</span>
-            <!-- TODO add checkbox instead radio buttons -->
-            <v-radio-group v-model="playerType" mandatory hide-details row class="mt-0 pt-0">
-              <v-radio label="Built-in player" value="0"></v-radio>
-              <v-radio label="System player" value="1"></v-radio>
-            </v-radio-group>
-          </div>
+          <v-btn @click="$store.state.Settings.dialogScanVideos=true" class="mb-10" block color="primary" x-large rounded>
+            <v-icon size="26" left>mdi-plus</v-icon> Add new videos
+          </v-btn>
 
           <v-card outlined class="mt-10 px-4">
             <div class="headline text-h5 text-center my-4"> Folders
@@ -142,90 +125,50 @@
                 </div>
               </v-col>
             </v-row>
-            <v-divider class="my-4"/>
-            <v-row>
-              <v-col cols="12">
-                <div class="d-flex align-center">
-                  <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                    </template>
-                    <span>If you have moved the video, you can change the path manually</span>
-                  </v-tooltip>
-                  <span class="mr-10">Manually update the video path:</span>
-                  <v-btn color="secondary" @click="dialogUpdatePath=true" rounded>
-                    <v-icon left>mdi-form-textbox</v-icon> Update path
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
           </v-card>
-          
-          <!-- <div class="subtitle mt-10 mb-1">
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
-              </template>
-              <span>This is necessary to play video from a specific time. <br> 
-                Works only with Media Player Classic.</span>
-            </v-tooltip>
-            Path to system player:
-          </div>
-          <v-row>
-            <v-col cols="10">
-              <v-text-field v-model="pathToSystemPlayer" outlined dense
-                hint="e.g. C:\Program Files\MPC-HC64\mpc-hc64.exe" />
-            </v-col>
-            <v-col cols="2">
-              <v-btn color="secondary" @click="testPathToSystemPlayer" block height="calc(100% - 26px)">Test</v-btn>
-            </v-col>
-          </v-row> -->
-          <!-- TODO remove this option from settings JSON -->
-          
-          <v-card outlined class="mt-10 pb-4 px-4">
-            <div class="headline text-h5 text-center py-4"> Video preview</div>
 
-            <v-row>
-              <v-col cols="12" sm="6" class="py-0">
-                <div class="d-flex align-center">
-                  <div class="mr-6">
-                    <v-tooltip top>
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                      </template>
-                      <span>Plays on hover</span>
-                    </v-tooltip>
-                    Video preview enabled:
-                  </div>
-                  <v-switch v-model="videoPreview" inset class="d-inline">
-                    <template v-slot:label>
-                      <span v-if="videoPreview">Yes</span>
-                      <span v-else>No</span>
-                    </template>
-                  </v-switch>
-                </div>
-              </v-col>
-              <v-col cols="12" sm="6" class="py-0">
-                <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
-                  hide-details :thumb-size="24" thumb-label />
-                <div class="caption text-center">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
-              </v-col>
-            </v-row>
-
-            <v-divider class="my-4"/>
-
+          <v-card outlined class="mt-10 pa-4">
             <div class="d-flex align-center">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
                 </template>
-                <span>Will be generated automatically when the video page is opened.</span>
+                <span>If you have moved the video, you can change the path manually</span>
               </v-tooltip>
-              <span class="mr-6">Video preview grid 3x3:</span>
-              <v-switch v-model="videoPreviewGrid" inset class="d-inline">
+              <span class="mr-6">Update path manually in multiple videos:</span>
+              <v-btn @click="dialogUpdatePath=true" class="px-5" rounded color="secondary">
+                <v-icon left>mdi-form-textbox</v-icon> Update path
+              </v-btn>
+            </div>
+            <div class="d-flex align-center mt-6">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                </template>
+                <span>The built-in player does not support all videos, <br>
+                  BUT it has additional features: markers, playlists, information editing. 
+                  <br> The list of features will be expanded in new releases!</span>
+              </v-tooltip>
+              <span class="mr-6">Play video in:</span>
+              <!-- TODO add checkbox instead radio buttons -->
+              <v-radio-group v-model="playerType" mandatory hide-details row class="mt-0 pt-0">
+                <v-radio label="Built-in player" value="0"></v-radio>
+                <v-radio label="System player" value="1"></v-radio>
+              </v-radio-group>
+            </div>
+            <div class="d-flex mt-6">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                </template>
+                <span>Item filters when typing.<br>
+                  Useful when you have a lot of items.</span>
+              </v-tooltip>
+              <span class="mr-6">Item filters:</span>
+              <v-switch v-model="typingFiltersDefault" inset class="d-inline mt-0 pt-0" hide-details>
                 <template v-slot:label>
-                  <span v-if="videoPreviewGrid">Yes</span>
-                  <span v-else>No</span>
+                  <span v-if="typingFiltersDefault">Exact</span>
+                  <span v-else>Inaccurate</span>
                 </template>
               </v-switch>
             </div>
@@ -312,74 +255,6 @@
           </v-card>
         </v-dialog>
       </v-tab-item>
-      <v-tab-item value="performers-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <v-card outlined class="pb-4 px-4">
-            <div class="headline text-h5 text-center py-4"> Parameters </div>
-            <v-btn @click="$store.state.Settings.dialogManagePerformerParameters=true" 
-              class="my-4" block color="primary">
-              <v-icon left>mdi-shape</v-icon> Manage custom parameters
-            </v-btn>
-            <ManagePerformerParameters v-if="$store.state.Settings.dialogManagePerformerParameters"/>
-
-            <div class="mt-8">Edit items of parameter:</div>
-            <EditPerformerItemsOfParameter/>
-          </v-card>
-          
-          <v-card outlined class="mt-10 px-4">
-            <div class="headline text-h5 text-center py-4"> Meter
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
-                </template>
-                <v-card class="my-2">
-                  <v-card-actions>
-                    <div class="text-center mx-4">
-                      You can use a meter to <br>see how hot the performer is. <br>
-                      The larger the tag value, <br>the more the meter will fill. <br><br>
-                      Tags from the video are used <br> in which the performer is involved. <br><br>
-                      Most likely none of your performers <br> will have a fully filled scale. <br>
-                      To increase the scale, <br>you can use a multiplier<br> in the settings -> performer.
-                    </div>
-                    <v-img :src="getMeterImg" width="165"/><br>
-                  </v-card-actions>
-                </v-card>
-              </v-tooltip>
-            </div>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <div class="text-center">Height</div>
-                <v-slider v-model="meterHeight" :min="1" :max="20"
-                  hide-details :thumb-size="32" thumb-label />
-                <div class="caption text-center">{{meterHeight}} pixels</div>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <div class="text-center">
-                  <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                    </template>
-                    <span>Change if the meter of tags shows an incorrect value</span>
-                  </v-tooltip>
-                  Multiplier
-                </div>
-                <v-slider v-model="meterMultiplier" :min="1" :max="100"
-                  hide-details :thumb-size="32" thumb-label />
-                <div class="caption text-center">Value: {{meterMultiplier}} %</div>
-              </v-col>
-            </v-row>
-          </v-card>
-        </v-card>
-      </v-tab-item>
-      <v-tab-item value="tags-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <v-card outlined class="pb-4 px-4">
-            <div class="headline text-h5 text-center py-4"> Parameters </div>
-            <div>Edit items of parameter:</div>
-            <EditTagItemsOfParameter/>
-          </v-card>
-        </v-card>
-      </v-tab-item>
       <v-tab-item value="appearance-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-card outlined class="px-4">
@@ -458,9 +333,7 @@
             </v-row>
           </v-card>
 
-          <v-card outlined class="mt-10 pb-4 px-4">
-            <div class="headline text-h5 text-center py-4">Application</div>
-
+          <v-card outlined class="mt-10 pa-4">
             <div class="d-flex">
               <span class="mr-6">Navigation menu position:</span>
               <v-radio-group v-model="navigationSide" mandatory row hide-details class="mt-0 pt-0">
@@ -489,18 +362,18 @@
                 <v-btn outlined :value="15">15</v-btn>
               </v-btn-toggle>
             </div>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn @click="dialogResetToDefaultSettings=true" rounded dark color="red" large class="pr-3">
-                <v-icon left>mdi-restore</v-icon> Reset to default</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
           </v-card>
+          <v-card-actions class="my-10">
+            <v-spacer></v-spacer>
+            <v-btn @click="dialogResetToDefaultSettings=true" rounded dark color="red" large class="pr-3">
+              <v-icon left>mdi-restore</v-icon> Reset appearance to default</v-btn>
+            <v-spacer></v-spacer>
+          </v-card-actions>
         </v-card>
         <v-dialog v-model="dialogResetToDefaultSettings" width="600">
           <v-card>
             <v-card-title class="headline">
-              Reset to default settings
+              Reset appearance to default settings
               <v-spacer></v-spacer>
               <v-icon color="red">mdi-alert</v-icon>
             </v-card-title>
@@ -518,6 +391,147 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+      </v-tab-item>
+      <v-tab-item value="videos-settings">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <!-- <div class="subtitle mt-10 mb-1">
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+              </template>
+              <span>This is necessary to play video from a specific time. <br> 
+                Works only with Media Player Classic.</span>
+            </v-tooltip>
+            Path to system player:
+          </div>
+          <v-row>
+            <v-col cols="10">
+              <v-text-field v-model="pathToSystemPlayer" outlined dense
+                hint="e.g. C:\Program Files\MPC-HC64\mpc-hc64.exe" />
+            </v-col>
+            <v-col cols="2">
+              <v-btn color="secondary" @click="testPathToSystemPlayer" block height="calc(100% - 26px)">Test</v-btn>
+            </v-col>
+          </v-row> -->
+          <!-- TODO remove this option from settings JSON -->
+          
+          <v-card outlined class="pb-4 px-4">
+            <div class="headline text-h5 text-center py-4"> Video preview</div>
+
+            <v-row>
+              <v-col cols="12" sm="6" class="py-0">
+                <div class="d-flex align-center">
+                  <div class="mr-6">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                      </template>
+                      <span>Plays on hover</span>
+                    </v-tooltip>
+                    Video preview enabled:
+                  </div>
+                  <v-switch v-model="videoPreview" inset class="d-inline">
+                    <template v-slot:label>
+                      <span v-if="videoPreview">Yes</span>
+                      <span v-else>No</span>
+                    </template>
+                  </v-switch>
+                </div>
+              </v-col>
+              <v-col cols="12" sm="6" class="py-0">
+                <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
+                  hide-details :thumb-size="24" thumb-label />
+                <div class="caption text-center">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
+              </v-col>
+            </v-row>
+
+            <v-divider class="my-4"/>
+
+            <div class="d-flex align-center">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                </template>
+                <span>Will be generated automatically when the video page is opened.</span>
+              </v-tooltip>
+              <span class="mr-6">Video preview grid 3x3:</span>
+              <v-switch v-model="videoPreviewGrid" inset class="d-inline">
+                <template v-slot:label>
+                  <span v-if="videoPreviewGrid">Yes</span>
+                  <span v-else>No</span>
+                </template>
+              </v-switch>
+            </div>
+          </v-card>
+        </v-card>
+      </v-tab-item>
+      <v-tab-item value="performers-settings">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <v-card outlined class="pb-4 px-4">
+            <div class="headline text-h5 text-center py-4"> Parameters </div>
+            <v-btn @click="$store.state.Settings.dialogManagePerformerParameters=true" 
+              class="my-4" block color="primary">
+              <v-icon left>mdi-shape</v-icon> Manage custom parameters
+            </v-btn>
+            <ManagePerformerParameters v-if="$store.state.Settings.dialogManagePerformerParameters"/>
+
+            <div class="mt-8">Edit items of parameter:</div>
+            <EditPerformerItemsOfParameter/>
+          </v-card>
+          
+          <v-card outlined class="mt-10 px-4">
+            <div class="headline text-h5 text-center py-4"> Meter
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
+                </template>
+                <v-card class="my-2">
+                  <v-card-actions>
+                    <div class="text-center mx-4">
+                      You can use a meter to <br>see how hot the performer is. <br>
+                      The larger the tag value, <br>the more the meter will fill. <br><br>
+                      Tags from the video are used <br> in which the performer is involved. <br><br>
+                      Most likely none of your performers <br> will have a fully filled scale. <br>
+                      To increase the scale, <br>you can use a multiplier<br> in the settings -> performer.
+                    </div>
+                    <v-img :src="getMeterImg" width="165"/><br>
+                  </v-card-actions>
+                </v-card>
+              </v-tooltip>
+            </div>
+            <v-row>
+              <v-col cols="12" sm="6">
+                <div class="text-center">Height</div>
+                <v-slider v-model="meterHeight" :min="1" :max="20"
+                  hide-details :thumb-size="32" thumb-label />
+                <div class="caption text-center">{{meterHeight}} pixels</div>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <div class="text-center">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                    </template>
+                    <span>Change if the meter of tags shows an incorrect value</span>
+                  </v-tooltip>
+                  Multiplier
+                </div>
+                <v-slider v-model="meterMultiplier" :min="1" :max="100"
+                  hide-details :thumb-size="32" thumb-label />
+                <div class="caption text-center">Value: {{meterMultiplier}} %</div>
+              </v-col>
+            </v-row>
+          </v-card>
+        </v-card>
+      </v-tab-item>
+      <v-tab-item value="tags-settings">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <v-card outlined class="pb-4 px-4">
+            <div class="headline text-h5 text-center py-4"> Parameters </div>
+            <div>Edit items of parameter:</div>
+            <EditTagItemsOfParameter/>
+          </v-card>
+        </v-card>
       </v-tab-item>
       <v-tab-item value="privacy-settings">
         <v-card flat max-width="800" class="py-10" style="margin: auto;">
@@ -814,7 +828,6 @@ export default {
         return this.$store.state.Settings.numberOfPagesLimit
       },
       set(number) {
-        console.log(number)
         this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value:number})
       }
     },
@@ -927,6 +940,14 @@ export default {
     },
     logoPath() {
       return 'file://' + path.join(__static, '/icons/icon.png')
+    },
+    typingFiltersDefault: {
+      get() {
+        return this.$store.state.Settings.typingFiltersDefault
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'typingFiltersDefault', value})
+      },
     },
   },
   methods: {
