@@ -16,7 +16,7 @@
                   <v-icon left>{{getIconParam(param.type)}}</v-icon> 
                   <div class="d-flex justify-space-between" style="width:100%">
                     <span>{{param.name}}</span>
-                    <i class="ml-2">(type: {{param.type}})</i>
+                    <span class="ml-2">(type: {{param.type}})</span>
                   </div>
                 </v-list-item>
               </v-list-item-group>

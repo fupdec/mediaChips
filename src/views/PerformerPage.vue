@@ -159,7 +159,7 @@
                 <v-col v-for="param in params" :key="param.name" cols="4" class="py-0">
                   {{param.name}} <b>{{getCustomParamValue(param.name, param.type)}}</b>
                 </v-col>
-                <v-col cols="12" class="text-center pt-4">
+                <v-col v-if="performer.tags.length" cols="12" class="text-center pt-4">
                   <div class="mt-2 font-weight-light">Tags of performer</div>
                 </v-col>
                 <v-col cols="12" class="text-center py-0">
