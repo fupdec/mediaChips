@@ -265,7 +265,7 @@
               item-text="name" class="hidden-close"
               item-value="name" no-data-text="No more tags"
               :menu-props="{contentClass:'list-with-preview'}"
-              :filter="filterItemsTags"
+              :filter="filterItemsTags" 
             >
               <template v-slot:selection="data">
                 <v-chip
@@ -1074,7 +1074,7 @@ export default {
       }
       if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
       return found
-    },
+    }, // TODO replace this function with function "filterItems" from main window
     filterItemsPerformers(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const aliases = item.aliases

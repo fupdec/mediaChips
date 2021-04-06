@@ -54,7 +54,7 @@
                 class="mb-4 select-small-chips hidden-close val overline" label="Performers" 
                 multiple hide-selected hide-details clearable dense outlined
                 :menu-props="{contentClass:'list-with-preview'}"
-                :filter="filterItemsPerformers" :disabled="filters[i].lock"
+                :filter="filterItems" :disabled="filters[i].lock"
               >
                 <template v-slot:selection="data">
                   <v-chip close small label class="my-1" close-icon="mdi-close"
@@ -99,7 +99,7 @@
                 item-value="name" no-data-text="No more tags" 
                 multiple hide-selected hide-details clearable outlined
                 :menu-props="{contentClass:'list-with-preview'}"
-                :filter="filterItemsTags" :disabled="filters[i].lock"
+                :filter="filterItems" :disabled="filters[i].lock"
               >
                 <template v-slot:selection="data">
                   <v-chip
@@ -343,25 +343,40 @@ export default {
     getValueRules(value) {
       return true
     },
-    filterItemsPerformers(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
+    filterItems(item, queryText) {
+      let query = queryText.toLowerCase()
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
       }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    },
-    filterItemsTags(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const alternateNames = item.altNames
-      let found = false
-      for (let i=0;i<alternateNames.length;i++) {
-        if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
+
+      let synonym = 'altNames' in item ? 'altNames' : 'aliases'
+      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
+
+      if (filtersDefault) {
+        if (item.name.toLowerCase().indexOf(query) > -1) return true
+        else {
+          for (let i=0; i<item[synonym].length; i++) {
+            if (item[synonym][i].toLowerCase().indexOf(query) > -1) return true
+          }
+          return false
+        }
+      } else {
+        if (foundByChars(item.name, query)) return true
+        else {
+          for (let i=0; i<item[synonym].length; i++) {
+            return foundByChars(item[synonym][i], query)
+          }
+        }
       }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
     },
     removeChip(item, i) { 
       const index = this.filters[i].val.indexOf(item.name)

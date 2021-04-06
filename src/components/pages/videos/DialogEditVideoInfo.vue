@@ -69,7 +69,7 @@
                     multiple hide-selected hide-details
                     @blur="sort('performers')" prepend-icon="mdi-account-outline"
                     :menu-props="{contentClass:'list-with-preview'}"
-                    :filter="filterItemsPerformers"
+                    :filter="filterItems"
                   >
                     <template v-slot:selection="data">
                       <v-chip v-bind="data.attrs" close close-icon="mdi-close"
@@ -103,7 +103,7 @@
                         />
                         <span>{{data.item.name}}</span>
                         <span v-if="data.item.aliases.length" class="aliases"> 
-                          aka {{data.item.aliases.join(', ').slice(0,50)}}
+                          aka {{data.item.aliases.join(', ').slice(0,80)}}
                         </span>
                       </div>
                     </template>
@@ -156,7 +156,7 @@
                     multiple hide-selected hide-details
                     @blur="sort('tags')" prepend-icon="mdi-tag-outline"
                     :menu-props="{contentClass:'list-with-preview'}"
-                    :filter="filterItemsTags"
+                    :filter="filterItems"
                   >
                     <template v-slot:selection="data">
                       <v-chip
@@ -179,7 +179,7 @@
                         <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
                         <span>{{data.item.name}}</span>
                         <span v-if="data.item.altNames.length" class="aliases"> 
-                          {{data.item.altNames.join(', ').slice(0,50)}}
+                          {{data.item.altNames.join(', ').slice(0,80)}}
                         </span>
                       </div>
                     </template>
@@ -229,7 +229,7 @@
                     :items="websitesAll" label="Websites" prepend-icon="mdi-web"
                     item-text="name" class="mt-0 hidden-close" 
                     item-value="name" multiple hide-selected hide-details
-                    no-data-text="No more websites"
+                    no-data-text="No more websites" :filter="filterItems"
                     :menu-props="{contentClass:'list-with-preview'}"
                   >
                     <template v-slot:selection="data">
@@ -250,7 +250,10 @@
                       > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
                           left size="14"> mdi-heart </v-icon>
                         <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
-                        {{data.item.name}}
+                        <span>{{data.item.name}}</span>
+                        <span v-if="data.item.altNames.length" class="aliases"> 
+                          {{data.item.altNames.join(', ').slice(0,80)}}
+                        </span>
                       </div>
                     </template>
                   </v-autocomplete>
@@ -437,7 +440,7 @@
                   item-value="name" no-data-text="No more tags"
                   multiple hide-selected hide-details
                   @blur="sort('tags')" :menu-props="{contentClass:'list-with-preview'}"
-                  :filter="filterItemsTags"
+                  :filter="filterItems" 
                 >
                   <template v-slot:selection="data">
                     <v-chip v-bind="data.attrs" close outlined :input-value="data.selected" 
@@ -457,7 +460,7 @@
                       <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
                       <span>{{data.item.name}}</span>
                       <span v-if="data.item.altNames.length" class="aliases"> 
-                        {{data.item.altNames.join(', ').slice(0,50)}}
+                        {{data.item.altNames.join(', ').slice(0,80)}}
                       </span>
                     </div>
                   </template>
@@ -507,7 +510,7 @@
                   :items="performersAll" item-text="name" class="hidden-close pt-0 mt-0"
                   item-value="name" no-data-text="No more performers"
                   multiple hide-selected hide-details @blur="sort('performers')" 
-                  :menu-props="{contentClass:'list-with-preview'}" :filter="filterItemsPerformers"
+                  :menu-props="{contentClass:'list-with-preview'}" :filter="filterItems"
                 >
                   <template v-slot:selection="data">
                     <v-chip v-bind="data.attrs" close close-icon="mdi-close"
@@ -541,7 +544,7 @@
                       />
                       <span>{{data.item.name}}</span>
                       <span v-if="data.item.aliases.length" class="aliases"> 
-                        aka {{data.item.aliases.join(', ').slice(0,50)}}
+                        aka {{data.item.aliases.join(', ').slice(0,80)}}
                       </span>
                     </div>
                   </template>
@@ -589,7 +592,7 @@
                 </v-card-actions>
                 <v-autocomplete v-model="websites" :disabled="clearWebsites" clearable
                   :items="websitesAll" item-text="name" class="hidden-close pt-0 mt-0" 
-                  item-value="name" multiple hide-selected hide-details
+                  item-value="name" multiple hide-selected hide-details :filter="filterItems"
                   no-data-text="No more websites" :menu-props="{contentClass:'list-with-preview'}"
                 >
                   <template v-slot:selection="data">
@@ -608,7 +611,10 @@
                     > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
                         left size="14"> mdi-heart </v-icon>
                       <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
-                      {{data.item.name}}
+                      <span>{{data.item.name}}</span>
+                      <span v-if="data.item.altNames.length" class="aliases"> 
+                        {{data.item.altNames.join(', ').slice(0,80)}}
+                      </span>
                     </div>
                   </template>
                 </v-autocomplete>
@@ -727,6 +733,11 @@ export default {
     muted: true,
     dialog: false,
     sheet: false,
+    // matched: {
+    //   tags: [],
+    //   performers: [],
+    //   websites: [],
+    // }, TODO highlight filtered letters
   }),
   computed: {
     isSelectedSingleVideo() {
@@ -832,26 +843,89 @@ export default {
         return itemsSorted
       } else return itemsSorted.value()
     },
-    filterItemsPerformers(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
+    filterItems(itemF, queryText) {
+      let item = _.cloneDeep(itemF)
+      let query = queryText.toLowerCase()
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
       }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    },
-    filterItemsTags(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const alternateNames = item.altNames
-      let found = false
-      for (let i=0;i<alternateNames.length;i++) {
-        if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
+
+      let synonym = 'altNames' in item ? 'altNames' : 'aliases'
+      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
+
+      if (filtersDefault) {
+        let index = item.name.toLowerCase().indexOf(query)
+        if (index > -1) {
+          // this.matched.tags.push({
+          //   index: index,
+          //   text: item.name,
+          //   query: query,
+          //   type: 'name',
+          //   item: item,
+          // })
+          return true
+        } else {
+          for (let i=0; i<item[synonym].length; i++) {
+            let indexSub = item[synonym][i].toLowerCase().indexOf(query)
+            if (indexSub > -1) {
+              // this.matched.tags.push({
+              //   index: indexSub,
+              //   text: item[synonym][i],
+              //   query: query,
+              //   type: synonym,
+              //   item: item,
+              // })
+              return true
+            } 
+          }
+          return false
+        }
+      } else {
+        if (foundByChars(item.name, query)) return true
+        else {
+          for (let i=0; i<item[synonym].length; i++) {
+            return foundByChars(item[synonym][i], query)
+          }
+        }
       }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
     },
+    // highlightText(text, type, typeSub, id) {
+    //   let match = _.cloneDeep(_.find(this.matched[type], i=>i.item.id==id))
+    //   // console.log(match)
+    //   if (!match || match.type !== typeSub) {
+    //     if (typeof text == 'string') return text
+    //     else return text.join(', ').slice(0,100)
+    //   } 
+    //   let start = match.index
+    //   let end = match.query.length + start
+    //   // console.log(this.matched[type][i].query)
+    //   if (this.$store.state.Settings.typingFiltersDefault) {
+    //     // console.log(text, start, end)
+    //     if (match.type == 'name') return transformText(text, start, end)
+    //     else {
+    //       let synonyms = match.item[match.type]
+    //       console.log(synonyms)
+    //       let synonymIndex = synonyms.indexOf(match.text)
+    //       let textSynonym = synonyms[synonymIndex]
+    //       synonyms[synonymIndex] = transformText(textSynonym, start, end)
+    //       return synonyms.join(', ').slice(0,100)
+    //     } 
+    //   }
+      
+    //   function transformText(text, start, end) {
+    //     // console.log(`${text.substring(0, start)}<b>${text.substring(start, end)}</b>${text.substring(end)}`)
+    //     return `${text.substring(0, start)}<b>${text.substring(start, end)}</b>${text.substring(end)}`
+    //   }
+    // },
     close() {
       this.sheet = false
       this.$store.state.Bookmarks.bookmarkText = ''
