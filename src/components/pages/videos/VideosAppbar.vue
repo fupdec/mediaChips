@@ -31,6 +31,8 @@
 
 <script>
 const fs = require('fs')
+const shell = require('electron').shell
+
 import { ipcRenderer } from 'electron'
 
 export default {
@@ -49,8 +51,14 @@ export default {
   },
   methods: {
     openRandomVideo() {
-      const rand = this.getRandomIntInclusive(1, this.$store.getters.videosTotal)
-      const video = this.$store.getters.videos.value()[rand]
+      const videos = this.$store.getters.filteredVideos.value()
+      if (videos.length == 0) return
+      if (videos.length == 1) {
+        this.playVideo(videos[0])
+        return
+      }
+      const rand = this.getRandomIntInclusive(1, videos.length)
+      const video = videos[rand-1]
       this.playVideo(video)
     },
     getRandomIntInclusive(min, max) {

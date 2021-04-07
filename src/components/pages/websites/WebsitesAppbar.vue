@@ -531,8 +531,14 @@ export default {
       this.$store.commit('updateSelectedWebsites', ids)
     },
     openRandomWebsite() {
-      const rand = this.getRandomIntInclusive(1, this.$store.getters.websitesTotal)
-      const websiteId = this.$store.getters.websites.value()[rand].id
+      const websites = this.$store.getters.filteredWebsites.value()
+      if (websites.length == 0) return
+      if (websites.length == 1) {
+        this.openWebsitePage(websites[0].id)
+        return
+      }
+      const rand = this.getRandomIntInclusive(1, websites.length)
+      const websiteId = websites[rand-1].id
       this.openWebsitePage(websiteId)
     },
     getRandomIntInclusive(min, max) {

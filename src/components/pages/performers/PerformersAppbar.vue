@@ -192,10 +192,15 @@ export default {
       })
     },
     openRandomPerformer() {
-      const rand = this.getRandomIntInclusive(1, this.$store.getters.performersTotal)
-      const performerId = this.$store.getters.performers.value()[rand].id
+      const performers = this.$store.getters.filteredPerformers.value()
+      if (performers.length == 0) return
+      if (performers.length == 1) {
+        this.openPerformerPage(performers[0].id)
+        return
+      }
+      const rand = this.getRandomIntInclusive(1, performers.length)
+      const performerId = performers[rand-1].id
       this.openPerformerPage(performerId)
-      // TODO open only from filtered items. do the same for videos and websites
     },
     getRandomIntInclusive(min, max) {
       min = Math.ceil(min)
