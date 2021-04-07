@@ -115,9 +115,9 @@ export default {
     },
     getImagePath(imgFolder, imgType) {
       if (imgFolder === 'thumb') {
-        return path.join('file://', this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
+        return path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
       }
-      return path.join('file://', this.$store.getters.getPathToUserData, `/media/${imgFolder}s/${this[imgFolder].id}_${imgType}.jpg`)
+      return path.join(this.$store.getters.getPathToUserData, `/media/${imgFolder}s/${this[imgFolder].id}_${imgType}.jpg`)
     },
     checkImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {
