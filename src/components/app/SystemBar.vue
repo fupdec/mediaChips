@@ -307,10 +307,11 @@ export default {
     },
     zoom: {
       get() {
-        return webFrame.getZoomFactor()
+        return this.$store.state.Settings.zoom
       },
       set(value) {
         webFrame.setZoomFactor(value)
+        this.$store.dispatch('updateSettingsState', {key:'zoom', value})
       },
     },
     logoPath() {

@@ -5,6 +5,7 @@ const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json'
 const adapterSettings = new FileSync(pathToDbSettings)
 const low = require('lowdb')
 const dbs = low(adapterSettings)
+const { webFrame } = require('electron')
 
 import router from '@/router'
 import Vuetify from '@/plugins/vuetify'
@@ -129,6 +130,7 @@ dbs.defaults({
   typingFiltersDefault: false,
   watchFolders: false,
   folders: [],
+  zoom: webFrame.getZoomFactor(),
 }).write()
 
 const Settings = {
@@ -260,6 +262,7 @@ const Settings = {
     typingFiltersDefault: dbs.get('typingFiltersDefault').value(),
     watchFolders: dbs.get('watchFolders').value(),
     folders: dbs.get('folders').value(),
+    zoom: dbs.get('zoom').value(),
   }),
   mutations: {
     updateSettings (state) {
