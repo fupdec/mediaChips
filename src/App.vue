@@ -244,7 +244,7 @@ export default {
       }
     },
     logoPath() {
-      return 'file://' + path.join(__static, '/icons/icon.png')
+      return path.join('file://', __static, '/icons/icon.png')
     },
     updateIntervalDataFromVideos() {
       return this.$store.state.Settings.updateIntervalDataFromVideos

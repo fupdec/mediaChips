@@ -25,7 +25,7 @@ export default {
       } else if (imgMainChecked) {
         return 'file://' + imgMainChecked
       } else {
-        return 'file://' + path.join(this.pathToUserData, '/img/templates/performer.png')
+        return path.join('file://', this.pathToUserData, '/img/templates/performer.png')
       }
     },
     getImgTagsUrl(tagId) {
@@ -34,7 +34,7 @@ export default {
       if (imgChecked) {
         return 'file://' + imgChecked
       } else {
-        return 'file://' + path.join(this.pathToUserData, '/img/templates/tag.png')
+        return path.join('file://', this.pathToUserData, '/img/templates/tag.png')
       }
     },
     getImgWebsiteUrl(websiteId) {
@@ -43,7 +43,7 @@ export default {
       if (imgChecked) {
         return 'file://' + imgChecked
       } else {
-        return 'file://' + path.join(this.pathToUserData, '/img/templates/website.png')
+        return path.join('file://', this.pathToUserData, '/img/templates/website.png')
       }
     },
     checkImageExist(imgPath) {

@@ -11,7 +11,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // be closed automatically when the JavaScript object is garbage collected.
 let win, loading, player
 
-// protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
+protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
 function createLoadingWindow () {
   loading = new BrowserWindow({
@@ -39,10 +39,6 @@ function createLoadingWindow () {
         loading.hide()
       })
     })
-    loading.loadURL('file://' + path.join(__static, 'loading.html'))
-    loading.webContents.on('did-finish-load', () => {
-      loading.show()
-    })
   } else {
     createProtocol('app')
     loading.once('show', () => {
@@ -53,11 +49,11 @@ function createLoadingWindow () {
         loading = null
       })
     })
-    loading.loadURL('file://' + path.join(__static, 'loading.html'))
-    loading.webContents.on('did-finish-load', () => {
-      loading.show()
-    })
   }
+  loading.loadURL(path.join('file://', __static, 'loading.html'))
+  loading.webContents.on('did-finish-load', () => {
+    loading.show()
+  })
 } 
 
 function createPlayerWindow() {
@@ -82,7 +78,7 @@ function createPlayerWindow() {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'player.html')
     if (!process.env.IS_TEST) window.webContents.openDevTools()
   } else {
-    window.loadURL('file://' + path.join(__static, 'player.html'))
+    window.loadURL(path.join('file://', __static, 'player.html'))
   }
 
   window.on('close', (e) => {
@@ -115,7 +111,7 @@ function createMainWindow() {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'index.html')
     if (!process.env.IS_TEST) window.webContents.openDevTools()
   } else {
-    window.loadURL('file://' + path.join(__static, 'index.html'))
+    window.loadURL(path.join('file://', __static, 'index.html'))
   }
   
   window.on('closed', () => {

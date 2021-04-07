@@ -3,6 +3,7 @@ const fs = require("fs")
 const path = require("path")
 const sharp = require('sharp')
 import { Cropper, CircleStencil } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 export default {
   components: {
@@ -114,13 +115,13 @@ export default {
     },
     getImagePath(imgFolder, imgType) {
       if (imgFolder === 'thumb') {
-        return path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
+        return path.join('file://', this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
       }
-      return path.join(this.$store.getters.getPathToUserData, `/media/${imgFolder}s/${this[imgFolder].id}_${imgType}.jpg`)
+      return path.join('file://', this.$store.getters.getPathToUserData, `/media/${imgFolder}s/${this[imgFolder].id}_${imgType}.jpg`)
     },
     checkImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {
-        this.images[imgType].file = imgPath
+        this.images[imgType].file = path.join('file://', imgPath)
         this.images[imgType].display = true
       } else {
         this.images[imgType].file = ''

@@ -314,7 +314,7 @@ export default {
       },
     },
     logoPath() {
-      return 'file://' + path.join(__static, '/icons/icon.png')
+      return path.join('file://', __static, '/icons/icon.png')
     },
   },
   methods: {
