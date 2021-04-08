@@ -1,7 +1,8 @@
 <script>
-const fs = require("fs")
-const path = require("path")
-const sharp = require('sharp')
+const fs = require('fs')
+const path = require('path')
+
+import jimp from 'jimp'
 import { Cropper, CircleStencil } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
@@ -32,60 +33,50 @@ export default {
       }
       return image
     },
-    decodeBase64Image(dataString) {
-      var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
-        response = {}
-      if (matches.length !== 3) {
-        return new Error('Invalid input string')
-      }
-      response.type = matches[1]
-      response.data = Buffer.from(matches[2], 'base64')
-      // console.log(response)
-      return response
-    },
     compressImage(inputImage, outputImagePath, imgType, outputWidth) {
-      let sizes = outputWidth ? outputWidth : 400
-      let imgQuality = 85
+      let sizes = {} 
+      sizes.height = jimp.AUTO
+      sizes.width = outputWidth ? outputWidth : 400
       if (['main','alt','custom1','custom2'].includes(imgType)) {
-        sizes = 500
+        sizes.width = 500
       }
       if (imgType == 'header') {
-        sizes = 1400
+        sizes.width = 1400
       }
       if (imgType == 'avatar') {
-        sizes = 164
+        sizes.width = 164
       }
       if (imgType == 'thumb') {
-        sizes = { height: 320 }
+        sizes.height = 320
+        sizes.width = jimp.AUTO
       }
-      const image = sharp(inputImage)
-      image.metadata()
-        .then(function(metadata) {
+      const buffer = Buffer.from(inputImage, "base64")
+      jimp.read(buffer)
+        .then(image => {
           if (imgType != 'thumb') {
-            sizes = metadata.width > sizes ? sizes : metadata.width
-            sizes = metadata.width < sizes ? metadata.width : sizes
+            if (image.bitmap.width < sizes.width) {
+              sizes.width = image.bitmap.width
+            }
           }
-          // TODO: fix thumb size or maybe input size for all types
           return image
-            .resize(sizes)
-            .jpeg({
-              quality: imgQuality,
-              chromaSubsampling: '4:4:4'
-            })
-            .toFile(outputImagePath)
+            .resize(sizes.width, sizes.height)
+            .quality(85)
+            .write(outputImagePath)
+        })
+        .catch(err => {
+          console.error(err)
         })
     },
     crop: async function(imgOutputPath, imgType, outputWidth, itemId) {
       let {coordinates, canvas} = this.$refs[imgType].getResult()
 			this.coordinates = coordinates
       let imgBuffer = canvas.toDataURL()
-      imgBuffer = this.decodeBase64Image(imgBuffer)
-      await this.compressImage(imgBuffer.data, imgOutputPath, imgType, outputWidth)
+      imgBuffer = imgBuffer.replace(/^data:image\/\w+;base64,/, '')
+      await this.compressImage(imgBuffer, imgOutputPath, imgType, outputWidth)
       if (imgOutputPath.includes('tags')) {
         this.$store.state.Tags.updateImage = Date.now()
       }
       if (imgOutputPath.includes('performers')) {
-        console.log(itemId)
         this.$store.state.Performers.updateImages = {
           type: imgType,
           key: Date.now(),

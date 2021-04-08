@@ -608,7 +608,7 @@
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div class="d-flex flex-column">
-                <div>Adult Video Database 0.7.4</div>
+                <div>Adult Video Database 0.8.0 (Angela)</div>
                 <p class="text--secondary">by fupdec</p>
                 <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database')" color="#eee" light rounded class="px-5 mb-4">
                   <v-icon left>mdi-github</v-icon> Github </v-btn>
@@ -655,10 +655,10 @@
                 <span @click="openLink('https://github.com/pqina/filepond')" class="link">filepond</span>
                 <span @click="openLink('https://github.com/fluent-ffmpeg/node-fluent-ffmpeg')" class="link">fluent-ffmpeg</span>
                 <span @click="openLink('https://github.com/jprichardson/node-fs-extra')" class="link">fs-extra</span>
+                <span @click="openLink('https://github.com/oliver-moran/jimp')" class="link">jimp</span>
                 <span @click="openLink('https://github.com/typicode/lowdb')" class="link">lowdb</span>
                 <span @click="openLink('https://github.com/cristiammercado/node-disk-info')" class="link">node-disk-info</span>
                 <span @click="openLink('https://github.com/antelle/node-stream-zip')" class="link">node-stream-zip</span>
-                <span @click="openLink('https://github.com/lovell/sharp')" class="link">sharp</span>
                 <span @click="openLink('https://github.com/dylang/shortid')" class="link">shortid</span>
                 <span @click="openLink('https://github.com/Norserium/vue-advanced-cropper')" class="link">vue-advanced-cropper</span>
                 <span @click="openLink('https://github.com/P3trur0/vue-country-flag')" class="link">vue-country-flag</span>

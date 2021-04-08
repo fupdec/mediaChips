@@ -1,49 +1,23 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.7.4-beta?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.8.0-beta?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
 ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
-<img align="left" width="110" height="110" src="./public/icons/icon.png">
+<img align="right" width="110" height="110" src="./public/icons/icon.png">
 
 # Adult Video Database
-Manage your porn video collection - add performers, tags, websites and have fun!
+Manage your porn video collection - add performers, tags, websites and have fun! <br>
+This is an open source desktop application for Windows, Mac and Linux!
 
-## Sponsorship and New Releases
+## &#129489;&#127995;&#8205;&#129309;&#8205;&#129489;&#127996; Community 
+You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a> and &#128279;<a href="https://discord.gg/QSnXFvXZVh">Discord</a>
+
+## Full Version and Sponsorship  
 Subscribe to &#128279;<a href="https://www.patreon.com/avdb">Patreon</a> to receive new releases and to support the development of the application.
 
-## Community 
-&#129489;&#127995;&#8205;&#129309;&#8205;&#129489;&#127996; You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a> and &#128279;<a href="https://discord.gg/QSnXFvXZVh">Discord</a>
-
-## Install application (Windows)
-1) To install, run the executable file. <br>
-You can download the latest executable under &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/releases">Releases</a> on the right hand side of this page. <br>
-2) After the first launch, go to your "AppData" directory (just write %appdata% in address bar). <br>
-Find the folder with the name of this application "AVDB". The folder "userfiles" should appear in it. <br>
-3) Then you should download &#128279;<a href="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z">archive</a> with FFmpeg <br>
-4) Extract files ffmpeg.exe and ffprobe.exe from folder "bin" in archive and place this files into folder "ffmpeg" in "userfiles".  <br>
-Check the right way to files should be "C:\Users\UserName\AppData\Roaming\AVDB\userfiles\ffmpeg\". <br>
-5) And now you can scan videos from application! It's all.
-
-### Portable version (Windows)
-After the first launch, a folder "userdata" will be created in the folder with the executable file. <br>
-Also need to copy files ffmpeg.exe and ffprobe.exe to the folder "userdata\userfiles\ffmpeg\"
-
-## Linux and macOS support
-Will be in the near future. You can follow the news in any of the communities above.
-
-## Built-in video player
-You can play videos inside the app, add markers to videos, open playlists and more. <br>
-!!! Important note: I had to abandon the VLC player, since to launch it I used the WebChimera.js framework, which does not work on Linux and Mac OS. <br>
-If you used VLC player only for this application, then you can uninstall it from the system. <br> 
-Now, to play video inside the application, HTML5 video player is used, which does not support some formats. <br>
-Support for all formats will be in the near future.
-### Guide for configuring the VLC player for releases v0.7.1 and older: <br>
-1) download and install VLC player. &#128279;<a href="https://www.videolan.org/vlc/">Official page</a> <br>
-2) a system variable must be registered in Windows Path. <br>
-In the variable you need to register the path to the folder of the VLC player. <br>
-By default it will be like "C:\Program Files\VideoLAN\VLC". <br>
-This &#128279;<a href="https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/">guide</a> can help you <br>
+## Download demo
+You can download the latest demo version under &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/releases">Releases</a> on the right hand side of this page.
 
 ## Features
 
