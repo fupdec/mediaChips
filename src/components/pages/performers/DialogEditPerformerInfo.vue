@@ -187,7 +187,7 @@
                   </v-col>
                   <v-col cols="3" sm="1">
                     <div class="masked-block">
-                      <v-text-field label="Bra" placeholder=" " class="masked-input"
+                      <v-text-field v-model="bra" label="Bra" placeholder=" " class="masked-input"
                         persistent-hint hint='in'/>
                       <the-mask v-model="bra" mask="###" type="text" class="masked-mask"/>
                     </div>
@@ -198,14 +198,14 @@
                   </v-col>
                   <v-col cols="3" sm="1">
                     <div class="masked-block">
-                      <v-text-field label="Waist" class="masked-input"
+                      <v-text-field v-model="waist" label="Waist" class="masked-input"
                         persistent-hint hint='in' placeholder=" "/>
                       <the-mask v-model="waist" mask="###" type="text" class="masked-mask"/>
                     </div>
                   </v-col>
                   <v-col cols="3" sm="1">
                     <div class="masked-block">
-                      <v-text-field label="Hip" class="masked-input"
+                      <v-text-field v-model="hip" label="Hip" class="masked-input"
                         persistent-hint hint='in' placeholder=" "/>
                       <the-mask v-model="hip" mask="###" type="text" class="masked-mask"/>
                     </div>
