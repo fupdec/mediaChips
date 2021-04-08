@@ -21,12 +21,20 @@ module.exports = {
       ],
       builderOptions: {
         win: {
+          target: "nsis",
+          verifyUpdateCodeSignature: false,
           icon: 'public/icons/icon.png',
           asar: true,
           asarUnpack: [
             "node_modules/@ffmpeg-installer",
             "node_modules/@ffprobe-installer"
           ],
+        },
+        nsis: {
+          oneClick: false,
+          perMachine: false,
+          allowElevation: true,
+          allowToChangeInstallationDirectory: true
         },
         linux: {
           icon: 'public/icons/icons.icns',
