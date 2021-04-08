@@ -58,20 +58,23 @@
             </template>
             
             <v-list dense class="context-menu">
-              <v-list-item @click="$store.dispatch('updateSettingsState', {key:'navigationSide', value: '1'})" class="pr-1" link>
+              <v-list-item @click="navigationSide = '1'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-left-variant</v-icon> Side
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='1'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="$store.dispatch('updateSettingsState', {key:'navigationSide', value: '2'})" class="pr-1" link>
+              <v-list-item @click="navigationSide = '2'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-bottom-variant</v-icon> Bottom
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='2'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="$store.dispatch('updateSettingsState', {key:'navigationSide', value: '0'})" class="pr-1" link>
+              <v-list-item @click="navigationSide = '0'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-none-variant</v-icon> None
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='0'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -86,30 +89,35 @@
             </template>
             
             <v-list dense class="context-menu">
-              <v-list-item @click="updateGutterSize('xs')" class="pr-1" link>
+              <v-list-item @click="gapSize = 'xs'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-xs</v-icon> Extra Small
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='xs'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="updateGutterSize('s')" class="pr-1" link>
+              <v-list-item @click="gapSize = 's'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-s</v-icon> Small
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='s'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="updateGutterSize('m')" class="pr-1" link>
+              <v-list-item @click="gapSize = 'm'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-m</v-icon> Medium
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='m'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="updateGutterSize('l')" class="pr-1" link>
+              <v-list-item @click="gapSize = 'l'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-l</v-icon> Large
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='l'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="updateGutterSize('xl')" class="pr-1" link>
+              <v-list-item @click="gapSize = 'xl'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-xl</v-icon> Extra Large
                 </v-list-item-title>
+                <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='xl'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -305,6 +313,22 @@ export default {
         this.$store.dispatch('updateSettingsState', {key:'playerType', value})
       },
     },
+    navigationSide: {
+      get() {
+        return this.$store.state.Settings.navigationSide
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})
+      },
+    },
+    gapSize: {
+      get() {
+        return this.$store.state.Settings.gapSize
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'gapSize', value})
+      },
+    },
     zoom: {
       get() {
         return this.$store.state.Settings.zoom
@@ -351,9 +375,6 @@ export default {
     },
     forward() {
       this.$router.go(1)
-    },
-    updateGutterSize(size) {
-      this.$store.dispatch('updateSettingsState', {key: 'gapSize', value: size})
     },
   },
 }
