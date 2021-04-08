@@ -158,17 +158,32 @@
               </v-col>
               <v-col cols="12" md="4" class="py-0">
                 <v-col cols="12" class="mb-6 cropper-wrapper" align="center" justify="center">
-                  <div>Website image</div>
-                  <div class="caption text-center"> (saves separate) </div>
+                   <div> 
+                      <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                          <v-icon v-on="on" left small>mdi-help-circle-outline</v-icon>
+                        </template>
+                        <span>Saves separate on click button "Crop/Save"</span>
+                      </v-tooltip>
+                      <span class="overline">Website image</span>
+                    </div>
+                    <v-alert v-if="size.width && size.width<500" type="info" text dense class="pa-1">
+                      Recomended size 500x500px
+                    </v-alert>
                   <img id="clipboard" class="img-clipboard-temporary">
-                  <Cropper :src="images.main.file" ref="main" class="cropper cropper-website"
-                    :stencil-props="{minAspectRatio: 2/2, maxAspectRatio: 3/3 }" :min-height="20"/>
+                  <div class="cropper-block">
+                    <Cropper :src="images.main.file" ref="main" class="cropper cropper-website" 
+                      :stencil-props="{minAspectRatio: 2/2, maxAspectRatio: 3/3 }" :min-height="20"
+                      :defaultSize="defaultSize" @change="updateSize"/>
+                    <div v-if="size.width && size.height" class="cropper-size">
+                      width: {{ size.width }}px <br> height: {{ size.height }}px</div>
+                  </div>
                   <v-btn @click="pasteImageFromClipboard('main')" small
                     class="ma-2" :color="images.main.btnColor">
                     <v-icon left>mdi-clipboard-outline</v-icon> Paste
                   </v-btn>
                   <v-btn v-if="images.main.display" 
-                    @click="crop(getImagePath('website',''),'main',600),loader='imgMainLoading'" 
+                    @click="crop(getImagePath('website',''),'main',500),loader='imgMainLoading'" 
                     class="ma-2" color="primary" small
                     :loading="imgMainLoading" :disabled="imgMainLoading"
                   > <v-icon left>mdi-crop</v-icon> Crop / save
@@ -261,6 +276,10 @@ export default {
       ["#795548"], // brown
       ["#9b9b9b"], // grey
     ],
+    size: {
+      width: null,
+      height: null,
+    },
   }),
   computed: {
     website() {
@@ -471,6 +490,16 @@ export default {
       const index = this.childWebsites.indexOf(item.name)
       if (index >= 0) this.childWebsites.splice(index, 1)
     },
+    defaultSize({ imageSize, visibleArea }) {
+			return {
+				width: (visibleArea || imageSize).width,
+				height: (visibleArea || imageSize).height,
+			}
+		},
+    updateSize({ coordinates }) {
+			this.size.width = Math.round(coordinates.width);
+			this.size.height = Math.round(coordinates.height);
+		},
   },
 }
 </script>

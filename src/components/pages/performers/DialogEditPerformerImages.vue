@@ -29,13 +29,16 @@
                 <v-col cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Main</p>
-                    <Cropper
-                      :src="images.main.file"
-                      ref="main"
-                      class="cropper"
-                      :stencil-props="{aspectRatio: 5/8}"
-                      :min-height="20"
-                    />
+                    <v-alert v-if="size.main.width && size.main.width<500" type="info" text dense class="caption pa-1">
+                      Recomended size 500x800px
+                    </v-alert>
+                    <div class="cropper-block">
+                      <Cropper :src="images.main.file" ref="main" class="cropper"
+                        :stencil-props="{aspectRatio: 5/8}" :min-height="20" 
+                        :defaultSize="defaultSize" @change="updateSize($event, 'main')"/>
+                      <div v-if="size.main.width && size.main.height" class="cropper-size">
+                        width: {{ size.main.width }}px <br> height: {{ size.main.height }}px</div>
+                    </div>
                     <v-btn @click="addImage('main')" color="green" icon small>
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
@@ -60,13 +63,16 @@
                 <v-col cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Alternate</p>
-                    <Cropper
-                      :src="images.alt.file"
-                      ref="alt"
-                      class="cropper"
-                      :stencil-props="{aspectRatio: 5/8}"
-                      :min-height="20"
-                    />
+                    <v-alert v-if="size.alt.width && size.alt.width<500" type="info" text dense class="caption pa-1">
+                      Recomended size 500x800px
+                    </v-alert>
+                    <div class="cropper-block">
+                      <Cropper :src="images.alt.file" ref="alt" class="cropper"
+                        :stencil-props="{aspectRatio: 5/8}" :min-height="20"
+                        :defaultSize="defaultSize" @change="updateSize($event, 'alt')"/>
+                      <div v-if="size.alt.width && size.alt.height" class="cropper-size">
+                        width: {{ size.alt.width }}px <br> height: {{ size.alt.height }}px</div>
+                    </div>
                     <v-btn @click="addImage('alt')" color="green" icon small>
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
@@ -91,13 +97,16 @@
                 <v-col cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">First additional</p>
-                    <Cropper
-                      :src="images.custom1.file"
-                      ref="custom1"
-                      class="cropper"
-                      :stencil-props="{aspectRatio: 5/8}"
-                      :min-height="20"
-                    />
+                    <v-alert v-if="size.custom1.width && size.custom1.width<500" type="info" text dense class="caption pa-1">
+                      Recomended size 500x800px
+                    </v-alert>
+                    <div class="cropper-block">
+                      <Cropper :src="images.custom1.file" ref="custom1" class="cropper"
+                        :stencil-props="{aspectRatio: 5/8}" :min-height="20" 
+                        :defaultSize="defaultSize" @change="updateSize($event, 'custom1')"/>
+                      <div v-if="size.custom1.width && size.custom1.height" class="cropper-size">
+                        width: {{ size.custom1.width }}px <br> height: {{ size.custom1.height }}px</div>
+                    </div>
                     <v-btn @click="addImage('custom1')" color="green" icon small>
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
@@ -122,13 +131,16 @@
                 <v-col cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Second additional</p>
-                    <Cropper
-                      :src="images.custom2.file"
-                      ref="custom2"
-                      class="cropper"
-                      :stencil-props="{aspectRatio: 5/8}"
-                      :min-height="20"
-                    />
+                    <v-alert v-if="size.custom2.width && size.custom2.width<500" type="info" text dense class="caption pa-1">
+                      Recomended size 500x800px
+                    </v-alert>
+                    <div class="cropper-block">
+                      <Cropper :src="images.custom2.file" ref="custom2" class="cropper"
+                        :stencil-props="{aspectRatio: 5/8}" :min-height="20"
+                        :defaultSize="defaultSize" @change="updateSize($event, 'custom2')"/>
+                      <div v-if="size.custom2.width && size.custom2.height" class="cropper-size">
+                        width: {{ size.custom2.width }}px <br> height: {{ size.custom2.height }}px</div>
+                    </div>
                     <v-btn @click="addImage('custom2')" color="green" icon small>
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
@@ -153,12 +165,16 @@
                 <v-col cols="12" md="4" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Avatar</p>
-                    <Cropper
-                      :src="images.avatar.file"
-                      ref="avatar"
-                      class="cropper"
-                      :stencilComponent="$options.components.CircleStencil"
-                    />
+                    <v-alert v-if="size.avatar.width && size.avatar.width<164" type="info" text dense class="caption pa-1">
+                      Recomended size 164x164px
+                    </v-alert>
+                    <div class="cropper-block">
+                      <Cropper :src="images.avatar.file" ref="avatar" class="cropper" 
+                        :stencilComponent="$options.components.CircleStencil" 
+                        :defaultSize="defaultSize" @change="updateSize($event, 'avatar')"/>
+                      <div v-if="size.avatar.width && size.avatar.height" class="cropper-size">
+                        width: {{ size.avatar.width }}px <br> height: {{ size.avatar.height }}px</div>
+                    </div>
                     <v-btn @click="addImage('avatar')" color="green" icon small>
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
@@ -183,13 +199,16 @@
                 <v-col cols="12" md="8" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Header</p>
-                    <Cropper
-                      :src="images.header.file"
-                      ref="header"
-                      class="cropper"
-                      :stencil-props="{aspectRatio: 2.3}"
-                      :min-height="20"
-                    />
+                    <v-alert v-if="size.header.width && size.header.width<1400" type="info" text dense class="caption pa-1">
+                      Recomended size 609x1400px
+                    </v-alert>
+                    <div class="cropper-block">
+                      <Cropper :src="images.header.file" ref="header" class="cropper"
+                        :stencil-props="{aspectRatio: 2.3}" :min-height="20" 
+                        :defaultSize="defaultSize" @change="updateSize($event, 'header')"/>
+                      <div v-if="size.header.width && size.header.height" class="cropper-size">
+                        width: {{ size.header.width }}px <br> height: {{ size.header.height }}px</div>
+                    </div>
                     <v-btn @click="addImage('header')" color="green" icon small>
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
@@ -309,6 +328,32 @@ export default {
     addImageType: 'main',
     dialogDeleteImage: false,
     deleteImageType: '',
+    size: {
+      main: {
+        width: null,
+        height: null,
+      },
+      alt: {
+        width: null,
+        height: null,
+      },
+      custom1: {
+        width: null,
+        height: null,
+      },
+      custom2: {
+        width: null,
+        height: null,
+      },
+      avatar: {
+        width: null,
+        height: null,
+      },
+      header: {
+        width: null,
+        height: null,
+      },
+    },
   }),
   computed: {
     performer() {
@@ -405,6 +450,16 @@ export default {
         id: this.performer.id
       }
     },
+    defaultSize({ imageSize, visibleArea }) {
+			return {
+				width: (visibleArea || imageSize).width,
+				height: (visibleArea || imageSize).height,
+			}
+		},
+    updateSize({ coordinates }, type) {
+			this.size[type].width = Math.round(coordinates.width);
+			this.size[type].height = Math.round(coordinates.height);
+		},
   },
   watch: {
   }
