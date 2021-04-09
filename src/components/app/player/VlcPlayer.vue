@@ -249,8 +249,10 @@
 
     <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
       <v-card>
-        <v-card-title class="headline">
-          Marker with tag on {{msToTime(seekTime*1000)}}
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Marker with tag on {{msToTime(seekTime*1000)}}
+          </div>
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerTag=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -260,11 +262,12 @@
         <vuescroll>
           <v-card-text class="pb-0">
             <v-autocomplete
-              v-model="markerTag" outlined clearable hide-details
+              v-model="markerTag" outlined clearable hide-details dense
               :items="tagsAll" label="Tag" placeholder="Choose a tag for the marker"
               item-text="name" class="hidden-close"
               item-value="name" no-data-text="No more tags"
               :menu-props="{contentClass:'list-with-preview'}"
+              @click:prepend="dialogAddNewTag=true" prepend-icon="mdi-plus-circle-outline"
               :filter="filterItemsTags" 
             >
               <template v-slot:selection="data">
@@ -302,10 +305,35 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogAddNewTag" max-width="400">
+      <v-card>
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Add new tag
+          </div>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-tag-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions class="pb-0">
+          <v-form ref="tagform" v-model="validNewTagName" style="width:100%">
+            <v-text-field v-model="newTagName" :rules="[getNewTagNameRules]" label="Tag name" outlined dense/>
+          </v-form>
+        </v-card-actions>
+        <v-card-actions class="pa-0">
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewTag" class="ma-4 mt-0" color="green" :disabled="!validNewTagName">
+            <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="dialogMarkerPerformer" max-width="500" scrollable eager>
       <v-card>
-        <v-card-title class="headline">
-          Marker with performer on {{msToTime(seekTime*1000)}}
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Marker with performer on {{msToTime(seekTime*1000)}}
+          </div>
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerPerformer=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -315,11 +343,12 @@
         <vuescroll>
           <v-card-text class="pb-0">
             <v-autocomplete
-              v-model="markerPerformer" outlined clearable hide-details
+              v-model="markerPerformer" outlined clearable hide-details dense
               :items="performersAll" label="Performer" placeholder="Choose a performer for the marker"
               item-text="name" class="hidden-close"
               item-value="name" no-data-text="No more performers"
               :menu-props="{contentClass:'list-with-preview'}"
+              @click:prepend="dialogAddNewPerformer=true" prepend-icon="mdi-plus-circle-outline"
               :filter="filterItemsPerformers"
             >
               <template v-slot:selection="data">
@@ -358,10 +387,35 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogAddNewPerformer" max-width="400">
+      <v-card>
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Add new performer
+          </div>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-account-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions class="pb-0">
+          <v-form ref="performerform" v-model="validNewPerformerName" style="width:100%">
+            <v-text-field v-model="newPerformerName" :rules="[getNewPerformerNameRules]" label="Performer name" outlined dense/>
+          </v-form>
+        </v-card-actions>
+        <v-card-actions class="pa-0">
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewPerformer" class="ma-4 mt-0" color="green" :disabled="!validNewPerformerName">
+            <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="dialogMarkerBookmark" max-width="550" scrollable eager>
       <v-card>
-        <v-card-title class="headline">
-          Marker with bookmark on {{msToTime(seekTime*1000)}}
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Marker with bookmark on {{msToTime(seekTime*1000)}}
+          </div>
           <v-spacer></v-spacer>
           <v-btn @click="dialogMarkerBookmark=false" icon>
             <v-icon>mdi-close</v-icon>
@@ -548,6 +602,13 @@ export default {
     dialogAddToPlaylist: false,
     markerForRemove: {},
     markersType: ['tag','performer','favorite','bookmark'],
+    // add new items to db
+    dialogAddNewTag: false,
+    newTagName: '',
+    validNewTagName: false,
+    dialogAddNewPerformer: false,
+    newPerformerName: '',
+    validNewPerformerName: false,
   }),
   computed: {
     fullscreen: {
@@ -1133,6 +1194,45 @@ export default {
     },
     getFileFromPath(videoPath) {
       return path.basename(videoPath)
+    },
+    // Add new items to db
+    getNewTagNameRules(name) {
+      let duplicate = _.find(this.tagsDb, t=>(t.name.toLowerCase()===name.toLowerCase()))
+      if (name.length > 100) {
+        return 'Name must be less than 100 characters'
+      } else if (name.length===0) {
+        return 'Name is required'
+      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
+        return 'Name must not content \\/\%\"<>{}\[\]'
+      } else if (duplicate!==undefined) {
+        return 'Tag with that name already exists'
+      } else {
+        return true
+      }
+    },
+    addNewTag() {
+      ipcRenderer.send('addNewTag', this.newTagName)
+      this.dialogAddNewTag = false
+      this.newTagName = ''
+    },
+    getNewPerformerNameRules(name) {
+      let duplicate = _.find(this.performersDb, t=>(t.name.toLowerCase()===name.toLowerCase()))
+      if (name.length > 100) {
+        return 'Name must be less than 100 characters'
+      } else if (name.length===0) {
+        return 'Name is required'
+      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
+        return 'Name must not content \\/\%\"<>{}\[\]'
+      } else if (duplicate!==undefined) {
+        return 'Performer with that name already exists'
+      } else {
+        return true
+      }
+    },
+    addNewPerformer() {
+      ipcRenderer.send('addNewPerformer', this.newPerformerName)
+      this.dialogAddNewPerformer = false
+      this.newPerformerName = ''
     },
   },
   watch: {

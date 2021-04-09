@@ -254,6 +254,7 @@
 
 <script>
 const shortid = require('shortid')
+const { ipcRenderer } = require('electron')
 
 export default {
   name: 'TagsAppbar',
@@ -493,6 +494,7 @@ export default {
         this.tagName = '',
         this.$store.commit('updateTags')
         this.$store.dispatch('filterTags', true)
+        ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
       })
     },
     toggleSortDirection() {

@@ -10,7 +10,8 @@
                 <v-icon v-on="on" class="mb-4" small dark>mdi-help-circle-outline</v-icon>
               </template>
               <span>Performers, tags, and websites added in this dialog will be added to the existing ones. <br>
-                Clearing information will affect the selected videos! Use this option carefully. </span>
+                Clearing information will affect the selected videos! Use this option carefully. <br>
+                Click the <v-icon dark small>mdi-plus-circle-outline</v-icon> to the left of the select to add a new item.</span>
             </v-tooltip>
           </div>
           <v-spacer></v-spacer>
@@ -24,8 +25,9 @@
               <v-row>
                 <v-col cols="12" md="6">
                   <v-card-actions>
+                    <span class="overline ml-6"><v-icon left>mdi-account-outline</v-icon> performers</span>
                     <v-spacer></v-spacer>
-                    <span class="caption mr-2">Sort list of performers by</span>
+                    <span class="caption mr-2">Sort list by</span>
                     <v-btn-toggle v-model="sortButtonsPerformers" mandatory color="primary">
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
@@ -63,13 +65,12 @@
                   </v-card-actions>
                   <v-autocomplete :disabled="clearPerformers"
                     v-model="performers" outlined clearable
-                    :items="performersAll" label="Performers"
+                    :items="performersAll()" label="Performers"
                     item-text="name" class="hidden-close"
                     item-value="name" no-data-text="No more performers"
-                    multiple hide-selected hide-details
-                    @blur="sort('performers')" prepend-icon="mdi-account-outline"
-                    :menu-props="{contentClass:'list-with-preview'}"
-                    :filter="filterItems"
+                    @blur="sort('performers')" multiple hide-selected hide-details  
+                    @click:prepend="dialogAddNewPerformer=true" prepend-icon="mdi-plus-circle-outline"
+                    :menu-props="{contentClass:'list-with-preview'}" :filter="filterItems"
                   >
                     <template v-slot:selection="data">
                       <v-chip v-bind="data.attrs" close close-icon="mdi-close"
@@ -111,8 +112,9 @@
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-card-actions>
+                    <span class="overline ml-6"><v-icon left>mdi-tag-outline</v-icon> tags</span>
                     <v-spacer></v-spacer>
-                    <span class="caption mr-2">Sort list of tags by</span>
+                    <span class="caption mr-2">Sort list by</span>
                     <v-btn-toggle v-model="sortButtonsTags" mandatory color="primary">
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
@@ -150,12 +152,12 @@
                   </v-card-actions>
                   <v-autocomplete :disabled="clearTags"
                     v-model="tags" outlined clearable
-                    :items="tagsAll" label="Tags"
+                    :items="tagsAll()" label="Tags"
                     item-text="name" class="hidden-close"
                     item-value="name" no-data-text="No more tags"
                     multiple hide-selected hide-details
-                    @blur="sort('tags')" prepend-icon="mdi-tag-outline"
-                    :menu-props="{contentClass:'list-with-preview'}"
+                    @click:prepend="dialogAddNewTag=true" prepend-icon="mdi-plus-circle-outline"
+                    @blur="sort('tags')" :menu-props="{contentClass:'list-with-preview'}"
                     :filter="filterItems"
                   >
                     <template v-slot:selection="data">
@@ -187,8 +189,9 @@
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-card-actions>
+                    <span class="overline ml-6"><v-icon left>mdi-web</v-icon> websites</span>
                     <v-spacer></v-spacer>
-                    <span class="caption mr-2">Sort list of websites by</span>
+                    <span class="caption mr-2">Sort list by</span>
                     <v-btn-toggle v-model="sortButtonsWebsites" mandatory color="primary">
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
@@ -226,9 +229,10 @@
                   </v-card-actions>
                   <v-autocomplete :disabled="clearWebsites"
                     v-model="websites" outlined clearable
-                    :items="websitesAll" label="Websites" prepend-icon="mdi-web"
+                    :items="websitesAll()" label="Websites"
                     item-text="name" class="mt-0 hidden-close" 
                     item-value="name" multiple hide-selected hide-details
+                    @click:prepend="dialogAddNewWebsite=true" prepend-icon="mdi-plus-circle-outline"
                     no-data-text="No more websites" :filter="filterItems"
                     :menu-props="{contentClass:'list-with-preview'}"
                   >
@@ -397,7 +401,12 @@
             <v-row class="mx-2">
               <v-col cols="12" class="mt-6">
                 <v-card-actions>
-                  <span class="overline"><v-icon left>mdi-tag-outline</v-icon> tags</span>
+                  <span class="mr-6">
+                    <v-btn @click="dialogAddNewTag=true" icon class="mr-2">
+                      <v-icon>mdi-tag-plus-outline</v-icon> 
+                    </v-btn>
+                    <span class="overline">tags</span>
+                  </span>
                   <v-spacer></v-spacer>
                   <span class="caption mr-2">Sort list by</span>
                   <v-btn-toggle v-model="sortButtonsTags" mandatory color="primary">
@@ -436,7 +445,7 @@
                   </v-btn-toggle>
                 </v-card-actions>
                 <v-autocomplete v-model="tags" :disabled="clearTags" clearable
-                  :items="tagsAll" item-text="name" class="hidden-close pt-0 mt-0"
+                  :items="tagsAll()" item-text="name" class="hidden-close pt-0 mt-0"
                   item-value="name" no-data-text="No more tags"
                   multiple hide-selected hide-details
                   @blur="sort('tags')" :menu-props="{contentClass:'list-with-preview'}"
@@ -468,7 +477,12 @@
               </v-col>
               <v-col cols="12" lg="6">
                 <v-card-actions>
-                  <span class="overline"><v-icon left>mdi-account-outline</v-icon> performers</span>
+                  <span class="mr-6">
+                    <v-btn @click="dialogAddNewPerformer=true" icon class="mr-2">
+                      <v-icon>mdi-account-plus-outline</v-icon> 
+                    </v-btn>
+                    <span class="overline">Performers</span>
+                  </span>
                   <v-spacer></v-spacer>
                   <span class="caption mr-2">Sort list by</span>
                   <v-btn-toggle v-model="sortButtonsPerformers" mandatory color="primary">
@@ -507,7 +521,7 @@
                   </v-btn-toggle>
                 </v-card-actions>
                 <v-autocomplete v-model="performers" :disabled="clearPerformers" clearable
-                  :items="performersAll" item-text="name" class="hidden-close pt-0 mt-0"
+                  :items="performersAll()" item-text="name" class="hidden-close pt-0 mt-0"
                   item-value="name" no-data-text="No more performers"
                   multiple hide-selected hide-details @blur="sort('performers')" 
                   :menu-props="{contentClass:'list-with-preview'}" :filter="filterItems"
@@ -552,7 +566,12 @@
               </v-col>
               <v-col cols="12" lg="6">
                 <v-card-actions>
-                  <span class="overline"><v-icon left>mdi-web</v-icon> websites</span>
+                  <span class="mr-6">
+                    <v-btn @click="dialogAddNewWebsite=true" icon class="mr-2">
+                      <v-icon>mdi-plus-circle-outline</v-icon> 
+                    </v-btn>
+                    <span class="overline">Websites</span>
+                  </span>
                   <v-spacer></v-spacer>
                   <span class="caption mr-2">Sort list by</span>
                   <v-btn-toggle v-model="sortButtonsWebsites" mandatory color="primary">
@@ -591,7 +610,7 @@
                   </v-btn-toggle>
                 </v-card-actions>
                 <v-autocomplete v-model="websites" :disabled="clearWebsites" clearable
-                  :items="websitesAll" item-text="name" class="hidden-close pt-0 mt-0" 
+                  :items="websitesAll()" item-text="name" class="hidden-close pt-0 mt-0" 
                   item-value="name" multiple hide-selected hide-details :filter="filterItems"
                   no-data-text="No more websites" :menu-props="{contentClass:'list-with-preview'}"
                 >
@@ -648,6 +667,76 @@
     <v-btn v-if="sheet" @click="saveVideoInfo" fab large class="save-btn">
       <v-icon large>mdi-content-save</v-icon>
     </v-btn>
+
+    <v-dialog v-model="dialogAddNewTag" max-width="400">
+      <v-card>
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Add new tag
+          </div>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-tag-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions class="pb-0">
+          <v-form ref="tagform" v-model="validNewTagName" style="width:100%">
+            <v-text-field v-model="newTagName" :rules="[getNewTagNameRules]" label="Tag name" outlined dense/>
+          </v-form>
+        </v-card-actions>
+        <v-card-actions class="pa-0">
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewTag" class="ma-4 mt-0" color="green" :disabled="!validNewTagName">
+            <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogAddNewPerformer" max-width="400">
+      <v-card>
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Add new performer
+          </div>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-tag-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions class="pb-0">
+          <v-form ref="tagform" v-model="validNewPerformerName" style="width:100%">
+            <v-text-field v-model="newPerformerName" :rules="[getNewPerformerNameRules]" label="Performer name" outlined dense/>
+          </v-form>
+        </v-card-actions>
+        <v-card-actions class="pa-0">
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewPerformer" class="ma-4 mt-0" color="green" :disabled="!validNewPerformerName">
+            <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogAddNewWebsite" max-width="400">
+      <v-card>
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Add new website
+          </div>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-tag-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions class="pb-0">
+          <v-form ref="tagform" v-model="validNewWebsiteName" style="width:100%">
+            <v-text-field v-model="newWebsiteName" :rules="[getNewWebsiteNameRules]" label="Website name" outlined dense/>
+          </v-form>
+        </v-card-actions>
+        <v-card-actions class="pa-0">
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewWebsite" class="ma-4 mt-0" color="green" :disabled="!validNewWebsiteName">
+            <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -733,6 +822,15 @@ export default {
     muted: true,
     dialog: false,
     sheet: false,
+    dialogAddNewTag: false,
+    newTagName: '',
+    validNewTagName: false,
+    dialogAddNewPerformer: false,
+    newPerformerName: '',
+    validNewPerformerName: false,
+    dialogAddNewWebsite: false,
+    newWebsiteName: '',
+    validNewWebsiteName: false,
     // matched: {
     //   tags: [],
     //   performers: [],
@@ -750,9 +848,6 @@ export default {
     fileName() {
       return path.parse(this.video.path).name
     },
-    performersAll() {
-      return this.sortItems(this.$store.getters.performers, 'Performers')
-    },
     sortButtonsPerformers: {
       get() {
         return this.$store.state.Settings.videoEditPerformersSortBy
@@ -761,10 +856,6 @@ export default {
         this.$store.dispatch('updateSettingsState', {key:'videoEditPerformersSortBy', value})
       },
     },
-    tagsAll() {
-      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('video')))
-      return this.sortItems(tags, 'Tags')
-    },
     sortButtonsTags: {
       get() {
         return this.$store.state.Settings.videoEditTagsSortBy
@@ -772,9 +863,6 @@ export default {
       set(value) {
         this.$store.dispatch('updateSettingsState', {key:'videoEditTagsSortBy', value})
       },
-    },
-    websitesAll() {
-      return this.sortItems(this.$store.getters.websites, 'Websites')
     },
     sortButtonsWebsites: {
       get() {
@@ -1072,6 +1160,153 @@ export default {
     toggleMuted() {
       this.muted = !this.muted
       this.$refs.video.muted = this.muted
+    },
+    tagsAll() {
+      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('video')))
+      return this.sortItems(tags, 'Tags')
+    },
+    performersAll() {
+      return this.sortItems(this.$store.getters.performers, 'Performers')
+    },
+    websitesAll() {
+      return this.sortItems(this.$store.getters.websites, 'Websites')
+    },
+    getNewTagNameRules(name) {
+      let duplicate = this.$store.getters.tags.find(t=>(t.name.toLowerCase()===name.toLowerCase())).value()
+      if (name.length > 100) {
+        return 'Name must be less than 100 characters'
+      } else if (name.length===0) {
+        return 'Name is required'
+      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
+        return 'Name must not content \\/\%\"<>{}\[\]'
+      } else if (duplicate!==undefined) {
+        return 'Tag with that name already exists'
+      } else {
+        return true
+      }
+    },
+    getNewPerformerNameRules(name) {
+      let duplicate = this.$store.getters.performers.find(i=>(i.name.toLowerCase()===name.toLowerCase())).value()
+      if (name.length > 100) {
+        return 'Name must be less than 100 characters'
+      } else if (name.length===0) {
+        return 'Name is required'
+      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
+        return 'Name must not content \\/\%\"<>{}\[\]'
+      } else if (duplicate!==undefined) {
+        return 'Performer with that name already exists'
+      } else {
+        return true
+      }
+    },
+    getNewWebsiteNameRules(name) {
+      let duplicate = this.$store.getters.websites.find(i=>(i.name.toLowerCase()===name.toLowerCase())).value()
+      if (name.length > 100) {
+        return 'Name must be less than 100 characters'
+      } else if (name.length===0) {
+        return 'Name is required'
+      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
+        return 'Name must not content \\/\%\"<>{}\[\]'
+      } else if (duplicate!==undefined) {
+        return 'Website with that name already exists'
+      } else {
+        return true
+      }
+    },
+    addNewTag() {
+      let tagInfo = {
+        id: shortid.generate(),
+        name: this.newTagName,
+        altNames: [],
+        category: [],
+        color: "#9b9b9b",
+        value: 0,
+        date: Date.now(),
+        edit: Date.now(),
+        favorite: false,
+        bookmark: false,
+        type: ['video', 'performer'],
+        videos: 0,
+        performers: [],
+      }
+      this.$store.getters.tags.push(tagInfo).write()
+      this.dialogAddNewTag = false
+      this.newTagName = ''
+      ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
+    },
+    addNewPerformer() {
+      let performerInfo = {
+        id: shortid.generate(),
+        name: this.newPerformerName,
+        date: Date.now(),
+        edit: Date.now(),
+        aliases: [],
+        tags: [],
+        favorite: false,
+        bookmark: false,
+        rating: 0,
+        nations: [],
+        birthday: "",
+        start: "",
+        end: "",
+        ethnicity: [],
+        hair: [],
+        eyes: [],
+        height: "",
+        weight: "",
+        bra: "",
+        waist: "",
+        hip: "",
+        boobs: [],
+        cups: [],
+        category: [],
+        videos: 0,
+        tags: [],
+        videoTags: [],
+        websites: [],
+        views: 0,
+      }
+
+      let params = this.$store.state.Settings.customParametersPerformer
+      for (let param in params) {
+        let type = params[param].type
+        if (type == 'boolean') {
+          performerInfo[params[param].name] = false
+        } else if (type == 'number' || type == 'string' || type == 'date') {
+          performerInfo[params[param].name] = ''
+        } else if (type == 'array') {
+          performerInfo[params[param].name] = []
+        }
+      }
+
+      this.$store.getters.performers.push(performerInfo).write()
+      this.dialogAddNewPerformer = false
+      this.newPerformerName = ''
+      ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window
+    },
+    addNewWebsite() {
+      let websiteInfo = {
+        id: shortid.generate(),
+        name: this.newWebsiteName,
+        color: "#9b9b9b",
+        network: false,
+        childWebsites: [],
+        favorite: false,
+        bookmark: false,
+        date: Date.now(),
+        edit: Date.now(),
+        videos: 0,
+        performers: [],
+        videoTags: [],
+        views: 0,
+        altNames: [],
+        url: '',
+      }
+
+      this.$store.getters.websites.push(websiteInfo).write()
+      this.dialogAddNewWebsite = false
+      this.newWebsiteName = ''
+      ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window
     },
   },
   watch: {

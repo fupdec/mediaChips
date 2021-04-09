@@ -257,10 +257,11 @@
                   <v-col cols="12" sm="9" class="pt-4">
                     <v-autocomplete
                       v-model="tags" outlined
-                      :items="tagsAll" placeholder="Choose tags of performer"
+                      :items="tagsAll()" placeholder="Choose tags of performer"
                       item-text="name" class="hidden-close"
                       item-value="name" no-data-text="No more tags"
                       multiple hide-selected hide-details
+                      @click:prepend="dialogAddNewTag=true" prepend-icon="mdi-plus-circle-outline"
                       :menu-props="{contentClass:'list-with-preview'}"
                       @blur="sort('tags')" :filter="filterItems"
                     >
@@ -344,6 +345,29 @@
             </v-form>
           </v-card-text>
         </vuescroll>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogAddNewTag" max-width="400">
+      <v-card>
+        <v-card-title class="px-4 py-1">
+          <div class="headline">
+            Add new tag
+          </div>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-tag-plus</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions class="pb-0">
+          <v-form ref="tagform" v-model="validNewTagName" style="width:100%">
+            <v-text-field v-model="newTagName" :rules="[getNewTagNameRules]" label="Tag name" outlined dense/>
+          </v-form>
+        </v-card-actions>
+        <v-card-actions class="pa-0">
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewTag" class="ma-4 mt-0" color="green" :disabled="!validNewTagName">
+            <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="dialogFindPerformerInfo" scrollable max-width="1200px">
@@ -498,7 +522,7 @@
 
 
 <script>
-const { clipboard } = require('electron')
+const { ipcRenderer, clipboard } = require('electron')
 const fs = require("fs")
 const path = require("path")
 const axios = require("axios")
@@ -622,6 +646,9 @@ export default {
     values: {},
     picker: false,
     pickerParam: null,
+    dialogAddNewTag: false,
+    newTagName: '',
+    validNewTagName: false,
   }),
   computed: {
     performer() {
@@ -640,10 +667,6 @@ export default {
     },
     performerNameForSearch() {
       return this.performer.name.trim().toLowerCase().replace(/ /g, '-')
-    },
-    tagsAll() {
-      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('performer')))
-      return this.sortItems(tags, 'Tags')
     },
     sortButtonsTags: {
       get() {
@@ -678,9 +701,10 @@ export default {
     pasteQueryString() {
       this.queryString = clipboard.readText()
     },
-    sortItems(items, type) {
-      const sortBy = this[`sortButtons${type}`]
-      let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
+    tagsAll() {
+      const sortBy = this.sortButtonsTags
+      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('performer')))
+      let itemsSorted = tags.orderBy(i=>i.name.toLowerCase(),['asc'])
       if (sortBy !== 'name') {
         if (sortBy == 'color') {
           let swatches = this.$store.state.swatches
@@ -1189,6 +1213,20 @@ export default {
         return true
       }
     },
+    getNewTagNameRules(name) {
+      let duplicate = this.$store.getters.tags.find(t=>(t.name.toLowerCase()===name.toLowerCase())).value()
+      if (name.length > 100) {
+        return 'Name must be less than 100 characters'
+      } else if (name.length===0) {
+        return 'Name is required'
+      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
+        return 'Name must not content \\/\%\"<>{}\[\]'
+      } else if (duplicate!==undefined) {
+        return 'Tag with that name already exists'
+      } else {
+        return true
+      }
+    },
     removeTrash(dirtyString) {
       let filtered = dirtyString.trim()
       return filtered.replace(/[\\\/\%"<>{}\[\]]/g, '').replace(/ +(?= )/g,'')
@@ -1303,6 +1341,7 @@ export default {
       this.$store.commit('updatePerformers')
       this.$store.state.Performers.dialogEditPerformerInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
+      ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window
     },
     calcPercentComleted() {
       let completed = []
@@ -1400,6 +1439,27 @@ export default {
       const index = this.nations.indexOf(item.name)
       if (index >= 0) this.nations.splice(index, 1)
       this.$store.state.hoveredImage = false
+    },
+    addNewTag() {
+      let tagInfo = {
+        id: shortid.generate(),
+        name: this.newTagName,
+        altNames: [],
+        category: [],
+        color: "#9b9b9b",
+        value: 0,
+        date: Date.now(),
+        edit: Date.now(),
+        favorite: false,
+        bookmark: false,
+        type: ['video', 'performer'],
+        videos: 0,
+        performers: [],
+      }
+      this.$store.getters.tags.push(tagInfo).write()
+      this.dialogAddNewTag = false
+      this.newTagName = ''
+      ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
     },
   },
   watch: {

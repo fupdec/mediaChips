@@ -262,3 +262,9 @@ ipcMain.on('toggleDarkMode', (event, value) => {
 ipcMain.on('updatePlayerDb', (event, value) => {
   player.webContents.send( 'updateDb', value )
 })
+ipcMain.on('addNewTag', (event, tagName) => {
+  win.webContents.send( 'addNewTag', tagName )
+}) 
+ipcMain.on('addNewPerformer', (event, performerName) => {
+  win.webContents.send( 'addNewPerformer', performerName )
+}) 

@@ -70,6 +70,8 @@
 <script>
 const shortid = require("shortid")
 
+import { ipcRenderer } from 'electron'
+
 export default {
   name: 'PerformersAppbar',
   components: {
@@ -189,6 +191,7 @@ export default {
         this.performerName = ""
         this.$store.commit('updatePerformers')
         this.$store.dispatch('filterPerformers', true)
+        ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window
       })
     },
     openRandomPerformer() {

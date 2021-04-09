@@ -266,6 +266,8 @@
 <script>
 const shortid = require('shortid')
 
+import { ipcRenderer } from 'electron'
+
 export default {
   name: 'WebsitesAppbar',
   components: {
@@ -494,6 +496,7 @@ export default {
           newWebsites.push(website)
           
           console.log(`added: website ${JSON.stringify(websiteInfo.name)}`)
+          ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window
         }
       }
       addWebsiteInDb().then(()=>{
