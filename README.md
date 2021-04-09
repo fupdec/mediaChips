@@ -8,16 +8,16 @@
 
 # Adult Video Database
 Manage your porn video collection - add performers, tags, websites and have fun! <br>
-This is an open source desktop application for Windows, Mac and Linux!
-
-## &#129489;&#127995;&#8205;&#129309;&#8205;&#129489;&#127996; Community 
-You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a> and &#128279;<a href="https://discord.gg/QSnXFvXZVh">Discord</a>
-
-## Full Version and Sponsorship  
-Subscribe to &#128279;<a href="https://www.patreon.com/avdb">Patreon</a> to receive new releases and to support the development of the application.
+This is an open source desktop application for Windows, Mac and Linux.
 
 ## Download demo
 You can download the latest demo version under &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/releases">Releases</a> on the right hand side of this page.
+
+## Full Version and Sponsorship
+Subscribe to &#128279;<a href="https://www.patreon.com/avdb">Patreon</a> to receive new releases and to support the development of the application.
+
+## &#129489;&#127995;&#8205;&#129309;&#8205;&#129489;&#127996; Community 
+You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a> and &#128279;<a href="https://discord.gg/QSnXFvXZVh">Discord</a> and in &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/discussions">GitHub Discussions</a>
 
 ## Features
 
@@ -91,7 +91,7 @@ You can download the latest demo version under &#128279;<a href="https://github.
 ![videos](https://i.ibb.co/fMzrzt1/videos.png)
 
 ### Edit video
-![video-edit](https://i.ibb.co/MV8FgF4/video-edit.png)
+[![video-edit](http://ibb.co.com/images/12121211c6786fc1925758ec.md.jpg)](http://ibb.co.com/image/2af3g9)
 
 ### Performers
 ![performers](https://i.ibb.co/YZvJXfm/performers.png)
