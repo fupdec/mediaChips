@@ -84,9 +84,18 @@
       <v-sheet>
         <div class="px-4 py-1 d-flex justify-space-between">
           <span><v-icon left small>mdi-console</v-icon>Logs</span>
-          <v-btn @click="$store.state.isLogVisible=false" icon small>
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
+          <span>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" @click="clearLogs" icon small>
+                  <v-icon size="20">mdi-delete-variant</v-icon> 
+                </v-btn>
+              </template>
+              <span>Clear logs</span>
+            </v-tooltip>
+            <v-btn @click="$store.state.isLogVisible=false" icon small class="ml-4">
+              <v-icon>mdi-chevron-down</v-icon> </v-btn>
+          </span>
         </div>
         <v-divider></v-divider>
         <vuescroll>
@@ -295,6 +304,14 @@ export default {
       let date = new Date(ms)
       return date.toLocaleDateString() + ', ' + date.toLocaleTimeString()
     },
+    clearLogs() {
+      this.$store.state.log = []
+      this.$store.state.isLogVisible = false
+      this.$store.commit('addLog', {
+        type: 'info',
+        text: `The logs have been removed`
+      })
+    },
     watchDir(dir) {
       // ++this.$store.state.backgroundProcesses
       this.watcher = chokidar.watch(dir, {
@@ -317,7 +334,11 @@ export default {
 
       this.foldersUpdated = false 
       this.getAllFiles(this.watcher.getWatched())
-      console.log(`File ${filePath} has been added`)
+      
+      this.$store.commit('addLog', {
+        type: 'info',
+        text: `File ${filePath} has been added`
+      })
     },
     removeFile(filePath) {
       if ( !this.extensions.includes( path.extname( filePath.toLowerCase() ) ) ) return
@@ -329,7 +350,10 @@ export default {
 
       this.foldersUpdated = false 
       this.getAllFiles(this.watcher.getWatched())
-      console.log(`File ${filePath} has been removed`)
+      this.$store.commit('addLog', {
+        type: 'info',
+        text: `File ${filePath} has been removed`
+      })
     },
     getAllFiles(dirs) {
       let files = []
