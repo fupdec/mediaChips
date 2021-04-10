@@ -17,7 +17,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: () => ({
     itemsLoading: true,
-    log: '',
+    log: [],
     isLogVisible: false,
     notifications: [],
     isRouteChanged: false,
@@ -51,6 +51,14 @@ export default new Vuex.Store({
     },
   },
   mutations: {
+    addLog(state, {text, type, color}) {
+      state.log.push({
+        type: type,
+        text: text,
+        color: color,
+        time: Date.now(),
+      })
+    },
     setNotification(state, notification) {
       state.notifications.push({
         id: Math.ceil(Math.random()*new Date().getTime()),

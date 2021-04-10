@@ -217,6 +217,19 @@
 }
 
 @font-face {
+  font-family: "RobotoMono";
+  src: url(assets/fonts/RobotoMono/RobotoMono-Regular.ttf) format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+  font-family: "RobotoMono";
+  src: url(assets/fonts/RobotoMono/RobotoMono-Bold.ttf) format("truetype");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
   font-family: "RobotoCondensed";
   src: url(assets/fonts/RobotoCondensed/RobotoCondensed-Light.ttf) format("truetype");
 	font-weight: 300;
@@ -1357,45 +1370,112 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
 }
 // end context menu
 // console status bar
-.console-log {
-  position: fixed;
-  left: 0;
-  bottom: 20px !important;
-  width: 100% !important;
+.console {
   user-select: text;
-  font-family: monospace;
-  font-size: 11px;
-  font-weight: 300;
-  color: #fff;
-  background-color: rgba(0, 0, 0, 0.97);
-  border-top: 1px solid #4d4d4d;
-  padding: 10px;
-  white-space: pre-wrap;
-  height: 160px;
-  max-height: 160px;
-  overflow-y: scroll;
-  z-index: 255;
-  transition: 0.3s all ease;
-  transform: translateY(100%);
-  &.visible {
-    transform: translateY(0);
+  font-family: "RobotoMono", monospace;
+  .string {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    &:hover {
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background-color: var(--v-primary-base);
+      }
+    }
   }
-  &::selection {
+  .type {
+    padding: 2px 4px;
+    margin-right: 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
     color: #fff;
-    background: var(--v-primary-base);
   }
 }
-.console-log-in-status {
-  font-size: 10px;
-  font-weight: 300;
-  cursor: pointer;
+.console-log {
+  margin-bottom: 20px !important;
+  .v-list-item {
+    min-height: 25px;
+    &:after {
+      display: none;
+    }
+  }
+}
+.last-log {
+  font-family: "RobotoMono", monospace;
   display: flex;
+  font-size: 12px;
+  cursor: pointer;
+  flex-grow: 3;
   position: relative;
-  .log-text {
+  padding: 0 16px;
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    background-color: #7e7e7e;
+    opacity: 0;
+    transition: 0.2s;
+  }
+  &:hover {
+    &::before {
+      opacity: 0.1;
+    }
+  }
+  .logs {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 40px;
+    width: calc(100% - 56px);
+    padding-top: 1px;
+    animation: lastlog 0.5s ease forwards;
+  }
+  .log {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    line-height: 1;
+    height: 19px;
+  }
+  .text {
+    margin-right: 10px;
+  }
+  .text, .time {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 35vw;
+  }
+  .text-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  .type {
+    padding: 1px 4px;
+    margin-right: 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+}
+@keyframes lastlog {
+  from {
+    top: 0;
+  }
+  to {
+    top: -20px;
   }
 }
 .editable-text-field {
@@ -1482,12 +1562,5 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
   .v-input__icon--append {
     display: none;
-  }
-}
-@media (max-width: 720px) {
-  .console-log-in-status {
-    .log-text {
-      max-width: 15vw;
-    }
   }
 }

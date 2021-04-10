@@ -78,12 +78,34 @@
       :src="getHoveredImage" height="160" max-width="160"
       :style="`top:${$store.state.hoveredImageY+30}px;left:${$store.state.hoveredImageX+30}px;`"
     />
-    <!-- <div class="console-log" :class="{visible: $store.state.isLogVisible}">
-      {{$store.state.log}} 
-    </div> -->
+
+    <!-- Console Logs -->
+    <v-bottom-sheet :value="$store.state.isLogVisible" content-class="console console-log" hide-overlay no-click-animation persistent>
+      <v-sheet>
+        <div class="px-4 py-1 d-flex justify-space-between">
+          <span><v-icon left small>mdi-console</v-icon>Logs</span>
+          <v-btn @click="$store.state.isLogVisible=false" icon small>
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-list height="200">
+            <v-list-item v-for="(log, i) in $store.state.log" :key="i" class="string">
+              <span>
+                <span class="type" :class="[log.type]">{{log.type}}</span>
+                <span class="text" :class="[log.color+'--text']" v-html="log.text"/>
+              </span>
+              <span class="time text--secondary">{{msToTime(log.time)}}</span>
+            </v-list-item>
+          </v-list>
+        </vuescroll>
+      </v-sheet>
+    </v-bottom-sheet>
+
     <DialogFolder v-if="$store.state.dialogFolder" @addNewVideos="addNewVideos" :folder="folder"/>
 
-    <v-footer app height="20" class="py-0 footer-app">
+    <v-footer app height="20" class="pa-0 footer-app">
       <StatusBar />
     </v-footer>
   </v-app>
@@ -104,6 +126,7 @@ const { ipcRenderer } = require('electron')
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
+import vuescroll from 'vuescroll'
 
 export default {
   name: 'App',
@@ -116,10 +139,12 @@ export default {
     DialogFolder: () => import('@/components/app/DialogFolder.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
+    vuescroll,
   },
   mixins: [HoveredImageFunctions, PlayerEvents],
   mounted() {
     this.$nextTick(function () {
+      this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
       this.checkForUpdates()
       this.$store.state.pathToUserData = app.getPath('userData')
       this.$router.push({ path: '/home', query: { name: 'Home' } })
@@ -266,6 +291,10 @@ export default {
     },
   },
   methods: {
+    msToTime(ms) {
+      let date = new Date(ms)
+      return date.toLocaleDateString() + ', ' + date.toLocaleTimeString()
+    },
     watchDir(dir) {
       // ++this.$store.state.backgroundProcesses
       this.watcher = chokidar.watch(dir, {
