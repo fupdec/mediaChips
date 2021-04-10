@@ -1377,6 +1377,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     display: flex;
     justify-content: space-between;
     font-size: 12px;
+    word-break: break-all;
     &:hover {
       &::before {
         content: '';
@@ -1395,6 +1396,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     border-radius: 3px;
     text-transform: uppercase;
     color: #fff;
+  }
+  .time {
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-left: 10px;
   }
 }
 .console-log {
@@ -1461,6 +1467,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   .text-wrapper {
     display: flex;
     align-items: center;
+    max-width: calc(100% - 150px);
   }
   .type {
     padding: 1px 4px;
