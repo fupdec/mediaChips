@@ -46,31 +46,39 @@
       <span class="caption val" v-text="$store.state.backgroundProcesses"/>
     </div>
 
-    <v-divider class="mr-4" vertical></v-divider>
+    <v-divider vertical></v-divider>
 
-    <div class="d-flex align-center">
-      <v-icon size="20">mdi-video-outline</v-icon>
-      <span class="caption ml-1 mr-3" v-text="$store.getters.videosTotal"/>
-    </div>
-    <div class="d-flex align-center">
-      <v-icon size="20">mdi-account-outline</v-icon>
-      <span class="caption ml-1 mr-3" v-text="$store.getters.performersTotal"/>
-    </div>
-    <div class="d-flex align-center">
-      <v-icon size="16">mdi-tag-outline</v-icon>
-      <span class="caption ml-1 mr-3" v-text="$store.getters.tagsTotal"/>
-    </div>
-    <div class="d-flex align-center">
-      <v-icon size="16">mdi-web</v-icon>
-      <span class="caption ml-1 mr-3" v-text="$store.getters.websitesTotal"/>
-    </div>
-    <div class="d-flex align-center">
-      <v-icon size="16">mdi-harddisk</v-icon>
-      <span class="caption ml-1" v-text="$store.getters.videosTotalSize"/>
-      <!-- TODO fix wrong file size -->
-    </div>
+    <v-tooltip top>
+      <template v-slot:activator="{ on }">
+        <span v-on="on" class="px-4 d-flex"><v-icon size="18">mdi-database-outline</v-icon></span>
+      </template>
+      <span>
+        <div class="overline text-center">Total</div>
+        <div class="d-flex align-center">
+          <v-icon size="20">mdi-video</v-icon>
+          <span class="ml-1" v-text="$store.getters.videosTotal"/>
+        </div>
+        <div class="d-flex align-center">
+          <v-icon size="20">mdi-account</v-icon>
+          <span class="ml-1" v-text="$store.getters.performersTotal"/>
+        </div>
+        <div class="d-flex align-center">
+          <v-icon size="16">mdi-tag</v-icon>
+          <span class="ml-1" v-text="$store.getters.tagsTotal"/>
+        </div>
+        <div class="d-flex align-center">
+          <v-icon size="18">mdi-web</v-icon>
+          <span class="ml-1" v-text="$store.getters.websitesTotal"/>
+        </div>
+        <div class="d-flex align-center">
+          <v-icon size="20">mdi-harddisk</v-icon>
+          <span class="ml-1" v-text="$store.getters.videosTotalSize"/>
+          <!-- TODO fix wrong file size -->
+        </div>
+      </span>
+    </v-tooltip>
     
-    <v-divider class="ml-4" vertical></v-divider>
+    <v-divider vertical></v-divider>
 
     <v-menu
       v-model="notificationsMenu" top offset-y 
@@ -80,7 +88,7 @@
       <template v-slot:activator="{ on, attrs }">
         <v-badge :value="isNotificationsEmpty"
           class="notifications-badge" overlap bordered dot color="grey" offset-x="16">
-          <v-btn x-small icon tile v-bind="attrs" width="36" v-on="on">
+          <v-btn x-small icon tile v-bind="attrs" width="48" v-on="on">
             <v-icon size="14" v-if="!notificationsMenu">mdi-bell-outline</v-icon>
             <v-icon size="14" v-else>mdi-bell</v-icon>
           </v-btn>
