@@ -125,7 +125,7 @@ dbs.defaults({
   playerType: "0",
   customParametersPerformer: [],
   updateIntervalDataFromVideos: 30,
-  autoUpdateDataFromVideos: false,
+  autoUpdateDataFromVideos: true,
   updateDataFromVideosOnStart: false,
   typingFiltersDefault: false,
   watchFolders: false,
