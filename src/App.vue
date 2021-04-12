@@ -80,7 +80,8 @@
     />
 
     <!-- Console Logs -->
-    <v-bottom-sheet :value="$store.state.isLogVisible" content-class="console console-log" hide-overlay no-click-animation persistent>
+    <v-bottom-sheet :value="$store.state.isLogVisible" ref="sheet" :retain-focus="false"
+      content-class="console console-log" hide-overlay no-click-animation persistent>
       <v-sheet>
         <div class="px-4 py-1 d-flex justify-space-between">
           <span><v-icon left small>mdi-console</v-icon>Logs</span>
@@ -298,6 +299,9 @@ export default {
     updateFoldersData() {
       return this.$store.state.updateFoldersData
     },
+    isLogVisible() {
+      return this.$store.state.isLogVisible
+    },
   },
   methods: {
     msToTime(ms) {
@@ -435,7 +439,10 @@ export default {
           let lastVersion = $('.release-header .f1 a').eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
           let currentVersion = app.getVersion()
-          if (this.compareVersion(currentVersion, lastVersion)) this.updateApp = true
+          if (this.compareVersion(currentVersion, lastVersion)) {
+            this.$store.commit('addLog',{text:`💿 Available new version: ${lastVersion}`, color:'green'})
+            this.updateApp = true
+          } 
         }
       })
     },
@@ -490,6 +497,11 @@ export default {
       if (!this.watchFolders) return
       this.foldersUpdated = false 
       this.getAllFiles(this.watcher.getWatched())
+    },
+    isLogVisible() {
+      this.$nextTick(() => {
+        this.$refs.sheet.showScroll()
+      })
     },
   },
 }
