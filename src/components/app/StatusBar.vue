@@ -20,7 +20,7 @@
     <v-divider v-if="getNumberSelectedItems>0" class="ml-4" vertical></v-divider>
 
     <div @click="$store.state.isLogVisible = !$store.state.isLogVisible" class="last-log">
-      <v-icon left size="18">mdi-console</v-icon>
+      <v-icon left size="18">mdi-notebook-outline</v-icon>
       <transition mode="out-in">
         <div v-if="logsNumber>0" :key="logsNumber" class="logs">
           <div class="log">
@@ -162,6 +162,7 @@ export default {
   },
   data: () => ({
     notificationsMenu: false,
+    penultLog: {},
   }),
   computed: {
     log() {
@@ -169,11 +170,6 @@ export default {
     },
     logsNumber() {
       return this.$store.state.log.length
-    },
-    penultLog() {
-      let numberOfLogs = this.$store.state.log.length
-      if (numberOfLogs == 1) return this.$store.state.log[numberOfLogs-1]
-      else return this.$store.state.log[numberOfLogs-2]
     },
     lastLog() {
       let numberOfLogs = this.$store.state.log.length
@@ -255,6 +251,11 @@ export default {
       this.$store.commit('updateSelectedPerformers', [])
       this.$store.commit('updateSelectedTags', [])
       this.$store.commit('updateSelectedWebsites', [])
+    },
+    lastLog(log) {
+      setTimeout(() => {
+        this.penultLog = log
+      }, 1000)
     },
   },
 }

@@ -80,27 +80,49 @@
     />
 
     <!-- Console Logs -->
-    <v-bottom-sheet :value="$store.state.isLogVisible" ref="sheet" :retain-focus="false"
+    <v-bottom-sheet :value="isLogVisible" ref="sheet" :retain-focus="false"
       content-class="console console-log" hide-overlay no-click-animation persistent>
       <v-sheet>
         <div class="px-4 py-1 d-flex justify-space-between">
-          <span><v-icon left small>mdi-console</v-icon>Logs</span>
+          <span class="d-flex align-center"><v-icon left>mdi-notebook-outline</v-icon>Logs</span>
           <span>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
-                <v-btn v-on="on" @click="clearLogs" icon small>
+                <v-btn v-on="on" @click="clearLogs" icon small class="mx-4">
                   <v-icon size="20">mdi-delete-variant</v-icon> 
                 </v-btn>
               </template>
-              <span>Clear logs</span>
+              <span>Clear Logs</span>
             </v-tooltip>
-            <v-btn @click="$store.state.isLogVisible=false" icon small class="ml-4">
-              <v-icon>mdi-chevron-down</v-icon> </v-btn>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" @click="scrollToTop" icon small class="ml-4">
+                  <v-icon>mdi-arrow-up</v-icon> 
+                </v-btn>
+              </template>
+              <span>Scroll to Top</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" @click="scrollToBottom" icon small class="mx-4">
+                  <v-icon>mdi-arrow-down</v-icon> 
+                </v-btn>
+              </template>
+              <span>Scroll to Bottom</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" @click="$store.state.isLogVisible=false" icon small class="ml-4">
+                  <v-icon>mdi-close</v-icon> 
+                </v-btn>
+              </template>
+              <span>Close</span>
+            </v-tooltip>
           </span>
         </div>
         <v-divider></v-divider>
-        <vuescroll>
-          <v-list height="200">
+        <vuescroll ref="logs">
+          <v-list height="200" class="pa-0">
             <v-list-item v-for="(log, i) in $store.state.log" :key="i" class="string">
               <span>
                 <span class="type" :class="[log.type]">{{log.type}}</span>
@@ -304,6 +326,12 @@ export default {
     },
   },
   methods: {
+    scrollToTop() {
+      this.$refs.logs.scrollTo({ y: '0%' }, 300)
+    },
+    scrollToBottom() {
+      this.$refs.logs.scrollTo({ y: '100%' }, 300)
+    },
     msToTime(ms) {
       let date = new Date(ms)
       return date.toLocaleDateString() + ', ' + date.toLocaleTimeString()
@@ -498,7 +526,10 @@ export default {
       this.foldersUpdated = false 
       this.getAllFiles(this.watcher.getWatched())
     },
-    isLogVisible() {
+    isLogVisible(newValue) {
+      if (newValue) setTimeout(() => {
+        this.$refs.logs.scrollTo({ y: '100%' }, 0)
+      }, 100)
       this.$nextTick(() => {
         this.$refs.sheet.showScroll()
       })
