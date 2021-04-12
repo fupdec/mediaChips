@@ -12,7 +12,7 @@ import router from '@/router'
 let defaultWebsite = {
   id: "defaultID",
   name: "Brazzers",
-  color: "#FF9800",
+  color: "#9b9b9b",
   network: false,
   childWebsites: [],
   favorite: false,
