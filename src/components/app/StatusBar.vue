@@ -41,10 +41,17 @@
       </transition>
     </div>
 
-    <div v-if="$store.state.backgroundProcesses" class="d-flex align-center worker">
-      <v-icon size="20" class="loading-animation">mdi-loading</v-icon>
-      <span class="caption val" v-text="$store.state.backgroundProcesses"/>
-    </div>
+    <v-tooltip v-if="$store.state.backgroundProcesses" top>
+      <template v-slot:activator="{ on }">
+        <div v-on="on" class="d-flex align-center worker pr-2">
+          <v-divider vertical></v-divider>
+          <span class="pl-2"></span>
+          <v-icon size="20" class="loading-animation">mdi-loading</v-icon>
+          <span class="caption val" v-text="$store.state.backgroundProcesses"/>
+        </div>
+      </template>
+      <span>Number of background processes</span>
+    </v-tooltip>
 
     <v-divider vertical></v-divider>
 
