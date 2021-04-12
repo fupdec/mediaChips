@@ -8,16 +8,16 @@ const dbpl = low(adapterPlaylists)
 
 import router from '@/router'
 
-dbpl.defaults({
-  playlists: [{
-    id: "123123123",
-    name: "Watch later",
-    videos: [],
-    date: Date.now(),
-    edit: Date.now(),
-    favorite: false,
-  }],
-}).write()
+let defaultPlaylist = {
+  id: "123123123",
+  name: "Watch later",
+  videos: [],
+  date: Date.now(),
+  edit: Date.now(),
+  favorite: false,
+}
+
+dbpl.defaults({ playlists: [{ ...defaultPlaylist }] }).write()
 
 const Playlists = {
   state: () => ({
@@ -34,9 +34,6 @@ const Playlists = {
     menuCard: false,
   }),
   mutations: {
-    addPlaylist(state, playlist) {
-      state.playlists.push(playlist)
-    },
     updatePlaylists(state) {
       console.log(':::::::playlists UPDATED:::::::')
       state.lastChanged = Date.now()
@@ -52,10 +49,6 @@ const Playlists = {
     },
   },
   actions: {
-    addPlaylist({ state, commit, getters}, playlist) {
-      getters.playlists.push(playlist).write()
-      commit('addPlaylist', playlist)
-    },
     updatePlaylistVideos({state, rootState, commit, dispatch, getters}, {id, videos}) {
       getters.playlists.find({id: id}).assign({videos: videos}).write()
       state.playlists = _.cloneDeep(getters.playlists.value())
@@ -193,8 +186,15 @@ const Playlists = {
         commit('getTabsFromDb')
       }
     },
+    addPlaylist({state, rootState, commit, dispatch, getters}, { id, name }) {
+      let playlist = { ...defaultPlaylist, ...{ id, name } }
+      getters.playlists.push(playlist).write()
+      commit('addLog', {type:'info', color:'green', text:`📃 Added playlist "${name}"`})
+    },
     deletePlaylists({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedPlaylists.map(id => {
+        let playlist = getters.playlists.find({id:id}).value().name
+        commit('addLog', {type:'info',color:'red',text:`📃 Playlist "${playlist}" has been removed 🗑️`})
         getters.playlists.remove({ id: id }).write()
       })
       commit('updateSelectedPlaylists', [])

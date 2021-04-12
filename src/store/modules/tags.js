@@ -9,23 +9,23 @@ const dbt = low(adapterTags)
 
 import router from '@/router'
 
-dbt.defaults({ 
-  tags: [{
-    id: "2222222222222222",
-    name: "Flower",
-    altNames: [],
-    category: [],
-    color: "#FF9800",
-    value: 5,
-    date: Date.now(),
-    edit: Date.now(),
-    favorite: true,
-    bookmark: false,
-    type: ['video'],
-    videos: 0,
-    performers: [],
-  },] 
-}).write()
+let defaultTag = {
+  id: "2222222222222222",
+  name: "Flower",
+  altNames: [],
+  category: [],
+  color: "#FF9800",
+  value: 5,
+  date: Date.now(),
+  edit: Date.now(),
+  favorite: true,
+  bookmark: false,
+  type: ['video'],
+  videos: 0,
+  performers: [],
+}
+
+dbt.defaults({ tags: [{ ...defaultTag }] }).write()
 
 const Tags = {
   state: () => ({
@@ -231,6 +231,11 @@ const Tags = {
         commit('getTabsFromDb')
       }
     },
+    addTag({state, rootState, commit, dispatch, getters}, { id, name }) {
+      let tag = { ...defaultTag, ...{ id, name } }
+      getters.tags.push(tag).write()
+      commit('addLog', {type:'info', color:'green', text:`🔖 Added tag "${name}"`})
+    },
     deleteTags({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedTags.map(id => {
         let tagName = getters.tags.find({id:id}).value().name
@@ -265,11 +270,12 @@ const Tags = {
         let imgPath = path.join(getters.getPathToUserData, `/media/tags/${id}_.jpg`)
         fs.unlink(imgPath, (err) => {
           if (err) {
-            console.log(`failed to delete image of tag "${tagName}". ${err}`);
+            // console.log(`failed to delete image of tag "${tagName}". ${err}`);
           } else {
-            console.log(`successfully deleted image of tag "${tagName}"`);                                
+            // console.log(`successfully deleted image of tag "${tagName}"`);                                
           }
         })
+        commit('addLog', {type:'info',color:'red',text:`🔖 Tag "${tagName}" has been removed 🗑️`})
       })
       state.selectedTags = []
       commit('updateTags')

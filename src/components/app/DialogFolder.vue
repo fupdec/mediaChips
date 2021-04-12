@@ -106,7 +106,7 @@ export default {
       this.listLostFiles = false
     },
     openTabWithLostVideos() {
-      console.log(this.folder.lostFiles)
+      // console.log(this.folder.lostFiles)
       // return
       let tabId = Date.now()
       let tab = { 

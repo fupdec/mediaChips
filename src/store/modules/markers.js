@@ -22,9 +22,9 @@ const Markers = {
       let imgPath = path.join(getters.getPathToUserData, `/media/markers/${marker.id}.jpg`)
       fs.unlink(imgPath, (err) => {
         if (err) {
-          console.log(`failed to delete image of marker "${marker.id}", "${marker.name}". ${err}`);
+          // console.log(`failed to delete image of marker "${marker.id}", "${marker.name}". ${err}`);
         } else {
-          console.log(`successfully deleted image of marker "${marker.id}", "${marker.name}"`);                                
+          // console.log(`successfully deleted image of marker "${marker.id}", "${marker.name}"`);                                
         }
       })
     },

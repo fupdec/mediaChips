@@ -203,6 +203,8 @@ export default {
           edit: Date.now(),
           videos: _.cloneDeep(this.videosList.map(video=>(video.id))),
         }).write()
+
+      this.$store.commit('addLog', {type:'info',text:`📃 Playlist "${this.playlistName}" has been edited ✏️`})
       this.$store.state.Playlists.dialogEditPlaylist = false
       this.$store.commit('updatePlaylists')
       this.$store.dispatch('filterPlaylists', true)

@@ -437,9 +437,11 @@ export default {
     deleteImage(imgType) {
       fs.unlink(this.getImagePath('performer',imgType), (err) => {
         if (err) {
-          console.log("failed to delete local image:"+err);
+          this.$store.commit('addLog', {type: 'error',text: "failed to delete local image:"+err})
+          // console.log("failed to delete local image:"+err);
         } else {
-          console.log('successfully deleted local image');                                
+          // console.log('successfully deleted local image');  
+          this.$store.commit('addLog', {type:'info', text:'successfully deleted local image for performer '+this.performer.name})
         }
       })
       this.images[imgType].file = ''

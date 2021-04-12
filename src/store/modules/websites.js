@@ -9,25 +9,25 @@ const dbw = low(adapterWebsites)
 
 import router from '@/router'
 
-dbw.defaults({
-  websites: [{
-    id: "defaultID",
-    name: "Brazzers",
-    color: "#FF9800",
-    network: false,
-    childWebsites: [],
-    favorite: false,
-    bookmark: false,
-    date: Date.now(),
-    edit: Date.now(),
-    videos: 0,
-    performers: [],
-    videoTags: [],
-    views: 0,
-    altNames: [],
-    url: '',
-  },]
-}).write()
+let defaultWebsite = {
+  id: "defaultID",
+  name: "Brazzers",
+  color: "#FF9800",
+  network: false,
+  childWebsites: [],
+  favorite: false,
+  bookmark: false,
+  date: Date.now(),
+  edit: Date.now(),
+  videos: 0,
+  performers: [],
+  videoTags: [],
+  views: 0,
+  altNames: [],
+  url: '',
+}
+
+dbw.defaults({ websites: [{ ...defaultWebsite }] }).write()
 
 const Websites = {
   state: () => ({
@@ -231,6 +231,11 @@ const Websites = {
         commit('getTabsFromDb')
       }
     },
+    addWebsite({state, rootState, commit, dispatch, getters}, { id, name }) {
+      let website = { ...defaultWebsite, ...{ id, name } }
+      getters.websites.push(website).write()
+      commit('addLog', {type:'info', color:'green', text:`🌐 Added website "${name}"`})
+    },
     deleteWebsites({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedWebsites.map(id => {
         let websiteName = getters.websites.find({id:id}).value().name
@@ -248,11 +253,12 @@ const Websites = {
         let imgPath = path.join(getters.getPathToUserData, `/media/websites/${id}_.jpg`)
         fs.unlink(imgPath, (err) => {
           if (err) {
-            console.log(`failed to delete image of website "${websiteName}". ${err}`);
+            // console.log(`failed to delete image of website "${websiteName}". ${err}`);
           } else {
-            console.log(`successfully deleted image of website "${websiteName}"`);                                
+            // console.log(`successfully deleted image of website "${websiteName}"`);                                
           }
         })
+        commit('addLog', {type:'info', color:'red', text:`🌐 Website "${websiteName}" has been removed 🗑️`})
         // run update data function (in settings button with this function)
       })
       state.selectedWebsites = []

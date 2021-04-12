@@ -455,48 +455,24 @@ export default {
       websitesArray = websitesArray.split(/\r?\n/)
       websitesArray = websitesArray.filter((el)=>(el != ""))
       websitesArray = websitesArray.map(s => s.trim())
-      console.log(`start:::${websitesArray.join(', ')}:::end`)
+      // console.log(`start:::${websitesArray.join(', ')}:::end`)
       const websitesDB = this.$store.getters.websites
       let dups = []
       let newWebsites = []
+      let vm = this
 
       async function addWebsiteInDb() {
         for (const website of websitesArray) {
-
           // check for duplicate name of website
           let duplicate = websitesDB.find(w=>(w.name.toLowerCase()===website.toLowerCase())).value()
           if (duplicate) {
-            console.warn(`website ${JSON.stringify(duplicate.name)} already in DB`)
+            // console.warn(`website ${JSON.stringify(duplicate.name)} already in DB`)
             dups.push(duplicate.name)
-            continue;
+            continue
           }
 
-          // create website info 
-          var websiteID = shortid.generate()
-          var websiteInfo = {
-            id: websiteID,
-            name: website,
-            color: "#9b9b9b",
-            network: false,
-            childWebsites: [],
-            favorite: false,
-            bookmark: false,
-            date: Date.now(),
-            edit: Date.now(),
-            videos: 0,
-            performers: [],
-            videoTags: [],
-            views: 0,
-            altNames: [],
-            url: '',
-          }
-
-          // add websiteInfo to DB
-          await websitesDB.push(websiteInfo).write()
+          vm.$store.dispatch('addWebsite', { id: shortid.generate(), name: website })
           newWebsites.push(website)
-          
-          console.log(`added: website ${JSON.stringify(websiteInfo.name)}`)
-          ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window
         }
       }
       addWebsiteInDb().then(()=>{
@@ -505,13 +481,13 @@ export default {
           this.alertDuplicateWebsites = true
         } else { this.alertDuplicateWebsites = false }
         this.newWebsites = newWebsites.join(", ")
-        console.log("All websites added!");
         if(this.newWebsites) {
           this.alertAddNewWebsites = true
         } else { this.alertAddNewWebsites = false }
         this.websiteName = '',
         this.$store.commit('updateWebsites')
         this.$store.dispatch('filterWebsites', true)
+        ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window
       })
     },
     toggleSortDirection() {

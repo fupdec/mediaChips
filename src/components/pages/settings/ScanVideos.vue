@@ -120,7 +120,7 @@
               </v-progress-linear>
             </v-card-actions>
 
-            <v-card-actions v-if="currentVideoScanName!==''" class="py-1">
+            <v-card-actions v-if="currentVideoScanName!==''" class="py-1 px-4">
               {{currentVideoScanName}}
             </v-card-actions>
 
@@ -319,7 +319,7 @@ export default {
           this.folderPaths = result.filePaths.join('\n')
         }
       }).catch(err => {
-        console.log(err)
+        this.$store.commit('addLog', {type:'error',text:'Video scanning process: '+err})
       })
     },
     scanDir() {
@@ -384,12 +384,12 @@ export default {
             vm.videoScanProgressBar = 100
           }
           // console.log(vm.videoScanProgressBar)
-          console.log(fileProcResult)
+          // console.log(fileProcResult)
           await sleep(10)
         }
         vm.isVideoScanFinished = true
         // console.log(vm.updateVideosInStore);
-        console.log('Files scaned!');
+        // console.log('Files scaned!');
       }
 
       processArray(filesArray).then(()=>{
@@ -401,7 +401,14 @@ export default {
         if (vm.newVideos.length===0 && vm.totalNumberOfScanVideos===0) {
           vm.noNewVideosAdded = true
           vm.textNoVideosAdded = 'There is no video in the selected folder.'
-        } 
+        }
+        if (vm.newVideos.length>0) {
+          vm.$store.commit('addLog', {
+            type:'info',
+            color:'green',
+            text:`${vm.newVideos.length} new videos have been added 😀`
+          })
+        }
         vm.$store.state.Settings.scanProcRun = false
         vm.$store.commit('updateVideos')
         vm.$store.dispatch('filterVideos')
@@ -413,7 +420,7 @@ export default {
       try {
         files = fs.readdirSync(dir)
       } catch (err) {
-        console.log(err)
+        this.$store.commit('addLog', {type:'error', text:'Video scanning process: '+err})
         files = []
         this.alertFolderError = true
         this.errorFolders.unshift(dir)
@@ -425,7 +432,7 @@ export default {
         try {
           fileStat = fs.lstatSync(filePath)
         } catch (error) {
-          console.log(error)
+          this.$store.commit('addLog', {type:'error', text:'Video scanning process: '+error})
           return
         }
 
@@ -443,19 +450,18 @@ export default {
       // check for duplicates in database
       let duplicate = this.$store.getters.videos.find(video => video.path.toLowerCase() == file.toLowerCase()).value()
       if (duplicate) {
-        console.warn(`file ${JSON.stringify(duplicate.path)} already in DB`)
         fileProcResult.duplicate = file
         fileProcResult.success = false
         return fileProcResult
       }
 
       this.fileInfo.id = shortid.generate() 
+      const vm = this
 
-      console.log('1) start getting meta')
       try {
         await this.getVideoMetadata(file)
       } catch (error) {
-        console.log(error)
+        vm.$store.commit('addLog', {type:'error',text:'Video scanning process: '+error})
         fileProcResult.errorVideo = file
         return fileProcResult
       }
@@ -464,13 +470,12 @@ export default {
       await this.createInfoForDb()
         .then(async (videoMetadata) => {
           await this.$store.getters.videos.push(videoMetadata).write()
-          console.log(`2) video added`)
           fileProcResult.duplicate = false
           fileProcResult.success = videoMetadata
           return(fileProcResult)
         })
-        .catch(err => {
-          console.log(err)
+        .catch(error => {
+          vm.$store.commit('addLog', {type:'error',text:'Video scanning process: '+error})
           fileProcResult.errorVideo = file
         })
       return fileProcResult
@@ -479,6 +484,7 @@ export default {
       return new Promise((resolve, reject) => {
         return ffmpeg.ffprobe(pathToFile, (error, info) => {
           if (error) {
+            this.$store.commit('addLog', {type:'error',text:'Video scanning process: '+error})
             return reject(error)
           }
           // console.log(`getVideoMetadata: ` + JSON.stringify(videoInfo.format))
@@ -522,7 +528,6 @@ export default {
           edit: Date.now(),
           views: 0,
         }
-        console.log('111111')
         
         let outputPathThumbs = path.join(this.$store.getters.getPathToUserData, '/media/thumbs/')
         // creating the thumb of the video
@@ -535,7 +540,7 @@ export default {
             size: '?x320' 
           })
           .on('end', () => {
-            console.log(`thumb created: ${outputPathThumbs + this.fileInfo.id}.jpg`)
+            // console.log(`thumb created: ${outputPathThumbs + this.fileInfo.id}.jpg`)
             resolve(videoMetadata)
           })
           .on('error', (err) => {

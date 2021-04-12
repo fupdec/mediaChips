@@ -525,9 +525,9 @@ export default {
               let newPath = path.join(filePath, fileName)
               fs.rename(oldPath, newPath, function (err) {
                 if (err) {
-                  vm.$store.dispatch('setNotification', {
+                  vm.$store.commit('addLog', {
                     type: 'error',
-                    text: `Failed to move file "${fileName}"`
+                    text: `Failed to move file "${fileName}".`
                   })
                   throw err
                 } else {
@@ -535,8 +535,8 @@ export default {
                     path: newPath,
                     edit: Date.now(),
                   }).write()
-                  console.log('Successfully moved!')
-                  vm.$store.dispatch('setNotification', {
+                  // console.log('Successfully moved!')
+                  vm.$store.commit('addLog', {
                     type: 'info',
                     text: `File "${fileName}" successfully moved!`
                   })
@@ -546,7 +546,8 @@ export default {
           }
         } else return
       }).catch(err => {
-        console.log(err)
+        // console.log(err)
+        this.$store.commit('addLog', {type: 'error',text: err})
         return
       })
     },

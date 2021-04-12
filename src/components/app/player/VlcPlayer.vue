@@ -128,7 +128,7 @@
             <span class="mx-1">/</span>
             <div class="time-end">{{ msToTime(duration * 1000) }}</div>
           </div>
-          <v-slider v-model="volume" value="1" min="0" step="0.1" max="1" hide-details 
+          <v-slider v-model="volume" value="1" min="0" step="0.05" max="1" hide-details 
             :prepend-icon="volumeIcon" @click:prepend="toggleMute" class="volume"/>
         </v-card-actions>
       </v-card>
@@ -944,7 +944,7 @@ export default {
       } else {
         if (this.player.volume >= 1) return
       }
-      this.player.volume = (this.player.volume - e.deltaY / 1000).toFixed(1)
+      this.player.volume = (this.player.volume - e.deltaY / 1000 / 2).toFixed(2)
       this.volume = this.player.volume
     },
     handleKey(e) {

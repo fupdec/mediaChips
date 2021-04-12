@@ -500,6 +500,7 @@ export default {
       this.$store.state.Tags.dialogEditTag = false
       this.$store.state.Bookmarks.bookmarkText = ''
       ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
+      this.$store.commit('addLog', {type:'info',text:`🔖 Tag "${this.newTagName}" has been edited ✏️`})
     },
     getImg() {
       let imgPath = this.getImgUrl(this.tag.id + '_.jpg')

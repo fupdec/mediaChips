@@ -9,40 +9,39 @@ const dbp = low(adapterPerformers)
 
 import router from '@/router'
 
+let defaultPerformer = {
+  id: '111111111111111',
+  name: 'Angela',
+  date: Date.now(),
+  edit: Date.now(),
+  aliases: [],
+  tags: [],
+  favorite: false,
+  bookmark: false,
+  rating: 0,
+  nations: [],
+  birthday: "",
+  start: "",
+  end: "",
+  ethnicity: [],
+  hair: [],
+  eyes: [],
+  height: "",
+  weight: "",
+  bra: "",
+  waist: "",
+  hip: "",
+  boobs: [],
+  cups: [],
+  category: [],
+  videos: 0,
+  videoTags: [],
+  websites: [],
+  views: 0,
+}
+
 dbp.defaults({ 
-  performers: [{
-    id: "1111111111111111",
-    name: "Angela",
-    date: Date.now(),
-    edit: Date.now(),
-    aliases: ["Angie"],
-    favorite: true,
-    bookmark: false,
-    rating: 5,
-    nations: ["United States"],
-    birthday: "1990-01-01",
-    start: "2010",
-    end: "",
-    ethnicity: ["Caucasian"],
-    hair: ["Brown"],
-    eyes: ["Blue"],
-    height: "165",
-    weight: "55",
-    bra: "38",
-    waist: "26",
-    hip: "38",
-    boobs: ["Real"],
-    cups: ["DD"],
-    category: ["Pornstar"],
-    body: ["Chubby"],
-    pussyLips: ["Medium"],
-    pussyHair: ["Bald"],
-    videos: 0,
-    tags: [],
-    videoTags: [],
-    websites: [],
-    views: 0,
-  }]
+  performers: [{ ...defaultPerformer }]
 }).write()
 
 const Performers = {
@@ -282,6 +281,22 @@ const Performers = {
         commit('getTabsFromDb')
       }
     },
+    addPerformer({state, rootState, commit, dispatch, getters}, {id, name}) {
+      let performer = { ...defaultPerformer, ...{ id, name } }
+      let params = rootState.Settings.customParametersPerformer
+      for (let param in params) {
+        let type = params[param].type
+        if (type == 'boolean') {
+          performer[params[param].name] = false
+        } else if (type == 'number' || type == 'string' || type == 'date') {
+          performer[params[param].name] = ''
+        } else if (type == 'array') {
+          performer[params[param].name] = []
+        }
+      }
+      getters.performers.push(performer).write()
+      commit('addLog', {type:'info', color:'green', text:`👩 Added performer "${name}"`})
+    },
     deletePerformers({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedPerformers.map(id => {
         let performerName = getters.performers.find({id:id}).value().name
@@ -301,12 +316,13 @@ const Performers = {
           let imgPath = path.join(getters.getPathToUserData, `/media/performers/${id}_${img}.jpg`)
           fs.unlink(imgPath, (err) => {
             if (err) {
-              console.log("failed to delete local image:"+err)
+              // console.log("failed to delete local image:"+err)
             } else {
-              console.log('successfully deleted local image')
+              // console.log('successfully deleted local image')
             }
           })
         })
+        commit('addLog', {type:'info',color:'red',text:`👩 Performer "${performerName}" has been removed 🗑️`})
       })
       commit('updateSelectedPerformers', [])
       commit('updatePerformers')

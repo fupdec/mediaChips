@@ -111,71 +111,25 @@ export default {
       performersArray = performersArray.split(/\r?\n/)
       performersArray = performersArray.filter((el)=>(el != ""))
       performersArray = performersArray.map(s => s.trim())
-      console.log(`start:::${performersArray.join(', ')}:::end`)
+      // console.log(`start:::${performersArray.join(', ')}:::end`)
       let dups = []
       let newPerformers = []
       let db = this.$store.getters.performers
-      let params = this.$store.state.Settings.customParametersPerformer
+      let vm = this
 
       async function addPerformerInDb() {
         for (const performer of performersArray) {
           // check for duplicate name of performer
           let duplicate = db.find(p=>(p.name.toLowerCase()===performer.toLowerCase())).value()
           if (duplicate) {
-            console.warn(`performer ${JSON.stringify(duplicate.name)} already in DB`)
+            // console.warn(`performer ${JSON.stringify(duplicate.name)} already in DB`)
             dups.push(duplicate.name)
-            continue;
+            continue
           }
 
-          // create performer info
-          let performerID = shortid.generate()
-          let performerInfo = {
-            id: performerID,
-            name: performer,
-            date: Date.now(),
-            edit: Date.now(),
-            aliases: [],
-            tags: [],
-            favorite: false,
-            bookmark: false,
-            rating: 0,
-            nations: [],
-            birthday: "",
-            start: "",
-            end: "",
-            ethnicity: [],
-            hair: [],
-            eyes: [],
-            height: "",
-            weight: "",
-            bra: "",
-            waist: "",
-            hip: "",
-            boobs: [],
-            cups: [],
-            category: [],
-            videos: 0,
-            tags: [],
-            videoTags: [],
-            websites: [],
-            views: 0,
-          }
-
-          for (let param in params) {
-            let type = params[param].type
-            if (type == 'boolean') {
-              performerInfo[params[param].name] = false
-            } else if (type == 'number' || type == 'string' || type == 'date') {
-              performerInfo[params[param].name] = ''
-            } else if (type == 'array') {
-              performerInfo[params[param].name] = []
-            }
-          }
-
-          // add performerInfo to DB
-          await db.push(performerInfo).write()
+          vm.$store.dispatch('addPerformer', { id: shortid.generate(), name: performer })
           newPerformers.push(performer)
-          console.log(`added performer "${performerInfo.name}": ${JSON.stringify(performerInfo)}`);
+          // console.log(`added performer "${performerInfo.name}": ${JSON.stringify(performerInfo)}`);
         }
       }
       addPerformerInDb().then(() => {
@@ -184,7 +138,6 @@ export default {
           this.alertDuplicatePerformers = true
         } else { this.alertDuplicatePerformers = false }
         this.newPerformers = newPerformers.join(", ")
-        console.log("Performers added!");
         if(this.newPerformers) {
           this.alertAddNewPerformers = true
         } else { this.alertAddNewPerformers = false }

@@ -339,6 +339,7 @@ export default {
       const playlistsDb = this.$store.getters.playlists
       let dups = []
       let newPlaylists = []
+      let vm = this
 
       async function addPlaylistInDb() {
         for (const playlist of playlistsArray) {
@@ -346,27 +347,14 @@ export default {
           // check for duplicate name of playlist
           let duplicate = playlistsDb.find(w=>(w.name.toLowerCase()===playlist.toLowerCase())).value()
           if (duplicate) {
-            console.warn(`playlist ${JSON.stringify(duplicate.name)} already in DB`)
+            // console.warn(`playlist ${JSON.stringify(duplicate.name)} already in DB`)
             dups.push(duplicate.name)
             continue
           }
 
-          // create playlist info 
-          const playlistID = shortid.generate()
-          const playlistInfo = {
-            id: playlistID,
-            name: playlist,
-            videos: [],
-            date: Date.now(),
-            edit: Date.now(),
-            favorite: false,
-          }
-
-          // add playlistInfo to DB
-          await playlistsDb.push(playlistInfo).write()
+          vm.$store.dispatch('addPlaylist', { id: shortid.generate(), name: playlist })
           newPlaylists.push(playlist)
-          
-          console.log(`added: playlist ${JSON.stringify(playlistInfo.name)}`)
+          // console.log(`added: playlist ${JSON.stringify(playlistInfo.name)}`)
         }
       }
       addPlaylistInDb().then(()=>{
@@ -375,7 +363,6 @@ export default {
           this.alertDuplicatePlaylists = true
         } else { this.alertDuplicatePlaylists = false }
         this.newPlaylists = newPlaylists.join(", ")
-        console.log("All playlists added!");
         if(this.newPlaylists) {
           this.alertAddNewPlaylists = true
         } else { this.alertAddNewPlaylists = false }

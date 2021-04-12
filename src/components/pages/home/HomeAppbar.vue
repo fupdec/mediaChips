@@ -76,7 +76,7 @@ export default {
   },
   methods: {
     changeQuantityRecentVideos(value) {
-      console.log(value)
+      // console.log(value)
       this.$store.commit('changeQuantityRecentVideos', value)
     },
   },

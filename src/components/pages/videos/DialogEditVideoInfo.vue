@@ -1115,6 +1115,8 @@ export default {
         this.$store.commit('updateVideos')
         this.$store.dispatch('filterVideos', true)
       })
+      
+      this.$store.commit('addLog', {type:'info',text:`📹 Video "${this.fileName}" has been edited ✏️`})
       this.$store.state.Videos.dialogEditVideoInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
     },
@@ -1214,96 +1216,19 @@ export default {
       }
     },
     addNewTag() {
-      let tagInfo = {
-        id: shortid.generate(),
-        name: this.newTagName,
-        altNames: [],
-        category: [],
-        color: "#9b9b9b",
-        value: 0,
-        date: Date.now(),
-        edit: Date.now(),
-        favorite: false,
-        bookmark: false,
-        type: ['video', 'performer'],
-        videos: 0,
-        performers: [],
-      }
-      this.$store.getters.tags.push(tagInfo).write()
+      this.$store.dispatch('addTag', { id: shortid.generate(), name: this.newTagName })
       this.dialogAddNewTag = false
       this.newTagName = ''
       ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
     },
     addNewPerformer() {
-      let performerInfo = {
-        id: shortid.generate(),
-        name: this.newPerformerName,
-        date: Date.now(),
-        edit: Date.now(),
-        aliases: [],
-        tags: [],
-        favorite: false,
-        bookmark: false,
-        rating: 0,
-        nations: [],
-        birthday: "",
-        start: "",
-        end: "",
-        ethnicity: [],
-        hair: [],
-        eyes: [],
-        height: "",
-        weight: "",
-        bra: "",
-        waist: "",
-        hip: "",
-        boobs: [],
-        cups: [],
-        category: [],
-        videos: 0,
-        tags: [],
-        videoTags: [],
-        websites: [],
-        views: 0,
-      }
-
-      let params = this.$store.state.Settings.customParametersPerformer
-      for (let param in params) {
-        let type = params[param].type
-        if (type == 'boolean') {
-          performerInfo[params[param].name] = false
-        } else if (type == 'number' || type == 'string' || type == 'date') {
-          performerInfo[params[param].name] = ''
-        } else if (type == 'array') {
-          performerInfo[params[param].name] = []
-        }
-      }
-
-      this.$store.getters.performers.push(performerInfo).write()
+      this.$store.dispatch('addPerformer', { id: shortid.generate(), name: this.newPerformerName })
       this.dialogAddNewPerformer = false
       this.newPerformerName = ''
       ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window
     },
     addNewWebsite() {
-      let websiteInfo = {
-        id: shortid.generate(),
-        name: this.newWebsiteName,
-        color: "#9b9b9b",
-        network: false,
-        childWebsites: [],
-        favorite: false,
-        bookmark: false,
-        date: Date.now(),
-        edit: Date.now(),
-        videos: 0,
-        performers: [],
-        videoTags: [],
-        views: 0,
-        altNames: [],
-        url: '',
-      }
-
-      this.$store.getters.websites.push(websiteInfo).write()
+      this.$store.dispatch('addWebsite', { id: shortid.generate(), name: this.newWebsiteName })
       this.dialogAddNewWebsite = false
       this.newWebsiteName = ''
       ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window

@@ -77,71 +77,11 @@ export default {
       this.$store.dispatch('deleteMarker' , markerForRemove)
     },
     addNewTag(tagName) {
-      let tag = {
-        id: shortid.generate(),
-        name: tagName,
-        altNames: [],
-        category: [],
-        color: "#9b9b9b",
-        value: 0,
-        date: Date.now(),
-        edit: Date.now(),
-        favorite: false,
-        bookmark: false,
-        type: ['video', 'performer'],
-        videos: 0,
-        performers: [],
-      }
-      this.$store.getters.tags.push(tag).write()
+      this.$store.dispatch('addTag', { id: shortid.generate(), name: tagName })
       ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
     },
-    
     addNewPerformer(performerName) {
-      let performerInfo = {
-        id: shortid.generate(),
-        name: performerName,
-        date: Date.now(),
-        edit: Date.now(),
-        aliases: [],
-        tags: [],
-        favorite: false,
-        bookmark: false,
-        rating: 0,
-        nations: [],
-        birthday: "",
-        start: "",
-        end: "",
-        ethnicity: [],
-        hair: [],
-        eyes: [],
-        height: "",
-        weight: "",
-        bra: "",
-        waist: "",
-        hip: "",
-        boobs: [],
-        cups: [],
-        category: [],
-        videos: 0,
-        tags: [],
-        videoTags: [],
-        websites: [],
-        views: 0,
-      }
-
-      let params = this.$store.state.Settings.customParametersPerformer
-      for (let param in params) {
-        let type = params[param].type
-        if (type == 'boolean') {
-          performerInfo[params[param].name] = false
-        } else if (type == 'number' || type == 'string' || type == 'date') {
-          performerInfo[params[param].name] = ''
-        } else if (type == 'array') {
-          performerInfo[params[param].name] = []
-        }
-      }
-
-      this.$store.getters.performers.push(performerInfo).write()
+      this.$store.dispatch('addPerformer', { id: shortid.generate(), name: performerName })
       ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window
     },
   },

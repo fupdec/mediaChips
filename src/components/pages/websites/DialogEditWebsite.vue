@@ -458,6 +458,7 @@ export default {
       info.network = isNetwork
       info.childWebsites = childWebsites
       info.bookmark = newBookmark
+      this.$store.commit('addLog', {type:'info',text:`🌐 Website "${this.websiteName}" has been edited ✏️`})
       this.$store.state.Websites.updateInfo = info
       this.$store.state.Websites.dialogEditWebsite = false
       this.$store.state.Bookmarks.bookmarkText = ''

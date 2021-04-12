@@ -774,7 +774,7 @@ export default {
         if(response.status === 200) {
           this.searchInProgress = false
           this.foundPerformers = []
-          console.log('result')
+          // console.log('result')
           const html = response.data;
           const $ = cheerio.load(html)
           $('.grid-item').each((i,e) => {
@@ -1337,7 +1337,7 @@ export default {
       this.aliases = newAliases.join(", ")
 
       // update performer card with new values
-      console.log('info saved')
+      this.$store.commit('addLog', {type:'info',text:`👩 Performer "${newName}" has been edited ✏️`})
       this.$store.commit('updatePerformers')
       this.$store.state.Performers.dialogEditPerformerInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
@@ -1441,22 +1441,7 @@ export default {
       this.$store.state.hoveredImage = false
     },
     addNewTag() {
-      let tagInfo = {
-        id: shortid.generate(),
-        name: this.newTagName,
-        altNames: [],
-        category: [],
-        color: "#9b9b9b",
-        value: 0,
-        date: Date.now(),
-        edit: Date.now(),
-        favorite: false,
-        bookmark: false,
-        type: ['video', 'performer'],
-        videos: 0,
-        performers: [],
-      }
-      this.$store.getters.tags.push(tagInfo).write()
+      this.$store.dispatch('addTag', { id: shortid.generate(), name: this.newTagName })
       this.dialogAddNewTag = false
       this.newTagName = ''
       ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window

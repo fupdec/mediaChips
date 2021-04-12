@@ -444,41 +444,23 @@ export default {
       const tagsDB = this.$store.getters.tags
       let dups = []
       let newTags = []
-
+      let vm = this
+      
       async function addTagInDb() {
         for (const tag of tagsArray) {
 
           // check for duplicate name of tag
           let duplicate = tagsDB.find(t=>(t.name.toLowerCase()===tag.toLowerCase())).value()
           if (duplicate) {
-            console.warn(`tag ${JSON.stringify(duplicate.name)} already in DB`)
+            // console.warn(`tag ${JSON.stringify(duplicate.name)} already in DB`)
             dups.push(duplicate.name)
             continue;
           }
 
-          // create tag info 
-          var tagID = shortid.generate()
-          var tagInfo = {
-            id: tagID,
-            name: tag,
-            altNames: [],
-            category: [],
-            color: "#9b9b9b",
-            value: 0,
-            date: Date.now(),
-            edit: Date.now(),
-            favorite: false,
-            bookmark: false,
-            type: ['video', 'performer'],
-            videos: 0,
-            performers: [],
-          }
-
           // add tagInfo to DB
-          await tagsDB.push(tagInfo).write()
+          vm.$store.dispatch('addTag', { id: shortid.generate(), name: tag })
           newTags.push(tag)
-          
-          console.log(`added: tag ${JSON.stringify(tagInfo.name)}`)
+          // console.log(`added: tag ${JSON.stringify(tagInfo.name)}`)
         }
       }
       addTagInDb().then(()=>{
@@ -487,7 +469,6 @@ export default {
           this.alertDuplicateTags = true
         } else { this.alertDuplicateTags = false }
         this.newTags = newTags.join(", ")
-        console.log("All tags added!");
         if(this.newTags) {
           this.alertAddNewTags = true
         } else { this.alertAddNewTags = false }
