@@ -43,7 +43,7 @@
 
     <v-tooltip v-if="$store.state.backgroundProcesses" top>
       <template v-slot:activator="{ on }">
-        <div v-on="on" class="d-flex align-center worker pr-2">
+        <div v-on="on" class="d-flex align-center worker pr-2 pb-1">
           <v-divider vertical></v-divider>
           <span class="pl-2"></span>
           <v-icon size="20" class="loading-animation">mdi-loading</v-icon>
@@ -62,23 +62,23 @@
       <span>
         <div class="overline text-center">Total</div>
         <div class="d-flex align-center">
-          <v-icon size="20">mdi-video</v-icon>
+          <v-icon size="20" dark>mdi-video</v-icon>
           <span class="ml-1" v-text="$store.getters.videosTotal"/>
         </div>
         <div class="d-flex align-center">
-          <v-icon size="20">mdi-account</v-icon>
+          <v-icon size="20" dark>mdi-account</v-icon>
           <span class="ml-1" v-text="$store.getters.performersTotal"/>
         </div>
         <div class="d-flex align-center">
-          <v-icon size="16">mdi-tag</v-icon>
+          <v-icon size="16" dark>mdi-tag</v-icon>
           <span class="ml-1" v-text="$store.getters.tagsTotal"/>
         </div>
         <div class="d-flex align-center">
-          <v-icon size="18">mdi-web</v-icon>
+          <v-icon size="18" dark>mdi-web</v-icon>
           <span class="ml-1" v-text="$store.getters.websitesTotal"/>
         </div>
         <div class="d-flex align-center">
-          <v-icon size="20">mdi-harddisk</v-icon>
+          <v-icon size="20" dark>mdi-harddisk</v-icon>
           <span class="ml-1" v-text="$store.getters.videosTotalSize"/>
           <!-- TODO fix wrong file size -->
         </div>
@@ -96,8 +96,8 @@
         <v-badge :value="isNotificationsEmpty"
           class="notifications-badge" overlap bordered dot color="grey" offset-x="24" offset-y="10">
           <v-btn x-small icon tile v-bind="attrs" width="48" v-on="on">
-            <v-icon v-if="!notificationsMenu">mdi-bell-outline</v-icon>
-            <v-icon v-else>mdi-bell</v-icon>
+            <v-icon size="16" v-if="!notificationsMenu">mdi-bell-outline</v-icon>
+            <v-icon size="16" v-else>mdi-bell</v-icon>
           </v-btn>
         </v-badge>
       </template>
