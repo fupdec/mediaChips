@@ -57,7 +57,7 @@
 
     <v-tooltip top>
       <template v-slot:activator="{ on }">
-        <span v-on="on" class="px-4 d-flex"><v-icon size="18">mdi-database-outline</v-icon></span>
+        <span v-on="on" class="px-4 d-flex"><v-icon size="18" class="mb-1">mdi-database-outline</v-icon></span>
       </template>
       <span>
         <div class="overline text-center">Total</div>
@@ -94,10 +94,10 @@
     >
       <template v-slot:activator="{ on, attrs }">
         <v-badge :value="isNotificationsEmpty"
-          class="notifications-badge" overlap bordered dot color="grey" offset-x="16">
+          class="notifications-badge" overlap bordered dot color="grey" offset-x="24" offset-y="10">
           <v-btn x-small icon tile v-bind="attrs" width="48" v-on="on">
-            <v-icon size="14" v-if="!notificationsMenu">mdi-bell-outline</v-icon>
-            <v-icon size="14" v-else>mdi-bell</v-icon>
+            <v-icon v-if="!notificationsMenu">mdi-bell-outline</v-icon>
+            <v-icon v-else>mdi-bell</v-icon>
           </v-btn>
         </v-badge>
       </template>
