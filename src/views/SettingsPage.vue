@@ -1,5 +1,8 @@
 <template>
-  <vuescroll ref="mainContainer">
+  <vuescroll>
+    <div class="headline text-h3 d-flex align-center justify-center my-6">
+      <v-icon x-large left>mdi-cog-outline</v-icon> Settings
+    </div>
 
     <v-tabs v-model="tab" centered icons-and-text>
       <v-tab href="#app-settings" draggable="false">App<v-icon>mdi-application</v-icon></v-tab>

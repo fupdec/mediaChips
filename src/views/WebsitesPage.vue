@@ -43,8 +43,9 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
-    <div class="headline text-h3 text-center my-6">Websites
-      <span class="text-h5">({{$store.getters.filteredWebsitesTotal}})</span>
+    <div class="headline text-h3 d-flex align-center justify-center my-6">
+      <v-icon x-large left>mdi-web</v-icon> Websites
+      <span class="text-h5 ml-2">({{$store.getters.filteredWebsitesTotal}})</span>
     </div>
 
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">

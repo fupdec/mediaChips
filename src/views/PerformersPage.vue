@@ -30,8 +30,9 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
-    <div class="headline text-h3 text-center my-6"> Performers
-      <span class="text-h5">({{$store.getters.filteredPerformersTotal}})</span>
+    <div class="headline text-h3 d-flex align-center justify-center my-6">
+      <v-icon x-large left>mdi-account-outline</v-icon> Performers
+      <span class="text-h5 ml-2">({{$store.getters.filteredPerformersTotal}})</span>
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-center mt-6">

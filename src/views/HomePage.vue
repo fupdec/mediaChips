@@ -1,6 +1,7 @@
 <template>
   <vuescroll>
-    <div class="headline text-h3 text-center my-6">Home</div>
+    <div class="headline text-h3 d-flex align-center justify-center my-6">
+      <v-icon x-large left>mdi-home-outline</v-icon> Home </div>
 
     <v-container class="text-center">
       <div v-if="$store.getters.videosTotal==0">

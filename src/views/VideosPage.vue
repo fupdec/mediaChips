@@ -1,8 +1,9 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
 
-    <div class="headline text-h3 text-center my-6"> Videos
-      <span class="text-h5">({{$store.getters.filteredVideosTotal}})</span>
+    <div class="headline text-h3 d-flex align-center justify-center my-6">
+      <v-icon x-large left>mdi-video-outline</v-icon> Videos
+      <span class="text-h5 ml-2">({{$store.getters.filteredVideosTotal}})</span>
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
