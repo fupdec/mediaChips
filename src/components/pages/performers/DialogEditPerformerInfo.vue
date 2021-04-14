@@ -545,15 +545,13 @@ export default {
   mixins: [Countries, ShowImageFunction], 
   mounted () {
     this.$nextTick(function () {
-      let filteredAliases = JSON.parse(JSON.stringify(this.performer.aliases))
-      filteredAliases = filteredAliases.join(", ")
       this.performerName = this.performer.name
+      this.aliases = _.cloneDeep(this.performer.aliases.join(', '))
       this.favorite = this.performer.favorite
       this.rating = this.performer.rating
-      this.aliases = filteredAliases
       this.start = this.performer.start
       this.end = this.performer.end
-      this.nations = this.performer.nations
+      this.nations = _.cloneDeep(this.performer.nations)
       this.birthday = this.performer.birthday
       this.ethnicity = this.performer.ethnicity
       this.eyes = this.performer.eyes
@@ -1338,7 +1336,7 @@ export default {
 
       // update performer card with new values
       this.$store.commit('addLog', {type:'info',text:`👩 Performer "${newName}" has been edited ✏️`})
-      this.$store.commit('updatePerformers')
+      this.$store.commit('updatePerformers', [this.performer.id])
       this.$store.state.Performers.dialogEditPerformerInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
       ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window

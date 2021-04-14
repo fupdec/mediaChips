@@ -1,11 +1,10 @@
 <template>
+  <div>
   <v-dialog v-model="$store.state.Websites.dialogEditWebsite" scrollable persistent width="1200">
     <v-card>
       <v-card-title class="edit-card-title">
-        <v-img 
-          :src="getImg()" :aspect-ratio="1" max-width="84" height="84" class="mr-6"
-          gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
-        />
+        <v-img :src="imgMain" :aspect-ratio="1" max-width="84" height="84" class="mr-6"
+          gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"/>
         <div>
           <div class="font-weight-light headline body-1">Editing the website</div>
           <div class="font-weight-bold headline">{{website.name}} 
@@ -20,10 +19,9 @@
         </div>
         <v-spacer></v-spacer>
         <div>
-          <v-btn outlined dark class="mr-6" @click="close">Cancel</v-btn>
-          <v-btn 
-            :disabled="!valid" color="primary" @click="saveWebsiteInfo"
-          ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
+          <v-btn @click="close" outlined dark class="mr-6"> Cancel </v-btn>
+          <v-btn @click="saveWebsiteInfo" :disabled="!valid" color="primary">
+            <v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
         </div>
       </v-card-title>
 
@@ -45,34 +43,31 @@
                         <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
                       </v-chip>
                     </v-col>
-                    <v-col cols="12" sm="9" align="center" justify="center">
+                    <v-col cols="12" sm="8" align="center" justify="center">
                       <div>Website name</div>
-                      <div class="editable-text-field">
+                      <div class="editable-text-field align-start">
                         <v-tooltip bottom v-if="isWebsiteNameEditEnabled">
                           <template v-slot:activator="{ on }">
-                            <v-icon left @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" 
-                              v-on="on">mdi-close</v-icon>
+                            <v-icon v-on="on" @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" 
+                              left class="mt-1">mdi-close</v-icon>
                           </template>
                           <span>Keep the old name</span>
                         </v-tooltip>
                         <v-tooltip bottom v-else>
                           <template v-slot:activator="{ on }">
-                            <v-icon left @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" 
-                              v-on="on">mdi-pencil</v-icon>
+                            <v-icon v-on="on" @click="isWebsiteNameEditEnabled=!isWebsiteNameEditEnabled" 
+                              left class="mt-1">mdi-pencil</v-icon>
                           </template>
                           <span>Edit name</span>
                         </v-tooltip>
                         <v-text-field v-model="websiteName" :disabled="!isWebsiteNameEditEnabled"
-                          :rules="[getNameRules]" validate-on-blur class="rename-website-field" 
+                          :rules="[getNameRules]" validate-on-blur class="rename-website-field mt-0 pt-0" 
                           hint='The name may include letters, numbers, symbols: \/%"<>{}[]'/>
                       </div>
                     </v-col>
-                    <v-col cols="12" sm="3" align="center" justify="center">
-                      <div>Favorite</div>
-                      <v-btn @click="favorite=!favorite" x-large icon class="mt-3">
-                        <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
-                        <v-icon v-else color="grey">mdi-heart-outline</v-icon>
-                      </v-btn>
+                    <v-col cols="12" sm="4" align="center" justify="center">
+                      <v-btn @click="favorite=!favorite" :color="favorite?'pink':'grey'" x-large outlined block>
+                        <v-icon class="mr-2" size="20">mdi-heart</v-icon> Favorite </v-btn>
                     </v-col>
                     <v-col cols="12" sm="6" align="center" justify="center">
                       <div>
@@ -102,24 +97,28 @@
                       <span>URL (Internet address)</span>
                       <v-text-field v-model="url" placeholder="e.g. https://new.videos.com/" />
                     </v-col>
-                    <v-col cols="12" align="center" justify="center">
+                    <v-col cols="12" sm="6" align="center" justify="center">
                       <span>Website color</span> 
-                      <v-chip class="ml-2" small label outlined :color="website.color">
+                      <v-chip class="ml-2" small label outlined :color="color">
                         {{website.name}}
                       </v-chip>
-                      <v-color-picker v-model="website.color" :swatches="swatches"
+                      <v-color-picker v-model="color" :swatches="swatches"
                         class="color-picker-websites" show-swatches hide-canvas hide-inputs />
                     </v-col>
-                    <v-col cols="12" align="center" justify="center">
+                    <v-col cols="12" sm="6">
+                      <div class="text-center mb-2">Bookmark</div>
+                      <v-textarea v-model="$store.state.Bookmarks.bookmarkText" hide-details
+                        clearable auto-grow outlined placeholder="Write text here" />
+                    </v-col>
+                    <v-col cols="12" align="center" justify="center" class="py-0 mt-4">
                       <span>Network</span> 
                     </v-col>
-                    <v-col cols="12" sm="3">
-                      <v-switch v-model="isNetwork" inset :label="`${isNetwork?'Yes':'No'}`"/>
-                    </v-col>
-                    <v-col cols="12" sm="9">
+                    <v-col cols="12" class="d-flex align-center">
+                      <v-switch v-model="isNetwork" :label="`${isNetwork?'Yes':'No'}`"
+                        hide-details inset class="mt-0 pt-0 pr-6"/>
                       <v-autocomplete
-                        v-model="childWebsites" :disabled="!isNetwork"
-                        :items="childWebsitesList" label="Child websites"
+                        v-model="childWebsites" :disabled="!isNetwork" clearable
+                        :items="childWebsitesList" label="Child websites" 
                         item-text="name" class="mt-0 hidden-close" outlined
                         item-value="name" no-data-text="No more child websites"
                         multiple hide-selected hide-details @blur="sort('childWebsites')"
@@ -147,11 +146,6 @@
                           </template>
                         </template>
                       </v-autocomplete>
-                    </v-col>
-                    <v-col cols="12" class="py-0">
-                      <div class="text-center mb-2">Bookmark</div>
-                      <v-textarea v-model="$store.state.Bookmarks.bookmarkText" hide-details
-                        clearable auto-grow outlined placeholder="Write text here" />
                     </v-col>
                   </v-row>
                 </v-form>
@@ -183,8 +177,7 @@
                     <v-icon left>mdi-clipboard-outline</v-icon> Paste
                   </v-btn>
                   <v-btn v-if="images.main.display" 
-                    @click="crop(getImagePath('website',''),'main',500),loader='imgMainLoading'" 
-                    class="ma-2" color="primary" small
+                    @click="cropImage" class="ma-2" color="primary" small
                     :loading="imgMainLoading" :disabled="imgMainLoading"
                   > <v-icon left>mdi-crop</v-icon> Crop / save
                     <template v-slot:loader>
@@ -192,6 +185,9 @@
                         <v-icon>mdi-cached</v-icon>
                       </span>
                     </template>
+                  </v-btn>
+                  <v-btn v-if="displayDeleteButton" @click="dialogDeleteImage=true" color="red" icon>
+                    <v-icon>mdi-delete-forever</v-icon>
                   </v-btn>
                   <file-pond ref="pond" label-idle="Drop image here or click for upload"
                     :allow-multiple="false" :files="uploadedImage" @addfile="handleFile"
@@ -204,6 +200,24 @@
       </vuescroll>
     </v-card>
   </v-dialog>
+    
+    <v-dialog v-model="dialogDeleteImage" max-width="360px" persistent>
+      <v-card>
+        <v-card-title class="headline red--text px-4 py-1"> Delete image?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete-alert</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="text-center red--text pt-8">The image will be permanently deleted!</v-card-text>
+        <v-card-actions class="pa-0">
+          <v-btn @click="dialogDeleteImage = false" class="ma-4"> No </v-btn>
+          <v-spacer/>
+          <v-btn @click="deleteImage" class="red ma-4" dark> 
+            <v-icon left>mdi-delete-alert</v-icon> Yes </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script>
@@ -233,11 +247,13 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
-      this.favorite = this.website.favorite
       this.checkImageExist(this.getImagePath('website',''), 'main')
+      this.imgMain = this.getImgUrl()
       this.websiteName = this.website.name
-      this.url = this.website.url
+      this.favorite = this.website.favorite
       this.websiteAlternateNames = this.website.altNames.join(', ')
+      this.url = this.website.url
+      this.color = this.website.color
       if (this.website.network !== undefined) {
         this.isNetwork = this.website.network 
       }
@@ -253,11 +269,13 @@ export default {
   },
   data: () => ({
     isWebsiteNameEditEnabled: false,
+    imgMain: '',
     imgMainLoading: null,
     websiteName: '',
     websiteAlternateNames: '',
     url: '',
     favorite: null,
+    color: '',
     valid: false,
     isNetwork: false,
     uploadedImage: null,
@@ -280,6 +298,8 @@ export default {
       width: null,
       height: null,
     },
+    dialogDeleteImage: false,
+    isImageEdited: false,
   }),
   computed: {
     website() {
@@ -318,6 +338,13 @@ export default {
       let date = new Date(this.website.edit)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
+    displayDeleteButton() {
+      if (this.images.main.display) {
+        if (this.images.main.file.includes('blob:')) {
+          return false
+        } else return true
+      }
+    },
   },
   methods: {
     handleFile(imgType) {
@@ -328,6 +355,7 @@ export default {
     close() {
       this.$store.state.Websites.dialogEditWebsite = false
       this.$store.state.Bookmarks.bookmarkText = ''
+      if (this.isImageEdited) this.$store.commit('updateWebsites', [this.website.id])
     },
     getWebsite(websiteName){
       return this.$store.getters.websites.find({name:websiteName}).value()
@@ -442,8 +470,7 @@ export default {
         .assign({
           name: this.websiteName,
           favorite: this.favorite,
-          category: this.website.category,
-          color: this.website.color,
+          color: this.color,
           network: isNetwork,
           childWebsites: childWebsites,
           bookmark: newBookmark,
@@ -451,24 +478,15 @@ export default {
           altNames: altNames,
           url: this.url,
         }).write()
-      let info = {}
-      info.info = true
-      info.name = this.websiteName
-      info.color = this.website.color
-      info.network = isNetwork
-      info.childWebsites = childWebsites
-      info.bookmark = newBookmark
-      this.$store.commit('addLog', {type:'info',text:`🌐 Website "${this.websiteName}" has been edited ✏️`})
-      this.$store.state.Websites.updateInfo = info
+
+      this.$store.commit('updateWebsites', [this.website.id])
       this.$store.state.Websites.dialogEditWebsite = false
       this.$store.state.Bookmarks.bookmarkText = ''
+      this.$store.commit('addLog', {type:'info',text:`🌐 Website "${this.websiteName}" has been edited ✏️`})
     },
-    getImg() {
-      let imgPath = this.getImgUrl(this.website.id + '_.jpg')
+    getImgUrl() {
+      let imgPath = path.join(this.pathToUserData, `/media/websites/${this.website.id}_.jpg`)
       return 'file://' + this.checkWebsiteImageExist(imgPath)
-    },
-    getImgUrl(img) {
-      return path.join(this.pathToUserData, `/media/websites/${img}`)
     },
     checkWebsiteImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -501,6 +519,37 @@ export default {
 			this.size.width = Math.round(coordinates.width);
 			this.size.height = Math.round(coordinates.height);
 		},
+    cropImage() {
+      let imagePath = this.getImagePath('website','')
+      this.crop(imagePath, 'main', 500)
+      this.loader='imgMainLoading'
+      this.imgMain = path.join('file://', this.pathToUserData, '/img/templates/website.png')
+      setTimeout(() => {
+        this.images.main.file = imagePath
+        this.images.main.display = true
+        this.imgMain = imagePath
+      }, 1000)
+      this.isImageEdited = true
+    },
+    deleteImage() {
+      fs.unlink(this.getImagePath('website',''), (err) => {
+        if (err) {
+          this.$store.commit('addLog', {type: 'error',text: "failed to delete local image:"+err})
+          // console.log("failed to delete local image:"+err)
+        } else {
+          // console.log('successfully deleted local image')
+          this.$store.commit('addLog', {
+            type:'info', 
+            text:`Deleted image for website "${this.website.name}"`
+          })
+        }
+      })
+      this.images.main.file = ''
+      this.images.main.display = false
+      this.imgMain = path.join('file://', this.pathToUserData, '/img/templates/website.png')
+      this.dialogDeleteImage = false
+      this.isImageEdited = true
+    },
   },
 }
 </script>

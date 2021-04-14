@@ -2,8 +2,9 @@
   <v-lazy>
     <v-card @click="$store.state.Performers.bottomSheet = true" 
       @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
-      class="performer-card" :class="{favorite: isFavorite}"
-      :data-id="performer.id" hover outlined height="100%" v-ripple="{ class: 'accent--text' }"
+      class="performer-card" :class="{favorite: performer.favorite}"
+      :data-id="performer.id" hover outlined height="100%"
+      :key="cardKey" v-ripple="{ class: 'accent--text' }"
     >
       <div class="img-container" :class="{hidden: isFavoriteHidden}">
         <div v-if="!isNationalityHidden" class="nation">
@@ -13,17 +14,13 @@
           </div>
         </div>
 
-        <v-img @click.middle="addNewTabPerformer()"
-          class="performer-card-img" :src="imgMain" :key="imgMainKey"
-          @click="openPerformerPage" :aspect-ratio="5/8" position="top"
-        >
+        <v-img  @click="openPerformerPage" @click.middle="addNewTabPerformer()"
+          :src="imgMain" :aspect-ratio="5/8" position="top" class="performer-card-img">
           <span class="template-text" v-if="imgMain.includes('performer.png')">Main image</span>
         </v-img>
         
-        <v-img @click.middle="addNewTabPerformer()"
-          class="secondary-img" :src="imgAlt" :aspect-ratio="5/8" position="top"
-          @click="openPerformerPage" :key="imgAltKey" :title="`Open ${performer.name} page`"
-        >
+        <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()" class="secondary-img"
+          :src="imgAlt" :aspect-ratio="5/8" position="top" :title="`Open ${performer.name} page`">
           <span class="template-text" v-if="imgAlt.includes('performer_back.png')">Alternate image</span>
         </v-img>
 
@@ -36,19 +33,17 @@
 
         <v-btn v-if="!isFavoriteHidden && !$store.state.Settings.ratingAndFavoriteInCard" 
           @click="toggleFavorite" icon absolute 
-          :color="isFavorite===false ? 'white' : 'pink'" class="fav-btn"
-        > <v-icon :color="isFavorite===false ? 'grey' : 'pink'"> mdi-heart-outline </v-icon>
+          :color="performer.favorite===false ? 'white' : 'pink'" class="fav-btn"
+        > <v-icon :color="performer.favorite===false ? 'grey' : 'pink'"> mdi-heart-outline </v-icon>
         </v-btn>
 
         <div class="custom1-img-button" v-if="!isCustomImgExist(imgCustom1)">1</div>
         <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
-          class="custom1-img" :key="imgCustom1Key"
-          :src="isCustomImgExist(imgCustom1) ? '' : imgCustom1"/>
+          :src="isCustomImgExist(imgCustom1) ? '' : imgCustom1" class="custom1-img" />
 
         <div class="custom2-img-button" v-if="!isCustomImgExist(imgCustom2)">2</div>
         <v-img @click="openPerformerPage" @click.middle="addNewTabPerformer()"
-          class="custom2-img" :key="imgCustom2Key"
-          :src="isCustomImgExist(imgCustom2) ? '' : imgCustom2"/> 
+          :src="isCustomImgExist(imgCustom2) ? '' : imgCustom2" class="custom2-img" /> 
 
         <v-progress-circular v-if="!isProfileProgressHidden" class="profile-complete-progress"
           :value="profileCompleteProgress" size="28" rotate="270" title="Profile complete"
@@ -68,9 +63,9 @@
       <v-progress-linear v-if="!isMeterHidden" class="performer-meter" :value="meter" :height="meterHeight"/>
       
       <v-card-title v-if="!isNameHidden" class="performer-card-title pa-2"> 
-        <div> {{performerName}} ({{performer.videos}})</div>
-        <div v-if="performerAliases.length != 0 && !isAliasesHidden" class="aliases mt-1">
-          <span class="aka">aka</span>{{performerAliases}}
+        <div> {{performer.name}} ({{performer.videos}})</div>
+        <div v-if="performer.aliases.length && !isAliasesHidden" class="aliases mt-1">
+          <span class="aka">aka</span>{{performer.aliases.join(", ")}}
         </div>
       </v-card-title>
 
@@ -81,7 +76,7 @@
           dense half-increments hover size="18" clearable />
         <v-spacer></v-spacer>
         <v-btn @click="toggleFavorite" small icon color="pink"> 
-          <v-icon v-if="isFavorite" color="pink">mdi-heart</v-icon>
+          <v-icon v-if="performer.favorite" color="pink">mdi-heart</v-icon>
           <v-icon v-else color="grey">mdi-heart-outline</v-icon>
         </v-btn>
       </v-card-actions>
@@ -146,7 +141,6 @@
 <script>
 const fs = require("fs")
 const path = require("path")
-const shortid = require("shortid")
 
 import CountryFlag from 'vue-country-flag'
 import Countries from '@/mixins/Countries'
@@ -164,31 +158,26 @@ export default {
   mixins: [Countries, ShowImageFunction, LabelFunctions], 
   mounted () {
     this.$nextTick(function () {
-      this.performerAliases = this.performer.aliases.join(", ")
-      this.performerName = this.performer.name
-      this.isFavorite = this.performer.favorite
-      this.imgMain = this.getImg(this.performer.id, 'main')
-      this.imgAlt = this.getImg(this.performer.id, 'alt')
-      this.imgCustom1 = this.getImg(this.performer.id, 'custom1')
-      this.imgCustom2 = this.getImg(this.performer.id, 'custom2')
+      this.cardKey = this.performer.id
+      this.imgMain = this.getImgUrl('main')
+      this.imgAlt = this.getImgUrl('alt')
+      this.imgCustom1 = this.getImgUrl('custom1')
+      this.imgCustom2 = this.getImgUrl('custom2')
       this.updateMeter()
     })
   },
   data: () => ({
-    performerName: '',
-    performerAliases: '',
+    cardKey: '',
     imgMain: '',
-    imgMainKey: Date.now()+0,
     imgAlt: '',
-    imgAltKey: Date.now()+1,
     imgCustom1: '',
-    imgCustom1Key: Date.now()+2,
     imgCustom2: '',
-    imgCustom2Key: Date.now()+3,
-    isFavorite: false,
     meter: 0,
   }),
   computed: {
+    updateCardIds() {
+      return this.$store.state.Performers.updateCardIds
+    },
     isChipsColored() {
       return this.$store.state.Settings.performerChipsColored
     },
@@ -227,37 +216,6 @@ export default {
     },
     isWebsitesHidden() {
       return this.$store.state.Settings.performerWebsitesHidden
-    },
-    aliases: {
-      get() {
-        let filteredAliases = JSON.parse(JSON.stringify(this.performer.aliases))
-        this.performerAliases = filteredAliases.join(", ")
-      },
-      set(newAliases) {
-        if (typeof newAliases === 'object') {
-          let filteredAliases = JSON.parse(JSON.stringify(newAliases))
-          this.performerAliases = filteredAliases.join(", ")
-        }
-        if (typeof newAliases === 'string') {
-          this.performerAliases = newAliases
-        }
-      },
-    },
-    name: {
-      get() {
-        this.performerName = this.performer.name
-      },
-      set(newName) {
-        if (typeof newName === 'string') {
-          this.performerName = newName
-        }
-      },
-    },
-    updateImagesData() {
-      return this.$store.state.Performers.updateImages
-    },
-    updateInfoData() {
-      return this.$store.state.Performers.updateInfo
     },
     tagsFromVideos() {
       return this.performer.videoTags
@@ -389,46 +347,8 @@ export default {
     openPerformerPage() {
       this.$router.push(`/performer/:${this.performer.id}?tabId=default`)
     },
-    isCustomImgExist (imgPath) {
+    isCustomImgExist(imgPath) {
       return imgPath.includes('not_exist')
-    },
-    updateInfo(info) { //TODO:make update only for current card
-      if (this.performer.id != info.id) return
-      setTimeout(() => {
-        if (info.aliases !== undefined) {
-          this.aliases = info.aliases
-        }
-        if (info.name !== undefined) {
-          this.name = info.name
-        }
-        // console.warn('name typeof: '+ typeof info.name)
-        // console.warn('name is: '+ info.name)
-        console.log(`info updated`)
-      }, 1000)
-    },
-    updateImages(imageData) {
-      setTimeout(() => {
-        if (imageData.type === 'main') {
-          this.imgMain = this.getImg(this.performer.id, imageData.type)
-          this.imgMainKey = imageData.key
-          console.log(`main img updated`)
-        }
-        if (imageData.type === 'alt') {
-          this.imgAlt = this.getImg(this.performer.id, imageData.type)
-          this.imgAltKey = imageData.key
-          console.log(`alt img updated`)
-        }
-        if (imageData.type === 'custom1') {
-          this.imgCustom1 = this.getImg(this.performer.id, imageData.type)
-          this.imgCustom1Key = imageData.key
-          console.log(`custom1 img updated`)
-        }
-        if (imageData.type === 'custom2') {
-          this.imgCustom2 = this.getImg(this.performer.id, imageData.type)
-          this.imgCustom2Key = imageData.key
-          console.log(`custom2 img updated`)
-        }
-      }, 3000)
     },
     updateMeter() {
       if (this.tagsFromVideos.length>0 && !this.isMeterHidden) {
@@ -439,9 +359,9 @@ export default {
         this.meter = this.meter * (1 + this.meterMultiplier / 50)
       }
     },
-    getImg(performerId, imageType) {
-      let imgMainPath = this.getImgUrl(performerId) + `_${imageType}.jpg`
-      return 'file://' + this.checkImageExist(imgMainPath, imageType)
+    getImgUrl(imageType) {
+      let imgMainPath = path.join(this.pathToUserData, `/media/performers/${this.performer.id}_${imageType}.jpg`)
+      return path.join('file://', this.checkImageExist(imgMainPath, imageType)) 
     },
     checkImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {
@@ -454,9 +374,6 @@ export default {
         return path.join(this.pathToUserData, '/img/templates/performer.png')
       }
     },
-    getImgUrl(img) {
-      return path.join(this.pathToUserData, `/media/performers/${img}`)
-    },
     addTag(tagName, videoID) {
       console.log(tagName, videoID);
     },
@@ -466,22 +383,13 @@ export default {
         rating: stars,
         edit: Date.now(),
       }).write()
-      this.$store.commit('updatePerformers')
     },
     toggleFavorite() {
-      if (this.isFavorite) {
-        this.isFavorite = false
-        console.log('remove from favorite')
-      } else {
-        this.isFavorite = true
-        console.log('added to favorite')
-      }
-
+      this.performer.favorite = !this.performer.favorite
       this.$store.getters.performers.find({ id: this.performer.id }).assign({ 
-        favorite: this.isFavorite,
+        favorite: this.performer.favorite,
         edit: Date.now(),
-      }).write();
-      this.$store.commit('updatePerformers')
+      }).write()
     },
     getTagColor(itemName) {
       if (this.isChipsColored) {
@@ -536,13 +444,17 @@ export default {
     },
   },
   watch: {
-    updateImagesData(imgData) {
-      if (this.performer.id == imgData.id) {
-        this.updateImages(imgData)
-      }
-    },
-    updateInfoData(info) {
-      this.updateInfo(info)
+    updateCardIds(newValue) {
+      if (newValue.length === 0) this.cardKey = this.performer.id + Date.now()
+      if (newValue.includes(this.performer.id)) {
+        this.cardKey = this.performer.id + Date.now()
+        setTimeout(() => {
+          this.imgMain = this.getImgUrl('main')
+          this.imgAlt = this.getImgUrl('alt')
+          this.imgCustom1 = this.getImgUrl('custom1')
+          this.imgCustom2 = this.getImgUrl('custom2')
+        }, 100)
+      } 
     },
     isMeterHidden() {
       this.updateMeter()

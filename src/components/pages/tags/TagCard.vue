@@ -1,20 +1,21 @@
 <template>
   <v-lazy>
     <v-card v-if="tagViewDefault" @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
-      :data-id="tag.id" class="tag-card" outlined hover 
-      :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
-      <v-img class="tag-card-img" :src="'file://' + imgMain" :aspect-ratio="1">
+      :data-id="tag.id" class="tag-card" outlined hover :key="cardKey"
+      :class="{favorite: tag.favorite}" v-ripple="{ class: 'accent--text' }">
+      <v-img class="tag-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="tag-color" :style="`border-color: ${tag.color} transparent transparent transparent;`"/>
         <v-icon v-if="tag.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
           mdi-bookmark
         </v-icon>
       </v-img>
-      <v-btn @click="isFavorite = !isFavorite" icon absolute large class="fav-btn"
-        :color="isFavorite===false ? 'white' : 'pink'"
-      > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
+      <v-divider></v-divider>
+      <v-btn @click="toggleFavorite" icon absolute large class="fav-btn"
+        :color="tag.favorite===false ? 'white' : 'pink'"
+      > <v-icon :color="tag.favorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
       </v-btn>
       <v-card-title class="py-1 px-2"> 
-        <div> {{tagName}} ({{tag.videos}}) </div>
+        <div> {{tag.name}} ({{tag.videos}}) </div>
         <div v-if="tag.altNames.length>0 && !isAltNamesHidden" class="mt-1 body-2">
           <span class="ml-2">Alternate: </span> {{tag.altNames.join(', ')}}
         </div>
@@ -44,12 +45,7 @@
       @mouseover.stop="showImage($event, tag.id, 'tag')" 
       @mouseleave.stop="$store.state.hoveredImage=false"
       :data-id="tag.id" :color="tag.color" dark class="tag-card"
-    >
-      <v-avatar left>
-        <img :src="'file://' + imgMain"/>
-      </v-avatar>
-      <span>{{tag.name}}</span>
-    </v-chip>
+    > <v-avatar left> <img :src="imgMain"/> </v-avatar> <span>{{tag.name}}</span> </v-chip>
   </v-lazy>
 </template>
 
@@ -68,34 +64,17 @@ export default {
   mixins: [ShowImageFunction, LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
-      this.imgMain = this.getImgUrl(this.tag.id)
-      this.tagName = this.tag.name
+      this.cardKey = this.tag.id
+      this.imgMain = this.getImgUrl()
     })
   },
   data: () => ({
-    tagName: '',
+    cardKey: '',
     imgMain: '',
-    imgMainKey: Date.now(),
   }),
   computed: {
-    updateInfoData() {
-      return this.$store.state.Tags.updateInfo
-    },
-    updateImageData() {
-      return this.$store.state.Tags.updateImage
-    },
-    isFavorite: {
-      get() {
-        return this.tag.favorite
-      },
-      set(value) {
-        this.tag.favorite = value
-        this.$store.getters.tags.find({id: this.tag.id}).assign({
-          favorite: value,
-          edit: Date.now(),
-        }).write()
-        this.$store.commit('updateTags')
-      },
+    updateCardIds() {
+      return this.$store.state.Tags.updateCardIds
     },
     bookmark() {
       return this.$store.getters.bookmarks.get('tags').find({itemId:this.tag.id}).value().text
@@ -119,31 +98,23 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
-    getImgUrl(tagId) {
-      let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/tags/${tagId}_.jpg`)
-      return this.checkImageExist(imgPath)
+    toggleFavorite() {
+      this.tag.favorite = !this.tag.favorite
+      this.$store.getters.tags.find({id: this.tag.id}).assign({
+        favorite: this.tag.favorite,
+        edit: Date.now(),
+      }).write()
+    },
+    getImgUrl() {
+      let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/tags/${this.tag.id}_.jpg`)
+      return path.join('file://', this.checkImageExist(imgPath))
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
         return imgPath
       } else {
-        this.errorThumb = true
         return path.join(this.$store.getters.getPathToUserData, '/img/templates/tag.png')
       }
-    },
-    updateInfo(info) {
-      if (this.tag.id != info.id) return
-      setTimeout(() => {
-        this.tagName = info.name
-        this.tag.color = info.color
-        console.log(`tag info updated`)
-      }, 1000)
-    },
-    updateImage(info) {
-      setTimeout(() => {
-        this.imgMain = this.getImgUrl(this.tag.id)
-        this.imgMainKey = Date.now()
-      }, 3000)
     },
     showContextMenu(e) {
       e.preventDefault()
@@ -157,11 +128,14 @@ export default {
     },
   },
   watch: {
-    updateInfoData (info) {
-      this.updateInfo(info)
-    },
-    updateImageData (data) {
-      this.updateImage(data)
+    updateCardIds(newValue) {
+      if (newValue.length === 0) this.cardKey = this.tag.id + Date.now()
+      if (newValue.includes(this.tag.id)) {
+        this.cardKey = this.tag.id + Date.now()
+        setTimeout(() => {
+          this.imgMain = this.getImgUrl()
+        }, 100)
+      } 
     },
   },
 }

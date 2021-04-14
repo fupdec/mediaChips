@@ -1112,7 +1112,7 @@ export default {
           path: newPath,
           edit: Date.now(),
         }).write()
-        this.$store.commit('updateVideos')
+        this.$store.commit('updateVideos', [videoId])
         this.$store.dispatch('filterVideos', true)
       })
       

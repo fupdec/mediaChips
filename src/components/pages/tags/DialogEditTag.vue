@@ -3,10 +3,8 @@
     <v-dialog v-model="$store.state.Tags.dialogEditTag" scrollable persistent width="1200">
       <v-card>
         <v-card-title class="edit-card-title">
-          <v-img 
-            :src="'file://' + getImg()" :aspect-ratio="1" max-width="84" height="84" class="mr-6"
-            gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"
-          />
+          <v-img :src="imgMain" :aspect-ratio="1" max-width="84" height="84" class="mr-6"
+            gradient="to right, rgba(0,0,0,.0) 70%, #3d3d3d 100%" position="top"/>
           <div>
             <div class="font-weight-light headline body-1">Editing the tag</div>
             <div class="font-weight-bold headline">{{tag.name}} 
@@ -122,7 +120,29 @@
                         />
                       </v-col>
                       <v-col cols="12" sm="6" align="center" justify="center">
-                        <div class="mb-4">Tag type
+                        <div class="mb-4">Tag category</div>
+                        <v-select
+                          v-model="category" :items="$store.state.Settings.tagInfoCategory" 
+                          label="Categories" outlined multiple
+                        ></v-select>
+                      </v-col>
+                      <v-col cols="12" sm="6" align="center" justify="center">
+                        <span>Tag color</span> 
+                        <v-color-picker 
+                          class="color-picker-tags"
+                          :swatches="swatches" show-swatches
+                          hide-canvas hide-inputs
+                          v-model="color" 
+                        /> 
+                        Sample: <v-chip class="ml-2" small outlined :color="color">{{tag.name}}</v-chip>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <div class="text-center mb-2">Bookmark</div>
+                        <v-textarea v-model="$store.state.Bookmarks.bookmarkText" hide-details
+                          clearable auto-grow outlined placeholder="Write text here" denses/>
+                      </v-col>
+                      <v-col cols="12" align="center" justify="center" class="mt-2">
+                        <div class="mb-2">Tag type
                           <v-tooltip top>
                             <template v-slot:activator="{ on, attrs }">
                               <v-icon v-bind="attrs" v-on="on" class="ml-2" с>
@@ -135,32 +155,8 @@
                               from all cards of the selected type.</span>
                           </v-tooltip>
                         </div>
-                        <v-select
-                          v-model="type" :items="types" label="Types"
-                          outlined multiple :rules="[getCategoryRules]"
-                        ></v-select>
-                      </v-col>
-                      <v-col cols="12" align="center" justify="center">
-                        <div class="mb-4">Tag category</div>
-                        <v-select
-                          v-model="category" :items="$store.state.Settings.tagInfoCategory" 
-                          label="Categories" outlined multiple
-                        ></v-select>
-                      </v-col>
-                      <v-col cols="12" align="center" justify="center">
-                        <span>Tag color</span> 
-                        <v-chip class="ml-2" small outlined :color="tag.color">{{tag.name}}</v-chip>
-                        <v-color-picker 
-                          class="color-picker-tags"
-                          :swatches="swatches" show-swatches
-                          hide-canvas hide-inputs
-                          v-model="tag.color"
-                        ></v-color-picker>
-                      </v-col>
-                      <v-col cols="12" class="py-0">
-                        <div class="text-center mb-2">Bookmark</div>
-                        <v-textarea v-model="$store.state.Bookmarks.bookmarkText" hide-details
-                          clearable auto-grow outlined placeholder="Write text here" />
+                        <v-select v-model="type" :items="types" label="Types" dense
+                          outlined multiple :rules="[getCategoryRules]"/>
                       </v-col>
                     </v-row>
                   </v-form>
@@ -191,16 +187,17 @@
                       class="ma-2" :color="images.main.btnColor"> 
                       <v-icon left>mdi-clipboard-outline</v-icon> Paste 
                     </v-btn>
-                    <v-btn v-if="images.main.display" 
-                      @click="crop(getImagePath('tag',''),'main',500),loader='imgMainLoading'" 
-                      class="mr-2" color="primary" small
-                      :loading="imgMainLoading" :disabled="imgMainLoading"
+                    <v-btn v-if="images.main.display" @click="cropImage" class="mr-2"
+                      color="primary" small :loading="imgMainLoading" :disabled="imgMainLoading"
                     > <v-icon left>mdi-crop</v-icon> Crop / save
                       <template v-slot:loader>
                         <span class="custom-loader">
                           <v-icon>mdi-cached</v-icon>
                         </span>
                       </template>
+                    </v-btn>
+                    <v-btn v-if="displayDeleteButton" @click="dialogDeleteImage=true" color="red" icon>
+                      <v-icon>mdi-delete-forever</v-icon>
                     </v-btn>
                     <file-pond ref="pond" label-idle="Drop image here or click for upload"
                       :allow-multiple="false" :files="uploadedImage" @addfile="handleFile"
@@ -228,6 +225,22 @@
             <v-icon left>mdi-check</v-icon> OK
           </v-btn>
           <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogDeleteImage" max-width="360px" persistent>
+      <v-card>
+        <v-card-title class="headline red--text px-4 py-1"> Delete image?
+          <v-spacer></v-spacer>
+          <v-icon color="red">mdi-delete-alert</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="text-center red--text pt-8">The image will be permanently deleted!</v-card-text>
+        <v-card-actions class="pa-0">
+          <v-btn @click="dialogDeleteImage = false" class="ma-4"> No </v-btn>
+          <v-spacer/>
+          <v-btn @click="deleteImage" class="red ma-4" dark> 
+            <v-icon left>mdi-delete-alert</v-icon> Yes </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -261,12 +274,14 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
+      this.checkImageExist(this.getImagePath('tag',''), 'main')
+      this.imgMain = this.getImgUrl()
+      this.newTagName = this.tag.name
       this.favorite = this.tag.favorite
       this.tagAlternateNames = this.tag.altNames.join(', ')
-      this.checkImageExist(this.getImagePath('tag',''), 'main')
-      this.newTagName = this.tag.name
       this.type = this.tag.type
       this.category = this.tag.category
+      this.color = this.tag.color
       if (this.tag.bookmark) {
         let text = this.$store.getters.bookmarks.get('tags')
                     .find({itemId:this.tag.id}).value().text
@@ -279,16 +294,19 @@ export default {
   },
   data: () => ({
     isTagNameEditEnabled: false,
+    imgMain: '',
     imgMainLoading: null,
     newTagName: "",
     category: [],
     type: [],
     favorite: null,
+    color: '',
     tagAlternateNames: "",
     valid: false,
     types: ['performer', 'video'],
     uploadedImage: null,
     dialogWarning: false,
+    dialogDeleteImage: false,
     warningAgree: false,
     swatches: [
       ["#cc0e00"], // red
@@ -309,6 +327,7 @@ export default {
       width: null,
       height: null,
     },
+    isImageEdited: false,
   }),
   computed: {
     tag() {
@@ -335,6 +354,13 @@ export default {
     getMeterImg() {
       return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)
     },
+    displayDeleteButton() {
+      if (this.images.main.display) {
+        if (this.images.main.file.includes('blob:')) {
+          return false
+        } else return true
+      }
+    },
   },
   methods: {
     handleFile(imgType) {
@@ -345,6 +371,7 @@ export default {
     close() {
       this.$store.state.Tags.dialogEditTag = false
       this.$store.state.Bookmarks.bookmarkText = ''
+      if (this.isImageEdited) this.$store.commit('updateTags', [this.tag.id])
     },
     validate() {
       this.$refs.form.validate()
@@ -481,33 +508,23 @@ export default {
           name: this.newTagName,
           type: this.type,
           category: this.category,
-          color: this.tag.color,
+          color: this.color,
           value: this.tag.value,
           favorite: this.favorite,
           bookmark: newBookmark,
           altNames: altNames,
           edit: Date.now(),
         }).write()
-      let info = {}
-      info.id = this.tag.id
-      info.info = true
-      info.name = this.newTagName
-      info.type = this.type
-      info.color = this.tag.color
-      info.value = this.tag.value
-      info.bookmark = newBookmark
-      this.$store.state.Tags.updateInfo = info
+
+      this.$store.commit('updateTags', [this.tag.id])
       this.$store.state.Tags.dialogEditTag = false
       this.$store.state.Bookmarks.bookmarkText = ''
       ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
       this.$store.commit('addLog', {type:'info',text:`🔖 Tag "${this.newTagName}" has been edited ✏️`})
     },
-    getImg() {
-      let imgPath = this.getImgUrl(this.tag.id + '_.jpg')
-      return this.checkTagImageExist(imgPath)
-    },
-    getImgUrl(img) {
-      return path.join(this.$store.getters.getPathToUserData, `/media/tags/${img}`)
+    getImgUrl() {
+      let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/tags/${this.tag.id}_.jpg`)
+      return path.join('file://', this.checkTagImageExist(imgPath))
     },
     checkTagImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -529,6 +546,37 @@ export default {
 			this.size.width = Math.round(coordinates.width);
 			this.size.height = Math.round(coordinates.height);
 		},
+    cropImage() {
+      let imagePath = this.getImagePath('tag','')
+      this.crop(imagePath,'main',500)
+      this.loader='imgMainLoading'
+      this.imgMain = path.join('file://',this.$store.getters.getPathToUserData,'/img/templates/tag.png')
+      setTimeout(() => {
+        this.images.main.file = imagePath
+        this.images.main.display = true
+        this.imgMain = imagePath
+      }, 1000)
+      this.isImageEdited = true
+    },
+    deleteImage() {
+      fs.unlink(this.getImagePath('tag',''), (err) => {
+        if (err) {
+          this.$store.commit('addLog', {type: 'error',text: "failed to delete local image:"+err})
+          // console.log("failed to delete local image:"+err)
+        } else {
+          // console.log('successfully deleted local image')
+          this.$store.commit('addLog', {
+            type:'info', 
+            text:`Deleted image for tag "${this.tag.name}"`
+          })
+        }
+      })
+      this.images.main.file = ''
+      this.images.main.display = false
+      this.imgMain = path.join('file://',this.$store.getters.getPathToUserData,'/img/templates/tag.png')
+      this.dialogDeleteImage = false
+      this.isImageEdited = true
+    },
   },
 };
 </script>

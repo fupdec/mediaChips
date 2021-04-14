@@ -38,16 +38,17 @@ const Websites = {
     dialogFilterWebsites: false,
     selection: null,
     selectedWebsites: [],
-    updateInfo: {},
-    updateImage: {},
     filteredWebsites: [],
     filteredEmpty: false,
     menuCard: false,
+    updateCardIds: [],
   }),
   mutations: {
-    updateWebsites (state) {
+    updateWebsites(state, ids) {
       console.log(':::::::websites UPDATED:::::::')
       state.lastChanged = Date.now()
+      if (ids === undefined) state.updateCardIds = []
+      else state.updateCardIds = ids
     },
     filterWebsites(state, filteredWebsites) {
       state.filteredWebsites = filteredWebsites

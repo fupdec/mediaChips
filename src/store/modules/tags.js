@@ -36,18 +36,19 @@ const Tags = {
     dialogFilterTags: false,
     selection: null,
     selectedTags: [],
-    updateInfo: {},
-    updateImage: {},
     filteredTags: [],
     filteredEmpty: false,
     menuCard: false,
     activeTab: null,
     markersActionOnTagDelete: 'delete',
+    updateCardIds: [],
   }),
   mutations: {
-    updateTags (state) {
+    updateTags (state, ids) {
       console.log(':::::::tags UPDATED:::::::')
       state.lastChanged = Date.now()
+      if (ids === undefined) state.updateCardIds = []
+      else state.updateCardIds = ids
     },
     filterTags(state, filteredTags) {
       state.filteredTags = filteredTags

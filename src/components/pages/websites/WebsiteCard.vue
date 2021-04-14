@@ -1,20 +1,21 @@
 <template>
   <v-lazy>
     <v-card v-if="websiteViewDefault" @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
-      :data-id="website.id" class="website-card" outlined hover 
+      :data-id="website.id" class="website-card" outlined hover :key="cardKey"
       :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
-      <v-img @click="openWebsitePage" @click.middle="addNewTabWebsite()" :title='`Open website "${websiteName}"`' 
+      <v-img @click="openWebsitePage" @click.middle="addNewTabWebsite()" :title='`Open website "${website.name}"`' 
         class="website-card-img" :src="imgMain" :aspect-ratio="1">
         <div class="website-color" :style="`border-color: ${website.color} transparent transparent transparent;`"/>
         <v-icon v-if="website.bookmark" class="bookmark" color="red" size="32" :title="bookmark">
           mdi-bookmark
         </v-icon>
       </v-img>
+      <v-divider></v-divider>
       <v-btn @click="isFavorite = !isFavorite" icon absolute large class="fav-btn"
         :color="isFavorite===false ? 'white' : 'pink'"
       > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
       </v-btn>
-      <v-card-title class="py-1 px-2">{{websiteName}} ({{website.videos}})
+      <v-card-title class="py-1 px-2">{{website.name}} ({{website.videos}})
       </v-card-title>
       <v-card-text v-if="website.performers.length>0 && !isPerformersHidden" class="pa-1 py-0">
         <div class="caption px-1">Performers ({{website.performers.length}})</div>
@@ -76,16 +77,18 @@ export default {
   mixins: [ShowImageFunction, LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
-      this.imgMain = this.getImgUrl(this.website.id)
-      this.websiteName = this.website.name
+      this.cardKey = this.website.id
+      this.imgMain = this.getImgUrl()
     })
   },
   data: () => ({
-    websiteName: '',
+    cardKey: '',
     imgMain: '',
-    imgMainKey: Date.now(),
   }),
   computed: {
+    updateCardIds() {
+      return this.$store.state.Websites.updateCardIds
+    },
     pathToUserData() {
       return this.$store.getters.getPathToUserData
     },
@@ -99,7 +102,6 @@ export default {
           favorite: value, 
           edit: Date.now(),
         }).write()
-        this.$store.commit('updateWebsites')
       },
     },
     bookmark() {
@@ -127,9 +129,9 @@ export default {
     openWebsitePage() {
       this.$router.push(`/website/:${this.website.id}?tabId=default`)
     },
-    getImgUrl(websiteId) {
-      let imgPath = path.join(this.pathToUserData, `/media/websites/${websiteId}_.jpg`)
-      return 'file://' + this.checkImageExist(imgPath)
+    getImgUrl() {
+      let imgPath = path.join(this.pathToUserData, `/media/websites/${this.website.id}_.jpg`)
+      return path.join('file://', this.checkImageExist(imgPath))
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) {
@@ -137,19 +139,6 @@ export default {
       } else {
         this.errorThumb = true
         return path.join(this.pathToUserData, '/img/templates/website.png')
-      }
-    },
-    updateInfo(eventType) {
-      setTimeout(() => {
-        if (eventType === 'main') {
-          this.imgMain = this.getImgUrl(this.website.id)
-          this.imgMainKey = Date.now()
-          console.log(`website img updated`)
-        }
-      }, 3000)
-      if (eventType.info) {
-        this.websiteName = eventType.name
-        this.website.color = eventType.color
       }
     },
     showContextMenu(e) {
@@ -163,7 +152,18 @@ export default {
       })
     },
   },
-};
+  watch: {
+    updateCardIds(newValue) {
+      if (newValue.length === 0) this.cardKey = this.website.id + Date.now()
+      if (newValue.includes(this.website.id)) {
+        this.cardKey = this.website.id + Date.now()
+        setTimeout(() => {
+          this.imgMain = this.getImgUrl()
+        }, 100)
+      } 
+    },
+  },
+}
 </script>
 
 <style lang="less">

@@ -188,8 +188,8 @@ export default {
     demo: false,
   }),
   computed: {
-    updateCard() {
-      return this.$store.state.Videos.updateCard
+    updateCardIds() {
+      return this.$store.state.Videos.updateCardIds
     },
     getVideoPath() {
       return this.video.path
@@ -246,7 +246,6 @@ export default {
           favorite: value,
           edit: Date.now(),
         }).write()
-        this.$store.commit('updateVideos')
       },
     },
     pathToUserData() {
@@ -378,8 +377,9 @@ export default {
     },
   },
   watch: {
-    updateCard() {
-      this.cardKey = this.video.id + Date.now()
+    updateCardIds(newValue) {
+      if (newValue.length === 0) this.cardKey = this.video.id + Date.now()
+      if (newValue.includes(this.video.id)) this.cardKey = this.video.id + Date.now()
     }
   }
 }

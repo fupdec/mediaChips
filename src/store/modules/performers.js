@@ -58,15 +58,16 @@ const Performers = {
     dialogDeletePerformer: false,
     dialogEditPerformerInfo: false,
     dialogEditPerformerImages: false,
-    updateImages: {},
-    updateInfo: {},
+    updateCardIds: [],
     rating: 0,
     menuCard: false,
   }),
   mutations: {
-    updatePerformers (state) {
+    updatePerformers (state, ids) {
       console.log(':::::::performers UPDATED:::::::')
       state.lastChanged = Date.now()
+      if (ids === undefined) state.updateCardIds = []
+      else state.updateCardIds = ids
     },
     changePerformersPageTotal(state, quantity) {
       state.pageTotal = quantity

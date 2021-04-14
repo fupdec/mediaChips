@@ -72,10 +72,11 @@ export default {
       }
 
       // re render cards if grid added
-      if (this.numberOfCreatedGrid) this.$store.state.Videos.updateCard = Date.now()
+      if (this.numberOfCreatedGrid) this.$store.commit('updateVideos')
       this.numberOfCreatedGrid = 0
       this.isProcessRun = false
       --this.$store.state.backgroundProcesses
+      // TODO stop process on page changed or items per page changed
       // console.log('End of creating grids')
     },
     async createVideoGrid(inputVideoPath, videoId) {

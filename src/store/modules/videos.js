@@ -28,13 +28,15 @@ const Videos = {
     deleteFile: false,
     rating: 0,
     menuCard: false,
-    updateCard: 1,
+    updateCardIds: [],
     tree: [],
   }),
   mutations: {
-    updateVideos (state) {
+    updateVideos (state, ids) {
       console.log(':::::::videos UPDATED:::::::')
       state.lastChanged = Date.now()
+      if (ids === undefined) state.updateCardIds = []
+      else state.updateCardIds = ids
     },
     filterVideos(state, filteredVideos) {
       state.filteredVideos = filteredVideos

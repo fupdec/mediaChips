@@ -16,11 +16,9 @@
               <span>Name copied to clipboard!</span>
             </v-tooltip>
           </div>
-          
           <v-spacer></v-spacer>
-
-          <v-btn @click="$store.state.Performers.dialogEditPerformerImages=false" class="ma-4"
-            dark outlined> <v-icon left>mdi-close</v-icon> Close </v-btn>
+          <v-btn @click="close" class="ma-4" dark outlined> 
+            <v-icon left>mdi-close</v-icon> Close </v-btn>
         </v-card-title>
         <vuescroll>
           <v-card-text class="pt-0">
@@ -43,8 +41,8 @@
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="images.main.display" 
-                      @click="crop(getImagePath('performer','main'), 'main', null, performer.id), loader = 'imgMainLoading'" 
-                      color="primary" small class="ml-4" :loading="imgMainLoading" :disabled="imgMainLoading"
+                      @click="cropImage('Main')" color="primary" small class="ml-4" 
+                      :loading="imgMainLoading" :disabled="imgMainLoading"
                     > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
@@ -77,8 +75,8 @@
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="images.alt.display" 
-                      @click="crop(getImagePath('performer','alt'), 'alt', null, performer.id), loader = 'imgAltLoading'" 
-                      color="primary" small class="ml-4" :loading="imgAltLoading" :disabled="imgAltLoading"  
+                      @click="cropImage('Alt')" color="primary" small class="ml-4" 
+                      :loading="imgAltLoading" :disabled="imgAltLoading"  
                     > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
@@ -111,8 +109,8 @@
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="images.custom1.display" 
-                      @click="crop(getImagePath('performer','custom1'), 'custom1', null, performer.id), loader = 'imgCustom1Loading'" 
-                      color="primary" small class="ml-4" :loading="imgCustom1Loading" :disabled="imgCustom1Loading"  
+                      @click="cropImage('Custom1')" color="primary" small class="ml-4"
+                      :loading="imgCustom1Loading" :disabled="imgCustom1Loading"  
                     > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
@@ -145,8 +143,8 @@
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="images.custom2.display" 
-                      @click="crop(getImagePath('performer','custom2'), 'custom2', null, performer.id), loader = 'imgCustom2Loading'" 
-                      color="primary" small class="ml-4" :loading="imgCustom2Loading" :disabled="imgCustom2Loading"  
+                      @click="cropImage('Custom2')" color="primary" small class="ml-4" 
+                      :loading="imgCustom2Loading" :disabled="imgCustom2Loading"  
                     > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
@@ -179,8 +177,8 @@
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="images.avatar.display" 
-                      @click="crop(getImagePath('performer','avatar'), 'avatar', null, performer.id), loader = 'imgAvatarLoading'" 
-                      color="primary" small class="ml-4" :loading="imgAvatarLoading" :disabled="imgAvatarLoading"  
+                      @click="cropImage('Avatar')" color="primary" small class="ml-4" 
+                      :loading="imgAvatarLoading" :disabled="imgAvatarLoading"  
                     > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
@@ -213,8 +211,8 @@
                       <v-icon>mdi-image-plus</v-icon>
                     </v-btn>
                     <v-btn v-if="images.header.display" 
-                      @click="crop(getImagePath('performer','header'), 'header', null, performer.id), loader = 'imgHeaderLoading'" 
-                      color="primary" small class="ml-4" :loading="imgHeaderLoading" :disabled="imgHeaderLoading" 
+                      @click="cropImage('Header')" color="primary" small class="ml-4" 
+                      :loading="imgHeaderLoading" :disabled="imgHeaderLoading" 
                     > <v-icon left>mdi-crop</v-icon> Save
                       <template v-slot:loader>
                         <span class="custom-loader">
@@ -256,12 +254,13 @@
     </v-dialog>
     <v-dialog v-model="dialogDeleteImage" max-width="360px" persistent>
       <v-card>
-        <v-card-title class="headline red--text"> Delete image?
+        <v-card-title class="headline red--text px-4 py-1"> Delete image?
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-database-remove</v-icon>
+          <v-icon color="red">mdi-delete-alert</v-icon>
         </v-card-title>
         <v-divider></v-divider>
-        <v-card-actions>
+        <v-card-text class="text-center red--text pt-8">The image will be permanently deleted!</v-card-text>
+        <v-card-actions class="pa-0">
           <v-btn @click="dialogDeleteImage = false" class="ma-4"> No </v-btn>
           <v-spacer/>
           <v-btn @click="deleteImage(deleteImageType),dialogDeleteImage = false" 
@@ -328,6 +327,7 @@ export default {
     addImageType: 'main',
     dialogDeleteImage: false,
     deleteImageType: '',
+    isImageEdited: false,
     size: {
       main: {
         width: null,
@@ -434,6 +434,18 @@ export default {
         } else return true
       }
     },
+    cropImage(imgType) {
+      // getImagePath('performer','header'), 'header'), loader = 'imgHeaderLoading'
+      let imgTypeLower = imgType.toLowerCase()
+      let imagePath = this.getImagePath('performer', imgTypeLower)
+      this.crop(imagePath, imgTypeLower)
+      this.loader = `img${imgType}Loading`
+      setTimeout(() => {
+        this.images[imgTypeLower].file = imagePath
+        this.images[imgTypeLower].display = true
+      }, 1000)
+      this.isImageEdited = true
+    },
     deleteImage(imgType) {
       fs.unlink(this.getImagePath('performer',imgType), (err) => {
         if (err) {
@@ -441,22 +453,32 @@ export default {
           // console.log("failed to delete local image:"+err);
         } else {
           // console.log('successfully deleted local image');  
-          this.$store.commit('addLog', {type:'info', text:'successfully deleted local image for performer '+this.performer.name})
+          let imageType
+          switch (imgType) {
+            case 'alt': imageType = 'alternative'; break;
+            case 'custom1': imageType = 'first additional'; break;
+            case 'custom2': imageType = 'second additional'; break;
+            default: imageType = imgType; break;
+          }
+          this.$store.commit('addLog', {
+            type:'info', 
+            text:`Deleted ${imageType} image of performer "${this.performer.name}"`
+          })
         }
       })
       this.images[imgType].file = ''
       this.images[imgType].display = false
-      this.$store.state.Performers.updateImages = {
-        type: imgType,
-        key: Date.now(),
-        id: this.performer.id
-      }
+      this.isImageEdited = true
     },
     defaultSize({ imageSize, visibleArea }) {
 			return {
 				width: (visibleArea || imageSize).width,
 				height: (visibleArea || imageSize).height,
 			}
+		},
+    close() {
+			this.$store.state.Performers.dialogEditPerformerImages = false
+      if (this.isImageEdited) this.$store.commit('updatePerformers', [this.performer.id])
 		},
     updateSize({ coordinates }, type) {
 			this.size[type].width = Math.round(coordinates.width);

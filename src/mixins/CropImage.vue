@@ -73,16 +73,6 @@ export default {
       let imgBuffer = canvas.toDataURL()
       imgBuffer = imgBuffer.replace(/^data:image\/\w+;base64,/, '')
       await this.compressImage(imgBuffer, imgOutputPath, imgType, outputWidth)
-      if (imgOutputPath.includes('tags')) {
-        this.$store.state.Tags.updateImage = Date.now()
-      }
-      if (imgOutputPath.includes('performers')) {
-        this.$store.state.Performers.updateImages = {
-          type: imgType,
-          key: Date.now(),
-          id: itemId
-        }
-      }
     },
     pasteImageFromClipboard: async function(imgType){
       let vm = this
@@ -92,13 +82,13 @@ export default {
         vm.images[imgType].file = window.URL.createObjectURL(blobOutput)
         vm.images[imgType].btnColor = "success"
         vm.images[imgType].display = true
-        console.log('Image pasted')
+        // console.log('Image pasted')
         setTimeout(() => {
           vm.images[imgType].btnColor = "primary"
         }, 1000)
       } catch(e) {
         vm.images[imgType].btnColor = "error"
-        console.log('Failed to read clipboard')
+        // console.log('Failed to read clipboard')
         setTimeout(() => {
           vm.images[imgType].btnColor = "primary"
         }, 1000)

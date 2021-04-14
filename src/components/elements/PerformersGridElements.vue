@@ -297,8 +297,9 @@ export default {
       this.$store.commit('updateSelectedPerformers', ids)
     },
     changeRating(stars) {
-      console.log('rating changed: ' +stars)
-      this.$store.state.Performers.selectedPerformers.map(performerId => {
+      // console.log('rating changed: ' +stars)
+      let selectedIds = this.$store.state.Performers.selectedPerformers
+      selectedIds.map(performerId => {
         this.$store.getters.performers.find({ id: performerId }).assign({ 
           rating: stars,
           edit: Date.now(),
@@ -307,7 +308,7 @@ export default {
       setTimeout(()=>{
         this.$store.state.Performers.rating = 0
       },1000)
-      this.$store.commit('updatePerformers')
+      this.$store.commit('updatePerformers', selectedIds)
     },
     filterByTag(tag) {
       let filter = {
