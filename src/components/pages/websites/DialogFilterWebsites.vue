@@ -35,13 +35,15 @@
               </v-select>
               
               <v-checkbox v-if="filters[i].param==='name'" label="Alt.names" class="mt-1 mr-2"
-                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate :disabled="filters[i].lock"/>
+                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate 
+                :disabled="filters[i].lock || filters[i].cond==='empty'"/>
 
               <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-                label="Value" outlined dense class="val overline" :disabled="filters[i].lock"/>
+                label="Value" outlined dense class="val overline" 
+                :disabled="filters[i].lock || filters[i].cond==='empty'"/>
 
-              <v-text-field v-if="filters[i].type==='date'" 
+              <v-text-field v-if="filters[i].type==='date'" :disabled="filters[i].cond==='empty'"
                 :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
                 label="Date" outlined dense readonly class="val overline"/>
               <v-dialog v-model="datePicker" width="300px">
@@ -102,9 +104,9 @@ export default {
   },
   data: () => ({
     filters: [],
-    params: ['name','favorite','bookmark','network','date','edit'],
+    params: ['name','favorite','bookmark','network','url','date','edit'],
     paramTypeNumber: [],
-    paramTypeString: ['name'],
+    paramTypeString: ['name','url'],
     paramTypeArray: [],
     paramTypeSelect: [],
     paramTypeDate: ['date','edit'],
@@ -129,9 +131,9 @@ export default {
   methods: {
     // TODO: add paste from clipboard function for all input's type
     getConditions(type) {
-      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal']
-      if (type === 'string' || type === 'select') return ['includes', 'excludes']
-      if (type === 'array') return ['all', 'one of', 'not']
+      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty']
+      if (type === 'string' || type === 'select') return ['includes', 'excludes', 'empty']
+      if (type === 'array') return ['all', 'one of', 'not', 'empty']
       if (type === 'boolean') return ['yes', 'no']
       return []
     },
@@ -142,6 +144,7 @@ export default {
       if (param === 'favorite') return 'mdi-heart'
       if (param === 'bookmark') return 'mdi-bookmark'
       if (param === 'network') return 'mdi-wan'
+      if (param === 'url') return 'mdi-link-variant'
       return 'mdi-filter'
     },
     getIconCond(cond) {
@@ -158,6 +161,7 @@ export default {
       if (cond === 'excludes') return 'mdi-alphabetical-off'
       if (cond === 'yes') return 'mdi-check'
       if (cond === 'no') return 'mdi-close'
+      if (cond === 'empty') return 'mdi-code-brackets'
       return 'mdi-help'
     },
     addFilter() {

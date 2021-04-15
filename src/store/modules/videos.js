@@ -90,7 +90,7 @@ const Videos = {
           } else videos = videos.filter(video => video[param] ===  false)
         }
         
-        if (val === null || val.length === 0) continue
+        if (val===null && cond!='empty' || val.length==0 && cond!='empty') continue
         
         if (type === 'number' || type === 'date') {
           if (type === 'number') val = +val
@@ -112,12 +112,15 @@ const Videos = {
         }
         
         if (type === 'string') {
-          let string = val.toLowerCase().trim()
-          if (string.length) {
-            if (cond === 'includes') {
-              videos = videos.filter(video => video[param].toLowerCase().includes(string))
-            } else videos = videos.filter(v => !v[param].toLowerCase().includes(string))
+          if (cond == 'empty') {
+            videos = videos.filter(video => video[param].length == 0)
+            continue
           }
+          let string = val.toLowerCase().trim()
+          if (string.length == 0) continue
+          if (cond === 'includes') {
+            videos = videos.filter(video => video[param].toLowerCase().includes(string))
+          } else videos = videos.filter(v => !v[param].toLowerCase().includes(string))
         }
 
         if (type === 'array') {
@@ -139,6 +142,9 @@ const Videos = {
               }
               return !include
             })
+          } else if (cond === 'empty') {
+            videos = videos.filter(video => video[param].length == 0)
+            continue
           }
         }
 

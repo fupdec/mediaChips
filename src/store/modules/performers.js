@@ -72,29 +72,19 @@ const Performers = {
     changePerformersPageTotal(state, quantity) {
       state.pageTotal = quantity
     },
-    updateFiltersOfPerformers(state, {key, value}) {
-      state.filters[key] = value
-      // console.log(state.filters)
-    },
     filterPerformers(state, filteredPerformers) {
       state.filteredPerformers = filteredPerformers
     },
-    // resetFilteredPerformers(state) {
-    //   state.filters = _.cloneDeep(defaultFilters)
-    // },
     updateSelectedPerformers(state, ids) {
       state.selectedPerformers = ids
     },
   },
   actions: {
     changePerformersPerPage({ state, commit, getters, dispatch}, number) {
-      // commit('updatePerformers')
       commit('resetLoading')
       dispatch('updateSettingsState', {key:'performersPerPage', value:number})
     },
     changePerformersPageTotal({ state, commit}, quantity) {
-      // TODO clean all useless actions and mutations like already did in videos
-      // commit('updatePerformers')
       commit('changePerformersPageTotal', quantity)
     },
     async filterPerformers({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
@@ -135,7 +125,7 @@ const Performers = {
           } else performers = performers.filter(performer=>performer[param]===false)
         }
         
-        if (val === null || val.length === 0) continue
+        if (val===null && cond!='empty' || val.length==0 && cond!='empty') continue
         
         if (type === 'number' || type === 'date') {
           if (type === 'number') val = +val
@@ -144,35 +134,38 @@ const Performers = {
         }
         
         if (type === 'string') {
+          if (cond == 'empty') {
+            performers = performers.filter(performer => performer[param].length == 0)
+            continue
+          }
           let string = val.toLowerCase().trim()
-          if (string.length) {
-            if (param === 'name' && flag === true) {
-              let filteredByNames = await performers.filter(perf => {
-                if (cond === 'includes') {
-                  return perf.name.toLowerCase().includes(string)
-                } else return !perf.name.toLowerCase().includes(string)
-              }).map('id').value()
-  
-              let filteredByAliases = await performers.filter( perf => {
-                let aliases = perf.aliases.map(p=>p.toLowerCase())
-                let matches = aliases.filter(a=>{
-                  if (cond === 'includes') {
-                    return a.includes(string)
-                  } else return !a.includes(string)
-                })
-                if (matches.length>0) {
-                  return true
-                } else { return false } 
-              }).map('id').value()
-  
-              let mergedIds = _.union(filteredByNames, filteredByAliases)
-  
-              performers = performers.filter(p=>(mergedIds.includes(p.id)))
-            } else {
+          if (string.length == 0) continue
+          if (param === 'name' && flag === true) {
+            let filteredByNames = await performers.filter(perf => {
               if (cond === 'includes') {
-                performers = performers.filter(performer => performer[param].toLowerCase().includes(string))
-              } else performers = performers.filter(v => !v[param].toLowerCase().includes(string))
-            }
+                return perf.name.toLowerCase().includes(string)
+              } else return !perf.name.toLowerCase().includes(string)
+            }).map('id').value()
+
+            let filteredByAliases = await performers.filter( perf => {
+              let aliases = perf.aliases.map(p=>p.toLowerCase())
+              let matches = aliases.filter(a=>{
+                if (cond === 'includes') {
+                  return a.includes(string)
+                } else return !a.includes(string)
+              })
+              if (matches.length>0) {
+                return true
+              } else { return false } 
+            }).map('id').value()
+
+            let mergedIds = _.union(filteredByNames, filteredByAliases)
+
+            performers = performers.filter(p=>(mergedIds.includes(p.id)))
+          } else {
+            if (cond === 'includes') {
+              performers = performers.filter(performer => performer[param].toLowerCase().includes(string))
+            } else performers = performers.filter(v => !v[param].toLowerCase().includes(string))
           }
         }
 
@@ -195,6 +188,9 @@ const Performers = {
               }
               return !include
             })
+          } else if (cond === 'empty') {
+            performers = performers.filter(performer => performer[param].length == 0)
+            continue
           }
         }
 

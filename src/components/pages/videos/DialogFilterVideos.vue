@@ -36,9 +36,10 @@
 
               <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-                label="Value" outlined dense class="val overline" :disabled="filters[i].lock"/>
+                label="Value" outlined dense class="val overline" 
+                :disabled="filters[i].lock || filters[i].cond==='empty'"/>
 
-              <v-text-field v-if="filters[i].type==='date'" 
+              <v-text-field v-if="filters[i].type==='date'" :disabled="filters[i].cond==='empty'"
                 :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
                 label="Date" outlined dense readonly class="val overline"/>
               <v-dialog v-model="datePicker" width="300px">
@@ -54,7 +55,7 @@
                 class="mb-4 select-small-chips hidden-close val overline" label="Performers" 
                 multiple hide-selected hide-details clearable dense outlined
                 :menu-props="{contentClass:'list-with-preview'}"
-                :filter="filterItems" :disabled="filters[i].lock"
+                :filter="filterItems" :disabled="filters[i].lock || filters[i].cond==='empty'"
               >
                 <template v-slot:selection="data">
                   <v-chip close small label class="my-1" close-icon="mdi-close"
@@ -99,7 +100,7 @@
                 item-value="name" no-data-text="No more tags" 
                 multiple hide-selected hide-details clearable outlined
                 :menu-props="{contentClass:'list-with-preview'}"
-                :filter="filterItems" :disabled="filters[i].lock"
+                :filter="filterItems" :disabled="filters[i].lock || filters[i].cond==='empty'"
               >
                 <template v-slot:selection="data">
                   <v-chip
@@ -131,7 +132,8 @@
                 item-text="name" dense label="Websites"
                 item-value="name" no-data-text="No more websites" 
                 multiple hide-selected hide-details clearable outlined
-                :menu-props="{contentClass:'list-with-preview'}" :disabled="filters[i].lock"
+                :menu-props="{contentClass:'list-with-preview'}" 
+                :disabled="filters[i].lock || filters[i].cond==='empty'"
               >
                 <template v-slot:selection="data">
                   <v-chip
@@ -242,9 +244,9 @@ export default {
   methods: {
     // TODO: add paste from clipboard function for all input's type
     getConditions(type) {
-      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal']
-      if (type === 'string' || type === 'select') return ['includes', 'excludes']
-      if (type === 'array') return ['all', 'one of', 'not']
+      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty']
+      if (type === 'string' || type === 'select') return ['includes', 'excludes', 'empty']
+      if (type === 'array') return ['all', 'one of', 'not', 'empty']
       if (type === 'boolean') return ['yes', 'no']
       return []
     },
@@ -278,6 +280,7 @@ export default {
       if (cond === 'excludes') return 'mdi-alphabetical-off'
       if (cond === 'yes') return 'mdi-check'
       if (cond === 'no') return 'mdi-close'
+      if (cond === 'empty') return 'mdi-code-brackets'
       return 'mdi-help'
     },
     addFilter() {

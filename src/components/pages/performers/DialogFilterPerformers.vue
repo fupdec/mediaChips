@@ -35,13 +35,15 @@
               </v-select>
 
               <v-checkbox v-if="filters[i].param==='name'" label="Aliases" class="mt-1 mr-2"
-                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate :disabled="filters[i].lock"/>
+                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate 
+                :disabled="filters[i].lock || filters[i].cond==='empty'"/>
               
               <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-                :disabled="filters[i].lock" label="Value" outlined dense class="val overline"/>
+                :disabled="filters[i].lock || filters[i].cond==='empty'" 
+                label="Value" outlined dense class="val overline"/>
                 
-              <v-text-field v-if="filters[i].type==='date'" 
+              <v-text-field v-if="filters[i].type==='date'" :disabled="filters[i].cond==='empty'"
                 :value="filters[i].val" @focus="picker=true, pickerIndex=i"
                 label="Date" outlined dense readonly class="val overline"/>
               <v-dialog v-model="picker" width="300px">
@@ -52,7 +54,8 @@
               </v-dialog>
 
               <v-autocomplete v-if="filters[i].param==='nations'" 
-                @input="setVal($event,i)" :value="filters[i].val" :disabled="filters[i].lock"
+                @input="setVal($event,i)" :value="filters[i].val" 
+                :disabled="filters[i].lock || filters[i].cond==='empty'"
                 :items="countries" item-text="name" item-value="name" label="Nationality" 
                 multiple hide-selected hide-details clearable outlined dense small-chips
                 class="select-small-chips nation-chips hidden-close val overline"
@@ -84,7 +87,7 @@
                 item-text="name" item-value="name" no-data-text="No more tags" 
                 multiple hide-selected hide-details clearable outlined dense
                 :menu-props="{contentClass:'list-with-preview'}"
-                :filter="filterItems" :disabled="filters[i].lock"
+                :filter="filterItems" :disabled="filters[i].lock || filters[i].cond==='empty'"
               >
                 <template v-slot:selection="data">
                   <v-chip
@@ -113,49 +116,49 @@
               <v-select v-if="filters[i].type==='array' && namesOfCustomParams.includes(filters[i].param)" 
                 @input="setVal($event,i)" :value="filters[i].val" class="val overline"
                 :items="getCustomItems(filters[i].param)" label="Values"
-                :disabled="filters[i].lock" outlined dense multiple 
+                :disabled="filters[i].lock || filters[i].cond==='empty'" outlined dense multiple 
                 :menu-props="{contentClass:'overline'}"/>
 
               <v-select v-if="filters[i].param==='category'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoCategory" 
                 outlined dense label="Categories" class="val overline"
-                :disabled="filters[i].lock" multiple
+                :disabled="filters[i].lock || filters[i].cond==='empty'" multiple
                 :menu-props="{contentClass:'overline'}"/>
 
               <v-select v-if="filters[i].param==='ethnicity'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoEthnicity" 
                 outlined dense label="Ethnicity" class="val overline"
-                :disabled="filters[i].lock" multiple
+                :disabled="filters[i].lock || filters[i].cond==='empty'" multiple
                 :menu-props="{contentClass:'overline'}"/>
 
               <v-select v-if="filters[i].param==='hair'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoHair" 
                 outlined dense label="Hair" class="val overline"
-                :disabled="filters[i].lock" multiple
+                :disabled="filters[i].lock || filters[i].cond==='empty'" multiple
                 :menu-props="{contentClass:'overline'}"/>
 
               <v-select v-if="filters[i].param==='eyes'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoEyes" 
                 outlined dense label="Eyes" class="val overline"
-                :disabled="filters[i].lock" multiple
+                :disabled="filters[i].lock || filters[i].cond==='empty'" multiple
                 :menu-props="{contentClass:'overline'}"/>
 
               <v-select v-if="filters[i].param==='cups'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoCups" 
                 outlined dense label="Cups" class="val overline"
-                :disabled="filters[i].lock" multiple
+                :disabled="filters[i].lock || filters[i].cond==='empty'" multiple
                 :menu-props="{contentClass:'overline'}"/>
 
               <v-select v-if="filters[i].param==='boobs'" 
                 @input="setVal($event,i)" :value="filters[i].val" 
                 :items="$store.state.Settings.performerInfoBoobs" 
                 outlined dense label="Boobs" class="val overline"
-                :disabled="filters[i].lock" multiple
+                :disabled="filters[i].lock || filters[i].cond==='empty'" multiple
                 :menu-props="{contentClass:'overline'}"/>
 
               <v-btn @click="duplicateFilter(i)" title="Duplicate filter" 
@@ -265,9 +268,9 @@ export default {
       } else return []
     },
     getConditions(type) {
-      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal']
-      if (type === 'string' || type === 'select') return ['includes', 'excludes']
-      if (type === 'array') return ['all', 'one of', 'not']
+      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty']
+      if (type === 'string' || type === 'select') return ['includes', 'excludes', 'empty']
+      if (type === 'array') return ['all', 'one of', 'not', 'empty']
       if (type === 'boolean') return ['yes', 'no']
       return []
     },
@@ -304,6 +307,7 @@ export default {
       if (cond === 'excludes') return 'mdi-alphabetical-off'
       if (cond === 'yes') return 'mdi-check'
       if (cond === 'no') return 'mdi-close'
+      if (cond === 'empty') return 'mdi-code-brackets'
       return 'mdi-help'
     },
     addFilter() {

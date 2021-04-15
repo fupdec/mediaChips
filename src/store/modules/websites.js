@@ -106,7 +106,7 @@ const Websites = {
           } else websites = websites.filter(website=>website[param]===false)
         }
         
-        if (val === null || val.length === 0) continue
+        if (val===null && cond!='empty' || val.length==0 && cond!='empty') continue
         
         if (type === 'number' || type === 'date') {
           if (type === 'number') val = +val
@@ -115,35 +115,38 @@ const Websites = {
         }
         
         if (type === 'string') {
+          if (cond == 'empty') {
+            websites = websites.filter(website => website[param].length == 0)
+            continue
+          }
           let string = val.toLowerCase().trim()
-          if (string.length) {
-            if (param === 'name' && flag === true) {
-              let filteredByNames = await websites.filter(website => {
-                if (cond === 'includes') {
-                  return website.name.toLowerCase().includes(string)
-                } else return !website.name.toLowerCase().includes(string)
-              }).map('id').value()
-  
-              let filteredByAltNames = await websites.filter( website => {
-                let altNames = website.altNames.map(p=>p.toLowerCase())
-                let matches = altNames.filter(a=>{
-                  if (cond === 'includes') {
-                    return a.includes(string)
-                  } else return !a.includes(string)
-                })
-                if (matches.length>0) {
-                  return true
-                } else { return false } 
-              }).map('id').value()
-  
-              let mergedIds = _.union(filteredByNames, filteredByAltNames)
-  
-              websites = websites.filter(p=>(mergedIds.includes(p.id)))
-            } else {
+          if (string.length == 0) continue
+          if (param === 'name' && flag === true) {
+            let filteredByNames = await websites.filter(website => {
               if (cond === 'includes') {
-                websites = websites.filter(website => website[param].toLowerCase().includes(string))
-              } else websites = websites.filter(v => !v[param].toLowerCase().includes(string))
-            }
+                return website.name.toLowerCase().includes(string)
+              } else return !website.name.toLowerCase().includes(string)
+            }).map('id').value()
+
+            let filteredByAltNames = await websites.filter( website => {
+              let altNames = website.altNames.map(p=>p.toLowerCase())
+              let matches = altNames.filter(a=>{
+                if (cond === 'includes') {
+                  return a.includes(string)
+                } else return !a.includes(string)
+              })
+              if (matches.length>0) {
+                return true
+              } else { return false } 
+            }).map('id').value()
+
+            let mergedIds = _.union(filteredByNames, filteredByAltNames)
+
+            websites = websites.filter(p=>(mergedIds.includes(p.id)))
+          } else {
+            if (cond === 'includes') {
+              websites = websites.filter(website => website[param].toLowerCase().includes(string))
+            } else websites = websites.filter(v => !v[param].toLowerCase().includes(string))
           }
         }
 
@@ -166,6 +169,9 @@ const Websites = {
               }
               return !include
             })
+          } else if (cond === 'empty') {
+            websites = websites.filter(website => website[param].length == 0)
+            continue
           }
         }
 

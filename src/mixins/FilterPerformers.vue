@@ -53,19 +53,6 @@ export default {
         return false
       }
     },
-    // resetAllFilters(event) {
-    //   this.$store.commit('resetFilteredPerformers')
-    //   if (this.isPerformerPage) {
-    //     let item = this.getItem('performers')
-    //     this.updateFiltersOfPerformers('performers', [item.name])
-    //   } else if (this.isWebsitePage) {
-    //     let item = this.getItem('websites')
-    //     this.updateFiltersOfPerformers('websites', [item.name])
-    //   } else {
-    //     this.$store.dispatch('saveFiltersOfPerformers', this.$route)
-    //   }
-    //   this.$store.dispatch('filterPerformers')
-    // },
     remove(item, array) { 
       const index = this[array].indexOf(item);
       if (index >= 0) this[array].splice(index, 1);

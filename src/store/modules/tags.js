@@ -106,7 +106,7 @@ const Tags = {
           } else tags = tags.filter(tag=>tag[param]===false)
         }
         
-        if (val === null || val.length === 0) continue
+        if (val===null && cond!='empty' || val.length==0 && cond!='empty') continue
         
         if (type === 'number' || type === 'date') {
           if (type === 'number') val = +val
@@ -115,35 +115,38 @@ const Tags = {
         }
         
         if (type === 'string') {
+          if (cond == 'empty') {
+            tags = tags.filter(tag => tag[param].length == 0)
+            continue
+          }
           let string = val.toLowerCase().trim()
-          if (string.length) {
-            if (param === 'name' && flag === true) {
-              let filteredByNames = await tags.filter(tag => {
-                if (cond === 'includes') {
-                  return tag.name.toLowerCase().includes(string)
-                } else return !tag.name.toLowerCase().includes(string)
-              }).map('id').value()
-  
-              let filteredByAltNames = await tags.filter( tag => {
-                let altNames = tag.altNames.map(p=>p.toLowerCase())
-                let matches = altNames.filter(a=>{
-                  if (cond === 'includes') {
-                    return a.includes(string)
-                  } else return !a.includes(string)
-                })
-                if (matches.length>0) {
-                  return true
-                } else { return false } 
-              }).map('id').value()
-  
-              let mergedIds = _.union(filteredByNames, filteredByAltNames)
-  
-              tags = tags.filter(p=>(mergedIds.includes(p.id)))
-            } else {
+          if (string.length == 0) continue
+          if (param === 'name' && flag === true) {
+            let filteredByNames = await tags.filter(tag => {
               if (cond === 'includes') {
-                tags = tags.filter(tag => tag[param].toLowerCase().includes(string))
-              } else tags = tags.filter(v => !v[param].toLowerCase().includes(string))
-            }
+                return tag.name.toLowerCase().includes(string)
+              } else return !tag.name.toLowerCase().includes(string)
+            }).map('id').value()
+
+            let filteredByAltNames = await tags.filter( tag => {
+              let altNames = tag.altNames.map(p=>p.toLowerCase())
+              let matches = altNames.filter(a=>{
+                if (cond === 'includes') {
+                  return a.includes(string)
+                } else return !a.includes(string)
+              })
+              if (matches.length>0) {
+                return true
+              } else { return false } 
+            }).map('id').value()
+
+            let mergedIds = _.union(filteredByNames, filteredByAltNames)
+
+            tags = tags.filter(p=>(mergedIds.includes(p.id)))
+          } else {
+            if (cond === 'includes') {
+              tags = tags.filter(tag => tag[param].toLowerCase().includes(string))
+            } else tags = tags.filter(v => !v[param].toLowerCase().includes(string))
           }
         }
 
@@ -166,6 +169,9 @@ const Tags = {
               }
               return !include
             })
+          } else if (cond === 'empty') {
+            tags = tags.filter(tag => tag[param].length == 0)
+            continue
           }
         }
 
