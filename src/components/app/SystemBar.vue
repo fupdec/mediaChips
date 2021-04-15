@@ -331,10 +331,11 @@ export default {
     },
     zoom: {
       get() {
-        return this.$store.state.Settings.zoom
+        let val = this.$store.state.Settings.zoom
+        webFrame.setZoomFactor(val)
+        return val
       },
       set(value) {
-        webFrame.setZoomFactor(value)
         this.$store.dispatch('updateSettingsState', {key:'zoom', value})
       },
     },
