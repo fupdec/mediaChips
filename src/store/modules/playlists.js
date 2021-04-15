@@ -53,10 +53,6 @@ const Playlists = {
       getters.playlists.find({id: id}).assign({videos: videos}).write()
       state.playlists = _.cloneDeep(getters.playlists.value())
     },
-    deletePlaylist({ state, commit, getters}, playlistName) {
-      getters.playlists.remove({ name: playlistName }).write()
-      state.playlists = _.cloneDeep(getters.playlists.value())
-    },
     updatePlaylistName({ state, commit, getters}, {oldName, newName}) {
       getters.playlists.find({name:oldName}).assign({name:newName}).write()
       state.playlists = _.cloneDeep(getters.playlists.value())
@@ -198,7 +194,6 @@ const Playlists = {
         getters.playlists.remove({ id: id }).write()
       })
       commit('updateSelectedPlaylists', [])
-      commit('updatePlaylists')
       dispatch('filterPlaylists', true)
     },
   },

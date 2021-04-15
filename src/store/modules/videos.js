@@ -319,7 +319,6 @@ const Videos = {
         commit('addLog', {type:'info',text:`📹 Video "${videoName}" has been removed from DB 🗑️`})
       })
       commit('updateSelectedVideos', [])
-      commit('updateVideos')
       dispatch('filterVideos', true)
       rootState.updateFoldersData = Date.now()
     },

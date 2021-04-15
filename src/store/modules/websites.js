@@ -263,7 +263,6 @@ const Websites = {
         // run update data function (in settings button with this function)
       })
       state.selectedWebsites = []
-      commit('updateWebsites')
       dispatch('filterWebsites', true)
     },
   },

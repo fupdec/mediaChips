@@ -279,7 +279,6 @@ const Tags = {
         commit('addLog', {type:'info',color:'red',text:`🔖 Tag "${tagName}" has been removed 🗑️`})
       })
       state.selectedTags = []
-      commit('updateTags')
       dispatch('filterTags', true)
     },
   },

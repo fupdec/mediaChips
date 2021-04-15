@@ -326,7 +326,6 @@ const Performers = {
         commit('addLog', {type:'info',color:'red',text:`👩 Performer "${performerName}" has been removed 🗑️`})
       })
       commit('updateSelectedPerformers', [])
-      commit('updatePerformers')
       dispatch('filterPerformers', true)
     },
   },
