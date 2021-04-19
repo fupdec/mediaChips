@@ -162,7 +162,7 @@
       <vuescroll class="items">
         <v-card-text class="pa-0">
           <div v-if="markers.length">
-            <div v-for="marker in markers" :key="marker.id">
+            <div v-for="marker in markers" :key="marker.id" class="marker-wrapper">
               <div @click="jumpTo(marker.time)" v-if="(markersType.includes(marker.type.toLowerCase()))" class="marker">
                 <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb" :gradient="markerGradient">
                   <span class="time">{{msToTime(marker.time*1000)}}</span>
@@ -173,11 +173,11 @@
                     <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
                     <span>{{marker.name}}</span>
                   </div>
-                  <v-btn @click="openDialogRemoveMarker(marker)" height="25" width="25" outlined icon color="red" class="delete">
-                    <v-icon>mdi-delete</v-icon>
-                  </v-btn>
                 </v-img>
               </div>
+              <v-btn @click="openDialogRemoveMarker(marker)" height="25" width="25" outlined icon color="red" class="delete">
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
             </div>
           </div>
           <div v-else class="text-center pt-6">
@@ -438,12 +438,13 @@
     </v-dialog>
     <v-dialog v-model="dialogRemoveMarker" max-width="420">
       <v-card>
-        <v-card-title class="headline red--text">Remove marker?
+        <v-card-title class="headline red--text px-4 py-1">Remove marker?
           <v-spacer></v-spacer>
           <v-icon color="red">mdi-delete</v-icon>
         </v-card-title>
+        <v-divider class="mb-4"></v-divider>
         <v-card-text class="text-center" v-if="markerForRemove.time">
-          <div @click="jumpTo(markerForRemove.time)">
+          <v-card outlined class="pb-2">
             <v-chip outlined class="my-2">
               <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" small :color="getTagColor(markerForRemove.name)">mdi-tag</v-icon>
               <v-icon v-if="markerForRemove.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
@@ -454,13 +455,18 @@
             <v-img :src="getMarkerImgUrl(markerForRemove.id)" :aspect-ratio="16/9" class="thumb"/>
             <div class="mt-2">
               <span class="mr-2">at time</span> 
-              <v-chip outlined label>
-                <b>{{msToTime(markerForRemove.time*1000)}}</b>
-              </v-chip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-chip @click="jumpTo(markerForRemove.time)" v-on="on" outlined label>
+                    <b>{{msToTime(markerForRemove.time*1000)}}</b>
+                  </v-chip>
+                </template>
+                <span>Jump To Time</span>
+              </v-tooltip>
             </div>
-          </div>
+          </v-card>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="pa-0">
           <v-btn @click="dialogRemoveMarker = false" class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="removeMarker" class="ma-4" dark color="red">
@@ -1094,7 +1100,9 @@ export default {
         text = this.markerPerformer
         this.dialogMarkerPerformer = false
       }
-      if (type === 'favorite') {}
+      if (type === 'favorite') {
+        time = Math.floor(this.player.currentTime)
+      }
       if (type === 'bookmark') {
         text = this.markerBookmarkText
         this.dialogMarkerBookmark = false
@@ -1506,9 +1514,12 @@ export default {
   }
   .marker {
     cursor: pointer;
-    &:hover {
-      .delete {
-        opacity: 1;
+    &-wrapper {
+      position: relative;
+      &:hover {
+        .delete {
+          opacity: 1;
+        }
       }
     }
     .thumb {
@@ -1548,6 +1559,7 @@ export default {
     position: absolute;
     left: 0;
     bottom: 0;
+    padding: 1.5vw;
     border-radius: 0 5px 0 0;
     background-color: rgba(0, 0, 0, 0.5);
   }
