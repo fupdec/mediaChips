@@ -2,7 +2,7 @@
   <v-dialog v-model="$store.state.Videos.dialogFolderTree" persistent scrollable max-width="600">
     <v-card>
       <v-card-title primary-title class="py-1">
-        <div class="headline">Folder tree</div>
+        <div class="headline">Folder tree (experimentally)</div>
         <v-spacer></v-spacer>
         <v-icon>mdi-file-tree</v-icon>
       </v-card-title>
@@ -131,7 +131,7 @@ export default {
       if (!selected.length) {
         this.selectedFolders = []
       }
-      this.folders = this.mapDir(this.selectedDisk+'\\', this.excludes)
+      this.folders = this.mapDir(this.selectedDisk+path.sep, this.excludes)
       this.updatingFolderTree = false
     },
     cancelFilterByTree() {
@@ -163,7 +163,7 @@ export default {
       }
     },
     loadChildren(item) {
-      const folder = this.mapDir(item.path+'\\', this.excludes)
+      const folder = this.mapDir(item.path+path.sep, this.excludes)
       if (folder.length) {
         item.children.push(...folder)
       } else item.children = undefined
@@ -174,7 +174,19 @@ export default {
       })
     },
     mapDir(directory, ignoredDirs, deep = 1) {
-      const dirMap = fs.readdirSync(directory, ignoredDirs)
+      let dirMap
+      try {
+        dirMap = fs.readdirSync(directory, ignoredDirs)
+      } catch (err) {
+        // if (err.code === 'ENOENT') {
+        //   console.log(directory + ' not found!')
+        // } else if (err.code === 'EACCES') {
+        //   console.log('No access rights to the ' + directory)
+        // } else {
+        //   throw err
+        // }
+        return []
+      }
       return dirMap.map((dir) => {
         if(!this.isIgnored(dir, ignoredDirs)) {
           const dirPath = path.join(directory, dir)
@@ -202,10 +214,7 @@ export default {
             }
           }
         }
-      })
-      .filter(function(x) {
-        return x !== undefined
-      })
+      }).filter(function(x) { return x !== undefined })
     },
   },
   watch: {
