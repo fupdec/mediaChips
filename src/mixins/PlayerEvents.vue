@@ -59,7 +59,7 @@ export default {
             tags: video.tags,
             edit: Date.now(),
           }).write()
-          this.$store.commit('updateVideos')
+          this.$store.commit('updateVideos', [video.id])
         }
       } else if (marker.type == 'performer') {
         if (!video.performers.includes(marker.name)) {
@@ -69,7 +69,7 @@ export default {
             performers: video.performers,
             edit: Date.now(),
           }).write()
-          this.$store.commit('updateVideos')
+          this.$store.commit('updateVideos', [video.id])
         }
       }
     },
