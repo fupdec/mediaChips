@@ -10,6 +10,7 @@ import Bookmarks from './modules/bookmarks.js'
 import SavedFilters from './modules/savedFilters.js'
 import Playlists from './modules/playlists.js'
 import Markers from './modules/markers.js'
+import Meta from './modules/meta.js'
 import Settings from './modules/settings.js'
 
 Vue.use(Vuex)
@@ -155,6 +156,7 @@ export default new Vuex.Store({
     SavedFilters,
     Playlists,
     Markers,
+    Meta,
     Settings,
   }
 })

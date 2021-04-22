@@ -6,6 +6,7 @@
 
     <v-tabs v-model="tab" centered icons-and-text>
       <v-tab href="#app-settings" draggable="false">App<v-icon>mdi-application</v-icon></v-tab>
+      <v-tab href="#meta-settings" draggable="false">Meta<v-icon>mdi-shape</v-icon></v-tab>
       <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
       <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
       <v-tab href="#performers-settings" draggable="false">Performers<v-icon>mdi-account</v-icon></v-tab>
@@ -257,6 +258,11 @@
             </vuescroll>
           </v-card>
         </v-dialog>
+      </v-tab-item>
+      <v-tab-item value="meta-settings">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <AddNewMeta/>
+        </v-card>
       </v-tab-item>
       <v-tab-item value="appearance-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
@@ -692,6 +698,7 @@ const {app} = require('electron').remote
 const axios = require("axios")
 const cheerio = require("cheerio")
 
+import AddNewMeta from '@/components/pages/settings/AddNewMeta.vue'
 import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
@@ -704,6 +711,7 @@ import vuescroll from 'vuescroll'
 export default {
   name: 'SettingsPage',
   components: {
+    AddNewMeta,
     HeaderGradient,
     ThemeColors,
     ManageBackups,
