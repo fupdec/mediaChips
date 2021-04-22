@@ -611,7 +611,7 @@
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div class="d-flex flex-column">
-                <div>Adult Video Database 0.8.0 (Angela)</div>
+                <div>Adult Video Database 0.8.1 (Bobbi)</div>
                 <p class="text--secondary">by fupdec</p>
                 <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database')" color="#eee" light rounded class="px-5 mb-4">
                   <v-icon left>mdi-github</v-icon> Github </v-btn>
