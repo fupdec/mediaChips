@@ -182,13 +182,7 @@ export default {
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.initTheme()
       this.runAutoUpdateDataFromVideos()
-      if (this.$store.state.Settings.updateDataFromVideosOnStart) {
-        // ++this.$store.state.backgroundProcesses
-        setTimeout(() => {
-          this.$store.dispatch('updateDataFromVideos')
-          // --this.$store.state.backgroundProcesses
-        }, 1000)
-      }
+      if (this.$store.state.Settings.updateDataFromVideosOnStart) this.updateDataFromVideos()
       // password
       if(this.passwordProtection && this.phrase!=='') {
         this.disableRunApp = this.phrase !== this.password 
@@ -413,6 +407,7 @@ export default {
       }
       this.foldersUpdated = true
       // --this.$store.state.backgroundProcesses
+      // TODO fix number of background process for watched folders
     },
     runAutoUpdateDataFromVideos() {
       if (this.autoUpdateDataFromVideos) {
@@ -420,14 +415,17 @@ export default {
           clearInterval(this.intervalUpdateDataFromVideos) 
         }
         this.intervalUpdateDataFromVideos = setInterval(()=>{
-          // ++this.$store.state.backgroundProcesses
-          setTimeout(() => {
-            this.$store.dispatch('updateDataFromVideos')
-            // --this.$store.state.backgroundProcesses
-            // TODO fix number of background process for watched folders
-          }, 1000)
+          this.updateDataFromVideos()
         }, this.updateIntervalDataFromVideos * 60 * 1000)
       } else clearInterval(this.intervalUpdateDataFromVideos) 
+    },
+    updateDataFromVideos() {
+      ++this.$store.state.backgroundProcesses
+      setTimeout(() => {
+        this.$store.dispatch('updateDataFromVideos')
+        --this.$store.state.backgroundProcesses
+        this.$store.commit('addLog', {type:'info',text:`Data from videos updated`})
+      }, 1000)
     },
     lock() {
       this.disableRunApp = true
