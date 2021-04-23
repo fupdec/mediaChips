@@ -202,7 +202,8 @@ export default {
     validItemName: false,
     list: [],
     itemName: '',
-    reserved: ['id','name',],
+    reserved: ['id','name','duration','size','resolution','rating','favorite','bookmark',
+      'date','edit','views','array','type','list','number','string','boolean'],
     // meta with cards
     selectedMeta: undefined,
     validMeta: false,
@@ -252,7 +253,7 @@ export default {
       } else if (dup.length || dupSimple.length) {
         return 'Meta with that name already exists'
       } else if (this.reserved.includes(name)) {
-        return 'Meta with that name is reserved'
+        return 'This word is reserved'
       } else {
         return true
       }
