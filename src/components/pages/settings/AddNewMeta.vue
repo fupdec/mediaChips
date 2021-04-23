@@ -31,7 +31,7 @@
       <v-list v-if="simpleMetaList.length" dense>
         <v-list-item-group color="primary">
           <v-list-item v-for="(meta, i) in simpleMetaList" :key="i">
-            <v-icon left>{{getIconParam(meta.settings.type)}}</v-icon> 
+            <v-icon left>{{getIconMeta(meta.settings.type)}}</v-icon> 
             <div class="d-flex justify-space-between align-center" style="width:100%">
               <span>{{meta.name}}</span>
               <span>
@@ -73,12 +73,12 @@
           <v-divider vertical class="mx-4"/>
           <div class="d-flex flex-column align-center" style="width:50%">
             <span class="overline">Simple Meta</span>
-            <span class="caption">string, number, list, date, boolean</span>
+            <span class="caption">string, number, array, date, boolean</span>
             <div class="my-4">
               <v-icon size="40">mdi-alphabetical</v-icon>
               <v-icon size="40">mdi-numeric</v-icon>
               <v-icon size="50">mdi-calendar</v-icon>
-              <v-icon size="40">mdi-format-list-numbered</v-icon>
+              <v-icon size="40">mdi-code-brackets</v-icon>
               <v-icon size="30">mdi-toggle-switch</v-icon>
             </div>
             <v-btn @click="dialogChooseNewMetaType=false, dialogAddNewSimpleMeta=true"
@@ -88,7 +88,7 @@
       </v-card>
     </v-dialog>
     
-    <v-dialog v-model="dialogAddNewSimpleMeta" scrollable max-width="500">
+    <v-dialog v-model="dialogAddNewSimpleMeta" scrollable max-width="450">
       <v-card>
         <v-card-title class="px-4 py-1">
           <div class="headline">Adding a new simple meta</div>
@@ -100,16 +100,27 @@
           <v-card-text class="px-4">
             <v-form v-model="validSimpleMeta" ref="formSimpleMeta" class="flex-grow-1" @submit.prevent>
               <v-text-field v-model="simpleMetaName" :rules="[nameRules]" label="Name of meta"/>
-              <v-select :items="['string', 'number', 'list', 'date', 'boolean']"
-                v-model="typeOfSimpleMeta" label="Type of meta"
-                :rules="[value => !!value || 'Type is required']"/>
+              <v-autocomplete v-model="typeOfSimpleMeta" label="Type of meta"
+                :items="['string', 'number', 'boolean', 'array', 'date']" class="mt-4"
+                :rules="[value => !!value || 'Type is required']" persistent-hint :hint="hint">
+                <template v-slot:selection="data">
+                  <v-icon left small>{{getIconMeta(data.item)}}</v-icon> 
+                  <span class="overline">{{data.item}}</span>
+                </template>
+                <template v-slot:item="data">
+                  <template>
+                    <v-icon left>{{getIconMeta(data.item)}}</v-icon> 
+                    <span class="overline">{{data.item}}</span>
+                  </template>
+                </template>
+              </v-autocomplete>
             </v-form>
 
-            <div v-if="typeOfSimpleMeta=='list'">
-              <div class="overline text-center mt-4">Items for list</div>
-              <div v-if="list.length <= 1" class="caption text-center mb-4">
+            <!-- <div v-if="typeOfSimpleMeta=='array'">
+              <div class="overline text-center mt-4">Items for array</div>
+              <div v-if="array.length <= 1" class="caption text-center mb-4">
                 <v-icon small left color="red">mdi-alert</v-icon>
-                <span class="red--text"> In list must be more than 2 items </span>
+                <span class="red--text"> In array must be more than 2 items </span>
               </div>
               <div class="d-flex">
                 <v-btn @click="addNewItem" :disabled="!validItemName" class="mr-4" color="green" rounded> 
@@ -121,10 +132,10 @@
                 </v-form>
               </div>
               <v-chip-group column>
-                <v-chip v-for="item in list" :key="item" 
+                <v-chip v-for="item in array" :key="item" 
                   @click:close="removeItem(item)" close close-icon="mdi-close">{{item}}</v-chip>
               </v-chip-group>
-            </div>
+            </div> -->
           </v-card-text>
         </vuescroll>
         <v-card-actions class="pa-0">
@@ -136,7 +147,7 @@
       </v-card>
     </v-dialog>
     
-    <v-dialog v-model="dialogAddNewMeta" scrollable max-width="500">
+    <v-dialog v-model="dialogAddNewMeta" scrollable max-width="450">
       <v-card>
         <v-card-title class="px-4 py-1">
           <div class="headline">Adding a new meta with cards</div>
@@ -149,7 +160,7 @@
             <v-form v-model="validMeta" ref="formMeta" class="flex-grow-1" @submit.prevent>
               <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
               <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
-                item-text="name" item-value="name" label="Icon"
+                item-text="name" item-value="name" label="Icon" class="mt-4"
                 :rules="[value => !!value || 'Icon is required']">
                 <template v-slot:selection="data">
                   <v-icon left>mdi-{{data.item.name}}</v-icon> {{data.item.name}}
@@ -199,13 +210,12 @@ export default {
     validSimpleMeta: false,
     simpleMetaName: '',
     typeOfSimpleMeta: '',
-    validItemName: false,
-    list: [],
-    itemName: '',
+    // validItemName: false,
+    // array: [],
+    // itemName: '',
     reserved: ['id','name','duration','size','resolution','rating','favorite','bookmark',
-      'date','edit','views','array','type','list','number','string','boolean'],
+      'date','edit','views','array','type','number','string','boolean'],
     // meta with cards
-    selectedMeta: undefined,
     validMeta: false,
     metaName: '',
     metaIcon: 'shape',
@@ -218,14 +228,22 @@ export default {
     simpleMetaList() {
       return this.$store.getters.simpleMeta.value()
     },
+    hint() {
+      if (this.typeOfSimpleMeta === 'string') return 'for description, notes'
+      if (this.typeOfSimpleMeta === 'date') return 'e.g. release date, last viewed date'
+      if (this.typeOfSimpleMeta === 'number') return 'to count'
+      if (this.typeOfSimpleMeta === 'array') return `for multiple values. for example colors: blue, red, green`
+      if (this.typeOfSimpleMeta === 'boolean') return 'for one value. either yes or no'
+      return 'choose one of the types'
+    },
   },
   methods: {
-    getIconParam(param) {
-      if (param === 'string') return 'mdi-alphabetical'
-      if (param === 'date') return 'mdi-calendar'
-      if (param === 'number') return 'mdi-numeric'
-      if (param === 'list') return 'mdi-code-array'
-      if (param === 'boolean') return 'mdi-toggle-switch'
+    getIconMeta(meta) {
+      if (meta === 'string') return 'mdi-alphabetical'
+      if (meta === 'date') return 'mdi-calendar'
+      if (meta === 'number') return 'mdi-numeric'
+      if (meta === 'array') return 'mdi-code-array'
+      if (meta === 'boolean') return 'mdi-toggle-switch'
       return 'mdi-shape'
     },
     deleteMeta(index, type) {
@@ -258,41 +276,41 @@ export default {
         return true
       }
     },
-    itemNameRules(name) {
-      name = name.trim().toLowerCase()
-      let duplicate = this.list.includes(name)
-      if (name.length > 30) {
-        return 'Name must be less than 30 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (/[\\\/\"<>{}\[\]]/g.test(name)) {
-        return 'Name must not contain any of the characters \\/<>{}\[\]"'
-      } else if (duplicate) {
-        return 'Item with that name already exists'
-      } else {
-        return true
-      }
-    },
-    tryAddNewItem() {
-      if (this.validSimpleMeta) this.addNewItem()
-    },
-    addNewItem() {
-      this.$refs.itemName.validate()
-      if (!this.validItemName) return
-      this.list.push(this.itemName)
-      this.itemName = ''
-    },
-    removeItem(item) { 
-      const index = this.list.indexOf(item)
-      if (index >= 0) this.list.splice(index, 1)
-    },
+    // itemNameRules(name) {
+    //   name = name.trim().toLowerCase()
+    //   let duplicate = this.array.includes(name)
+    //   if (name.length > 30) {
+    //     return 'Name must be less than 30 characters'
+    //   } else if (name.length===0) {
+    //     return 'Name is required'
+    //   } else if (/[\\\/\"<>{}\[\]]/g.test(name)) {
+    //     return 'Name must not contain any of the characters \\/<>{}\[\]"'
+    //   } else if (duplicate) {
+    //     return 'Item with that name already exists'
+    //   } else {
+    //     return true
+    //   }
+    // },
+    // tryAddNewItem() {
+    //   if (this.validSimpleMeta) this.addNewItem()
+    // },
+    // addNewItem() {
+    //   this.$refs.itemName.validate()
+    //   if (!this.validItemName) return
+    //   this.array.push(this.itemName)
+    //   this.itemName = ''
+    // },
+    // removeItem(item) { 
+    //   const index = this.array.indexOf(item)
+    //   if (index >= 0) this.array.splice(index, 1)
+    // },
     addSimpleMeta() {
       this.$refs.formSimpleMeta.validate()
       if (!this.validSimpleMeta) return
-      if (this.typeOfSimpleMeta=='list' && this.list.length <= 1) return
+      // if (this.typeOfSimpleMeta=='array' && this.array.length <= 1) return
 
       let settings = { type: this.typeOfSimpleMeta }
-      if (this.typeOfSimpleMeta=='list') settings.list = this.list
+      // if (this.typeOfSimpleMeta=='array') settings.array = this.array
 
       this.$store.dispatch('addMeta', {
         id: shortid.generate(), 
@@ -304,7 +322,7 @@ export default {
       this.dialogAddNewSimpleMeta = false
       this.simpleMetaName = ''
       this.typeOfSimpleMeta = ''
-      this.list = []
+      // this.array = []
       this.itemName = ''
     },
     // dialogs - meta with cards
