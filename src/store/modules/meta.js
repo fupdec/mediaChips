@@ -30,6 +30,11 @@ const Meta = {
       else getters.meta.push(meta).write()
       commit('addLog', {type:'info', color:'green', text:`Added meta "${name}"`})
     },
+    deleteMeta({state, rootState, commit, dispatch, getters}, { id, name, type }) {
+      if (type == 'simple') getters.simpleMeta.remove({id}).write()
+      else getters.meta.remove({id}).write()
+      commit('addLog', {type:'info', color:'red', text:`Deleted meta "${name}"`})
+    },
   },
   getters: {
     dbMeta() {

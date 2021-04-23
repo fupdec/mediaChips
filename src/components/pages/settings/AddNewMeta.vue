@@ -3,6 +3,52 @@
     <v-btn @click="dialogChooseNewMetaType=true" color="primary" x-large block rounded>
       <v-icon size="26" left>mdi-plus</v-icon> Add new meta </v-btn>
     
+    <v-card outlined class="mt-6 pb-2">
+      <div class="text-center overline">Meta with cards</div>
+      <v-list v-if="metaList.length" dense>
+        <v-list-item-group color="primary">
+          <v-list-item v-for="(meta, i) in metaList" :key="i">
+            <v-icon left>mdi-{{meta.settings.icon}}</v-icon> 
+            <div class="d-flex justify-space-between align-center" style="width:100%">
+              <span>{{meta.name}}</span>
+              <span>
+                <v-btn @click="deleteMeta(i)" color="red" icon>
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
+              </span>
+            </div>
+          </v-list-item>
+        </v-list-item-group>
+      </v-list>
+      <div v-else class="d-flex justify-space-between align-center flex-column">
+        <v-icon size="80" class="my-4">mdi-shape-outline</v-icon>
+        It's so empty ... Maybe you need to add a new meta?
+      </div>
+    </v-card>
+    
+    <v-card outlined class="mt-6 pb-2">
+      <div class="text-center overline">Simple Meta</div>
+      <v-list v-if="simpleMetaList.length" dense>
+        <v-list-item-group color="primary">
+          <v-list-item v-for="(meta, i) in simpleMetaList" :key="i">
+            <v-icon left>{{getIconParam(meta.settings.type)}}</v-icon> 
+            <div class="d-flex justify-space-between align-center" style="width:100%">
+              <span>{{meta.name}}</span>
+              <span>
+                <v-btn @click="deleteMeta(i, 'simple')" color="red" icon>
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
+              </span>
+            </div>
+          </v-list-item>
+        </v-list-item-group>
+      </v-list>
+      <div v-else class="d-flex justify-space-between align-center flex-column">
+        <v-icon size="80" class="my-4">mdi-shape-outline</v-icon>
+        It's so empty ... Maybe you need to add a new meta?
+      </div>
+    </v-card>
+
     <v-dialog v-model="dialogChooseNewMetaType" scrollable max-width="600">
       <v-card>
         <v-card-title class="px-4 py-1">
@@ -12,6 +58,19 @@
         </v-card-title>
         <v-divider></v-divider>
         <div class="d-flex justify-space-around ma-4">
+          <div class="d-flex flex-column align-center" style="width:50%">
+            <span class="overline">Meta with cards</span>
+            <span class="caption">add images, ratings, favorite to meta-cards</span>
+            <div class="my-4">
+              <v-icon size="40">mdi-card-bulleted</v-icon>
+              <v-icon size="50" class="mx-1">mdi-card-account-details</v-icon>
+              <v-icon size="40">mdi-card-text</v-icon>
+              <v-icon size="30">mdi-card-bulleted-outline</v-icon>
+            </div>
+            <v-btn @click="dialogChooseNewMetaType=false, dialogAddNewMeta=true"
+              class="my-4" rounded color="primary">Add Meta with cards</v-btn>
+          </div>
+          <v-divider vertical class="mx-4"/>
           <div class="d-flex flex-column align-center" style="width:50%">
             <span class="overline">Simple Meta</span>
             <span class="caption">string, number, list, date, boolean</span>
@@ -24,19 +83,6 @@
             </div>
             <v-btn @click="dialogChooseNewMetaType=false, dialogAddNewSimpleMeta=true"
               class="my-4" rounded color="primary">Add simple meta</v-btn>
-          </div>
-          <v-divider vertical class="mx-4"/>
-          <div class="d-flex flex-column align-center" style="width:50%">
-            <span class="overline">Meta with cards</span>
-            <span class="caption">add images, ratings, favorite to meta-cards</span>
-            <div class="my-4">
-              <v-icon size="40">mdi-card-bulleted</v-icon>
-              <v-icon size="50" class="mx-1">mdi-card-account-details</v-icon>
-              <v-icon size="40">mdi-card-text</v-icon>
-              <v-icon size="30">mdi-card-bulleted-outline</v-icon>
-            </div>
-            <v-btn @click="dialogChooseNewMetaType=false, dialogAddNewMeta=true"
-              class="my-4" rounded color="primary">Add Meta with cards</v-btn>
           </div>
         </div>
       </v-card>
@@ -158,14 +204,41 @@ export default {
     itemName: '',
     reserved: ['id','name',],
     // meta with cards
+    selectedMeta: undefined,
     validMeta: false,
     metaName: '',
     metaIcon: 'shape',
     icons: icons,
   }),
   computed: {
+    metaList() {
+      return this.$store.getters.meta.value()
+    },
+    simpleMetaList() {
+      return this.$store.getters.simpleMeta.value()
+    },
   },
   methods: {
+    getIconParam(param) {
+      if (param === 'string') return 'mdi-alphabetical'
+      if (param === 'date') return 'mdi-calendar'
+      if (param === 'number') return 'mdi-numeric'
+      if (param === 'list') return 'mdi-code-array'
+      if (param === 'boolean') return 'mdi-toggle-switch'
+      return 'mdi-shape'
+    },
+    deleteMeta(index, type) {
+      let id, name
+      if (type == 'simple') {
+        id = this.simpleMetaList[index].id
+        name = this.simpleMetaList[index].name
+      } else {
+        id = this.metaList[index].id 
+        name = this.metaList[index].name
+      }
+      this.$store.dispatch('deleteMeta', {id, name, type})
+    },
+    // dialogs - simple meta
     nameRules(name) {
       name = name.trim().toLowerCase()
       let dup = this.$store.getters.meta.filter(meta => name==meta.name.toLowerCase()).value()
@@ -233,7 +306,7 @@ export default {
       this.list = []
       this.itemName = ''
     },
-    // meta with cards
+    // dialogs - meta with cards
     filterIcons(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const aliases = item.aliases
