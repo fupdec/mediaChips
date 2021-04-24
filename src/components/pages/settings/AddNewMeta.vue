@@ -1,10 +1,23 @@
 <template>
 	<div>
-    <v-btn @click="dialogChooseNewMetaType=true" color="primary" x-large block rounded>
-      <v-icon size="26" left>mdi-plus</v-icon> Add new meta </v-btn>
-    
-    <v-card outlined class="mt-6 pb-2">
-      <div class="text-center overline">Meta with cards</div>
+    <v-card outlined class="py-2 mb-10">
+      <div class="text-center">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+          </template>
+          <div class="d-flex flex-column align-center">
+            <span class="caption">add images, ratings, favorite to meta-cards</span>
+            <div class="my-2">
+              <v-icon size="40" dark>mdi-card-bulleted</v-icon>
+              <v-icon size="50" dark class="mx-1">mdi-card-account-details</v-icon>
+              <v-icon size="40" dark>mdi-card-text</v-icon>
+              <v-icon size="30" dark>mdi-card-bulleted-outline</v-icon>
+            </div>
+          </div>
+        </v-tooltip>
+        <span class="overline">Meta with cards</span>
+      </div>
       <v-list v-if="metaList.length" dense>
         <v-list-item-group color="primary">
           <v-list-item v-for="(meta, i) in metaList" :key="i">
@@ -22,16 +35,36 @@
       </v-list>
       <div v-else class="d-flex justify-space-between align-center flex-column">
         <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
-        <div class="d-flex align-center mb-2">
-          It's so empty ... Maybe you need to 
-          <v-btn @click="dialogAddNewMeta=true" outlined small rounded class="ml-2" color="primary">
-            add new meta</v-btn>
-        </div>
+        <div class="d-flex align-center mb-2">It's so empty ... </div>
       </div>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="dialogAddNewMeta=true" rounded class="pr-4" color="primary">
+          <v-icon left>mdi-plus</v-icon> <span>add new meta</span>  
+        </v-btn>
+        <v-spacer></v-spacer>
+      </v-card-actions>
     </v-card>
     
-    <v-card outlined class="mt-6 pb-2">
-      <div class="text-center overline">Simple Meta</div>
+    <v-card outlined class="py-2">
+      <div class="text-center">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+          </template>
+          <div class="d-flex flex-column align-center">
+            <span class="caption">string, number, array, date, boolean</span>
+            <div class="my-2">
+              <v-icon size="40" dark>mdi-alphabetical</v-icon>
+              <v-icon size="40" dark>mdi-numeric</v-icon>
+              <v-icon size="50" dark>mdi-calendar</v-icon>
+              <v-icon size="40" dark>mdi-code-brackets</v-icon>
+              <v-icon size="30" dark>mdi-toggle-switch</v-icon>
+            </div>
+          </div>
+        </v-tooltip>
+        <span class="overline">Simple Meta</span>
+      </div>
       <v-list v-if="simpleMetaList.length" dense>
         <v-list-item-group color="primary">
           <v-list-item v-for="(meta, i) in simpleMetaList" :key="i">
@@ -49,52 +82,16 @@
       </v-list>
       <div v-else class="d-flex justify-space-between align-center flex-column">
         <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
-        <div class="d-flex align-center mb-2">
-          It's so empty ... Maybe you need to 
-          <v-btn @click="dialogAddNewSimpleMeta=true" outlined small rounded class="ml-2" color="primary">
-            add new meta</v-btn>
-        </div>
+        <div class="d-flex align-center mb-2">It's so empty ...</div>
       </div>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="dialogAddNewSimpleMeta=true" rounded class="pr-4" color="primary">
+          <v-icon left>mdi-plus</v-icon> <span>add new meta</span>  
+        </v-btn>
+        <v-spacer></v-spacer>
+      </v-card-actions>
     </v-card>
-
-    <v-dialog v-model="dialogChooseNewMetaType" scrollable max-width="600">
-      <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">Choose meta type</div>
-          <v-spacer></v-spacer>
-          <v-icon>mdi-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <div class="d-flex justify-space-around ma-4">
-          <div class="d-flex flex-column align-center" style="width:50%">
-            <span class="overline">Meta with cards</span>
-            <span class="caption">add images, ratings, favorite to meta-cards</span>
-            <div class="my-4">
-              <v-icon size="40">mdi-card-bulleted</v-icon>
-              <v-icon size="50" class="mx-1">mdi-card-account-details</v-icon>
-              <v-icon size="40">mdi-card-text</v-icon>
-              <v-icon size="30">mdi-card-bulleted-outline</v-icon>
-            </div>
-            <v-btn @click="dialogChooseNewMetaType=false, dialogAddNewMeta=true"
-              class="my-4" rounded color="primary">Add Meta with cards</v-btn>
-          </div>
-          <v-divider vertical class="mx-4"/>
-          <div class="d-flex flex-column align-center" style="width:50%">
-            <span class="overline">Simple Meta</span>
-            <span class="caption">string, number, array, date, boolean</span>
-            <div class="my-4">
-              <v-icon size="40">mdi-alphabetical</v-icon>
-              <v-icon size="40">mdi-numeric</v-icon>
-              <v-icon size="50">mdi-calendar</v-icon>
-              <v-icon size="40">mdi-code-brackets</v-icon>
-              <v-icon size="30">mdi-toggle-switch</v-icon>
-            </div>
-            <v-btn @click="dialogChooseNewMetaType=false, dialogAddNewSimpleMeta=true"
-              class="my-4" rounded color="primary">Add simple meta</v-btn>
-          </div>
-        </div>
-      </v-card>
-    </v-dialog>
     
     <v-dialog v-model="dialogAddNewSimpleMeta" scrollable max-width="450">
       <v-card>
@@ -211,7 +208,6 @@ export default {
     })
   },
   data: () => ({
-    dialogChooseNewMetaType: false,
     dialogAddNewSimpleMeta: false,
     dialogAddNewMeta: false,
     // simple meta
