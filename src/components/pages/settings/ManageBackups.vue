@@ -42,25 +42,28 @@
     </v-row>
     <v-dialog v-model="dialogCreateBackup" width="400" persistent>
       <v-card :loading="isCreatingBackupRun" loader-height="5">
-        <v-card-title class="headline">Create a backup?
+        <v-card-title class="headline py-1 px-4">Create a backup?
           <v-spacer></v-spacer>
           <v-icon color="green">mdi-database-plus</v-icon>
         </v-card-title>
         <v-divider></v-divider>
-        <v-card-actions>
+        <v-card-text class="pt-4 text-center">
+          <div>All images, video previews and data will be archived.</div>
+        </v-card-text>
+        <v-card-actions class="pa-0">
           <v-btn @click="dialogCreateBackup=false" :disabled="isCreatingBackupRun"
             class="ma-4">Cancel</v-btn>
           <v-spacer/>
           <v-btn @click="createBackup" :disabled="isCreatingBackupRun"
             class="ma-4" color="green"> 
-            <v-icon left>mdi-plus</v-icon> Create
+            <v-icon left>mdi-database-plus</v-icon> Create
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="dialogRestoreBackup" width="400" persistent>
       <v-card :loading="isRestoringBackupRun" loader-height="5">
-        <v-card-title class="headline">Restore the backup?
+        <v-card-title class="headline py-1 px-4">Restore the backup?
           <v-spacer></v-spacer>
           <v-icon color="orange">mdi-database-refresh</v-icon>
         </v-card-title>
@@ -68,7 +71,7 @@
         <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
           <div class="py-6">
             This will replace current state of the database.
-            <br>Confirm if you are sure.
+            <br>It is recommended to create a backup before restoring to avoid data loss in case of an error.
           </div>
           <v-icon size="72" color="red">mdi-alert-outline</v-icon>
         </v-card-text>
@@ -79,7 +82,7 @@
         <v-card-text v-if="isBackupRestoredError" class="text-center py-6">
           An error occurred while restoring.
         </v-card-text>
-        <v-card-actions v-if="!isBackupRestoredSuccessfully">
+        <v-card-actions v-if="!isBackupRestoredSuccessfully" class="pa-0">
           <v-btn @click="dialogRestoreBackup = false" :disabled="isRestoringBackupRun" 
             class="ma-4">Cancel</v-btn>
           <v-spacer></v-spacer>
@@ -92,7 +95,7 @@
     </v-dialog>
     <v-dialog v-model="dialogDeleteBackup" width="400" persistent>
       <v-card>
-        <v-card-title class="headline red--text">Delete the backup?
+        <v-card-title class="headline red--text py-1 px-4">Delete the backup?
           <v-spacer></v-spacer>
           <v-icon color="red">mdi-database-remove</v-icon>
         </v-card-title>
@@ -103,7 +106,7 @@
           </div>
           <v-icon size="72" color="red">mdi-alert-outline</v-icon>
         </v-card-text>
-        <v-card-actions class="pt-0">
+        <v-card-actions class="pa-0">
           <v-btn @click="dialogDeleteBackup=false" class="ma-4">Cancel</v-btn>
           <v-spacer/>
           <v-btn @click="deleteBackup" class="ma-4" color="red" dark>
@@ -236,10 +239,8 @@ export default {
       output.on('close', function() {
         backupInfo.size = archive.pointer()
         vm.$store.getters.settings.get('backups').push(backupInfo).write()
-        vm.$store.dispatch('setNotification', {
-          type: 'success',
-          text: 'Backup successfully created'
-        })
+        vm.$store.dispatch('setNotification', {type:'success', text:'Backup successfully created'})
+        vm.$store.commit('addLog', {text:'💾 Backup successfully created', type:'success'})
         vm.isCreatingBackupRun = false
         vm.$store.dispatch('updateBackups')
         vm.backups = vm.getBackups()
@@ -248,7 +249,7 @@ export default {
         vm.dialogCreateBackup = false
       })
       archive.on('error', function(err) { 
-        vm.$store.dispatch('setNotification', { type: 'error', text: err })
+        this.$store.commit('addLog', { text: err, type: 'error' })
         throw err 
       })
       archive.pipe(output)
@@ -306,11 +307,7 @@ export default {
           } else {
             let backupInfoPath = path.join(this.pathToUserData, '/info.json')
             fs.unlink(backupInfoPath)
-
-            this.$store.dispatch('setNotification', {
-              type: 'success',
-              text: 'Backup successfully restored'
-            })
+            this.$store.commit('addLog', { text: 'Backup successfully restored', type: 'success' })
             this.isRestoringBackupRun = false
             this.isBackupRestoredSuccessfully = true
             console.log(`Extracted ${count} entries`)
@@ -360,17 +357,16 @@ export default {
               backupInfo.size = fs.statSync(backupPath).size
               fs.copyFile(backupPath, importPath+backupInfo.date+'.zip', (err) => {
                 if (err) {
-                  this.$store.dispatch('setNotification', {
-                    type: 'error',
-                    text: err
-                  })
+                  this.$store.commit('addLog', { text: err, type: 'error' })
                   throw err
                 } else {
                   this.$store.getters.settings.get('backups').push(backupInfo).write()
-                  this.$store.dispatch('setNotification', {
-                    type: 'success',
-                    text: 'Backup successfully imported'
+                  this.$store.commit('addLog', { 
+                    text: `Backup "${backupInfo.date}" successfully imported`, 
+                    type: 'success'
                   })
+                  // TODO recreate backup info for new meta system. 
+                  // no more tags, webs, perfs in backup info
                   this.$store.dispatch('updateBackups')
                   this.backups = this.getBackups()
                 }
@@ -379,13 +375,7 @@ export default {
             zip.close()
           })
         }
-      }).catch(err => {
-        console.log(err)
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: err
-        })
-      })
+      }).catch(err => { this.$store.commit('addLog', { text: err, type: 'error' }) })
     },
     exportBackup() {
       if (this.selectedBackup.length == 0) {
@@ -403,27 +393,14 @@ export default {
           let exportPath = path.join(result.filePaths[0], '/'+date+'.zip')
           fs.copyFile(backupPath, exportPath, (err) => {
             if (err) {
-              this.$store.dispatch('setNotification', {
-                type: 'error',
-                text: err
-              })
+              this.$store.commit('addLog', { text: err, type: 'error' })
               throw err
             } else {
-              this.$store.dispatch('setNotification', {
-                type: 'success',
-                text: 'Backup successfully exported'
-              })
-              console.log('backup was exported')
+              this.$store.commit('addLog', { text: `Backup "${date}" successfully exported`, type: 'success' })
             }
           })
         }
-      }).catch(err => {
-        console.log(err)
-        this.$store.dispatch('setNotification', {
-          type: 'error',
-          text: err
-        })
-      })
+      }).catch(err => { this.$store.commit('addLog', { text: err, type: 'error' }) })
     },
     openDialogDeleteBackup() {
       if (this.selectedBackup.length == 0) {
@@ -440,10 +417,7 @@ export default {
       if (fs.existsSync(backupPath)) {
         fs.unlink(backupPath, err => {
           if (err) {
-            this.$store.dispatch('setNotification', {
-              type: 'error',
-              text: err
-            })
+            this.$store.commit('addLog', { text: err, type: 'error' })
             throw err
           } else {
             this.deleteBackupFromDb(backupDate)
@@ -456,10 +430,7 @@ export default {
     },
     deleteBackupFromDb(backupDate) {
       this.$store.getters.settings.get('backups').remove({ 'date': backupDate }).write()
-      this.$store.dispatch('setNotification', {
-        type: 'info',
-        text: 'Backup successfully deleted'
-      })
+      this.$store.commit('addLog', { text: `Backup "${backupDate}" successfully deleted`, type: 'info' })
       this.$store.dispatch('updateBackups')
       this.backups = this.getBackups()
     },
