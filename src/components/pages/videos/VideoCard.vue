@@ -135,6 +135,10 @@
           > {{ website }} </v-chip>
         </v-chip-group>
       </v-card-actions>
+
+      <div v-for="(meta, i) in simpleMetaList" :key="i" class="pa-1">
+        <span class="meta">{{meta.name}} {{video[meta.id]}}</span>
+      </div>
       
       <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
         mdi-bookmark
@@ -265,6 +269,12 @@ export default {
     },
     ratingInCard() {
       return this.$store.state.Settings.videoRatingInCard
+    },
+    metaList() {
+      return this.$store.getters.meta.value()
+    },
+    simpleMetaList() {
+      return this.$store.getters.simpleMeta.value()
     },
   },
   methods: {
