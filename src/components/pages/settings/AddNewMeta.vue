@@ -21,8 +21,12 @@
         </v-list-item-group>
       </v-list>
       <div v-else class="d-flex justify-space-between align-center flex-column">
-        <v-icon size="80" class="my-4">mdi-shape-outline</v-icon>
-        It's so empty ... Maybe you need to add a new meta?
+        <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
+        <div class="d-flex align-center mb-2">
+          It's so empty ... Maybe you need to 
+          <v-btn @click="dialogAddNewMeta=true" outlined small rounded class="ml-2" color="primary">
+            add new meta</v-btn>
+        </div>
       </div>
     </v-card>
     
@@ -44,8 +48,12 @@
         </v-list-item-group>
       </v-list>
       <div v-else class="d-flex justify-space-between align-center flex-column">
-        <v-icon size="80" class="my-4">mdi-shape-outline</v-icon>
-        It's so empty ... Maybe you need to add a new meta?
+        <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
+        <div class="d-flex align-center mb-2">
+          It's so empty ... Maybe you need to 
+          <v-btn @click="dialogAddNewSimpleMeta=true" outlined small rounded class="ml-2" color="primary">
+            add new meta</v-btn>
+        </div>
       </div>
     </v-card>
 
