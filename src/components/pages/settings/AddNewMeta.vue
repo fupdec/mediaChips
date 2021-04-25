@@ -120,16 +120,16 @@
                 </template>
               </v-autocomplete>
             </v-form>
-
-            <!-- <div v-if="typeOfSimpleMeta=='array'">
+            <div v-if="typeOfSimpleMeta=='array'">
               <div class="overline text-center mt-4">Items for array</div>
               <div v-if="array.length <= 1" class="caption text-center mb-4">
                 <v-icon small left color="red">mdi-alert</v-icon>
                 <span class="red--text"> In array must be more than 2 items </span>
               </div>
               <div class="d-flex">
-                <v-btn @click="addNewItem" :disabled="!validItemName" class="mr-4" color="green" rounded> 
-                  <v-icon left>mdi-plus</v-icon> Add item
+                <v-btn @click="addNewItem" :disabled="!validItemName" 
+                  height="40" class="mr-4" color="success" outlined rounded> 
+                  <v-icon left>mdi-plus</v-icon> Add item 
                 </v-btn>
                 <v-form v-model="validItemName" ref="itemName" class="flex-grow-1" @submit.prevent>
                   <v-text-field v-model="itemName" :rules="[itemNameRules]" @keyup.enter="tryAddNewItem"
@@ -140,7 +140,7 @@
                 <v-chip v-for="item in array" :key="item" 
                   @click:close="removeItem(item)" close close-icon="mdi-close">{{item}}</v-chip>
               </v-chip-group>
-            </div> -->
+            </div>
           </v-card-text>
         </vuescroll>
         <v-card-actions class="pa-0">
@@ -214,9 +214,9 @@ export default {
     validSimpleMeta: false,
     simpleMetaName: '',
     typeOfSimpleMeta: '',
-    // validItemName: false,
-    // array: [],
-    // itemName: '',
+    validItemName: false,
+    array: [],
+    itemName: '',
     reserved: ['id','name','duration','size','resolution','rating','favorite','bookmark',
       'date','edit','views','array','type','number','string','boolean'],
     // meta with cards
@@ -280,41 +280,41 @@ export default {
         return true
       }
     },
-    // itemNameRules(name) {
-    //   name = name.trim().toLowerCase()
-    //   let duplicate = this.array.includes(name)
-    //   if (name.length > 30) {
-    //     return 'Name must be less than 30 characters'
-    //   } else if (name.length===0) {
-    //     return 'Name is required'
-    //   } else if (/[\\\/\"<>{}\[\]]/g.test(name)) {
-    //     return 'Name must not contain any of the characters \\/<>{}\[\]"'
-    //   } else if (duplicate) {
-    //     return 'Item with that name already exists'
-    //   } else {
-    //     return true
-    //   }
-    // },
-    // tryAddNewItem() {
-    //   if (this.validSimpleMeta) this.addNewItem()
-    // },
-    // addNewItem() {
-    //   this.$refs.itemName.validate()
-    //   if (!this.validItemName) return
-    //   this.array.push(this.itemName)
-    //   this.itemName = ''
-    // },
-    // removeItem(item) { 
-    //   const index = this.array.indexOf(item)
-    //   if (index >= 0) this.array.splice(index, 1)
-    // },
+    itemNameRules(name) {
+      name = name.trim().toLowerCase()
+      let duplicate = this.array.includes(name)
+      if (name.length > 30) {
+        return 'Name must be less than 30 characters'
+      } else if (name.length===0) {
+        return 'Name is required'
+      } else if (/[\\\/\"<>{}\[\]]/g.test(name)) {
+        return 'Name must not contain any of the characters \\/<>{}\[\]"'
+      } else if (duplicate) {
+        return 'Item with that name already exists'
+      } else {
+        return true
+      }
+    },
+    tryAddNewItem() {
+      if (this.validSimpleMeta) this.addNewItem()
+    },
+    addNewItem() {
+      this.$refs.itemName.validate()
+      if (!this.validItemName) return
+      this.array.push(this.itemName)
+      this.itemName = ''
+    },
+    removeItem(item) { 
+      const index = this.array.indexOf(item)
+      if (index >= 0) this.array.splice(index, 1)
+    },
     addSimpleMeta() {
       this.$refs.formSimpleMeta.validate()
       if (!this.validSimpleMeta) return
-      // if (this.typeOfSimpleMeta=='array' && this.array.length <= 1) return
+      if (this.typeOfSimpleMeta=='array' && this.array.length <= 1) return
 
       let settings = { type: this.typeOfSimpleMeta }
-      // if (this.typeOfSimpleMeta=='array') settings.array = this.array
+      if (this.typeOfSimpleMeta=='array') settings.array = this.array
 
       this.$store.dispatch('addMeta', {
         id: shortid.generate(), 
@@ -326,7 +326,7 @@ export default {
       this.dialogAddNewSimpleMeta = false
       this.simpleMetaName = ''
       this.typeOfSimpleMeta = ''
-      // this.array = []
+      this.array = []
       this.itemName = ''
     },
     // dialogs - meta with cards
