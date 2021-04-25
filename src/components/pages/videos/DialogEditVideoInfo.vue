@@ -402,10 +402,13 @@
             </v-responsive>
             <v-row class="mx-2">
               <v-col v-for="meta in simpleMetaList" :key="meta.id" cols="6" sm="4">
-                <v-text-field v-if="meta.settings.type==='string'||meta.settings.type==='number'" 
+                <v-text-field v-if="meta.settings.type==='string'" 
                   @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.name" clearable/>
 
-                <v-autocomplete v-if="meta.settings.type==='array'" :items="meta.settings.items"
+                <v-text-field v-if="meta.settings.type==='number'" :value="values[meta.id]"
+                  @input="setVal($event,meta.id)" :label="meta.name" clearable type="number"/>
+
+                <v-autocomplete v-if="meta.settings.type==='array'" :items="meta.settings.array"
                   @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.name" multiple/>
 
                 <v-switch v-if="meta.settings.type==='boolean'" inset :label="meta.name"
