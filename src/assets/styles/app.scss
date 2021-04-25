@@ -634,6 +634,14 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   pointer-events: none;
   border: 2px solid var(--v-secondary-base);
 }
+.meta {
+  font-size: 14px;
+  line-height: 1;
+}
+.meta-grid {
+  display: flex;
+  justify-content: space-between;
+}
 .videos-grid {
   display: grid;
   grid-gap: 10px;

@@ -43,6 +43,11 @@
           <v-icon>mdi-format-list-bulleted</v-icon>
         </v-btn>
 
+        <v-btn v-for="meta in metaList" :key="meta.id" :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary">
+          <span>{{meta.name}}</span>
+          <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+        </v-btn>
+
         <v-btn to="/settings" text color="secondary">
           <span>Settings</span>
           <v-icon>mdi-cog-outline</v-icon>
@@ -111,6 +116,9 @@ export default {
     },
     watchFolders() {
       return this.$store.state.Settings.watchFolders
+    },
+    metaList() {
+      return this.$store.getters.meta.value()
     },
   },
   methods: {
