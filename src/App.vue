@@ -177,7 +177,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
-      this.checkForUpdates()
+      if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
       this.$store.state.pathToUserData = app.getPath('userData')
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.initTheme()
@@ -469,7 +469,7 @@ export default {
             this.$store.commit('addLog',{text:`💿 Available new version: ${lastVersion}`, color:'green'})
             this.updateApp = true
           } 
-        }
+        } else this.$store.commit('addLog', { text: 'An internet connection error occurred while checking for updates', type: 'error' })
       })
     },
     compareVersion(currentVersion, lastVersion) {

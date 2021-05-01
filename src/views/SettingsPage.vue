@@ -608,6 +608,26 @@
       </v-tab-item>
       <v-tab-item value="about-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <v-card outlined class="pa-4 mb-10">
+            <div class="d-flex align-center justify-center">
+              <div class="mr-6">Check for updates at startup:</div>
+              <v-switch v-model="checkForUpdatesAtStartup" inset hide-details class="mt-0 pt-0 d-inline-flex"
+                :label="checkForUpdatesAtStartup?'Yes':'No'"/>
+            </div>
+            <div class="d-flex align-center justify-center">
+              <v-btn v-if="!updateApp" @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded class="mt-4 pa-5">
+                <v-icon left>mdi-update</v-icon> Check for updates manually</v-btn>
+              <div v-if="updateApp" class="d-flex flex-column align-center justify-center">
+                <span class="pt-4">New version available!</span>
+                <div>
+                  <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database/releases')" color="#eee" light rounded class="mx-4 mt-4 pa-5">
+                    <v-icon left>mdi-github</v-icon> Demo version </v-btn>
+                  <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" rounded class="mx-4 mt-4 pa-5">
+                    <v-icon left>mdi-patreon</v-icon> Full version </v-btn>
+                </div>
+              </div>
+            </div>
+          </v-card>
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div class="d-flex flex-column">
@@ -625,12 +645,6 @@
                 <div>Support development and full version</div>
                 <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" class="pa-5">
                   <v-icon left>mdi-patreon</v-icon> Patreon </v-btn>
-                <v-btn v-if="!updateApp" @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded class="mt-4 pa-5">
-                  <v-icon left>mdi-update</v-icon> Check for updates </v-btn>
-                <v-btn v-if="updateApp" @click="openLink('https://github.com/fupdec/Adult-Video-Database/releases')" color="#eee" light rounded class="mt-4 pa-5">
-                  <v-icon left>mdi-github</v-icon> Demo version </v-btn>
-                <v-btn v-if="updateApp" @click="openLink('https://patreon.com/avdb')" color="#ff424d" rounded class="mt-4 pa-5">
-                  <v-icon left>mdi-patreon</v-icon> Full version </v-btn>
               </div>
               <v-spacer></v-spacer>
               <div class="text-center d-flex flex-column">
@@ -950,6 +964,14 @@ export default {
       },
       set(value) {
         this.$store.dispatch('updateSettingsState', {key:'typingFiltersDefault', value})
+      },
+    },
+    checkForUpdatesAtStartup: {
+      get() {
+        return this.$store.state.Settings.checkForUpdatesAtStartup
+      },
+      set(value) {
+        this.$store.dispatch('updateSettingsState', {key:'checkForUpdatesAtStartup', value})
       },
     },
   },

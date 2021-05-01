@@ -94,7 +94,6 @@ export default new Vuex.Store({
       commit('clearAllNotifications')
     },
     updateDataFromVideos({getters}) {
-      console.log('update performer data')
       const videos = getters.videos
         // update performer data
       getters.performers.each(p=>{

@@ -5,7 +5,6 @@ const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json'
 const adapterSettings = new FileSync(pathToDbSettings)
 const low = require('lowdb')
 const dbs = low(adapterSettings)
-const { webFrame } = require('electron')
 
 import router from '@/router'
 import Vuetify from '@/plugins/vuetify'
@@ -130,7 +129,8 @@ dbs.defaults({
   typingFiltersDefault: false,
   watchFolders: false,
   folders: [],
-  zoom: webFrame.getZoomFactor(),
+  zoom: 1,
+  checkForUpdatesAtStartup: false,
 }).write()
 
 const Settings = {
@@ -263,17 +263,11 @@ const Settings = {
     watchFolders: dbs.get('watchFolders').value(),
     folders: dbs.get('folders').value(),
     zoom: dbs.get('zoom').value(),
+    checkForUpdatesAtStartup: dbs.get('checkForUpdatesAtStartup').value(),
   }),
   mutations: {
-    updateSettings (state) {
-      console.log(':::::::settings UPDATED:::::::')
-      state.lastChanged = Date.now()
-    },
     updateBackups(state, value) {
       state.backups = value
-    },
-    addNewTab(state, tab) {
-      state.tabs.push(tab)
     },
     closeTab(state, tabId) {
       state.tabs = _.filter(state.tabs, tab => tab.id !== tabId)
@@ -281,11 +275,8 @@ const Settings = {
     getTabsFromDb(state, tabs) {
       state.tabs = _.cloneDeep(dbs.get('tabs').value())
     },
-    updateTabs(state, tabs) {
+    updateTabs(state, tabs) { // TODO create mutation for update any value in settings
       state.tabs = _.cloneDeep(tabs)
-    },
-    updateFiltersPresetDefault(state, {type, value}) {
-      state[`${type}FiltersPresetDefault`] = value
     },
     resetSettingsToDefault(state) { // TODO reset only visuals. change text in settings
       state.passwordProtection = false
@@ -363,7 +354,7 @@ const Settings = {
     },
     addNewTab({state, rootState, commit, dispatch, getters}, tab) {
       getters.tabsDb.push(tab).write()
-      commit('addNewTab', tab)
+      state.tabs.push(tab)
     },
     closeTab({state, rootState, commit, dispatch, getters}, tabId) {
       let currentTab = getters.tabsDb.find({id: tabId}).value()
