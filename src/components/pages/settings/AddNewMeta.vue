@@ -7,8 +7,10 @@
             <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
           </template>
           <div class="d-flex flex-column align-center">
-            <span class="caption">add images, ratings, favorite to meta-cards</span>
-            <div class="my-2">
+            <span class="caption">Complex meta has a separate page with cards <br> 
+              that can be customized in detail:<br>
+              images, rating, favorite and etc.</span>
+            <div class="mt-2">
               <v-icon size="40" dark>mdi-card-bulleted</v-icon>
               <v-icon size="50" dark class="mx-1">mdi-card-account-details</v-icon>
               <v-icon size="40" dark>mdi-card-text</v-icon>
@@ -16,18 +18,20 @@
             </div>
           </div>
         </v-tooltip>
-        <span class="overline">Meta with cards</span>
+        <span class="overline">Complex Meta</span>
       </div>
       <v-list v-if="metaList.length" dense>
         <v-list-item-group color="primary">
           <v-list-item v-for="(meta, i) in metaList" :key="i">
             <v-icon left>mdi-{{meta.settings.icon}}</v-icon> 
             <div class="d-flex justify-space-between align-center" style="width:100%">
-              <span>{{meta.name}}</span>
               <span>
-                <v-btn @click="deleteMeta(i)" color="red" icon>
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
+                <span>{{meta.settings.name}}</span>
+                <span class="caption px-4">id: {{meta.id}}</span>
+              </span>
+              <span>
+                <v-btn @click="openSettings(i)" icon><v-icon>mdi-cog</v-icon></v-btn>
+                <v-btn @click="deleteMeta(i)" color="red" icon><v-icon>mdi-delete</v-icon></v-btn>
               </span>
             </div>
           </v-list-item>
@@ -53,8 +57,11 @@
             <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
           </template>
           <div class="d-flex flex-column align-center">
-            <span class="caption">string, number, array, date, boolean</span>
-            <div class="my-2">
+            <span class="caption">Simple meta doesn't have a separate page or cards.<br> 
+              They are simply displayed as a line on cards<br>
+              and can be of different types:<br>
+              string, number, array, date, boolean and etc.</span>
+            <div class="mt-2">
               <v-icon size="40" dark>mdi-alphabetical</v-icon>
               <v-icon size="40" dark>mdi-numeric</v-icon>
               <v-icon size="50" dark>mdi-calendar</v-icon>
@@ -68,9 +75,13 @@
       <v-list v-if="simpleMetaList.length" dense>
         <v-list-item-group color="primary">
           <v-list-item v-for="(meta, i) in simpleMetaList" :key="i">
-            <v-icon left>{{getIconMeta(meta.settings.type)}}</v-icon> 
             <div class="d-flex justify-space-between align-center" style="width:100%">
-              <span>{{meta.name}}</span>
+              <span>
+                <v-icon left>mdi-{{meta.settings.icon}}</v-icon>
+                <span>{{meta.settings.name}}</span>
+                <span class="caption px-4">type: {{meta.settings.type}}</span>
+                <span class="caption">id: {{meta.id}}</span>
+              </span>
               <span>
                 <v-btn @click="deleteMeta(i, 'simple')" color="red" icon>
                   <v-icon>mdi-delete</v-icon>
@@ -105,6 +116,17 @@
           <v-card-text class="px-4">
             <v-form v-model="validSimpleMeta" ref="formSimpleMeta" class="flex-grow-1" @submit.prevent>
               <v-text-field v-model="simpleMetaName" :rules="[nameRules]" label="Name of meta"/>
+              <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
+                item-text="name" item-value="name" label="Icon" class="mt-4"
+                :rules="[value => !!value || 'Icon is required']">
+                <template v-slot:selection="data">
+                  <v-icon left>mdi-{{data.item.name}}</v-icon> {{data.item.name}}
+                </template>
+                <template v-slot:item="data">
+                  <v-icon left>mdi-{{data.item.name}}</v-icon>
+                  <span v-html="data.item.name"></span>
+                </template>
+              </v-autocomplete>
               <v-autocomplete v-model="typeOfSimpleMeta" label="Type of meta"
                 :items="['string', 'number', 'boolean', 'array', 'date']" class="mt-4"
                 :rules="[value => !!value || 'Type is required']" persistent-hint :hint="hint">
@@ -113,10 +135,8 @@
                   <span class="overline">{{data.item}}</span>
                 </template>
                 <template v-slot:item="data">
-                  <template>
-                    <v-icon left>{{getIconMeta(data.item)}}</v-icon> 
-                    <span class="overline">{{data.item}}</span>
-                  </template>
+                  <v-icon left>{{getIconMeta(data.item)}}</v-icon> 
+                  <span class="overline">{{data.item}}</span>
                 </template>
               </v-autocomplete>
             </v-form>
@@ -136,10 +156,12 @@
                     dense outlined label="Name of item" />
                 </v-form>
               </div>
-              <v-chip-group column>
-                <v-chip v-for="item in array" :key="item" 
-                  @click:close="removeItem(item)" close close-icon="mdi-close">{{item}}</v-chip>
-              </v-chip-group>
+              <draggable v-model="array" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+                <transition-group type="transition" class="d-flex flex-wrap">
+                  <v-chip v-for="item in array" :key="item" @click:close="removeItem(item)"
+                    close close-icon="mdi-close" class="mr-2 mb-2">{{item}}</v-chip>
+                </transition-group>
+              </draggable>
             </div>
           </v-card-text>
         </vuescroll>
@@ -155,7 +177,7 @@
     <v-dialog v-model="dialogAddNewMeta" scrollable max-width="450">
       <v-card>
         <v-card-title class="px-4 py-1">
-          <div class="headline">Adding a new meta with cards</div>
+          <div class="headline">Adding a new complex meta</div>
           <v-spacer></v-spacer>
           <v-icon>mdi-plus</v-icon>
         </v-card-title>
@@ -171,10 +193,8 @@
                   <v-icon left>mdi-{{data.item.name}}</v-icon> {{data.item.name}}
                 </template>
                 <template v-slot:item="data">
-                  <template>
-                    <v-icon left>mdi-{{data.item.name}}</v-icon>
-                    <span v-html="data.item.name"></span>
-                  </template>
+                  <v-icon left>mdi-{{data.item.name}}</v-icon>
+                  <span v-html="data.item.name"></span>
                 </template>
               </v-autocomplete>
             </v-form>
@@ -188,6 +208,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <DialogEditMeta v-if="dialogEditMeta" :dialogEditMeta="dialogEditMeta" :metaIndex="metaSettingsIndex" @closeSettings="closeSettings"/>
   </div>
 </template>
 
@@ -197,11 +219,14 @@ const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
 import icons from '@/assets/material-icons.json'
+import draggable from 'vuedraggable'
 
 export default {
   name: 'AddNewMeta',
   components: {
     vuescroll,
+    draggable,
+    DialogEditMeta: () => import("@/components/pages/meta/DialogEditMeta.vue"),
   },
   mounted() {
     this.$nextTick(function () {
@@ -210,6 +235,8 @@ export default {
   data: () => ({
     dialogAddNewSimpleMeta: false,
     dialogAddNewMeta: false,
+    dialogEditMeta: false,
+    dialogAddMetaToCard: false,
     // simple meta
     validSimpleMeta: false,
     simpleMetaName: '',
@@ -219,11 +246,20 @@ export default {
     itemName: '',
     reserved: ['id','name','duration','size','resolution','rating','favorite','bookmark',
       'date','edit','views','array','type','number','string','boolean'],
+    drag: false,
+    dragOptions: {
+      animation: 200,
+      group: "description",
+      disabled: false,
+      ghostClass: "ghost"
+    },
     // meta with cards
     validMeta: false,
     metaName: '',
     metaIcon: 'shape',
     icons: icons,
+    // settings
+    metaSettingsIndex: 0,
   }),
   computed: {
     metaList() {
@@ -254,26 +290,22 @@ export default {
       let id, name
       if (type == 'simple') {
         id = this.simpleMetaList[index].id
-        name = this.simpleMetaList[index].name
+        name = this.simpleMetaList[index].settings.name
       } else {
         id = this.metaList[index].id 
-        name = this.metaList[index].name
+        name = this.metaList[index].settings.name
       }
       this.$store.dispatch('deleteMeta', {id, name, type})
     },
     // dialogs - simple meta
     nameRules(name) {
       name = name.trim().toLowerCase()
-      let dup = this.$store.getters.meta.filter(meta => name==meta.name.toLowerCase()).value()
-      let dupSimple = this.$store.getters.simpleMeta.filter(meta => name==meta.name.toLowerCase()).value()
       if (name.length > 30) {
         return 'Name must be less than 30 characters'
       } else if (name.length===0) {
         return 'Name is required'
-      } else if (!/^[a-zA-Z]*$/g.test(name)) {
+      } else if (!/^[a-zA-Z\s]*$/g.test(name)) {
         return 'Name must content only letters'
-      } else if (dup.length || dupSimple.length) {
-        return 'Meta with that name already exists'
       } else if (this.reserved.includes(name)) {
         return 'This word is reserved'
       } else {
@@ -281,8 +313,8 @@ export default {
       }
     },
     itemNameRules(name) {
-      name = name.trim().toLowerCase()
-      let duplicate = this.array.includes(name)
+      let arr = this.array.map(i => i.toLowerCase())
+      let duplicate = arr.includes(name.trim().toLowerCase())
       if (name.length > 30) {
         return 'Name must be less than 30 characters'
       } else if (name.length===0) {
@@ -313,18 +345,24 @@ export default {
       if (!this.validSimpleMeta) return
       if (this.typeOfSimpleMeta=='array' && this.array.length <= 1) return
 
-      let settings = { type: this.typeOfSimpleMeta }
-      if (this.typeOfSimpleMeta=='array') settings.array = this.array
+      let settings = { 
+        name: this.simpleMetaName,
+        type: this.typeOfSimpleMeta,
+        icon: this.metaIcon,
+      }
+      if (this.typeOfSimpleMeta=='array') {
+        settings.array = this.array.map(i => { return { id: shortid.generate(), name: i}})
+      } 
 
       this.$store.dispatch('addMeta', {
-        id: shortid.generate(), 
-        name: this.simpleMetaName, 
+        id: shortid.generate(),
         type: 'simple', 
         settings
       })
 
       this.dialogAddNewSimpleMeta = false
       this.simpleMetaName = ''
+      this.metaIcon = 'shape'
       this.typeOfSimpleMeta = ''
       this.array = []
       this.itemName = ''
@@ -346,14 +384,20 @@ export default {
 
       this.$store.dispatch('addMeta', {
         id: shortid.generate(), 
-        name: this.metaName, 
         type: 'cards', 
-        settings: { icon: this.metaIcon }
+        settings: { name: this.metaName, icon: this.metaIcon, metaInCard: [] }
       })
 
       this.dialogAddNewMeta = false
       this.metaName = ''
       this.metaIcon = 'shape'
+    },
+    openSettings(index) {
+      this.metaSettingsIndex = index
+      this.dialogEditMeta = true
+    },
+    closeSettings() {
+      this.dialogEditMeta = false
     },
   },
 }

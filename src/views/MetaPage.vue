@@ -1,12 +1,16 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
     <div class="headline text-h3 d-flex align-center justify-center py-6">
-      <v-icon x-large left>mdi-{{metaList[0].settings.icon}}</v-icon> {{metaList[0].name}}
+      <v-icon x-large left>mdi-{{meta.settings.icon}}</v-icon> {{meta.settings.name}}
     </div>
 
     <v-container fluid class="meta-grid">
       <MetaCard v-for="(metaCard, i) in metaCardsOnPage" :key="i" :metaCard="metaCard"/>
     </v-container>
+    <div v-if="metaCardsOnPage.length==0" class="text-center"> 
+      <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
+      Empty
+    </div>
   </vuescroll>
 </template>
 
@@ -33,6 +37,9 @@ export default {
     metaId() {
       return this.$route.query.metaId
     },
+    meta() {
+      return this.$store.getters.meta.find({id: this.metaId}).value()
+    },
     metaList() {
       return this.$store.getters.meta.value()
     },
@@ -50,7 +57,7 @@ export default {
       } else this.isScrollToTopVisible = false
     },
     initFilters() {
-      this.$store.dispatch('filterMetaCards', { metaId: this.metaList[0].id })
+      this.$store.dispatch('filterMetaCards', { metaId: this.meta.id })
     },
   },
   watch: {

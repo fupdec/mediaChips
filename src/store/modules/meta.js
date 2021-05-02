@@ -8,20 +8,23 @@ const dbMeta = low(adapterMeta)
 
 let defaultMeta = {
   id: "defaultMeta",
-  name: "Tags",
   date: Date.now(),
   edit: Date.now(),
   settings: {
+    name: "Tags",
     icon: 'tag-outline',
     cardSize: 1,
+    metaInCard: [],
   },
 }
 
 let defaultMetaCard = {
   id: "defaultMetaCard",
-  name: "Card",
   date: Date.now(),
   edit: Date.now(),
+  meta: {
+    name: "Card",
+  }
 }
 
 dbMeta.defaults({ meta: [{ ...defaultMeta }], simpleMeta: [], cards: {} }).write()
@@ -35,29 +38,42 @@ const Meta = {
   mutations: {
     updateMetaCards(state, ids) {
       if (ids === undefined) state.updateCardIds = []
-      else state.updateCardIds = ids
+      else state.updateCardIds = ids // TODO make update function
     },
   },
   actions: {
-    addMeta({commit, getters}, {id, name, type, settings}) {
-      let meta = { ...defaultMeta, ...{ id, name, settings } }
+    addMeta({commit, getters, rootState}, {id, type, settings}) {
+      let meta = { ...defaultMeta, ...{ id, settings } }
       if (type == 'simple') getters.simpleMeta.push(meta).write()
-      else { getters.meta.push(meta).write(); getters.metaCards.set(id, []).write() }
-      commit('addLog', {type:'info', color:'green', text:`Added meta "${name}"`})
+      else { 
+        getters.meta.push(meta).write()
+        getters.metaCards.set(id, []).write()
+      }
+      commit('addLog', {type:'info', color:'green', text:`Added meta "${settings.name}"`})
     },
     deleteMeta({commit, getters}, {id, name, type}) {
-      if (type == 'simple') getters.simpleMeta.remove({id}).write()
-      else { getters.meta.remove({id}).write(); getters.metaCards.unset(id).write() }
-      commit('addLog', {type:'info', color:'red', text:`Deleted meta "${name}"`})
+      if (type == 'simple') {
+        getters.simpleMeta.remove({id}).write()
+        getters.meta.filter(i => _.some(i.settings.metaInCard, {id})).each(i => {
+          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)}).write()
+        // TODO remove from cards
+      } else {
+        getters.meta.remove({id}).write()
+        getters.metaCards.unset(id).write() 
+        getters.meta.filter(i => _.some(i.settings.metaInCard, {id})).each(i => {
+          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)}).write()
+        // TODO remove from cards
+      }
+      commit('addLog', {type:'info', color:'red', text:`Deleted ${type} meta "${name}"`})
     },
-    addMetaCard({commit, getters}, {cardId, name, metaId}) {
-      let metaCard = { ...defaultMetaCard, ...{ id: cardId, name } }
+    addMetaCard({commit, getters}, {cardId, metaInfo, metaId}) {
+      let metaCard = { ...defaultMetaCard, ...{ id: cardId, meta: metaInfo } }
       getters.metaCards.get(metaId).push(metaCard).write()
-      commit('addLog', {type:'info', color:'green', text:`Added card "${name}"`})
+      commit('addLog', {type:'info', color:'green', text:`Added card "${metaInfo.name}"`})
     },
     async filterMetaCards({state, getters}, {metaId, stayOnCurrentPage}) {
       let meta = getters.metaCards.get(metaId)
-      meta = meta.orderBy(i=>(i.name.toLowerCase()), ['asc'])
+      meta = meta.orderBy(i=>(i.meta.name.toLowerCase()), ['asc'])
       state.filteredMeta = meta.value()
     },
     updateMetaSettings({getters}, {id, type, key, value}) {

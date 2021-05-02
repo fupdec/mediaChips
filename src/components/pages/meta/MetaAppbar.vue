@@ -124,7 +124,7 @@ export default {
           if (duplicate) { dups.push(duplicate.name); continue }
           vm.$store.dispatch('addMetaCard', { 
             cardId: shortid.generate(),
-            name: card,
+            metaInfo: { name: card },
             metaId: vm.metaId,
           })
           newCards.push(card)

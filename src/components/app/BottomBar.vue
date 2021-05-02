@@ -44,7 +44,7 @@
         </v-btn>
 
         <v-btn v-for="meta in metaList" :key="meta.id" :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary">
-          <span>{{meta.name}}</span>
+          <span>{{meta.settings.name}}</span>
           <v-icon>mdi-{{meta.settings.icon}}</v-icon>
         </v-btn>
 

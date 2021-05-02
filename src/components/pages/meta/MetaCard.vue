@@ -4,7 +4,7 @@
       :data-id="metaCard.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{ class: 'accent--text' }">
       <v-icon>mdi-card</v-icon>
-      <div>{{metaCard.name}}</div>
+      <div>{{metaCard.meta.name}}</div>
     </v-card>
   </v-lazy>
 </template>
