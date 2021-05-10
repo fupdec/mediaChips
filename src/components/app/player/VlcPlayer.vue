@@ -7,7 +7,7 @@
         @mousedown="handleMouseCanvas($event)" @contextmenu="showContextMenu($event)"
         @wheel="changeVolume" @keydown="handleKey" tabindex="-1">
         <video ref="videoPlayer" class="video-player"></video>
-        <div v-if="isVideoFormatNotSupported" class="video-error">
+        <div v-if="isVideoFormatNotSupported && reg" class="video-error">
           <v-icon size="60" color="red">mdi-alert</v-icon>
           <div>{{getFileFromPath(videos[playIndex].path)}}</div>
           <div class="mb-4">Video format not supported.</div>
@@ -16,9 +16,9 @@
             <span>Play in the system player</span>
           </v-btn>
         </div>
-        <div v-if="demo && playIndex>3" class="demo-block">
-          <div class="ma-4 title">demo mode</div>
-          <div class="caption">limited number of videos</div>
+        <div v-if="!reg && playIndex>4" class="reg-block">
+          <div class="mb-2">Application not registered</div>
+          <div class="caption">In the unregistered version, you can only play the first 5 videos of the playlist.</div>
         </div>
         <div v-if="isVideoNotExist" class="video-error">
           <v-icon size="60" color="red">mdi-alert</v-icon>
@@ -235,6 +235,7 @@
                   <b>{{i+1}}.</b>
                   <span class="path">{{getFileNameFromPath(video.path)}}</span>
                 </span>
+                <div v-if="!reg && i>4" class="reg-playlist">App not registered</div>
                 <span v-if="playIndex===i" class="play-state overline text--primary">
                   <v-icon class="pl-2 pr-1">mdi-play</v-icon>
                   <span class="pr-4 text">Now playing</span>
@@ -531,13 +532,14 @@ ffmpeg.setFfprobePath(pathToFfprobe)
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
+import Keys from '@/mixins/Keys'
 
 export default {
   name: "VlcPlayer",
   components: {
     vuescroll,
   },
-  mixins: [ShowImageFunction, LabelFunctions],
+  mixins: [ShowImageFunction, LabelFunctions, Keys],
   beforeDestroy() {
     document.removeEventListener("mousemove", this.controlsMove)
     document.removeEventListener("mouseup", this.controlsUp)
@@ -571,7 +573,6 @@ export default {
     mouseOverControls: false,
     statusText: '',
     statusTextTimeout: null,
-    demo: false,
     // Video element properties //
     duration: 1,
     volume: 1,
@@ -742,9 +743,7 @@ export default {
       this.duration = this.player.duration
       this.trackCurrentTime()
       this.getMarkers()
-      if (this.demo && this.playIndex>3) {
-        this.player.src = ''
-      }
+      if (!this.reg && this.playIndex>4) this.player.src = ''
     },
     moveOverPlayer(e) {
       if (e.movementX > 0 || e.movementY > 0) {
@@ -889,7 +888,6 @@ export default {
       }
     },
     seek(e) {
-      console.log(e)
       this.player.currentTime = e
       this.currentTime = e
     },
@@ -1339,15 +1337,29 @@ export default {
     width: 100%;
     height: auto;
   }
-  .demo-block {
+  .reg-block {
     position: absolute;
-    right: 5px;
-    top: 5px;
+    top: 40%;
+    right: 20%;
+    left: 20%;
     z-index: 3;
-    background-color: hsla(335, 100%, 50%, 0.7);
+    background-color: hsla(0, 0%, 30%, 0.7);
+    color: #fff;
     text-transform: uppercase;
     text-align: center;
-    padding: 5px;
+    padding: 10px;
+  }
+  .reg-playlist {
+    background-color: #414141;
+    color: #fff;
+    padding: 4px;
+    position: absolute;
+    left: 5%;
+    right: 5%;
+    text-align: center;
+    font-size: 1vw;
+    line-height: 1;
+    text-transform: uppercase;
   }
 }
 .video-error {

@@ -354,7 +354,7 @@
                 </template>
               </v-switch>
             </div>
-            <div class="py-8">
+            <div class="pt-6">
               <span class="mr-6">Limit of pages in pagination:</span>
               <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
                 <v-btn outlined :value="5">5</v-btn>
@@ -581,7 +581,8 @@
           </v-card>
         </v-card>
       </v-tab-item>
-      <v-tab-item value="database-settings">
+      <v-tab-item value="database-settings"> 
+        <!-- TODO create migration database to new version of app. backups with old version don't work with new -->
         <v-card flat max-width="1000" style="margin: auto;" class="py-10">
           <v-card outlined class="pb-4 px-4">
             <div class="headline text-h5 text-center py-4">Backups</div>
@@ -609,48 +610,53 @@
       <v-tab-item value="about-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-card outlined class="pa-4 mb-10">
-            <div class="d-flex align-center justify-center">
-              <div class="mr-6">Check for updates at startup:</div>
-              <v-switch v-model="checkForUpdatesAtStartup" inset hide-details class="mt-0 pt-0 d-inline-flex"
-                :label="checkForUpdatesAtStartup?'Yes':'No'"/>
-            </div>
-            <div class="d-flex align-center justify-center">
-              <v-btn v-if="!updateApp" @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded class="mt-4 pa-5">
-                <v-icon left>mdi-update</v-icon> Check for updates manually</v-btn>
-              <div v-if="updateApp" class="d-flex flex-column align-center justify-center">
-                <span class="pt-4">New version available!</span>
-                <div>
-                  <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database/releases')" color="#eee" light rounded class="mx-4 mt-4 pa-5">
-                    <v-icon left>mdi-github</v-icon> Demo version </v-btn>
-                  <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" rounded class="mx-4 mt-4 pa-5">
-                    <v-icon left>mdi-patreon</v-icon> Full version </v-btn>
+            <Registration />
+          </v-card>
+          <v-card outlined class="pa-4 mb-10">
+            <div class="headline text-h5 text-center pb-4">Updates</div>
+            <v-row>
+              <v-col cols="12" sm="6">
+                <div class="d-flex align-center justify-center mt-2">
+                  <div class="mr-6">Check for updates at startup:</div>
+                  <v-switch v-model="checkForUpdatesAtStartup" class="mt-0 pt-0 d-inline-flex"  
+                    :label="checkForUpdatesAtStartup?'Yes':'No'" inset hide-details/>
                 </div>
-              </div>
-            </div>
+              </v-col>
+              <v-col cols="12" sm="6" align="center">
+                <v-btn v-if="!updateApp" @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded>
+                  <v-icon left>mdi-update</v-icon> Check for updates manually</v-btn>
+              </v-col>
+              <v-col cols="12" v-if="updateApp" class="text-center">
+                <span class="pt-4 pr-4">New version available!</span>
+                <v-btn @click="openLink('https://avdb.app/downloads/')" color="primary" rounded>
+                  <v-icon left>mdi-download</v-icon> Download from official website </v-btn>
+              </v-col>
+            </v-row>
           </v-card>
           <v-card outlined class="pa-4">
             <div class="d-flex">
-              <div class="d-flex flex-column">
+              <div>
                 <div>Adult Video Database 0.8.1 (Bobbi)</div>
-                <p class="text--secondary">by fupdec</p>
-                <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database')" color="#eee" light rounded class="px-5 mb-4">
-                  <v-icon left>mdi-github</v-icon> Github </v-btn>
-                <v-btn @click="openLink('https://reddit.com/r/avdb/')" color="#ff4500" rounded class="px-5 mb-4">
-                  <v-icon left>mdi-reddit</v-icon> Reddit </v-btn>
-                <v-btn @click="openLink('https://discord.gg/QSnXFvXZVh')" color="#7289DA" rounded class="px-5 mb-4">
-                  <v-icon left>mdi-discord</v-icon> Discord </v-btn>
-              </div>
-              <v-spacer></v-spacer>
-              <div class="d-flex flex-column">
-                <div>Support development and full version</div>
-                <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" class="pa-5">
-                  <v-icon left>mdi-patreon</v-icon> Patreon </v-btn>
+                <div class="text--secondary">by fupdec</div>
               </div>
               <v-spacer></v-spacer>
               <div class="text-center d-flex flex-column">
                 <img :src="logoPath" alt="avdb" width="82" height="82">
                 <span>2021</span>
               </div>
+            </div>
+            <div>Links</div>
+            <div class="d-flex flex-wrap mt-2">
+              <v-btn @click="openLink('https://avdb.app/')" color="#1da6ff" rounded class="px-5 mb-2 mr-2">
+                <v-icon left>mdi-web</v-icon> website </v-btn>
+              <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database')" color="#eee" light rounded class="px-5 mb-2 mr-2">
+                <v-icon left>mdi-github</v-icon> Github </v-btn>
+              <v-btn @click="openLink('https://reddit.com/r/avdb/')" color="#ff4500" rounded class="px-5 mb-2 mr-2">
+                <v-icon left>mdi-reddit</v-icon> Reddit </v-btn>
+              <v-btn @click="openLink('https://discord.gg/QSnXFvXZVh')" color="#7289DA" rounded class="px-5 mb-2 mr-2">
+                <v-icon left>mdi-discord</v-icon> Discord </v-btn>
+              <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" rounded class="px-5 mb-2 mr-2">
+                <v-icon left>mdi-patreon</v-icon> patreon </v-btn>
             </div>
             <v-divider class="my-4"></v-divider>
             <div class="d-flex flex-column">
@@ -713,6 +719,7 @@ import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
 import ManagePerformerParameters from '@/components/pages/settings/ManagePerformerParameters.vue'
 import EditPerformerItemsOfParameter from '@/components/pages/settings/EditPerformerItemsOfParameter.vue'
 import EditTagItemsOfParameter from '@/components/pages/settings/EditTagItemsOfParameter.vue'
+import Registration from '@/components/pages/settings/Registration.vue'
 import vuescroll from 'vuescroll'
 
 export default {
@@ -726,6 +733,7 @@ export default {
     EditPerformerItemsOfParameter,
     EditTagItemsOfParameter,
     vuescroll,
+    Registration,
   },
   mounted () {
     this.$nextTick(function () {

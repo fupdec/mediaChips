@@ -3,15 +3,14 @@
     <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
       :class="{favorite: isFavorite}" class="video-card" height="100%"
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
-      :key="cardKey" :disabled="demo && i>3"
+      :key="cardKey" :disabled="!reg && i>4"
     >
       <v-responsive 
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
-        <div v-if="demo && i>3" class="demo-block">
-          <div class="title">Demo Mode</div>
-          <div class="sm">limited number of videos</div>
+        <div v-if="!reg && i>4" class="reg-block">
+          <div>App not registered</div>
         </div>
         <v-img :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb" contain/>
         <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
@@ -163,6 +162,7 @@ export default {
   props: {
     video: Object,
     i: Number,
+    reg: Boolean,
   },
   mixins: [ShowImageFunction, Functions, LabelFunctions],
   mounted() {
@@ -185,7 +185,6 @@ export default {
     isVideoHovered: false,
     timeouts: {},
     cardKey: '',
-    demo: false,
   }),
   computed: {
     updateCardIds() {
@@ -392,10 +391,10 @@ export default {
   .v-image {
     cursor: pointer;
   }
-  .demo-block {
+  .reg-block {
     position: absolute;
     z-index: 3;
-    background-color: hsla(335, 100%, 50%, 0.7);
+    background-color: hsla(0, 0%, 0%, 0.7);
     text-transform: uppercase;
     text-align: center;
     padding: 5px;
@@ -403,15 +402,12 @@ export default {
     right: 0;
     top: 0;
     bottom: 0;
-    width: 200px;
-    height: 70px;
     margin: auto;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    .sm {
-      font-size: 10px;
-    }
+    font-size: 12px;
+    justify-content: center;
+    color: #fff;
   }
   &:hover {
     .bookmark {

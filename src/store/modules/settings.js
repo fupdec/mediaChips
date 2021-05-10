@@ -131,6 +131,7 @@ dbs.defaults({
   folders: [],
   zoom: 1,
   checkForUpdatesAtStartup: false,
+  registration: '',
 }).write()
 
 const Settings = {
@@ -264,6 +265,7 @@ const Settings = {
     folders: dbs.get('folders').value(),
     zoom: dbs.get('zoom').value(),
     checkForUpdatesAtStartup: dbs.get('checkForUpdatesAtStartup').value(),
+    registration: dbs.get('registration').value(),
   }),
   mutations: {
     updateBackups(state, value) {

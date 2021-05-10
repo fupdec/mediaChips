@@ -46,7 +46,7 @@
 
     <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
-      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i"/>
+      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
     </v-container>
 
     <v-pagination
@@ -69,6 +69,7 @@
 <script>
 import VideosGrid from '@/mixins/VideosGrid'
 import vuescroll from 'vuescroll'
+import Keys from '@/mixins/Keys'
 
 export default {
   name: 'Videos',
@@ -77,7 +78,7 @@ export default {
     Loading: () => import('@/components/elements/Loading.vue'),
     FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
-  mixins: [VideosGrid],
+  mixins: [VideosGrid,Keys],
   mounted() {
     this.$nextTick(function () {
       this.initFilters()

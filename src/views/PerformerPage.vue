@@ -263,7 +263,7 @@
 
     <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
-      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i"/>
+      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
     </v-container>
 
     <v-pagination class="pt-10 pb-16"
@@ -297,10 +297,11 @@ import Countries from '@/mixins/Countries'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
+import Keys from '@/mixins/Keys'
 
 export default {
   name: 'PerformerPage',
-  mixins: [VideosGrid, Countries, ShowImageFunction, LabelFunctions],
+  mixins: [VideosGrid, Countries, ShowImageFunction, LabelFunctions, Keys],
   components: {
     CountryFlag,
     DialogEditPerformerInfo: () => import('@/components/pages/performers/DialogEditPerformerInfo.vue'),

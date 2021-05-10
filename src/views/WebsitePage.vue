@@ -134,7 +134,7 @@
 
     <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
-      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i"/>
+      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
     </v-container>
 
     <v-pagination class="pt-10 pb-16"
@@ -165,6 +165,7 @@ import VideosGrid from '@/mixins/VideosGrid'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
+import Keys from '@/mixins/Keys'
 
 export default {
   name: 'WebsitePage',
@@ -174,7 +175,7 @@ export default {
     Loading: () => import('@/components/elements/Loading.vue'),
     FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
-  mixins: [VideosGrid, ShowImageFunction, LabelFunctions],
+  mixins: [VideosGrid, ShowImageFunction, LabelFunctions, Keys],
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
