@@ -122,9 +122,7 @@ export default {
       this.$store.state.Tags.menuCard = false
       this.$store.state.x = e.clientX
       this.$store.state.y = e.clientY
-      this.$nextTick(() => {
-        this.$store.state.Tags.menuCard = true
-      })
+      setTimeout(() => { this.$store.state.Tags.menuCard = true }, 100)
     },
   },
   watch: {

@@ -120,9 +120,7 @@ export default {
       this.$store.state.Playlists.menuCard = false
       this.$store.state.x = e.clientX
       this.$store.state.y = e.clientY
-      this.$nextTick(() => {
-        this.$store.state.Playlists.menuCard = true
-      })
+      setTimeout(() => { this.$store.state.Playlists.menuCard = true }, 100)
     },
   },
 };

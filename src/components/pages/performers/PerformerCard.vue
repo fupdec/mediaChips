@@ -426,9 +426,7 @@ export default {
       this.$store.state.Performers.menuCard = false
       this.$store.state.x = e.clientX
       this.$store.state.y = e.clientY
-      this.$nextTick(() => {
-        this.$store.state.Performers.menuCard = true
-      })
+      setTimeout(() => { this.$store.state.Performers.menuCard = true }, 100)
     },
     filterByTag(tag) {
       let filter = {
