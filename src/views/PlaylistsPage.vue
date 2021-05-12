@@ -125,33 +125,21 @@ export default {
         selectables: ['.playlist-card'],
       }).on('beforestart', ({store, event}) => {
         const targetEl = event.target.closest('.playlist-card')
-        if (event.button == 2 && store.selected.includes(targetEl)) {
-          return false
-        }
+        if (event.button == 2 && store.stored.includes(targetEl)) return false
         return (event.button !== 1)
       }).on('start', ({store, event}) => {
         const targetEl = event.target.closest('.playlist-card')
-        if (event.button == 2 && store.selected.includes(targetEl)) {
-          return false
-        }
+        if (event.button == 2 && store.stored.includes(targetEl)) return false
         if (!event.ctrlKey && !event.metaKey) {
-          for (const el of store.stored) {
-            el.classList.remove('selected')
-          }
+          for (const el of store.stored) el.classList.remove('selected')
           this.$store.state.Playlists.selection.clearSelection()
         }
       }).on('move', ({store: {changed: {added, removed}}}) => {
-        for (const el of added) {
-          el.classList.add('selected')
-        }
-        for (const el of removed) {
-          el.classList.remove('selected')
-        }
+        for (const el of added) el.classList.add('selected')
+        for (const el of removed) el.classList.remove('selected')
       }).on('stop', ({store, event}) => {
         const targetEl = event.target.closest('.playlist-card')
-        if (event.button==0 && targetEl) {
-          this.$store.state.Playlists.selection.select(targetEl)
-        }
+        if (event.button==0 && targetEl) this.$store.state.Playlists.selection.select(targetEl)
         this.$store.state.Playlists.selection.keepSelection()
         this.getSelectedPlaylists(store.stored)
       })
