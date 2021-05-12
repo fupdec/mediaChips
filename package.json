@@ -1,13 +1,13 @@
 {
   "name": "avdb",
   "productName": "AVDB",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "author": {
     "name": "fupdec",
     "email": "fupdec@gmail.com"
   },
   "homepage": "https://github.com/fupdec/Adult-Video-Database",
-  "description": "Manage your ever-growing video collection - add tags, performers, websites and have fun!",
+  "description": "Organize your video library with ease and convenience.",
   "private": false,
   "license": "GPL-3.0",
   "repository": "github:fupdec/Adult-Video-Database",

@@ -1,23 +1,26 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/adult-video-database?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/Adult-Video-Database?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.8.1-beta?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/adult-video-database/v0.8.2-beta?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/Adult-Video-Database?color=blue)
 ![GitHub all releases](https://img.shields.io/github/downloads/fupdec/Adult-Video-Database/total?color=blueviolet)
 
 <img align="right" width="110" height="110" src="./public/icons/icon.png">
 
 # Adult Video Database
-Manage your porn video collection - add performers, tags, websites and have fun! <br>
-This is an open source desktop application for Windows, Mac and Linux.
+Organize your video library with ease and convenience. Add performers, tags, websites and have fun! The app has a built-in player. <br>
+This is an open source desktop application for Windows, Mac and Linux. <br>
+Demo version and main version are now combined into one. To register the application, go to Settings - About tab.<br>
+The cost of the application is $ 2 per month, or $ 25 - for life.<br>
+Subscribe to <a href="https://www.patreon.com/avdb">🔗Patreon</a> to get a license key. 
 
-## 💿 Download demo
-You can download the latest demo version under &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/releases">Releases</a> on the right hand side of this page.
+## 💿 Download
+Download from the <a href="https://avdb.app/downloads/">🔗official website</a> or from <a href="https://github.com/fupdec/Adult-Video-Database/releases">🔗github releases</a>
 
-## 🖥️ Full Version and Sponsorship
-Subscribe to &#128279;<a href="https://www.patreon.com/avdb">Patreon</a> to receive new releases and to support the development of the application.
-
-## 🧑‍🤝‍🧑 Community 
-You can discuss the application on reddit &#128279;<a href="https://www.reddit.com/r/avdb/">r/avdb</a> and &#128279;<a href="https://discord.gg/QSnXFvXZVh">Discord</a> and in &#128279;<a href="https://github.com/fupdec/Adult-Video-Database/discussions">GitHub Discussions</a>
+## 🧑‍🤝‍🧑 Community, Links and Help ⁉️
+Join the discussion on reddit <a href="https://www.reddit.com/r/avdb/">🔗r/avdb</a>, <a href="https://discord.gg/QSnXFvXZVh">🔗Discord</a>,
+<a href="https://github.com/fupdec/Adult-Video-Database/discussions">🔗GitHub Discussions</a> and <a href="https://www.patreon.com/avdb">🔗Patreon</a> <br>
+for help also see <a href="https://github.com/fupdec/Adult-Video-Database/wiki">🔗github wiki</a> <br>
+<a href="https://github.com/fupdec/Adult-Video-Database/projects/1">🔗Roadmap</a>
 
 ## 🎞️ Video demonstration on YouTube
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/voXkWelDpc8/mqdefault.jpg)](https://www.youtube.com/watch?v=voXkWelDpc8)
