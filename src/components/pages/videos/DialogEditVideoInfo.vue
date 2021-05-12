@@ -658,15 +658,19 @@
           </v-card-text>
         </vuescroll>
       </v-card>
+      <div @click="close" class="left-close-panel">
+        <div class="content">
+          <v-icon color="red" size="15vw">mdi-close</v-icon>
+          <span class="red--text">Close</span>
+        </div>
+      </div>
+      <div @click="saveVideoInfo" class="right-close-panel">
+        <div class="content">
+          <v-icon color="green" size="15vw">mdi-check</v-icon>
+          <span class="green--text">Save</span>
+        </div>
+      </div>
     </v-bottom-sheet>
-
-    <v-btn v-if="sheet" @click="close" fab class="close-btn-float">
-      <v-icon large>mdi-close</v-icon>
-    </v-btn>
-
-    <v-btn v-if="sheet" @click="saveVideoInfo" fab large class="save-btn">
-      <v-icon large>mdi-content-save</v-icon>
-    </v-btn>
 
     <v-dialog v-model="dialogAddNewTag" max-width="400">
       <v-card>
@@ -1115,7 +1119,7 @@ export default {
         this.$store.commit('updateVideos', [videoId])
         this.$store.dispatch('filterVideos', true)
       })
-      
+      // TODO slow close animation
       this.$store.commit('addLog', {type:'info',text:`📹 Video "${this.fileName}" has been edited ✏️`})
       this.$store.state.Videos.dialogEditVideoInfo = false
       this.$store.state.Bookmarks.bookmarkText = ''
@@ -1335,17 +1339,5 @@ export default {
 .edit-path-title {
   display: flex;
   justify-content: center;
-}
-.close-btn-float {
-  position: fixed;
-  right: 35px;
-  bottom: 120px;
-  z-index: 500;
-}
-.save-btn {
-  position: fixed;
-  right: 30px;
-  bottom: 40px;
-  z-index: 500;
 }
 </style> 

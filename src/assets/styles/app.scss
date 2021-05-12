@@ -1490,6 +1490,44 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   align-items: center;
 }
 // end console status bar
+.left-close-panel,
+.right-close-panel {
+  position: absolute;
+  top: 0;
+  width: 50vw !important;
+  height: 100%;
+  z-index: -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  transition: .3s all;
+  opacity: 0;
+  &:hover {
+    opacity: 1;
+  }
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    span {
+      font-size: 1.5vw;
+      text-transform: uppercase;
+      letter-spacing: 0.5vw;
+      font-weight: bold;
+    }
+  }
+}
+.left-close-panel {
+  left: 0;
+  align-items: flex-start;
+  background: linear-gradient(90deg, rgba(143, 8, 8, 0.8), transparent);
+}
+.right-close-panel {
+  right: 0;
+  align-items: flex-end;
+  background: linear-gradient(270deg, rgba(19, 87, 19, 0.8), transparent);
+}
 .loading-animation {
   animation: rotate 0.5s infinite linear;
 }
