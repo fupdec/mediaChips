@@ -120,9 +120,11 @@ export default {
       e.preventDefault()
       this.$store.state.menuTabs = false
       this.$store.state.Tags.menuCard = false
-      this.$store.state.x = e.clientX
-      this.$store.state.y = e.clientY
-      setTimeout(() => { this.$store.state.Tags.menuCard = true }, 100)
+      setTimeout(() => {
+        this.$store.state.x = e.clientX
+        this.$store.state.y = e.clientY
+        this.$store.state.Tags.menuCard = true
+      }, 300)
     },
   },
   watch: {

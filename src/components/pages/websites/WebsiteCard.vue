@@ -145,9 +145,11 @@ export default {
       e.preventDefault()
       this.$store.state.menuTabs = false
       this.$store.state.Websites.menuCard = false
-      this.$store.state.x = e.clientX
-      this.$store.state.y = e.clientY
-      setTimeout(() => { this.$store.state.Websites.menuCard = true }, 100)
+      setTimeout(() => {
+        this.$store.state.x = e.clientX
+        this.$store.state.y = e.clientY
+        this.$store.state.Websites.menuCard = true
+      }, 300)
     },
   },
   watch: {

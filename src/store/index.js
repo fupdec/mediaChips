@@ -30,6 +30,8 @@ export default new Vuex.Store({
     hoveredImageY: 0,
     x: 0,
     y: 0,
+    contextMenu: false,
+    contextMenuContent: [],
     pathToUserData: '',
     menuTabs: false,
     contextTab: '',

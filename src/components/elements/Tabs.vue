@@ -71,11 +71,11 @@ export default {
       this.$store.state.Tags.menuCard = false
       this.$store.state.Websites.menuCard = false
       this.$store.state.menuTabs = false
-      this.$store.state.x = e.clientX
-      this.$store.state.y = e.clientY
-      this.$nextTick(() => {
+      setTimeout(() => {
+        this.$store.state.x = e.clientX
+        this.$store.state.y = e.clientY
         this.$store.state.menuTabs = true
-      })
+      }, 300)
     },
   },
   watch: {

@@ -115,20 +115,6 @@ export default {
       }
       this.$store.state.menuTabs = false
     },
-    showContextMenu(e, tabId) {
-      e.preventDefault()
-      this.contextTab = tabId
-      this.$store.state.Videos.menuCard = false
-      this.$store.state.Performers.menuCard = false
-      this.$store.state.Tags.menuCard = false
-      this.$store.state.Websites.menuCard = false
-      this.$store.state.menuTabs = false
-      this.$store.state.x = e.clientX
-      this.$store.state.y = e.clientY
-      this.$nextTick(() => {
-        this.$store.state.menuTabs = true
-      })
-    },
   },
   watch: {
   },

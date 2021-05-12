@@ -356,9 +356,11 @@ export default {
       e.preventDefault()
       this.$store.state.menuTabs = false
       this.$store.state.Videos.menuCard = false
-      this.$store.state.x = e.clientX
-      this.$store.state.y = e.clientY
-      setTimeout(() => { this.$store.state.Videos.menuCard = true }, 100)
+      setTimeout(() => {
+        this.$store.state.x = e.clientX
+        this.$store.state.y = e.clientY
+        this.$store.state.Videos.menuCard = true
+      }, 300)
     },
     filterByTag(tag) {
       let filter = {
