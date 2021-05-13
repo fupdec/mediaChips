@@ -1539,12 +1539,12 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     transform: rotate(360deg);
   }
 }
-@keyframes glow {
-  0% {
-    box-shadow: 0 0 0 2px var(--v-secondary-base);
+@keyframes appearing {
+  from {
+    opacity: 0;
   }
-  100% {
-    box-shadow: 0 0 0 4px var(--v-secondary-base);
+  to {
+    opacity: 1;
   }
 }
 .cropper-block {

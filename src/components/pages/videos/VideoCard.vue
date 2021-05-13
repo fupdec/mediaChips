@@ -10,7 +10,7 @@
         :aspect-ratio="16/9" class="video-preview-container"
       >
         <div v-if="!reg && i>4" class="reg-block"> <div>App not registered</div> </div>
-        <v-img :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb" contain/>
+        <v-img :src="getImgUrl()" :aspect-ratio="16/9" class="thumb" contain/>
         <v-btn @click="playVideo" icon x-large outlined class="btn-play" :color="isVideoExist?'white':'red'">
           <v-icon size="40">mdi-play</v-icon> </v-btn>
 
@@ -46,6 +46,13 @@
         <div class="preview"
           :style="`animation-delay: ${delayVideoPreview}.7s`">
           <video ref="video" autoplay muted loop />
+        </div>
+
+        <div v-if="isVideoHovered && videoPreviewHover=='timeline'" class="timeline">
+          <img :src="getTimelineImgUrl(timeline[hoveredSection])">
+          <div class="sections">
+            <div v-for="(item, i) in timeline" :key="i" @mouseover="hoveredSection=i" class="section"/>
+          </div>
         </div>
       </v-responsive>
       <v-card-text class="px-2 py-1 video-card-title" :class="{hidden: isFileNameHidden}">
@@ -182,6 +189,8 @@ export default {
     isVideoHovered: false,
     timeouts: {},
     cardKey: '',
+    hoveredSection: 0,
+    timeline: [10, 20, 30, 40, 50, 60, 70, 80, 90],
   }),
   computed: {
     updateCardIds() { return this.$store.state.Videos.updateCardIds},
@@ -212,8 +221,8 @@ export default {
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     bookmark() { return this.$store.getters.bookmarks.get('videos').find({itemId:this.video.id}).value().text },
-    videoPreviewEnabled() { return this.$store.state.Settings.videoPreviewEnabled },
-    videoPreviewGridEnabled() { return this.$store.state.Settings.videoPreviewGridEnabled },
+    videoPreviewStatic() { return this.$store.state.Settings.videoPreviewStatic },
+    videoPreviewHover() { return this.$store.state.Settings.videoPreviewHover },
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
     ratingInCard() { return this.$store.state.Settings.videoRatingInCard },
     isVideoExist() { return fs.existsSync(this.video.path) },
@@ -228,47 +237,50 @@ export default {
       this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
     },
     playPreview() {
-      if (this.isVideoHovered || !this.videoPreviewEnabled) return
+      if (this.isVideoHovered) return
       this.isVideoHovered = true
-      this.timeouts.z = setTimeout(()=>{
-        // play original video
-        if (!this.isVideoExist) return
-        this.$refs.video.src = this.video.path
-        this.setVideoProgress(0.2)
-        this.timeouts.a = setTimeout(this.setVideoProgress, 3000, 0.4)
-        this.timeouts.b = setTimeout(this.setVideoProgress, 6000, 0.6)
-        this.timeouts.c = setTimeout(this.setVideoProgress, 9000, 0.8)
-        this.timeouts.d = setTimeout(this.setVideoProgress, 12000, 0.2)
-      }, this.delayVideoPreview * 1000 + 500)
+      if (this.videoPreviewHover == 'video') {
+        this.timeouts.z = setTimeout(()=>{
+          // play original video
+          if (!this.isVideoExist) return
+          this.$refs.video.src = this.video.path
+          this.setVideoProgress(0.2)
+          this.timeouts.a = setTimeout(this.setVideoProgress, 3000, 0.4)
+          this.timeouts.b = setTimeout(this.setVideoProgress, 6000, 0.6)
+          this.timeouts.c = setTimeout(this.setVideoProgress, 9000, 0.8)
+          this.timeouts.d = setTimeout(this.setVideoProgress, 12000, 0.2)
+        }, this.delayVideoPreview * 1000 + 500)
+      }
     },
     stopPlayingPreview() {
-      if (!this.videoPreviewEnabled) return
-      this.isVideoHovered = false
-      for (const timeout in this.timeouts) {
-        clearTimeout(this.timeouts[timeout])
-      }
+      if (this.videoPreviewHover != 'none') this.isVideoHovered = false
+      if (this.videoPreviewHover != 'video') return
+      for (const timeout in this.timeouts) clearTimeout(this.timeouts[timeout])
       this.$refs.video.src = ''
     },
-    getImgUrl(videoId) {
-      let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
-      let gridPath = path.join(this.pathToUserData, `/media/previews/${videoId}.jpg`)
+    getImgUrl() {
+      let imgPath = path.join(this.pathToUserData, `/media/thumbs/${this.video.id}.jpg`)
+      let gridPath = path.join(this.pathToUserData, `/media/previews/${this.video.id}.jpg`)
       return 'file://' + this.checkImageExist(imgPath, gridPath)
     },
     checkImageExist(imgPath, gridPath) {
-      if (this.videoPreviewGridEnabled && fs.existsSync(gridPath)) {
-        return gridPath
-      } else if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
+      if (this.videoPreviewStatic=='grid' && fs.existsSync(gridPath)) return gridPath
+      else if (fs.existsSync(imgPath)) return imgPath
+      else {
         this.errorThumb = true
         return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
       }
+    },
+    getTimelineImgUrl(progress) {
+      let imgPath = path.join(this.pathToUserData, `/media/timeline/${this.video.id}_${progress}.jpg`)
+      if (fs.existsSync(imgPath)) return 'file://' + imgPath
+      else return 'file://' + path.join(this.pathToUserData, '/img/templates/thumb.jpg')
     },
     playVideo() {
       const pathToVideo = this.video.path
       if (!this.isVideoExist) {
         this.$store.state.Videos.dialogErrorPlayVideo = true
-        this.$store.state.Videos.errorPlayVideoPath = this.video.path
+        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
         return
       }
       if (this.$store.state.Settings.playerType === '0') {
@@ -280,20 +292,11 @@ export default {
       } else shell.openPath(pathToVideo)
     },
     changeRating(stars, videoID) {
-      this.$store.getters.videos.find({ id: videoID }).assign({
-        rating: stars,  
-        edit: Date.now(),  
-      }).write()
+      this.$store.getters.videos.find({id:videoID}).assign({rating:stars,edit:Date.now()}).write()
     },
-    getPerformerByName(performer) {
-      return this.$store.getters.performers.find({name:performer}).value()
-    },
-    performerLink(performer) {
-      return `/performer/:${this.getPerformerByName(performer).id}?tabId=default`
-    },
-    isFavoritePerformer(performer) {
-      return this.getPerformerByName(performer).favorite
-    },
+    getPerformerByName(performer) {return this.$store.getters.performers.find({name:performer}).value()},
+    performerLink(performer) { return `/performer/:${this.getPerformerByName(performer).id}?tabId=default`},
+    isFavoritePerformer(performer) { return this.getPerformerByName(performer).favorite },
     colorTag(tag) {
       if (this.isChipsColored) {
         return this.$store.getters.tags.find({name:tag}).value().color
@@ -315,14 +318,7 @@ export default {
       }, 300)
     },
     filterByTag(tag) {
-      let filter = {
-        param: 'tags',
-        cond: 'one of',
-        val: [tag],
-        type: 'array',
-        flag: null,
-        lock: false,
-      }
+      let filter = {param:'tags',cond:'one of',val:[tag],type:'array',flag:null,lock:false}
       this.$store.state.Settings.videoFilters.push(filter)
       this.$store.dispatch('filterVideos')
     },
@@ -528,6 +524,48 @@ export default {
     top: -6px;
     right: 25%;
     opacity: 0.4;
+  }
+  .timeline {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    background-color: #000;
+    position: absolute;
+    animation: appearing 0.3s both;
+    img {
+      height: 100%;
+    }
+    .sections {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      display: flex;
+    }
+    .section {
+      height: 100%;
+      width: 100%;
+      position: relative;
+      &:before {
+        content: '';
+        position: absolute;
+        height: 5px;
+        left: 1px;
+        right: 1px;
+        bottom: 1px;
+        border-radius: 1px;
+        background-color: white;
+        box-shadow: 0 0 3px #333;
+        opacity: 0.5;
+        transition: .3s all;
+      }
+      &:hover {
+        &:before {
+          opacity: 1;
+          height: 8px;
+        }
+      }
+    }
   }
 }
 .error-load-thumb {

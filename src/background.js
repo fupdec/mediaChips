@@ -148,7 +148,7 @@ app.on('ready', async () => {
   // create folder for user's files
   const srcUserDataFolder = path.join(__static, 'userfiles')
   const destUserDataFolder = path.join(app.getPath('userData'), 'userfiles')
-  if (!fs.existsSync(destUserDataFolder)){
+  if (!fs.existsSync(destUserDataFolder)) {
     fs.mkdirSync(destUserDataFolder)
     fs.mkdirSync(path.join(destUserDataFolder, 'backups'))
     fs.mkdirSync(path.join(destUserDataFolder, 'databases'))
@@ -162,13 +162,11 @@ app.on('ready', async () => {
     fs.mkdirSync(path.join(destUserDataFolder, 'media/thumbs'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/websites'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/markers'))
-    fs.copy(srcUserDataFolder, destUserDataFolder, function (err) {
-      if (err) console.error(err)
-    }) 
+    fs.copy(srcUserDataFolder, destUserDataFolder, (err) => {if (err) console.error(err)}) 
   }
-  if (!isDevelopment) {
-    createProtocol('app')
-  }
+  const timelineFolder = path.join(destUserDataFolder, 'media', 'timeline')
+  if (!fs.existsSync(timelineFolder)) fs.mkdirSync(timelineFolder)
+  if (!isDevelopment) createProtocol('app')
   win = createMainWindow()
   player = createPlayerWindow()
   createLoadingWindow()

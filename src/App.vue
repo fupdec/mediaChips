@@ -250,80 +250,38 @@ export default {
     stage: 0,
   }),
   computed: {
-    passwordProtection() {
-      return this.$store.state.Settings.passwordProtection
-    },
-    phrase() {
-      return this.$store.state.Settings.phrase
-    },
-    passwordHint() {
-      return this.$store.state.Settings.passwordHint
-    },
-    textFont() {
-      return 'text-font-' + this.$store.state.Settings.textFont.toLowerCase()
-    },
-    headerFont() {
-      return 'header-font-' + this.$store.state.Settings.headerFont.toLowerCase()
-    },
+    passwordProtection() {return this.$store.state.Settings.passwordProtection},
+    phrase() {return this.$store.state.Settings.phrase},
+    passwordHint() {return this.$store.state.Settings.passwordHint},
+    textFont() {return 'text-font-' + this.$store.state.Settings.textFont.toLowerCase()},
+    headerFont() {return 'header-font-' + this.$store.state.Settings.headerFont.toLowerCase()},
     darkMode: {
-      get() {
-        return this.$store.state.Settings.darkMode
-      },
+      get() {return this.$store.state.Settings.darkMode},
       set(value) {
         this.$vuetify.theme.dark = value
         this.$store.dispatch('updateSettingsState', {key:'darkMode', value})
       },
     },
-    navigationSide() {
-      return this.$store.state.Settings.navigationSide
-    },
-    hoveredImageId() {
-      return this.$store.state.hoveredImageId
-    },
+    navigationSide() {return this.$store.state.Settings.navigationSide},
+    hoveredImageId() {return this.$store.state.hoveredImageId},
     getHoveredImage() {
       let imgType = this.$store.state.hoveredImageType
-      if (imgType === 'performer') {
-        return this.getImgPerformersUrl(this.hoveredImageId)
-      }
-      if (imgType === 'tag') {
-        return this.getImgTagsUrl(this.hoveredImageId)
-      }
-      if (imgType === 'website') {
-        return this.getImgWebsiteUrl(this.hoveredImageId)
-      }
+      if (imgType === 'performer') {return this.getImgPerformersUrl(this.hoveredImageId)}
+      if (imgType === 'tag') {return this.getImgTagsUrl(this.hoveredImageId)}
+      if (imgType === 'website') {return this.getImgWebsiteUrl(this.hoveredImageId)}
     },
-    logoPath() {
-      return path.join('file://', __static, '/icons/icon.png')
-    },
-    updateIntervalDataFromVideos() {
-      return this.$store.state.Settings.updateIntervalDataFromVideos
-    },
-    autoUpdateDataFromVideos() {
-      return this.$store.state.Settings.autoUpdateDataFromVideos
-    },
-    folders() {
-      return _.cloneDeep(this.$store.state.Settings.folders)
-    },
-    foldersData() {
-      return this.$store.state.foldersData
-    },
-    watchFolders() {
-      return this.$store.state.Settings.watchFolders
-    },
-    updateFoldersData() {
-      return this.$store.state.updateFoldersData
-    },
-    isLogVisible() {
-      return this.$store.state.isLogVisible
-    },
+    logoPath() {return path.join('file://', __static, '/icons/icon.png')},
+    updateIntervalDataFromVideos() {return this.$store.state.Settings.updateIntervalDataFromVideos},
+    autoUpdateDataFromVideos() {return this.$store.state.Settings.autoUpdateDataFromVideos},
+    folders() {return _.cloneDeep(this.$store.state.Settings.folders)},
+    foldersData() {return this.$store.state.foldersData},
+    watchFolders() {return this.$store.state.Settings.watchFolders},
+    updateFoldersData() {return this.$store.state.updateFoldersData},
+    isLogVisible() {return this.$store.state.isLogVisible},
   },
   methods: {
-    scrollToTop() {
-      this.$refs.logs.scrollTo({ y: '0%' }, 300)
-    },
-    scrollToBottom() {
-      this.$refs.logs.scrollTo({ y: '100%' }, 300)
-    },
+    scrollToTop() {this.$refs.logs.scrollTo({ y: '0%' }, 300)},
+    scrollToBottom() {this.$refs.logs.scrollTo({ y: '100%' }, 300)},
     msToTime(ms) {
       let date = new Date(ms)
       return date.toLocaleDateString() + ', ' + date.toLocaleTimeString()

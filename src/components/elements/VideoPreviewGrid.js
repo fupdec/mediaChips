@@ -2,9 +2,7 @@ const os = require('os')
 const path = require('path')
 const ffmpeg = require('fluent-ffmpeg')
 const pathToFfmpeg = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
-const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
 ffmpeg.setFfmpegPath(pathToFfmpeg)
-ffmpeg.setFfprobePath(pathToFfprobe)
 
 class VideoPreviewGrid {
   constructor(opts) {
@@ -14,12 +12,14 @@ class VideoPreviewGrid {
     this.cols = opts.cols;
     this.rows = opts.rows;
     this.width = opts.width;
+    this.duration = opts.duration;
     this.tileCount = this.rows*this.cols;
     if (typeof this.input === 'undefined') throw new Error('input is required in options. got undefined.')
     if (typeof this.output === 'undefined') throw new Error('output is required in options. got undefined.')
     if (typeof this.cols === 'undefined') throw new Error('cols is required in options. got undefined.')
     if (typeof this.rows === 'undefined') throw new Error('rows is required in options. got undefined.')
     if (typeof this.width === 'undefined') throw new Error('width is required in options. got undefined.')
+    if (typeof this.duration === 'undefined') throw new Error('duration is required in options. got undefined.')
   }
 
   makeLayout (i) {
@@ -84,23 +84,9 @@ class VideoPreviewGrid {
     })
   }
 
-  async ffprobeP (input) {
-    return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(input, (err, data) => {
-        if (err) reject(err);
-        else resolve(data);
-      });
-    });
-  }
-
   async generate () {
-    // get the length of the video
-    const info = await this.ffprobeP(this.input);
-    const { duration } = info.streams[0];
-    if (typeof duration !== 'number') return false
-
-    // use ffmpeg to get equidistant snapshots
-    const durSlice = parseInt(duration/this.tileCount);
+    if (typeof this.duration !== 'number') return false
+    const durSlice = parseInt(this.duration/this.tileCount);
 
     let framePromises = [];
     for (var i=0; i<this.tileCount; i++) {

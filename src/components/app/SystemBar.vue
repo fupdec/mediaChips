@@ -82,6 +82,28 @@
             <template v-slot:activator="{ on, attrs }">
               <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
                 <v-list-item-title> 
+                  <v-icon left size="18">mdi-magnify</v-icon> Zoom
+                </v-list-item-title>
+                <v-icon size="22">mdi-menu-right</v-icon>
+              </v-list-item>
+            </template>
+            
+            <v-list dense class="context-menu">
+              <v-list-item class="pr-1" link>
+                <v-slider v-model="zoom" min="0.5" step="0.1" max="2" hide-details />
+              </v-list-item>
+              <v-list-item @click="zoom=1" class="pr-5" link>
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+          <v-divider class="ma-1"></v-divider>
+          <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+            <template v-slot:activator="{ on, attrs }">
+              <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
+                <v-list-item-title> 
                   <v-icon left size="18">mdi-arrow-expand-horizontal</v-icon> Gap in Card Grid
                 </v-list-item-title>
                 <v-icon size="22">mdi-menu-right</v-icon>
@@ -121,38 +143,11 @@
               </v-list-item>
             </v-list>
           </v-menu>
-          <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
-            <template v-slot:activator="{ on, attrs }">
-              <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
-                <v-list-item-title> 
-                  <v-icon left size="18">mdi-magnify</v-icon> Zoom
-                </v-list-item-title>
-                <v-icon size="22">mdi-menu-right</v-icon>
-              </v-list-item>
-            </template>
-            
-            <v-list dense class="context-menu">
-              <v-list-item class="pr-1" link>
-                <v-slider v-model="zoom" min="0.5" step="0.1" max="2" hide-details />
-              </v-list-item>
-              <v-list-item @click="zoom=1" class="pr-5" link>
-                <v-list-item-title>
-                  <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
           <v-list-item class="pr-1" link @click="ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
             <v-list-item-title>
               <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Description
             </v-list-item-title>
             <v-icon size="20" class="ml-6" :color="ratingAndFavoriteInCard?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-          </v-list-item>
-          <v-list-item class="pr-1" link @click="videoPreview=!videoPreview">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-video-box</v-icon> Video Preview on Hover
-            </v-list-item-title>
-            <v-icon size="22" class="ml-6" :color="videoPreview?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
           <v-list-item class="pr-2" link @click="toggleDarkMode">
@@ -290,44 +285,20 @@ export default {
       }
     },
     ratingAndFavoriteInCard: {
-      get() {
-        return this.$store.state.Settings.ratingAndFavoriteInCard
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})
-      },
-    },
-    videoPreview: {
-      get() {
-        return this.$store.state.Settings.videoPreviewEnabled
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoPreviewEnabled', value})
-      },
+      get() {return this.$store.state.Settings.ratingAndFavoriteInCard},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})},
     },
     playerType: {
-      get() {
-        return this.$store.state.Settings.playerType
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'playerType', value})
-      },
+      get() {return this.$store.state.Settings.playerType},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'playerType', value})},
     },
     navigationSide: {
-      get() {
-        return this.$store.state.Settings.navigationSide
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})
-      },
+      get() {return this.$store.state.Settings.navigationSide},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})},
     },
     gapSize: {
-      get() {
-        return this.$store.state.Settings.gapSize
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'gapSize', value})
-      },
+      get() {return this.$store.state.Settings.gapSize},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'gapSize', value})},
     },
     zoom: {
       get() {
@@ -335,24 +306,14 @@ export default {
         webFrame.setZoomFactor(val)
         return val
       },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'zoom', value})
-      },
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'zoom', value})},
     },
-    logoPath() {
-      return path.join('file://', __static, '/icons/icon.png')
-    },
+    logoPath() {return path.join('file://', __static, '/icons/icon.png')},
   },
   methods: {
-    lock() {
-      this.$emit('lock')
-    },
-    restart() {
-      ipcRenderer.send('reload')
-    },
-    minimize() {
-      win.minimize()
-    },
+    lock() {this.$emit('lock')},
+    restart() {ipcRenderer.send('reload')},
+    minimize() {win.minimize()},
     maximize() {
       this.maximized = !this.maximized
       win.maximize()
@@ -362,21 +323,15 @@ export default {
       win.unmaximize()
       // TODO: MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 unmaximize listeners added to [BrowserWindow]. Use emitter.setMaxListeners() to increase limit
     },
-    close() {
-      win.close()
-    },
+    close() {win.close()},
     toggleDarkMode() {
       let darkModeValue = !this.$store.state.Settings.darkMode
       this.$vuetify.theme.dark = darkModeValue
       this.$store.dispatch('updateSettingsState', {key:'darkMode', value:darkModeValue})
       ipcRenderer.send('toggleDarkMode', darkModeValue)
     },
-    back() {
-      this.$router.go(-1)
-    },
-    forward() {
-      this.$router.go(1)
-    },
+    back() {this.$router.go(-1)},
+    forward() {this.$router.go(1)},
   },
 }
 </script>

@@ -420,51 +420,68 @@
           
           <v-card outlined class="pb-4 px-4">
             <div class="headline text-h5 text-center py-4"> Video preview</div>
-
+            <div class="d-flex align-center">
+              <span class="mr-6">Static:</span>
+              <v-radio-group v-model="videoPreviewStatic" mandatory hide-details row class="mt-0 pt-0">
+                <v-tooltip top>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-radio v-bind="attrs" v-on="on" label="Thumb" value="thumb"/>
+                  </template>
+                  <div class="d-flex flex-column align-center">
+                    <v-icon dark>mdi-image</v-icon>
+                    <span>Default thumb</span>
+                  </div>
+                </v-tooltip>
+                <v-tooltip top>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-radio v-bind="attrs" v-on="on" label="Grid 3x3" value="grid"/>
+                  </template>
+                  <div class="d-flex flex-column align-center">
+                    <v-icon dark large class="mb-2">mdi-apps</v-icon>
+                    <span>Will be generated automatically when the video page is opened.</span>
+                    <span>The spinner in the status bar is displayed while the generation process is in progress.</span>
+                    <span>When all the grids are ready, the cards will update automatically.</span>
+                  </div>
+                </v-tooltip>
+              </v-radio-group>
+            </div>
+            <v-divider class="my-4"/>
             <v-row>
-              <v-col cols="12" sm="6" class="py-0">
+              <v-col cols="12" sm="7">
                 <div class="d-flex align-center">
-                  <div class="mr-6">
+                  <span class="mr-6">On hover:</span>
+                  <v-radio-group v-model="videoPreviewHover" mandatory hide-details row class="mt-0 pt-0">
+                    <v-radio label="None" value="none"></v-radio>
                     <v-tooltip top>
                       <template v-slot:activator="{ on, attrs }">
-                        <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                        <v-radio v-bind="attrs" v-on="on" label="Timeline" value="timeline"/>
                       </template>
-                      <span>Plays on hover</span>
+                      <div class="d-flex flex-column align-center">
+                        <v-icon dark>mdi-view-carousel</v-icon>
+                        <span>A frame from the video appears.</span>
+                        <span>The frame depends on the position of the cursor.</span>
+                        <span>Frames will be generated automatically when the video page is opened.</span>
+                        <span>The spinner in the status bar is displayed while the generation process is in progress.</span>
+                      </div>
                     </v-tooltip>
-                    Video preview enabled:
-                  </div>
-                  <v-switch v-model="videoPreview" inset class="d-inline">
-                    <template v-slot:label>
-                      <span v-if="videoPreview">Yes</span>
-                      <span v-else>No</span>
-                    </template>
-                  </v-switch>
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-radio v-bind="attrs" v-on="on" label="Video" value="video"/>
+                      </template>
+                      <div class="d-flex flex-column align-center">
+                        <v-icon dark>mdi-video</v-icon>
+                        <span>Sections from the video are played</span>
+                      </div>
+                    </v-tooltip>
+                  </v-radio-group>
                 </div>
               </v-col>
-              <v-col cols="12" sm="6" class="py-0">
-                <v-slider v-model="delayVideoPreview" :min="0" :max="5" :disabled="!videoPreview"
+              <v-col v-if="videoPreviewHover=='video'" cols="12" sm="5" class="py-0">
+                <v-slider v-model="delayVideoPreview" :min="0" :max="5"
                   hide-details :thumb-size="24" thumb-label />
                 <div class="caption text-center">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
               </v-col>
             </v-row>
-
-            <v-divider class="my-4"/>
-
-            <div class="d-flex align-center">
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                </template>
-                <span>Will be generated automatically when the video page is opened.</span>
-              </v-tooltip>
-              <span class="mr-6">Video preview grid 3x3:</span>
-              <v-switch v-model="videoPreviewGrid" inset class="d-inline">
-                <template v-slot:label>
-                  <span v-if="videoPreviewGrid">Yes</span>
-                  <span v-else>No</span>
-                </template>
-              </v-switch>
-            </div>
           </v-card>
         </v-card>
       </v-tab-item>
@@ -783,9 +800,7 @@ export default {
   }),
   computed: {
     updateIntervalDataFromVideos: {
-      get() {
-        return this.$store.state.Settings.updateIntervalDataFromVideos
-      },
+      get() {return this.$store.state.Settings.updateIntervalDataFromVideos},
       set(value) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
@@ -794,53 +809,19 @@ export default {
       },
     },
     watchFolders: {
-      get() {
-        return this.$store.state.Settings.watchFolders
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'watchFolders', value})
-      },
+      get() { return this.$store.state.Settings.watchFolders},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'watchFolders', value})},
     },
     autoUpdateDataFromVideos: {
-      get() {
-        return this.$store.state.Settings.autoUpdateDataFromVideos
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'autoUpdateDataFromVideos', value})
-      },
+      get() {return this.$store.state.Settings.autoUpdateDataFromVideos},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'autoUpdateDataFromVideos', value})},
     },
     updateDataFromVideosOnStart: {
-      get() {
-        return this.$store.state.Settings.updateDataFromVideosOnStart
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'updateDataFromVideosOnStart', value})
-      },
-    },
-    videoPreview: {
-      get() {
-        return this.$store.state.Settings.videoPreviewEnabled
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoPreviewEnabled', value})
-      },
-    },
-    videoPreviewGrid: {
-      get() {
-        return this.$store.state.Settings.videoPreviewGridEnabled
-      },
-      set(value) {
-        const values = {
-          key: 'videoPreviewGridEnabled',
-          value: value,
-        }
-        this.$store.dispatch('updateSettingsState', values)
-      },
+      get() {return this.$store.state.Settings.updateDataFromVideosOnStart},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'updateDataFromVideosOnStart', value})},
     },
     delayVideoPreview: {
-      get() {
-        return this.$store.state.Settings.delayVideoPreview
-      },
+      get() {return this.$store.state.Settings.delayVideoPreview},
       set(value) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
@@ -849,41 +830,23 @@ export default {
       },
     },
     numberOfPagesLimit: {
-      get() {
-        return this.$store.state.Settings.numberOfPagesLimit
-      },
-      set(number) {
-        this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value:number})
-      }
+      get() {return this.$store.state.Settings.numberOfPagesLimit},
+      set(number) {this.$store.dispatch('updateSettingsState', {key:'numberOfPagesLimit', value:number})}
     },
     navigationSide: {
-      get() {
-        return this.$store.state.Settings.navigationSide
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})
-      },
+      get() {return this.$store.state.Settings.navigationSide},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})},
     },
     playerType: {
-      get() {
-        return this.$store.state.Settings.playerType
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'playerType', value})
-      },
+      get() {return this.$store.state.Settings.playerType},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'playerType', value})},
     },
     ratingAndFavoriteInCard: {
-      get() {
-        return this.$store.state.Settings.ratingAndFavoriteInCard
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})
-      },
+      get() {return this.$store.state.Settings.ratingAndFavoriteInCard},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})},
     },
     darkMode: {
-      get() {
-        return this.$store.state.Settings.darkMode
-      },
+      get() {return this.$store.state.Settings.darkMode},
       set(value) {
         this.$vuetify.theme.dark = value
         this.$store.dispatch('updateSettingsState', {key:'darkMode', value})
@@ -891,33 +854,19 @@ export default {
       },
     },
     headerGradient: {
-      get() {
-        return this.$store.state.Settings.headerGradient
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'headerGradient', value})
-      },
+      get() {return this.$store.state.Settings.headerGradient},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'headerGradient', value})},
     },
     textFont: {
-      get() {
-        return this.$store.state.Settings.textFont
-      },
-      set(font) {
-        this.$store.dispatch('updateSettingsState', {key:'textFont', value: font})
-      },
+      get() {return this.$store.state.Settings.textFont},
+      set(font) {this.$store.dispatch('updateSettingsState', {key:'textFont', value: font})},
     },
     headerFont: {
-      get() {
-        return this.$store.state.Settings.headerFont
-      },
-      set(font) {
-        this.$store.dispatch('updateSettingsState', {key:'headerFont', value: font})
-      },
+      get() {return this.$store.state.Settings.headerFont},
+      set(font) {this.$store.dispatch('updateSettingsState', {key:'headerFont', value: font})},
     },
     meterHeight: {
-      get() {
-        return this.$store.state.Settings.meterHeight
-      },
+      get() {return this.$store.state.Settings.meterHeight},
       set(value) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
@@ -926,9 +875,7 @@ export default {
       },
     },
     meterMultiplier: {
-      get() {
-        return this.$store.state.Settings.meterMultiplier
-      },
+      get() {return this.$store.state.Settings.meterMultiplier},
       set(value) {
         if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
         window.LIT = setTimeout(() => {
@@ -937,50 +884,34 @@ export default {
       },
     },
     pathToSystemPlayer: {
-      get() {
-        return this.$store.state.Settings.pathToSystemPlayer
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'pathToSystemPlayer', value})
-      },
+      get() {return this.$store.state.Settings.pathToSystemPlayer},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'pathToSystemPlayer', value})},
     },
     passwordProtection: {
-      get() {
-        return this.$store.state.Settings.passwordProtection
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'passwordProtection', value})
-      },
+      get() {return this.$store.state.Settings.passwordProtection},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'passwordProtection', value})},
     },
-    getMeterImg() {
-      return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)
-    },
+    getMeterImg() {return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)},
     folders: {
-      get() {
-        return this.$store.state.Settings.folders
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'folders', value})
-      },
+      get() {return this.$store.state.Settings.folders},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'folders', value})},
     },
-    logoPath() {
-      return path.join('file://', __static, '/icons/icon.png')
-    },
+    logoPath() {return path.join('file://', __static, '/icons/icon.png')},
     typingFiltersDefault: {
-      get() {
-        return this.$store.state.Settings.typingFiltersDefault
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'typingFiltersDefault', value})
-      },
+      get() {return this.$store.state.Settings.typingFiltersDefault},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'typingFiltersDefault', value})},
     },
     checkForUpdatesAtStartup: {
-      get() {
-        return this.$store.state.Settings.checkForUpdatesAtStartup
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'checkForUpdatesAtStartup', value})
-      },
+      get() {return this.$store.state.Settings.checkForUpdatesAtStartup},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'checkForUpdatesAtStartup', value})},
+    },
+    videoPreviewStatic: {
+      get() {return this.$store.state.Settings.videoPreviewStatic},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'videoPreviewStatic', value})},
+    },
+    videoPreviewHover: {
+      get() {return this.$store.state.Settings.videoPreviewHover},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'videoPreviewHover', value})},
     },
   },
   methods: {

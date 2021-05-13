@@ -262,9 +262,7 @@ const Videos = {
     },
     deleteVideos({state, rootState, commit, dispatch, getters}) {
       getters.getSelectedVideos.map(id => {
-        if (getters.tabsDb.find({id: id}).value()) {
-          dispatch('closeTab', id)
-        }
+        if (getters.tabsDb.find({id: id}).value()) dispatch('closeTab', id)
         const video = getters.videos.find({'id':id}).value()
         let fileName = path.basename(video.path)
         let videoName = path.parse(video.path).name
@@ -273,11 +271,8 @@ const Videos = {
           let filePath = getters.videos.find({ 'id': id }).value().path
           if (fs.existsSync(filePath)) {
             fs.unlink(filePath, (err) => {
-              if (err) {
-                commit('addLog',{type:'error',text:err})
-              } else {
-                commit('addLog',{type:'info',text:`File ${fileName} was deleted successfully.`})
-              }
+              if (err) commit('addLog',{type:'error',text:err})
+              else commit('addLog',{type:'info',text:`File ${fileName} was deleted successfully.`})
             })
           } else {
             commit('addLog',{
@@ -294,34 +289,34 @@ const Videos = {
         }).write()
         // remove marker from DB and image of marker
         let markers = getters.markers.filter({videoId: id}).value()
-        for (let m=0;m<markers.length; m++) {
+        for (let m = 0; m < markers.length; m++) {
           let imgPath = path.join(getters.getPathToUserData, `/media/markers/${markers[m].id}.jpg`)
           fs.unlink(imgPath, (err) => {
-            if (err) {
-              // console.log(`failed to delete image of marker "${markers[m].id}", "${markers[m].name}". ${err}`);
-            } else {
-              // console.log(`successfully deleted image of marker "${markers[m].id}", "${markers[m].name}"`);                                
-            }
+            // if (err) console.log(`failed to delete image of marker "${markers[m].id}", "${markers[m].name}". ${err}`)
+            // else console.log(`successfully deleted image of marker "${markers[m].id}", "${markers[m].name}"`)                             
           })
         }
+
         if (markers.length) getters.markers.remove({videoId: id}).write()
         // remove thumb, grid and preview of video
         let thumbPath = path.join(getters.getPathToUserData, `/media/thumbs/${id}.jpg`)
         fs.unlink(thumbPath, (err) => {
-          if (err) {
-            // console.log("failed to delete thumb:"+err)
-          } else {
-            // console.log('successfully deleted thumb')
-          }
+          // if (err) console.log("failed to delete thumb: "+err)
+          // else console.log('successfully deleted thumb')
         })
         let gridPath = path.join(getters.getPathToUserData, `/media/previews/${id}.jpg`)
         fs.unlink(gridPath, (err) => {
-          if (err) {
-            // console.log("failed to delete grid:"+err)
-          } else {
-            // console.log('successfully deleted grid')
-          }
+          // if (err) console.log("failed to delete grid: "+err)
+          // else console.log('successfully deleted grid')
         })
+        let frames =  [10, 20, 30, 40, 50, 60, 70, 80, 90]
+        for (let f = 0; f < frames.length; f++) {
+          let framePath = path.join(getters.getPathToUserData, `/media/timeline/${id}_${frames[f]}.jpg`)
+          fs.unlink(framePath, (err) => {
+            // if (err) console.log("failed to delete grid: "+err)
+            // else console.log('successfully deleted grid')
+          })
+        }
         commit('addLog', {type:'info',text:`📹 Video "${videoName}" has been removed from DB 🗑️`})
       })
       commit('updateSelectedVideos', [])
