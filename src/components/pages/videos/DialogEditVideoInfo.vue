@@ -354,24 +354,23 @@
               </div>
               <div class="gradient" :style="gradient"></div>
               <v-card-actions class="actions">
-                <v-btn @click="playVideo" large outlined :disabled="!videoExists">
-                  <v-icon left large>mdi-play</v-icon> play </v-btn>
-                <v-btn @click="toggleMuted" small outlined fab class="mr-4">
+                <v-btn @click="playVideo" small outlined fab :disabled="!videoExists" :color="darkMode?'#cacaca':'#8a8a8a'">
+                  <v-icon large>mdi-play</v-icon> </v-btn>
+                <v-btn @click="toggleMuted" small outlined fab class="mr-4" :color="darkMode?'#cacaca':'#8a8a8a'">
                   <v-icon v-if="muted">mdi-volume-off</v-icon>
                   <v-icon v-else>mdi-volume-high</v-icon>
                 </v-btn>
                 <v-rating v-model="rating" clearable hover half-increments size="30"
-                  :color="darkMode?'#fff':'#000'" :background-color="darkMode?'#fff':'#000'" 
+                  :color="darkMode?'#cacaca':'#8a8a8a'" :background-color="darkMode?'#cacaca':'#8a8a8a'" 
                   empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/>
-                <v-btn @click="favorite=!favorite" class="mx-2" :color="darkMode?'#fff':'#000'" icon large> 
+                <v-btn @click="favorite=!favorite" class="mx-2" :color="darkMode?'#cacaca':'#8a8a8a'" icon large> 
                   <v-icon size="25">mdi-heart{{favorite? '':'-outline'}}</v-icon>
                 </v-btn>
                 <v-spacer></v-spacer>
-                <v-btn @click="saveVideoInfo" large outlined>
-                  <v-icon left>mdi-content-save</v-icon> save
-                </v-btn>
+                <v-btn @click="saveVideoInfo" large outlined rounded :color="darkMode?'#cacaca':'#8a8a8a'" class="pr-3">
+                  <v-icon left>mdi-content-save</v-icon> save </v-btn>
               </v-card-actions>
-              <div class="headline video-title text-h4">{{fileName}}</div>
+              <div class="headline video-title text--secondary text-h4">{{fileName}}</div>
               <v-btn class="file-info-icon" fab x-small>
                 <v-icon>mdi-information-variant</v-icon>
               </v-btn>
