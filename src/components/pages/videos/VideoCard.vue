@@ -9,13 +9,10 @@
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
-        <div v-if="!reg && i>4" class="reg-block">
-          <div>App not registered</div>
-        </div>
+        <div v-if="!reg && i>4" class="reg-block"> <div>App not registered</div> </div>
         <v-img :src="getImgUrl(video.id)" :aspect-ratio="16/9" class="thumb" contain/>
-        <v-btn @click="playVideo" icon x-large outlined class="btn-play" color="white">
-          <v-icon size="40">mdi-play</v-icon>
-        </v-btn>
+        <v-btn @click="playVideo" icon x-large outlined class="btn-play" :color="isVideoExist?'white':'red'">
+          <v-icon size="40">mdi-play</v-icon> </v-btn>
 
         <div v-if="errorThumb" class="error-load-thumb">
           unable to find thumb for this video
@@ -187,58 +184,24 @@ export default {
     cardKey: '',
   }),
   computed: {
-    updateCardIds() {
-      return this.$store.state.Videos.updateCardIds
-    },
-    getVideoPath() {
-      return this.video.path
-    },
-    isChipsColored() {
-      return this.$store.state.Settings.videoChipsColored
-    },
-    isEditBtnHidden() {
-      return this.$store.state.Settings.videoEditBtnHidden 
-    },
-    isFileNameHidden() {
-      return this.$store.state.Settings.videoFileNameHidden 
-    },
-    isFileInfoHidden() {
-      return this.$store.state.Settings.videoFileInfoHidden 
-    },
-    isRatingHidden() {
-      return this.$store.state.Settings.videoRatingHidden 
-    },
-    isFavoriteHidden() {
-      return this.$store.state.Settings.videoFavoriteHidden
-    },
-    isQualityLabelHidden() {
-      return this.$store.state.Settings.videoQualityLabelHidden
-    },
-    isDurationHidden() {
-      return this.$store.state.Settings.videoDurationHidden
-    },
-    isPerformersHidden() {
-      return this.$store.state.Settings.videoPerformersHidden
-    },
-    isTagsHidden() {
-      return this.$store.state.Settings.videoTagsHidden
-    },
-    isWebsiteHidden() {
-      return this.$store.state.Settings.videoWebsiteHidden
-    },
-    videoPath() {
-      return path.parse(this.video.path).dir
-    },
-    fileName() {
-      return path.parse(this.video.path).name
-    },
-    fileExtension() {
-      return path.parse(this.video.path).ext.replace('.', '').toLowerCase()
-    },
+    updateCardIds() { return this.$store.state.Videos.updateCardIds},
+    getVideoPath() {return this.video.path},
+    isChipsColored() {return this.$store.state.Settings.videoChipsColored},
+    isEditBtnHidden() {return this.$store.state.Settings.videoEditBtnHidden },
+    isFileNameHidden() {return this.$store.state.Settings.videoFileNameHidden },
+    isFileInfoHidden() {return this.$store.state.Settings.videoFileInfoHidden },
+    isRatingHidden() {return this.$store.state.Settings.videoRatingHidden },
+    isFavoriteHidden() {return this.$store.state.Settings.videoFavoriteHidden},
+    isQualityLabelHidden() {return this.$store.state.Settings.videoQualityLabelHidden},
+    isDurationHidden() { return this.$store.state.Settings.videoDurationHidden },
+    isPerformersHidden() { return this.$store.state.Settings.videoPerformersHidden },
+    isTagsHidden() { return this.$store.state.Settings.videoTagsHidden },
+    isWebsiteHidden() { return this.$store.state.Settings.videoWebsiteHidden },
+    videoPath() { return path.parse(this.video.path).dir },
+    fileName() { return path.parse(this.video.path).name },
+    fileExtension() { return path.parse(this.video.path).ext.replace('.', '').toLowerCase() },
     isFavorite: {
-      get() {
-        return this.video.favorite
-      },
+      get() { return this.video.favorite },
       set(value) {
         this.video.favorite = value
         this.$store.getters.videos.find({id: this.video.id}).assign({
@@ -247,24 +210,13 @@ export default {
         }).write()
       },
     },
-    pathToUserData() {
-      return this.$store.getters.getPathToUserData
-    },
-    bookmark() {
-      return this.$store.getters.bookmarks.get('videos').find({itemId:this.video.id}).value().text
-    },
-    videoPreviewEnabled() {
-      return this.$store.state.Settings.videoPreviewEnabled
-    },
-    videoPreviewGridEnabled() {
-      return this.$store.state.Settings.videoPreviewGridEnabled
-    },
-    delayVideoPreview() {
-      return this.$store.state.Settings.delayVideoPreview
-    },
-    ratingInCard() {
-      return this.$store.state.Settings.videoRatingInCard
-    },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
+    bookmark() { return this.$store.getters.bookmarks.get('videos').find({itemId:this.video.id}).value().text },
+    videoPreviewEnabled() { return this.$store.state.Settings.videoPreviewEnabled },
+    videoPreviewGridEnabled() { return this.$store.state.Settings.videoPreviewGridEnabled },
+    delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
+    ratingInCard() { return this.$store.state.Settings.videoRatingInCard },
+    isVideoExist() { return fs.existsSync(this.video.path) },
   },
   methods: {
     stopSmoothScroll(event) {
@@ -280,7 +232,7 @@ export default {
       this.isVideoHovered = true
       this.timeouts.z = setTimeout(()=>{
         // play original video
-        if (!fs.existsSync(this.video.path)) return
+        if (!this.isVideoExist) return
         this.$refs.video.src = this.video.path
         this.setVideoProgress(0.2)
         this.timeouts.a = setTimeout(this.setVideoProgress, 3000, 0.4)
@@ -314,9 +266,9 @@ export default {
     },
     playVideo() {
       const pathToVideo = this.video.path
-      if (!fs.existsSync(pathToVideo)) {
+      if (!this.isVideoExist) {
         this.$store.state.Videos.dialogErrorPlayVideo = true
-        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
+        this.$store.state.Videos.errorPlayVideoPath = this.video.path
         return
       }
       if (this.$store.state.Settings.playerType === '0') {
