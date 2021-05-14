@@ -1,5 +1,6 @@
 const {app} = require('electron').remote
 const path = require("path")
+const rimraf = require("rimraf")
 const FileSync = require('lowdb/adapters/FileSync')
 const pathToDbMeta = path.join(app.getPath('userData'), 'userfiles/databases/meta.json')
 const adapterMeta = new FileSync(pathToDbMeta)
@@ -34,6 +35,7 @@ const Meta = {
     pageTotal: 1,
     filteredMeta: [],
     updateCardIds: [],
+    dialogEditMetaCard: false,
   }),
   mutations: {
     updateMetaCards(state, ids) {
@@ -63,6 +65,8 @@ const Meta = {
         getters.meta.filter(i => _.some(i.settings.metaInCard, {id})).each(i => {
           i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)}).write()
         // TODO remove from cards
+        const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
+        rimraf(metaFolder, function () { console.log("done") })
       }
       commit('addLog', {type:'info', color:'red', text:`Deleted ${type} meta "${name}"`})
     },

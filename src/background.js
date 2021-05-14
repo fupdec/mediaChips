@@ -166,6 +166,8 @@ app.on('ready', async () => {
   }
   const timelineFolder = path.join(destUserDataFolder, 'media', 'timeline')
   if (!fs.existsSync(timelineFolder)) fs.mkdirSync(timelineFolder)
+  const metaFolder = path.join(destUserDataFolder, 'media', 'meta')
+  if (!fs.existsSync(metaFolder)) fs.mkdirSync(metaFolder)
   if (!isDevelopment) createProtocol('app')
   win = createMainWindow()
   player = createPlayerWindow()

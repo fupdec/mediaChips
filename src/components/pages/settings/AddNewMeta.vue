@@ -216,6 +216,8 @@
 
 <script>
 const shortid = require('shortid')
+const fs = require("fs-extra")
+const path = require("path")
 
 import vuescroll from 'vuescroll'
 import icons from '@/assets/material-icons.json'
@@ -262,12 +264,9 @@ export default {
     metaSettingsIndex: 0,
   }),
   computed: {
-    metaList() {
-      return this.$store.getters.meta.value()
-    },
-    simpleMetaList() {
-      return this.$store.getters.simpleMeta.value()
-    },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
+    metaList() { return this.$store.getters.meta.value() },
+    simpleMetaList() { return this.$store.getters.simpleMeta.value() },
     hint() {
       if (this.typeOfSimpleMeta === 'string') return 'for description, notes'
       if (this.typeOfSimpleMeta === 'date') return 'e.g. release date, last viewed date'
@@ -367,7 +366,7 @@ export default {
       this.array = []
       this.itemName = ''
     },
-    // dialogs - meta with cards
+    // dialogs - complex meta (with cards)
     filterIcons(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const aliases = item.aliases
@@ -382,11 +381,15 @@ export default {
       this.$refs.formMeta.validate()
       if (!this.validMeta) return
 
+      let id = shortid.generate()
       this.$store.dispatch('addMeta', {
-        id: shortid.generate(), 
-        type: 'cards', 
+        id: id, 
+        type: 'complex', 
         settings: { name: this.metaName, icon: this.metaIcon, metaInCard: [] }
       })
+
+      const metaFolder = path.join(this.pathToUserData, 'media', 'meta', id)
+      if (!fs.existsSync(metaFolder)) fs.mkdirSync(metaFolder)
 
       this.dialogAddNewMeta = false
       this.metaName = ''
