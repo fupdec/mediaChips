@@ -391,33 +391,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-			this.$store.state.Videos.selection = new Selection({
-        boundaries: ['.videos-grid'],
-        selectables: ['.video-card'],
-      }).on('beforestart', ({store, event}) => {
-        const targetEl = event.target.closest('.video-card')
-        if (event.button == 2 && store.stored.includes(targetEl)) return false
-        return (event.button !== 1)
-      }).on('start', ({store, event}) => {
-        const targetEl = event.target.closest('.video-card')
-        if (event.button == 2 && store.stored.includes(targetEl)) return false
-        // Remove class if the user isn't pressing the shift or control or ⌘ keys
-        if (!event.ctrlKey && !event.metaKey) {
-          for (const el of store.stored) el.classList.remove('selected') // Unselect all elements
-          this.$store.state.Videos.selection.clearSelection() // Clear previous selection
-        }
-      }).on('move', ({store: {changed: {added, removed}}}) => {
-        // Add a custom class to the elements that where selected.
-        for (const el of added) el.classList.add('selected')
-        // Remove the class from elements that where removed
-        // since the last selection
-        for (const el of removed) el.classList.remove('selected')
-      }).on('stop', ({store, event}) => {
-        const targetEl = event.target.closest('.video-card')
-        if (event.button==0 && targetEl) this.$store.state.Videos.selection.select(targetEl)
-        this.$store.state.Videos.selection.keepSelection()
-        this.getSelectedVideos(store.stored)
-      })
+      this.initSelection()
     })
   },
   destroyed() {
@@ -466,6 +440,35 @@ export default {
     },
   },
   methods: {
+		initSelection() {
+			this.$store.state.Videos.selection = new Selection({
+        boundaries: ['.videos-grid'],
+        selectables: ['.video-card'],
+      }).on('beforestart', ({store, event}) => {
+        const targetEl = event.target.closest('.video-card')
+        if (event.button == 2 && store.stored.includes(targetEl)) return false
+        return (event.button !== 1)
+      }).on('start', ({store, event}) => {
+        const targetEl = event.target.closest('.video-card')
+        if (event.button == 2 && store.stored.includes(targetEl)) return false
+        // Remove class if the user isn't pressing the shift or control or ⌘ keys
+        if (!event.ctrlKey && !event.metaKey) {
+          for (const el of store.stored) el.classList.remove('selected') // Unselect all elements
+          this.$store.state.Videos.selection.clearSelection() // Clear previous selection
+        }
+      }).on('move', ({store: {changed: {added, removed}}}) => {
+        // Add a custom class to the elements that where selected.
+        for (const el of added) el.classList.add('selected')
+        // Remove the class from elements that where removed
+        // since the last selection
+        for (const el of removed) el.classList.remove('selected')
+      }).on('stop', ({store, event}) => {
+        const targetEl = event.target.closest('.video-card')
+        if (event.button==0 && targetEl) this.$store.state.Videos.selection.select(targetEl)
+        this.$store.state.Videos.selection.keepSelection()
+        this.getSelectedVideos(store.stored)
+      })
+    },
 		selectedVideos(list) {
       let ids = this.$store.getters.getSelectedVideos
       let vids = this.$store.getters.videos
