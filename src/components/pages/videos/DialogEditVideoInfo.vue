@@ -350,6 +350,7 @@
               <v-icon>mdi-close</v-icon></v-btn>
             <v-responsive :aspect-ratio="16/9">
               <div class="video-container">
+                <img :src="'file://' + getImg()">
                 <video ref="video" autoplay loop :poster="'file://' + getImg()" muted></video>
               </div>
               <div class="gradient" :style="gradient"></div>
@@ -398,6 +399,24 @@
               </v-card>
             </v-responsive>
             <v-row class="mx-2">
+              <v-col v-for="meta in simpleMetaList" :key="meta.id" cols="6" sm="4">
+                <v-text-field v-if="meta.settings.type==='string'" 
+                  @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.settings.name" clearable/>
+
+                <v-text-field v-if="meta.settings.type==='number'" :value="values[meta.id]"
+                  @input="setVal($event,meta.id)" :label="meta.settings.name" clearable type="number"/>
+
+                <v-autocomplete v-if="meta.settings.type==='array'" :items="meta.settings.array"
+                  @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.settings.name" multiple/>
+
+                <v-switch v-if="meta.settings.type==='boolean'" inset :label="meta.settings.name"
+                  @change="setVal($event,meta.id)" :value="values[meta.id]"/>
+                    
+                <v-text-field v-if="meta.settings.type==='date'" readonly
+                  :value="values[meta.id]" @focus="picker=true, pickerMeta=meta.id"
+                  :label="meta.settings.name" placeholder=" " hint='YYYY-MM-DD' persistent-hint
+                  clearable @click:clear="setVal('', meta.id)"/>
+              </v-col>
               <v-col cols="12" class="mt-6">
                 <v-card-actions>
                   <span class="mr-6">
@@ -671,6 +690,21 @@
       </div>
     </v-bottom-sheet>
 
+    <v-dialog v-if="picker" v-model="picker" width="300px">
+      <v-date-picker @input="setVal($event, pickerMeta)"
+        :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
+        :value="values[pickerMeta]" no-title color="primary" full-width/>
+      <v-btn @click="picker=false" color="success">Confirm date</v-btn>
+    </v-dialog>
+
+    <v-btn v-if="sheet" @click="close" fab class="close-btn-float">
+      <v-icon large>mdi-close</v-icon>
+    </v-btn>
+
+    <v-btn v-if="sheet" @click="saveVideoInfo" fab large class="save-btn">
+      <v-icon large>mdi-content-save</v-icon>
+    </v-btn>
+
     <v-dialog v-model="dialogAddNewTag" max-width="400">
       <v-card>
         <v-card-title class="px-4 py-1">
@@ -790,6 +824,9 @@ export default {
         setTimeout(() => {
           this.playPreview()
         }, 300)
+        for (let meta in this.simpleMetaList) {
+          this.values[this.simpleMetaList[meta].id] = this.video[this.simpleMetaList[meta].id]
+        }
       } else this.dialog = true
     })
   },
@@ -839,6 +876,10 @@ export default {
     //   performers: [],
     //   websites: [],
     // }, TODO highlight filtered letters
+    // meta
+    values: {},
+    picker: false,
+    pickerMeta: null,
   }),
   computed: {
     isSelectedSingleVideo() {
@@ -884,6 +925,12 @@ export default {
     },
     fileExtension() {
       return path.parse(this.video.path).ext.replace('.', '').toLowerCase()
+    },
+    metaList() {
+      return this.$store.getters.meta.value()
+    },
+    simpleMetaList() {
+      return this.$store.getters.simpleMeta.value()
     },
   },
   methods: {
@@ -1114,7 +1161,9 @@ export default {
           bookmark: newBookmark,
           path: newPath,
           edit: Date.now(),
-        }).write()
+        }).assign(this.values).write()
+
+        console.log(this.values)
         this.$store.commit('updateVideos', [videoId])
         this.$store.dispatch('filterVideos', true)
       })
@@ -1236,6 +1285,9 @@ export default {
       this.newWebsiteName = ''
       ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window
     },
+    setVal(value, meta) {
+      this.values[meta] = value
+    },
   },
   watch: {
     clearRating(newValue) {
@@ -1271,13 +1323,22 @@ export default {
     display: flex;
     overflow: hidden;
     position: absolute;
+    img {
+      width: 100%;
+      position: absolute;
+      z-index: 0;
+      opacity: 1;
+      filter: blur(10px);
+    }
     video {
       min-width: 100%;
       min-height: 100%;
       object-fit: contain;
+      z-index: 1;
     }
   }
   .video-title {
+    word-break: break-word;
     position: absolute;
     bottom: 80px;
     z-index: 3;
@@ -1321,6 +1382,7 @@ export default {
     left: 50px;
     top: 10px;
     padding: 10px;
+    z-index: 2;
   }
   &.v-bottom-sheet.v-dialog.v-bottom-sheet--inset {
     max-width: 55% !important;

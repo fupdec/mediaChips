@@ -138,6 +138,10 @@
           > {{ website }} </v-chip>
         </v-chip-group>
       </v-card-actions>
+
+      <div v-for="(meta, i) in simpleMetaList" :key="i" class="meta pa-1">
+        <span class="key">{{meta.settings.name}}:</span> <span class="value">{{video[meta.id]}}</span>
+      </div>
       
       <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
         mdi-bookmark
@@ -226,6 +230,8 @@ export default {
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
     ratingInCard() { return this.$store.state.Settings.videoRatingInCard },
     isVideoExist() { return fs.existsSync(this.video.path) },
+    metaList() { return this.$store.getters.meta.value() },
+    simpleMetaList() { return this.$store.getters.simpleMeta.value() },
   },
   methods: {
     stopSmoothScroll(event) {

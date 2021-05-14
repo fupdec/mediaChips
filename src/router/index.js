@@ -18,6 +18,8 @@ const Playlists = () => import('../views/PlaylistsPage.vue')
 const PlaylistsAppbar = () => import('../components/pages/playlists/PlaylistsAppbar.vue')
 const Settings = () => import('../views/SettingsPage.vue')
 const SettingsAppbar = () => import('../components/pages/settings/SettingsAppbar.vue')
+const Meta = () => import('../views/MetaPage.vue')
+const MetaAppbar = () => import('../components/pages/meta/MetaAppbar.vue')
 
 Vue.use(VueRouter)
 
@@ -96,6 +98,14 @@ const routes = [
     components: {
       default: Settings,
       appbar: SettingsAppbar,
+    }
+  },
+  {
+    path: '/meta',
+    name: 'Meta',
+    components: {
+      default: Meta,
+      appbar: MetaAppbar,
     }
   },
 ]

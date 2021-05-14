@@ -634,6 +634,15 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   pointer-events: none;
   border: 2px solid var(--v-secondary-base);
 }
+.meta {
+  font-size: 14px;
+  line-height: 1;
+}
+.meta-grid {
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 250px));
+}
 .videos-grid {
   display: grid;
   grid-gap: 10px;
@@ -1453,7 +1462,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    line-height: 1;
+    line-height: 20px;
     height: 20px;
   }
   .text {
