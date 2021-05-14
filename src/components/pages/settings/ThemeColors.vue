@@ -135,6 +135,12 @@
     </v-row>
 
     <HeaderGradient :themeDark="gradientThemeDark"/>
+
+    <v-divider class="my-4"></v-divider>
+    <div class="d-flex">
+      <span class="mr-6">Color scroll:</span>
+      <v-switch v-model="colorScroll" :label="colorScroll?'Yes':'No'" inset hide-details class="d-inline-flex mt-0 pt-0"/>
+    </div>
   </v-container>
 </template>
 
@@ -290,6 +296,10 @@ export default {
           this.$store.dispatch('updateSettingsState', {key:'appColorDarkHeader', value:color})
         }, 500)
       },
+    },
+    colorScroll: {
+      get() { return this.$store.state.Settings.colorScroll },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'colorScroll', value}) },
     },
   },
   methods: {

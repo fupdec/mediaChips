@@ -8,7 +8,7 @@ import vuescroll from 'vuescroll'
 Vue.use(vuescroll, {
   ops: {
     rail: {
-      size: '12px',
+      size: '14px',
       specifyBorderRadius: '0',
       gutterOfEnds: '0',
       gutterOfSide: '0',
@@ -17,7 +17,7 @@ Vue.use(vuescroll, {
       background: '#555',
       opacity: 0.6,
       minSize: 0.2,
-      size: '12px',
+      size: '14px',
     }
   }
 })

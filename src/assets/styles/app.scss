@@ -1618,6 +1618,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     display: none;
   }
 }
+.color-scroll {
+  .__bar-is-vertical {
+    background-color: var(--v-accent-base) !important;
+  }
+}
 // meta
 .meta-card {
   cursor: default;

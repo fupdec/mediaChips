@@ -132,6 +132,7 @@ dbs.defaults({
   zoom: 1,
   checkForUpdatesAtStartup: false,
   registration: '',
+  colorScroll: false,
 }).write()
 
 const Settings = {
@@ -266,6 +267,7 @@ const Settings = {
     zoom: dbs.get('zoom').value(),
     checkForUpdatesAtStartup: dbs.get('checkForUpdatesAtStartup').value(),
     registration: dbs.get('registration').value(),
+    colorScroll: dbs.get('colorScroll').value(),
   }),
   mutations: {
     updateBackups(state, value) {

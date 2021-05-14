@@ -6,7 +6,7 @@
 
     <SideBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
-    <v-main app v-if="!disableRunApp">
+    <v-main app v-if="!disableRunApp" :class="{'color-scroll': colorScroll}">
       <router-view :key="$route.name + ($route.params.id || '')" />
     </v-main>
 
@@ -251,6 +251,7 @@ export default {
   }),
   computed: {
     showSystemBar() {return process.platform === 'win32'},
+    colorScroll() {return this.$store.state.Settings.colorScroll},
     passwordProtection() {return this.$store.state.Settings.passwordProtection},
     phrase() {return this.$store.state.Settings.phrase},
     passwordHint() {return this.$store.state.Settings.passwordHint},
