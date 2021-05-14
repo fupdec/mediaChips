@@ -343,13 +343,11 @@ export default {
         this.$store.state.Videos.errorPlayVideoPath = video.path
         return
       }
-      if (this.$store.state.Settings.playerType === '0') {
-        let data = {
-          videos: this.recentVideos,
-          id: video.id,  
-        }
+      if (this.$store.state.Settings.isPlayVideoInSystemPlayer) shell.openPath(video.path) 
+      else {
+        let data = { videos: this.recentVideos, id: video.id }
         ipcRenderer.send('openPlayer', data)
-      } else shell.openPath(video.path)
+      }
     },
     getPerformerImg(id) {
       let imgAvaPath = this.getPerformerImgUrl(id + '_avatar.jpg')

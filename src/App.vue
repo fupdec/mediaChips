@@ -1,6 +1,6 @@
 <template>
   <v-app :class="[textFont, headerFont]">
-    <SystemBar :disableRunApp="disableRunApp" @lock="lock"/>
+    <SystemBar v-if="showSystemBar" :disableRunApp="disableRunApp" @lock="lock"/>
 
     <AppBar />
 
@@ -250,6 +250,7 @@ export default {
     stage: 0,
   }),
   computed: {
+    showSystemBar() {return process.platform === 'win32'},
     passwordProtection() {return this.$store.state.Settings.passwordProtection},
     phrase() {return this.$store.state.Settings.phrase},
     passwordHint() {return this.$store.state.Settings.passwordHint},

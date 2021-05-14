@@ -141,8 +141,7 @@
               </v-tooltip>
               <span class="mr-6">Update path manually in multiple videos:</span>
               <v-btn @click="dialogUpdatePath=true" class="px-5" rounded color="secondary">
-                <v-icon left>mdi-form-textbox</v-icon> Update path
-              </v-btn>
+                <v-icon left>mdi-form-textbox</v-icon> Update path in videos </v-btn>
             </div>
             <div class="d-flex align-center mt-6">
               <v-tooltip top>
@@ -150,23 +149,24 @@
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
                 </template>
                 <span>The built-in player does not support all videos, <br>
-                  BUT it has additional features: markers, playlists, information editing. 
+                  BUT it has additional features: markers, playlists and etc. 
                   <br> The list of features will be expanded in new releases!</span>
               </v-tooltip>
               <span class="mr-6">Play video in:</span>
-              <!-- TODO add checkbox instead radio buttons -->
-              <v-radio-group v-model="playerType" mandatory hide-details row class="mt-0 pt-0">
-                <v-radio label="Built-in player" value="0"></v-radio>
-                <v-radio label="System player" value="1"></v-radio>
-              </v-radio-group>
+              <v-switch v-model="isPlayVideoInSystemPlayer" inset class="d-inline mt-0 pt-0" hide-details
+                :label="isPlayVideoInSystemPlayer? 'System player':'App`s player'"/>
             </div>
             <div class="d-flex mt-6">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
                 </template>
-                <span>Item filters when typing.<br>
-                  Useful when you have a lot of items.</span>
+                <div class="d-flex flex-column type-hint">
+                  <span>Item filters when typing. Useful when you have a lot of items.</span>
+                  <span>How it works (the letters you type and the result): </span>
+                  <span>Exact: <b>favo</b> -> my <b>favo</b>rite video</span>
+                  <span>Inaccurate: <b>yrid</b> -> m<b>y</b> favo<b>ri</b>te vi<b>d</b>eo</span>
+                </div>
               </v-tooltip>
               <span class="mr-6">Item filters:</span>
               <v-switch v-model="typingFiltersDefault" inset class="d-inline mt-0 pt-0" hide-details>
@@ -268,45 +268,10 @@
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-card outlined class="px-4">
             <div class="headline text-h5 text-center py-4">Theme</div>
-            <v-row>
-              <v-col cols="12">
-                <div class="d-flex">
-                  <span class="mr-6">Dark mode:</span>
-                  <v-switch v-model="darkMode" inset hide-details class="d-inline-flex mt-0 pt-0">
-                    <template v-slot:label>
-                      <span v-if="darkMode">Yes</span>
-                      <span v-else>No</span>
-                    </template>
-                  </v-switch>
-                </div>
-              </v-col>
-              <v-col cols="12">
-                <div class="d-flex">
-                  <span class="mr-6">Use header gradient:</span>
-                  <v-switch v-model="headerGradient" inset hide-details class="d-inline-flex mt-0 pt-0">
-                    <template v-slot:label>
-                      <span v-if="headerGradient">Yes</span>
-                      <span v-else>No</span>
-                    </template>
-                  </v-switch>
-                </div>
-              </v-col>
-              <v-col cols="12" sm="6" v-if="headerGradient">
-                <div class="mb-2">Colors for header gradient (light theme):</div>
-                <v-btn @click="openDialogHeaderGradientLight" color="secondary">
-                  <v-icon left>mdi-palette</v-icon> Change
-                </v-btn>
-              </v-col>
-              <v-col cols="12" sm="6" v-if="headerGradient">
-                <div class="mb-2">Colors for header gradient (dark theme):</div>
-                <v-btn @click="openDialogHeaderGradientDark" color="secondary">
-                  <v-icon left>mdi-palette</v-icon> Change
-                </v-btn>
-              </v-col>
-            </v-row>
-
-            <HeaderGradient :themeDark="gradientThemeDark"/>
-
+            <div class="d-flex">
+              <span class="mr-6">Dark mode:</span>
+              <v-switch v-model="darkMode" :label="darkMode?'Enabled':'Disabled'" inset hide-details class="d-inline-flex mt-0 pt-0"/>
+            </div>
             <ThemeColors />
           </v-card>
 
@@ -351,14 +316,11 @@
                 <v-radio label="None" value="0"></v-radio>
               </v-radio-group>
             </div>
-            <div class="mt-8 d-flex">
-              <span class="mr-6">Rating and Favorite in Card Description:</span>
-              <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex">
-                <template v-slot:label>
-                  <span v-if="ratingAndFavoriteInCard">Yes</span>
-                  <span v-else>No</span>
-                </template>
-              </v-switch>
+            <div class="pt-7 d-flex">
+              <span class="mr-6">Position of icons <v-icon color="yellow darken-2">mdi-star</v-icon> 
+                rating and <v-icon color="pink">mdi-heart</v-icon> favorite:</span>
+              <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex"
+                :label="ratingAndFavoriteInCard?'Card description':'Card image'"/>
             </div>
             <div class="pt-6">
               <span class="mr-6">Limit of pages in pagination:</span>
@@ -371,35 +333,24 @@
                 <v-btn outlined :value="15">15</v-btn>
               </v-btn-toggle>
             </div>
+            <div class="pt-6">
+              <span class="mr-6">Gap in Card Grid:</span>
+              <v-btn-toggle v-model="gapSize" dense mandatory color="secondary">
+                <v-btn outlined value="xs">xs</v-btn>
+                <v-btn outlined value="s">s</v-btn>
+                <v-btn outlined value="m">m</v-btn>
+                <v-btn outlined value="l">l</v-btn>
+                <v-btn outlined value="xl">xl</v-btn>
+              </v-btn-toggle>
+            </div>
+            <div class="mt-5 d-flex align-center">
+              <span class="mr-6">Zoom: {{Math.floor(zoom*100)}}%</span>
+              <v-slider v-model="zoom" min="0.5" step="0.1" max="2" hide-details/>
+              <v-btn @click="zoom=1" color="secondary" rounded class="ml-10">
+                <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom </v-btn>
+            </div>
           </v-card>
-          <v-card-actions class="my-10">
-            <v-spacer></v-spacer>
-            <v-btn @click="dialogResetToDefaultSettings=true" rounded dark color="red" large class="pr-3">
-              <v-icon left>mdi-restore</v-icon> Reset appearance to default</v-btn>
-            <v-spacer></v-spacer>
-          </v-card-actions>
         </v-card>
-        <v-dialog v-model="dialogResetToDefaultSettings" width="600">
-          <v-card>
-            <v-card-title class="headline">
-              Reset appearance to default settings
-              <v-spacer></v-spacer>
-              <v-icon color="red">mdi-alert</v-icon>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text class="pt-6 text-center">
-              This will reset all visuals: colors, fonts, card styles and etc. <br>
-              <b>Are you sure?</b>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn @click="dialogResetToDefaultSettings=false" class="ma-4">No</v-btn>
-              <v-spacer></v-spacer>
-              <v-btn @click="resetToDefaultSettings" class="ma-4" color="red" dark>
-                <v-icon left>mdi-restore</v-icon> Yes
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
       </v-tab-item>
       <v-tab-item value="videos-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
@@ -734,9 +685,9 @@ const { dialog } = require('electron').remote
 const {app} = require('electron').remote
 const axios = require("axios")
 const cheerio = require("cheerio")
+const { webFrame } = require('electron')
 
 import AddNewMeta from '@/components/pages/settings/AddNewMeta.vue'
-import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
@@ -750,7 +701,6 @@ export default {
   name: 'SettingsPage',
   components: {
     AddNewMeta,
-    HeaderGradient,
     ThemeColors,
     ManageBackups,
     ClearDatabases,
@@ -801,8 +751,6 @@ export default {
     foundedPath: '',
     pathForUpdate: '',
     videosWithSamePath: [],
-    dialogResetToDefaultSettings: false,
-    gradientThemeDark: null,
     isCheckingUpdate: false,
     updateApp: false,
   }),
@@ -845,9 +793,13 @@ export default {
       get() {return this.$store.state.Settings.navigationSide},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'navigationSide', value})},
     },
-    playerType: {
-      get() {return this.$store.state.Settings.playerType},
-      set(value) {this.$store.dispatch('updateSettingsState', {key:'playerType', value})},
+    gapSize: {
+      get() {return this.$store.state.Settings.gapSize},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'gapSize', value})},
+    },
+    isPlayVideoInSystemPlayer: {
+      get() {return this.$store.state.Settings.isPlayVideoInSystemPlayer},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'isPlayVideoInSystemPlayer', value})},
     },
     ratingAndFavoriteInCard: {
       get() {return this.$store.state.Settings.ratingAndFavoriteInCard},
@@ -860,10 +812,6 @@ export default {
         this.$store.dispatch('updateSettingsState', {key:'darkMode', value})
         ipcRenderer.send('toggleDarkMode', value)
       },
-    },
-    headerGradient: {
-      get() {return this.$store.state.Settings.headerGradient},
-      set(value) {this.$store.dispatch('updateSettingsState', {key:'headerGradient', value})},
     },
     textFont: {
       get() {return this.$store.state.Settings.textFont},
@@ -921,6 +869,14 @@ export default {
       get() {return this.$store.state.Settings.videoPreviewHover},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'videoPreviewHover', value})},
     },
+    zoom: {
+      get() {
+        let val = this.$store.state.Settings.zoom
+        webFrame.setZoomFactor(val)
+        return val
+      },
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'zoom', value})},
+    },
   },
   methods: {
     updateDataFromVideos() {
@@ -931,14 +887,6 @@ export default {
         this.$store.dispatch('updateDataFromVideos')
         this.updatingNumberOfVideos = false
       }, 500)
-    },
-    openDialogHeaderGradientLight() {
-      this.gradientThemeDark = false
-      this.$store.state.Settings.dialogHeaderGradient = true
-    },
-    openDialogHeaderGradientDark() {
-      this.gradientThemeDark = true
-      this.$store.state.Settings.dialogHeaderGradient = true
     },
     openLink(link) {
       shell.openExternal(link)
@@ -970,10 +918,6 @@ export default {
     },
     testPathToSystemPlayer () {
       spawn(`${this.pathToSystemPlayer}`)
-    },
-    resetToDefaultSettings() {
-      this.$store.dispatch('resetSettingsToDefault')
-      this.dialogResetToDefaultSettings = false
     },
     savePass() {
       this.$store.dispatch('updateSettingsState', {key:'phrase', value:this.password})
@@ -1119,5 +1063,10 @@ export default {
 .link {
   margin-right: 15px;
   cursor: pointer;
+}
+.type-hint {
+  b {
+    text-decoration: underline;
+  }
 }
 </style>

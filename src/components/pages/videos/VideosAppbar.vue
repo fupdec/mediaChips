@@ -73,13 +73,11 @@ export default {
         this.$store.state.Videos.errorPlayVideoPath = pathToVideo
         return
       }
-      if (this.$store.state.Settings.playerType === '0') {
-        let data = {
-          videos: [video],
-          id: video.id,  
-        }
+      if (this.$store.state.Settings.isPlayVideoInSystemPlayer) shell.openPath(pathToVideo)
+      else {
+        let data = { videos: [video], id: video.id }
         ipcRenderer.send('openPlayer', data)
-      } else shell.openPath(pathToVideo)
+      }  
     },
   },
   watch: {

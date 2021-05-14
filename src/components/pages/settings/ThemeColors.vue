@@ -1,9 +1,58 @@
 <template> 
-  <v-container class="px-0">
+  <v-container class="px-0 pt-0">
+    <v-divider class="my-4"></v-divider>
+    <v-row>
+      <v-col cols="12">
+        <div class="d-flex">
+          <span class="mr-6">Use header gradient:</span>
+          <v-switch v-model="headerGradient" inset hide-details class="d-inline-flex mt-0 pt-0">
+            <template v-slot:label>
+              <span v-if="headerGradient">Yes</span>
+              <span v-else>No</span>
+            </template>
+          </v-switch>
+        </div>
+      </v-col>
+      <v-col cols="12" sm="6" v-if="headerGradient">
+        <div class="mb-2">Colors for header gradient (light theme):</div>
+        <v-btn @click="openDialogHeaderGradientLight" light rounded depressed :style="{background: this.$store.state.Settings.headerGradientLight}">
+          <v-icon left>mdi-palette</v-icon> Change header color </v-btn> 
+      </v-col>
+
+      <!-- TODO create one dialog for all palletes -->
+      
+      <v-col cols="12" sm="6" v-else>
+        <div class="mb-2">Color for header (light theme):</div>
+        <v-btn @click.stop="dialogAppColorLightHeader = true" light rounded depressed :color="appColorLightHeader"> 
+          <v-icon left>mdi-palette</v-icon> Change header color 
+        </v-btn>
+        <v-dialog v-model="dialogAppColorLightHeader" width="300">
+          <v-color-picker v-model="appColorLightHeader"/>
+        </v-dialog>
+      </v-col>
+
+      <v-col cols="12" sm="6" v-if="headerGradient">
+        <div class="mb-2">Colors for header gradient (dark theme):</div>
+        <v-btn @click="openDialogHeaderGradientDark" dark rounded depressed :style="{background: this.$store.state.Settings.headerGradientDark}">
+          <v-icon left>mdi-palette</v-icon> Change header color 
+        </v-btn>
+      </v-col>
+
+      <v-col cols="12" sm="6" v-else>
+        <div class="mb-2">Color for header (dark theme):</div>
+        <v-btn @click.stop="dialogAppColorDarkHeader = true" dark rounded depressed :color="appColorDarkHeader"> 
+          <v-icon left>mdi-palette</v-icon> Change header color 
+        </v-btn>
+        <v-dialog v-model="dialogAppColorDarkHeader" width="300">
+          <v-color-picker v-model="appColorDarkHeader"/>
+        </v-dialog>
+      </v-col>
+    </v-row>
+    <v-divider class="my-4"></v-divider>
     <v-row>
       <v-col cols="12" sm="6">
         <div class="subtitle">Light theme colors:</div>
-        <v-btn light
+        <v-btn light rounded
           class="ma-2" depressed :color="appColorLightPrimary"
           @click.stop="dialogAppColorLightPrimary = true"
         >Primary</v-btn>
@@ -16,7 +65,7 @@
           ></v-color-picker>
         </v-dialog>
 
-        <v-btn light
+        <v-btn light rounded
           class="ma-2" depressed :color="appColorLightSecondary"
           @click.stop="dialogAppColorLightSecondary = true"
         >Secondary</v-btn>
@@ -29,7 +78,7 @@
           ></v-color-picker>
         </v-dialog>
 
-        <v-btn light
+        <v-btn light rounded
           class="ma-2" depressed :color="appColorLightAccent"
           @click.stop="dialogAppColorLightAccent = true"
         >Accent</v-btn>
@@ -41,23 +90,10 @@
             v-model="appColorLightAccent"
           ></v-color-picker>
         </v-dialog>
-
-        <v-btn light
-          class="ma-2" depressed :color="appColorLightHeader"
-          @click.stop="dialogAppColorLightHeader = true"
-        >Header</v-btn>
-        <v-dialog
-          v-model="dialogAppColorLightHeader"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorLightHeader"
-          ></v-color-picker>
-        </v-dialog>
       </v-col>
       <v-col cols="12" sm="6">
         <div class="subtitle">Dark theme colors:</div>
-        <v-btn dark
+        <v-btn dark rounded
           class="ma-2" depressed :color="appColorDarkPrimary"
           @click.stop="dialogAppColorDarkPrimary = true"
         >Primary</v-btn>
@@ -70,7 +106,7 @@
           ></v-color-picker>
         </v-dialog>
 
-        <v-btn dark
+        <v-btn dark rounded
           class="ma-2" depressed :color="appColorDarkSecondary"
           @click.stop="dialogAppColorDarkSecondary = true"
         >Secondary</v-btn>
@@ -83,7 +119,7 @@
           ></v-color-picker>
         </v-dialog>
 
-        <v-btn dark
+        <v-btn dark rounded
           class="ma-2" depressed :color="appColorDarkAccent"
           @click.stop="dialogAppColorDarkAccent = true"
         >Accent</v-btn>
@@ -95,30 +131,21 @@
             v-model="appColorDarkAccent"
           ></v-color-picker>
         </v-dialog>
-
-        <v-btn dark
-          class="ma-2" depressed :color="appColorDarkHeader"
-          @click.stop="dialogAppColorDarkHeader = true"
-        >Header</v-btn>
-        <v-dialog
-          v-model="dialogAppColorDarkHeader"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorDarkHeader"
-          ></v-color-picker>
-        </v-dialog>
       </v-col>
     </v-row>
+
+    <HeaderGradient :themeDark="gradientThemeDark"/>
   </v-container>
 </template>
 
 
 <script>
+import HeaderGradient from '@/components/pages/settings/HeaderGradient.vue'
 
 export default {
   name: 'ThemeColors',
   components: {
+    HeaderGradient,
 	},
   mounted() {
     this.$nextTick(function () {
@@ -133,8 +160,13 @@ export default {
     dialogAppColorDarkSecondary: false,
     dialogAppColorDarkAccent: false,
     dialogAppColorDarkHeader: false,
+    gradientThemeDark: null,
   }),
   computed: {
+    headerGradient: {
+      get() {return this.$store.state.Settings.headerGradient},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'headerGradient', value})},
+    },
     appColorLightPrimary: {
       get() {
         return this.$store.state.Settings.appColorLightPrimary
@@ -258,6 +290,16 @@ export default {
           this.$store.dispatch('updateSettingsState', {key:'appColorDarkHeader', value:color})
         }, 500)
       },
+    },
+  },
+  methods: {
+    openDialogHeaderGradientLight() {
+      this.gradientThemeDark = false
+      this.$store.state.Settings.dialogHeaderGradient = true
+    },
+    openDialogHeaderGradientDark() {
+      this.gradientThemeDark = true
+      this.$store.state.Settings.dialogHeaderGradient = true
     },
   },
 }

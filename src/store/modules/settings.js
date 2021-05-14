@@ -121,7 +121,7 @@ dbs.defaults({
   websitesPerPage: 20,
   playlistsPerPage: 20,
   gapSize: 's',
-  playerType: "0",
+  isPlayVideoInSystemPlayer: false,
   customParametersPerformer: [],
   updateIntervalDataFromVideos: 30,
   autoUpdateDataFromVideos: true,
@@ -254,7 +254,7 @@ const Settings = {
     websiteView: dbs.get('websiteView').value(),
     dialogHeaderGradient: false,
     gapSize: dbs.get('gapSize').value(),
-    playerType: dbs.get('playerType').value() || '0',
+    isPlayVideoInSystemPlayer: dbs.get('isPlayVideoInSystemPlayer').value(),
     dialogManagePerformerParameters: false,
     customParametersPerformer: _.cloneDeep(dbs.get('customParametersPerformer').value()),
     updateIntervalDataFromVideos: dbs.get('updateIntervalDataFromVideos').value(),
@@ -279,63 +279,6 @@ const Settings = {
     },
     updateTabs(state, tabs) { // TODO create mutation for update any value in settings
       state.tabs = _.cloneDeep(tabs)
-    },
-    resetSettingsToDefault(state) { // TODO reset only visuals. change text in settings
-      state.passwordProtection = false
-      state.appColorLightPrimary = '#ef0051'
-      state.appColorLightSecondary = '#d80155'
-      state.appColorLightAccent = '#14db00'
-      state.appColorLightHeader = '#ff0f60'
-      state.appColorDarkPrimary = '#2175ab'
-      state.appColorDarkSecondary = '#3797cd'
-      state.appColorDarkAccent = '#84329e'
-      state.appColorDarkHeader = '#2b6c90'
-      state.darkMode = false
-      state.headerGradient = true
-      state.headerGradientLight = 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)'
-      state.headerGradientDark = 'linear-gradient(to right, #0033a5, #c30059, #C5A401)'
-      state.textFont = 'Roboto'
-      state.headerFont = 'Roboto'
-      state.navigationSide = "1"
-      state.numberOfPagesLimit = 7
-      state.videoCardSize = 3
-      state.performerCardSize = 3
-      state.performerChipsColored = true
-      state.performerEditBtnHidden = false
-      state.performerMeterHidden = false
-      state.performerNameHidden = false
-      state.performerRatingHidden = false
-      state.performerNationalityHidden = false
-      state.performerFavoriteHidden = false
-      state.performerProfileProgressHidden = false
-      state.performerAliasesHidden = false
-      state.performerCareerStatusHidden = false
-      state.performerTagsHidden = false
-      state.performerVideoTagsHidden = false
-      state.performerWebsitesHidden = false
-      state.performerProfile = false
-      state.performerProfileTags = true
-      state.performerProfileWebsites = true
-      state.selectedDisk = ''
-      state.videoChipsColored = true
-      state.videoEditBtnHidden = false
-      state.videoFileNameHidden = false
-      state.videoFileInfoHidden = false
-      state.videoRatingHidden = false
-      state.videoFavoriteHidden = false
-      state.videoQualityLabelHidden = false
-      state.videoDurationHidden = false
-      state.videoPerformersHidden = false
-      state.videoTagsHidden = false
-      state.ratingAndFavoriteInCard = false
-      state.tagAltNamesHidden = false
-      state.tagPerformersHidden = false
-      state.tagEditBtnHidden = false
-      state.websiteVideoTagsHidden = false
-      state.websitePerformersHidden = false
-      state.websiteEditBtnHidden = false
-      state.gapSize = 's'
-      state.playerType = '0'
     },
   },
   actions: {
@@ -377,66 +320,6 @@ const Settings = {
     updateTabs({state, rootState, commit, dispatch, getters}, tabs) {
       getters.settings.set('tabs', _.cloneDeep(tabs)).write()
       commit('updateTabs', tabs)
-    },
-    resetSettingsToDefault({state, rootState, commit, dispatch, getters}) {
-      getters.settings.assign({
-        passwordProtection: false,
-        appColorLightPrimary: '#ef0051',
-        appColorLightSecondary: '#d80155',
-        appColorLightAccent: '#14db00',
-        appColorLightHeader: '#ff0f60',
-        appColorDarkPrimary: '#2175ab',
-        appColorDarkSecondary: '#3797cd',
-        appColorDarkAccent: '#84329e',
-        appColorDarkHeader: '#2b6c90',
-        darkMode: false,
-        headerGradient: true,
-        headerGradientLight: 'linear-gradient(to right, #00ffff, #ff9800, #7a00ff)',
-        headerGradientDark: 'linear-gradient(to right, #0033a5, #c30059, #C5A401)',
-        textFont: 'Roboto',
-        headerFont: 'Roboto',
-        navigationSide: "1",
-        numberOfPagesLimit: 7,
-        videoCardSize: 3,
-        performerCardSize: 3,
-        performerChipsColored: true,
-        performerEditBtnHidden: false,
-        performerMeterHidden: false,
-        performerNameHidden: false,
-        performerRatingHidden: false,
-        performerNationalityHidden: false,
-        performerFavoriteHidden: false,
-        performerProfileProgressHidden: false,
-        performerAliasesHidden: false,
-        performerCareerStatusHidden: false,
-        performerTagsHidden: false,
-        performerVideoTagsHidden: false,
-        performerWebsitesHidden: false,
-        performerProfile: false,
-        performerProfileTags: true,
-        performerProfileWebsites: true,
-        selectedDisk: '',
-        videoChipsColored: true,
-        videoEditBtnHidden: false,
-        videoFileNameHidden: false,
-        videoFileInfoHidden: false,
-        videoRatingHidden: false,
-        videoFavoriteHidden: false,
-        videoQualityLabelHidden: false,
-        videoDurationHidden: false,
-        videoPerformersHidden: false,
-        videoTagsHidden: false,
-        ratingAndFavoriteInCard: false,
-        tagAltNamesHidden: false,
-        tagPerformersHidden: false,
-        tagEditBtnHidden: false,
-        websiteVideoTagsHidden: false,
-        websitePerformersHidden: false,
-        websiteEditBtnHidden: false,
-        gapSize: 's',
-        playerType: '0',
-      }).write()
-      commit('resetSettingsToDefault')
     },
     updateSettingsState({state, rootState, commit, dispatch, getters}, {key, value}) {
       getters.settings.set(key, value).write()

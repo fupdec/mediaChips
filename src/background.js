@@ -51,9 +51,7 @@ function createLoadingWindow () {
     })
   }
   loading.loadURL(path.join('file://', __static, 'loading.html'))
-  loading.webContents.on('did-finish-load', () => {
-    loading.show()
-  })
+  loading.webContents.on('did-finish-load', () => { loading.show() })
 } 
 
 function createPlayerWindow() {
@@ -77,9 +75,7 @@ function createPlayerWindow() {
   if (isDevelopment) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'player.html')
     if (!process.env.IS_TEST) window.webContents.openDevTools()
-  } else {
-    window.loadURL(path.join('file://', __static, 'player.html'))
-  }
+  } else window.loadURL(path.join('file://', __static, 'player.html'))
 
   window.on('close', (e) => {
     e.preventDefault()
@@ -94,7 +90,7 @@ function createMainWindow() {
   let window = new BrowserWindow({
     width: 1200,
     height: 700,
-    frame: false,
+    frame: process.platform !== 'win32',
     backgroundColor: '#333',
     icon: __static + `/icons/icon.png`,
     show: false, 
@@ -110,9 +106,7 @@ function createMainWindow() {
   if (isDevelopment) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'index.html')
     if (!process.env.IS_TEST) window.webContents.openDevTools()
-  } else {
-    window.loadURL(path.join('file://', __static, 'index.html'))
-  }
+  } else window.loadURL(path.join('file://', __static, 'index.html'))
   
   window.on('closed', () => {
     loading = null 
@@ -127,17 +121,13 @@ function createMainWindow() {
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  if (process.platform !== 'darwin') app.quit()
 })
 
 // create userdata folder if runs portable version
 if (process.env.PORTABLE_EXECUTABLE_DIR) {
   const userData = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'userdata')
-  if (!fs.existsSync(userData)){
-    fs.mkdirSync(userData)
-  }
+  if (!fs.existsSync(userData)) fs.mkdirSync(userData) 
   app.setPath ('userData', userData)
 }
 
@@ -185,86 +175,36 @@ app.whenReady().then(() => {
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
-    process.on('message', data => {
-      if (data === 'graceful-exit') {
-        app.quit()
-      }
-    })
-  } else {
-    process.on('SIGTERM', () => {
-      app.quit()
-    })
-  }
+    process.on('message', data => { if (data === 'graceful-exit') app.quit() })
+  } else process.on('SIGTERM', () => { app.quit() })
 }
 
 // restart application
-ipcMain.on('reload', function() {
-  if (isDevelopment) {
-    win.reload()
-  } else {
-    app.relaunch()
-    app.exit() // TODO fix relaunch
-  }
+ipcMain.on('reload', function () {
+  if (isDevelopment) win.reload()
+  else { app.relaunch(); app.exit() } // TODO fix relaunch
 })
 
-// keyboard shortcuts
-const menu = new Menu()
-menu.append(new MenuItem({
-  label: 'App',
-  submenu: [
-    {
-      role: 'help',
-      accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
-      click: () => { console.log('Page reloading is disabled!') }
-    },
-    {
-      role: 'tool',
-      accelerator: process.platform === 'darwin' ? 'Cmd+Shift+I' : 'Ctrl+Shift+I',
-      click: () => { win.webContents.openDevTools() }
-    },
-  ]
-}))
-
-Menu.setApplicationMenu(menu)
+Menu.setApplicationMenu(null)
 
 // events from render process
 ipcMain.on('openPlayer', (event, data) => {
   player.show()
   player.webContents.send('getDataForPlayer', data)
 })
-ipcMain.on('closePlayer', () => {
-  player.hide()
-})
+ipcMain.on('closePlayer', () => { player.hide() })
 ipcMain.handle('getDb', async (event, dbType) => {
   win.webContents.send( 'getDb', dbType )
   const database = await getDb()
   player.webContents.send( 'getDbAnswer', database )
 })
-function getDb() {
-  return new Promise((resolve) => {
-    ipcMain.once('getDbAnswer', (event, database) => {
-      resolve(database)
-    })
-  }) 
-} 
-ipcMain.on('watchLater', (event, videoId) => {
-  win.webContents.send( 'watchLater', videoId )
-})
-ipcMain.on('addMarker', (event, marker, markerTag, video) => {
-  win.webContents.send( 'addMarker', marker, markerTag, video )
-}) 
-ipcMain.on('removeMarker', (event, markerForRemove, video) => {
-  win.webContents.send( 'removeMarker', markerForRemove, video )
-}) 
-ipcMain.on('toggleDarkMode', (event, value) => {
-  player.webContents.send( 'toggleDarkMode', value )
-})
-ipcMain.on('updatePlayerDb', (event, value) => {
-  player.webContents.send( 'updateDb', value )
-})
-ipcMain.on('addNewTag', (event, tagName) => {
-  win.webContents.send( 'addNewTag', tagName )
-}) 
-ipcMain.on('addNewPerformer', (event, performerName) => {
-  win.webContents.send( 'addNewPerformer', performerName )
-}) 
+function getDb() { return new Promise((resolve) => {
+  ipcMain.once('getDbAnswer', (e, database) => { resolve(database) }) 
+}) } 
+ipcMain.on('watchLater', (e, videoId) => { win.webContents.send( 'watchLater', videoId ) })
+ipcMain.on('addMarker', (e, marker, markerTag, video) => { win.webContents.send( 'addMarker', marker, markerTag, video ) }) 
+ipcMain.on('removeMarker', (event, markerForRemove, video) => { win.webContents.send( 'removeMarker', markerForRemove, video ) }) 
+ipcMain.on('toggleDarkMode', (e, value) => { player.webContents.send( 'toggleDarkMode', value ) })
+ipcMain.on('updatePlayerDb', (e, value) => { player.webContents.send( 'updateDb', value ) })
+ipcMain.on('addNewTag', (e, tagName) => { win.webContents.send( 'addNewTag', tagName ) }) 
+ipcMain.on('addNewPerformer', (e, performerName) => { win.webContents.send( 'addNewPerformer', performerName ) }) 

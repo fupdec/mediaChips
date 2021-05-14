@@ -14,11 +14,11 @@
               <v-icon left size="18">mdi-video-plus</v-icon> Add New Videos
             </v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="playerType=playerType=='0'?'1':'0'">
+          <v-list-item link @click="isPlayVideoInSystemPlayer=!isPlayVideoInSystemPlayer">
             <v-list-item-title>
               <v-icon left size="18">mdi-television-play</v-icon> Play Video in System Player
             </v-list-item-title>
-            <v-icon size="20" class="ml-6" :color="playerType=='1'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            <v-icon size="20" class="ml-6" :color="isPlayVideoInSystemPlayer?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
           <v-list-item link @click="lock" v-if="$store.state.Settings.passwordProtection">
@@ -288,9 +288,9 @@ export default {
       get() {return this.$store.state.Settings.ratingAndFavoriteInCard},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})},
     },
-    playerType: {
-      get() {return this.$store.state.Settings.playerType},
-      set(value) {this.$store.dispatch('updateSettingsState', {key:'playerType', value})},
+    isPlayVideoInSystemPlayer: {
+      get() {return this.$store.state.Settings.isPlayVideoInSystemPlayer},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'isPlayVideoInSystemPlayer', value})},
     },
     navigationSide: {
       get() {return this.$store.state.Settings.navigationSide},

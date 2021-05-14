@@ -1201,13 +1201,11 @@ export default {
       const pathToVideo = this.video.path
       if (fs.existsSync(pathToVideo)) {
         this.videoExists = false
-        if (this.$store.state.Settings.playerType === '0') {
-          let data = {
-            videos: [this.video],
-            id: this.video.id,  
-          }
+        if (this.$store.state.Settings.isPlayVideoInSystemPlayer) shell.openPath(pathToVideo)
+        else {
+          let data = { videos: [this.video], id: this.video.id, }
           ipcRenderer.send('openPlayer', data)
-        } else shell.openPath(pathToVideo)
+        }
         setTimeout(() => { this.videoExists = true }, 1500)
       } else this.videoExists = false
     },
