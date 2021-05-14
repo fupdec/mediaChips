@@ -8,6 +8,9 @@
       <div v-for="(m,i) in metaInCard" :key="i">
         <v-icon>mdi-{{getMeta(m.id,m.type).settings.icon}}</v-icon>
       </div>
+
+      <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" color="secondary" fab x-small class="btn-edit">
+        <v-icon>mdi-pencil</v-icon> </v-btn>
     </v-card>
   </v-lazy>
 </template>

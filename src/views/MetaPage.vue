@@ -11,24 +11,32 @@
       <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
       Empty
     </div>
+
+    <DialogEditMetaCard v-if="$store.state.Meta.dialogEditMetaCard"/>
   </vuescroll>
 </template>
 
 
 <script>
-import MetaCard from "@/components/pages/meta/MetaCard.vue"
+import MetaCard from '@/components/pages/meta/MetaCard.vue'
 import vuescroll from 'vuescroll'
+import Selection from '@simonwep/selection-js'
 
 export default {
   name: "MetaPage",
   components: {
     MetaCard,
     vuescroll,
+    DialogEditMetaCard: () => import('@/components/pages/meta/DialogEditMetaCard.vue'),
   },
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
+      this.initSelection()
     })
+  },
+  destroyed() {
+    this.$store.state.Meta.selection.destroy()
   },
   data: () => ({
     isScrollToTopVisible: false,
@@ -48,6 +56,32 @@ export default {
     },
   },
   methods: {
+    initSelection() {
+      this.$store.state.Meta.selection = new Selection({
+        boundaries: ['.meta-grid'],
+        selectables: ['.meta-card'],
+        allowTouch: false,
+      }).on('beforestart', ({store, event}) => {
+        const targetEl = event.target.closest('.meta-card')
+        if (event.button == 2 && store.stored.includes(targetEl)) return false
+        return (event.button !== 1)
+      }).on('start', ({store, event}) => {
+        const targetEl = event.target.closest('.meta-card')
+        if (event.button == 2 && store.stored.includes(targetEl)) return false
+        if (!event.ctrlKey && !event.metaKey) {
+          for (const el of store.stored) el.classList.remove('selected')
+          this.$store.state.Meta.selection.clearSelection()
+        }
+      }).on('move', ({store: {changed: {added, removed}}}) => {
+        for (const el of added) el.classList.add('selected')
+        for (const el of removed) el.classList.remove('selected')
+      }).on('stop', ({store, event}) => {
+        const targetEl = event.target.closest('.meta-card')
+        if (event.button==0 && targetEl) this.$store.state.Meta.selection.select(targetEl)
+        this.$store.state.Meta.selection.keepSelection()
+        this.$store.state.Meta.selectedMeta = store.stored.map(item => (item.dataset.id))
+      })
+    },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
     },

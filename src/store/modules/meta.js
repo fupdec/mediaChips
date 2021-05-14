@@ -36,6 +36,8 @@ const Meta = {
     filteredMeta: [],
     updateCardIds: [],
     dialogEditMetaCard: false,
+    selection: null,
+    selectedMeta: [],
   }),
   mutations: {
     updateMetaCards(state, ids) {
