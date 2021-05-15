@@ -1,12 +1,12 @@
 <template>
-  <v-app :class="[textFont, headerFont]">
+  <v-app :class="[textFont, headerFont, {'color-scroll': colorScroll}]">
     <SystemBar v-if="showSystemBar" :disableRunApp="disableRunApp" @lock="lock"/>
 
     <AppBar />
 
     <SideBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
-    <v-main app v-if="!disableRunApp" :class="{'color-scroll': colorScroll}">
+    <v-main app v-if="!disableRunApp">
       <router-view :key="$route.name + ($route.params.id || '')" />
     </v-main>
 

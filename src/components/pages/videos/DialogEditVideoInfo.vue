@@ -355,20 +355,20 @@
               </div>
               <div class="gradient" :style="gradient"></div>
               <v-card-actions class="actions">
-                <v-btn @click="playVideo" small outlined fab :disabled="!videoExists" :color="darkMode?'#cacaca':'#8a8a8a'">
+                <v-btn @click="playVideo" small outlined fab :disabled="!videoExists" :color="darkMode?'#ccc':'#777'">
                   <v-icon large>mdi-play</v-icon> </v-btn>
-                <v-btn @click="toggleMuted" small outlined fab class="mr-4" :color="darkMode?'#cacaca':'#8a8a8a'">
+                <v-btn @click="toggleMuted" small outlined fab class="mr-4" :color="darkMode?'#ccc':'#777'">
                   <v-icon v-if="muted">mdi-volume-off</v-icon>
                   <v-icon v-else>mdi-volume-high</v-icon>
                 </v-btn>
                 <v-rating v-model="rating" clearable hover half-increments size="30"
-                  :color="darkMode?'#cacaca':'#8a8a8a'" :background-color="darkMode?'#cacaca':'#8a8a8a'" 
+                  :color="darkMode?'#ccc':'#777'" :background-color="darkMode?'#ccc':'#777'" 
                   empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/>
-                <v-btn @click="favorite=!favorite" class="mx-2" :color="darkMode?'#cacaca':'#8a8a8a'" icon large> 
+                <v-btn @click="favorite=!favorite" class="mx-2" :color="darkMode?'#ccc':'#777'" icon large> 
                   <v-icon size="25">mdi-heart{{favorite? '':'-outline'}}</v-icon>
                 </v-btn>
                 <v-spacer></v-spacer>
-                <v-btn @click="saveVideoInfo" large outlined rounded :color="darkMode?'#cacaca':'#8a8a8a'" class="pr-3">
+                <v-btn @click="saveVideoInfo" large outlined rounded :color="darkMode?'#ccc':'#777'" class="pr-3">
                   <v-icon left>mdi-content-save</v-icon> save </v-btn>
               </v-card-actions>
               <div class="headline video-title text--secondary text-h4">{{fileName}}</div>
