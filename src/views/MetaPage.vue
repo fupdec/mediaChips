@@ -13,6 +13,7 @@
     </div>
 
     <DialogEditMetaCard v-if="$store.state.Meta.dialogEditMetaCard"/>
+    <DialogEditMetaCardImages v-if="$store.state.Meta.dialogEditMetaCardImages"/>
   </vuescroll>
 </template>
 
@@ -28,6 +29,7 @@ export default {
     MetaCard,
     vuescroll,
     DialogEditMetaCard: () => import('@/components/pages/meta/DialogEditMetaCard.vue'),
+    DialogEditMetaCardImages: () => import('@/components/pages/meta/DialogEditMetaCardImages.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -42,18 +44,10 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
-    metaId() {
-      return this.$route.query.metaId
-    },
-    meta() {
-      return this.$store.getters.meta.find({id: this.metaId}).value()
-    },
-    metaList() {
-      return this.$store.getters.meta.value()
-    },
-    metaCardsOnPage() {
-      return this.$store.getters.metaCardsOnPage
-    },
+    metaId() { return this.$route.query.metaId },
+    meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
+    metaList() { return this.$store.getters.meta.value() },
+    metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
   },
   methods: {
     initSelection() {
@@ -82,17 +76,12 @@ export default {
         this.$store.state.Meta.selectedMeta = store.stored.map(item => (item.dataset.id))
       })
     },
-    scrollToTop() {
-      this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
-    },
+    scrollToTop() { this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad") },
     handleScroll(vertical) {
-      if (vertical.scrollTop > 150) {
-        this.isScrollToTopVisible = true
-      } else this.isScrollToTopVisible = false
+      if (vertical.scrollTop > 150) this.isScrollToTopVisible = true
+      else this.isScrollToTopVisible = false
     },
-    initFilters() {
-      this.$store.dispatch('filterMetaCards', { metaId: this.meta.id })
-    },
+    initFilters() { this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) },
   },
   watch: {
     $route(newRoute) {

@@ -11,6 +11,8 @@
 
       <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" color="secondary" fab x-small class="btn-edit">
         <v-icon>mdi-pencil</v-icon> </v-btn>
+      <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" color="secondary" fab x-small class="btn-edit-images">
+        <v-icon>mdi-image-edit-outline</v-icon> </v-btn>
     </v-card>
   </v-lazy>
 </template>

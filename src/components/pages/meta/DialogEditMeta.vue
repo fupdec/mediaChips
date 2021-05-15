@@ -37,17 +37,22 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="12">
-                  <div class="mb-2 body-1">Chips shape:</div> <!-- TODO outline, label like in vuetify documentation example  -->
-                  <v-radio-group v-model="settings.chipsShape" row mandatory hide-details class="mt-0">
-                    <v-radio value="standart"><template v-slot:label><v-chip>Standart</v-chip></template></v-radio>
-                    <v-radio value="label"><template v-slot:label><v-chip label>Label</v-chip></template></v-radio>
-                  </v-radio-group>
+                <v-col cols="12" align="center" class="pb-0">
+                  <span class="overline text-center">Chips Appearance</span>
                 </v-col>
                 <v-col cols="12">
-                  <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'Yes':'No'}`" class="ma-0" hide-details/>
+                  <div class="d-flex justify-space-around">
+                    <div class="d-flex justify-space-between">
+                      <v-checkbox v-model="settings.chipLabel" label="Label" class="my-0 mr-6" hide-details/>
+                      <v-checkbox v-model="settings.chipOutlined" label="Outlined" class="my-0 mr-6" hide-details/>
+                      <v-checkbox v-model="settings.chipColor" label="Color" class="my-0" hide-details/>
+                    </div>
+                    <v-spacer></v-spacer>
+                    <v-chip :label="settings.chipLabel" :outlined="settings.chipOutlined" 
+                      :color="settings.chipColor?getRandomColor():''">Example chip</v-chip>
+                  </div>
                 </v-col>
-                <v-col cols="12" align="center">
+                <v-col cols="12" align="center" class="pb-0">
                   <span class="overline text-center">Card Appearance</span>
                 </v-col>
                 <v-col cols="12" sm="6">
@@ -61,7 +66,7 @@
                 </v-col>
                 <v-col cols="12" sm="6" v-if="settings.images">
                   <div class="mb-2 body-1">Type of Images:</div>
-                  <v-checkbox v-model="settings.imageTypes" label="Main" value="main" class="ma-0 pa-0" hide-details/>
+                  <v-checkbox v-model="settings.imageTypes" label="Main" value="main" class="ma-0 pa-0" hide-details disabled/>
                   <v-checkbox v-model="settings.imageTypes" label="Alternate" value="alt" class="ma-0 pa-0" hide-details/>
                   <v-checkbox v-model="settings.imageTypes" label="Custom 1" value="custom1" class="ma-0 pa-0" hide-details/>
                   <v-checkbox v-model="settings.imageTypes" label="Custom 2" value="custom2" class="ma-0 pa-0" hide-details/>
@@ -85,6 +90,12 @@
                   </div>
                   <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
                     <v-icon left>mdi-plus</v-icon>Add meta to card</v-btn>
+                </v-col>
+                <v-col cols="12" align="center" class="pb-0">
+                  <span class="overline text-center">Specific meta</span>
+                </v-col>
+                <v-col cols="12">
+                  <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'Yes':'No'}`" class="ma-0" hide-details/>
                 </v-col>
               </v-row>
             </v-form>
@@ -166,8 +177,10 @@ export default {
       icon: 'shape',
       images: false,
       imageAspectRatio: '',
-      imageTypes: [],
-      chipsShape: 'standart',
+      imageTypes: ['main'],
+      chipLabel: false,
+      chipOutlined: false,
+      chipColor: false,
       cardSize: 1,
       synonyms: false,
       metaInCard: [],
@@ -245,9 +258,8 @@ export default {
       this.$store.commit('getMetaListFromDb')
       this.$emit('closeSettings')
     },
-    closeSettings() {
-      this.$emit('closeSettings')
-    },
+    closeSettings() { this.$emit('closeSettings') },
+    getRandomColor() { return '#'+Math.floor(Math.random()*16777215).toString(16) },
   },
 }
 </script>

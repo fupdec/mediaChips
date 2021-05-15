@@ -38,14 +38,14 @@
           <v-icon>mdi-web-box</v-icon>
         </v-btn>
 
-        <v-btn to="/playlists/:default?tabId=default" @click.middle="addNewTabPlaylists" text color="secondary">
-          <span>Playlists</span>
-          <v-icon>mdi-format-list-bulleted</v-icon>
-        </v-btn>
-
         <v-btn v-for="meta in metaList" :key="meta.id" exact :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary">
           <span>{{meta.settings.name}}</span>
           <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+        </v-btn>
+
+        <v-btn to="/playlists/:default?tabId=default" @click.middle="addNewTabPlaylists" text color="secondary">
+          <span>Playlists</span>
+          <v-icon>mdi-format-list-bulleted</v-icon>
         </v-btn>
 
         <v-btn to="/settings" text color="secondary">

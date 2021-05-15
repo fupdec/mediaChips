@@ -36,6 +36,7 @@ const Meta = {
     filteredMeta: [],
     updateCardIds: [],
     dialogEditMetaCard: false,
+    dialogEditMetaCardImages: false,
     selection: null,
     selectedMeta: [],
     metaList: dbMeta.get('meta').value(),

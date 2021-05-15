@@ -23,6 +23,9 @@ export default {
       top: 0
     },
   }),
+  computed: {
+    pathToUserData() { return this.$store.getters.getPathToUserData }
+  },
   methods: {
     getImageObject() {
       const image = {
@@ -94,11 +97,10 @@ export default {
         }, 1000)
       }
     },
-    getImagePath(imgFolder, imgType) {
-      if (imgFolder === 'thumb') {
-        return path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
-      }
-      return path.join(this.$store.getters.getPathToUserData, `/media/${imgFolder}s/${this[imgFolder].id}_${imgType}.jpg`)
+    getImagePath(imgFolder, imgType, id) {
+      if (imgFolder==='thumb') return path.join(this.pathToUserData, `/media/thumbs/${this.video.id}.jpg`)
+      if (imgFolder.includes('meta')) return path.join(this.pathToUserData,'/media/',`${imgFolder}/`,`${id}_${imgType}.jpg`)
+      return path.join(this.pathToUserData, `/media/${imgFolder}s/${this[imgFolder].id}_${imgType}.jpg`)
     },
     checkImageExist(imgPath, imgType) {
       if (fs.existsSync(imgPath)) {
@@ -155,6 +157,7 @@ export default {
       content: "no image";
       text-transform: uppercase;
       opacity: 0.5;
+      background: #cccccc24;
       top: 0;
       bottom: 0;
       position: absolute;
