@@ -57,6 +57,14 @@
           <v-list-item-title>Website</v-list-item-title>
         </v-list-item>
         
+        <v-list-item v-for="meta in metaList" :key="meta.id" @click.middle="addNewTabPlaylists"
+          link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
+          <v-list-item-icon>
+            <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>{{meta.settings.name}}</v-list-item-title>
+        </v-list-item>
+        
         <v-list-item link to="/playlists/:default?tabId=default"
           @click.middle="addNewTabPlaylists" color="secondary" draggable="false">
           <v-list-item-icon>
@@ -122,21 +130,12 @@ export default {
     folderHovered: false,
   }),
   computed: {
-    navigationSide() {
-      return this.$store.state.Settings.navigationSide
-    },
-    tabId() {
-      return this.$route.query.tabId
-    },
-    folders() {
-      return this.$store.state.Settings.folders
-    },
-    foldersData() {
-      return this.$store.state.foldersData
-    },
-    watchFolders() {
-      return this.$store.state.Settings.watchFolders
-    },
+    navigationSide() { return this.$store.state.Settings.navigationSide },
+    tabId() { return this.$route.query.tabId },
+    folders() { return this.$store.state.Settings.folders },
+    foldersData() { return this.$store.state.foldersData },
+    watchFolders() { return this.$store.state.Settings.watchFolders },
+    metaList() { return this.$store.getters.meta.value() },
   },
   methods: {
     addNewTabVideos() {
