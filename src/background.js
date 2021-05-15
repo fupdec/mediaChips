@@ -59,7 +59,7 @@ function createPlayerWindow() {
   let window = new BrowserWindow({
     width: 1200,
     height: 700,
-    frame: false,
+    frame: process.platform !== 'win32',
     backgroundColor: '#333',
     icon: __static + `/icons/icon.png`,
     show: false, 
