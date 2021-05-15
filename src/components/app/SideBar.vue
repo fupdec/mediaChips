@@ -57,7 +57,7 @@
           <v-list-item-title>Website</v-list-item-title>
         </v-list-item>
         
-        <v-list-item v-for="meta in metaList" :key="meta.id" @click.middle="addNewTabPlaylists"
+        <v-list-item v-for="meta in metaList" :key="meta.edit" @click.middle="addNewTabPlaylists"
           link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
           <v-list-item-icon>
             <v-icon>mdi-{{meta.settings.icon}}</v-icon>
@@ -135,7 +135,7 @@ export default {
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
-    metaList() { return this.$store.getters.meta.value() },
+    metaList() { return this.$store.state.Meta.metaList },
   },
   methods: {
     addNewTabVideos() {

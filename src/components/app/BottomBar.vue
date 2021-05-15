@@ -107,7 +107,7 @@ export default {
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
-    metaList() { return this.$store.getters.meta.value() },
+    metaList() { return this.$store.state.Meta.metaList },
   },
   methods: {
     addNewTabVideos() {

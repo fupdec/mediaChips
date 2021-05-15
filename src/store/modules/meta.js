@@ -38,11 +38,15 @@ const Meta = {
     dialogEditMetaCard: false,
     selection: null,
     selectedMeta: [],
+    metaList: dbMeta.get('meta').value(),
   }),
   mutations: {
     updateMetaCards(state, ids) {
       if (ids === undefined) state.updateCardIds = []
       else state.updateCardIds = ids // TODO make update function
+    },
+    getMetaListFromDb(state) {
+      state.metaList = _.cloneDeep(dbMeta.get('meta').value())
     },
   },
   actions: {
@@ -50,6 +54,7 @@ const Meta = {
       let meta = { ...defaultMeta, ...{ id, settings } }
       getters.meta.push(meta).write()
       getters.metaCards.set(id, []).write()
+      commit('getMetaListFromDb')
       commit('addLog', {type:'info', color:'green', text:`Added complex meta "${settings.name}"`})
     },
     addSimpleMeta({commit, getters, rootState}, {id, settings}) {
@@ -68,6 +73,7 @@ const Meta = {
       // TODO remove from cards
       const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
       rimraf(metaFolder, function () { console.log("done") })
+      commit('getMetaListFromDb')
       commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
     },
     deleteSimpleMeta({commit, getters}, {id, name}) {

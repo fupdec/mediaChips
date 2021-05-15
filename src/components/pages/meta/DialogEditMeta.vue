@@ -8,6 +8,14 @@
           <v-icon>mdi-cog</v-icon>
         </v-card-title>
         <v-divider></v-divider>
+        <div class="d-flex justify-space-between px-4 pt-2">
+          <v-chip label small outlined class="mr-4">
+            <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+          </v-chip>
+          <v-chip label small outlined>
+            <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+          </v-chip>
+        </div>
         <vuescroll>
           <v-card-text class="px-4">
             <v-form v-model="validMetaSettings" ref="formMetaSettings" class="flex-grow-1" @submit.prevent>
@@ -21,7 +29,7 @@
                     item-text="name" item-value="name" label="Icon"
                     :rules="[value => !!value || 'Icon is required']">
                     <template v-slot:selection="data">
-                      <v-icon left>mdi-{{data.item.name}}</v-icon> {{data.item.name}}
+                      <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
                     </template>
                     <template v-slot:item="data">
                       <v-icon left>mdi-{{data.item.name}}</v-icon>
@@ -144,7 +152,7 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
-      this.settings = { ...this.settings, ...this.metaSettings.settings }
+      this.settings = { ...this.settings, ...this.meta.settings }
     })
   },
   data: () => ({
@@ -168,26 +176,28 @@ export default {
       'date','edit','views','array','type','number','string','boolean'],
   }),
   computed: {
-    metaList() {
-      return this.$store.getters.meta.value()
-    },
-    simpleMetaList() {
-      return this.$store.getters.simpleMeta.value()
-    },
-    metaSettings() {
-      return _.cloneDeep(this.metaList[this.metaIndex])
-    },
+    metaList() { return this.$store.getters.meta.value() },
+    simpleMetaList() { return this.$store.getters.simpleMeta.value() },
+    meta() { return _.cloneDeep(this.metaList[this.metaIndex]) },
     metaForCard() {
       let existMeta = _.filter(this.settings.metaInCard, {type:'complex'}).map(i=>i.id)
       let existSimpleMeta = _.filter(this.settings.metaInCard, {type:'simple'}).map(i=>i.id)
       let metaList = this.$store.getters.meta.filter(i=>!existMeta.includes(i.id)).cloneDeep().value()
-      metaList = _.filter(metaList, i=>i.id!=this.metaSettings.id)
+      metaList = _.filter(metaList, i=>i.id!=this.meta.id)
       metaList = metaList.map(i => {i.type = 'complex'; return i})
       let simpleMetaList = this.$store.getters.simpleMeta.filter(i=>!existSimpleMeta.includes(i.id)).cloneDeep().value()
       simpleMetaList = simpleMetaList.map(i => {i.type = 'simple'; return i})
       let list = [...metaList, ...simpleMetaList]
       // TODO remove from list current meta and already added meta in settings.meta
       return list
+    },
+    dateAdded() {
+      let date = new Date(this.meta.date)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
+    dateEdit() {
+      let date = new Date(this.meta.edit)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
   },
   methods: {
@@ -231,7 +241,8 @@ export default {
     saveSettings() {
       this.$refs.formMetaSettings.validate()
       if (!this.validMetaSettings) return
-      this.$store.getters.meta.find({id: this.metaSettings.id}).set('settings', this.settings).write()
+      this.$store.getters.meta.find({id: this.meta.id}).set('edit', Date.now()).set('settings', this.settings).write()
+      this.$store.commit('getMetaListFromDb')
       this.$emit('closeSettings')
     },
     closeSettings() {

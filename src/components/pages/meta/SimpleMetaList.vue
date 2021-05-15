@@ -68,7 +68,7 @@
                 item-text="name" item-value="name" label="Icon" class="mt-4"
                 :rules="[value => !!value || 'Icon is required']">
                 <template v-slot:selection="data">
-                  <v-icon left>mdi-{{data.item.name}}</v-icon> {{data.item.name}}
+                  <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
                 </template>
                 <template v-slot:item="data">
                   <v-icon left>mdi-{{data.item.name}}</v-icon>
