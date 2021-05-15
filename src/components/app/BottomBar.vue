@@ -102,24 +102,12 @@ export default {
     },
   }),
   computed: {
-    navigationSide() {
-      return this.$store.state.Settings.navigationSide
-    },
-    tabId() {
-      return this.$route.query.tabId
-    },
-    folders() {
-      return this.$store.state.Settings.folders
-    },
-    foldersData() {
-      return this.$store.state.foldersData
-    },
-    watchFolders() {
-      return this.$store.state.Settings.watchFolders
-    },
-    metaList() {
-      return this.$store.getters.meta.value()
-    },
+    navigationSide() { return this.$store.state.Settings.navigationSide },
+    tabId() { return this.$route.query.tabId },
+    folders() { return this.$store.state.Settings.folders },
+    foldersData() { return this.$store.state.foldersData },
+    watchFolders() { return this.$store.state.Settings.watchFolders },
+    metaList() { return this.$store.getters.meta.value() },
   },
   methods: {
     addNewTabVideos() {

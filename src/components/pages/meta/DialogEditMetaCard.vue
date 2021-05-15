@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-bottom-sheet v-model="$store.state.Meta.dialogEditMetaCard" inset scrollable persistent>
+    <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="800" width="70vw">
       <v-card class="pb-5">
         <v-card-title>Edit "{{card.meta.name}}"</v-card-title>
         <div class="d-flex justify-space-between px-4">
@@ -29,7 +29,7 @@
           <span class="green--text">Save</span>
         </div>
       </div>
-    </v-bottom-sheet>
+    </v-dialog>
   </div>
 </template>
 

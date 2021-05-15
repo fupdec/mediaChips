@@ -4,7 +4,7 @@
       <v-icon x-large left>mdi-cog-outline</v-icon> Settings
     </div>
 
-    <v-tabs v-model="tab" centered icons-and-text>
+    <v-tabs v-model="tab" centered icons-and-text class="settings-tabs">
       <v-tab href="#app-settings" draggable="false">App<v-icon>mdi-application</v-icon></v-tab>
       <v-tab href="#meta-settings" draggable="false">Meta<v-icon>mdi-shape</v-icon></v-tab>
       <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
@@ -15,8 +15,8 @@
       <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
       <v-tab href="#about-settings" draggable="false">About<v-icon>mdi-information-variant</v-icon></v-tab>
     </v-tabs>
-
-    <v-tabs-items v-model="tab">
+    <v-divider></v-divider>
+    <v-tabs-items v-model="tab" class="settings-tabs">
       <v-tab-item value="app-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-btn @click="$store.state.Settings.dialogScanVideos=true" class="mb-10" block color="primary" x-large rounded>

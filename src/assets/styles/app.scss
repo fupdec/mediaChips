@@ -1623,6 +1623,14 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     background-color: var(--v-accent-base) !important;
   }
 }
+.settings-tabs {
+  &.v-tabs-items,
+  .v-tabs-bar,
+  .v-sheet,
+  .v-card {
+    background-color: transparent !important;
+  }
+}
 // meta
 .meta-card {
   cursor: default;
