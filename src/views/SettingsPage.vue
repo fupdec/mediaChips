@@ -323,6 +323,11 @@
               <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex"
                 :label="ratingAndFavoriteInCard?'Card description':'Card image'"/>
             </div>
+            <div class="pt-7 d-flex">
+              <span class="mr-6">Tab borders:</span>
+              <v-switch v-model="tabBorders" inset hide-details 
+                class="mt-0 pt-0 d-inline-flex" :label="tabBorders?'Show':'Hide'"/>
+            </div>
             <div class="pt-6">
               <span class="mr-6">Limit of pages in pagination:</span>
               <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
@@ -807,6 +812,10 @@ export default {
     ratingAndFavoriteInCard: {
       get() {return this.$store.state.Settings.ratingAndFavoriteInCard},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'ratingAndFavoriteInCard', value})},
+    },
+    tabBorders: {
+      get() {return this.$store.state.Settings.tabBorders},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'tabBorders', value})},
     },
     darkMode: {
       get() {return this.$store.state.Settings.darkMode},

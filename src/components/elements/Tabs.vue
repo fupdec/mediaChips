@@ -1,5 +1,5 @@
 <template>
-	<v-tabs v-model="active" optional centered>
+	<v-tabs v-model="active" optional centered :class="{borders:tabBorders}">
     <draggable  
       v-model="tabs" class="tabs-group" v-bind="dragOptions"
       @start="drag = true" @end="drag = false"
@@ -48,14 +48,8 @@ export default {
     },
   }),
   computed: {
-    tabs:{
-      get() {
-        return this.$store.getters.tabs
-      },
-      set(tabs) {
-        return this.$store.dispatch('updateTabs', tabs) // TODO: check if can delete return
-      },
-    },
+    tabs() { return this.$store.getters.tabs },
+    tabBorders() { return this.$store.state.Settings.tabBorders },
   },
   methods: {
     closeTab(e, tabId) {

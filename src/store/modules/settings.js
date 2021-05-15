@@ -133,6 +133,7 @@ dbs.defaults({
   checkForUpdatesAtStartup: false,
   registration: '',
   colorScroll: false,
+  tabBorders: true,
 }).write()
 
 const Settings = {
@@ -268,6 +269,7 @@ const Settings = {
     checkForUpdatesAtStartup: dbs.get('checkForUpdatesAtStartup').value(),
     registration: dbs.get('registration').value(),
     colorScroll: dbs.get('colorScroll').value(),
+    tabBorders: dbs.get('tabBorders').value(),
   }),
   mutations: {
     updateBackups(state, value) {

@@ -1087,6 +1087,24 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
 // TABS
 .v-app-bar {
   .v-tabs {
+    &.borders {
+      .v-tab {
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        &:not(:last-child) {
+          border-right: 1px solid rgba(255, 255, 255, 0.4);
+        }
+      }
+      &.theme--light {
+        .v-tab {
+          border-color: rgba(0, 0, 0, 0.3);
+          &:not(:last-child) {
+            border-right: 1px solid rgba(0, 0, 0, 0.3);
+          }
+        }
+      }
+    }
     .v-tab {
       -webkit-app-region: no-drag;
       font-size: 12px;
