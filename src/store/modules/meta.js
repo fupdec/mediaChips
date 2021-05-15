@@ -46,31 +46,39 @@ const Meta = {
     },
   },
   actions: {
-    addMeta({commit, getters, rootState}, {id, type, settings}) {
+    addComplexMeta({commit, getters, rootState}, {id, settings}) {
       let meta = { ...defaultMeta, ...{ id, settings } }
-      if (type == 'simple') getters.simpleMeta.push(meta).write()
-      else { 
-        getters.meta.push(meta).write()
-        getters.metaCards.set(id, []).write()
-      }
-      commit('addLog', {type:'info', color:'green', text:`Added meta "${settings.name}"`})
+      getters.meta.push(meta).write()
+      getters.metaCards.set(id, []).write()
+      commit('addLog', {type:'info', color:'green', text:`Added complex meta "${settings.name}"`})
     },
-    deleteMeta({commit, getters}, {id, name, type}) {
-      if (type == 'simple') {
-        getters.simpleMeta.remove({id}).write()
-        getters.meta.filter(i => _.some(i.settings.metaInCard, {id})).each(i => {
-          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)}).write()
-        // TODO remove from cards
-      } else {
-        getters.meta.remove({id}).write()
-        getters.metaCards.unset(id).write() 
-        getters.meta.filter(i => _.some(i.settings.metaInCard, {id})).each(i => {
-          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)}).write()
-        // TODO remove from cards
-        const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
-        rimraf(metaFolder, function () { console.log("done") })
-      }
-      commit('addLog', {type:'info', color:'red', text:`Deleted ${type} meta "${name}"`})
+    addSimpleMeta({commit, getters, rootState}, {id, settings}) {
+      let meta = { ...defaultMeta, ...{ id, settings } }
+      getters.simpleMeta.push(meta).write()
+      commit('addLog', {type:'info', color:'green', text:`Added simple meta "${settings.name}"`})
+    },
+    deleteComplexMeta({commit, getters}, {id, name}) {
+      getters.meta.remove({id}).write()
+      getters.metaCards.unset(id).write() 
+      getters.meta
+        .filter(i => _.some(i.settings.metaInCard, {id}))
+        .each(i => {
+          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)
+        }).write()
+      // TODO remove from cards
+      const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
+      rimraf(metaFolder, function () { console.log("done") })
+      commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
+    },
+    deleteSimpleMeta({commit, getters}, {id, name}) {
+      getters.simpleMeta.remove({id}).write()
+      getters.meta
+        .filter(i => _.some(i.settings.metaInCard, {id}))
+        .each(i => { 
+          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)
+        }).write()
+      // TODO remove from cards
+      commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
     },
     addMetaCard({commit, getters}, {cardId, metaInfo, metaId}) {
       let metaCard = { ...defaultMetaCard, ...{ id: cardId, meta: metaInfo } }

@@ -1,55 +1,5 @@
 <template>
 	<div>
-    <v-card outlined class="py-2 mb-10">
-      <div class="text-center">
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
-          </template>
-          <div class="d-flex flex-column align-center">
-            <span class="caption">Complex meta has a separate page with cards <br> 
-              that can be customized in detail:<br>
-              images, rating, favorite and etc.</span>
-            <div class="mt-2">
-              <v-icon size="40" dark>mdi-card-bulleted</v-icon>
-              <v-icon size="50" dark class="mx-1">mdi-card-account-details</v-icon>
-              <v-icon size="40" dark>mdi-card-text</v-icon>
-              <v-icon size="30" dark>mdi-card-bulleted-outline</v-icon>
-            </div>
-          </div>
-        </v-tooltip>
-        <span class="overline">Complex Meta</span>
-      </div>
-      <v-list v-if="metaList.length" dense>
-        <v-list-item-group color="primary">
-          <v-list-item v-for="(meta, i) in metaList" :key="i">
-            <v-icon left>mdi-{{meta.settings.icon}}</v-icon> 
-            <div class="d-flex justify-space-between align-center" style="width:100%">
-              <span>
-                <span>{{meta.settings.name}}</span>
-                <span class="caption px-4">id: {{meta.id}}</span>
-              </span>
-              <span>
-                <v-btn @click="openSettings(i)" icon><v-icon>mdi-cog</v-icon></v-btn>
-                <v-btn @click="deleteMeta(i)" color="red" icon><v-icon>mdi-delete</v-icon></v-btn>
-              </span>
-            </div>
-          </v-list-item>
-        </v-list-item-group>
-      </v-list>
-      <div v-else class="d-flex justify-space-between align-center flex-column">
-        <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
-        <div class="d-flex align-center mb-2">It's so empty ... </div>
-      </div>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn @click="dialogAddNewMeta=true" rounded class="pr-4" color="primary">
-          <v-icon left>mdi-plus</v-icon> <span>add new meta</span>  
-        </v-btn>
-        <v-spacer></v-spacer>
-      </v-card-actions>
-    </v-card>
-    
     <v-card outlined class="py-2">
       <div class="text-center">
         <v-tooltip bottom>
@@ -83,9 +33,7 @@
                 <span class="caption">id: {{meta.id}}</span>
               </span>
               <span>
-                <v-btn @click="deleteMeta(i, 'simple')" color="red" icon>
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
+                <v-btn @click="openDeleteDialog(i)" color="red" icon><v-icon>mdi-delete</v-icon></v-btn>
               </span>
             </div>
           </v-list-item>
@@ -114,8 +62,8 @@
         <v-divider></v-divider>
         <vuescroll>
           <v-card-text class="px-4">
-            <v-form v-model="validSimpleMeta" ref="formSimpleMeta" class="flex-grow-1" @submit.prevent>
-              <v-text-field v-model="simpleMetaName" :rules="[nameRules]" label="Name of meta"/>
+            <v-form v-model="validMeta" ref="form" class="flex-grow-1" @submit.prevent>
+              <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
               <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
                 item-text="name" item-value="name" label="Icon" class="mt-4"
                 :rules="[value => !!value || 'Icon is required']">
@@ -127,7 +75,7 @@
                   <span v-html="data.item.name"></span>
                 </template>
               </v-autocomplete>
-              <v-autocomplete v-model="typeOfSimpleMeta" label="Type of meta"
+              <v-autocomplete v-model="metaType" label="Type of meta"
                 :items="['string', 'number', 'boolean', 'array', 'date']" class="mt-4"
                 :rules="[value => !!value || 'Type is required']" persistent-hint :hint="hint">
                 <template v-slot:selection="data">
@@ -140,9 +88,9 @@
                 </template>
               </v-autocomplete>
             </v-form>
-            <div v-if="typeOfSimpleMeta=='array'">
+            <div v-if="metaType=='array'">
               <div class="overline text-center mt-4">Items for array</div>
-              <div v-if="array.length <= 1" class="caption text-center mb-4">
+              <div v-if="items.length <= 1" class="caption text-center mb-4">
                 <v-icon small left color="red">mdi-alert</v-icon>
                 <span class="red--text"> In array must be more than 2 items </span>
               </div>
@@ -156,49 +104,13 @@
                     dense outlined label="Name of item" />
                 </v-form>
               </div>
-              <draggable v-model="array" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+              <draggable v-model="items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
                 <transition-group type="transition" class="d-flex flex-wrap">
-                  <v-chip v-for="item in array" :key="item" @click:close="removeItem(item)"
+                  <v-chip v-for="item in items" :key="item" @click:close="removeItem(item)"
                     close close-icon="mdi-close" class="mr-2 mb-2">{{item}}</v-chip>
                 </transition-group>
               </draggable>
             </div>
-          </v-card-text>
-        </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="addSimpleMeta" class="ma-4 pr-4" rounded color="primary">
-            <v-icon left>mdi-plus</v-icon> Add meta </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    
-    <v-dialog v-model="dialogAddNewMeta" scrollable max-width="450">
-      <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">Adding a new complex meta</div>
-          <v-spacer></v-spacer>
-          <v-icon>mdi-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <vuescroll>
-          <v-card-text class="px-4">
-            <v-form v-model="validMeta" ref="formMeta" class="flex-grow-1" @submit.prevent>
-              <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
-              <v-text-field v-model="nameSingular" :rules="[nameRules]" label="Name singular"/>
-              <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
-                item-text="name" item-value="name" label="Icon" class="mt-4"
-                :rules="[value => !!value || 'Icon is required']">
-                <template v-slot:selection="data">
-                  <v-icon left>mdi-{{data.item.name}}</v-icon> {{data.item.name}}
-                </template>
-                <template v-slot:item="data">
-                  <v-icon left>mdi-{{data.item.name}}</v-icon>
-                  <span v-html="data.item.name"></span>
-                </template>
-              </v-autocomplete>
-            </v-form>
           </v-card-text>
         </vuescroll>
         <v-card-actions class="pa-0">
@@ -210,7 +122,30 @@
       </v-card>
     </v-dialog>
 
-    <DialogEditMeta v-if="dialogEditMeta" :dialogEditMeta="dialogEditMeta" :metaIndex="metaSettingsIndex" @closeSettings="closeSettings"/>
+    <v-dialog v-if="dialogDeleteMeta" :value="dialogDeleteMeta" persistent max-width="450">
+      <v-card>
+        <v-card-title class="py-1 px-4 headline red--text"> 
+          <span>Are you sure?</span>
+          <v-spacer></v-spacer> 
+          <v-icon color="red">mdi-delete-alert</v-icon>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="py-2">
+          <div class="text-center">Delete simple meta 
+            <v-chip small class="mx-2">
+              <v-icon small left>mdi-{{simpleMetaList[selectedMetaIndex].settings.icon}}</v-icon>
+              <b>{{simpleMetaList[selectedMetaIndex].settings.name}}</b>
+            </v-chip>?
+          </div>
+        </v-card-text>
+        <v-card-actions class="pa-0">
+          <v-btn @click="dialogDeleteMeta=false" small class="ma-4">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="deleteMeta" small class="ma-4" color="red" dark> 
+            <v-icon left>mdi-delete-alert</v-icon> Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -225,7 +160,7 @@ import icons from '@/assets/material-icons.json'
 import draggable from 'vuedraggable'
 
 export default {
-  name: 'AddNewMeta',
+  name: 'SimpleMetaList',
   components: {
     vuescroll,
     draggable,
@@ -240,13 +175,11 @@ export default {
     dialogAddNewMeta: false,
     dialogEditMeta: false,
     dialogAddMetaToCard: false,
-    // simple meta
-    validSimpleMeta: false,
-    simpleMetaName: '',
-    typeOfSimpleMeta: '',
-    validItemName: false,
-    array: [],
-    itemName: '',
+    dialogDeleteMeta: false,
+    deleteMetaType: null,
+    selectedMetaIndex: 0,
+    metaIcon: 'shape',
+    icons: icons,
     reserved: ['id','name','namesingular','duration','size','resolution','rating','favorite','bookmark',
       'date','edit','views','array','type','number','string','boolean'],
     drag: false,
@@ -256,25 +189,23 @@ export default {
       disabled: false,
       ghostClass: "ghost"
     },
-    // meta with cards
+    // simple meta
     validMeta: false,
     metaName: '',
-    nameSingular: '',
-    metaIcon: 'shape',
-    icons: icons,
-    // settings
-    metaSettingsIndex: 0,
+    metaType: '',
+    validItemName: false,
+    items: [],
+    itemName: '',
   }),
   computed: {
     pathToUserData() { return this.$store.getters.getPathToUserData },
-    metaList() { return this.$store.getters.meta.value() },
     simpleMetaList() { return this.$store.getters.simpleMeta.value() },
     hint() {
-      if (this.typeOfSimpleMeta === 'string') return 'for description, notes'
-      if (this.typeOfSimpleMeta === 'date') return 'e.g. release date, last viewed date'
-      if (this.typeOfSimpleMeta === 'number') return 'to count'
-      if (this.typeOfSimpleMeta === 'array') return `for multiple values. for example colors: blue, red, green`
-      if (this.typeOfSimpleMeta === 'boolean') return 'for one value. either yes or no'
+      if (this.metaType === 'string') return 'for description, notes'
+      if (this.metaType === 'date') return 'e.g. release date, last viewed date'
+      if (this.metaType === 'number') return 'to count'
+      if (this.metaType === 'array') return `for multiple values. for example colors: blue, red, green`
+      if (this.metaType === 'boolean') return 'for one value. either yes or no'
       return 'choose one of the types'
     },
   },
@@ -287,18 +218,16 @@ export default {
       if (meta === 'boolean') return 'mdi-toggle-switch'
       return 'mdi-shape'
     },
-    deleteMeta(index, type) {
-      let id, name
-      if (type == 'simple') {
-        id = this.simpleMetaList[index].id
-        name = this.simpleMetaList[index].settings.name
-      } else {
-        id = this.metaList[index].id 
-        name = this.metaList[index].settings.name
+    filterIcons(item, queryText, itemText) {
+      const searchText = queryText.toLowerCase()
+      const aliases = item.aliases
+      let found = false
+      for (let i=0;i<aliases.length;i++) {
+        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
       }
-      this.$store.dispatch('deleteMeta', {id, name, type})
+      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
+      return found
     },
-    // dialogs - simple meta
     nameRules(name) {
       name = name.trim().toLowerCase()
       if (name.length > 30) {
@@ -314,8 +243,8 @@ export default {
       }
     },
     itemNameRules(name) {
-      let arr = this.array.map(i => i.toLowerCase())
-      let duplicate = arr.includes(name.trim().toLowerCase())
+      let items = this.items.map(i => i.toLowerCase())
+      let duplicate = items.includes(name.trim().toLowerCase())
       if (name.length > 30) {
         return 'Name must be less than 30 characters'
       } else if (name.length===0) {
@@ -329,81 +258,51 @@ export default {
       }
     },
     tryAddNewItem() {
-      if (this.validSimpleMeta) this.addNewItem()
+      if (this.validMeta) this.addNewItem()
     },
     addNewItem() {
       this.$refs.itemName.validate()
       if (!this.validItemName) return
-      this.array.push(this.itemName)
+      this.items.push(this.itemName)
       this.itemName = ''
     },
     removeItem(item) { 
-      const index = this.array.indexOf(item)
-      if (index >= 0) this.array.splice(index, 1)
-    },
-    addSimpleMeta() {
-      this.$refs.formSimpleMeta.validate()
-      if (!this.validSimpleMeta) return
-      if (this.typeOfSimpleMeta=='array' && this.array.length <= 1) return
-
-      let settings = { 
-        name: this.simpleMetaName,
-        type: this.typeOfSimpleMeta,
-        icon: this.metaIcon,
-      }
-      if (this.typeOfSimpleMeta=='array') {
-        settings.array = this.array.map(i => { return { id: shortid.generate(), name: i}})
-      } 
-
-      this.$store.dispatch('addMeta', {
-        id: shortid.generate(),
-        type: 'simple', 
-        settings
-      })
-
-      this.dialogAddNewSimpleMeta = false
-      this.simpleMetaName = ''
-      this.metaIcon = 'shape'
-      this.typeOfSimpleMeta = ''
-      this.array = []
-      this.itemName = ''
-    },
-    // dialogs - complex meta (with cards)
-    filterIcons(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
+      const index = this.items.indexOf(item)
+      if (index >= 0) this.items.splice(index, 1)
     },
     addMeta() {
-      this.$refs.formMeta.validate()
+      this.$refs.form.validate()
       if (!this.validMeta) return
+      if (this.metaType=='array' && this.items.length <= 1) return
 
-      let id = shortid.generate()
-      this.$store.dispatch('addMeta', {
-        id: id, 
-        type: 'complex', 
-        settings: { name: this.metaName, nameSingular: this.nameSingular, icon: this.metaIcon, metaInCard: [] }
-      })
+      let settings = { 
+        name: this.metaName,
+        type: this.metaType,
+        icon: this.metaIcon,
+      }
+      if (this.metaType=='array') {
+        settings.items = this.items.map(i => { return { id: shortid.generate(), name: i}})
+      } 
 
-      const metaFolder = path.join(this.pathToUserData, 'media', 'meta', id)
-      if (!fs.existsSync(metaFolder)) fs.mkdirSync(metaFolder)
+      this.$store.dispatch('addSimpleMeta', { id: shortid.generate(), settings })
 
-      this.dialogAddNewMeta = false
+      this.dialogAddNewSimpleMeta = false
       this.metaName = ''
-      this.nameSingular = ''
       this.metaIcon = 'shape'
+      this.metaType = ''
+      this.items = []
+      this.itemName = ''
     },
-    openSettings(index) {
-      this.metaSettingsIndex = index
-      this.dialogEditMeta = true
+    openDeleteDialog(index) {
+      this.selectedMetaIndex = index
+      this.dialogDeleteMeta = true
     },
-    closeSettings() {
-      this.dialogEditMeta = false
+    deleteMeta() {
+      let index = this.selectedMetaIndex
+      let id = this.simpleMetaList[index].id
+      let name = this.simpleMetaList[index].settings.name
+      this.$store.dispatch('deleteSimpleMeta', {id, name})
+      this.dialogDeleteMeta = false
     },
   },
 }

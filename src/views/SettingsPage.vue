@@ -261,7 +261,8 @@
       </v-tab-item>
       <v-tab-item value="meta-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <AddNewMeta/>
+          <ComplexMetaList/>
+          <SimpleMetaList/>
         </v-card>
       </v-tab-item>
       <v-tab-item value="appearance-settings">
@@ -687,7 +688,8 @@ const axios = require("axios")
 const cheerio = require("cheerio")
 const { webFrame } = require('electron')
 
-import AddNewMeta from '@/components/pages/settings/AddNewMeta.vue'
+import ComplexMetaList from '@/components/pages/meta/ComplexMetaList.vue'
+import SimpleMetaList from '@/components/pages/meta/SimpleMetaList.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
@@ -700,7 +702,8 @@ import vuescroll from 'vuescroll'
 export default {
   name: 'SettingsPage',
   components: {
-    AddNewMeta,
+    ComplexMetaList,
+    SimpleMetaList,
     ThemeColors,
     ManageBackups,
     ClearDatabases,
