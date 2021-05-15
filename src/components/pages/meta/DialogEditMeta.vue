@@ -14,6 +14,7 @@
               <v-row>
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="settings.name" :rules="[nameRules]" label="Name of meta"/>
+                  <v-text-field v-model="settings.nameSingular" :rules="[nameRules]" label="Name singular"/>
                 </v-col>
                 <v-col cols="12" sm="6">
                   <v-autocomplete v-model="settings.icon" :items="icons" :filter="filterIcons"
@@ -153,6 +154,7 @@ export default {
     validMetaSettings: false,
     settings: {
       name: '',
+      nameSingular: '',
       icon: 'shape',
       images: false,
       imageAspectRatio: '',

@@ -186,6 +186,7 @@
           <v-card-text class="px-4">
             <v-form v-model="validMeta" ref="formMeta" class="flex-grow-1" @submit.prevent>
               <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
+              <v-text-field v-model="nameSingular" :rules="[nameRules]" label="Name singular"/>
               <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
                 item-text="name" item-value="name" label="Icon" class="mt-4"
                 :rules="[value => !!value || 'Icon is required']">
@@ -246,7 +247,7 @@ export default {
     validItemName: false,
     array: [],
     itemName: '',
-    reserved: ['id','name','duration','size','resolution','rating','favorite','bookmark',
+    reserved: ['id','name','namesingular','duration','size','resolution','rating','favorite','bookmark',
       'date','edit','views','array','type','number','string','boolean'],
     drag: false,
     dragOptions: {
@@ -258,6 +259,7 @@ export default {
     // meta with cards
     validMeta: false,
     metaName: '',
+    nameSingular: '',
     metaIcon: 'shape',
     icons: icons,
     // settings
@@ -385,7 +387,7 @@ export default {
       this.$store.dispatch('addMeta', {
         id: id, 
         type: 'complex', 
-        settings: { name: this.metaName, icon: this.metaIcon, metaInCard: [] }
+        settings: { name: this.metaName, nameSingular: this.nameSingular, icon: this.metaIcon, metaInCard: [] }
       })
 
       const metaFolder = path.join(this.pathToUserData, 'media', 'meta', id)
@@ -393,6 +395,7 @@ export default {
 
       this.dialogAddNewMeta = false
       this.metaName = ''
+      this.nameSingular = ''
       this.metaIcon = 'shape'
     },
     openSettings(index) {
