@@ -84,10 +84,7 @@ export default {
     initFilters() { this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) },
   },
   watch: {
-    $route(newRoute) {
-      if (!this.$route.path.includes('/meta/')) return
-      this.initFilters()
-    },
+    $route(newRoute) { if (this.$route.path.includes('/meta/')) this.initFilters() },
   }
 }
 </script>

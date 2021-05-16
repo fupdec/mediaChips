@@ -95,7 +95,13 @@
                   <span class="overline text-center">Specific meta</span>
                 </v-col>
                 <v-col cols="12">
-                  <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'Yes':'No'}`" class="ma-0" hide-details/>
+                  <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0" hide-details/>
+                </v-col>
+                <v-col cols="6">
+                  <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
+                </v-col>
+                <v-col cols="6">
+                  <v-switch v-model="settings.rating" :label="`Ratings: ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
                 </v-col>
               </v-row>
             </v-form>
@@ -183,6 +189,8 @@ export default {
       chipColor: false,
       cardSize: 1,
       synonyms: false,
+      favorite: true,
+      rating: false,
       metaInCard: [],
     },
     reserved: ['id','name','duration','size','resolution','rating','favorite','bookmark',
