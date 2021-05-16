@@ -20,7 +20,7 @@
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="name" outlined label="Name" hide-details dense/>
                 </v-col>
-                <v-col cols="12" sm="6">
+                <v-col v-if="meta.settings.synonyms" cols="12" sm="6">
                   <v-text-field v-model="synonyms" outlined label="Synonyms" hide-details dense/>
                 </v-col>
                 <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
@@ -56,9 +56,13 @@
                     @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
                     
                   <v-text-field v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='date'" 
-                    :value="values[m.id]" @click="pickerId=m.id,picker=true" outlined dense
+                    :value="values[m.id]" @click="calendarId=m.id,calendar=true" outlined dense
                     :label="getMeta(m.id,m.type).settings.name" hint='YYYY-MM-DD' hide-details
                     clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
+
+                </v-col>
+                <v-col v-if="meta.settings.chipColor" cols="12" sm="6">
+                  <v-btn @click="dialogColor=true" :color="color">Pick another color for card</v-btn>
                 </v-col>
               </v-row>
             </v-container>
@@ -79,10 +83,14 @@
       </div>
     </v-dialog>
 
-    <v-dialog v-model="picker" width="300px">
-      <v-date-picker @change="setVal($event, pickerId), picker=false"
+    <v-dialog v-model="calendar" width="300px">
+      <v-date-picker @change="setVal($event, calendarId), calendar=false"
         :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
-        :value="values[pickerId]" no-title color="primary" full-width/>
+        :value="values[calendarId]" no-title color="primary" full-width/>
+    </v-dialog>
+    
+    <v-dialog v-model="dialogColor" width="300">
+      <v-color-picker v-model="color"/>
     </v-dialog>
   </div>
 </template>
@@ -103,16 +111,19 @@ export default {
   mounted () {
     this.$nextTick(function () {
       this.name = this.card.meta.name || ''
+      this.color = this.card.meta.color || '#777'
       this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
     })
   },
   data: () => ({
     isSelectedSingle: null,
     values: {},
-    picker: false,
-    pickerId: null,
+    calendar: false,
+    calendarId: null,
     name: '',
     synonyms: '',
+    dialogColor: false,
+    color: '#777',
   }),
   computed: {
     metaId() { return this.$route.query.metaId },
@@ -179,6 +190,7 @@ export default {
       let presetValues = {
         name: this.name,
         synonyms: this.parseStringToArray(this.synonyms),
+        color: this.color,
       }
       let newValues = {...presetValues, ...this.oldValues, ...this.values}
       this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()

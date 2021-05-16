@@ -4,6 +4,7 @@
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{class:'accent--text'}" :class="{favorite: favorite}">
       <div v-if="meta.settings.images" class="img-container">
+        <div v-if="meta.settings.chipColor" class="meta-color" :style="`border-color: ${getColor(metaId,card.id)} transparent transparent transparent;`"/>
         <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img"/>
         <v-img v-if="isAltImgExist" :src="imgAlt" :aspect-ratio="meta.settings.imageAspectRatio" position="top" class="secondary-img"/> 
         <div v-if="isCustom1ImgExist" class="custom1-img-button">1</div> <v-img v-if="isCustom1ImgExist" :src="imgCustom1" class="custom1-img"/>
@@ -20,7 +21,7 @@
       </div>
       
       <!-- Parse meta from cards -->
-      <div v-for="(m,i) in metaInCard" :key="i" class="d-flex">
+      <div v-for="(m,i) in metaInCard" :key="i" class="d-flex px-1">
         <v-tooltip top>
           <template v-slot:activator="{ on }">
             <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id,m.type).settings.icon}}</v-icon>
@@ -28,7 +29,10 @@
           <span>{{getMeta(m.id,m.type).settings.name}}</span>
         </v-tooltip>
         <v-chip-group v-if="m.type=='complex'" column>
-          <v-chip v-for="c in card.meta[m.id]" :key="c" @mouseover.stop="showImage($event,c,'meta',m.id)" @mouseleave.stop="$store.state.hoveredImage=false"> {{ getCard(m.id,c).meta.name }} </v-chip>
+          <v-chip v-for="c in card.meta[m.id]" :key="c" :color="getColor(m.id,c)"
+            @mouseover.stop="showImage($event,c,'meta',m.id)" 
+            @mouseleave.stop="$store.state.hoveredImage=false"> 
+              {{ getCard(m.id,c).meta.name }} </v-chip>
         </v-chip-group>
         <div v-else-if="m.type=='simple'">
           <span v-if="getMeta(m.id,m.type).type=='array'">{{card.meta[m.id]===undefined?'':card.meta[m.id].join(', ')}}</span>
@@ -92,6 +96,10 @@ export default {
       if (event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
+    },
+    getColor(metaId, cardId) {
+      if (!this.getMeta(metaId, 'complex').settings.chipColor) return ''
+      else return this.getCard(metaId,cardId).meta.color || '#777'
     },
     getMeta(id, type) {
       if (type == 'complex') return this.$store.getters.meta.find({id}).value()
