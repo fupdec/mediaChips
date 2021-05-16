@@ -25,8 +25,7 @@
           <span>{{getMeta(m.id,m.type).settings.name}}</span>
         </v-tooltip>
         <v-chip-group v-if="m.type=='complex'" column>
-          <v-chip v-for="c in card.meta[m.id]" :key="c">
-            {{ getCard(m.id,c).meta.name }} </v-chip>
+          <v-chip v-for="c in card.meta[m.id]" :key="c" @mouseover.stop="showImage($event,c,'meta',m.id)" @mouseleave.stop="$store.state.hoveredImage=false"> {{ getCard(m.id,c).meta.name }} </v-chip>
         </v-chip-group>
         <div v-else-if="m.type=='simple'">
           <span v-if="getMeta(m.id,m.type).type=='array'">{{card.meta[m.id]===undefined?'':card.meta[m.id].join(', ')}}</span>
@@ -46,11 +45,14 @@
 const fs = require("fs")
 const path = require("path")
 
+import ShowImageFunction from '@/mixins/ShowImageFunction'
+
 export default {
   name: "MetaCard",
   props: {
     card: Object,
   },
+  mixins: [ShowImageFunction],
   mounted() {
     this.$nextTick(function () {
       this.cardKey = this.card.id

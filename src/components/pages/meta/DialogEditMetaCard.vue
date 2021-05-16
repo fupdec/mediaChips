@@ -3,19 +3,15 @@
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="800" width="70vw">
       <v-card>
         <v-card-title class="px-4 py-2">
-          Edit "{{card.meta.name}}"
+          <span>Editing of {{meta.settings.nameSingular.toLowerCase()}} "{{card.meta.name}}"</span>
           <v-spacer></v-spacer>
-          <v-btn @click="close" color="red">Close</v-btn>
-          <v-btn @click="save" color="green">Save</v-btn>
+          <v-btn @click="close" class="mx-4" color="red"> <v-icon left>mdi-close</v-icon> Close</v-btn>
+          <v-btn @click="save" color="green"> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
         </v-card-title>
         <v-divider class="mb-2"></v-divider>
         <div class="d-flex justify-space-between px-4">
-          <v-chip label outlined small class="mr-4">
-            <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}}
-          </v-chip>
-          <v-chip label outlined small>
-            <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
-          </v-chip>
+          <v-chip label outlined small class="mr-4"> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
+          <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>
         </div>
         <vuescroll>
           <v-card-text>
@@ -28,7 +24,9 @@
                     :label="getMeta(m.id,m.type).settings.name" item-value="id"
                   >
                     <template v-slot:selection="data">
-                      <v-chip v-bind="data.attrs">
+                      <v-chip v-bind="data.attrs" 
+                        @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                        @mouseleave.stop="$store.state.hoveredImage=false">
                         <span>{{ data.item.meta.name }}</span>
                       </v-chip>
                     </template>
@@ -85,6 +83,7 @@
 
 <script>
 import vuescroll from 'vuescroll'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
 
 export default {
   name: "DialogEditMetaCard",
@@ -94,6 +93,7 @@ export default {
   beforeMount () {
     this.parseMetaInCard()
   },
+  mixins: [ShowImageFunction], 
   mounted () {
     this.$nextTick(function () {
     })

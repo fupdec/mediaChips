@@ -46,12 +46,15 @@ export default {
         return path.join('file://', this.pathToUserData, '/img/templates/website.png')
       }
     },
+    getImgMetaUrl(cardId, metaId) {
+      let img = path.join(this.pathToUserData, `/media/meta/${metaId}/${cardId}_main.jpg`)
+      let imgChecked = this.checkImageExist(img)
+      if (imgChecked) return 'file://' + imgChecked
+      else return path.join('file://', this.pathToUserData, '/img/templates/tag.png')
+    },
     checkImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
-        return false
-      }
+      if (fs.existsSync(imgPath)) return imgPath
+      else return false
     },
   },
 }

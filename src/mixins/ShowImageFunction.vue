@@ -1,7 +1,7 @@
 <script>
 export default {
   methods: {
-    showImage(event, itemId, imgType) {
+    showImage(event, itemId, imgType, cardId) {
       if (event.buttons !== 0) return
       let x = event.clientX
       let y = event.clientY
@@ -15,6 +15,7 @@ export default {
       this.$store.state.hoveredImageY = y
       this.$store.state.hoveredImage = true
       this.$store.state.hoveredImageId = itemId
+      this.$store.state.hoveredImageMetaId = cardId
       this.$store.state.hoveredImageType = imgType
 
       this.$store.state.hoveredImageTime = new Date().getTime()

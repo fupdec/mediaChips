@@ -25,10 +25,11 @@ export default new Vuex.Store({
     quantityRecentVideos: 20,
     hoveredImage: false,
     hoveredImageId: '',
+    hoveredImageMetaId: '',
     hoveredImageType: '',
     hoveredImageTime: 0,
     hoveredImageX: 0,
-    hoveredImageY: 0,
+    hoveredImageY: 0, // TODO create object for hovered values
     x: 0,
     y: 0,
     contextMenu: false,
