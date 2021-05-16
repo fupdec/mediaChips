@@ -14,7 +14,10 @@
       <v-divider v-show="meta.settings.images"/>
 
       <div class="px-1">{{card.meta.name}}</div>
-      <div v-if="meta.settings.synonyms" class="px-1">{{card.meta.name}}</div>
+      <div v-if="meta.settings.synonyms" class="px-1 caption"> 
+        <span v-if="card.meta.synonyms" class="mx-2">a.k.a.</span> 
+        {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}}
+      </div>
       
       <!-- Parse meta from cards -->
       <div v-for="(m,i) in metaInCard" :key="i" class="d-flex">

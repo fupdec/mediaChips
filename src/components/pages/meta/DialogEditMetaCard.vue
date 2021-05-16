@@ -17,6 +17,12 @@
           <v-card-text>
             <v-container fluid>
               <v-row>
+                <v-col cols="12" sm="6">
+                  <v-text-field v-model="name" outlined label="Name" hide-details dense/>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field v-model="synonyms" outlined label="Synonyms" hide-details dense/>
+                </v-col>
                 <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
                   <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                     @input="setVal($event,m.id)" :value="values[m.id]"
@@ -96,6 +102,8 @@ export default {
   mixins: [ShowImageFunction], 
   mounted () {
     this.$nextTick(function () {
+      this.name = this.card.meta.name || ''
+      this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
     })
   },
   data: () => ({
@@ -103,11 +111,14 @@ export default {
     values: {},
     picker: false,
     pickerId: null,
+    name: '',
+    synonyms: '',
   }),
   computed: {
     metaId() { return this.$route.query.metaId },
     meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
     metaInCard() { return this.meta.settings.metaInCard },
+    oldValues() { return this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).get('meta').cloneDeep().value() },
     card() {
       let ids = this.$store.state.Meta.selectedMeta
       ids.length > 1 ? this.isSelectedSingle=false : this.isSelectedSingle=true 
@@ -134,6 +145,7 @@ export default {
       if (type == 'complex') return this.$store.getters.meta.find({id}).value()
       else return this.$store.getters.simpleMeta.find({id}).value()
     },
+    // TODO rules for name and synonyms
     parseMetaInCard() {
       let metaInCard = this.meta.settings.metaInCard
       for (let i = 0; i < metaInCard.length; i++) {
@@ -146,14 +158,29 @@ export default {
         if (simpleMetaType=='boolean') defaultValue = false
         this.values[id] = this.card.meta[id] || defaultValue
       }
-      console.log(this.values)
+    },
+    removeTrash(string) {
+      string = string.trim()
+      string = string.replace(/[\\\/\%"<>{}\[\]]/g, '')
+      string = string.replace(/ +(?= )/g,'') // remove multiple spaces
+      return string
+    },
+    parseStringToArray(string) {
+      string = this.removeTrash(string)
+      string = string.split(/[,;]/)
+      string = string.filter((el)=>(el != '' && el != ' '))
+      string = string.map(s => s.trim())
+      return string
     },
     getCards(metaId) { return this.$store.getters.metaCards.get(metaId).value() },
     setVal(value, id) { this.values[id] = value },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
     save() {
-      let oldValues = this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).get('meta').cloneDeep().value()
-      let newValues = {...oldValues, ...this.values}
+      let presetValues = {
+        name: this.name,
+        synonyms: this.parseStringToArray(this.synonyms),
+      }
+      let newValues = {...presetValues, ...this.oldValues, ...this.values}
       this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
       this.$store.state.Meta.dialogEditMetaCard = false 
     },
