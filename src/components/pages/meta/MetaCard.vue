@@ -15,8 +15,24 @@
 
       <div class="px-1">{{card.meta.name}}</div>
       <div v-if="meta.settings.synonyms" class="px-1">{{card.meta.name}}</div>
-      <div v-for="(m,i) in metaInCard" :key="i">
-        <v-icon>mdi-{{getMeta(m.id,m.type).settings.icon}}</v-icon> {{getMeta(m.id,m.type).settings.name}}
+      
+      <!-- Parse meta from cards -->
+      <div v-for="(m,i) in metaInCard" :key="i" class="d-flex">
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id,m.type).settings.icon}}</v-icon>
+          </template>
+          <span>{{getMeta(m.id,m.type).settings.name}}</span>
+        </v-tooltip>
+        <v-chip-group v-if="m.type=='complex'" column>
+          <v-chip v-for="c in card.meta[m.id]" :key="c">
+            {{ getCard(m.id,c).meta.name }} </v-chip>
+        </v-chip-group>
+        <div v-else-if="m.type=='simple'">
+          <span v-if="getMeta(m.id,m.type).type=='array'">{{card.meta[m.id]===undefined?'':card.meta[m.id].join(', ')}}</span>
+          <span v-else-if="getMeta(m.id,m.type).type=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
+          <span v-else>{{card.meta[m.id]}}</span>
+        </div>
       </div>
 
       <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" color="secondary" fab x-small class="btn-edit"> <v-icon>mdi-pencil</v-icon> </v-btn>
@@ -76,6 +92,7 @@ export default {
       if (type == 'complex') return this.$store.getters.meta.find({id}).value()
       else return this.$store.getters.simpleMeta.find({id}).value()
     },
+    getCard(metaId, cardId) { return this.$store.getters.metaCards.get(metaId).find({id:cardId}).value() },
     // image 
     getImgUrl(type) {
       console.log()
