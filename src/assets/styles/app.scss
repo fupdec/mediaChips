@@ -1799,6 +1799,18 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     }
   }
   // end images
+  .rating-wrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-top-right-radius: 3px;
+    line-height: 1;
+    .v-icon {
+      padding: 0;
+    }
+  }
   .bookmark {
     position: absolute;
     top: -6px;
