@@ -59,9 +59,9 @@
                   <v-switch v-model="settings.images" :label="`Images: ${settings.images?'Yes':'No'}`" class="ma-0" hide-details/>
                   <v-radio-group v-if="settings.images" v-model="settings.imageAspectRatio" column mandatory hide-details>
                     <span class="mb-2">Aspect ratio of images:</span>
-                    <v-radio value="square"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
-                    <v-radio value="album"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
-                    <v-radio value="portrait"><template v-slot:label><v-icon left>mdi-image-album</v-icon> 9:16 </template></v-radio>
+                    <v-radio :value="1"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
+                    <v-radio :value="16/9"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
+                    <v-radio :value="5/8"><template v-slot:label><v-icon left>mdi-image-album</v-icon> 5:8 </template></v-radio>
                   </v-radio-group>
                 </v-col>
                 <v-col cols="12" sm="6" v-if="settings.images">

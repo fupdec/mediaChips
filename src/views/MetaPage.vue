@@ -5,7 +5,7 @@
     </div>
 
     <v-container fluid class="meta-grid">
-      <MetaCard v-for="(metaCard, i) in metaCardsOnPage" :key="i" :metaCard="metaCard"/>
+      <MetaCard v-for="(card, i) in metaCardsOnPage" :key="i" :card="card"/>
     </v-container>
     <div v-if="metaCardsOnPage.length==0" class="text-center"> 
       <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>

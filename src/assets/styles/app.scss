@@ -1651,6 +1651,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
 }
 // meta
 .meta-card {
+  box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.12);
   cursor: default;
   position: relative;
   overflow: visible;
@@ -1702,10 +1703,102 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       pointer-events: none;
       box-shadow: 0px 2px 8px 3px rgba(255, 0, 75, 0.25), 0 0 0 1px rgba(255, 0, 75, 1);
     }
-    .tag-card-img:before {
+    .main-img:before {
       opacity: 1;
     }
   }
+  // images
+  .img-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px 4px 0 0;
+    &:hover {
+      .secondary-img {
+        opacity: 1;
+      }
+      .main-img:not(.show) {
+        opacity: 0;
+      }
+    }
+    &:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 1;
+      opacity: 0;
+      background-image: linear-gradient(225deg, rgba(255, 0, 75, 1) 0%, rgba(0, 0, 0, 0) 12%, rgba(0, 0, 0, 0));
+      transition: 1s all ease;
+      pointer-events: none;
+    }
+  }
+  .secondary-img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    transition: .3s all ease;
+    opacity: 0;
+    .v-image__image {
+      background-position-y: top !important;
+      background-color: rgba(134, 134, 134, 0.1);
+    } 
+  }
+  .custom2-img,
+  .custom1-img {
+    position: absolute !important;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    opacity: 0;
+    min-width: 100%;
+    min-height: 100%;
+    transition: .3s opacity ease-out;
+    &-button {
+      width: 30px;
+      height: 30px;
+      background: rgba(10, 10, 10, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      position: absolute;
+      right: 0;
+      opacity: 0;
+      transition: .3s;
+      transform: translateX(50px);
+      z-index: 1;
+    }
+  }
+  .custom1-img {
+    &-button {
+      bottom: 50%;
+    }
+  }
+  .custom2-img {
+    &-button {
+      bottom: calc(50% - 30px);
+    }
+  }
+  .custom1-img-button {
+    &:hover {
+      & + .custom1-img {
+        opacity: 1 !important;
+      }
+    }
+  }
+  .custom2-img-button {
+    &:hover {
+      & + .custom2-img {
+        opacity: 1 !important;
+      }
+    }
+  }
+  // end images
   .bookmark {
     position: absolute;
     top: -6px;
