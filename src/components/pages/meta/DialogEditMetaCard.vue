@@ -1,19 +1,63 @@
 <template>
   <div>
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="800" width="70vw">
-      <v-card class="pb-5">
-        <v-card-title>Edit "{{card.meta.name}}"</v-card-title>
+      <v-card>
+        <v-card-title class="px-4 py-2">
+          Edit "{{card.meta.name}}"
+          <v-spacer></v-spacer>
+          <v-btn @click="close" color="red">Close</v-btn>
+          <v-btn @click="save" color="green">Save</v-btn>
+        </v-card-title>
+        <v-divider class="mb-2"></v-divider>
         <div class="d-flex justify-space-between px-4">
-          <v-chip label outlined class="mr-4">
-            <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+          <v-chip label outlined small class="mr-4">
+            <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}}
           </v-chip>
-          <v-chip label outlined>
-            <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+          <v-chip label outlined small>
+            <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
           </v-chip>
         </div>
         <vuescroll>
-          <v-card-text class="pa-0">
-            {{card}}
+          <v-card-text>
+            <v-container fluid>
+              <v-row>
+                <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
+                  <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
+                    @input="setVal($event,m.id)" :value="values[m.id]"
+                    outlined multiple hide-selected hide-details dense
+                    :label="getMeta(m.id,m.type).settings.name" item-value="id"
+                  >
+                    <template v-slot:selection="data">
+                      <v-chip v-bind="data.attrs">
+                        <span>{{ data.item.meta.name }}</span>
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <span>{{data.item.meta.name}}</span>
+                    </template>
+                  </v-autocomplete>
+
+                  <v-text-field v-if="m.type=='simple'&&(getMeta(m.id,m.type).type==='string'||getMeta(m.id,m.type).type==='number')" 
+                    @input="setVal($event,m.id)" :value="values[m.id]" outlined
+                    :label="getMeta(m.id,m.type).settings.name" hide-details dense
+                    clearable @click:clear="setVal('', m.id)"/>
+
+                  <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='array'" 
+                    :items="getMeta(m.id,m.type).settings.items" item-value="id" item-text="name"
+                    @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
+                    :label="getMeta(m.id,m.type).settings.name" outlined dense/>
+                  
+                  <v-switch v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='boolean'" 
+                    inset :label="getMeta(m.id,m.type).settings.name" hide-details 
+                    @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
+                    
+                  <v-text-field v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='date'" 
+                    :value="values[m.id]" @click="pickerId=m.id,picker=true" outlined dense
+                    :label="getMeta(m.id,m.type).settings.name" hint='YYYY-MM-DD' hide-details
+                    clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
+                </v-col>
+              </v-row>
+            </v-container>
           </v-card-text>
         </vuescroll>
       </v-card>
@@ -30,6 +74,12 @@
         </div>
       </div>
     </v-dialog>
+
+    <v-dialog v-model="picker" width="300px">
+      <v-date-picker @change="setVal($event, pickerId), picker=false"
+        :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
+        :value="values[pickerId]" no-title color="primary" full-width/>
+    </v-dialog>
   </div>
 </template>
 
@@ -41,15 +91,23 @@ export default {
   components: {
     vuescroll,
 	},
+  beforeMount () {
+    this.parseMetaInCard()
+  },
   mounted () {
     this.$nextTick(function () {
     })
   },
   data: () => ({
     isSelectedSingle: null,
+    values: {},
+    picker: false,
+    pickerId: null,
   }),
   computed: {
     metaId() { return this.$route.query.metaId },
+    meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
+    metaInCard() { return this.meta.settings.metaInCard },
     card() {
       let ids = this.$store.state.Meta.selectedMeta
       ids.length > 1 ? this.isSelectedSingle=false : this.isSelectedSingle=true 
@@ -72,8 +130,33 @@ export default {
     },
   },
   methods: {
+    getMeta(id, type) {
+      if (type == 'complex') return this.$store.getters.meta.find({id}).value()
+      else return this.$store.getters.simpleMeta.find({id}).value()
+    },
+    parseMetaInCard() {
+      let metaInCard = this.meta.settings.metaInCard
+      for (let i = 0; i < metaInCard.length; i++) {
+        const id = metaInCard[i].id
+        const type = metaInCard[i].type
+        if (type=='complex') { this.values[id] = this.card.meta[id] || []; continue }
+        const simpleMetaType = this.getMeta(id,type).type
+        let defaultValue = ''
+        if (simpleMetaType=='array') defaultValue = []
+        if (simpleMetaType=='boolean') defaultValue = false
+        this.values[id] = this.card.meta[id] || defaultValue
+      }
+      console.log(this.values)
+    },
+    getCards(metaId) { return this.$store.getters.metaCards.get(metaId).value() },
+    setVal(value, id) { this.values[id] = value },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
-    save() { this.$store.state.Meta.dialogEditMetaCard = false },
+    save() {
+      let oldValues = this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).get('meta').cloneDeep().value()
+      let newValues = {...oldValues, ...this.values}
+      this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
+      this.$store.state.Meta.dialogEditMetaCard = false 
+    },
   },
 };
 </script>

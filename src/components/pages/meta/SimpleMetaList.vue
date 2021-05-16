@@ -29,7 +29,7 @@
               <span>
                 <v-icon left>mdi-{{meta.settings.icon}}</v-icon>
                 <span>{{meta.settings.name}}</span>
-                <span class="caption px-4">type: {{meta.settings.type}}</span>
+                <span class="caption px-4">type: {{meta.type}}</span>
                 <span class="caption">id: {{meta.id}}</span>
               </span>
               <span>
@@ -275,16 +275,10 @@ export default {
       if (!this.validMeta) return
       if (this.metaType=='array' && this.items.length <= 1) return
 
-      let settings = { 
-        name: this.metaName,
-        type: this.metaType,
-        icon: this.metaIcon,
-      }
-      if (this.metaType=='array') {
-        settings.items = this.items.map(i => { return { id: shortid.generate(), name: i}})
-      } 
+      let settings = { name: this.metaName, icon: this.metaIcon }
+      if (this.metaType=='array') settings.items = this.items.map(i=>({id:shortid.generate(),name:i})) 
 
-      this.$store.dispatch('addSimpleMeta', { id: shortid.generate(), settings })
+      this.$store.dispatch('addSimpleMeta', { id:shortid.generate(), type:this.metaType, settings })
 
       this.dialogAddNewSimpleMeta = false
       this.metaName = ''

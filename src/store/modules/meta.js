@@ -58,8 +58,8 @@ const Meta = {
       commit('getMetaListFromDb')
       commit('addLog', {type:'info', color:'green', text:`Added complex meta "${settings.name}"`})
     },
-    addSimpleMeta({commit, getters, rootState}, {id, settings}) {
-      let meta = { ...defaultMeta, ...{ id, settings } }
+    addSimpleMeta({commit, getters, rootState}, {id, type, settings}) {
+      let meta = { ...defaultMeta, ...{ id, type, settings } }
       getters.simpleMeta.push(meta).write()
       commit('addLog', {type:'info', color:'green', text:`Added simple meta "${settings.name}"`})
     },

@@ -139,9 +139,9 @@
         </v-chip-group>
       </v-card-actions>
 
-      <div v-for="(meta, i) in simpleMetaList" :key="i" class="meta pa-1">
+      <!-- <div v-for="(meta, i) in simpleMetaList" :key="i" class="meta pa-1">
         <span class="key">{{meta.settings.name}}:</span> <span class="value">{{video[meta.id]}}</span>
-      </div>
+      </div> -->
       
       <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
         mdi-bookmark

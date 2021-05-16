@@ -78,8 +78,8 @@
                   <v-list v-if="settings.metaInCard.length" dense class="mb-2">
                     <v-list-item-group color="primary">
                       <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
-                        <v-icon left>mdi-{{getMetaByType(meta.type, meta.id).settings.icon}}</v-icon>
-                        {{getMetaByType(meta.type, meta.id).settings.name}}
+                        <v-icon left>mdi-{{getMeta(meta.id, meta.type).settings.icon}}</v-icon>
+                        {{getMeta(meta.id, meta.type).settings.name}}
                         <span class="px-2">({{meta.type}})</span>
                       </v-list-item>
                     </v-list-item-group>
@@ -255,7 +255,7 @@ export default {
       this.dialogAddMetaToCard = false
       this.selectedMetaForCard = null
     },
-    getMetaByType(type, id) {
+    getMeta(id, type) {
       if (type == 'simple') return _.find(this.simpleMetaList, {id})
       else return _.find(this.metaList, {id})
     },

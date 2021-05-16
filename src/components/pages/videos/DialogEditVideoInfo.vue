@@ -399,24 +399,24 @@
               </v-card>
             </v-responsive>
             <v-row class="mx-2">
-              <v-col v-for="meta in simpleMetaList" :key="meta.id" cols="6" sm="4">
-                <v-text-field v-if="meta.settings.type==='string'" 
+              <!-- <v-col v-for="meta in simpleMetaList" :key="meta.id" cols="6" sm="4">
+                <v-text-field v-if="meta.type==='string'" 
                   @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.settings.name" clearable/>
 
-                <v-text-field v-if="meta.settings.type==='number'" :value="values[meta.id]"
+                <v-text-field v-if="meta.type==='number'" :value="values[meta.id]"
                   @input="setVal($event,meta.id)" :label="meta.settings.name" clearable type="number"/>
 
-                <v-autocomplete v-if="meta.settings.type==='array'" :items="meta.settings.array"
+                <v-autocomplete v-if="meta.type==='array'" :items="meta.settings.array"
                   @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.settings.name" multiple/>
 
-                <v-switch v-if="meta.settings.type==='boolean'" inset :label="meta.settings.name"
+                <v-switch v-if="meta.type==='boolean'" inset :label="meta.settings.name"
                   @change="setVal($event,meta.id)" :value="values[meta.id]"/>
                     
-                <v-text-field v-if="meta.settings.type==='date'" readonly
+                <v-text-field v-if="meta.type==='date'" readonly
                   :value="values[meta.id]" @focus="picker=true, pickerMeta=meta.id"
                   :label="meta.settings.name" placeholder=" " hint='YYYY-MM-DD' persistent-hint
                   clearable @click:clear="setVal('', meta.id)"/>
-              </v-col>
+              </v-col> -->
               <v-col cols="12" class="mt-6">
                 <v-card-actions>
                   <span class="mr-6">
@@ -1161,7 +1161,9 @@ export default {
           bookmark: newBookmark,
           path: newPath,
           edit: Date.now(),
-        }).assign(this.values).write()
+        })
+        // .assign(this.values)
+        .write()
 
         console.log(this.values)
         this.$store.commit('updateVideos', [videoId])
