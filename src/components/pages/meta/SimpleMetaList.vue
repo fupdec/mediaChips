@@ -22,7 +22,7 @@
         </v-tooltip>
         <span class="overline">Simple Meta</span>
       </div>
-      <v-list v-if="simpleMetaList.length" dense>
+      <v-list v-if="simpleMetaList.length" dense class="list-zebra">
         <v-list-item-group color="primary">
           <v-list-item v-for="(meta, i) in simpleMetaList" :key="i">
             <div class="d-flex justify-space-between align-center" style="width:100%">
@@ -33,6 +33,7 @@
                 <span class="caption">id: {{meta.id}}</span>
               </span>
               <span>
+                <v-btn @click="openSettings(i)" icon><v-icon>mdi-cog</v-icon></v-btn>
                 <v-btn @click="openDeleteDialog(i)" color="red" icon><v-icon>mdi-delete</v-icon></v-btn>
               </span>
             </div>
@@ -146,6 +147,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <DialogEditSimpleMeta v-if="dialogEditMeta" :dialogEditMeta="dialogEditMeta" :metaIndex="selectedMetaIndex" @closeSettings="closeSettings"/>
   </div>
 </template>
 
@@ -163,7 +166,7 @@ export default {
   components: {
     vuescroll,
     draggable,
-    DialogEditMeta: () => import("@/components/pages/meta/DialogEditMeta.vue"),
+    DialogEditSimpleMeta: () => import("@/components/pages/meta/DialogEditSimpleMeta.vue"),
   },
   mixins: [NameRules], 
   mounted() {
@@ -264,6 +267,10 @@ export default {
       this.items = []
       this.itemName = ''
     },
+    openSettings(index) {
+      this.selectedMetaIndex = index
+      this.dialogEditMeta = true
+    },
     openDeleteDialog(index) {
       this.selectedMetaIndex = index
       this.dialogDeleteMeta = true
@@ -275,6 +282,7 @@ export default {
       this.$store.dispatch('deleteSimpleMeta', {id, name})
       this.dialogDeleteMeta = false
     },
+    closeSettings() { this.dialogEditMeta = false },
   },
 }
 </script>

@@ -3,22 +3,22 @@
     <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable max-width="600">
       <v-card>
         <v-card-title class="px-4 py-1">
-          <div class="headline">Meta Settings</div>
+          <div class="headline">Settings for meta "{{this.meta.settings.name}}"</div>
           <v-spacer></v-spacer>
           <v-icon>mdi-cog</v-icon>
         </v-card-title>
         <v-divider></v-divider>
-        <div class="d-flex justify-space-between px-4 pt-2">
-          <v-chip label small outlined class="mr-4">
-            <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}}
-          </v-chip>
-          <v-chip label small outlined>
-            <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
-          </v-chip>
-        </div>
         <vuescroll>
           <v-card-text class="px-4">
-            <v-form v-model="validMetaSettings" ref="formMetaSettings" class="flex-grow-1" @submit.prevent>
+            <div class="d-flex justify-space-between pb-4">
+              <v-chip label small outlined class="mr-4">
+                <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+              </v-chip>
+              <v-chip label small outlined>
+                <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+              </v-chip>
+            </div>
+            <v-form v-model="valid" ref="form" class="flex-grow-1" @submit.prevent>
               <v-row>
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="settings.name" :rules="[nameRules]" label="Name of meta"/>
@@ -75,15 +75,17 @@
                 </v-col>
                 <v-col cols="12" align="center">
                   <span class="overline text-center">Meta in Card</span>
-                  <v-list v-if="settings.metaInCard.length" dense class="mb-2">
-                    <v-list-item-group color="primary">
-                      <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
-                        <v-icon left>mdi-{{getMeta(meta.id, meta.type).settings.icon}}</v-icon>
-                        {{getMeta(meta.id, meta.type).settings.name}}
-                        <span class="px-2">({{meta.type}})</span>
-                      </v-list-item>
-                    </v-list-item-group>
-                  </v-list>
+                  <v-card v-if="settings.metaInCard.length" outlined class="mb-2">
+                    <v-list dense class="list-zebra pa-0">
+                      <v-list-item-group color="primary">
+                        <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
+                          <v-icon left>mdi-{{getMeta(meta.id, meta.type).settings.icon}}</v-icon>
+                          {{getMeta(meta.id, meta.type).settings.name}}
+                          <span class="px-2">({{meta.type}})</span>
+                        </v-list-item>
+                      </v-list-item-group>
+                    </v-list>
+                  </v-card>
                   <div v-else class="mb-4">
                     <v-icon large class="mb-2">mdi-card-off-outline</v-icon>
                     <div>No meta added to the card</div>
@@ -178,7 +180,7 @@ export default {
     dialogAddMetaToCard: false,
     icons: icons,
     selectedMetaForCard: null,
-    validMetaSettings: false,
+    valid: false,
     settings: {
       name: '',
       nameSingular: '',
@@ -246,8 +248,8 @@ export default {
       else return _.find(this.metaList, {id})
     },
     saveSettings() {
-      this.$refs.formMetaSettings.validate()
-      if (!this.validMetaSettings) return
+      this.$refs.form.validate()
+      if (!this.valid) return
       this.$store.getters.meta.find({id: this.meta.id}).set('edit', Date.now()).set('settings', this.settings).write()
       this.$store.commit('getMetaListFromDb')
       this.$emit('closeSettings')

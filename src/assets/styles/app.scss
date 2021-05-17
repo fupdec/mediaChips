@@ -1373,6 +1373,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     }
   }
 }
+.list-zebra .v-list-item:nth-of-type(even) {
+  background-color: rgba(100, 100, 100, 0.04);
+}
 // context menu
 .context-menu {
   padding-top: 4px !important;

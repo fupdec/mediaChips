@@ -20,7 +20,7 @@
         </v-tooltip>
         <span class="overline">Complex Meta</span>
       </div>
-      <v-list v-if="metaList.length" dense>
+      <v-list v-if="metaList.length" dense class="list-zebra">
         <v-list-item-group color="primary">
           <v-list-item v-for="(meta, i) in metaList" :key="i">
             <v-icon left>mdi-{{meta.settings.icon}}</v-icon> 
@@ -111,7 +111,7 @@
       </v-card>
     </v-dialog>
 
-    <DialogEditMeta v-if="dialogEditMeta" :dialogEditMeta="dialogEditMeta" :metaIndex="selectedMetaIndex" @closeSettings="closeSettings"/>
+    <DialogEditComplexMeta v-if="dialogEditMeta" :dialogEditMeta="dialogEditMeta" :metaIndex="selectedMetaIndex" @closeSettings="closeSettings"/>
   </div>
 </template>
 
@@ -131,7 +131,7 @@ export default {
   components: {
     vuescroll,
     draggable,
-    DialogEditMeta: () => import("@/components/pages/meta/DialogEditMeta.vue"),
+    DialogEditComplexMeta: () => import("@/components/pages/meta/DialogEditComplexMeta.vue"),
   },
   mixins: [NameRules], 
   mounted() {
@@ -214,9 +214,7 @@ export default {
       this.$store.dispatch('deleteComplexMeta', {id, name})
       this.dialogDeleteMeta = false
     },
-    closeSettings() {
-      this.dialogEditMeta = false
-    },
+    closeSettings() { this.dialogEditMeta = false },
   },
 }
 </script>
