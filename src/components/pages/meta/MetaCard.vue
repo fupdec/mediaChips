@@ -92,11 +92,7 @@ export default {
     isCustom2ImgExist() { return this.meta.settings.imageTypes.includes('custom2') && !this.imgCustom2.includes('not_exist') },
   },
   methods: {
-    stopSmoothScroll(event) {
-      if (event.button != 1) return
-      event.preventDefault()
-      event.stopPropagation()
-    },
+    stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
     getColor(metaId, cardId) {
       if (this.getMeta(metaId, 'complex').settings.chipColor) {
         if (this.getCard(metaId,cardId) === undefined) return '#777'
