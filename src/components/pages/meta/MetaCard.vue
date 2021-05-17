@@ -29,13 +29,16 @@
           <span>{{getMeta(m.id,m.type).settings.name}}</span>
         </v-tooltip>
         <v-chip-group v-if="m.type=='complex'" column>
-          <v-chip v-for="c in card.meta[m.id]" :key="c" :color="getColor(m.id,c)"
+          <v-chip v-for="c in card.meta[m.id]" :key="c" 
+            :color="getColor(m.id,c)" 
+            :label="getMeta(m.id,m.type).settings.chipLabel"
+            :outlined="getMeta(m.id,m.type).settings.chipOutlined"
             @mouseover.stop="showImage($event,c,'meta',m.id)" 
             @mouseleave.stop="$store.state.hoveredImage=false"> 
               {{ getCard(m.id,c).meta.name }} </v-chip>
         </v-chip-group>
         <div v-else-if="m.type=='simple'">
-          <span v-if="getMeta(m.id,m.type).type=='array'">{{getArrayValues(m.id)}}</span>
+          <span v-if="getMeta(m.id,m.type).type=='array'">{{getArrayValuesForCard(m.id)}}</span>
           <span v-else-if="getMeta(m.id,m.type).type=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
           <span v-else>{{card.meta[m.id]}}</span>
         </div>
@@ -53,13 +56,14 @@ const fs = require("fs")
 const path = require("path")
 
 import ShowImageFunction from '@/mixins/ShowImageFunction'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: "MetaCard",
   props: {
     card: Object,
   },
-  mixins: [ShowImageFunction],
+  mixins: [ShowImageFunction, MetaGetters],
   mounted() {
     this.$nextTick(function () {
       this.cardKey = this.card.id
@@ -81,11 +85,8 @@ export default {
     rating: 0,
   }),
   computed: {
-    metaId() { return this.$route.query.metaId },
-    meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
     cardSize() { return `calc(${100 / this.meta.settings.cardSize}% - 20px)` },
     updateCardIds() { return this.$store.state.Meta.updateCardIds },
-    metaInCard() { return this.meta.settings.metaInCard },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     isAltImgExist() { return this.meta.settings.imageTypes.includes('alt') && !this.imgAlt.includes('not_exist') },
     isCustom1ImgExist() { return this.meta.settings.imageTypes.includes('custom1') && !this.imgCustom1.includes('not_exist') },
@@ -93,24 +94,7 @@ export default {
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
-    getColor(metaId, cardId) {
-      if (this.getMeta(metaId, 'complex').settings.chipColor) {
-        if (this.getCard(metaId,cardId) === undefined) return '#777'
-        else return this.getCard(metaId,cardId).meta.color || '#777'
-      } else return ''
-    },
-    getMeta(id, type) {
-      if (type == 'complex') return this.$store.getters.meta.find({id}).value()
-      else return this.$store.getters.simpleMeta.find({id}).value()
-    },
-    getCard(metaId, cardId) { return this.$store.getters.metaCards.get(metaId).find({id:cardId}).value() },
-    getArrayValues(metaId) { 
-      let array = this.card.meta[metaId]
-      if (array === undefined) return ''
-      let items = this.getMeta(metaId,'simple').settings.items
-      let values = array.map(itemId=>(_.find(items, {id: itemId}).name))
-      return values.join(', ') 
-    },
+
     // image 
     getImgUrl(type) {
       let img = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${type}.jpg`)

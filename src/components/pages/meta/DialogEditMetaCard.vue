@@ -29,16 +29,36 @@
                       @input="setVal($event,m.id)" :value="values[m.id]"
                       outlined multiple hide-selected hide-details dense
                       :label="getMeta(m.id,m.type).settings.name" item-value="id"
+                      :menu-props="{contentClass:'list-with-preview'}"
                     >
                       <template v-slot:selection="data">
-                        <v-chip v-bind="data.attrs" 
+                        <v-chip v-bind="data.attrs" close 
+                          @click:close="removeItem(data.item.id,m.id)"
+                          :color="getColor(m.id,data.item.id)" 
+                          :label="getMeta(m.id,m.type).settings.chipLabel"
+                          :outlined="getMeta(m.id,m.type).settings.chipOutlined"
                           @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
                           @mouseleave.stop="$store.state.hoveredImage=false">
                           <span>{{ data.item.meta.name }}</span>
                         </v-chip>
                       </template>
                       <template v-slot:item="data">
-                        <span>{{data.item.meta.name}}</span>
+                        <div class="list-item" 
+                          @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                          @mouseleave.stop="$store.state.hoveredImage=false"
+                        > 
+                          <span v-if="getMeta(m.id,m.type).settings.favorite">
+                            <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
+                          </span>
+                          <span v-if="getMeta(m.id,m.type).settings.chipColor">
+                            <v-icon :color="data.item.meta.color || ''" left small>
+                              mdi-{{getMeta(m.id,m.type).settings.icon}}</v-icon>
+                          </span>
+                          <span>{{data.item.meta.name}}</span>
+                          <span v-if="getMeta(m.id,m.type).settings.synonyms" class="aliases"> a.k.a.
+                            {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ').slice(0,50)}}
+                          </span>
+                        </div>
                       </template>
                     </v-autocomplete>
 
@@ -101,6 +121,7 @@
 import vuescroll from 'vuescroll'
 import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: "DialogEditMetaCard",
@@ -110,7 +131,7 @@ export default {
   beforeMount () {
     this.parseMetaInCard()
   },
-  mixins: [ShowImageFunction, NameRules], 
+  mixins: [ShowImageFunction, NameRules, MetaGetters], 
   mounted () {
     this.$nextTick(function () {
       this.name = this.card.meta.name || ''
@@ -130,9 +151,6 @@ export default {
     color: '#777',
   }),
   computed: {
-    metaId() { return this.$route.query.metaId },
-    meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
-    metaInCard() { return this.meta.settings.metaInCard },
     oldValues() { return this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).get('meta').cloneDeep().value() },
     card() {
       let ids = this.$store.state.Meta.selectedMeta
@@ -156,22 +174,17 @@ export default {
     },
   },
   methods: {
-    getMeta(id, type) {
-      if (type == 'complex') return this.$store.getters.meta.find({id}).value()
-      else return this.$store.getters.simpleMeta.find({id}).value()
-    },
-    // TODO rules for name and synonyms
     parseMetaInCard() {
       let metaInCard = this.meta.settings.metaInCard
       for (let i = 0; i < metaInCard.length; i++) {
         const id = metaInCard[i].id
         const type = metaInCard[i].type
-        if (type=='complex') { this.values[id] = this.card.meta[id] || []; continue }
+        if (type=='complex') { this.values[id] = _.cloneDeep(this.card.meta[id]) || []; continue }
         const simpleMetaType = this.getMeta(id,type).type
         let defaultValue = ''
         if (simpleMetaType=='array') defaultValue = []
         if (simpleMetaType=='boolean') defaultValue = false
-        this.values[id] = this.card.meta[id] || defaultValue
+        this.values[id] = _.cloneDeep(this.card.meta[id]) || defaultValue
       }
     },
     removeTrash(string) {
@@ -187,7 +200,11 @@ export default {
       string = string.map(s => s.trim())
       return string
     },
-    getCards(metaId) { return this.$store.getters.metaCards.get(metaId).value() },
+    removeItem(item, id) { 
+      const index = this.values[id].indexOf(item)
+      if (index >= 0) this.values[id].splice(index, 1)
+      this.$store.state.hoveredImage = false
+    },
     setVal(value, id) { this.values[id] = value },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
     save() {
