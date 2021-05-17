@@ -15,57 +15,59 @@
         </div>
         <vuescroll>
           <v-card-text>
-            <v-container fluid>
-              <v-row>
-                <v-col cols="12" sm="6">
-                  <v-text-field v-model="name" outlined label="Name" hide-details dense/>
-                </v-col>
-                <v-col v-if="meta.settings.synonyms" cols="12" sm="6">
-                  <v-text-field v-model="synonyms" outlined label="Synonyms" hide-details dense/>
-                </v-col>
-                <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
-                  <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
-                    @input="setVal($event,m.id)" :value="values[m.id]"
-                    outlined multiple hide-selected hide-details dense
-                    :label="getMeta(m.id,m.type).settings.name" item-value="id"
-                  >
-                    <template v-slot:selection="data">
-                      <v-chip v-bind="data.attrs" 
-                        @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
-                        @mouseleave.stop="$store.state.hoveredImage=false">
-                        <span>{{ data.item.meta.name }}</span>
-                      </v-chip>
-                    </template>
-                    <template v-slot:item="data">
-                      <span>{{data.item.meta.name}}</span>
-                    </template>
-                  </v-autocomplete>
+            <v-form v-model="valid" ref="form" @submit.prevent>
+              <v-container fluid>
+                <v-row>
+                  <v-col cols="12" sm="6">
+                    <v-text-field v-model="name" :rules="[nameRules]" outlined label="Name" dense/>
+                  </v-col>
+                  <v-col v-if="meta.settings.synonyms" cols="12" sm="6">
+                    <v-text-field v-model="synonyms" outlined label="Synonyms" hide-details dense/>
+                  </v-col>
+                  <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
+                    <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
+                      @input="setVal($event,m.id)" :value="values[m.id]"
+                      outlined multiple hide-selected hide-details dense
+                      :label="getMeta(m.id,m.type).settings.name" item-value="id"
+                    >
+                      <template v-slot:selection="data">
+                        <v-chip v-bind="data.attrs" 
+                          @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                          @mouseleave.stop="$store.state.hoveredImage=false">
+                          <span>{{ data.item.meta.name }}</span>
+                        </v-chip>
+                      </template>
+                      <template v-slot:item="data">
+                        <span>{{data.item.meta.name}}</span>
+                      </template>
+                    </v-autocomplete>
 
-                  <v-text-field v-if="m.type=='simple'&&(getMeta(m.id,m.type).type==='string'||getMeta(m.id,m.type).type==='number')" 
-                    @input="setVal($event,m.id)" :value="values[m.id]" outlined
-                    :label="getMeta(m.id,m.type).settings.name" hide-details dense
-                    clearable @click:clear="setVal('', m.id)"/>
+                    <v-text-field v-if="m.type=='simple'&&(getMeta(m.id,m.type).type==='string'||getMeta(m.id,m.type).type==='number')" 
+                      @input="setVal($event,m.id)" :value="values[m.id]" outlined
+                      :label="getMeta(m.id,m.type).settings.name" hide-details dense
+                      clearable @click:clear="setVal('', m.id)"/>
 
-                  <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='array'" 
-                    :items="getMeta(m.id,m.type).settings.items" item-value="id" item-text="name"
-                    @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
-                    :label="getMeta(m.id,m.type).settings.name" outlined dense/>
-                  
-                  <v-switch v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='boolean'" 
-                    inset :label="getMeta(m.id,m.type).settings.name" hide-details 
-                    @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
+                    <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='array'" 
+                      :items="getMeta(m.id,m.type).settings.items" item-value="id" item-text="name"
+                      @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
+                      :label="getMeta(m.id,m.type).settings.name" outlined dense/>
                     
-                  <v-text-field v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='date'" 
-                    :value="values[m.id]" @click="calendarId=m.id,calendar=true" outlined dense
-                    :label="getMeta(m.id,m.type).settings.name" hint='YYYY-MM-DD' hide-details
-                    clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
+                    <v-switch v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='boolean'" 
+                      inset :label="getMeta(m.id,m.type).settings.name" hide-details 
+                      @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
+                      
+                    <v-text-field v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='date'" 
+                      :value="values[m.id]" @click="calendarId=m.id,calendar=true" outlined dense
+                      :label="getMeta(m.id,m.type).settings.name" hint='YYYY-MM-DD' hide-details
+                      clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
 
-                </v-col>
-                <v-col v-if="meta.settings.chipColor" cols="12" sm="6">
-                  <v-btn @click="dialogColor=true" :color="color">Pick another color for card</v-btn>
-                </v-col>
-              </v-row>
-            </v-container>
+                  </v-col>
+                  <v-col v-if="meta.settings.chipColor" cols="12" sm="6">
+                    <v-btn @click="dialogColor=true" :color="color">Pick another color for card</v-btn>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-form>
           </v-card-text>
         </vuescroll>
       </v-card>
@@ -97,6 +99,7 @@
 
 <script>
 import vuescroll from 'vuescroll'
+import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 
 export default {
@@ -107,7 +110,7 @@ export default {
   beforeMount () {
     this.parseMetaInCard()
   },
-  mixins: [ShowImageFunction], 
+  mixins: [ShowImageFunction, NameRules], 
   mounted () {
     this.$nextTick(function () {
       this.name = this.card.meta.name || ''
@@ -116,6 +119,7 @@ export default {
     })
   },
   data: () => ({
+    valid: false,
     isSelectedSingle: null,
     values: {},
     calendar: false,
@@ -187,6 +191,9 @@ export default {
     setVal(value, id) { this.values[id] = value },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
     save() {
+      this.$refs.form.validate()
+      if (!this.valid) return
+
       let presetValues = {
         name: this.name,
         synonyms: this.parseStringToArray(this.synonyms),

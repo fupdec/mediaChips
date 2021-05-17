@@ -124,6 +124,7 @@ const path = require("path")
 import vuescroll from 'vuescroll'
 import icons from '@/assets/material-icons.json'
 import draggable from 'vuedraggable'
+import NameRules from '@/mixins/NameRules'
 
 export default {
   name: 'ComplexMetaList',
@@ -132,6 +133,7 @@ export default {
     draggable,
     DialogEditMeta: () => import("@/components/pages/meta/DialogEditMeta.vue"),
   },
+  mixins: [NameRules], 
   mounted() {
     this.$nextTick(function () {
     })
@@ -146,8 +148,6 @@ export default {
     selectedMetaIndex: 0,
     metaIcon: 'shape',
     icons: icons,
-    reserved: ['id','name','namesingular','duration','size','resolution','rating','favorite','bookmark',
-      'date','edit','views','array','type','number','string','boolean'],
     // complex meta (with cards)
     validMeta: false,
     metaName: '',
@@ -167,20 +167,6 @@ export default {
       if (meta === 'array') return 'mdi-code-array'
       if (meta === 'boolean') return 'mdi-toggle-switch'
       return 'mdi-shape'
-    },
-    nameRules(name) {
-      name = name.trim().toLowerCase()
-      if (name.length > 30) {
-        return 'Name must be less than 30 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (!/^[a-zA-Z\s]*$/g.test(name)) {
-        return 'Name must content only letters'
-      } else if (this.reserved.includes(name)) {
-        return 'This word is reserved'
-      } else {
-        return true
-      }
     },
     filterIcons(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()

@@ -155,6 +155,7 @@
 <script>
 import vuescroll from 'vuescroll'
 import icons from '@/assets/material-icons.json'
+import NameRules from '@/mixins/NameRules'
 
 export default {
   props: {
@@ -167,6 +168,7 @@ export default {
 	},
   created() {
   },
+  mixins: [NameRules], 
   mounted () {
     this.$nextTick(function () {
       this.settings = { ...this.settings, ...this.meta.settings }
@@ -193,8 +195,6 @@ export default {
       rating: false,
       metaInCard: [],
     },
-    reserved: ['id','name','duration','size','resolution','rating','favorite','bookmark',
-      'date','edit','views','array','type','number','string','boolean'],
   }),
   computed: {
     metaList() { return this.$store.getters.meta.value() },
@@ -222,20 +222,6 @@ export default {
     },
   },
   methods: {
-    nameRules(name) {
-      name = name.trim().toLowerCase()
-      if (name.length > 30) {
-        return 'Name must be less than 30 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (!/^[a-zA-Z\s]*$/g.test(name)) {
-        return 'Name must content only letters'
-      } else if (this.reserved.includes(name)) {
-        return 'This word is reserved'
-      } else {
-        return true
-      }
-    },
     filterIcons(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()
       const aliases = item.aliases

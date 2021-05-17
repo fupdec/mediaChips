@@ -152,12 +152,11 @@
 
 <script>
 const shortid = require('shortid')
-const fs = require("fs-extra")
-const path = require("path")
 
 import vuescroll from 'vuescroll'
 import icons from '@/assets/material-icons.json'
 import draggable from 'vuedraggable'
+import NameRules from '@/mixins/NameRules'
 
 export default {
   name: 'SimpleMetaList',
@@ -166,6 +165,7 @@ export default {
     draggable,
     DialogEditMeta: () => import("@/components/pages/meta/DialogEditMeta.vue"),
   },
+  mixins: [NameRules], 
   mounted() {
     this.$nextTick(function () {
     })
@@ -180,8 +180,6 @@ export default {
     selectedMetaIndex: 0,
     metaIcon: 'shape',
     icons: icons,
-    reserved: ['id','name','namesingular','duration','size','resolution','rating','favorite','bookmark',
-      'date','edit','views','array','type','number','string','boolean'],
     drag: false,
     dragOptions: {
       animation: 200,
@@ -228,34 +226,13 @@ export default {
       if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
       return found
     },
-    nameRules(name) {
-      name = name.trim().toLowerCase()
-      if (name.length > 30) {
-        return 'Name must be less than 30 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (!/^[a-zA-Z\s]*$/g.test(name)) {
-        return 'Name must content only letters'
-      } else if (this.reserved.includes(name)) {
-        return 'This word is reserved'
-      } else {
-        return true
-      }
-    },
-    itemNameRules(name) {
+    itemNameRules(string) {
       let items = this.items.map(i => i.toLowerCase())
-      let duplicate = items.includes(name.trim().toLowerCase())
-      if (name.length > 30) {
-        return 'Name must be less than 30 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (/[\\\/\"<>{}\[\]]/g.test(name)) {
-        return 'Name must not contain any of the characters \\/<>{}\[\]"'
-      } else if (duplicate) {
-        return 'Item with that name already exists'
-      } else {
-        return true
-      }
+      let duplicate = items.includes(string.trim().toLowerCase())
+      if (string.length > 30) return 'Name must be less than 30 characters'
+      else if (string.length===0) return 'Name is required'
+      else if (duplicate) return 'Item with that name already exists'
+      else return true
     },
     tryAddNewItem() {
       if (this.validMeta) this.addNewItem()
