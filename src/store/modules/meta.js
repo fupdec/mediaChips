@@ -64,27 +64,27 @@ const Meta = {
       commit('addLog', {type:'info', color:'green', text:`Added simple meta "${settings.name}"`})
     },
     deleteComplexMeta({commit, getters}, {id, name}) {
-      getters.meta.remove({id}).write()
-      getters.metaCards.unset(id).write() 
-      getters.meta
-        .filter(i => _.some(i.settings.metaInCard, {id}))
-        .each(i => {
-          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)
-        }).write()
-      // TODO remove from cards
+      let ids = getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).map('id').value()
+      for (let i = 0; i < ids.length; i++) { // delete from meta cards
+        getters.metaCards.get(ids[i]).each(card=>{card.meta[id]=undefined}).write() 
+      }
+      getters.meta.remove({id}).write() // delete from database
+      getters.metaCards.unset(id).write() // delete all cards from database
+      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ // setts
+        i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
       const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
       rimraf(metaFolder, function () { console.log("done") })
       commit('getMetaListFromDb')
       commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
     },
     deleteSimpleMeta({commit, getters}, {id, name}) {
-      getters.simpleMeta.remove({id}).write()
-      getters.meta
-        .filter(i => _.some(i.settings.metaInCard, {id}))
-        .each(i => { 
-          i.settings.metaInCard = i.settings.metaInCard.filter(x => x.id != id)
-        }).write()
-      // TODO remove from cards
+      let ids = getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).map('id').value()
+      for (let i = 0; i < ids.length; i++) { // delete from meta cards
+        getters.metaCards.get(ids[i]).each(card=>{card.meta[id]=undefined}).write() 
+      }
+      getters.simpleMeta.remove({id}).write() // delete from database
+      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})) // delete from complex meta 
+        .each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
       commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
     },
     addMetaCard({commit, getters}, {cardId, metaInfo, metaId}) {
