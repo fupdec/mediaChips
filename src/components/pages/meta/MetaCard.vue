@@ -35,7 +35,7 @@
               {{ getCard(m.id,c).meta.name }} </v-chip>
         </v-chip-group>
         <div v-else-if="m.type=='simple'">
-          <span v-if="getMeta(m.id,m.type).type=='array'">{{card.meta[m.id]===undefined?'':card.meta[m.id].join(', ')}}</span>
+          <span v-if="getMeta(m.id,m.type).type=='array'">{{getArrayValues(m.id)}}</span>
           <span v-else-if="getMeta(m.id,m.type).type=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
           <span v-else>{{card.meta[m.id]}}</span>
         </div>
@@ -106,6 +106,13 @@ export default {
       else return this.$store.getters.simpleMeta.find({id}).value()
     },
     getCard(metaId, cardId) { return this.$store.getters.metaCards.get(metaId).find({id:cardId}).value() },
+    getArrayValues(metaId) { 
+      let array = this.card.meta[metaId]
+      if (array === undefined) return ''
+      let items = this.getMeta(metaId,'simple').settings.items
+      let values = array.map(itemId=>(_.find(items, {id: itemId}).name))
+      return values.join(', ') 
+    },
     // image 
     getImgUrl(type) {
       console.log()
