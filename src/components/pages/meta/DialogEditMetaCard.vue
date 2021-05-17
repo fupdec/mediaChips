@@ -202,6 +202,7 @@ export default {
       let newValues = {...presetValues, ...this.oldValues, ...this.values}
       this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
       this.$store.state.Meta.dialogEditMetaCard = false 
+      this.$store.commit('updateMetaCards', [this.card.id])
     },
   },
 };

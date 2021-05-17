@@ -5,7 +5,7 @@
     </div>
 
     <v-container fluid class="meta-grid">
-      <MetaCard v-for="(card, i) in metaCardsOnPage" :key="i" :card="card"/>
+      <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
     </v-container>
     <div v-if="metaCardsOnPage.length==0" class="text-center"> 
       <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
@@ -84,7 +84,7 @@ export default {
     initFilters() { this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) },
   },
   watch: {
-    $route(newRoute) { if (this.$route.path.includes('/meta/')) this.initFilters() },
+    // $route(newRoute) { if (this.$route.path.includes('/meta/')) this.initFilters() },
   }
 }
 </script>

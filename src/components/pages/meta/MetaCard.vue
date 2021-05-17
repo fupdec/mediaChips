@@ -98,8 +98,10 @@ export default {
       event.stopPropagation()
     },
     getColor(metaId, cardId) {
-      if (!this.getMeta(metaId, 'complex').settings.chipColor) return ''
-      else return this.getCard(metaId,cardId).meta.color || '#777'
+      if (this.getMeta(metaId, 'complex').settings.chipColor) {
+        if (this.getCard(metaId,cardId) === undefined) return '#777'
+        else return this.getCard(metaId,cardId).meta.color || '#777'
+      } else return ''
     },
     getMeta(id, type) {
       if (type == 'complex') return this.$store.getters.meta.find({id}).value()
@@ -115,7 +117,6 @@ export default {
     },
     // image 
     getImgUrl(type) {
-      console.log()
       let img = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${type}.jpg`)
       return path.join('file://', this.checkImageExist(img, type)) 
     },

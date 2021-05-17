@@ -7,7 +7,7 @@
     <SideBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
     <v-main app v-if="!disableRunApp">
-      <router-view :key="$route.name + ($route.params.id || '')" />
+      <router-view :key="$route.fullPath" />
     </v-main>
 
     <v-dialog v-model="disableRunApp" scrollable persistent width="400" overlay-opacity="1">

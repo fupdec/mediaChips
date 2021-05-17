@@ -1,6 +1,6 @@
 <template>
 	<v-app-bar app dense clipped-left extension-height="28" :style="{background: headerColor}">
-    <router-view name="appbar" :key="$route.name + ($route.params.id || '')" />
+    <router-view name="appbar" :key="$route.fullPath" />
 
     <template v-slot:extension v-if="tabs.length>0">
       <Tabs />
