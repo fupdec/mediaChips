@@ -37,6 +37,26 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
+                <v-col cols="12" align="center">
+                  <span class="overline text-center">Meta in Card</span>
+                  <v-card v-if="settings.metaInCard.length" outlined class="mb-4 mt-2">
+                    <v-list dense class="list-zebra pa-0">
+                      <v-list-item-group color="primary">
+                        <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
+                          <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
+                          {{getMeta(meta.id).settings.name}}
+                          <span class="px-2">({{meta.type}})</span>
+                        </v-list-item>
+                      </v-list-item-group>
+                    </v-list>
+                  </v-card>
+                  <div v-else class="mb-4">
+                    <v-icon large class="mb-2">mdi-card-off-outline</v-icon>
+                    <div>No meta added to the card</div>
+                  </div>
+                  <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
+                    <v-icon left>mdi-plus</v-icon>Add meta to card</v-btn>
+                </v-col>
                 <v-col cols="12" align="center" class="pb-0">
                   <span class="overline text-center">Chips Appearance</span>
                 </v-col>
@@ -72,26 +92,6 @@
                   <v-checkbox v-model="settings.imageTypes" label="Custom 2" value="custom2" class="ma-0 pa-0" hide-details/>
                   <v-checkbox v-model="settings.imageTypes" label="Avatar" value="avatar" class="ma-0 pa-0" hide-details/>
                   <v-checkbox v-model="settings.imageTypes" label="Header" value="header" class="ma-0 pa-0" hide-details/>
-                </v-col>
-                <v-col cols="12" align="center">
-                  <span class="overline text-center">Meta in Card</span>
-                  <v-card v-if="settings.metaInCard.length" outlined class="mb-2">
-                    <v-list dense class="list-zebra pa-0">
-                      <v-list-item-group color="primary">
-                        <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
-                          <v-icon left>mdi-{{getMeta(meta.id, meta.type).settings.icon}}</v-icon>
-                          {{getMeta(meta.id, meta.type).settings.name}}
-                          <span class="px-2">({{meta.type}})</span>
-                        </v-list-item>
-                      </v-list-item-group>
-                    </v-list>
-                  </v-card>
-                  <div v-else class="mb-4">
-                    <v-icon large class="mb-2">mdi-card-off-outline</v-icon>
-                    <div>No meta added to the card</div>
-                  </div>
-                  <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
-                    <v-icon left>mdi-plus</v-icon>Add meta to card</v-btn>
                 </v-col>
                 <v-col cols="12" align="center" class="pb-0">
                   <span class="overline text-center">Specific meta</span>
@@ -158,6 +158,7 @@
 import vuescroll from 'vuescroll'
 import icons from '@/assets/material-icons.json'
 import NameRules from '@/mixins/NameRules'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   props: {
@@ -170,7 +171,7 @@ export default {
 	},
   created() {
   },
-  mixins: [NameRules], 
+  mixins: [NameRules, MetaGetters], 
   mounted () {
     this.$nextTick(function () {
       this.settings = { ...this.settings, ...this.meta.settings }
@@ -199,20 +200,13 @@ export default {
     },
   }),
   computed: {
-    metaList() { return this.$store.getters.meta.value() },
+    complexMetaList() { return this.$store.getters.complexMeta.value() },
     simpleMetaList() { return this.$store.getters.simpleMeta.value() },
-    meta() { return _.cloneDeep(this.metaList[this.metaIndex]) },
+    meta() { return _.cloneDeep(this.complexMetaList[this.metaIndex]) },
     metaForCard() {
-      let existMeta = _.filter(this.settings.metaInCard, {type:'complex'}).map(i=>i.id)
-      let existSimpleMeta = _.filter(this.settings.metaInCard, {type:'simple'}).map(i=>i.id)
-      let metaList = this.$store.getters.meta.filter(i=>!existMeta.includes(i.id)).cloneDeep().value()
-      metaList = _.filter(metaList, i=>i.id!=this.meta.id)
-      metaList = metaList.map(i => {i.type = 'complex'; return i})
-      let simpleMetaList = this.$store.getters.simpleMeta.filter(i=>!existSimpleMeta.includes(i.id)).cloneDeep().value()
-      simpleMetaList = simpleMetaList.map(i => {i.type = 'simple'; return i})
-      let list = [...metaList, ...simpleMetaList]
-      // TODO remove from list current meta and already added meta in settings.meta
-      return list
+      let metaInCardIds = this.settings.metaInCard.map(i=>i.id)
+      let freeMetaList = this.$store.getters.meta.filter(i=>!metaInCardIds.includes(i.id)).cloneDeep().value()
+      return _.filter(freeMetaList, i=>i.id!=this.meta.id)
     },
     dateAdded() {
       let date = new Date(this.meta.date)
@@ -242,10 +236,6 @@ export default {
       this.settings.metaInCard.push(metaForAdding)
       this.dialogAddMetaToCard = false
       this.selectedMetaForCard = null
-    },
-    getMeta(id, type) {
-      if (type == 'simple') return _.find(this.simpleMetaList, {id})
-      else return _.find(this.metaList, {id})
     },
     saveSettings() {
       this.$refs.form.validate()

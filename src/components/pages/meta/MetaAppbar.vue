@@ -6,17 +6,17 @@
           <v-tooltip bottom>
             <template #activator="{ on: onTooltip }">
               <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
-                <v-icon>mdi-card-plus</v-icon>
+                <v-icon>mdi-{{meta.settings.icon}}</v-icon>
               </v-btn>
             </template>
-            <span>Add New Card</span>
+            <span>Add New {{meta.settings.nameSingular}}</span>
           </v-tooltip>
         </template>
         <v-card width="500">
           <v-card-title class="py-1">
-            <span class="headline">Add New Card</span>
+            <span class="headline">Adding New {{meta.settings.nameSingular}}</span>
             <v-spacer></v-spacer>
-            <v-icon>mdi-card-plus</v-icon>
+            <v-icon>mdi-{{meta.settings.icon}}</v-icon>
           </v-card-title>
           <v-divider></v-divider>
             <v-card-text class="pb-0">
@@ -38,7 +38,16 @@
             </v-card-actions>
         </v-card>
       </v-menu>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="$store.state.Meta.dialogFilterMetaCards=true" v-on="on" icon tile>
+            <v-icon>mdi-filter</v-icon>
+          </v-btn>
+        </template>
+        <span>Filter {{meta.settings.name}}</span>
+      </v-tooltip>
     </div>
+    <DialogFilterMetaCards v-if="$store.state.Meta.dialogFilterMetaCards"/>
 
     <v-spacer></v-spacer>
 
@@ -75,10 +84,14 @@
 <script>
 const shortid = require('shortid')
 
+import MetaGetters from '@/mixins/MetaGetters'
+
 export default {
   name: 'MetaAppbar',
   components: {
+    DialogFilterMetaCards: () => import('@/components/pages/meta/DialogFilterMetaCards.vue'),
   },
+  mixins: [MetaGetters],
   mounted() {
     this.$nextTick(function () {
     })
@@ -87,8 +100,6 @@ export default {
     validCardName: false,
     nameRules: [
       v => !!v || 'Name is required',
-      v => v.length > 1 || 'Name must be more than 1 characters',
-      v => !/[\/\%"?<>{}\[\]]/g.test(v) || 'Name must not content \/%\"?<>{}\[\]',
     ],
     dupCards: '',
     newCards: '',

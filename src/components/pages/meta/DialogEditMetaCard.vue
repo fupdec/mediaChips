@@ -28,15 +28,15 @@
                     <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
                       outlined multiple hide-selected hide-details dense
-                      :label="getMeta(m.id,m.type).settings.name" item-value="id"
+                      :label="getMeta(m.id).settings.name" item-value="id"
                       :menu-props="{contentClass:'list-with-preview'}"
                     >
                       <template v-slot:selection="data">
                         <v-chip v-bind="data.attrs" close 
                           @click:close="removeItem(data.item.id,m.id)"
                           :color="getColor(m.id,data.item.id)" 
-                          :label="getMeta(m.id,m.type).settings.chipLabel"
-                          :outlined="getMeta(m.id,m.type).settings.chipOutlined"
+                          :label="getMeta(m.id).settings.chipLabel"
+                          :outlined="getMeta(m.id).settings.chipOutlined"
                           @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
                           @mouseleave.stop="$store.state.hoveredImage=false">
                           <span>{{ data.item.meta.name }}</span>
@@ -47,38 +47,38 @@
                           @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
                           @mouseleave.stop="$store.state.hoveredImage=false"
                         > 
-                          <span v-if="getMeta(m.id,m.type).settings.favorite">
+                          <span v-if="getMeta(m.id).settings.favorite">
                             <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
                           </span>
-                          <span v-if="getMeta(m.id,m.type).settings.chipColor">
+                          <span v-if="getMeta(m.id).settings.chipColor">
                             <v-icon :color="data.item.meta.color || ''" left small>
-                              mdi-{{getMeta(m.id,m.type).settings.icon}}</v-icon>
+                              mdi-{{getMeta(m.id).settings.icon}}</v-icon>
                           </span>
                           <span>{{data.item.meta.name}}</span>
-                          <span v-if="getMeta(m.id,m.type).settings.synonyms" class="aliases"> a.k.a.
+                          <span v-if="getMeta(m.id).settings.synonyms" class="aliases"> a.k.a.
                             {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ').slice(0,50)}}
                           </span>
                         </div>
                       </template>
                     </v-autocomplete>
 
-                    <v-text-field v-if="m.type=='simple'&&(getMeta(m.id,m.type).type==='string'||getMeta(m.id,m.type).type==='number')" 
+                    <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string'||getMeta(m.id).dataType==='number')" 
                       @input="setVal($event,m.id)" :value="values[m.id]" outlined
-                      :label="getMeta(m.id,m.type).settings.name" hide-details dense
+                      :label="getMeta(m.id).settings.name" hide-details dense
                       clearable @click:clear="setVal('', m.id)"/>
 
-                    <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='array'" 
-                      :items="getMeta(m.id,m.type).settings.items" item-value="id" item-text="name"
+                    <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
+                      :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                       @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
-                      :label="getMeta(m.id,m.type).settings.name" outlined dense/>
+                      :label="getMeta(m.id).settings.name" outlined dense/>
                     
-                    <v-switch v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='boolean'" 
-                      inset :label="getMeta(m.id,m.type).settings.name" hide-details 
+                    <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
+                      inset :label="getMeta(m.id).settings.name" hide-details 
                       @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
                       
-                    <v-text-field v-if="m.type=='simple'&&getMeta(m.id,m.type).type==='date'" 
+                    <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
                       :value="values[m.id]" @click="calendarId=m.id,calendar=true" outlined dense
-                      :label="getMeta(m.id,m.type).settings.name" hint='YYYY-MM-DD' hide-details
+                      :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
                       clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
 
                   </v-col>
@@ -180,7 +180,7 @@ export default {
         const id = metaInCard[i].id
         const type = metaInCard[i].type
         if (type=='complex') { this.values[id] = _.cloneDeep(this.card.meta[id]) || []; continue }
-        const simpleMetaType = this.getMeta(id,type).type
+        const simpleMetaType = this.getMeta(id).dataType
         let defaultValue = ''
         if (simpleMetaType=='array') defaultValue = []
         if (simpleMetaType=='boolean') defaultValue = false
@@ -216,7 +216,7 @@ export default {
         synonyms: this.parseStringToArray(this.synonyms),
         color: this.color,
       }
-      let newValues = {...presetValues, ...this.oldValues, ...this.values}
+      let newValues = {...this.oldValues, ...presetValues, ...this.values}
       this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
       this.$store.state.Meta.dialogEditMetaCard = false 
       this.$store.commit('updateMetaCards', [this.card.id])

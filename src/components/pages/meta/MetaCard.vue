@@ -2,7 +2,7 @@
   <v-lazy :width="cardSize">
     <v-card @mousedown="stopSmoothScroll($event)" height="100%"
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
-      v-ripple="{class:'accent--text'}" :class="{favorite: favorite}">
+      v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
       <div v-if="meta.settings.images" class="img-container">
         <div v-if="meta.settings.chipColor" class="meta-color" :style="`border-color: ${getColor(metaId,card.id)} transparent transparent transparent;`"/>
         <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img"/>
@@ -24,22 +24,22 @@
       <div v-for="(m,i) in metaInCard" :key="i" class="d-flex px-1">
         <v-tooltip top>
           <template v-slot:activator="{ on }">
-            <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id,m.type).settings.icon}}</v-icon>
+            <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
           </template>
-          <span>{{getMeta(m.id,m.type).settings.name}}</span>
+          <span>{{getMeta(m.id).settings.name}}</span>
         </v-tooltip>
         <v-chip-group v-if="m.type=='complex'" column>
           <v-chip v-for="c in card.meta[m.id]" :key="c" 
             :color="getColor(m.id,c)" 
-            :label="getMeta(m.id,m.type).settings.chipLabel"
-            :outlined="getMeta(m.id,m.type).settings.chipOutlined"
+            :label="getMeta(m.id).settings.chipLabel"
+            :outlined="getMeta(m.id).settings.chipOutlined"
             @mouseover.stop="showImage($event,c,'meta',m.id)" 
             @mouseleave.stop="$store.state.hoveredImage=false"> 
               {{ getCard(m.id,c).meta.name }} </v-chip>
         </v-chip-group>
         <div v-else-if="m.type=='simple'">
-          <span v-if="getMeta(m.id,m.type).type=='array'">{{getArrayValuesForCard(m.id)}}</span>
-          <span v-else-if="getMeta(m.id,m.type).type=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
+          <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+          <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
           <span v-else>{{card.meta[m.id]}}</span>
         </div>
       </div>

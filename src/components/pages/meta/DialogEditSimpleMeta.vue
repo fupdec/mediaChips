@@ -82,7 +82,6 @@ export default {
     },
   }),
   computed: {
-    metaList() { return this.$store.getters.meta.value() },
     simpleMetaList() { return this.$store.getters.simpleMeta.value() },
     meta() { return _.cloneDeep(this.simpleMetaList[this.metaIndex]) },
     dateAdded() {

@@ -20,9 +20,9 @@
         </v-tooltip>
         <span class="overline">Complex Meta</span>
       </div>
-      <v-list v-if="metaList.length" dense class="list-zebra">
+      <v-list v-if="complexMetaList.length" dense class="list-zebra">
         <v-list-item-group color="primary">
-          <v-list-item v-for="(meta, i) in metaList" :key="i">
+          <v-list-item v-for="(meta, i) in complexMetaList" :key="i">
             <v-icon left>mdi-{{meta.settings.icon}}</v-icon> 
             <div class="d-flex justify-space-between align-center" style="width:100%">
               <span>
@@ -60,7 +60,7 @@
         <v-divider></v-divider>
         <vuescroll>
           <v-card-text class="px-4">
-            <v-form v-model="validMeta" ref="formMeta" class="flex-grow-1" @submit.prevent>
+            <v-form v-model="valid" ref="form" class="flex-grow-1" @submit.prevent>
               <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
               <v-text-field v-model="nameSingular" :rules="[nameRules]" label="Name singular"/>
               <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
@@ -97,8 +97,8 @@
         <v-card-text class="py-2">
           <div class="text-center">Delete complex meta 
             <v-chip small class="mx-2">
-              <v-icon small left>mdi-{{metaList[selectedMetaIndex].settings.icon}}</v-icon>
-              <b>{{metaList[selectedMetaIndex].settings.name}}</b>
+              <v-icon small left>mdi-{{complexMetaList[selectedMetaIndex].settings.icon}}</v-icon>
+              <b>{{complexMetaList[selectedMetaIndex].settings.name}}</b>
             </v-chip>?
           </div>
         </v-card-text>
@@ -139,7 +139,6 @@ export default {
     })
   },
   data: () => ({
-    dialogAddNewSimpleMeta: false,
     dialogAddNewMeta: false,
     dialogEditMeta: false,
     dialogAddMetaToCard: false,
@@ -149,14 +148,14 @@ export default {
     metaIcon: 'shape',
     icons: icons,
     // complex meta (with cards)
-    validMeta: false,
+    valid: false,
     metaName: '',
     nameSingular: '',
     metaIcon: 'shape',
   }),
   computed: {
     pathToUserData() { return this.$store.getters.getPathToUserData },
-    metaList() { return this.$store.getters.meta.value() },
+    complexMetaList() { return this.$store.getters.complexMeta.value() },
     simpleMetaList() { return this.$store.getters.simpleMeta.value() },
   },
   methods: {
@@ -179,17 +178,21 @@ export default {
       return found
     },
     addMeta() {
-      this.$refs.formMeta.validate()
-      if (!this.validMeta) return
+      this.$refs.form.validate()
+      if (!this.valid) return
 
       let id = shortid.generate()
-      let settings = { 
-        name: this.metaName,
-        nameSingular: this.nameSingular,
-        icon: this.metaIcon,
-        metaInCard: [],
+      let meta = {
+        id: id,
+        type: 'complex',
+        settings: { 
+          name: this.metaName,
+          nameSingular: this.nameSingular,
+          icon: this.metaIcon,
+          metaInCard: [],
+        },
       }
-      this.$store.dispatch('addComplexMeta', { id, settings })
+      this.$store.dispatch('addComplexMeta', meta)
 
       const metaFolder = path.join(this.pathToUserData, 'media', 'meta', id)
       if (!fs.existsSync(metaFolder)) fs.mkdirSync(metaFolder)
@@ -209,8 +212,8 @@ export default {
     },
     deleteMeta() {
       let index = this.selectedMetaIndex
-      let id = this.metaList[index].id 
-      let name = this.metaList[index].settings.name
+      let id = this.complexMetaList[index].id 
+      let name = this.complexMetaList[index].settings.name
       this.$store.dispatch('deleteComplexMeta', {id, name})
       this.dialogDeleteMeta = false
     },

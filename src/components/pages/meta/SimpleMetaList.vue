@@ -29,7 +29,7 @@
               <span>
                 <v-icon left>mdi-{{meta.settings.icon}}</v-icon>
                 <span>{{meta.settings.name}}</span>
-                <span class="caption px-4">type: {{meta.type}}</span>
+                <span class="caption px-4">type: {{meta.dataType}}</span>
                 <span class="caption">id: {{meta.id}}</span>
               </span>
               <span>
@@ -46,14 +46,14 @@
       </div>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn @click="dialogAddNewSimpleMeta=true" rounded class="pr-4" color="primary">
+        <v-btn @click="dialogAddNewMeta=true" rounded class="pr-4" color="primary">
           <v-icon left>mdi-plus</v-icon> <span>add new meta</span>  
         </v-btn>
         <v-spacer></v-spacer>
       </v-card-actions>
     </v-card>
     
-    <v-dialog v-model="dialogAddNewSimpleMeta" scrollable max-width="450">
+    <v-dialog v-model="dialogAddNewMeta" scrollable max-width="450">
       <v-card>
         <v-card-title class="px-4 py-1">
           <div class="headline">Adding a new simple meta</div>
@@ -76,7 +76,7 @@
                   <span v-html="data.item.name"></span>
                 </template>
               </v-autocomplete>
-              <v-autocomplete v-model="metaType" label="Type of meta"
+              <v-autocomplete v-model="dataType" label="Data type of meta"
                 :items="['string', 'number', 'boolean', 'array', 'date']" class="mt-4"
                 :rules="[value => !!value || 'Type is required']" persistent-hint :hint="hint">
                 <template v-slot:selection="data">
@@ -89,7 +89,7 @@
                 </template>
               </v-autocomplete>
             </v-form>
-            <div v-if="metaType=='array'">
+            <div v-if="dataType=='array'">
               <div class="overline text-center mt-4">Items for array</div>
               <div v-if="items.length <= 1" class="caption text-center mb-4">
                 <v-icon small left color="red">mdi-alert</v-icon>
@@ -174,12 +174,11 @@ export default {
     })
   },
   data: () => ({
-    dialogAddNewSimpleMeta: false,
     dialogAddNewMeta: false,
     dialogEditMeta: false,
     dialogAddMetaToCard: false,
     dialogDeleteMeta: false,
-    deleteMetaType: null,
+    deleteDataType: null,
     selectedMetaIndex: 0,
     metaIcon: 'shape',
     icons: icons,
@@ -193,7 +192,7 @@ export default {
     // simple meta
     validMeta: false,
     metaName: '',
-    metaType: '',
+    dataType: '',
     validItemName: false,
     items: [],
     itemName: '',
@@ -202,11 +201,11 @@ export default {
     pathToUserData() { return this.$store.getters.getPathToUserData },
     simpleMetaList() { return this.$store.getters.simpleMeta.value() },
     hint() {
-      if (this.metaType === 'string') return 'for description, notes'
-      if (this.metaType === 'date') return 'e.g. release date, last viewed date'
-      if (this.metaType === 'number') return 'to count'
-      if (this.metaType === 'array') return `for multiple values. for example colors: blue, red, green`
-      if (this.metaType === 'boolean') return 'for one value. either yes or no'
+      if (this.dataType === 'string') return 'for description, notes'
+      if (this.dataType === 'date') return 'e.g. release date, last viewed date'
+      if (this.dataType === 'number') return 'to count'
+      if (this.dataType === 'array') return `for multiple values. for example colors: blue, red, green`
+      if (this.dataType === 'boolean') return 'for one value. either yes or no'
       return 'choose one of the types'
     },
   },
@@ -253,19 +252,29 @@ export default {
     addMeta() {
       this.$refs.form.validate()
       if (!this.validMeta) return
-      if (this.metaType=='array' && this.items.length <= 1) return
+      if (this.dataType=='array' && this.items.length <= 1) return
 
-      let settings = { name: this.metaName, icon: this.metaIcon }
-      if (this.metaType=='array') settings.items = this.items.map(i=>({id:shortid.generate(),name:i})) 
+      let settings = { 
+        name: this.metaName, 
+        icon: this.metaIcon 
+      }
+      if (this.dataType=='array') settings.items = this.items.map(i=>({id:shortid.generate(),name:i})) 
 
-      this.$store.dispatch('addSimpleMeta', { id:shortid.generate(), type:this.metaType, settings })
+      let meta = {
+        id: shortid.generate(),
+        type: 'simple',
+        dataType: this.dataType,
+        settings: settings,
+      }
+      this.$store.dispatch('addSimpleMeta', meta)
 
-      this.dialogAddNewSimpleMeta = false
+      this.dialogAddNewMeta = false
       this.metaName = ''
       this.metaIcon = 'shape'
-      this.metaType = ''
+      this.dataType = ''
       this.items = []
       this.itemName = ''
+      // TODO update simple meta list
     },
     openSettings(index) {
       this.selectedMetaIndex = index

@@ -46,7 +46,6 @@ export default {
   computed: {
     metaId() { return this.$route.query.metaId },
     meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
-    metaList() { return this.$store.getters.meta.value() },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
   },
   methods: {
