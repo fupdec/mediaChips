@@ -1,13 +1,13 @@
 <template>
   <div>
-    <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable max-width="600">
+    <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable width="80vw" max-width="800">
       <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">Settings for meta "{{this.meta.settings.name}}"</div>
+        <v-toolbar color="primary">
+          <v-card-title class="headline pl-0">Settings for meta "{{this.meta.settings.name}}"</v-card-title>
           <v-spacer></v-spacer>
-          <v-icon>mdi-cog</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="saveSettings" outlined large>
+            <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text class="px-4">
             <div class="d-flex justify-space-between pb-4">
@@ -38,90 +38,112 @@
                   </v-autocomplete>
                 </v-col>
                 <v-col cols="12" align="center">
-                  <span class="overline text-center">Meta in Card</span>
-                  <v-card v-if="settings.metaInCard.length" outlined class="mb-4 mt-2">
-                    <v-list dense class="list-zebra pa-0">
-                      <v-list-item-group color="primary">
-                        <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
-                          <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
-                          {{getMeta(meta.id).settings.name}}
-                          <span class="px-2">({{meta.type}})</span>
-                        </v-list-item>
-                      </v-list-item-group>
-                    </v-list>
-                  </v-card>
-                  <div v-else class="mb-4">
-                    <v-icon large class="mb-2">mdi-card-off-outline</v-icon>
-                    <div>No meta added to the card</div>
-                  </div>
-                  <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
-                    <v-icon left>mdi-plus</v-icon>Add meta to card</v-btn>
-                </v-col>
-                <v-col cols="12" align="center" class="pb-0">
-                  <span class="overline text-center">Chips Appearance</span>
-                </v-col>
-                <v-col cols="12">
-                  <div class="d-flex justify-space-around">
-                    <div class="d-flex justify-space-between">
-                      <v-checkbox v-model="settings.chipLabel" label="Label" class="my-0 mr-6" hide-details/>
-                      <v-checkbox v-model="settings.chipOutlined" label="Outlined" class="my-0 mr-6" hide-details/>
-                      <v-checkbox v-model="settings.chipColor" label="Color" class="my-0" hide-details/>
+                  <v-card outlined class="pa-4">
+                    <span class="text-center">
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+                        </template>
+                        <span>Drag to change order</span>
+                      </v-tooltip>
+                      <span class="overline">Meta in Cards</span> 
+                    </span>
+                    <v-card v-if="settings.metaInCard.length" outlined class="mb-4 mt-2">
+                      <v-list dense class="list-zebra pa-0">
+                        <v-list-item-group color="primary">
+                          <draggable v-model="settings.metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+                            <transition-group type="transition">
+                              <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
+                                <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
+                                {{getMeta(meta.id).settings.name}}
+                                <span class="px-2">({{meta.type}})</span>
+                                <span class="caption px-2">id: {{meta.id}}</span>
+                                <span v-if="meta.type=='simple'" class="caption px-2">
+                                  {{getMeta(meta.id).dataType}}
+                                </span>
+                              </v-list-item>
+                            </transition-group>
+                          </draggable>
+                        </v-list-item-group>
+                      </v-list>
+                    </v-card>
+                    <div v-else class="mb-4">
+                      <v-icon large class="mb-2">mdi-card-off-outline</v-icon>
+                      <div>No meta added to the cards</div>
                     </div>
-                    <v-spacer></v-spacer>
-                    <v-chip :label="settings.chipLabel" :outlined="settings.chipOutlined" 
-                      :color="settings.chipColor?getRandomColor():''">Example chip</v-chip>
-                  </div>
+                    <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
+                      <v-icon left>mdi-plus</v-icon>Add meta to cards</v-btn>
+                  </v-card>
                 </v-col>
-                <v-col cols="12" align="center" class="pb-0">
-                  <span class="overline text-center">Card Appearance</span>
-                </v-col>
-                <v-col cols="12" sm="6">
-                  <v-switch v-model="settings.images" :label="`Images: ${settings.images?'Yes':'No'}`" class="ma-0" hide-details/>
-                  <v-radio-group v-if="settings.images" v-model="settings.imageAspectRatio" column mandatory hide-details>
-                    <span class="mb-2">Aspect ratio of images:</span>
-                    <v-radio :value="1"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
-                    <v-radio :value="16/9"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
-                    <v-radio :value="5/8"><template v-slot:label><v-icon left>mdi-image-album</v-icon> 5:8 </template></v-radio>
-                  </v-radio-group>
-                </v-col>
-                <v-col cols="12" sm="6" v-if="settings.images">
-                  <div class="mb-2 body-1">Type of Images:</div>
-                  <v-checkbox v-model="settings.imageTypes" label="Main" value="main" class="ma-0 pa-0" hide-details disabled/>
-                  <v-checkbox v-model="settings.imageTypes" label="Alternate" value="alt" class="ma-0 pa-0" hide-details/>
-                  <v-checkbox v-model="settings.imageTypes" label="Custom 1" value="custom1" class="ma-0 pa-0" hide-details/>
-                  <v-checkbox v-model="settings.imageTypes" label="Custom 2" value="custom2" class="ma-0 pa-0" hide-details/>
-                  <v-checkbox v-model="settings.imageTypes" label="Avatar" value="avatar" class="ma-0 pa-0" hide-details/>
-                  <v-checkbox v-model="settings.imageTypes" label="Header" value="header" class="ma-0 pa-0" hide-details/>
-                </v-col>
-                <v-col cols="12" align="center" class="pb-0">
-                  <span class="overline text-center">Specific meta</span>
+                <v-col cols="12" align="center">
+                  <v-card outlined class="pa-4">
+                    <span class="overline text-center">Specific meta</span>
+                    <v-row>
+                      <v-col cols="12">
+                        <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0" hide-details/>
+                      </v-col>
+                      <v-col cols="6">
+                        <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
+                      </v-col>
+                      <v-col cols="6">
+                        <v-switch v-model="settings.rating" :label="`Ratings: ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
+                      </v-col>
+                    </v-row>
+                  </v-card>
                 </v-col>
                 <v-col cols="12">
-                  <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0" hide-details/>
+                  <v-card outlined class="pa-4">
+                    <div class="overline text-center mb-4">Chips Appearance</div>
+                    <div class="d-flex justify-space-around">
+                      <div class="d-flex justify-space-between">
+                        <v-checkbox v-model="settings.chipLabel" label="Label" class="my-0 mr-6" hide-details/>
+                        <v-checkbox v-model="settings.chipOutlined" label="Outlined" class="my-0 mr-6" hide-details/>
+                        <v-checkbox v-model="settings.chipColor" label="Color" class="my-0" hide-details/>
+                      </div>
+                      <v-spacer></v-spacer>
+                      <v-chip :label="settings.chipLabel" :outlined="settings.chipOutlined" 
+                        :color="settings.chipColor?getRandomColor():''">Example chip</v-chip>
+                    </div>
+                  </v-card>
                 </v-col>
-                <v-col cols="6">
-                  <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
-                </v-col>
-                <v-col cols="6">
-                  <v-switch v-model="settings.rating" :label="`Ratings: ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
+                <v-col cols="12">
+                  <v-card outlined class="pa-4">
+                    <v-row>
+                      <v-col cols="12" align="center" class="pb-0">
+                        <span class="overline text-center">Card Appearance</span>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <v-switch v-model="settings.images" :label="`Images: ${settings.images?'Yes':'No'}`" class="ma-0" hide-details/>
+                        <v-radio-group v-if="settings.images" v-model="settings.imageAspectRatio" column mandatory hide-details>
+                          <span class="mb-2">Aspect ratio of images:</span>
+                          <v-radio :value="1"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
+                          <v-radio :value="16/9"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
+                          <v-radio :value="5/8"><template v-slot:label><v-icon left>mdi-image-album</v-icon> 5:8 </template></v-radio>
+                        </v-radio-group>
+                      </v-col>
+                      <v-col cols="12" sm="6" v-if="settings.images">
+                        <div class="mb-2 body-1">Type of Images:</div>
+                        <v-checkbox v-model="settings.imageTypes" label="Main" value="main" class="ma-0 pa-0" hide-details disabled/>
+                        <v-checkbox v-model="settings.imageTypes" label="Alternate" value="alt" class="ma-0 pa-0" hide-details/>
+                        <v-checkbox v-model="settings.imageTypes" label="Custom 1" value="custom1" class="ma-0 pa-0" hide-details/>
+                        <v-checkbox v-model="settings.imageTypes" label="Custom 2" value="custom2" class="ma-0 pa-0" hide-details/>
+                        <v-checkbox v-model="settings.imageTypes" label="Avatar" value="avatar" class="ma-0 pa-0" hide-details/>
+                        <v-checkbox v-model="settings.imageTypes" label="Header" value="header" class="ma-0 pa-0" hide-details/>
+                      </v-col>
+                    </v-row>
+                  </v-card>
                 </v-col>
               </v-row>
             </v-form>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="saveSettings" class="ma-4 pr-4" rounded color="primary">
-            <v-icon left>mdi-content-save</v-icon> Save Settings </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
       </v-card>
     </v-dialog>
     
     <v-dialog v-if="dialogAddMetaToCard" v-model="dialogAddMetaToCard" scrollable max-width="350">
       <v-card>
         <v-card-title class="px-4 py-1">
-          <div class="headline">Add Meta to Card</div>
+          <div class="headline">Add Meta to Cards</div>
           <v-spacer></v-spacer>
           <v-icon>mdi-plus</v-icon>
         </v-card-title>
@@ -156,6 +178,7 @@
 
 <script>
 import vuescroll from 'vuescroll'
+import draggable from 'vuedraggable'
 import icons from '@/assets/material-icons.json'
 import NameRules from '@/mixins/NameRules'
 import MetaGetters from '@/mixins/MetaGetters'
@@ -168,6 +191,7 @@ export default {
   name: "DialogEditMeta",
   components: {
     vuescroll,
+    draggable,
 	},
   created() {
   },
@@ -186,7 +210,7 @@ export default {
       name: '',
       nameSingular: '',
       icon: 'shape',
-      images: false,
+      images: true,
       imageAspectRatio: '',
       imageTypes: ['main'],
       chipLabel: false,
@@ -197,6 +221,13 @@ export default {
       favorite: true,
       rating: false,
       metaInCard: [],
+    },
+    drag: false,
+    dragOptions: {
+      animation: 200,
+      group: "description",
+      disabled: false,
+      ghostClass: "ghost"
     },
   }),
   computed: {
