@@ -63,10 +63,14 @@
                       </template>
                     </v-autocomplete>
 
-                    <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string'||getMeta(m.id).dataType==='number')" 
+                    <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
                       @input="setVal($event,m.id)" :value="values[m.id]" outlined
                       :label="getMeta(m.id).settings.name" hide-details dense
                       clearable @click:clear="setVal('', m.id)"/>
+
+                    <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
+                      @input="setVal($event,m.id)" :value="values[m.id]" type="number"
+                      :label="getMeta(m.id).settings.name" hide-details dense outlined/>
 
                     <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                       :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
@@ -185,6 +189,7 @@ export default {
         let defaultValue = ''
         if (simpleMetaType=='array') defaultValue = []
         if (simpleMetaType=='boolean') defaultValue = false
+        if (simpleMetaType=='number') defaultValue = 0
         this.values[id] = _.cloneDeep(this.card.meta[id]) || defaultValue
       }
     },

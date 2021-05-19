@@ -42,10 +42,14 @@
                 @change="setFlag($event,i)" :value="filters[i].flag" indeterminate 
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"/>
               
-              <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
-                @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
+              <v-text-field v-if="filters[i].type==='string'||filters[i].type===null"
+                @input="setVal($event,i)" :value="filters[i].val"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
                 label="Value" outlined dense class="val"/>
+
+              <v-text-field v-if="filters[i].type==='number'" label="Value" outlined dense class="val"
+                @input="setVal($event,i)" :value="filters[i].val" type="number"
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"/>
                 
               <v-text-field v-if="filters[i].type==='date'" 
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
@@ -241,7 +245,7 @@ export default {
       this.filters[i].by = e
       if (this.metaType.number.includes(e)) {
         this.filters[i].type = 'number'
-        this.filters[i].val = ''
+        this.filters[i].val = 0
       } else if (this.metaType.string.includes(e)) {
         this.filters[i].type = 'string'
         this.filters[i].val = ''
@@ -263,7 +267,6 @@ export default {
     setCond(e, i) { this.filters[i].cond = e },
     setVal(e, i) { this.filters[i].val = e },
     setFlag(e, i) { this.filters[i].flag = e },
-    getValueRules(value) { return true },
     removeChip(item, i) { 
       const index = this.filters[i].val.indexOf(item.name)
       if (index >= 0) this.filters[i].val.splice(index, 1)
