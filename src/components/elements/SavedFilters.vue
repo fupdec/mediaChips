@@ -2,12 +2,12 @@
 	<div>
     <v-dialog :value="$store.state.SavedFilters.dialogSavedFilters" width="800" persistent scrollable eager>
       <v-card>
-        <v-card-title class="py-1 px-4 headline">
-          Saved filters for {{type}}
+        <v-toolbar color="primary">
+          <span class="headline">Saved filters for {{type=='meta'?meta.settings.name:type}}</span>
           <v-spacer></v-spacer>
-          <v-icon>mdi-filter</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters=false" outlined>
+            <v-icon left>mdi-close</v-icon> Close </v-btn>
+        </v-toolbar>
         <v-card-actions class="pa-0">
           <v-container class="py-0 pl-4">
             <v-row>
@@ -38,9 +38,6 @@
           </v-card-text>
         </vuescroll>
         <v-card-actions class="pa-0">
-          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters=false" small class="ma-4">
-            <v-icon left>mdi-close</v-icon> Close
-          </v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialogDeleteFilters=true" small class="ma-4" color="red" :disabled="isDisbaled"> 
             <v-icon left>mdi-delete</v-icon> Delete 
@@ -51,7 +48,9 @@
           <v-btn @click="loadFilters" class="ma-4" small color="primary" :disabled="isDisbaled"> 
             <v-icon left>mdi-content-save-move</v-icon> Load filters
           </v-btn>
+          <v-spacer></v-spacer>
         </v-card-actions>
+        <!-- TODO create buttons in lines like in settings -> meta, remove buttons -->
       </v-card>
     </v-dialog>
 
@@ -104,6 +103,7 @@
 
 <script>
 import vuescroll from 'vuescroll'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'SavedFilters',
@@ -114,6 +114,7 @@ export default {
   components: {
     vuescroll,
   },
+  mixins: [MetaGetters], 
   mounted() {
     this.$nextTick(function () {
     })
@@ -129,7 +130,8 @@ export default {
   }),
   computed: {
     savedFilters() {
-      return this.$store.state.SavedFilters.savedFilters[this.type]
+      if (this.type=='meta') return this.$store.state.SavedFilters.savedFilters[this.metaId] 
+      else return this.$store.state.SavedFilters.savedFilters[this.type]
     },
     isDisbaled() {
       return this.selected === undefined || this.savedFilters.length === 0
@@ -137,7 +139,8 @@ export default {
   },
   methods: {
     getNameRules(name) {
-      let duplicate = this.$store.getters.savedFilters.get([this.type]).find({name:name}).value()
+      let type = this.type=='meta' ? this.metaId : this.type
+      let duplicate = this.$store.getters.savedFilters.get([type]).find({name:name}).value()
       if (name.length > 500) {
         return 'Name must be less than 500 characters'
       } else if (name.length===0) {
@@ -157,16 +160,18 @@ export default {
         name: this.savedFiltersName,
         filters: _.cloneDeep(this.filters),
       }
+      let type = this.type=='meta' ? this.metaId : this.type
       const values = {
-        type: this.type,
+        type: type,
         savedFilters: savedFilters
       }
       this.$store.dispatch('addSavedFilter', values)
       this.savedFiltersName = ''
     },
     deleteSavedFilter() {
+      let type = this.type=='meta' ? this.metaId : this.type
       const values = {
-        type: this.type,
+        type: type,
         name: this.savedFilters[this.selected].name 
       }
       this.$store.dispatch('deleteSavedFilter', values)
@@ -178,8 +183,9 @@ export default {
     },
     saveFiltersName() {
       if (!this.validNameNew) return
+      let type = this.type=='meta' ? this.metaId : this.type
       const valuesForUpdate = {
-        type: this.type,
+        type: type,
         oldName: this.savedFilters[this.selected].name,
         newName: this.nameNew,
       }

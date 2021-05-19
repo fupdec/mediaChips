@@ -2,13 +2,14 @@
   <div>
     <v-dialog v-model="$store.state.Meta.dialogFilterMetaCards" scrollable width="1000">
       <v-card>
-        <v-card-title class="py-1 px-4">
+        <v-toolbar color="primary">
           <span class="headline">Filter {{meta.settings.name}}</span>
           <v-spacer></v-spacer>
-          <v-icon>mdi-filter</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        
+          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters=true" class="mx-4" outlined>
+            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
+          <v-btn @click="applyFilters" outlined>
+            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
@@ -122,15 +123,6 @@
               <v-icon left>mdi-close</v-icon>Remove all</v-btn>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-btn @click="$store.state.Meta.dialogFilterMetaCards=false" class="ma-4">
-            <v-icon left>mdi-cancel</v-icon> Cancel </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters = true" class="ma-4" color="secondary">
-            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
-          <v-btn @click="applyFilters" class="ma-4" color="primary">
-            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
 

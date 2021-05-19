@@ -57,9 +57,10 @@ const Meta = {
     addComplexMeta({commit, getters, rootState}, metaObject) {
       let meta = { ...defaultMeta, ...metaObject }
       getters.meta.push(meta).write()
-      getters.metaCards.set(metaObject.id, []).write()
+      getters.metaCards.set(meta.id, []).write()
+      getters.savedFilters.set(meta.id, []).write()
       commit('getMetaListFromDb')
-      commit('addLog', {type:'info', color:'green', text:`Added complex meta "${metaObject.settings.name}"`})
+      commit('addLog', {type:'info', color:'green', text:`Added complex meta "${meta.settings.name}"`})
     },
     addSimpleMeta({commit, getters, rootState}, metaObject) {
       let meta = { ...defaultMeta, ...metaObject }
@@ -73,6 +74,7 @@ const Meta = {
       }
       getters.meta.remove({id}).write() // delete from database
       getters.metaCards.remove({metaId:id}).write() // delete all cards from database
+      getters.savedFilters.unset(id).write() // delete saved filters from database
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ // setts
         i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
       const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
