@@ -1,17 +1,19 @@
 <template>
   <div>
-    <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable max-width="600">
+    <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable max-width="700">
       <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">Settings for meta "{{this.meta.settings.name}}"</div>
+        <v-toolbar color="primary">
+          <v-card-title class="headline pl-0">Settings for meta "{{this.meta.settings.name}}"</v-card-title>
           <v-spacer></v-spacer>
-          <v-icon>mdi-cog</v-icon>
-        </v-card-title>
+          <v-btn @click="saveSettings" outlined large>
+            <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+        </v-toolbar>
         <v-divider></v-divider>
         <div class="d-flex justify-space-between px-4 pt-2">
           <v-chip label small outlined class="mr-4">
             <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}}
           </v-chip>
+          <span class="caption">data type: <b>{{meta.dataType}}</b></span>
           <v-chip label small outlined>
             <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
           </v-chip>
@@ -36,15 +38,57 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
+                <v-col v-if="meta.dataType=='array'" cols="12">
+                  <div class="overline text-center">Items in array</div>
+                  <div v-if="meta.settings.items.length <= 1" class="caption text-center mb-4">
+                    <v-icon small left color="red">mdi-alert</v-icon>
+                    <span class="red--text"> In array must be more than 2 items </span>
+                  </div>
+                  <div class="d-flex">
+                    <v-btn @click="addNewItem" :disabled="!validItemName" 
+                      height="40" class="mr-4" color="success" outlined rounded> 
+                      <v-icon left>mdi-plus</v-icon> Add item 
+                    </v-btn>
+                    <v-form v-model="validItemName" ref="itemName" class="flex-grow-1" @submit.prevent>
+                      <v-text-field v-model="itemName" :rules="[itemNameRules]" @keyup.enter="tryAddNewItem"
+                        dense outlined label="Name of item" />
+                    </v-form>
+                  </div>
+                  <draggable v-model="meta.settings.items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+                    <transition-group type="transition" class="d-flex flex-wrap">
+                      <v-chip v-for="(item,i) in meta.settings.items" :key="item.id" @click:close="removeItem(i)"
+                        close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
+                    </transition-group>
+                  </draggable>
+                </v-col>
               </v-row>
             </v-form>
           </v-card-text>
         </vuescroll>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-if="dialogDeleteItem" :value="dialogDeleteItem" persistent max-width="450">
+      <v-card>
+        <v-toolbar color="error">
+          <v-card-title class="headline pl-0">Are you sure?</v-card-title>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-delete-alert</v-icon>
+        </v-toolbar>
+        <v-card-text class="pt-8">
+          <div class="text-center">Delete item
+            <v-chip small class="mx-1">
+              {{meta.settings.items[deleteItemIndex].name}}
+            </v-chip> from array?
+            <div>This item will be removed from all meta.</div>
+          </div>
+        </v-card-text>
         <v-card-actions class="pa-0">
+          <v-btn @click="dialogDeleteItem=false" small class="ma-4">
+            <v-icon left>mdi-close</v-icon> Cancel </v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="saveSettings" class="ma-4 pr-4" rounded color="primary">
-            <v-icon left>mdi-content-save</v-icon> Save Settings </v-btn>
-          <v-spacer></v-spacer>
+          <v-btn @click="deleteItem" small class="ma-4" color="red" dark> 
+            <v-icon left>mdi-delete-alert</v-icon> Delete </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -53,6 +97,7 @@
 
 <script>
 import vuescroll from 'vuescroll'
+import draggable from 'vuedraggable'
 import icons from '@/assets/material-icons.json'
 import NameRules from '@/mixins/NameRules'
 
@@ -62,11 +107,7 @@ export default {
     metaIndex: Number,
   },
   name: "DialogEditMeta",
-  components: {
-    vuescroll,
-	},
-  created() {
-  },
+  components: { vuescroll, draggable, },
   mixins: [NameRules], 
   mounted () {
     this.$nextTick(function () {
@@ -79,6 +120,18 @@ export default {
     settings: {
       name: '',
       icon: 'shape',
+    },
+    // for data type array
+    itemName: '',
+    validItemName: false,
+    dialogDeleteItem: false,
+    deleteItemIndex: 0,
+    drag: false,
+    dragOptions: {
+      animation: 200,
+      group: "description",
+      disabled: false,
+      ghostClass: "ghost"
     },
   }),
   computed: {
@@ -112,6 +165,42 @@ export default {
     },
     closeSettings() { this.$emit('closeSettings') },
     getRandomColor() { return '#'+Math.floor(Math.random()*16777215).toString(16) },
+    tryAddNewItem() { if (this.valid) this.addNewItem() },
+    addNewItem() {
+      this.$refs.itemName.validate()
+      if (!this.validItemName) return
+      this.items.push(this.itemName)
+      this.itemName = ''
+    },
+    removeItem(index) { 
+      this.dialogDeleteItem = true
+      this.deleteItemIndex = index
+    },
+    deleteItem() {
+      // let itemId = this.meta.settings.items[this.deleteItemIndex].id
+      // let metaId =  this.meta.id
+      // let cards =  this.$store.getters.metaCards
+      // let complexMetaIds = this.$store.getters.complexMeta
+      //   .filter(i=>_.find(i.settings.metaInCard, {id: metaId})).value()
+      // complexMetaIds = complexMetaIds.map(i=>i.id)
+      // for (let i = 0; i < complexMetaIds.length; i++) {
+      //   cards.get(complexMetaIds[i]).filter(c=>c.meta[metaId].includes(itemId))
+      //     .each(c=>{
+      //       const index = c.meta[metaId].indexOf(itemId)
+      //       c.meta[metaId].splice(index, 1) 
+      //     }).write()
+      // }
+      // TODO remove item from meta db 
+      this.meta.settings.items.splice(this.deleteItemIndex, 1)
+    },
+    itemNameRules(string) {
+      let items = this.meta.settings.items.map(i => i.name.toLowerCase())
+      let duplicate = items.includes(string.trim().toLowerCase())
+      if (string.length > 30) return 'Name must be less than 30 characters'
+      else if (string.length===0) return 'Name is required'
+      else if (duplicate) return 'Item with that name already exists'
+      else return true
+    },
   },
 }
 </script>

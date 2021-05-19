@@ -11,6 +11,7 @@
         <v-divider class="mb-2"></v-divider>
         <div class="d-flex justify-space-between px-4">
           <v-chip label outlined small class="mr-4"> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
+          <span class="caption">id: {{meta.id}}</span>
           <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>
         </div>
         <vuescroll>
@@ -151,11 +152,11 @@ export default {
     color: '#777',
   }),
   computed: {
-    oldValues() { return this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).get('meta').cloneDeep().value() },
+    oldValues() { return this.$store.getters.metaCards.find({id:this.card.id}).get('meta').cloneDeep().value() },
     card() {
       let ids = this.$store.state.Meta.selectedMeta
       ids.length > 1 ? this.isSelectedSingle=false : this.isSelectedSingle=true 
-      let metaCards = this.$store.getters.metaCards.get(this.metaId)
+      let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
       if (this.$route.path.includes('/meta/:') && this.$router.currentRoute.params.id) {
         if (this.$router.currentRoute.params.id.substring(1)) {
           return metaCards.find({id:this.$router.currentRoute.params.id.substring(1)}).value()
@@ -217,7 +218,7 @@ export default {
         color: this.color,
       }
       let newValues = {...this.oldValues, ...presetValues, ...this.values}
-      this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
+      this.$store.getters.metaCards.find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
       this.$store.state.Meta.dialogEditMetaCard = false 
       this.$store.commit('updateMetaCards', [this.card.id])
     },

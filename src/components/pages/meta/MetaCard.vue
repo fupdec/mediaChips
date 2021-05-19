@@ -35,7 +35,7 @@
             :outlined="getMeta(m.id).settings.chipOutlined"
             @mouseover.stop="showImage($event,c,'meta',m.id)" 
             @mouseleave.stop="$store.state.hoveredImage=false"> 
-              {{ getCard(m.id,c).meta.name }} </v-chip>
+              {{ getCard(c).meta.name }} </v-chip>
         </v-chip-group>
         <div v-else-if="m.type=='simple'">
           <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
@@ -107,11 +107,11 @@ export default {
     },
     toggleFavorite() {
       this.favorite = !this.favorite
-      this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id})
+      this.$store.getters.metaCards.find({id:this.card.id})
         .assign({edit: Date.now()}).get('meta').assign({favorite:this.favorite}).write()
     },
     changeRating(stars) {
-      this.$store.getters.metaCards.get(this.metaId).find({id:this.card.id})
+      this.$store.getters.metaCards.find({id:this.card.id})
         .assign({edit: Date.now()}).get('meta').assign({rating:stars}).write()
     },
   },

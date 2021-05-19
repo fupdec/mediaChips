@@ -10,23 +10,35 @@
     </v-tooltip>
     <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary" 
       small close :disabled="filter.lock" @click:close="removeFilter(i)">
-      <span class="mr-1">"{{filter.param}}"</span>
+      <span v-if="type=='Meta'" class="mr-1">"{{getMeta(filter.by).settings.name}}"</span>
+      <span v-else class="mr-1">"{{filter.param}}"</span>
       <span>{{filter.cond}}</span> 
-      <span v-if="filter.type=='array'" class="ml-1">"{{filter.val.join(', ')}}"</span>
-      <span v-else-if="filter.type=='boolean'"></span>
-      <span v-else class="ml-1">"{{filter.val}}"</span>
+      <div v-if="type=='Meta'">
+        <!-- TODO remove empty quotes and create function for getting values -->
+        <span v-if="filter.type=='array'||filter.type=='select'" class="ml-1">"{{getMetaItems(filter.by, filter.val)}}"</span>
+        <span v-else-if="filter.type=='boolean'"></span>
+        <span v-else class="ml-1">"{{filter.val}}"</span>
+      </div>
+      <div v-else>
+        <span v-if="filter.type=='array'" class="ml-1">"{{filter.val.join(', ')}}"</span>
+        <span v-else-if="filter.type=='boolean'"></span>
+        <span v-else class="ml-1">"{{filter.val}}"</span>
+      </div>
     </v-chip>
   </div>
 </template>
 
 
 <script>
+import MetaGetters from '@/mixins/MetaGetters'
+
 export default {
   name: 'FiltersChips',
   props: {
     filters: Array,
     type: String, // e.g. Video, Tag
   },
+  mixins: [MetaGetters],
   mounted() {
     this.$nextTick(function () {
     })
@@ -38,7 +50,7 @@ export default {
   },
   methods: {
     removeAllFilters() {
-      if (['Performer','Website'].includes(this.$route.name)) {
+      if (['Performer','Website','Meta'].includes(this.$route.name)) {
         this.$emit('removeAllFilters')
         return
       }
@@ -47,8 +59,20 @@ export default {
       this.$store.dispatch(`filter${this.type}s`)
     },
     removeFilter(i) {
+      if (this.type == 'Meta') {
+        this.filters.splice(i, 1)
+        this.$store.getters.meta.find({id:this.metaId}).set('filters', this.filters).write()
+        this.$store.dispatch('filterMetaCards', {metaId: this.metaId})
+        return
+      }
       this.filters.splice(i, 1)
       this.$store.dispatch(`filter${this.type}s`)
+    },
+    getMetaItems(metaId, items) {
+      let meta = this.getMeta(metaId)
+      let metaCards = this.getCards(metaId)
+      if (meta.type == 'simple') return items.map(id=>_.find(meta.settings.items, {id}).name).join(', ')
+      else return items.map(id=>_.find(metaCards, {id}).meta.name).join(', ')
     },
   },
 }

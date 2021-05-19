@@ -8,15 +8,15 @@ export default {
   methods: {
     getColor(metaId, cardId) {
       if (this.getMeta(metaId).settings.chipColor) {
-        if (this.getCard(metaId,cardId) === undefined) return '#777'
-        else return this.getCard(metaId,cardId).meta.color || '#777'
+        if (this.getCard(cardId) === undefined) return '#777'
+        else return this.getCard(cardId).meta.color || '#777'
       } else return ''
     },
     getMeta(id) {
       return this.$store.getters.meta.find({id}).value()
     },
-    getCard(metaId, cardId) { return this.$store.getters.metaCards.get(metaId).find({id:cardId}).value() },
-    getCards(metaId) { return this.$store.getters.metaCards.get(metaId).value() },
+    getCard(cardId) { return this.$store.getters.metaCards.find({id:cardId}).value() },
+    getCards(metaId) { return this.$store.getters.metaCards.filter({metaId}).value() },
     getArrayValuesForCard(metaId) { 
       let array = this.card.meta[metaId]
       if (array === undefined) return ''

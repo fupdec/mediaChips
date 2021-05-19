@@ -3,6 +3,10 @@
     <div class="headline text-h3 d-flex align-center justify-center py-6">
       <v-icon x-large left>mdi-{{meta.settings.icon}}</v-icon> {{meta.settings.name}}
     </div>
+    
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
+      <FiltersChips :filters="filters" type="Meta" @removeAllFilters="removeAllFilters"/>
+    </v-container>
 
     <v-container fluid class="meta-grid">
       <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
@@ -22,6 +26,7 @@
 import MetaCard from '@/components/pages/meta/MetaCard.vue'
 import vuescroll from 'vuescroll'
 import Selection from '@simonwep/selection-js'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: "MetaPage",
@@ -30,7 +35,9 @@ export default {
     vuescroll,
     DialogEditMetaCard: () => import('@/components/pages/meta/DialogEditMetaCard.vue'),
     DialogEditMetaCardImages: () => import('@/components/pages/meta/DialogEditMetaCardImages.vue'),
+    FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
+  mixins: [MetaGetters],
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
@@ -44,9 +51,8 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
-    metaId() { return this.$route.query.metaId },
-    meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
+    filters() { return this.$store.getters.meta.find({id:this.metaId}).cloneDeep().value().filters || [] },
   },
   methods: {
     initSelection() {
@@ -81,6 +87,10 @@ export default {
       else this.isScrollToTopVisible = false
     },
     initFilters() { this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) },
+    removeAllFilters() {
+      this.$store.getters.meta.find({id:this.meta.id}).set('filters', []).write()
+      this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) 
+    },
   },
   watch: {
     // $route(newRoute) { if (this.$route.path.includes('/meta/')) this.initFilters() },

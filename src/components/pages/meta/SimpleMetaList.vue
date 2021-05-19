@@ -125,22 +125,24 @@
 
     <v-dialog v-if="dialogDeleteMeta" :value="dialogDeleteMeta" persistent max-width="450">
       <v-card>
-        <v-card-title class="py-1 px-4 headline red--text"> 
-          <span>Are you sure?</span>
-          <v-spacer></v-spacer> 
-          <v-icon color="red">mdi-delete-alert</v-icon>
-        </v-card-title>
+        <v-toolbar color="error">
+          <v-card-title class="headline pl-0">Are you sure?</v-card-title>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-delete-alert</v-icon>
+        </v-toolbar>
         <v-divider></v-divider>
-        <v-card-text class="py-2">
-          <div class="text-center">Delete simple meta 
+        <v-card-text class="pt-8">
+          <div class="text-center">Delete <b>simple</b> meta?
             <v-chip small class="mx-2">
               <v-icon small left>mdi-{{simpleMetaList[selectedMetaIndex].settings.icon}}</v-icon>
               <b>{{simpleMetaList[selectedMetaIndex].settings.name}}</b>
-            </v-chip>?
+            </v-chip>
+            <div>This meta will be removed <br> from all assigned complex meta and cards.</div>
           </div>
         </v-card-text>
         <v-card-actions class="pa-0">
-          <v-btn @click="dialogDeleteMeta=false" small class="ma-4">Cancel</v-btn>
+          <v-btn @click="dialogDeleteMeta=false" small class="ma-4">
+            <v-icon left>mdi-close</v-icon> Cancel </v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="deleteMeta" small class="ma-4" color="red" dark> 
             <v-icon left>mdi-delete-alert</v-icon> Delete</v-btn>

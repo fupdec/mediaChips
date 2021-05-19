@@ -6,6 +6,7 @@
           <v-tooltip bottom>
             <template #activator="{ on: onTooltip }">
               <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                <v-icon small class="icon-plus">mdi-plus</v-icon>
                 <v-icon>mdi-{{meta.settings.icon}}</v-icon>
               </v-btn>
             </template>
@@ -134,8 +135,8 @@ export default {
           let duplicate = cardsDb.find(i=>(i.name.toLowerCase()===card.toLowerCase())).value()
           if (duplicate) { dups.push(duplicate.name); continue }
           vm.$store.dispatch('addMetaCard', { 
-            cardId: shortid.generate(),
-            metaInfo: { name: card },
+            id: shortid.generate(),
+            meta: { name: card },
             metaId: vm.metaId,
           })
           newCards.push(card)
@@ -158,3 +159,10 @@ export default {
   },
 }
 </script>
+
+
+<style lang="scss">
+.icon-plus {
+  width: 10px !important;
+}
+</style>

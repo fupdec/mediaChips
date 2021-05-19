@@ -356,7 +356,7 @@ export default {
     meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
     card() {
       let ids = this.$store.state.Meta.selectedMeta
-      let metaCards = this.$store.getters.metaCards.get(this.metaId)
+      let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
       let id = this.$router.currentRoute.params.id
       if (this.$route.path.includes('/meta/:') && id) {
         if (id.substring(1)) return metaCards.find({id:id.substring(1)}).value()

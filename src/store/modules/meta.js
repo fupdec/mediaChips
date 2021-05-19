@@ -22,6 +22,7 @@ let defaultMeta = {
 
 let defaultMetaCard = {
   id: "defaultMetaCard",
+  metaId: 'defaultMeta',
   date: Date.now(),
   edit: Date.now(),
   meta: {
@@ -29,7 +30,7 @@ let defaultMetaCard = {
   }
 }
 
-dbMeta.defaults({ meta: [{ ...defaultMeta }], cards: {} }).write()
+dbMeta.defaults({ meta: [{ ...defaultMeta }], cards: [] }).write()
 
 const Meta = {
   state: () => ({
@@ -68,37 +69,38 @@ const Meta = {
     deleteComplexMeta({commit, getters}, {id, name}) {
       let ids = getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).map('id').value()
       for (let i = 0; i < ids.length; i++) { // delete from meta cards
-        getters.metaCards.get(ids[i]).each(card=>{card.meta[id]=undefined}).write() 
+        getters.metaCards.filter({metaId:ids[i]}).each(card=>{card.meta[id]=undefined}).write() 
       }
       getters.meta.remove({id}).write() // delete from database
-      getters.metaCards.unset(id).write() // delete all cards from database
+      getters.metaCards.remove({metaId:id}).write() // delete all cards from database
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ // setts
         i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
       const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
-      rimraf(metaFolder, function () { console.log("done") })
+      rimraf(metaFolder, () => { /*console.log("done")*/ }) // remove folder with images
       commit('getMetaListFromDb')
       commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
     },
     deleteSimpleMeta({commit, getters}, {id, name}) {
       let ids = getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).map('id').value()
       for (let i = 0; i < ids.length; i++) { // delete from meta cards
-        getters.metaCards.get(ids[i]).each(card=>{card.meta[id]=undefined}).write() 
+        getters.metaCards.filter({metaId:ids[i]}).each(card=>{card.meta[id]=undefined}).write() 
       }
       getters.remove({id}).write() // delete from database
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})) // delete from complex meta 
         .each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
       commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
     },
-    addMetaCard({commit, getters}, {cardId, metaInfo, metaId}) {
-      let metaCard = { ...defaultMetaCard, ...{ id: cardId, meta: metaInfo } }
-      getters.metaCards.get(metaId).push(metaCard).write()
-      commit('addLog', {type:'info', color:'green', text:`Added card "${metaInfo.name}"`})
+    addMetaCard({commit, getters}, newMetaCard) {
+      let metaCard = { ...defaultMetaCard, ...newMetaCard }
+      getters.metaCards.push(metaCard).write()
+      // TODO change 'card' to meta name
+      commit('addLog', {type:'info', color:'green', text:`Added card "${metaCard.meta.name}"`})
     },
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()
     },
     filterMetaCards({ state, commit, dispatch, getters, rootState}, {metaId, stayOnCurrentPage}) {
-      let mc = getters.metaCards.get(metaId)
+      let mc = getters.metaCards.filter({metaId})
       mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), ['asc'])
 
       function compare(sign, a, b) {
@@ -144,7 +146,10 @@ const Meta = {
         }
 
         if (type === 'array' || type === 'select') {
-          if (cond === 'includes all') mc = mc.filter(c=>_.isEqual(c.meta[by].sort(), val.sort()))
+          if (cond === 'includes all') mc = mc.filter(c=>{
+            if (c.meta[by]===undefined) return false
+            else return _.isEqual(c.meta[by].sort(), val.sort())
+          })
           else if (cond === 'includes one of') mc = mc.filter(c=>_.difference(val, c.meta[by]).length===0)
           else if (cond === 'excludes') mc = mc.filter(c=>_.difference(val, c.meta[by]).length!==0)
         }

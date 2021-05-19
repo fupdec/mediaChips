@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable width="80vw" max-width="800">
+    <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable width="80vw" max-width="700">
       <v-card>
         <v-toolbar color="primary">
           <v-card-title class="headline pl-0">Settings for meta "{{this.meta.settings.name}}"</v-card-title>
