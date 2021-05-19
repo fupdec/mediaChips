@@ -55,11 +55,11 @@
     
     <v-dialog v-model="dialogAddNewMeta" scrollable max-width="450">
       <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">Adding a new simple meta</div>
+        <v-toolbar color="primary">
+          <div class="headline">New simple meta</div>
           <v-spacer></v-spacer>
-          <v-icon>mdi-plus</v-icon>
-        </v-card-title>
+          <v-btn @click="addMeta" outlined large> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
         <v-divider></v-divider>
         <vuescroll>
           <v-card-text class="px-4">
@@ -89,12 +89,8 @@
                 </template>
               </v-autocomplete>
             </v-form>
-            <div v-if="dataType=='array'">
-              <div class="overline text-center mt-4">Items for array</div>
-              <div v-if="items.length <= 1" class="caption text-center mb-4">
-                <v-icon small left color="red">mdi-alert</v-icon>
-                <span class="red--text"> In array must be more than 2 items </span>
-              </div>
+            <v-card v-if="dataType=='array'" outlined class="px-4 pb-4 mt-4">
+              <div class="overline text-center">Array Items</div>
               <div class="d-flex">
                 <v-btn @click="addNewItem" :disabled="!validItemName" 
                   height="40" class="mr-4" color="success" outlined rounded> 
@@ -105,21 +101,16 @@
                     dense outlined label="Name of item" />
                 </v-form>
               </div>
+              <div v-if="items.length==0" class="text-center">Please add items to array</div>
               <draggable v-model="items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
                 <transition-group type="transition" class="d-flex flex-wrap">
-                  <v-chip v-for="item in items" :key="item" @click:close="removeItem(item)"
-                    close close-icon="mdi-close" class="mr-2 mb-2">{{item}}</v-chip>
+                  <v-chip v-for="(item,i) in items" :key="i" @click:close="removeItem(i)"
+                    close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
                 </transition-group>
               </draggable>
-            </div>
+            </v-card>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="addMeta" class="ma-4 pr-4" rounded color="primary">
-            <v-icon left>mdi-plus</v-icon> Add meta </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -231,36 +222,30 @@ export default {
       return found
     },
     itemNameRules(string) {
-      let items = this.items.map(i => i.toLowerCase())
+      let items = this.items.map(i => i.name.toLowerCase())
       let duplicate = items.includes(string.trim().toLowerCase())
       if (string.length > 30) return 'Name must be less than 30 characters'
       else if (string.length===0) return 'Name is required'
       else if (duplicate) return 'Item with that name already exists'
       else return true
     },
-    tryAddNewItem() {
-      if (this.validMeta) this.addNewItem()
-    },
+    tryAddNewItem() { if (this.validMeta) this.addNewItem() },
     addNewItem() {
       this.$refs.itemName.validate()
       if (!this.validItemName) return
-      this.items.push(this.itemName)
+      this.items.push({ id:shortid.generate(), name: this.itemName })
       this.itemName = ''
     },
-    removeItem(item) { 
-      const index = this.items.indexOf(item)
-      if (index >= 0) this.items.splice(index, 1)
-    },
+    removeItem(index) { this.items.splice(index, 1) },
     addMeta() {
       this.$refs.form.validate()
       if (!this.validMeta) return
-      if (this.dataType=='array' && this.items.length <= 1) return
 
       let settings = { 
         name: this.metaName, 
         icon: this.metaIcon 
       }
-      if (this.dataType=='array') settings.items = this.items.map(i=>({id:shortid.generate(),name:i})) 
+      if (this.dataType=='array') settings.items = this.items
 
       let meta = {
         id: shortid.generate(),

@@ -2,14 +2,13 @@
   <div>
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="800" width="70vw">
       <v-card>
-        <v-card-title class="px-4 py-2">
-          <span>Editing of {{meta.settings.nameSingular.toLowerCase()}} "{{card.meta.name}}"</span>
+        <v-toolbar color="primary">
+          <span class="headline">Editing of {{meta.settings.nameSingular.toLowerCase()}} "{{card.meta.name}}"</span>
           <v-spacer></v-spacer>
-          <v-btn @click="close" class="mx-4" color="red"> <v-icon left>mdi-close</v-icon> Close</v-btn>
-          <v-btn @click="save" color="green"> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
-        </v-card-title>
-        <v-divider class="mb-2"></v-divider>
-        <div class="d-flex justify-space-between px-4">
+          <v-btn @click="close" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> Close</v-btn>
+          <v-btn @click="save" outlined> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
+        </v-toolbar>
+        <div class="d-flex justify-space-between px-4 pt-4">
           <v-chip label outlined small class="mr-4"> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
           <span class="caption">id: {{meta.id}}</span>
           <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>

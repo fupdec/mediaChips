@@ -39,27 +39,26 @@
                   </v-autocomplete>
                 </v-col>
                 <v-col v-if="meta.dataType=='array'" cols="12">
-                  <div class="overline text-center">Items in array</div>
-                  <div v-if="meta.settings.items.length <= 1" class="caption text-center mb-4">
-                    <v-icon small left color="red">mdi-alert</v-icon>
-                    <span class="red--text"> In array must be more than 2 items </span>
-                  </div>
-                  <div class="d-flex">
-                    <v-btn @click="addNewItem" :disabled="!validItemName" 
-                      height="40" class="mr-4" color="success" outlined rounded> 
-                      <v-icon left>mdi-plus</v-icon> Add item 
-                    </v-btn>
-                    <v-form v-model="validItemName" ref="itemName" class="flex-grow-1" @submit.prevent>
-                      <v-text-field v-model="itemName" :rules="[itemNameRules]" @keyup.enter="tryAddNewItem"
-                        dense outlined label="Name of item" />
-                    </v-form>
-                  </div>
-                  <draggable v-model="meta.settings.items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
-                    <transition-group type="transition" class="d-flex flex-wrap">
-                      <v-chip v-for="(item,i) in meta.settings.items" :key="item.id" @click:close="removeItem(i)"
-                        close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
-                    </transition-group>
-                  </draggable>
+                  <v-card outlined class="px-4 pb-4">
+                    <div class="overline text-center">Array Items</div>
+                    <div class="d-flex">
+                      <v-btn @click="addNewItem" :disabled="!validItemName" 
+                        height="40" class="mr-4" color="success" outlined rounded> 
+                        <v-icon left>mdi-plus</v-icon> Add item 
+                      </v-btn>
+                      <v-form v-model="validItemName" ref="itemName" class="flex-grow-1" @submit.prevent>
+                        <v-text-field v-model="itemName" :rules="[itemNameRules]" @keyup.enter="tryAddNewItem"
+                          dense outlined label="Name of item" />
+                      </v-form>
+                    </div>
+                    <div v-if="meta.settings.items.length==0" class="text-center">Please add items to array</div>
+                    <draggable v-model="meta.settings.items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+                      <transition-group type="transition" class="d-flex flex-wrap">
+                        <v-chip v-for="(item,i) in meta.settings.items" :key="i" @click:close="removeItem(i)"
+                          close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
+                      </transition-group>
+                    </draggable>
+                  </v-card>
                 </v-col>
               </v-row>
             </v-form>
@@ -96,6 +95,8 @@
 </template>
 
 <script>
+const shortid = require('shortid')
+
 import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
 import icons from '@/assets/material-icons.json'
@@ -169,7 +170,7 @@ export default {
     addNewItem() {
       this.$refs.itemName.validate()
       if (!this.validItemName) return
-      this.items.push(this.itemName)
+      this.meta.settings.items.push({ id:shortid.generate(), name: this.itemName })
       this.itemName = ''
     },
     removeItem(index) { 
@@ -177,20 +178,18 @@ export default {
       this.deleteItemIndex = index
     },
     deleteItem() {
-      // let itemId = this.meta.settings.items[this.deleteItemIndex].id
-      // let metaId =  this.meta.id
-      // let cards =  this.$store.getters.metaCards
-      // let complexMetaIds = this.$store.getters.complexMeta
-      //   .filter(i=>_.find(i.settings.metaInCard, {id: metaId})).value()
-      // complexMetaIds = complexMetaIds.map(i=>i.id)
-      // for (let i = 0; i < complexMetaIds.length; i++) {
-      //   cards.get(complexMetaIds[i]).filter(c=>c.meta[metaId].includes(itemId))
-      //     .each(c=>{
-      //       const index = c.meta[metaId].indexOf(itemId)
-      //       c.meta[metaId].splice(index, 1) 
-      //     }).write()
-      // }
-      // TODO remove item from meta db 
+      this.dialogDeleteItem = false
+      let itemId = this.meta.settings.items[this.deleteItemIndex].id
+      let metaId =  this.meta.id
+      this.$store.getters.metaCards.filter(i=>{
+        let metaInCard = i.meta[metaId]
+        if (metaInCard) return i.meta[metaId].includes(itemId)
+        else return false
+      }).each(i=>{
+        const index = i.meta[metaId].indexOf(itemId)
+        if (index > -1) i.meta[metaId].splice(index, 1) 
+      }).write()
+      this.$store.getters.meta.find({id:metaId}).get('settings').get('items').remove({id:itemId}).write()
       this.meta.settings.items.splice(this.deleteItemIndex, 1)
     },
     itemNameRules(string) {

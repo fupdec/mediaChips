@@ -3,8 +3,8 @@
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCardImages" 
       scrollable transition="dialog-bottom-transition" fullscreen persistent>
       <v-card>
-        <v-card-title class="edit-card-title">
-          <div class="ml-4 mr-2 headline">Edit images of </div>
+        <v-toolbar color="primary">
+          <div class="mr-2 headline">Image editing for {{meta.settings.nameSingular.toLowerCase()}} </div>
           <div class="font-weight-bold headline" style="cursor:pointer;">
             <v-tooltip v-model="tooltipCopyName" bottom>
               <template v-slot:activator="{ click }">
@@ -14,8 +14,8 @@
             </v-tooltip>
           </div>
           <v-spacer></v-spacer>
-          <v-btn @click="close" class="my-4" dark outlined><v-icon left>mdi-close</v-icon>Close</v-btn>
-        </v-card-title>
+          <v-btn @click="close" outlined><v-icon left>mdi-close</v-icon>Close</v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text class="pt-0">
             <v-container fluid>

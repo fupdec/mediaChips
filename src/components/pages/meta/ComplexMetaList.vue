@@ -52,11 +52,11 @@
     
     <v-dialog v-model="dialogAddNewMeta" scrollable max-width="450">
       <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">Adding a new complex meta</div>
+        <v-toolbar color="primary">
+          <div class="headline">New complex meta</div>
           <v-spacer></v-spacer>
-          <v-icon>mdi-plus</v-icon>
-        </v-card-title>
+          <v-btn @click="addMeta" outlined large> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
         <v-divider></v-divider>
         <vuescroll>
           <v-card-text class="px-4">
@@ -77,12 +77,6 @@
             </v-form>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="addMeta" class="ma-4 pr-4" rounded color="primary">
-            <v-icon left>mdi-plus</v-icon> Add meta </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
       </v-card>
     </v-dialog>
 
