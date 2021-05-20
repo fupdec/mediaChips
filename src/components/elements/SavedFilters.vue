@@ -1,7 +1,7 @@
 <template>
 	<div>
-    <v-dialog :value="$store.state.SavedFilters.dialogSavedFilters" width="800" persistent scrollable eager>
-      <v-card>
+    <v-dialog v-model="$store.state.SavedFilters.dialogSavedFilters" width="800" scrollable eager>
+      <v-card class="pb-4">
         <v-toolbar color="primary">
           <span class="headline">Saved filters for {{type=='meta'?meta.settings.name:type}}</span>
           <v-spacer></v-spacer>
@@ -26,66 +26,70 @@
         </v-card-actions>
         <vuescroll>
           <v-card-text class="py-0" v-if="savedFilters.length">
-            <v-list dense>
-              <v-list-item-group color="secondary" v-model="selected">
-                <v-list-item v-for="(item, i) in savedFilters" :key="i">{{item.name}}</v-list-item>
-              </v-list-item-group>
-            </v-list>
+            <v-card outlined>
+              <v-list dense class="list-zebra pa-0">
+                <v-list-item-group color="primary">
+                  <v-list-item v-for="(item, i) in savedFilters" :key="i">
+                    <div class="d-flex justify-space-between align-center" style="width:100%">
+                      <span>{{item.name}}</span>
+                      <span>
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on }">
+                            <v-btn v-on="on" @click="selected=i, dialogDeleteFilters=true" color="red" icon><v-icon>mdi-delete</v-icon></v-btn>
+                          </template>
+                          <span>Delete</span>
+                        </v-tooltip>
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on }">
+                            <v-btn v-on="on" @click="selected=i, openDialogEditSavedFiltersName()" icon><v-icon>mdi-pencil</v-icon></v-btn>
+                          </template>
+                          <span>Edit name</span>
+                        </v-tooltip>
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on }">
+                            <v-btn v-on="on" @click="selected=i, loadFilters()" icon><v-icon>mdi-content-save-move</v-icon></v-btn>
+                          </template>
+                          <span>Load filters</span>
+                        </v-tooltip>
+                      </span>
+                    </div>
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
+            </v-card>
           </v-card-text>
           <v-card-text class="text-center" v-else>
             <v-icon size="32">mdi-close</v-icon>
             <div class="overline">No filters saved</div>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="dialogDeleteFilters=true" small class="ma-4" color="red" :disabled="isDisbaled"> 
-            <v-icon left>mdi-delete</v-icon> Delete 
-          </v-btn>
-          <v-btn @click="openDialogEditSavedFiltersName" small class="ma-4" :disabled="isDisbaled"> 
-            <v-icon left>mdi-pencil</v-icon> Rename
-          </v-btn>
-          <v-btn @click="loadFilters" class="ma-4" small color="primary" :disabled="isDisbaled"> 
-            <v-icon left>mdi-content-save-move</v-icon> Load filters
-          </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-        <!-- TODO create buttons in lines like in settings -> meta, remove buttons -->
       </v-card>
     </v-dialog>
 
-    <v-dialog :value="dialogEditSavedFiltersName" width="500" persistent>
+    <v-dialog v-model="dialogEditSavedFiltersName" width="500">
       <v-card>
-        <v-card-title class="py-1 px-4 headline"> Edit name of saved filters
+        <v-toolbar color="primary">
+          <span class="headline">Name editing</span>
           <v-spacer></v-spacer>
-          <v-icon>mdi-pencil</v-icon>
-        </v-card-title>
+          <v-btn @click="saveFiltersName" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+        </v-toolbar>
         <v-divider></v-divider>
         <v-card-text class="pb-0 pt-4 px-4">
           <v-form ref="formNameNew" v-model="validNameNew">
-            <v-text-field v-model="nameNew" :rules="[getNameRules]"
-              dense outlined label="New name of saved filters"/>
+            <v-text-field v-model="nameNew" :rules="[getNameRules]" dense outlined label="New name"/>
           </v-form>
         </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn @click="dialogEditSavedFiltersName=false" small class="ma-4">Cancel</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="saveFiltersName" small class="ma-4" color="primary" :disabled="!validNameNew"> 
-            <v-icon left>mdi-content-save</v-icon> Save
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
 
     <v-dialog v-if="dialogDeleteFilters" :value="dialogDeleteFilters" width="400" persistent>
       <v-card>
-        <v-card-title class="py-1 px-4 headline red--text"> 
-          <span>Are you sure?</span>
-          <v-spacer></v-spacer> 
-          <v-icon color="red">mdi-delete-alert</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-text class="py-2">
+        <v-toolbar color="error">
+          <v-card-title class="headline pl-0">Are you sure?</v-card-title>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-delete-alert</v-icon>
+        </v-toolbar>
+        <v-card-text class="pt-8">
           <div class="text-center">Delete saved filters with name "<b>{{savedFilters[selected].name}}</b>"?</div>
         </v-card-text>
         <v-card-actions class="pa-0">
@@ -133,9 +137,6 @@ export default {
       if (this.type=='meta') return this.$store.state.SavedFilters.savedFilters[this.metaId] 
       else return this.$store.state.SavedFilters.savedFilters[this.type]
     },
-    isDisbaled() {
-      return this.selected === undefined || this.savedFilters.length === 0
-    },
   },
   methods: {
     getNameRules(name) {
@@ -182,6 +183,7 @@ export default {
       this.nameNew = this.savedFilters[this.selected].name
     },
     saveFiltersName() {
+      this.$refs.formNameNew.validate()
       if (!this.validNameNew) return
       let type = this.type=='meta' ? this.metaId : this.type
       const valuesForUpdate = {

@@ -121,7 +121,6 @@
           <v-spacer></v-spacer>
           <v-icon>mdi-delete-alert</v-icon>
         </v-toolbar>
-        <v-divider></v-divider>
         <v-card-text class="pt-8">
           <div class="text-center">Delete <b>simple</b> meta?
             <v-chip small class="mx-2">
