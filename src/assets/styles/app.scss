@@ -558,6 +558,9 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       font-weight: normal;
       text-decoration: underline;
     }
+    &:nth-of-type(even) {
+      background-color: rgba(100, 100, 100, 0.05);
+    }
   }
   .list-item {
     display: flex;

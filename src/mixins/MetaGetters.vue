@@ -4,6 +4,11 @@ export default {
     metaId() { return this.$route.query.metaId },
     meta() { return this.$store.getters.meta.find({id: this.metaId}).value() },
     metaInCard() { return this.meta.settings.metaInCard },
+    tabId() { return this.$route.query.tabId },
+    tab() {
+      if (this.tabId === 'default') return undefined
+      else return this.$store.getters.tabsDb.find({id: this.tabId}).value()
+    },
   },
   methods: {
     getColor(metaId, cardId) {

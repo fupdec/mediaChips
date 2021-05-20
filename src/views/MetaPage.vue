@@ -2,6 +2,7 @@
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
     <div class="headline text-h3 d-flex align-center justify-center py-6">
       <v-icon x-large left>mdi-{{meta.settings.icon}}</v-icon> {{meta.settings.name}}
+      <span class="text-h5 ml-2">({{metaCardsOnPage.length}})</span>
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
@@ -38,9 +39,11 @@ export default {
     FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
   mixins: [MetaGetters],
+  beforeMount() {
+    this.initFilters()
+  },
   mounted() {
     this.$nextTick(function () {
-      this.initFilters()
       this.initSelection()
     })
   },
@@ -86,10 +89,25 @@ export default {
       if (vertical.scrollTop > 150) this.isScrollToTopVisible = true
       else this.isScrollToTopVisible = false
     },
-    initFilters() { this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) },
+    initFilters() {
+      let newFilters
+      if (this.tabId === 'default' || this.tab.filters === undefined) {
+        newFilters = _.cloneDeep(this.meta.filters) || []
+        this.$store.state.Meta.sortBy = this.meta.sortBy || 'name'
+        this.$store.state.Meta.sortDirection = this.meta.sortDirection || 'asc'
+        this.$store.state.Meta.page = this.meta.page || 1
+      } else {
+        newFilters = _.cloneDeep(this.tab.filters)
+        this.$store.state.Meta.sortBy = this.tab.sortBy
+        this.$store.state.Meta.sortDirection = this.tab.sortDirection
+        this.$store.state.Meta.page = this.tab.page
+      }
+      this.$store.state.Meta.filters = newFilters
+      this.$store.dispatch('filterMetaCards') 
+    },
     removeAllFilters() {
       this.$store.getters.meta.find({id:this.meta.id}).set('filters', []).write()
-      this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) 
+      this.initFilters()
     },
   },
   watch: {

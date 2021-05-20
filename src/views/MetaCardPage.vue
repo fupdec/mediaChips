@@ -188,8 +188,8 @@ export default {
   },
   methods: {
     removeAllFilters() {
-      this.$store.getters.meta.find({id:this.meta.id}).set('filters', []).write()
-      this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) 
+      this.$store.state.Meta.filters = []
+      this.$store.dispatch('filterMetaCards') 
     },
     toggleProfile() {
       let value
@@ -205,7 +205,7 @@ export default {
       else this.isScrollToTopVisible = false
       this.header = `top:${vertical.scrollTop * 0.7}px` // parallax effect
     },
-    initFilters() { this.$store.dispatch('filterMetaCards', { metaId: this.meta.id }) },
+    initFilters() { this.$store.dispatch('filterMetaCards') },
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${imgType}.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath

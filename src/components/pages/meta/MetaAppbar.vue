@@ -57,7 +57,7 @@
             <v-badge :icon="sortIcon" overlap offset-x="23" offset-y="44" class="badge-sort">
               <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
                 <v-icon>mdi-sort-variant</v-icon>
-                <v-icon v-if="sortDir=='desc'" size="16" class="badge-sort-icon">mdi-arrow-up-thick</v-icon>
+                <v-icon v-if="sortDirection=='desc'" size="16" class="badge-sort-icon">mdi-arrow-up-thick</v-icon>
                 <v-icon v-else size="16" class="badge-sort-icon">mdi-arrow-down-thick</v-icon>
               </v-btn>
             </v-badge>
@@ -71,8 +71,8 @@
             <template v-slot:activator="{ on }">
               <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
                 <v-icon>mdi-{{s.icon}}</v-icon>
-                <v-icon right size="14" v-if="sortBy==s.name && sortDir=='desc'">mdi-arrow-up-thick</v-icon>
-                <v-icon right size="14" v-if="sortBy==s.name && sortDir=='asc'">mdi-arrow-down-thick</v-icon>
+                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='desc'">mdi-arrow-up-thick</v-icon>
+                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='asc'">mdi-arrow-down-thick</v-icon>
               </v-btn>
             </template>
             <span>Sort by {{s.tip}}</span>
@@ -162,7 +162,7 @@ export default {
       if (sortObject) return `mdi-${sortObject.icon}`
       else return 'mdi-help'
     },
-    sortDir() { return this.meta.sortDir || 'asc' },
+    sortDirection() { return this.meta.sortDirection || 'asc' },
   },
   methods: {
     addNewCard() {
@@ -197,7 +197,7 @@ export default {
         this.dupCards = dups.join(', ')
         this.newCards = newCards.join(', ')
         this.cardNames = '',
-        this.$store.dispatch('filterMetaCards', {metaId:this.metaId})
+        this.$store.dispatch('filterMetaCards')
         // ipcRenderer.send('updatePlayerDb', 'websites') // TODO update meta in player window
       })
     },
@@ -211,10 +211,10 @@ export default {
     },
     changeSortBy(e) { this.sortBy = e },
     sortMetaCards() {
-      let dir = this.sortDir == 'asc' ? 'desc':'asc'
       setTimeout(()=>{ 
-        this.$store.getters.meta.find({id: this.metaId}).assign({sortBy: this.sortBy},{sortDir: dir}).write()
-        this.$store.dispatch('filterMetaCards', {metaId:this.metaId}) 
+        this.$store.state.Meta.sortBy = this.sortBy
+        this.$store.state.Meta.sortDirection = this.sortDirection=='asc'?'desc':'asc'
+        this.$store.dispatch('filterMetaCards') 
       }, 100)
     },
   },

@@ -228,9 +228,8 @@ export default {
     removeFilter(i) { this.filters.splice(i, 1) },
     removeAll() { this.filters = _.filter(this.filters, {lock: true}) },
     applyFilters() {
-      let filters = _.cloneDeep(this.filters)
-      this.$store.getters.meta.find({id:this.metaId}).set('filters', filters).write()
-      this.$store.dispatch('filterMetaCards', {metaId: this.metaId})
+      this.$store.state.Meta.filters = _.cloneDeep(this.filters)
+      this.$store.dispatch('filterMetaCards')
       this.$store.state.Meta.dialogFilterMetaCards = false 
     },
     setBy(e, i) {

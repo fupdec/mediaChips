@@ -7,6 +7,8 @@ const adapterMeta = new FileSync(pathToDbMeta)
 const low = require('lowdb')
 const dbMeta = low(adapterMeta)
 
+import router from '@/router'
+
 let defaultMeta = {
   id: "defaultMeta",
   type: 'complex',
@@ -30,7 +32,7 @@ let defaultMetaCard = {
   }
 }
 
-dbMeta.defaults({ meta: [{ ...defaultMeta }], cards: [] }).write()
+dbMeta.defaults({ meta: [], cards: [] }).write()
 
 const Meta = {
   state: () => ({
@@ -42,6 +44,10 @@ const Meta = {
     dialogFilterMetaCards: false,
     selection: null,
     selectedMeta: [],
+    filters: [],
+    page: 1,
+    sortBy: 'name',
+    sortDirection: 'asc',
     metaList: dbMeta.get('meta').filter({type:'complex'}).value(),
   }),
   mutations: {
@@ -101,7 +107,8 @@ const Meta = {
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()
     },
-    filterMetaCards({ state, commit, dispatch, getters, rootState}, {metaId, stayOnCurrentPage}) {
+    filterMetaCards({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
+      const metaId = router.currentRoute.query.metaId
       let mc = getters.metaCards.filter({metaId})
       mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), ['asc'])
 
@@ -115,7 +122,7 @@ const Meta = {
         if (sign === 'less than or equal') return a >= b
       }
 
-      let filters = getters.meta.find({id:metaId}).value().filters || []
+      let filters = state.filters
       for (let filter in filters) {
         let by = filters[filter].by
         let cond = filters[filter].cond
@@ -156,13 +163,28 @@ const Meta = {
         }
       }
       // sort meta
-      let sortBy = getters.meta.find({id:metaId}).value().sortBy || 'name'
-      let sortDir = getters.meta.find({id:metaId}).value().sortDir || 'asc'
-      if (sortBy == 'name') mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), [sortDir])
-      else if (['date','edit'].includes(sortBy)) mc = mc.orderBy(sortBy, [sortDir])
-      else mc = mc.orderBy(`meta.${sortBy}`, [sortDir])
+      let sortBy = state.sortBy || 'name'
+      let sortDirection = state.sortDirection || 'asc'
+      if (sortBy == 'name') mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), [sortDirection])
+      else if (['date','edit'].includes(sortBy)) mc = mc.orderBy(sortBy, [sortDirection])
+      else mc = mc.orderBy(`meta.${sortBy}`, [sortDirection])
 
       state.filteredMeta = mc.value()
+      
+      if (!stayOnCurrentPage) state.page = 1
+      dispatch('saveStateOfMeta')
+    },
+    saveStateOfMeta({state, commit, getters, rootState}) {
+      const metaId = router.currentRoute.query.metaId
+      const tabId = router.currentRoute.query.tabId
+      const data = {
+        filters: _.cloneDeep(state.filters),
+        sortBy: state.sortBy,
+        sortDirection: state.sortDirection,
+        page:  state.page,
+      }
+      if (tabId === 'default') getters.meta.find({id:metaId}).assign(data).write()
+      else { getters.tabsDb.find({id: tabId}).assign(data).write(); commit('getTabsFromDb') }
     },
   },
   getters: {
@@ -191,6 +213,11 @@ const Meta = {
       // }
       const end = 1 * metaCount, start = end - metaCount // TODO fix it
       return meta.slice(start, end)
+    },
+    metaCardsPages(state) {
+      let pages = []
+      for (let i = 0; i < state.pageTotal; i++) pages.push(i+1)
+      return pages
     },
   }
 }

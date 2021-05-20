@@ -38,12 +38,7 @@ const Videos = {
       if (ids === undefined) state.updateCardIds = []
       else state.updateCardIds = ids
     },
-    filterVideos(state, filteredVideos) {
-      state.filteredVideos = filteredVideos
-    },
-    updateSelectedVideos(state, ids) {
-      state.selectedVideos = ids
-    },
+    updateSelectedVideos(state, ids) { state.selectedVideos = ids },
   },
   actions: {
     changeVideosPerPage({ state, commit, getters, dispatch}, number) {
@@ -207,7 +202,7 @@ const Videos = {
       //   }
       // }
       let filteredVideos = []
-      if (videos != getters.videos) {
+      if (videos != getters.videos) { // TODO check if that block can be removed
         if (videos.value().length == 0) {
           state.filteredEmpty = true
           filteredVideos = videos
@@ -216,12 +211,9 @@ const Videos = {
           filteredVideos = videos
         }
       }
-      // console.log(filteredVideos)
       commit('resetLoading')
-      commit('filterVideos', filteredVideos)
-      if (!stayOnCurrentPage) {
-        rootState.Settings.videoPage = 1
-      }
+      state.filteredVideos = filteredVideos
+      if (!stayOnCurrentPage) rootState.Settings.videoPage = 1
       dispatch('saveFiltersOfVideos')
     },
     saveFiltersOfVideos({state, commit, getters, rootState}) {

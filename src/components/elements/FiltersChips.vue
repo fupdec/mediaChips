@@ -61,9 +61,8 @@ export default {
     removeFilter(i) {
       if (this.type == 'Meta') {
         this.filters.splice(i, 1)
-        this.$store.getters.meta.find({id:this.metaId}).set('filters', this.filters).write()
-        this.$store.dispatch('filterMetaCards', {metaId: this.metaId})
-        return
+        this.$store.dispatch('filterMetaCards')
+        return // TODO rename type to 'MetaCard' and remove condition block
       }
       this.filters.splice(i, 1)
       this.$store.dispatch(`filter${this.type}s`)
