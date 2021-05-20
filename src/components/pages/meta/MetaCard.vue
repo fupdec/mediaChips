@@ -12,7 +12,11 @@
         <v-btn v-if="meta.settings.favorite" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
         <div v-if="meta.settings.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable size="18" color="yellow darken-2" background-color="grey darken-1" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
       </div>
-      <v-divider v-show="meta.settings.images"/>
+      <!-- <div v-else class="d-flex flex-column align-center py-1">
+        <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+        <span>Open {{meta.settings.nameSingular}} page</span>
+      </div> -->
+      <v-divider/>
 
       <div class="px-1">{{card.meta.name}}</div>
       <div v-if="meta.settings.synonyms" class="px-1 caption"> 
@@ -94,7 +98,7 @@ export default {
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
-
+    openMetaCardPage() { this.$router.push(`/metacard/?metaId=${this.meta.id}&cardId=${this.card.id}&tabId=default`) },
     // image 
     getImgUrl(type) {
       let img = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${type}.jpg`)

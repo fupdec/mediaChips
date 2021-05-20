@@ -155,18 +155,15 @@ export default {
     color: '#777',
   }),
   computed: {
+    metaCardId() { return this.$route.query.cardId },
     oldValues() { return this.$store.getters.metaCards.find({id:this.card.id}).get('meta').cloneDeep().value() },
     card() {
+      let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
+      if (this.metaCardId) { this.isSelectedSingle=true; return metaCards.find({id:this.metaCardId}).value() }
       let ids = this.$store.state.Meta.selectedMeta
       ids.length > 1 ? this.isSelectedSingle=false : this.isSelectedSingle=true 
-      let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
-      if (this.$route.path.includes('/meta/:') && this.$router.currentRoute.params.id) {
-        if (this.$router.currentRoute.params.id.substring(1)) {
-          return metaCards.find({id:this.$router.currentRoute.params.id.substring(1)}).value()
-        }
-      } else if (this.isSelectedSingle) {
-        return metaCards.find({id:ids[0]}).value()
-      } else return metaCards.filter(i=>ids.includes(i.id)).value()
+      if (this.isSelectedSingle) return metaCards.find({id:ids[0]}).value()
+      else return metaCards.filter(i=>ids.includes(i.id)).value()
     },
     dateAdded() {
       let date = new Date(this.card.date)

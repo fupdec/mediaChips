@@ -20,6 +20,8 @@ const Settings = () => import('../views/SettingsPage.vue')
 const SettingsAppbar = () => import('../components/pages/settings/SettingsAppbar.vue')
 const Meta = () => import('../views/MetaPage.vue')
 const MetaAppbar = () => import('../components/pages/meta/MetaAppbar.vue')
+const MetaCard = () => import('../views/MetaCardPage.vue')
+const MetaCardAppbar = () => import('../components/pages/meta/MetaCardAppbar.vue')
 
 Vue.use(VueRouter)
 
@@ -106,6 +108,14 @@ const routes = [
     components: {
       default: Meta,
       appbar: MetaAppbar,
+    }
+  },
+  {
+    path: '/metacard',
+    name: 'MetaCard',
+    components: {
+      default: MetaCard,
+      appbar: MetaCardAppbar,
     }
   },
 ]
