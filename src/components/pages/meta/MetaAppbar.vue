@@ -50,6 +50,37 @@
     </div>
     <DialogFilterMetaCards v-if="$store.state.Meta.dialogFilterMetaCards"/>
 
+    <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
+      <template #activator="{ on: onMenu }">
+        <v-tooltip bottom>
+          <template #activator="{ on: onTooltip }">
+            <v-badge :icon="sortIcon" overlap offset-x="23" offset-y="44" class="badge-sort">
+              <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                <v-icon>mdi-sort-variant</v-icon>
+                <v-icon v-if="sortDir=='desc'" size="16" class="badge-sort-icon">mdi-arrow-up-thick</v-icon>
+                <v-icon v-else size="16" class="badge-sort-icon">mdi-arrow-down-thick</v-icon>
+              </v-btn>
+            </v-badge>
+          </template>
+          <span>Sort {{meta.settings.name}}</span>
+        </v-tooltip>
+      </template>
+      <v-card>
+        <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
+          <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
+                <v-icon>mdi-{{s.icon}}</v-icon>
+                <v-icon right size="14" v-if="sortBy==s.name && sortDir=='desc'">mdi-arrow-up-thick</v-icon>
+                <v-icon right size="14" v-if="sortBy==s.name && sortDir=='asc'">mdi-arrow-down-thick</v-icon>
+              </v-btn>
+            </template>
+            <span>Sort by {{s.tip}}</span>
+          </v-tooltip>
+        </v-btn-toggle>
+      </v-card>
+    </v-menu>
+
     <v-spacer></v-spacer>
 
     <div>
@@ -93,26 +124,45 @@ export default {
     DialogFilterMetaCards: () => import('@/components/pages/meta/DialogFilterMetaCards.vue'),
   },
   mixins: [MetaGetters],
+  beforeMount() {
+    this.initSort()
+  },
   mounted() {
     this.$nextTick(function () {
     })
   },
   data: () => ({
     validCardName: false,
-    nameRules: [
-      v => !!v || 'Name is required',
-    ],
+    nameRules: [v => !!v || 'Name is required'],
     dupCards: '',
     newCards: '',
     cardNames: '',
+    sort: [
+      {
+        name: 'name',
+        icon: 'alphabetical-variant',
+        tip: 'Name',
+      },
+      {
+        name: 'date',
+        icon: 'calendar-plus',
+        tip: 'Date Added',
+      },
+      {
+        name: 'edit',
+        icon: 'calendar-edit',
+        tip: 'Date of Editing',
+      },
+    ],
+    sortBy: 'name',
   }),
   computed: {
-    metaId() {
-      return this.$route.query.metaId
+    sortIcon() {
+      let sortObject = _.find(this.sort, {name: this.sortBy})
+      if (sortObject) return `mdi-${sortObject.icon}`
+      else return 'mdi-help'
     },
-    meta() {
-      return this.$store.getters.meta.find({id: this.metaId}).value()
-    },
+    sortDir() { return this.meta.sortDir || 'asc' },
   },
   methods: {
     addNewCard() {
@@ -136,8 +186,8 @@ export default {
           if (duplicate) { dups.push(duplicate.name); continue }
           vm.$store.dispatch('addMetaCard', { 
             id: shortid.generate(),
-            meta: { name: card },
             metaId: vm.metaId,
+            meta: { name: card },
           })
           newCards.push(card)
         }
@@ -153,6 +203,19 @@ export default {
     },
     updateMetaSettings(key, value) {
       this.$store.dispatch('updateMetaSettings', {id: this.metaId, key, value})
+    },
+    initSort() {
+      this.sortBy = this.meta.sortBy || 'name'
+      let color = { name: 'color', icon: 'palette', tip: 'Color', }
+      if (this.meta.settings.chipColor) this.sort.push(color)
+    },
+    changeSortBy(e) { this.sortBy = e },
+    sortMetaCards() {
+      let dir = this.sortDir == 'asc' ? 'desc':'asc'
+      setTimeout(()=>{ 
+        this.$store.getters.meta.find({id: this.metaId}).assign({sortBy: this.sortBy},{sortDir: dir}).write()
+        this.$store.dispatch('filterMetaCards', {metaId:this.metaId}) 
+      }, 100)
     },
   },
   watch: {

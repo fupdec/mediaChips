@@ -156,8 +156,11 @@ const Meta = {
         }
       }
       // sort meta
-      let sort = getters.meta.find({id:metaId}).sort || { by: 'name', dir: 'asc' }
-      mc = mc.orderBy(sort.by, [sort.dir])
+      let sortBy = getters.meta.find({id:metaId}).value().sortBy || 'name'
+      let sortDir = getters.meta.find({id:metaId}).value().sortDir || 'asc'
+      if (sortBy == 'name') mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), [sortDir])
+      else if (['date','edit'].includes(sortBy)) mc = mc.orderBy(sortBy, [sortDir])
+      else mc = mc.orderBy(`meta.${sortBy}`, [sortDir])
 
       state.filteredMeta = mc.value()
     },
