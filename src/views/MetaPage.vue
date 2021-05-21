@@ -1,6 +1,6 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <div class="headline text-h3 d-flex align-center justify-center py-6">
+    <div class="headline text-h3 d-flex align-center justify-center py-4">
       <v-icon x-large left>mdi-{{meta.settings.icon}}</v-icon> {{meta.settings.name}}
       <span class="text-h5 ml-2">({{filteredMeta.length}})</span>
     </div>
@@ -10,7 +10,7 @@
     </v-container>
 
     <div v-if="metaCardsOnPage.length">
-      <v-container fluid class="pagination-container my-6">
+      <v-container fluid class="pagination-container">
         <v-overflow-btn v-model="cardsPerPage" hint="items per page" persistent-hint
           :items="cardsPerPagePreset" dense height="36" solo disable-lookup hide-no-data
           class="items-per-page-dropdown"/>
@@ -30,8 +30,7 @@
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
       
-      <v-pagination v-model="currentPage" :length="pagesSum"
-        :total-visible="getNumberOfPagesLimit" class="my-10"/>
+      <v-pagination v-model="currentPage" :length="pagesSum" :total-visible="getNumberOfPagesLimit" class="my-4"/>
     </div>
     
     <div v-else class="text-center"> 
@@ -41,7 +40,7 @@
 
     <Loading />
     
-    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
+    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-10"></div>
 
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
       class="scroll-to-top" fixed fab color="primary">

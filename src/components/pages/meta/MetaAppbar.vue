@@ -42,44 +42,64 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="$store.state.Meta.dialogFilterMetaCards=true" v-on="on" icon tile>
-            <v-icon>mdi-filter</v-icon>
+            <v-badge :value="filterBadge" :content="filteredVideosTotal" overlap bottom style="z-index: 5;"> 
+              <v-icon>mdi-filter</v-icon> </v-badge>
           </v-btn>
         </template>
         <span>Filter {{meta.settings.name}}</span>
       </v-tooltip>
+      <v-tooltip v-if="meta.settings.favorite" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="toggleFavorites" v-on="on" icon tile>
+            <v-icon v-if="favoritesFilterExist">mdi-heart</v-icon>
+            <v-icon v-else>mdi-heart-outline</v-icon>
+          </v-btn>
+        </template>
+        <span>Toggle Favorites</span>
+      </v-tooltip>
+
+      <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
+        <template #activator="{ on: onMenu }">
+          <v-tooltip bottom>
+            <template #activator="{ on: onTooltip }">
+              <v-badge :icon="sortIcon" overlap offset-x="23" offset-y="44" class="badge-sort">
+                <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                  <v-icon>mdi-sort-variant</v-icon>
+                  <v-icon v-if="sortDirection=='desc'" size="16" class="badge-sort-icon">mdi-arrow-up-thick</v-icon>
+                  <v-icon v-else size="16" class="badge-sort-icon">mdi-arrow-down-thick</v-icon>
+                </v-btn>
+              </v-badge>
+            </template>
+            <span>Sort {{meta.settings.name}}</span>
+          </v-tooltip>
+        </template>
+        <v-card>
+          <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
+            <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
+                  <v-icon>mdi-{{s.icon}}</v-icon>
+                  <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='desc'">mdi-arrow-up-thick</v-icon>
+                  <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='asc'">mdi-arrow-down-thick</v-icon>
+                </v-btn>
+              </template>
+              <span>Sort by {{s.tip}}</span>
+            </v-tooltip>
+          </v-btn-toggle>
+        </v-card>
+      </v-menu>
+
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="addNewTab" icon tile v-on="on">
+            <v-icon>mdi-tab-plus</v-icon>
+          </v-btn>
+        </template>
+        <span>Add New Tab</span>
+      </v-tooltip>
     </div>
     <DialogFilterMetaCards v-if="$store.state.Meta.dialogFilterMetaCards"/>
 
-    <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
-      <template #activator="{ on: onMenu }">
-        <v-tooltip bottom>
-          <template #activator="{ on: onTooltip }">
-            <v-badge :icon="sortIcon" overlap offset-x="23" offset-y="44" class="badge-sort">
-              <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
-                <v-icon>mdi-sort-variant</v-icon>
-                <v-icon v-if="sortDirection=='desc'" size="16" class="badge-sort-icon">mdi-arrow-up-thick</v-icon>
-                <v-icon v-else size="16" class="badge-sort-icon">mdi-arrow-down-thick</v-icon>
-              </v-btn>
-            </v-badge>
-          </template>
-          <span>Sort {{meta.settings.name}}</span>
-        </v-tooltip>
-      </template>
-      <v-card>
-        <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
-          <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
-                <v-icon>mdi-{{s.icon}}</v-icon>
-                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='desc'">mdi-arrow-up-thick</v-icon>
-                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='asc'">mdi-arrow-down-thick</v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by {{s.tip}}</span>
-          </v-tooltip>
-        </v-btn-toggle>
-      </v-card>
-    </v-menu>
 
     <v-spacer></v-spacer>
 
@@ -162,6 +182,41 @@ export default {
       if (sortObject) return `mdi-${sortObject.icon}`
       else return 'mdi-help'
     },
+    filters() { return this.$store.getters.meta.find({id:this.metaId}).cloneDeep().value().filters || [] },
+    filterBadge() {
+      let filters = this.filters
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type == 'boolean') return true
+          if (['number','string','date','select','array'].includes(f.type)) {
+            if (f.val.length) return true 
+            else return false
+          } 
+        })
+        return filters.length > 0
+      } else return false
+    },
+    filteredVideosTotal() {
+      let filters = this.filters
+      if (filters.length) {
+        filters = _.filter(filters, f => {
+          if (f.type == null) return false 
+          if (f.type == 'boolean') return true
+          if (['number','string','date','select','array'].includes(f.type)) {
+            if (f.val.length) return true 
+            else return false
+          } 
+        })
+        return filters.length
+      } else return 0
+    },
+    favoritesFilterExist() {
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:'appbar',lock:false}
+      let index = _.findIndex(this.filters, favorite)
+      if (index > -1) return true 
+      else return false
+    },
     sortDirection() { return this.meta.sortDirection || 'asc' },
   },
   methods: {
@@ -201,6 +256,14 @@ export default {
         // ipcRenderer.send('updatePlayerDb', 'websites') // TODO update meta in player window
       })
     },
+    toggleFavorites() {
+      let filters = this.filters
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:'appbar',lock:false}
+      let index = _.findIndex(filters, favorite)
+      if (index > -1) this.$store.state.Meta.filters.splice(index, 1)
+      else this.$store.state.Meta.filters.push(favorite)
+      this.$store.dispatch('filterMetaCards')
+    },
     updateMetaSettings(key, value) {
       this.$store.dispatch('updateMetaSettings', {id: this.metaId, key, value})
     },
@@ -216,6 +279,21 @@ export default {
         this.$store.state.Meta.sortDirection = this.sortDirection=='asc'?'desc':'asc'
         this.$store.dispatch('filterMetaCards') 
       }, 100)
+    },
+    addNewTab() {
+      let tabId = Date.now()
+      let tab = { 
+        name: this.meta.settings.name, 
+        link: `/meta/?metaId=${this.meta.id}&tabId=${tabId}`,
+        id: tabId,
+        filters: this.filters,
+        sortBy: this.sortBy,
+        sortDirection: this.sortDirection,
+        page: 1,
+        icon: this.meta.settings.icon
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
     },
   },
   watch: {

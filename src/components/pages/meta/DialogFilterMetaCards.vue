@@ -180,6 +180,7 @@ export default {
         else if (meta.dataType=='boolean') this.metaType.boolean.push(meta.id)
         else if (meta.dataType=='date') this.metaType.date.push(meta.id)
       }
+      if (this.meta.settings.favorite) this.metaType.boolean.push('favorite')
     },
     getConditions(type) {
       if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty', 'not empty']

@@ -10,7 +10,7 @@
     </v-tooltip>
     <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary" 
       small close :disabled="filter.lock" @click:close="removeFilter(i)">
-      <span v-if="type=='Meta'" class="mr-1">"{{getMeta(filter.by).settings.name}}"</span>
+      <span v-if="type=='Meta'" class="mr-1">"{{getMetaBy(filter.by)}}"</span>
       <span v-else class="mr-1">"{{filter.param}}"</span>
       <span>{{filter.cond}}</span> 
       <div v-if="type=='Meta'">
@@ -48,6 +48,9 @@ export default {
       return this.type.toLowerCase() + 'Filters'
     },
   },
+  data: () => ({
+    defaultFilters: ['name','favorite','rating'],
+  }),
   methods: {
     removeAllFilters() {
       if (['Performer','Website','Meta'].includes(this.$route.name)) {
@@ -60,12 +63,16 @@ export default {
     },
     removeFilter(i) {
       if (this.type == 'Meta') {
-        this.filters.splice(i, 1)
+        this.$store.state.Meta.filters.splice(i, 1)
         this.$store.dispatch('filterMetaCards')
-        return // TODO rename type to 'MetaCard' and remove condition block
+        return 
       }
       this.filters.splice(i, 1)
       this.$store.dispatch(`filter${this.type}s`)
+    },
+    getMetaBy(filterBy) {
+      if (this.defaultFilters.includes(filterBy)) return filterBy
+      else return this.getMeta(filterBy).settings.name
     },
     getMetaItems(metaId, items) {
       let meta = this.getMeta(metaId)
