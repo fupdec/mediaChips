@@ -248,7 +248,7 @@ export default {
       if (index > -1) return true 
       else return false
     },
-    sortDirection() { return this.meta.sortDirection || 'asc' },
+    sortDirection() { return this.meta.state.sortDirection || 'asc' },
   },
   methods: {
     addNewCard() {
@@ -318,7 +318,7 @@ export default {
       this.$store.dispatch('updateMetaSettings', {id: this.metaId, key, value})
     },
     initSort() {
-      this.sortBy = this.meta.sortBy || 'name'
+      this.sortBy = this.meta.state.sortBy || 'name'
       let color = { name: 'color', icon: 'palette', tip: 'Color', }
       if (this.meta.settings.chipColor) this.sort.push(color)
     },

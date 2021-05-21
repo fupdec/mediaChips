@@ -98,7 +98,10 @@ export default {
     },
     currentPage: {
       get() { return this.$store.state.Meta.page },
-      set(number) { this.$store.state.Meta.page = number },
+      set(number) { 
+        this.$store.state.Meta.page = number 
+        this.$store.dispatch('saveStateOfMeta') 
+      },
     },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
     filteredMeta() { return this.$store.state.Meta.filteredMeta },
@@ -139,10 +142,10 @@ export default {
     initFilters() {
       let newFilters
       if (this.tabId === 'default' || this.tab.filters === undefined) {
-        newFilters = _.cloneDeep(this.meta.filters) || []
-        this.$store.state.Meta.sortBy = this.meta.sortBy || 'name'
-        this.$store.state.Meta.sortDirection = this.meta.sortDirection || 'asc'
-        this.$store.state.Meta.page = this.meta.page || 1
+        newFilters = _.cloneDeep(this.meta.state.filters) || []
+        this.$store.state.Meta.sortBy = this.meta.state.sortBy || 'name'
+        this.$store.state.Meta.sortDirection = this.meta.state.sortDirection || 'asc'
+        this.$store.state.Meta.page = this.meta.state.page || 1
       } else {
         newFilters = _.cloneDeep(this.tab.filters)
         this.$store.state.Meta.sortBy = this.tab.sortBy

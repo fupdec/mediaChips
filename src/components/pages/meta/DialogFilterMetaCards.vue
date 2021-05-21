@@ -145,7 +145,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initMetaList()
-      this.filters = _.cloneDeep(this.meta.filters || [])
+      this.filters = _.cloneDeep(this.$store.state.Meta.filters)
     })
   },
   data: () => ({

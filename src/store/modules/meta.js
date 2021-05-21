@@ -135,7 +135,7 @@ const Meta = {
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()
     },
-    async filterMetaCards({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
+    async filterMetaCards({ state, commit, dispatch, getters, rootState}) {
       const metaId = router.currentRoute.query.metaId
       let mc = getters.metaCards.filter({metaId})
       mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), ['asc'])
@@ -219,8 +219,6 @@ const Meta = {
       else mc = mc.orderBy(`meta.${sortBy}`, [sortDirection])
 
       state.filteredMeta = mc.value()
-      
-      if (!stayOnCurrentPage) state.page = 1
       dispatch('saveStateOfMeta')
     },
     saveStateOfMeta({state, commit, getters, rootState}) {
@@ -232,7 +230,7 @@ const Meta = {
         sortDirection: state.sortDirection,
         page:  state.page,
       }
-      if (tabId === 'default') getters.meta.find({id:metaId}).assign(data).write()
+      if (tabId === 'default') getters.meta.find({id:metaId}).get('state').assign(data).write()
       else { getters.tabsDb.find({id: tabId}).assign(data).write(); commit('getTabsFromDb') }
     },
   },
