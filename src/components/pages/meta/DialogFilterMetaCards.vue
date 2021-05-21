@@ -14,16 +14,16 @@
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
               <v-select @input="setBy($event,i)" :value="filters[i].by" 
-                :items="metaList" label="By" outlined dense class="param"
-                :disabled="filters[i].lock">
+                :items="computedBy" label="By" outlined dense class="param"
+                :disabled="filters[i].lock" item-value="by">
                 <template v-slot:selection="data">
-                  <v-icon left>mdi-{{getMeta(data.item).settings.icon||''}}</v-icon>
-                  <span>{{getMeta(data.item).settings.name||''}}</span>
+                  <v-icon left>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
+                  <span>{{getMeta(data.item.by).settings.name||''}}</span>
                 </template>
                 <template v-slot:item="data">
                   <div class="list-item"> 
-                    <v-icon left>mdi-{{getMeta(data.item).settings.icon||''}}</v-icon>
-                    <span>{{getMeta(data.item).settings.name||''}}</span>
+                    <v-icon left>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
+                    <span>{{getMeta(data.item.by).settings.name||''}}</span>
                   </div>
                 </template>
               </v-select>
@@ -39,14 +39,13 @@
                 </template>
               </v-select>
 
-              <v-checkbox v-if="filters[i].by==='name'" label="Aliases" class="mt-1 mr-2"
-                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate 
-                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"/>
-              
               <v-text-field v-if="filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
                 label="Value" outlined dense class="val"/>
+              <v-checkbox v-if="filters[i].by==='name'" label="Synonyms" class="mt-1 ml-4"
+                @change="setFlag($event,i)" :value="filters[i].flag" indeterminate 
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"/>
 
               <v-text-field v-if="filters[i].type==='number'" label="Value" outlined dense class="val"
                 @input="setVal($event,i)" :value="filters[i].val" type="number"
@@ -165,9 +164,25 @@ export default {
   }),
   computed: {
     tabId() { return this.$route.query.tabId },
+    computedBy() {
+      let filtersBoolean = _.filter(this.filters, {type: 'boolean'}).map(i=>i.by)
+      return this.metaList.map(by => {
+        return { by, disabled: filtersBoolean.includes(by) }
+      })
+    },
   },
   methods: {
     initMetaList() {
+      this.metaList.push('name')
+      this.metaType.string.push('name')
+      if (this.meta.settings.favorite) {
+        this.metaList.push('favorite')
+        this.metaType.boolean.push('favorite')
+      } 
+      if (this.meta.settings.rating) {
+        this.metaList.push('rating')
+        this.metaType.number.push('rating')
+      } 
       for (let i = 0; i < this.metaInCard.length; i++) {
         let id = this.metaInCard[i].id
         let type = this.metaInCard[i].type
@@ -180,7 +195,6 @@ export default {
         else if (meta.dataType=='boolean') this.metaType.boolean.push(meta.id)
         else if (meta.dataType=='date') this.metaType.date.push(meta.id)
       }
-      if (this.meta.settings.favorite) this.metaType.boolean.push('favorite')
     },
     getConditions(type) {
       if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty', 'not empty']

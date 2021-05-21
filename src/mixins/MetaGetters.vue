@@ -10,6 +10,9 @@ export default {
       else return this.$store.getters.tabsDb.find({id: +this.tabId}).value()
     },
   },
+  data: () => ({
+    specificMeta: ['name','synonyms','favorite','rating'],
+  }),
   methods: {
     getColor(metaId, cardId) {
       if (this.getMeta(metaId).settings.chipColor) {

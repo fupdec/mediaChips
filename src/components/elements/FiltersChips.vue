@@ -49,7 +49,6 @@ export default {
     },
   },
   data: () => ({
-    defaultFilters: ['name','favorite','rating'],
   }),
   methods: {
     removeAllFilters() {
@@ -71,7 +70,7 @@ export default {
       this.$store.dispatch(`filter${this.type}s`)
     },
     getMetaBy(filterBy) {
-      if (this.defaultFilters.includes(filterBy)) return filterBy
+      if (this.specificMeta.includes(filterBy)) return filterBy
       else return this.getMeta(filterBy).settings.name
     },
     getMetaItems(metaId, items) {

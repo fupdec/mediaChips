@@ -32,7 +32,34 @@ let defaultMetaCard = {
   }
 }
 
-dbMeta.defaults({ meta: [], cards: [] }).write()
+const specificMeta = [
+  {
+    id: 'favorite',
+    type: 'specific',
+    settings: {
+      name: 'Favorite',
+      icon: 'heart'
+    }
+  },
+  {
+    id: 'rating',
+    type: 'specific',
+    settings: {
+      name: 'Rating',
+      icon: 'star'
+    }
+  },
+  {
+    id: 'name',
+    type: 'specific',
+    settings: {
+      name: 'Name',
+      icon: 'alphabetical-variant'
+    }
+  },
+]
+
+dbMeta.defaults({ meta: [...specificMeta], cards: [] }).write()
 
 const Meta = {
   state: () => ({
@@ -108,7 +135,7 @@ const Meta = {
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()
     },
-    filterMetaCards({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
+    async filterMetaCards({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
       const metaId = router.currentRoute.query.metaId
       let mc = getters.metaCards.filter({metaId})
       mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), ['asc'])
@@ -149,8 +176,29 @@ const Meta = {
         }
         
         if (type === 'string') {
+          if (by === 'name' && flag === true) {
+            let filteredByNames = await mc.filter(c => {
+              if (cond=='includes') return c.meta.name.toLowerCase().includes(val)
+              else return !c.meta.name.toLowerCase().includes(val)
+            }).map('id').value()
+
+            let filteredBySynonyms = await mc.filter(c => {
+              if (c.meta.synonyms===undefined || c.meta.synonyms === []) return false
+              let synonyms = c.meta.synonyms.map(s=>s.toLowerCase())
+              let matches = synonyms.filter(s=>{
+                if (cond === 'includes') return s.includes(val)
+                else return !s.includes(val)
+              })
+              return matches.length>0
+            }).map('id').value()
+
+            let mergedIds = _.union(filteredByNames, filteredBySynonyms)
+
+            mc = mc.filter(c=>(mergedIds.includes(c.id)))
+            continue
+          }
           if (cond=='includes') mc=mc.filter(c=>c.meta[by].toLowerCase().includes(val))
-          else mc=mc.filter(c=>!c[by].toLowerCase().includes(val))
+          else mc=mc.filter(c=>!c.meta[by].toLowerCase().includes(val))
           continue
         }
 
