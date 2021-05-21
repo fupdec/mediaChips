@@ -37,18 +37,19 @@ dbMeta.defaults({ meta: [], cards: [] }).write()
 const Meta = {
   state: () => ({
     pageTotal: 1,
-    filteredMeta: [],
-    updateCardIds: [],
-    dialogEditMetaCard: false,
-    dialogEditMetaCardImages: false,
-    dialogFilterMetaCards: false,
-    selection: null,
-    selectedMeta: [],
-    filters: [],
+    cardsPerPage: 20,
     page: 1,
     sortBy: 'name',
     sortDirection: 'asc',
+    filters: [],
+    filteredMeta: [],
+    updateCardIds: [],
+    selection: null,
+    selectedMeta: [],
     metaList: dbMeta.get('meta').filter({type:'complex'}).value(),
+    dialogEditMetaCard: false,
+    dialogEditMetaCardImages: false,
+    dialogFilterMetaCards: false,
   }),
   mutations: {
     updateMetaCards(state, ids) {
@@ -205,13 +206,10 @@ const Meta = {
     },
     metaCardsOnPage(state, store, rootState) {
       const meta = state.filteredMeta,
-            metaCount = 20 // rootState.Settings.metaPerPage
+            metaCount = state.cardsPerPage
       state.pageTotal = Math.ceil(meta.length / metaCount)
-
-      // if(rootState.Settings.metaPage > state.pageTotal) {
-      //   rootState.Settings.metaPage = state.pageTotal
-      // }
-      const end = 1 * metaCount, start = end - metaCount // TODO fix it
+      if (state.page > state.pageTotal) state.page = state.pageTotal
+      const end = state.page * metaCount, start = end - metaCount
       return meta.slice(start, end)
     },
     metaCardsPages(state) {
