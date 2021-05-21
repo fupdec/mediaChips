@@ -57,7 +57,7 @@
           <v-list-item-title>Website</v-list-item-title>
         </v-list-item>
         
-        <v-list-item v-for="meta in metaList" :key="meta.edit" @click.middle="addNewTabPlaylists"
+        <v-list-item v-for="meta in metaList" :key="meta.edit" @click.middle="addNewTabMetaCards(meta)"
           link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
           <v-list-item-icon>
             <v-icon>mdi-{{meta.settings.icon}}</v-icon>
@@ -149,6 +149,21 @@ export default {
         sortDirection: this.$store.state.Settings.videoSortDirection,
         page: 1,
         icon: 'video-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
+    },
+    addNewTabMetaCards(meta) {
+      let tabId = Date.now().toString()
+      let tab = { 
+        name: meta.settings.name, 
+        link: `/meta/?metaId=${meta.id}&tabId=${tabId}`,
+        id: tabId,
+        filters: [],
+        sortBy: 'name',
+        sortDirection: 'asc',
+        page: 1,
+        icon: meta.settings.icon
       }
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)

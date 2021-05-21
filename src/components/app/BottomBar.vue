@@ -38,7 +38,8 @@
           <v-icon>mdi-web-box</v-icon>
         </v-btn>
 
-        <v-btn v-for="meta in metaList" :key="meta.id" exact :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary">
+        <v-btn v-for="meta in metaList" :key="meta.id" exact @click.middle="addNewTabMetaCards(meta)"
+          :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary">
           <span>{{meta.settings.name}}</span>
           <v-icon>mdi-{{meta.settings.icon}}</v-icon>
         </v-btn>
@@ -121,6 +122,21 @@ export default {
         sortDirection: this.$store.state.Settings.videoSortDirection,
         page: 1,
         icon: 'video-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
+    },
+    addNewTabMetaCards(meta) {
+      let tabId = Date.now().toString()
+      let tab = { 
+        name: meta.settings.name, 
+        link: `/meta/?metaId=${meta.id}&tabId=${tabId}`,
+        id: tabId,
+        filters: [],
+        sortBy: 'name',
+        sortDirection: 'asc',
+        page: 1,
+        icon: meta.settings.icon
       }
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
