@@ -48,6 +48,31 @@
         </template>
         <span>Filter {{meta.settings.name}}</span>
       </v-tooltip>
+    
+      <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
+        <template #activator="{ on: onMenu }">
+          <v-tooltip bottom>
+            <template #activator="{ on: onTooltip }">
+              <v-badge :value="searchStringComputed" icon="mdi-format-letter-case" overlap offset-x="23" offset-y="44">
+                <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                  <v-icon>mdi-magnify</v-icon>
+                </v-btn>
+              </v-badge>
+            </template>
+            <span>Search</span>
+          </v-tooltip>
+        </template>
+        <v-card width="350">
+          <div class="pa-2 d-flex">
+            <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" 
+              @click:clear="clearSearch" outlined dense hide-details clearable class="pt-0"/>
+            <v-btn @click="search" class="ml-2" color="primary" depressed height="40">
+              <v-icon>mdi-magnify</v-icon>
+            </v-btn>
+          </div>
+        </v-card>
+      </v-menu>
+
       <v-tooltip v-if="meta.settings.favorite" bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="toggleFavorites" v-on="on" icon tile>
@@ -157,6 +182,7 @@ export default {
     dupCards: '',
     newCards: '',
     cardNames: '',
+    searchString: '',
     sort: [
       {
         name: 'name',
@@ -182,7 +208,7 @@ export default {
       if (sortObject) return `mdi-${sortObject.icon}`
       else return 'mdi-help'
     },
-    filters() { return this.$store.getters.meta.find({id:this.metaId}).cloneDeep().value().filters || [] },
+    filters() { return this.$store.state.Meta.filters || [] },
     filterBadge() {
       let filters = this.filters
       if (filters.length) {
@@ -211,8 +237,13 @@ export default {
         return filters.length
       } else return 0
     },
+    searchStringComputed() {
+      let search = _.find(this.filters, {by: 'name', appbar: true})
+      if (search) return search.val
+      else return ''
+    },
     favoritesFilterExist() {
-      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:'appbar',lock:false}
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
       let index = _.findIndex(this.filters, favorite)
       if (index > -1) return true 
       else return false
@@ -256,9 +287,28 @@ export default {
         // ipcRenderer.send('updatePlayerDb', 'websites') // TODO update meta in player window
       })
     },
+    search() {
+      if (this.searchString == null || this.searchString.length == 0) return
+      let index = _.findIndex(this.filters, {by: 'name', appbar: true})
+      if (index > -1) this.$store.state.Meta.filters.splice(index, 1)
+      this.$store.state.Meta.filters.push({
+        by: 'name', cond: 'includes', val: this.searchString,
+        type: 'string', flag: null, appbar: true, lock: false
+      })
+      this.$store.dispatch('filterMetaCards')
+    },
+    changeSearchString(e) {
+      this.searchString = e
+    },
+    clearSearch() {
+      let index = _.findIndex(this.filters, {by: 'name', appbar: true,})
+      if (index > -1) this.$store.state.Meta.filters.splice(index, 1)
+      else return
+      this.$store.dispatch('filterMetaCards')
+    },
     toggleFavorites() {
       let filters = this.filters
-      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:'appbar',lock:false}
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
       let index = _.findIndex(filters, favorite)
       if (index > -1) this.$store.state.Meta.filters.splice(index, 1)
       else this.$store.state.Meta.filters.push(favorite)
@@ -281,7 +331,7 @@ export default {
       }, 100)
     },
     addNewTab() {
-      let tabId = Date.now()
+      let tabId = Date.now().toString()
       let tab = { 
         name: this.meta.settings.name, 
         link: `/meta/?metaId=${this.meta.id}&tabId=${tabId}`,

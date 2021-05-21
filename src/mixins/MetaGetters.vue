@@ -7,7 +7,7 @@ export default {
     tabId() { return this.$route.query.tabId },
     tab() {
       if (this.tabId === 'default') return undefined
-      else return this.$store.getters.tabsDb.find({id: +this.tabId}).value()
+      else return this.$store.getters.tabsDb.find({id: this.tabId}).value()
     },
   },
   data: () => ({
