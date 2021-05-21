@@ -79,6 +79,7 @@ export default {
     })
   },
   destroyed() {
+    this.$store.state.Meta.selectedMeta = []
     this.$store.state.Meta.selection.destroy()
   },
   data: () => ({

@@ -193,26 +193,22 @@ export default {
     },
     getNumberSelectedItems() {
       let number = 0
-      if (this.isVideosPage) {
-        number = this.$store.getters.getSelectedVideos.length
-      }
-      if (this.$route.path.includes('/performers/:')) {
-        number = this.$store.getters.getSelectedPerformers.length
-      }
-      if (this.$route.path.includes('/tags/:')) {
-        number = this.$store.getters.getSelectedTags.length
-      }
-      if (this.$route.path.includes('/websites/:')) {
-        number = this.$store.getters.getSelectedWebsites.length
-      }
+      if (this.isVideosPage) number = this.$store.getters.getSelectedVideos.length
+      else if (this.$route.path.includes('/meta/')) number = this.$store.state.Meta.selectedMeta.length
+      else if (this.$route.path.includes('/performers/:')) number = this.$store.getters.getSelectedPerformers.length
+      else if (this.$route.path.includes('/tags/:')) number = this.$store.getters.getSelectedTags.length
+      else if (this.$route.path.includes('/websites/:')) number = this.$store.getters.getSelectedWebsites.length
       return number
     },
     getTypeSelectedItems() {
       let type = ''
       if (this.isVideosPage) type = 'video'
-      if (this.$route.path.includes('/performers/:')) type = 'performer'
-      if (this.$route.path.includes('/tags/:')) type = 'tag'
-      if (this.$route.path.includes('/websites/:')) type = 'website'
+      else if (this.$route.path.includes('/meta/')) {
+        type = this.$store.getters.meta.find({id: this.$route.query.metaId}).value().settings.nameSingular.toLowerCase()
+      } 
+      else if (this.$route.path.includes('/performers/:')) type = 'performer'
+      else if (this.$route.path.includes('/tags/:')) type = 'tag'
+      else if (this.$route.path.includes('/websites/:')) type = 'website'
       return type
     },
     getSelectedVideosSize() {
