@@ -26,7 +26,7 @@
         <div v-else style="min-width:80px;"></div>
       </v-container>
 
-      <v-container fluid class="meta-grid">
+      <v-container fluid class="meta-grid" :class="[cardSize, gapSize]">
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
       
@@ -104,6 +104,8 @@ export default {
       },
     },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
+    cardSize() { return `card-size-${this.meta.state.cardSize || 1}` },
+    gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     filteredMeta() { return this.$store.state.Meta.filteredMeta },
     filters() { return this.$store.getters.meta.find({id:this.metaId}).cloneDeep().value().filters || [] },
   },

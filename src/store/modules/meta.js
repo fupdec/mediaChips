@@ -135,6 +135,9 @@ const Meta = {
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()
     },
+    updateMetaState({getters}, {id, key, value}) {
+      getters.meta.find({id}).get('state').set(key, value).write()
+    },
     async filterMetaCards({ state, commit, dispatch, getters, rootState}) {
       const metaId = router.currentRoute.query.metaId
       let mc = getters.metaCards.filter({metaId})
@@ -255,6 +258,7 @@ const Meta = {
             metaCount = state.cardsPerPage
       state.pageTotal = Math.ceil(meta.length / metaCount)
       if (state.page > state.pageTotal) state.page = state.pageTotal
+      if (state.page == 0) state.page = 1
       const end = state.page * metaCount, start = end - metaCount
       return meta.slice(start, end)
     },
