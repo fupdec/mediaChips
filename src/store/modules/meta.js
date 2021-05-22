@@ -68,6 +68,7 @@ const Meta = {
     page: 1,
     sortBy: 'name',
     sortDirection: 'asc',
+    firstChar: [],
     filters: [],
     filteredMeta: [],
     updateCardIds: [],
@@ -142,6 +143,18 @@ const Meta = {
       const metaId = router.currentRoute.query.metaId
       let mc = getters.metaCards.filter({metaId})
       mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), ['asc'])
+      
+      if (state.firstChar.length) { // filter by first character
+        let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
+        let allChars = []
+        state.firstChar.forEach( char => { allChars.push(chars[char]) } )
+        if (allChars.length) {
+          mc = mc.filter( c => {
+            let charTag = c.meta.name.charAt(0).toLowerCase()
+            return allChars.includes(charTag)
+          })
+        }
+      }
 
       function compare(sign, a, b) {
         if (b===undefined||b===null||b.length==0) return false
@@ -232,6 +245,7 @@ const Meta = {
         sortBy: state.sortBy,
         sortDirection: state.sortDirection,
         page:  state.page,
+        firstChar:  state.firstChar,
       }
       if (tabId === 'default') getters.meta.find({id:metaId}).get('state').assign(data).write()
       else { getters.tabsDb.find({id: tabId}).assign(data).write(); commit('getTabsFromDb') }

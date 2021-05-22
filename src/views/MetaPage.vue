@@ -1,5 +1,35 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
+    <v-toolbar dense>
+      <v-spacer></v-spacer>
+      <v-btn-toggle v-model="chars" group multiple color="primary">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn icon small class="ma-0" :value="27" v-on="on">#</v-btn>
+          </template>
+          <span>Symbol</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn icon small class="ma-0" :value="0" v-on="on">0-9</v-btn>
+          </template>
+          <span>Number</span>
+        </v-tooltip>
+        <v-btn v-for="(char,i) in alphabet" :key="i" icon small class="ma-0" :value="i+1">
+          {{char}}
+        </v-btn>
+      </v-btn-toggle>
+      <v-tooltip bottom v-if="chars.length">
+        <template v-slot:activator="{ on }">
+          <v-btn @click="clearChars" icon small tile class="ml-2" v-on="on">
+            <v-icon size="20">mdi-alphabetical-variant-off</v-icon>
+          </v-btn>
+        </template>
+        <span>Clear all characters</span>
+      </v-tooltip>
+      <v-spacer></v-spacer>
+    </v-toolbar>
+
     <div class="headline text-h3 d-flex align-center justify-center py-4">
       <v-icon x-large left>mdi-{{meta.settings.icon}}</v-icon> {{meta.settings.name}}
       <span class="text-h5 ml-2">({{filteredMeta.length}})</span>
@@ -83,6 +113,10 @@ export default {
     this.$store.state.Meta.selection.destroy()
   },
   data: () => ({
+    alphabet: [
+      'a','b','c','d','e','f','g','h','i','j','k','l','m','n',
+      'o','p','q','r','s','t','u','v','w','x','y','z'
+    ],
     cardsPerPagePreset: [20,40,60,80,100,150,200,300], // TODO create custom numbers in settings
     isScrollToTopVisible: false,
   }),
@@ -102,6 +136,13 @@ export default {
       set(number) { 
         this.$store.state.Meta.page = number 
         this.$store.dispatch('saveStateOfMeta') 
+      },
+    },
+    chars: {
+      get () { return this.$store.state.Meta.firstChar },
+      set (value) {
+        this.$store.state.Meta.firstChar = value
+        this.$store.dispatch('filterMetaCards')
       },
     },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
@@ -149,11 +190,13 @@ export default {
         this.$store.state.Meta.sortBy = this.meta.state.sortBy || 'name'
         this.$store.state.Meta.sortDirection = this.meta.state.sortDirection || 'asc'
         this.$store.state.Meta.page = this.meta.state.page || 1
+        this.$store.state.Meta.firstChar = this.meta.state.firstChar || []
       } else {
         newFilters = _.cloneDeep(this.tab.filters)
         this.$store.state.Meta.sortBy = this.tab.sortBy
         this.$store.state.Meta.sortDirection = this.tab.sortDirection
         this.$store.state.Meta.page = this.tab.page
+        this.$store.state.Meta.firstChar = this.tab.firstChar || []
       }
       this.$store.state.Meta.filters = newFilters
       this.$store.dispatch('filterMetaCards') 
@@ -161,6 +204,10 @@ export default {
     removeAllFilters() {
       this.$store.getters.meta.find({id:this.meta.id}).set('filters', []).write()
       this.initFilters()
+    },
+    clearChars() {
+      this.$store.state.Meta.firstChar = []
+      this.$store.dispatch('filterMetaCards')
     },
   },
   watch: {
