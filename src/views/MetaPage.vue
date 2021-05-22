@@ -149,7 +149,7 @@ export default {
     cardSize() { return `card-size-${this.meta.state.cardSize || 1}` },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     filteredMeta() { return this.$store.state.Meta.filteredMeta },
-    filters() { return this.$store.getters.meta.find({id:this.metaId}).cloneDeep().value().filters || [] },
+    filters() { return this.$store.state.Meta.filters },
   },
   methods: {
     initSelection() {
