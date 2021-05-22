@@ -116,7 +116,7 @@
     </v-dialog>
     
     <v-dialog v-model="dialogColor" width="300">
-      <v-color-picker v-model="color"/>
+      <v-color-picker v-model="color" hide-mode-switch/>
     </v-dialog>
   </div>
 </template>
@@ -139,7 +139,7 @@ export default {
   mounted () {
     this.$nextTick(function () {
       this.name = this.card.meta.name || ''
-      this.color = this.card.meta.color || '#777'
+      this.color = this.card.meta.color || '#777777'
       this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
     })
   },
@@ -152,7 +152,7 @@ export default {
     name: '',
     synonyms: '',
     dialogColor: false,
-    color: '#777',
+    color: '#777777',
   }),
   computed: {
     metaCardId() { return this.$route.query.cardId },
