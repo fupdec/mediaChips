@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="800" width="70vw">
+    <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="980" width="70vw">
       <v-card>
         <v-toolbar color="primary">
           <span class="headline">Editing of {{meta.settings.nameSingular.toLowerCase()}} "{{card.meta.name}}"</span>
@@ -9,8 +9,11 @@
           <v-btn @click="save" outlined> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
         </v-toolbar>
         <div class="d-flex justify-space-between px-4 pt-4">
-          <v-chip label outlined small class="mr-4"> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
-          <span class="caption">id: {{meta.id}}</span>
+          <v-btn v-if="meta.settings.scraper" @click="dialogScraper=true" small rounded color="secondary"> 
+            <v-icon left>mdi-magnify</v-icon> Scrap data </v-btn>
+          <v-spacer v-if="meta.settings.scraper"></v-spacer>
+          <v-chip label outlined small> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
+          <span class="caption mx-4">id: {{meta.id}}</span>
           <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>
         </div>
         <vuescroll>
@@ -118,6 +121,8 @@
     <v-dialog v-model="dialogColor" width="300">
       <v-color-picker v-model="color" hide-mode-switch/>
     </v-dialog>
+
+    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" @closeScraper="closeScraper"/>
   </div>
 </template>
 
@@ -126,11 +131,13 @@ import vuescroll from 'vuescroll'
 import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
+import Scraper from '@/components/pages/meta/Scraper.vue'
 
 export default {
   name: "DialogEditMetaCard",
   components: {
     vuescroll,
+    Scraper,
 	},
   beforeMount () {
     this.parseMetaInCard()
@@ -153,6 +160,7 @@ export default {
     synonyms: '',
     dialogColor: false,
     color: '#777777',
+    dialogScraper: false,
   }),
   computed: {
     metaCardId() { return this.$route.query.cardId },
@@ -223,6 +231,7 @@ export default {
       this.$store.state.Meta.dialogEditMetaCard = false 
       this.$store.commit('updateMetaCards', [this.card.id])
     },
+    closeScraper() { this.dialogScraper = false },
   },
 };
 </script>

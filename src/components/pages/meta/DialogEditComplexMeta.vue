@@ -77,10 +77,43 @@
                 </v-col>
                 <v-col cols="12" align="center">
                   <v-card outlined class="pa-4">
+                    <span class="overline text-center">
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+                        </template>
+                        <span>This will allow you to take information from the internet for your meta.
+                        <br>You can set up scrapers in Settings -> Application.</span>
+                      </v-tooltip>
+                      Data scraper
+                    </span>
+                    <v-row>
+                      <v-col cols="6">       
+                        <div class="d-flex align-center">             
+                          <v-switch v-model="settings.scraper" :label="`Data scraper: ${settings.scraper?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                        </div>
+                      </v-col>
+                      <v-col cols="6" align="right">
+                        <v-btn @click="dialogSetUpScraper=true" color="primary" small rounded :disabled="!settings.scraper">
+                          <v-icon left>mdi-cog</v-icon>Set up meta for scraper</v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" align="center">
+                  <v-card outlined class="pa-4">
                     <span class="overline text-center">Specific meta</span>
                     <v-row>
                       <v-col cols="12">
-                        <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0" hide-details/>
+                        <div class="d-flex align-center">
+                          <v-tooltip top>
+                            <template v-slot:activator="{ on }">
+                              <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+                            </template>
+                            <span>This will allow you to add multiple names to one card.</span>
+                          </v-tooltip>
+                          <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                        </div>
                       </v-col>
                       <v-col cols="6">
                         <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
@@ -173,6 +206,48 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    
+    <v-dialog v-if="dialogSetUpScraper" v-model="dialogSetUpScraper" scrollable max-width="500">
+      <v-stepper v-model="scraperSteps">
+        <v-stepper-header style="height: 50px;">
+          <v-stepper-step :complete="scraperSteps > 1" step="1" class="py-0">Scrapers</v-stepper-step>
+          <v-divider></v-divider>
+          <v-stepper-step :complete="scraperSteps > 2" step="2" class="py-0">Meta</v-stepper-step>
+        </v-stepper-header>
+        <v-divider></v-divider>
+        <v-stepper-items>
+          <v-stepper-content step="1" class="pa-0">
+            <v-card>
+              <v-card-text class="text-center">
+              </v-card-text>
+              <v-card-actions>
+                <v-btn @click="dialogSetUpScraper=false" class="ma-2">
+                  <v-icon left>mdi-cancel</v-icon> Cancel </v-btn>
+                <v-spacer></v-spacer>
+                <v-btn @click="scraperSteps=2" color="primary" class="ma-2">
+                  <v-icon left>mdi-cog</v-icon> Set up meta 
+                  <v-icon large right>mdi-chevron-right</v-icon> </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-stepper-content>
+
+          <v-stepper-content step="2" class="pa-0">
+            <v-card>
+              <v-card-text class="text-center body-1"></v-card-text>
+              <v-card-actions>
+                <v-btn @click="dialogSetUpScraper=false" class="ma-2">
+                  <v-icon left>mdi-cancel</v-icon> Cancel</v-btn>
+                <v-spacer></v-spacer>
+                <v-btn @click="scraperSteps=1" class="ma-2">
+                  <v-icon large left>mdi-chevron-left</v-icon> Back to scrapers </v-btn>
+                <v-btn @click="dialogSetUpScraper=false" color="primary" class="ma-2"> 
+                  <v-icon left>mdi-check</v-icon> Finish </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-stepper-content>
+        </v-stepper-items>
+      </v-stepper>
+    </v-dialog>
   </div>
 </template>
 
@@ -203,6 +278,7 @@ export default {
   },
   data: () => ({
     dialogAddMetaToCard: false,
+    dialogSetUpScraper: false,
     icons: icons,
     selectedMetaForCard: null,
     valid: false,
@@ -220,8 +296,10 @@ export default {
       synonyms: false,
       favorite: true,
       rating: false,
+      scraper: false,
       metaInCard: [],
     },
+    scraperSteps: 1,
     drag: false,
     dragOptions: {
       animation: 200,
