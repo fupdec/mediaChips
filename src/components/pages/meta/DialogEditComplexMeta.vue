@@ -239,7 +239,6 @@ export default {
       chipLabel: false,
       chipOutlined: false,
       chipColor: false,
-      cardSize: 1,
       synonyms: false,
       favorite: true,
       rating: false,

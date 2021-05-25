@@ -3,7 +3,14 @@
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="980" width="70vw">
       <v-card>
         <v-toolbar color="primary">
-          <span class="headline">Editing of {{meta.settings.nameSingular.toLowerCase()}} "{{card.meta.name}}"</span>
+          <span class="headline">Editing of {{meta.settings.nameSingular.toLowerCase()}} 
+            <v-tooltip v-model="tooltipCopyName" bottom>
+              <template v-slot:activator="{ click }">
+                <b v-on="click" @click="copyNameToClipboard" style="cursor:pointer;" title="Copy name to clipboard">{{card.meta.name}}</b>
+              </template>
+              <span>Name copied to clipboard!</span>
+            </v-tooltip>
+          </span>
           <v-spacer></v-spacer>
           <v-btn @click="close" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> Close</v-btn>
           <v-btn @click="save" outlined> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
@@ -122,11 +129,14 @@
       <v-color-picker v-model="color" hide-mode-switch/>
     </v-dialog>
 
-    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" @closeScraper="closeScraper"/>
+    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="values"
+      @closeScraper="dialogScraper=false" @getValues="getSraperValues($event)"/>
   </div>
 </template>
 
 <script>
+const { clipboard } = require('electron')
+
 import vuescroll from 'vuescroll'
 import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
@@ -161,6 +171,7 @@ export default {
     dialogColor: false,
     color: '#777777',
     dialogScraper: false,
+    tooltipCopyName: false,
   }),
   computed: {
     metaCardId() { return this.$route.query.cardId },
@@ -231,7 +242,18 @@ export default {
       this.$store.state.Meta.dialogEditMetaCard = false 
       this.$store.commit('updateMetaCards', [this.card.id])
     },
-    closeScraper() { this.dialogScraper = false },
+    getSraperValues(values) { 
+      this.dialogScraper = false 
+      for (const key in values) {
+        let meta = _.find(this.meta.settings.metaInCard, i=>i.scraperField===key)
+        if (meta) this.values[meta.id] = values[key]
+      }
+    },
+    copyNameToClipboard() {
+      this.tooltipCopyName = true
+      clipboard.writeText(this.card.meta.name)
+      setTimeout(() => { this.tooltipCopyName = false }, 3000)
+    },
   },
 };
 </script>

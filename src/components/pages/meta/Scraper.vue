@@ -1,38 +1,36 @@
 <template>
   <div>
     <v-dialog :value="dialog" @input="closeDialog" scrollable max-width="1200px">
-      <v-card :loading="searchInProgress" class="pb-4">
+      <v-card class="pb-4">
         <v-toolbar color="primary">
           <div class="headline">
             Scrap data for
             <v-tooltip v-model="tooltipCopyName" bottom>
               <template v-slot:activator="{ click }">
-                <span v-on="click" @click="copyPerformerNameToClipboard('find')" class="font-weight-bold "
-                  style="cursor:pointer;" title="Copy name to clipboard"> {{name}} 
-                </span>
+                <b v-on="click" @click="copyNameToClipboard" style="cursor:pointer;" title="Copy name to clipboard">{{name}}</b>
               </template>
               <span>Name copied to clipboard!</span>
             </v-tooltip>
           </div>
           <v-spacer></v-spacer>
-          <v-btn class="mx-2" dark outlined @click="closeDialog"> Cancel </v-btn>
+          <v-btn outlined @click="closeDialog"><v-icon left>mdi-close</v-icon>Close</v-btn>
         </v-toolbar>
         <v-card-actions>
           <v-container>
             <v-row>
               <v-col cols="12" md="6">
-                <v-text-field v-model="queryString" hide-details dense solo
+                <v-text-field v-model="queryString" hide-details dense outlined
                   placeholder="Performer name or alias" :disabled="searchInProgress"
                   @click:append-outer="pasteQueryString" 
                   append-outer-icon="mdi-clipboard-text-outline"/>
               </v-col>
               <v-col cols="6" md="3">
-                <v-btn @click="findPerformersIafd" :loading="searchInProgress"
+                <v-btn @click="findMeta('iafd')" :loading="searchInProgress"
                   color="secondary" block :disabled="searchInProgress"
                 > <v-icon left>mdi-magnify</v-icon> iafd.com </v-btn>
               </v-col>
               <v-col cols="6" md="3">
-                <v-btn @click="findPerformersFreeonce" :loading="searchInProgress"
+                <v-btn @click="findMeta('freeonce')" :loading="searchInProgress"
                   color="secondary" block :disabled="searchInProgress"
                 > <v-icon left>mdi-magnify</v-icon> freeones.com </v-btn>
               </v-col>
@@ -43,10 +41,15 @@
           <v-card-text class="py-0">
             <v-container fluid class="py-0">
               <v-row>
-                <v-col cols="12" class="text-center" v-once v-if="showFindError">
-                  <h2>Nothing found</h2>
+                <v-col v-if="notFound" cols="12" class="text-center" v-once>
+                  <v-icon x-large>mdi-magnify-close</v-icon> <h2 class="mt-4">Nothing found</h2>
                 </v-col>
-                <v-col cols="12">
+                <v-col v-if="searchInProgress" cols="12">
+                  <v-row>
+                    <v-col v-for="(c, i) in [1,2,3,4,5,6]" :key="i" cols="2"><v-skeleton-loader type="card"/></v-col>
+                  </v-row>
+                </v-col>
+                <v-col v-else cols="12">
                   <v-row>
                     <v-col cols="4" xs="4" sm="3" md="2" v-for="(fp, i) in foundPerformers" :key="i">
                       <v-hover>
@@ -63,13 +66,10 @@
                             </v-card-text>
                             <v-fade-transition>
                               <v-overlay v-if="hover" absolute color="secondary">
-                                <v-btn v-if="resultFromFreeones" @click="getPerformerInfoFreeonce(fp.link)" color="primary" 
-                                  :loading="searchInProgress">
-                                  <v-icon left>mdi-information-variant</v-icon> Get info
-                                </v-btn>
-                                <v-btn v-else @click="getPerformerInfoIafd(fp.link)" color="primary" :loading="searchInProgress">
-                                  <v-icon left>mdi-information-variant</v-icon> Get info
-                                </v-btn>
+                                <v-btn v-if="resultFromFreeones" @click="getInfo(fp.link, 'freeonce')" color="primary" :loading="searchInProgress">
+                                  <v-icon left>mdi-information-variant</v-icon> Get info </v-btn>
+                                <v-btn v-else @click="getInfo(fp.link, 'iafd')" color="primary" :loading="searchInProgress">
+                                  <v-icon left>mdi-information-variant</v-icon> Get info </v-btn>
                               </v-overlay>
                             </v-fade-transition>
                           </v-card>
@@ -86,25 +86,21 @@
     </v-dialog>
     <v-dialog v-model="dialogTransferInfo" scrollable max-width="860">
       <v-card>
-        <v-card-title class="edit-card-title pa-4">
-          <div class="headline">
-            Transfer information
-          </div>
+        <v-toolbar color="primary">
+          <div class="headline">Transfer information</div>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogTransferInfo=false" class="mx-2" dark outlined>Cancel</v-btn>
-          <v-btn @click="applyTransfered" class="mx-2" color="primary"> 
+          <v-btn @click="dialogTransferInfo=false" outlined>Cancel</v-btn>
+          <v-btn @click="applyTransfered" class="mx-4" outlined> 
             <v-icon left>mdi-transfer</v-icon> Apply transfered</v-btn>
-          <v-btn @click="applyFounded" class="mx-2" color="primary"> 
+          <v-btn @click="applyFounded" outlined> 
             <v-icon left>mdi-magnify</v-icon> Apply found </v-btn>
-        </v-card-title>
+        </v-toolbar>
         <v-card-actions>
-          <v-btn @click="restoreAll" small color="secondary" class="mx-4 mt-4">
-            <v-icon left>mdi-restore</v-icon> Restore all
-          </v-btn>
+          <v-btn @click="initCurrentValues" small color="secondary" class="mx-4 mt-4">
+            <v-icon left>mdi-restore</v-icon> Restore all </v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="transferAll" small color="secondary" class="mx-4 mt-4">
-            <v-icon left>mdi-transfer-left</v-icon> Transfer all
-          </v-btn>
+            <v-icon left>mdi-transfer-left</v-icon> Transfer all </v-btn>
         </v-card-actions>
         <vuescroll>
           <v-card-text>
@@ -112,26 +108,32 @@
               <template v-slot:default>
                 <thead>
                   <tr>
-                    <th class="text-right" style="width:20%">Parameter</th>
-                    <th class="text-center" style="width:40%">Current</th>
-                    <th class="text-center" style="width:40%">Found</th>
+                    <th class="text-center pl-8" style="width:20%">Meta</th>
+                    <th class="text-center" style="width:20%">Parameter</th>
+                    <th class="text-center pr-8" style="width:30%">Current</th>
+                    <th class="text-center" style="width:30%">Found</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(param, name, index) in transfer.found" :key="index">
-                    <td v-if="param.length" class="text-right val-name">
-                      <v-btn @click="transfer.current[name]=$data[name]" 
-                        icon small class="transfer-btn" color="primary">
-                        <v-icon>mdi-restore</v-icon>
-                      </v-btn> {{ name }}: 
+                  <tr v-for="(value, key, i) in transfer.found" :key="i+transferedKey">
+                    <td v-if="getMetaByField(key)" class="text-center pl-8">
+                      <v-btn @click="restore(key)" icon small class="restore-btn" color="primary"> <v-icon>mdi-restore</v-icon> </v-btn> 
+                      <v-icon size="20">mdi-{{ getMeta(getMetaByField(key).id).settings.icon }}</v-icon>
+                      {{ getMeta(getMetaByField(key).id).settings.name }}
                     </td>
-                    <td v-if="param.length" class="text-center"> {{ transfer.current[name] }} </td>
-                    <td v-if="param.length" class="text-center val-found">
-                      <v-btn @click="transfer.current[name]=param" 
-                        icon small class="transfer-btn" color="primary">
+                    <td v-else class="text-center pl-8 red--text">Not assigned</td>
+                    
+                    <td class="text-center">{{ key }}</td>
+                    
+                    <td v-if="getMetaByField(key)" class="text-center pr-8">
+                      <span>{{ transfer.current[key] }}</span> 
+                      <v-btn @click="transferValue(key, value)" icon small class="transfer-btn" color="primary">
                         <v-icon>mdi-transfer-left</v-icon>
-                      </v-btn> {{ param }} 
+                      </v-btn>
                     </td>
+                    <td v-else class="text-center pr-8">-</td>
+                    
+                    <td class="text-center">{{ value }}</td>
                   </tr>
                 </tbody>
               </template>
@@ -146,23 +148,22 @@
 
 <script>
 const { clipboard } = require('electron')
-const path = require("path")
-const axios = require("axios")
-const cheerio = require("cheerio")
 
 import vuescroll from 'vuescroll'
+import CountryFlag from 'vue-country-flag'
 import Scrapers from '@/mixins/Scrapers'
+import Countries from '@/mixins/Countries'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   props: {
     dialog: Boolean,
     name: String,
+    values: Object,
   },
   name: "Scraper",
-  components: {
-    vuescroll,
-	},
-  mixins: [Scrapers], 
+  components: { vuescroll, CountryFlag },
+  mixins: [Countries, Scrapers, MetaGetters], 
   beforeMount() {
     this.queryString = this.name
   },
@@ -171,163 +172,62 @@ export default {
     })
   },
   data: () => ({
-    date: null,
-    menu: false,
-    isPerformerNameEditEnabled: false,
-    valid: false,
-    queryString: "",
+    queryString: '',
     searchInProgress: false,
-    showFindError: false,
+    notFound: false,
     resultFromFreeones: false,
     foundPerformers: [],
-    performerName: '',
-    favorite: false,
-    rating: 0,
-    aliases: '',
-    start: '',
-    end: '',
-    category: [],
-    birthday: '',
-    nations: [],
-    ethnicity: [],
-    eyes: [],
-    hair: [],
-    height: '',
-    weight: '',
-    bra: '',
-    waist: '',
-    hip: '',
-    boobs: [],
-    cups: [],
-    currentYear: new Date().getFullYear(),
-    percentCompleted: 0,
-    tags: [],
     tooltipCopyName: false,
-    tooltipCopyName: false,
-    months: ['january','february','march','april','may','june','july',
-      'august','september','october','november','december'],
     dialogTransferInfo: false,
     transfer: {
       current: {},
       found: {},
     },
-    defaultParamsForInfo: {
-      aliases: '',
-      start: '',
-      end: '',
-      category: [],
-      birthday: '',
-      nations: [],
-      ethnicity: [],
-      eyes: [],
-      hair: [],
-      height: '',
-      weight: '',
-      bra: '',
-      waist: '',
-      hip: '',
-      boobs: [],
-      cups: [],
-    },
-    values: {},
-    picker: false,
-    pickerParam: null,
-    dialogAddNewTag: false,
-    newTagName: '',
-    validNewTagName: false,
+    transferedKey: Date.now(),
   }),
   computed: {
+    pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
-    pastePerformerName() {
-      this.performerName = clipboard.readText()
-    },
-    pasteAliases() {
-      this.aliases = clipboard.readText()
-    },
-    pasteQueryString() {
-      this.queryString = clipboard.readText()
-    },
-    clearPreviouslyFound() {
-      this.transfer.current = _.cloneDeep(this.defaultParamsForInfo)
-      this.transfer.found = _.cloneDeep(this.defaultParamsForInfo)
-    },
-    getTransferCurrent() {
-      this.transfer.current.aliases = this.aliases
-      this.transfer.current.start = this.start
-      this.transfer.current.end = this.end
-      this.transfer.current.category = this.category
-      this.transfer.current.birthday = this.birthday
-      this.transfer.current.nations = this.nations
-      this.transfer.current.ethnicity = this.ethnicity
-      this.transfer.current.eyes = this.eyes
-      this.transfer.current.hair = this.hair
-      this.transfer.current.height = this.height
-      this.transfer.current.weight = this.weight
-      this.transfer.current.bra = this.bra
-      this.transfer.current.waist = this.waist
-      this.transfer.current.hip = this.hip
-      this.transfer.current.boobs = this.boobs
-      this.transfer.current.cups = this.cups
-    },
-    restoreAll() {
-      for (const param in this.transfer.current) {
-        this.transfer.current[param] = this[param]
+    initCurrentValues() { 
+      for (const key in this.transfer.found) {
+        let meta = this.getMetaByField(key)
+        if (meta) this.transfer.current[key] = this.values[meta.id]
       }
+      this.transferedKey = Date.now()
+    },
+    restore(key) { 
+      this.transfer.current[key] = this.values[this.getMetaByField(key).id] 
+      this.transferedKey = Date.now()
+    },
+    transferValue(key, value) { 
+      this.transfer.current[key] = value
+      this.transferedKey = Date.now()
     },
     transferAll() {
-      for (const param in this.transfer.found) {
-        if (this.transfer.found[param].length) {
-          this.transfer.current[param] = this.transfer.found[param]
-        }
+      for (const key in this.transfer.found) {
+        let meta = this.getMetaByField(key)
+        if (meta) this.transfer.current[key] = this.transfer.found[key]
       }
-    },
-    applyTransfered() {
-      this.dialogTransferInfo = false
-      setTimeout(()=>{
-        for (const param in this.transfer.current) {
-          if (this.transfer.current[param].length) {
-            this[param] = this.transfer.current[param]
-          }
-        }
-      }, 1000)
-    },
-    applyFounded() {
-      this.dialogTransferInfo = false
-      setTimeout(()=>{
-        for (const param in this.transfer.found) {
-          if (this.transfer.found[param].length) {
-            this[param] = this.transfer.found[param]
-          }
-        }
-      }, 1000)
-    },
-    removeTrash(dirtyString) {
-      let filtered = dirtyString.trim()
-      return filtered.replace(/[\\\/\%"<>{}\[\]]/g, '').replace(/ +(?= )/g,'')
-    },
-    parseStringToArray(string) {
-      string = string.trim()
-      string = string.replace(/[\\\/\%"<>{}\[\]]/g, '')
-      string = string.replace(/ +(?= )/g,'') // remove multiple spaces
-      string = string.split(/[,;]/)
-      string = string.filter((el)=>(el != '' && el != ' '))
-      string = string.map(s => s.trim())
-      return string
-    },
-    copyPerformerNameToClipboard(dialog) {
-      if(dialog == 'find') {
-        this.tooltipCopyName = true
-      } else {
-        this.tooltipCopyName = true
-      }
-      setTimeout(() => {
-        this.tooltipCopyName = false
-        this.tooltipCopyName = false
-      },3000)
-      clipboard.writeText(this.name)
+      this.transferedKey = Date.now()
     },
     closeDialog() { this.$emit('closeScraper')},
+    applyTransfered() { this.$emit('getValues', this.transfer.current) },
+    applyFounded() { this.$emit('getValues', this.transfer.found) },
+    getMetaByField(field) { return _.find(this.meta.settings.metaInCard, i=>i.scraperField===field) },
+    copyNameToClipboard() {
+      this.tooltipCopyName = true
+      clipboard.writeText(this.name)
+      setTimeout(() => { this.tooltipCopyName = false }, 3000)
+    },
+    pasteQueryString() { this.queryString = clipboard.readText() },
+    findCountryCode(country) {
+      if (country == '' || country === undefined) return ''
+      let countryName = country.toLowerCase()
+      let code = _.filter(this.countries, country => (country.name.toLowerCase().includes(countryName)) )[0]
+      if (code == undefined) return ''
+      else return code.code
+    },
   },
   watch: {
   }
@@ -336,65 +236,22 @@ export default {
 
 
 <style lang="less">
-.masked {
-  &-block {
-    position: relative;
-  }
-  &-input {
-    &.v-input input {
-      color: transparent;
-      &::placeholder {
-          color: transparent;
-      }
-    }
-  }
-  &-mask {
-    position: absolute;
-    height: 34px;
-    width: 100%;
-    outline: none;
-    font-size: 16px;
-    color: rgba(0, 0, 0, 0.87);
-    top: 11px;
-    left: 0;
-  }
-}
-.theme--dark .masked-mask {
-  color: #fff;
-}
-.nation-select {
-  & .v-select__slot {
-    height: 32px;
-  }
-}
-.profile-completed-container {
-  display: flex;
-  align-items: center;
-  z-index: 5;
-}
-.profile-completed-progress {
-  .v-progress-circular__info {
-    font-size: 12px;
-  }
-  .percent {
-    font-size: 10px;
-  }
-  .v-progress-circular__underlay {
-    stroke: rgba(255, 255, 255, 0.2);
-  }
-}
 .transfer-table {
-  .val-name,
-  .val-found {
+  td {
     position: relative;
-    padding-left: 30px !important;
   }
+  .restore-btn,
   .transfer-btn {
     position: absolute; 
-    left: 0;
     top: 0;
     bottom: 0;
     margin: auto;
+  }
+  .restore-btn { 
+    left: 0;
+  }
+  .transfer-btn { 
+    right: 0;
   }
 }
 </style> 
