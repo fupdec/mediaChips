@@ -29,8 +29,8 @@
               <span>
                 <v-icon left>mdi-{{meta.settings.icon}}</v-icon>
                 <span>{{meta.settings.name}}</span>
-                <span class="caption px-4">type: {{meta.dataType}}</span>
-                <span class="caption">id: {{meta.id}}</span>
+                <span class="caption text--secondary px-4">type: {{meta.dataType}}</span>
+                <span class="caption text--secondary">id: {{meta.id}}</span>
               </span>
               <span>
                 <v-btn @click="openSettings(i)" icon><v-icon>mdi-cog</v-icon></v-btn>

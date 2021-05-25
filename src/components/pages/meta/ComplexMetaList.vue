@@ -27,7 +27,7 @@
             <div class="d-flex justify-space-between align-center" style="width:100%">
               <span>
                 <span>{{meta.settings.name}}</span>
-                <span class="caption px-4">id: {{meta.id}}</span>
+                <span class="caption text--secondary px-4">id: {{meta.id}}</span>
               </span>
               <span>
                 <v-btn @click="openSettings(i)" icon><v-icon>mdi-cog</v-icon></v-btn>

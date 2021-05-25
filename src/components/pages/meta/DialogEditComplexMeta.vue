@@ -50,21 +50,26 @@
                     </span>
                     <v-card v-if="settings.metaInCard.length" outlined class="mb-4 mt-2">
                       <v-list dense class="list-zebra pa-0">
-                        <v-list-item-group color="primary">
-                          <draggable v-model="settings.metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
-                            <transition-group type="transition">
-                              <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i">
-                                <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
-                                {{getMeta(meta.id).settings.name}}
-                                <span class="px-2">({{meta.type}})</span>
-                                <span class="caption px-2">id: {{meta.id}}</span>
-                                <span v-if="meta.type=='simple'" class="caption px-2">
-                                  {{getMeta(meta.id).dataType}}
+                        <draggable v-model="settings.metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+                          <transition-group type="transition">
+                            <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i" class="pr-1 pl-2">
+                              <div class="d-flex justify-space-between align-center" style="width:100%">
+                                <span>
+                                  <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
+                                  <span>{{getMeta(meta.id).settings.name}}</span>
+                                  <span class="text--secondary px-2">({{meta.type}})</span>
+                                  <span class="caption text--secondary px-2">id: {{meta.id}}</span>
+                                  <span v-if="meta.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(meta.id).dataType}}</span>
+                                  <span v-if="meta.scraperField" class="caption text--secondary">scraper: {{meta.scraperField}}</span>
                                 </span>
-                              </v-list-item>
-                            </transition-group>
-                          </draggable>
-                        </v-list-item-group>
+                                <span>
+                                  <!-- TODO add function for removing -->
+                                  <v-btn color="red" icon><v-icon>mdi-close</v-icon></v-btn>
+                                </span>
+                              </div>
+                            </v-list-item>
+                          </transition-group>
+                        </draggable>
                       </v-list>
                     </v-card>
                     <div v-else class="mb-4">
@@ -73,24 +78,17 @@
                     </div>
                     <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
                       <v-icon left>mdi-plus</v-icon>Add meta to cards</v-btn>
-                  </v-card>
-                </v-col>
-                <v-col cols="12" align="center">
-                  <v-card outlined class="pa-4">
-                    <span class="overline text-center">
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
-                        </template>
-                        <span>This will allow you to take information from the internet for your meta.
-                        <br>You can set up scrapers in Settings -> Application.</span>
-                      </v-tooltip>
-                      Data scraper
-                    </span>
+                    <v-divider class="my-4"></v-divider>
                     <v-row>
                       <v-col cols="6">       
-                        <div class="d-flex align-center">             
-                          <v-switch v-model="settings.scraper" :label="`Data scraper: ${settings.scraper?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                        <div class="d-flex align-center"> 
+                          <v-tooltip top>
+                            <template v-slot:activator="{ on }">
+                              <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+                            </template>
+                            <span>This will allow you to take information from the internet for your meta.</span>
+                          </v-tooltip>            
+                          <v-switch v-model="settings.scraper" :label="`Data scraper: ${settings.scraper?'On':'Off'}`" class="my-0 py-0" hide-details/>
                         </div>
                       </v-col>
                       <v-col cols="6" align="right">
@@ -173,14 +171,13 @@
       </v-card>
     </v-dialog>
     
-    <v-dialog v-if="dialogAddMetaToCard" v-model="dialogAddMetaToCard" scrollable max-width="350">
+    <v-dialog v-if="dialogAddMetaToCard" v-model="dialogAddMetaToCard" scrollable max-width="450">
       <v-card>
-        <v-card-title class="px-4 py-1">
+        <v-toolbar color="primary" height="50">
           <div class="headline">Add Meta to Cards</div>
           <v-spacer></v-spacer>
-          <v-icon>mdi-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="addMetaToCard" outlined><v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text class="px-4">
             <v-autocomplete v-model="selectedMetaForCard" label="Meta name" :items="metaForCard"
@@ -188,66 +185,20 @@
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
                 <span>{{data.item.settings.name}}</span>
-                <span class="ml-2">({{data.item.type}})</span>
+                <span class="text--secondary ml-2">({{data.item.type}})</span>
               </template>
               <template v-slot:item="data">
                 <v-icon left>mdi-{{data.item.settings.icon}}</v-icon>
                 <span>{{data.item.settings.name}}</span>
-                <span class="ml-2">({{data.item.type}})</span>
+                <span class="text--secondary ml-2">({{data.item.type}})</span>
               </template>
             </v-autocomplete>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="addMetaToCard" class="ma-4 pr-4" rounded color="primary">
-            <v-icon left>mdi-plus</v-icon> Add Meta To Card </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
       </v-card>
     </v-dialog>
     
-    <v-dialog v-if="dialogSetUpScraper" v-model="dialogSetUpScraper" scrollable max-width="500">
-      <v-stepper v-model="scraperSteps">
-        <v-stepper-header style="height: 50px;">
-          <v-stepper-step :complete="scraperSteps > 1" step="1" class="py-0">Scrapers</v-stepper-step>
-          <v-divider></v-divider>
-          <v-stepper-step :complete="scraperSteps > 2" step="2" class="py-0">Meta</v-stepper-step>
-        </v-stepper-header>
-        <v-divider></v-divider>
-        <v-stepper-items>
-          <v-stepper-content step="1" class="pa-0">
-            <v-card>
-              <v-card-text class="text-center">
-              </v-card-text>
-              <v-card-actions>
-                <v-btn @click="dialogSetUpScraper=false" class="ma-2">
-                  <v-icon left>mdi-cancel</v-icon> Cancel </v-btn>
-                <v-spacer></v-spacer>
-                <v-btn @click="scraperSteps=2" color="primary" class="ma-2">
-                  <v-icon left>mdi-cog</v-icon> Set up meta 
-                  <v-icon large right>mdi-chevron-right</v-icon> </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-stepper-content>
-
-          <v-stepper-content step="2" class="pa-0">
-            <v-card>
-              <v-card-text class="text-center body-1"></v-card-text>
-              <v-card-actions>
-                <v-btn @click="dialogSetUpScraper=false" class="ma-2">
-                  <v-icon left>mdi-cancel</v-icon> Cancel</v-btn>
-                <v-spacer></v-spacer>
-                <v-btn @click="scraperSteps=1" class="ma-2">
-                  <v-icon large left>mdi-chevron-left</v-icon> Back to scrapers </v-btn>
-                <v-btn @click="dialogSetUpScraper=false" color="primary" class="ma-2"> 
-                  <v-icon left>mdi-check</v-icon> Finish </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-stepper-content>
-        </v-stepper-items>
-      </v-stepper>
-    </v-dialog>
+    <DialogEditScraperFields v-if="dialogSetUpScraper" :dialog="dialogSetUpScraper" :metaInCards="settings.metaInCard" @closeDialog="getScraperFields($event)"/>
   </div>
 </template>
 
@@ -257,6 +208,7 @@ import draggable from 'vuedraggable'
 import icons from '@/assets/material-icons.json'
 import NameRules from '@/mixins/NameRules'
 import MetaGetters from '@/mixins/MetaGetters'
+import DialogEditScraperFields from '@/components/pages/meta/DialogEditScraperFields.vue'
 
 export default {
   props: {
@@ -264,12 +216,7 @@ export default {
     metaIndex: Number,
   },
   name: "DialogEditMeta",
-  components: {
-    vuescroll,
-    draggable,
-	},
-  created() {
-  },
+  components: { vuescroll, draggable, DialogEditScraperFields },
   mixins: [NameRules, MetaGetters], 
   mounted () {
     this.$nextTick(function () {
@@ -299,7 +246,6 @@ export default {
       scraper: false,
       metaInCard: [],
     },
-    scraperSteps: 1,
     drag: false,
     dragOptions: {
       animation: 200,
@@ -314,8 +260,9 @@ export default {
     meta() { return _.cloneDeep(this.complexMetaList[this.metaIndex]) },
     metaForCard() {
       let metaInCardIds = this.settings.metaInCard.map(i=>i.id)
-      let freeMetaList = this.$store.getters.meta.filter(i=>!metaInCardIds.includes(i.id)).cloneDeep().value()
-      return _.filter(freeMetaList, i=>i.id!=this.meta.id)
+      let freeMetaList = this.$store.getters.meta.filter(i=>!metaInCardIds.includes(i.id))
+      freeMetaList = freeMetaList.filter(i=>i.type!=='specific')
+      return freeMetaList.filter(i=>i.id!=this.meta.id).cloneDeep().value()
     },
     dateAdded() {
       let date = new Date(this.meta.date)
@@ -351,9 +298,20 @@ export default {
       if (!this.valid) return
       this.$store.getters.meta.find({id: this.meta.id}).set('edit', Date.now()).set('settings', this.settings).write()
       this.$store.commit('getMetaListFromDb')
-      this.$emit('closeSettings')
+      this.closeSettings()
     },
     closeSettings() { this.$emit('closeSettings') },
+    getScraperFields(fields) { 
+      this.dialogSetUpScraper=false
+      if (fields===undefined) return
+      let metaInCard = this.settings.metaInCard
+      let assignedFields = _.filter(fields, i=>i.assigned)
+      for (let i = 0; i < metaInCard.length; i++) {
+        const index = _.findIndex(assignedFields, j=>j.assigned===metaInCard[i].id)
+        if (index > -1) this.settings.metaInCard[i].scraperField = assignedFields[index].name
+        else this.settings.metaInCard[i].scraperField = undefined
+      }
+    },
     getRandomColor() { return '#'+Math.floor(Math.random()*16777215).toString(16) },
   },
 }
