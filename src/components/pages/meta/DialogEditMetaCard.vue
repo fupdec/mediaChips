@@ -28,22 +28,43 @@
             <v-form v-model="valid" ref="form" @submit.prevent>
               <v-container fluid>
                 <v-row>
-                  <v-col cols="12" sm="6">
+                  <v-col cols="12" sm="6" class="pb-0 remove-details-margin">
                     <v-text-field v-model="name" :rules="[nameRules]" outlined label="Name" dense/>
                   </v-col>
-                  <v-col v-if="meta.settings.synonyms" cols="12" sm="6">
+                  <v-col v-if="meta.settings.synonyms" cols="12" sm="6" class="pb-0 remove-details-margin">
                     <v-text-field v-model="synonyms" outlined label="Synonyms" hide-details dense/>
                   </v-col>
+                  <v-col v-if="meta.settings.country" cols="12" sm="6">
+                    <v-autocomplete v-model="country" :items="countries" multiple 
+                      item-text="name" item-value="name" label="Country" outlined dense
+                      class="nation-chips hidden-close nation-select" hide-selected hide-details
+                      :menu-props="{contentClass:'list-with-preview'}">
+                      <template v-slot:selection="data">
+                        <v-chip @click="data.select" @click:close="removeCountry(data.item)"
+                          v-bind="data.attrs" class="my-1" outlined close
+                          :input-value="data.selected" close-icon="mdi-close"> 
+                          <country-flag :country='data.item.code' size='normal'/> 
+                          <span class="pl-2">{{ data.item.name }}</span>
+                        </v-chip>
+                      </template>
+                      <template v-slot:item="data">
+                        <country-flag :country='data.item.code' size='normal'/>
+                        <span class="pl-2">{{data.item.name}}</span>
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+
                   <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
                     <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
                       outlined multiple hide-selected hide-details dense
                       :label="getMeta(m.id).settings.name" item-value="id"
-                      :menu-props="{contentClass:'list-with-preview'}"
-                    >
+                      :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
+                    > <!--  TODO fix filtering when type smth in search field -->
                       <template v-slot:selection="data">
-                        <v-chip v-bind="data.attrs" close 
-                          @click:close="removeItem(data.item.id,m.id)"
+                        <v-chip v-bind="data.attrs" class="my-1 px-2"
+                          @click="data.select" :input-value="data.selected"
+                          @click:close="removeItem(data.item.id,m.id)" close
                           :color="getColor(m.id,data.item.id)" 
                           :label="getMeta(m.id).settings.chipLabel"
                           :outlined="getMeta(m.id).settings.chipOutlined"
@@ -130,7 +151,7 @@
     </v-dialog>
 
     <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="valuesForScraper"
-      @closeScraper="dialogScraper=false" @getValues="getSraperValues($event)"/>
+      @closeScraper="dialogScraper=false" @getValues="getScraperValues($event)"/>
   </div>
 </template>
 
@@ -142,22 +163,26 @@ import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
 import Scraper from '@/components/pages/meta/Scraper.vue'
+import CountryFlag from 'vue-country-flag'
+import Countries from '@/mixins/Countries'
 
 export default {
   name: "DialogEditMetaCard",
   components: {
     vuescroll,
     Scraper,
+    CountryFlag,
 	},
   beforeMount () {
     this.parseMetaInCard()
   },
-  mixins: [ShowImageFunction, NameRules, MetaGetters], 
+  mixins: [ShowImageFunction, NameRules, MetaGetters, Countries,], 
   mounted () {
     this.$nextTick(function () {
       this.name = this.card.meta.name || ''
       this.color = this.card.meta.color || '#777777'
       this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
+      this.country = this.card.meta.country || []
     })
   },
   data: () => ({
@@ -168,6 +193,7 @@ export default {
     calendarId: null,
     name: '',
     synonyms: '',
+    country: [],
     dialogColor: false,
     color: '#777777',
     dialogScraper: false,
@@ -229,8 +255,12 @@ export default {
     },
     removeItem(item, id) { 
       const index = this.values[id].indexOf(item)
-      if (index >= 0) this.values[id].splice(index, 1)
+      if (index > -1) this.values[id].splice(index, 1)
       this.$store.state.hoveredImage = false
+    },
+    removeCountry(item) { 
+      const index = this.country.indexOf(item.name)
+      if (index > -1) this.country.splice(index, 1)
     },
     setVal(value, id) { this.values[id] = value },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
@@ -238,17 +268,17 @@ export default {
       this.$refs.form.validate()
       if (!this.valid) return
 
-      let presetValues = {
-        name: this.name,
-        synonyms: this.parseStringToArray(this.synonyms),
-        color: this.color,
-      }
+      let presetValues = { name: this.name }
+      if (this.meta.settings.synonyms) presetValues.synonyms = this.parseStringToArray(this.synonyms)
+      if (this.meta.settings.color) presetValues.color = this.color
+      if (this.meta.settings.country) presetValues.country = this.country
+
       let newValues = {...this.oldValues, ...presetValues, ...this.values}
       this.$store.getters.metaCards.find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
       this.$store.state.Meta.dialogEditMetaCard = false 
       this.$store.commit('updateMetaCards', [this.card.id])
     },
-    getSraperValues(values) { 
+    getScraperValues(values) { 
       this.dialogScraper = false
       let specificMeta = ['name']
       if (this.meta.settings.synonyms) specificMeta.push('synonyms')

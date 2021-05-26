@@ -102,22 +102,26 @@
                   <v-card outlined class="pa-4">
                     <span class="overline text-center">Specific meta</span>
                     <v-row>
-                      <v-col cols="12">
-                        <div class="d-flex align-center">
-                          <v-tooltip top>
-                            <template v-slot:activator="{ on }">
-                              <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
-                            </template>
-                            <span>This will allow you to add multiple names to one card.</span>
-                          </v-tooltip>
-                          <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
-                        </div>
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on }">
+                            <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+                          </template>
+                          <span>This will allow you to add multiple names to one card.</span>
+                        </v-tooltip>
+                        <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
-                      <v-col cols="6">
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-icon left color="pink">mdi-heart</v-icon>
                         <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
-                      <v-col cols="6">
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-icon left color="yellow darken-2">mdi-star</v-icon>
                         <v-switch v-model="settings.rating" :label="`Ratings: ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
+                      </v-col>
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-icon left>mdi-flag</v-icon>
+                        <v-switch v-model="settings.country" :label="`Countries: ${settings.country?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -242,6 +246,7 @@ export default {
       synonyms: false,
       favorite: true,
       rating: false,
+      country: false,
       scraper: false,
       metaInCard: [],
     },
