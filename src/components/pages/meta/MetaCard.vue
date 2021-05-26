@@ -1,5 +1,5 @@
 <template>
-  <v-lazy :width="cardSize">
+  <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" height="100%"
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
@@ -89,7 +89,6 @@ export default {
     rating: 0,
   }),
   computed: {
-    cardSize() { return `calc(${100 / this.meta.settings.cardSize}% - 20px)` },
     updateCardIds() { return this.$store.state.Meta.updateCardIds },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     isAltImgExist() { return this.meta.settings.imageTypes.includes('alt') && !this.imgAlt.includes('not_exist') },
