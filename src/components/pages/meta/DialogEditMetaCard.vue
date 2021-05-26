@@ -29,19 +29,19 @@
               <v-container fluid>
                 <v-row>
                   <v-col cols="12" sm="6" class="pb-0 remove-details-margin">
-                    <v-text-field v-model="name" :rules="[nameRules]" outlined label="Name" dense/>
+                    <v-text-field v-model="name" :rules="[nameRules]" label="Name" dense/>
                   </v-col>
                   <v-col v-if="meta.settings.synonyms" cols="12" sm="6" class="pb-0 remove-details-margin">
-                    <v-text-field v-model="synonyms" outlined label="Synonyms" hide-details dense/>
+                    <v-text-field v-model="synonyms" label="Synonyms" hide-details dense/>
                   </v-col>
                   <v-col v-if="meta.settings.country" cols="12" sm="6">
                     <v-autocomplete v-model="country" :items="countries" multiple 
-                      item-text="name" item-value="name" label="Country" outlined dense
+                      item-text="name" item-value="name" label="Country" dense
                       class="nation-chips hidden-close nation-select" hide-selected hide-details
                       :menu-props="{contentClass:'list-with-preview'}">
                       <template v-slot:selection="data">
                         <v-chip @click="data.select" @click:close="removeCountry(data.item)"
-                          v-bind="data.attrs" class="my-1" outlined close
+                          v-bind="data.attrs" class="my-1" outlined close small
                           :input-value="data.selected" close-icon="mdi-close"> 
                           <country-flag :country='data.item.code' size='normal'/> 
                           <span class="pl-2">{{ data.item.name }}</span>
@@ -57,12 +57,12 @@
                   <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
                     <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
-                      outlined multiple hide-selected hide-details dense
+                      multiple hide-selected hide-details dense
                       :label="getMeta(m.id).settings.name" item-value="id"
                       :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
                     > <!--  TODO fix filtering when type smth in search field -->
                       <template v-slot:selection="data">
-                        <v-chip v-bind="data.attrs" class="my-1 px-2"
+                        <v-chip v-bind="data.attrs" class="my-1 px-2" small
                           @click="data.select" :input-value="data.selected"
                           @click:close="removeItem(data.item.id,m.id)" close
                           :color="getColor(m.id,data.item.id)" 
@@ -94,25 +94,25 @@
                     </v-autocomplete>
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
-                      @input="setVal($event,m.id)" :value="values[m.id]" outlined
+                      @input="setVal($event,m.id)" :value="values[m.id]"
                       :label="getMeta(m.id).settings.name" hide-details dense
                       clearable @click:clear="setVal('', m.id)"/>
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
                       @input="setVal($event,m.id)" :value="values[m.id]" type="number"
-                      :label="getMeta(m.id).settings.name" hide-details dense outlined/>
+                      :label="getMeta(m.id).settings.name" hide-details dense/>
 
                     <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                       :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                       @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
-                      :label="getMeta(m.id).settings.name" outlined dense/>
+                      :label="getMeta(m.id).settings.name" dense/>
                     
                     <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
-                      inset :label="getMeta(m.id).settings.name" hide-details 
+                      :label="getMeta(m.id).settings.name" hide-details 
                       @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
                       
                     <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
-                      :value="values[m.id]" @click="calendarId=m.id,calendar=true" outlined dense
+                      :value="values[m.id]" @click="calendarId=m.id,calendar=true" dense
                       :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
                       clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
 
