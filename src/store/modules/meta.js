@@ -57,6 +57,22 @@ const specificMeta = [
       icon: 'alphabetical-variant'
     }
   },
+  {
+    id: 'synonyms',
+    type: 'specific',
+    settings: {
+      name: 'Synonyms',
+      icon: 'alphabetical'
+    }
+  },
+  {
+    id: 'country',
+    type: 'specific',
+    settings: {
+      name: 'Country',
+      icon: 'flag'
+    }
+  },
 ]
 
 dbMeta.defaults({ meta: [...specificMeta], cards: [] }).write()

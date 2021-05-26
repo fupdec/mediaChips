@@ -51,24 +51,24 @@
                 </v-col>
                 <v-col v-else cols="12">
                   <v-row>
-                    <v-col cols="4" xs="4" sm="3" md="2" v-for="(fp, i) in foundPerformers" :key="i">
+                    <v-col cols="4" xs="4" sm="3" md="2" v-for="(f, i) in found" :key="i">
                       <v-hover>
                         <template v-slot:default="{ hover }">
                           <v-card height="100%">
-                            <v-img :src="fp.img" :aspect-ratio="1" position="center top" 
+                            <v-img :src="f.img" :aspect-ratio="1" position="center top" 
                               style="background-color:#777;"
-                            > <country-flag :country='findCountryCode(fp.country)' size='normal'/>
+                            > <country-flag :country='findCountryCode(f.country)' size='normal'/>
                             </v-img>
                             <v-card-text>
-                              <div class="body-2">{{fp.name}}</div>
-                              <v-divider v-if="fp.aliases" class="my-2"></v-divider>
-                              <div class="caption" style="line-height:1;">{{fp.aliases}}</div>
+                              <div class="body-2">{{f.name}}</div>
+                              <v-divider v-if="f.synonyms" class="my-2"></v-divider>
+                              <div class="caption" style="line-height:1;">{{f.synonyms}}</div>
                             </v-card-text>
                             <v-fade-transition>
                               <v-overlay v-if="hover" absolute color="secondary">
-                                <v-btn v-if="resultFromFreeones" @click="getInfo(fp.link, 'freeonce')" color="primary" :loading="searchInProgress">
+                                <v-btn v-if="resultFromFreeones" @click="getInfo(f.link, 'freeonce', f.name)" color="primary" :loading="searchInProgress">
                                   <v-icon left>mdi-information-variant</v-icon> Get info </v-btn>
-                                <v-btn v-else @click="getInfo(fp.link, 'iafd')" color="primary" :loading="searchInProgress">
+                                <v-btn v-else @click="getInfo(f.link, 'iafd', f.name)" color="primary" :loading="searchInProgress">
                                   <v-icon left>mdi-information-variant</v-icon> Get info </v-btn>
                               </v-overlay>
                             </v-fade-transition>
@@ -117,7 +117,7 @@
                 <tbody>
                   <tr v-for="(value, key, i) in transfer.found" :key="i+transferedKey">
                     <td v-if="getMetaByField(key)" class="text-center pl-8">
-                      <v-btn @click="restore(key)" icon small class="restore-btn" color="primary"> <v-icon>mdi-restore</v-icon> </v-btn> 
+                      <v-btn @click="restore(key)" icon small class="restore-btn" color="secondary"> <v-icon>mdi-restore</v-icon> </v-btn> 
                       <v-icon size="20">mdi-{{ getMeta(getMetaByField(key).id).settings.icon }}</v-icon>
                       {{ getMeta(getMetaByField(key).id).settings.name }}
                     </td>
@@ -127,7 +127,7 @@
                     
                     <td v-if="getMetaByField(key)" class="text-center pr-8">
                       <span>{{ transfer.current[key] }}</span> 
-                      <v-btn @click="transferValue(key, value)" icon small class="transfer-btn" color="primary">
+                      <v-btn @click="transferValue(key, value)" icon small class="transfer-btn" color="secondary">
                         <v-icon>mdi-transfer-left</v-icon>
                       </v-btn>
                     </td>
@@ -166,9 +166,15 @@ export default {
   mixins: [Countries, Scrapers, MetaGetters], 
   beforeMount() {
     this.queryString = this.name
+    if (this.meta.settings.synonyms) this.specificMeta.push('synonyms')
+    if (this.meta.settings.country) this.specificMeta.push('country')
   },
   mounted () {
     this.$nextTick(function () {
+      // console.log(this.values)
+      // this.transfer.found.name = 'fas' 
+      // this.dialogTransferInfo = true
+      // this.initCurrentValues()
     })
   },
   data: () => ({
@@ -176,7 +182,7 @@ export default {
     searchInProgress: false,
     notFound: false,
     resultFromFreeones: false,
-    foundPerformers: [],
+    found: [],
     tooltipCopyName: false,
     dialogTransferInfo: false,
     transfer: {
@@ -184,6 +190,7 @@ export default {
       found: {},
     },
     transferedKey: Date.now(),
+    specificMeta: ['name'],
   }),
   computed: {
     pathToUserData() { return this.$store.getters.getPathToUserData },
@@ -191,6 +198,10 @@ export default {
   methods: {
     initCurrentValues() { 
       for (const key in this.transfer.found) {
+        if (this.specificMeta.includes(key)) {
+          this.transfer.current[key] = this.values[key]
+          continue
+        }
         let meta = this.getMetaByField(key)
         if (meta) this.transfer.current[key] = this.values[meta.id]
       }
@@ -214,7 +225,10 @@ export default {
     closeDialog() { this.$emit('closeScraper')},
     applyTransfered() { this.$emit('getValues', this.transfer.current) },
     applyFounded() { this.$emit('getValues', this.transfer.found) },
-    getMetaByField(field) { return _.find(this.meta.settings.metaInCard, i=>i.scraperField===field) },
+    getMetaByField(field) { 
+      if (this.specificMeta.includes(field)) return {id: field}
+      return _.find(this.meta.settings.metaInCard, i=>i.scraperField===field) 
+    },
     copyNameToClipboard() {
       this.tooltipCopyName = true
       clipboard.writeText(this.name)

@@ -20,12 +20,12 @@ export default {
       axios.get(query).then((response) => {
         if (response.status !== 200) return
         this.searchInProgress = false
-        this.foundPerformers = []
+        this.found = []
         const html = response.data
         const $ = cheerio.load(html)
         if (scraper == 'freeonce') this.freeonce($)
         if (scraper == 'iafd') this.iafd($)
-        this.showFindError = this.foundPerformers.length==0
+        this.showFindError = this.found.length==0
       }, (error) => {
         this.searchInProgress = false
         this.showFindError = true
@@ -42,7 +42,7 @@ export default {
         p.link = p.name.replace(' ', '-').toLowerCase()
         let flag =  $(e).find('.flag-icon').attr('title') || ''
         if (flag) p.country = flag.trim()
-        this.foundPerformers.push(p)
+        this.found.push(p)
       })
     },
     iafd($) {
@@ -52,14 +52,13 @@ export default {
         p.link = $(e).find('td:nth-child(2) a').attr('href')
         p.img = $(e).find('img').attr('src')
         p.name = $(e).find('td:nth-child(2) a').text().trim()
-        p.aliases = $(e).find('td:nth-child(3)').text().trim()
+        p.synonyms = $(e).find('td:nth-child(3)').text().trim()
         p.country = ''
-        this.foundPerformers.push(p)
+        this.found.push(p)
       })
     },
-    getInfo(meta, scraper) {
+    getInfo(meta, scraper, name) {
       this.searchInProgress = true
-      this.foundPerformers = []
       let query = ''
       if (scraper == 'freeonce') query = `https://www.freeones.com/${meta}/bio`
       if (scraper == 'iafd') query = `http://www.iafd.com${meta}`
@@ -70,20 +69,20 @@ export default {
         this.transfer.found = {}
         const html = response.data
         const $ = cheerio.load(html)
-        if (scraper == 'freeonce') this.freeonesMeta($)
-        if (scraper == 'iafd') this.iafdMeta($)
+        if (scraper == 'freeonce') this.freeonesMeta($, name)
+        if (scraper == 'iafd') this.iafdMeta($, name)
         this.initCurrentValues()
         this.dialogTransferInfo = true
-        // this.closeDialog()
       }, (error) => {
         this.searchInProgress = false
-        // this.closeDialog()
         this.$store.dispatch('setNotification', {type:'error', text:`Can't find info for "${this.queryString}"`})
       })
     },
-    freeonesMeta($) {
+    freeonesMeta($, name) {
       let found = {}
-      found.aliases = $('[data-test="p_aliases"]').text().trim()
+      found.name = name
+      found.synonyms = $('[data-test="link-country"]').text().trim()
+      found.synonyms = $('[data-test="p_aliases"]').text().trim()
       let yearsActive = []
       $('.timeline-horizontal .m-0').each((i,elem)=>{yearsActive[i] = $(elem).text().trim()}) 
       if (yearsActive[0]) if (!yearsActive[0].match(/\D*/)[0]) found.start = +yearsActive[0] // if not contains words
@@ -130,6 +129,12 @@ export default {
       this.transfer.found = _.cloneDeep(found)
     },
     iafdMeta($) {
+      // TODO create validation for sraped info. if item in array not exist in db then add this item
+      function getBioString(string, bio) {
+        let val = _.filter(bio, i=>i.heading.toLowerCase().includes(string))[0].biodata
+        if (val!=='No known aliases' && val!=='No data') return val
+        else return false
+      }
       let bio = []
       $('.bioheading').each((i,heading) => {
         bio.push({
@@ -137,80 +142,65 @@ export default {
           biodata: $('.bioheading + .biodata').eq(i).text().trim()
         })
       })
-      if (this.getBioString('performer', bio)) {
-        this.transfer.found.aliases = this.getBioString('performer', bio)
-      }
-      if (this.getBioString('ethnicity', bio)) {
-        let ethnicity = this.getBioString('ethnicity', bio).split(',')
+      if (getBioString('performer', bio)) this.transfer.found.synonyms = getBioString('performer', bio)
+      if (getBioString('ethnicity', bio)) {
+        let ethnicity = getBioString('ethnicity', bio).split(',')
         let foundEth = []
         let performerInfoEthnicity = this.$store.getters.settings.get('performerInfoEthnicity').value()
         for (let i=0; i<ethnicity.length; i++) {
-          if ( performerInfoEthnicity.includes(ethnicity[i]) ) {
-            foundEth.push(ethnicity[i])
-          }
+          if ( performerInfoEthnicity.includes(ethnicity[i]) ) foundEth.push(ethnicity[i])
         }
-        if (foundEth.length) {
-          this.transfer.found.ethnicity = foundEth
-        }
+        if (foundEth.length) this.transfer.found.ethnicity = foundEth
       }
-      if (this.getBioString('hair', bio)) {
-        let hair = this.getBioString('hair', bio).split(',')
+      if (getBioString('hair', bio)) {
+        let hair = getBioString('hair', bio).split(',')
         let foundHair = []
         let performerInfoHair = this.$store.getters.settings.get('performerInfoHair').value()
         for (let i=0; i<hair.length; i++) {
-          if ( performerInfoHair.includes(hair[i]) ) {
-            foundHair.push(hair[i])
-          }
+          if ( performerInfoHair.includes(hair[i]) ) foundHair.push(hair[i])
         }
-        if (foundHair.length) {
-          this.transfer.found.hair = foundHair
-        }
+        if (foundHair.length) this.transfer.found.hair = foundHair
       }
       let years
-      if (this.getBioString('years', bio)) {
-        years = this.getBioString('years', bio)
+      if (getBioString('years', bio)) {
+        years = getBioString('years', bio)
         this.transfer.found.start = years.match(/\d{4}/)[0]  
         if ( years.match(/\d{4}/)[1] !== undefined ) {
           this.transfer.found.end = years.match(/\d{4}/)[1]
         }
       }
-      if (this.getBioString('birthday', bio)) {
-        let year = this.getBioString('birthday', bio).match(/\d{4}/)[0]
-        let day = this.getBioString('birthday', bio).match(/\d{2}/)[0]
-        let month = this.getBioString('birthday', bio).split(' ')[0]
+      if (getBioString('birthday', bio)) {
+        let year = getBioString('birthday', bio).match(/\d{4}/)[0]
+        let day = getBioString('birthday', bio).match(/\d{2}/)[0]
+        let month = getBioString('birthday', bio).split(' ')[0]
         month = this.months.indexOf(month.toLowerCase())+1
         if (+month < 10) month = "0"+month.toString()
         this.transfer.found.birthday = `${year}-${month}-${day}`
       }
-      if (this.getBioString('height', bio)) {
-        this.transfer.found.height = this.getBioString('height', bio).match(/\d{3}/)[0]
+      if (getBioString('height', bio)) {
+        this.transfer.found.height = getBioString('height', bio).match(/\d{3}/)[0]
       }
-      if (this.getBioString('weight', bio)) {
-        this.transfer.found.weight = this.getBioString('weight', bio).match(/\d{2}/g)[1]
+      if (getBioString('weight', bio)) {
+        this.transfer.found.weight = getBioString('weight', bio).match(/\d{2}/g)[1]
       }
-      if (this.getBioString('measurements', bio)) {
-        let sizes = this.getBioString('measurements', bio).match(/\d{2}/g)
-        let cups = this.getBioString('measurements', bio).split('-')[0]
+      if (getBioString('measurements', bio)) {
+        let sizes = getBioString('measurements', bio).match(/\d{2}/g)
+        let cups = getBioString('measurements', bio).split('-')[0]
         this.transfer.found.cups = [ cups.match(/\D{1,}/)[0] ]
         this.transfer.found.bra = sizes[0]
         this.transfer.found.waist = sizes[1]
         this.transfer.found.hip = sizes[2]
       }
-      if (this.getBioString('birthplace', bio)) {
+      if (getBioString('birthplace', bio)) {
         let countries = this.countries.map(c=>c.name)
-        if (countries.includes(this.getBioString('birthplace', bio))) {
-          this.transfer.found.country = [this.getBioString('birthplace', bio)]
+        if (countries.includes(getBioString('birthplace', bio))) {
+          this.transfer.found.country = [getBioString('birthplace', bio)]
         }
-        if (this.getBioString('nationality', bio).toLowerCase().includes('america')) {
+        if (getBioString('nationality', bio).toLowerCase().includes('america')) {
           this.transfer.found.country = ['United States']
         }
       }
       this.transfer.found.category = ['Pornstar']
-    },
-    getBioString(string, bio) {
-      let val = _.filter(bio, i=>i.heading.toLowerCase().includes(string))[0].biodata
-      if (val!=='No known aliases' && val!=='No data') return val
-      else return false
     },
   },
 }

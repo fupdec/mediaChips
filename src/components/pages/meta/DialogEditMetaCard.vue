@@ -129,7 +129,7 @@
       <v-color-picker v-model="color" hide-mode-switch/>
     </v-dialog>
 
-    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="values"
+    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="valuesForScraper"
       @closeScraper="dialogScraper=false" @getValues="getSraperValues($event)"/>
   </div>
 </template>
@@ -192,6 +192,12 @@ export default {
       let date = new Date(this.card.edit)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
+    valuesForScraper() {
+      let values = _.cloneDeep(this.values)
+      values.name = this.name
+      if (this.meta.settings.synonyms) values.synonyms = this.synonyms
+      return values
+    },
   },
   methods: {
     parseMetaInCard() {
@@ -243,8 +249,15 @@ export default {
       this.$store.commit('updateMetaCards', [this.card.id])
     },
     getSraperValues(values) { 
-      this.dialogScraper = false 
+      this.dialogScraper = false
+      let specificMeta = ['name']
+      if (this.meta.settings.synonyms) specificMeta.push('synonyms')
+      if (this.meta.settings.country) specificMeta.push('country')
       for (const key in values) {
+        if (specificMeta.includes(key)) {
+          this[key] = values[key]
+          continue
+        }
         let meta = _.find(this.meta.settings.metaInCard, i=>i.scraperField===key)
         if (meta) this.values[meta.id] = values[key]
       }
