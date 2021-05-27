@@ -84,22 +84,20 @@
         </vuescroll>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogTransferInfo" scrollable max-width="860">
+    <v-dialog v-model="dialogTransferInfo" scrollable max-width="960">
       <v-card>
         <v-toolbar color="primary">
           <div class="headline">Transfer information</div>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogTransferInfo=false" outlined>Cancel</v-btn>
-          <v-btn @click="applyTransfered" class="mx-4" outlined> 
-            <v-icon left>mdi-transfer</v-icon> Apply transfered</v-btn>
-          <v-btn @click="applyFounded" outlined> 
-            <v-icon left>mdi-magnify</v-icon> Apply found </v-btn>
+          <v-btn @click="dialogTransferInfo=false" outlined><v-icon left>mdi-close</v-icon>Cancel</v-btn>
+          <v-btn @click="applyTransfered" class="mx-4" outlined><v-icon left>mdi-transfer</v-icon>Apply transfered</v-btn>
+          <v-btn @click="applyFounded" outlined><v-icon left>mdi-magnify</v-icon>Apply found</v-btn>
         </v-toolbar>
         <v-card-actions>
-          <v-btn @click="initCurrentValues" small color="secondary" class="mx-4 mt-4">
+          <v-btn @click="initCurrentValues" small rounded color="secondary" class="mt-4 pr-4">
             <v-icon left>mdi-restore</v-icon> Restore all </v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="transferAll" small color="secondary" class="mx-4 mt-4">
+          <v-btn @click="transferAll" small rounded color="secondary" class="mt-4 pr-4">
             <v-icon left>mdi-transfer-left</v-icon> Transfer all </v-btn>
         </v-card-actions>
         <vuescroll>
@@ -109,9 +107,9 @@
                 <thead>
                   <tr>
                     <th class="text-center pl-8" style="width:20%">Meta</th>
-                    <th class="text-center" style="width:20%">Parameter</th>
-                    <th class="text-center pr-8" style="width:30%">Current</th>
-                    <th class="text-center" style="width:30%">Found</th>
+                    <th class="text-center" style="width:10%">Parameter</th>
+                    <th class="text-center pr-8" style="width:35%">Current</th>
+                    <th class="text-center" style="width:35%">Found</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -131,7 +129,7 @@
                         <v-icon>mdi-transfer-left</v-icon>
                       </v-btn>
                     </td>
-                    <td v-else class="text-center pr-8">-</td>
+                    <td v-else class="text-center red--text pr-8">Not available</td>
                     
                     <td class="text-center">{{ value }}</td>
                   </tr>
@@ -142,11 +140,42 @@
         </vuescroll>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="dialogNonexistent" scrollable persistent max-width="600">
+      <v-card>
+        <v-toolbar color="warning">
+          <div class="headline">Add new items?</div>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogNonexistent=false" class="mx-4" outlined><v-icon left>mdi-close</v-icon>No</v-btn>
+          <v-btn @click="addNewItems" outlined><v-icon left>mdi-check</v-icon>Yes</v-btn>
+        </v-toolbar>
+        <vuescroll>
+          <v-card-text>
+            <v-alert type="warning" text dense outlined>The following items have not been found in the database. <br> Do you want to add them?</v-alert>
+            <div v-for="(vals, type, j) in nonexistent" :key="j">
+              <div v-if="nonexistent[type].length">
+                <div class="body-1 my-2">For {{type}} meta:</div>
+                <v-divider class="mb-2"></v-divider>
+                <div v-for="(valObj, indexObj) in nonexistent[type]" :key="indexObj">
+                  <div v-for="(items, metaId, j) in valObj" :key="j" class="d-flex align-center justify-space-between"> 
+                    <div>
+                      <v-icon left>mdi-{{getMeta(metaId).settings.icon}}</v-icon>
+                      <span>{{getMeta(metaId).settings.name}}</span><br>
+                    </div>
+                    <div><v-chip v-for="(item, itemIndex) in items" :key="itemIndex" class="ma-1">{{item}}</v-chip></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </v-card-text>
+        </vuescroll>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 
 <script>
+const shortid = require('shortid')
 const { clipboard } = require('electron')
 
 import vuescroll from 'vuescroll'
@@ -171,10 +200,7 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
-      // console.log(this.values)
-      // this.transfer.found.name = 'fas' 
-      // this.dialogTransferInfo = true
-      // this.initCurrentValues()
+      this.initCurrentValues()
     })
   },
   data: () => ({
@@ -191,25 +217,40 @@ export default {
     },
     transferedKey: Date.now(),
     specificMeta: ['name'],
+    dialogNonexistent: false,
+    nonexistent: { simple: [], complex: [] }
   }),
   computed: {
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
-    initCurrentValues() { 
+    initCurrentValues() {
       for (const key in this.transfer.found) {
-        if (this.specificMeta.includes(key)) {
-          this.transfer.current[key] = this.values[key]
-          continue
-        }
-        let meta = this.getMetaByField(key)
-        if (meta) this.transfer.current[key] = this.values[meta.id]
+        if (this.specificMeta.includes(key)) { this.transfer.current[key] = this.values[key]; continue }
+        let metaItem = this.getMetaByField(key)
+        if (!metaItem) continue
+        this.getMetaNamesAndUpdateCurrent(key)
       }
       this.transferedKey = Date.now()
     },
-    restore(key) { 
-      this.transfer.current[key] = this.values[this.getMetaByField(key).id] 
+    restore(key) {
+      this.getMetaNamesAndUpdateCurrent(key)
       this.transferedKey = Date.now()
+    },
+    getMetaNamesAndUpdateCurrent(key) { 
+      let metaItem = this.getMetaByField(key)
+      let meta = this.getMeta(metaItem.id)
+      let values = this.values[metaItem.id]
+      if (meta.type === 'simple') {
+        if (meta.dataType === 'array') {
+          let arr = values.map(id => _.find(meta.settings.items, {id}).name)
+          this.transfer.current[key] = arr
+        } else this.transfer.current[key] = values
+      } else if (meta.type === 'complex') {
+        let metaCards = this.$store.getters.metaCards
+        let arr = values.map(id => metaCards.find({id}).value().meta.name)
+        this.transfer.current[key] = arr
+      }
     },
     transferValue(key, value) { 
       this.transfer.current[key] = value
@@ -223,8 +264,73 @@ export default {
       this.transferedKey = Date.now()
     },
     closeDialog() { this.$emit('closeScraper')},
-    applyTransfered() { this.$emit('getValues', this.transfer.current) },
-    applyFounded() { this.$emit('getValues', this.transfer.found) },
+    validateNonexistent(typeOfTransferedInfo) { 
+      this.nonexistent = { simple: [], complex: [] }
+      let values = this.transfer[typeOfTransferedInfo]
+      let metaCards = this.$store.getters.metaCards
+      for (const key in values) {
+        if (this.specificMeta.includes(key)) continue
+        let metaItem = _.find(this.meta.settings.metaInCard, i=>i.scraperField===key)
+        if (!metaItem) continue // if not assigned
+        let meta = this.getMeta(metaItem.id)
+        let value = values[key]
+        let nonexistent = []
+        if (meta.type === 'simple' && meta.dataType !== 'array') continue
+        for (let i = 0; i < value.length; i++) {
+          let found
+          if (meta.type === 'simple') found = _.find(meta.settings.items, j=>j.name.trim().toLowerCase()===value[i].trim().toLowerCase())
+          else found = metaCards.find(j=>j.meta.name.trim().toLowerCase()===value[i].trim().toLowerCase()).value()
+          if (!found) nonexistent.push(value[i])
+        }
+        if (nonexistent.length) this.nonexistent[meta.type].push({[meta.id]:nonexistent})
+      }
+      if (this.nonexistent.simple.length || this.nonexistent.complex.length) this.dialogNonexistent = true
+    },
+    addNewItems() {
+      let simpleItems = this.nonexistent.simple
+      let complexItems = this.nonexistent.complex
+      if (simpleItems.length) {
+        for (let i = 0; i < simpleItems.length; i++) {
+          const item = simpleItems[i]
+          for (let metaId in item) {
+            const newItems = item[metaId]
+            for (let j = 0; j < newItems.length; j++) {
+              const newItemName = newItems[j]
+              const newItemId = shortid.generate()
+              const newItemGenerated = { id: newItemId, name: newItemName }
+              this.$store.getters.meta.find({id:metaId}).get('settings.items').push(newItemGenerated).write()
+            }
+          }
+        }
+      }
+      if (complexItems.length) {
+        for (let i = 0; i < complexItems.length; i++) {
+          const item = complexItems[i]
+          for (let metaId in item) {
+            const newItems = item[metaId]
+            for (let j = 0; j < newItems.length; j++) {
+              const newItemName = newItems[j]
+              const newItemId = shortid.generate()
+              const newCard = { id:newItemId, metaId, meta:{name:newItemName} }
+              this.$store.dispatch('addMetaCard', newCard)
+            }
+          }
+        }
+      }
+      this.$emit('updateKey') 
+      this.nonexistent = { simple: [], complex: [] }
+      this.dialogNonexistent = false
+    },
+    applyTransfered() {
+      this.validateNonexistent('current') 
+      if (this.nonexistent.simple.length || this.nonexistent.complex.length) return
+      this.$emit('getValues', this.transfer.current) 
+    },
+    applyFounded() { 
+      this.validateNonexistent('found') 
+      if (this.nonexistent.simple.length || this.nonexistent.complex.length) return
+      this.$emit('getValues', this.transfer.found) 
+    },
     getMetaByField(field) { 
       if (this.specificMeta.includes(field)) return {id: field}
       return _.find(this.meta.settings.metaInCard, i=>i.scraperField===field) 

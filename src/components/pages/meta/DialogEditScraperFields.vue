@@ -82,8 +82,8 @@ export default {
     scraperFields: [],
     defaultScraperFields: [
       {name: 'birthday', type: 'date'},
-      {name: 'career start', type: 'number'},
-      {name: 'career end', type: 'number'},
+      {name: 'career_start', type: 'number'}, // TODO change it to one word
+      {name: 'career_end', type: 'number'}, // TODO change it to one word
       {name: 'ethnicity', type: 'array'},
       {name: 'eyes', type: 'array'},
       {name: 'hair', type: 'array'},

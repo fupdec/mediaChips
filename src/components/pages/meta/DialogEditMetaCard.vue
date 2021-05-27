@@ -54,7 +54,7 @@
                     </v-autocomplete>
                   </v-col>
 
-                  <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
+                  <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" sm="6">
                     <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
                       multiple hide-selected hide-details dense
@@ -151,7 +151,7 @@
     </v-dialog>
 
     <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="valuesForScraper"
-      @closeScraper="dialogScraper=false" @getValues="getScraperValues($event)"/>
+      @closeScraper="dialogScraper=false" @getValues="getScraperValues($event)" @updateKey="key=Date.now()"/>
   </div>
 </template>
 
@@ -198,6 +198,7 @@ export default {
     color: '#777777',
     dialogScraper: false,
     tooltipCopyName: false,
+    key: Date.now(),
   }),
   computed: {
     metaCardId() { return this.$route.query.cardId },
@@ -284,13 +285,23 @@ export default {
       if (this.meta.settings.synonyms) specificMeta.push('synonyms')
       if (this.meta.settings.country) specificMeta.push('country')
       for (const key in values) {
-        if (specificMeta.includes(key)) {
-          this[key] = values[key]
-          continue
+        if (specificMeta.includes(key)) { this[key] = values[key]; continue }
+        let metaItem = _.find(this.meta.settings.metaInCard, i=>i.scraperField===key)
+        if (!metaItem) continue // if not assigned
+        let meta = this.getMeta(metaItem.id)
+        if (meta.type === 'simple') {
+          if (meta.dataType === 'array') {
+            let arr = values[key].map(name => _.find(meta.settings.items, {name}).id)
+            this.values[meta.id] = arr
+          } else if (meta.dataType === 'number') this.values[meta.id] = Number(values[key])
+          else this.values[meta.id] = values[key]
+        } else if (meta.type === 'complex') {
+          let metaCards = this.$store.getters.metaCards
+          let arr = values[key].map(name => metaCards.find(card=>card.meta.name===name).value().id)
+          this.values[meta.id] = arr
         }
-        let meta = _.find(this.meta.settings.metaInCard, i=>i.scraperField===key)
-        if (meta) this.values[meta.id] = values[key]
       }
+      console.log(this.values)
     },
     copyNameToClipboard() {
       this.tooltipCopyName = true

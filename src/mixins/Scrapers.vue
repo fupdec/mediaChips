@@ -85,8 +85,8 @@ export default {
       found.synonyms = $('[data-test="p_aliases"]').text().trim()
       let yearsActive = []
       $('.timeline-horizontal .m-0').each((i,elem)=>{yearsActive[i] = $(elem).text().trim()}) 
-      if (yearsActive[0]) if (!yearsActive[0].match(/\D*/)[0]) found.start = +yearsActive[0] // if not contains words
-      if (yearsActive[1]) if (!yearsActive[1].match(/\D*/)[0]) found.end = +yearsActive[1] // if not contains words like "Now"
+      if (yearsActive[0]) if (!yearsActive[0].match(/\D*/)[0]) found.career_start = +yearsActive[0] // if not contains words
+      if (yearsActive[1]) if (!yearsActive[1].match(/\D*/)[0]) found.career_end = +yearsActive[1] // if not contains words like "Now"
       let countries = this.countries.map(c=>c.name)
       if ( countries.includes($('[data-test="link-country"] span').text().trim()) )
         found.country = [$('[data-test="link-country"] span').text().trim()]
@@ -129,7 +129,6 @@ export default {
       this.transfer.found = _.cloneDeep(found)
     },
     iafdMeta($) {
-      // TODO create validation for sraped info. if item in array not exist in db then add this item
       function getBioString(string, bio) {
         let val = _.filter(bio, i=>i.heading.toLowerCase().includes(string))[0].biodata
         if (val!=='No known aliases' && val!=='No data') return val
@@ -143,31 +142,13 @@ export default {
         })
       })
       if (getBioString('performer', bio)) this.transfer.found.synonyms = getBioString('performer', bio)
-      if (getBioString('ethnicity', bio)) {
-        let ethnicity = getBioString('ethnicity', bio).split(',')
-        let foundEth = []
-        let performerInfoEthnicity = this.$store.getters.settings.get('performerInfoEthnicity').value()
-        for (let i=0; i<ethnicity.length; i++) {
-          if ( performerInfoEthnicity.includes(ethnicity[i]) ) foundEth.push(ethnicity[i])
-        }
-        if (foundEth.length) this.transfer.found.ethnicity = foundEth
-      }
-      if (getBioString('hair', bio)) {
-        let hair = getBioString('hair', bio).split(',')
-        let foundHair = []
-        let performerInfoHair = this.$store.getters.settings.get('performerInfoHair').value()
-        for (let i=0; i<hair.length; i++) {
-          if ( performerInfoHair.includes(hair[i]) ) foundHair.push(hair[i])
-        }
-        if (foundHair.length) this.transfer.found.hair = foundHair
-      }
+      if (getBioString('ethnicity', bio)) this.transfer.found.ethnicity = getBioString('ethnicity', bio).split(',')
+      if (getBioString('hair', bio)) this.transfer.found.hair = getBioString('hair', bio).split(',')
       let years
       if (getBioString('years', bio)) {
         years = getBioString('years', bio)
-        this.transfer.found.start = years.match(/\d{4}/)[0]  
-        if ( years.match(/\d{4}/)[1] !== undefined ) {
-          this.transfer.found.end = years.match(/\d{4}/)[1]
-        }
+        this.transfer.found.career_start = years.match(/\d{4}/)[0]  
+        if ( years.match(/\d{4}/)[1] !== undefined ) this.transfer.found.career_end = years.match(/\d{4}/)[1]
       }
       if (getBioString('birthday', bio)) {
         let year = getBioString('birthday', bio).match(/\d{4}/)[0]
@@ -177,12 +158,8 @@ export default {
         if (+month < 10) month = "0"+month.toString()
         this.transfer.found.birthday = `${year}-${month}-${day}`
       }
-      if (getBioString('height', bio)) {
-        this.transfer.found.height = getBioString('height', bio).match(/\d{3}/)[0]
-      }
-      if (getBioString('weight', bio)) {
-        this.transfer.found.weight = getBioString('weight', bio).match(/\d{2}/g)[1]
-      }
+      if (getBioString('height', bio)) this.transfer.found.height = getBioString('height', bio).match(/\d{3}/)[0]
+      if (getBioString('weight', bio)) this.transfer.found.weight = getBioString('weight', bio).match(/\d{2}/g)[1]
       if (getBioString('measurements', bio)) {
         let sizes = getBioString('measurements', bio).match(/\d{2}/g)
         let cups = getBioString('measurements', bio).split('-')[0]
