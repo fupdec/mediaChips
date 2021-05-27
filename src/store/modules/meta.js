@@ -50,6 +50,14 @@ const specificMeta = [
     }
   },
   {
+    id: 'color',
+    type: 'specific',
+    settings: {
+      name: 'Color',
+      icon: 'palette'
+    }
+  },
+  {
     id: 'name',
     type: 'specific',
     settings: {
@@ -84,6 +92,7 @@ const Meta = {
     page: 1,
     sortBy: 'name',
     sortDirection: 'asc',
+    visibility: {},
     firstChar: [],
     filters: [],
     filteredMeta: [],

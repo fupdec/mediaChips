@@ -81,7 +81,7 @@
                           <span v-if="getMeta(m.id).settings.favorite">
                             <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
                           </span>
-                          <span v-if="getMeta(m.id).settings.chipColor">
+                          <span v-if="getMeta(m.id).settings.color">
                             <v-icon :color="data.item.meta.color || ''" left small>
                               mdi-{{getMeta(m.id).settings.icon}}</v-icon>
                           </span>
@@ -117,7 +117,7 @@
                       clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
 
                   </v-col>
-                  <v-col v-if="meta.settings.chipColor" cols="12" sm="6">
+                  <v-col v-if="meta.settings.color" cols="12" sm="6">
                     <v-btn @click="dialogColor=true" :color="color">Pick another color for card</v-btn>
                   </v-col>
                 </v-row>

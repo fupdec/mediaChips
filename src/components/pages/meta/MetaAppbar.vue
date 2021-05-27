@@ -133,18 +133,49 @@
                 </v-btn>
               </v-badge>
             </template>
-            <span>Card size</span>
+            <span>Card Size</span>
           </v-tooltip>
         </template>
         <v-card width="300">
           <v-toolbar color="primary" height="30">
-            <span class="headline">Card size</span>
+            <span class="headline">Card Size</span>
             <v-spacer></v-spacer>
             <v-icon>mdi-card-bulleted-settings</v-icon>
           </v-toolbar>
           <v-slider :value="meta.state.cardSize" min="1" max="5" step="1" class="pa-6"
             @input="updateMetaState('cardSize', $event)" :tick-labels="cardSizes"/>
         </v-card>
+      </v-menu>
+
+      <v-menu bottom offset-y min-width="160">
+        <template #activator="{ on: onMenu }">
+          <v-tooltip bottom>
+            <template #activator="{ on: onTooltip }">
+              <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
+                <v-icon>mdi-dots-vertical</v-icon>
+              </v-btn>
+            </template>
+            <span>Visibility</span>
+          </v-tooltip>
+        </template>
+        
+        <v-list dense class="context-menu">
+          <v-list-item v-for="(s) in specificMeta" :key="s" link @click="toggleVisibility(s)">
+            <v-list-item-title> 
+              <v-icon left size="18">mdi-{{getMeta(s).settings.icon}}</v-icon>
+              {{getMeta(s).settings.name}}
+            </v-list-item-title>
+            <v-icon size="20" class="pl-10" :color="visibility[s]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+          </v-list-item>
+          <v-divider class="ma-2"></v-divider>
+          <v-list-item v-for="(mc,i) in metaInCard" :key="i" link @click="toggleVisibility(mc.id)">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
+              {{getMeta(mc.id).settings.name}}
+            </v-list-item-title>
+            <v-icon size="20" class="pl-10" :color="visibility[mc.id]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+          </v-list-item>
+        </v-list>
       </v-menu>
     </div>
 	</div>
@@ -164,6 +195,8 @@ export default {
   mixins: [MetaGetters],
   beforeMount() {
     this.initSort()
+    this.initSpecificMeta()
+    this.initVisibility()
   },
   mounted() {
     this.$nextTick(function () {
@@ -195,6 +228,7 @@ export default {
     ],
     sortBy: 'name',
     cardSizes: ['XS','S','M','L','XL'],
+    specificMeta: ['name'],
   }),
   computed: {
     sortIcon() {
@@ -243,8 +277,23 @@ export default {
       else return false
     },
     sortDirection() { return this.meta.state.sortDirection || 'asc' },
+    metaInCard() { return this.meta.settings.metaInCard || [] },
+    visibility() { return this.$store.state.Meta.visibility },
   },
   methods: {
+    initSpecificMeta() {
+      if (this.meta.settings.synonyms) this.specificMeta.push('synonyms')
+      if (this.meta.settings.favorite) this.specificMeta.push('favorite')
+      if (this.meta.settings.rating) this.specificMeta.push('rating')
+      if (this.meta.settings.country) this.specificMeta.push('country')
+      if (this.meta.settings.color) this.specificMeta.push('color')
+    },
+    initVisibility() {
+      let visibility = {}
+      for (let i = 0; i < this.specificMeta.length; i++) visibility[this.specificMeta[i]] = true
+      for (let i = 0; i < this.metaInCard.length; i++) visibility[this.metaInCard[i].id] = true
+      this.$store.state.Meta.visibility = {...visibility, ...this.meta.state.visibility}
+    },
     addNewCard() {
       this.$refs.formAddCard.validate()
       if (!this.validCardName) return
@@ -310,7 +359,7 @@ export default {
     initSort() {
       this.sortBy = this.meta.state.sortBy || 'name'
       let color = { name: 'color', icon: 'palette', tip: 'Color', }
-      if (this.meta.settings.chipColor) this.sort.push(color)
+      if (this.meta.settings.color) this.sort.push(color)
     },
     changeSortBy(e) { this.sortBy = e },
     sortMetaCards() {
@@ -334,6 +383,11 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
+    },
+    toggleVisibility(item) {
+      let value = !this.visibility[item]
+      this.$store.state.Meta.visibility[item] = value
+      this.$store.getters.meta.find({id:this.meta.id}).get('state.visibility').set(item,value).write()
     },
   },
   watch: {

@@ -131,13 +131,13 @@
                     <div class="overline text-center mb-4">Chips Appearance</div>
                     <div class="d-flex justify-space-around">
                       <div class="d-flex justify-space-between">
+                        <v-checkbox v-model="settings.color" label="Color" class="my-0 mr-6" hide-details/>
                         <v-checkbox v-model="settings.chipLabel" label="Label" class="my-0 mr-6" hide-details/>
                         <v-checkbox v-model="settings.chipOutlined" label="Outlined" class="my-0 mr-6" hide-details/>
-                        <v-checkbox v-model="settings.chipColor" label="Color" class="my-0" hide-details/>
                       </div>
                       <v-spacer></v-spacer>
                       <v-chip :label="settings.chipLabel" :outlined="settings.chipOutlined" 
-                        :color="settings.chipColor?getRandomColor():''">Example chip</v-chip>
+                        :color="settings.color?getRandomColor():''">Example chip</v-chip>
                     </div>
                   </v-card>
                 </v-col>
@@ -242,7 +242,7 @@ export default {
       imageTypes: ['main'],
       chipLabel: false,
       chipOutlined: false,
-      chipColor: false,
+      color: false,
       synonyms: false,
       favorite: true,
       rating: false,

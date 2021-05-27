@@ -94,7 +94,7 @@
                     <span v-if="getMeta(filters[i].by).settings.favorite">
                       <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
                     </span>
-                    <span v-if="getMeta(filters[i].by).settings.chipColor">
+                    <span v-if="getMeta(filters[i].by).settings.color">
                       <v-icon :color="data.item.meta.color || ''" left small>
                         mdi-{{getMeta(filters[i].by).settings.icon}}</v-icon>
                     </span>

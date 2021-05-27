@@ -4,13 +4,14 @@
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
       <div v-if="meta.settings.images" class="img-container">
-        <div v-if="meta.settings.chipColor" class="meta-color" :style="`border-color: ${getColor(metaId,card.id)} transparent transparent transparent;`"/>
+        <div v-if="meta.settings.color && visibility.color" class="meta-color" :style="`border-color: ${getColor(metaId,card.id)} transparent transparent transparent;`"/>
+        <div v-if="meta.settings.country && visibility.country" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
         <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img"/>
         <v-img v-if="isAltImgExist" :src="imgAlt" :aspect-ratio="meta.settings.imageAspectRatio" position="top" class="secondary-img"/> 
         <div v-if="isCustom1ImgExist" class="custom1-img-button">1</div> <v-img v-if="isCustom1ImgExist" :src="imgCustom1" class="custom1-img"/>
         <div v-if="isCustom2ImgExist" class="custom2-img-button">2</div> <v-img v-if="isCustom2ImgExist" :src="imgCustom2" class="custom2-img"/>
-        <v-btn v-if="meta.settings.favorite" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
-        <div v-if="meta.settings.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable size="18" color="yellow darken-2" background-color="grey darken-1" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
+        <v-btn v-if="meta.settings.favorite && visibility.favorite" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
+        <div v-if="meta.settings.rating && visibility.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable size="18" color="yellow darken-2" background-color="grey darken-1" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
       </div>
       <!-- <div v-else class="d-flex flex-column align-center py-1">
         <v-icon>mdi-{{meta.settings.icon}}</v-icon>
@@ -18,33 +19,32 @@
       </div> -->
       <v-divider/>
 
-      <div class="px-1">{{card.meta.name}}</div>
-      <div v-if="meta.settings.synonyms" class="px-1 caption"> 
-        <span v-if="card.meta.synonyms" class="mx-2">a.k.a.</span> 
-        {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}}
-      </div>
+      <div v-if="visibility.name" class="px-1">{{card.meta.name}}</div>
+      <div v-if="meta.settings.synonyms && visibility.synonyms" class="px-1 caption"><span class="px-2"></span> {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}} </div>
       
       <!-- Parse meta from cards -->
-      <div v-for="(m,i) in metaInCard" :key="i" class="d-flex px-1">
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-          </template>
-          <span>{{getMeta(m.id).settings.name}}</span>
-        </v-tooltip>
-        <v-chip-group v-if="m.type=='complex'" column>
-          <v-chip v-for="c in card.meta[m.id]" :key="c" 
-            :color="getColor(m.id,c)" 
-            :label="getMeta(m.id).settings.chipLabel"
-            :outlined="getMeta(m.id).settings.chipOutlined"
-            @mouseover.stop="showImage($event,c,'meta',m.id)" 
-            @mouseleave.stop="$store.state.hoveredImage=false"> 
-              {{ getCard(c).meta.name }} </v-chip>
-        </v-chip-group>
-        <div v-else-if="m.type=='simple'">
-          <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
-          <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
-          <span v-else>{{card.meta[m.id]}}</span>
+      <div v-for="(m,i) in metaInCard" :key="i">
+        <div v-if="visibility[m.id]" class="d-flex px-1"> 
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+            </template>
+            <span>{{getMeta(m.id).settings.name}}</span>
+          </v-tooltip>
+          <v-chip-group v-if="m.type=='complex'" column>
+            <v-chip v-for="c in card.meta[m.id]" :key="c" 
+              :color="getColor(m.id,c)" 
+              :label="getMeta(m.id).settings.chipLabel"
+              :outlined="getMeta(m.id).settings.chipOutlined"
+              @mouseover.stop="showImage($event,c,'meta',m.id)" 
+              @mouseleave.stop="$store.state.hoveredImage=false"> 
+                {{ getCard(c).meta.name }} </v-chip>
+          </v-chip-group>
+          <div v-else-if="m.type=='simple'">
+            <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+            <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
+            <span v-else>{{card.meta[m.id]}}</span>
+          </div>
         </div>
       </div>
 
@@ -61,13 +61,16 @@ const path = require("path")
 
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
+import CountryFlag from 'vue-country-flag'
+import Countries from '@/mixins/Countries'
 
 export default {
   name: "MetaCard",
   props: {
     card: Object,
   },
-  mixins: [ShowImageFunction, MetaGetters],
+  components: { CountryFlag, },
+  mixins: [ShowImageFunction, MetaGetters, Countries],
   mounted() {
     this.$nextTick(function () {
       this.cardKey = this.card.id
@@ -89,6 +92,7 @@ export default {
     rating: 0,
   }),
   computed: {
+    visibility() { return this.$store.state.Meta.visibility },
     updateCardIds() { return this.$store.state.Meta.updateCardIds },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     isAltImgExist() { return this.meta.settings.imageTypes.includes('alt') && !this.imgAlt.includes('not_exist') },
@@ -116,6 +120,13 @@ export default {
     changeRating(stars) {
       this.$store.getters.metaCards.find({id:this.card.id})
         .assign({edit: Date.now()}).get('meta').assign({rating:stars}).write()
+    },
+    findCountryCode(country) {
+      if (country == '') return ''
+      let countryName = country.toLowerCase()
+      let code = _.filter(this.countries, country => (country.name.toLowerCase().includes(countryName)) )[0]
+      if (code === undefined) return ''
+      else return code.code
     },
   },
   watch: {

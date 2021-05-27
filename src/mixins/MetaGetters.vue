@@ -15,7 +15,7 @@ export default {
   }),
   methods: {
     getColor(metaId, cardId) {
-      if (this.getMeta(metaId).settings.chipColor) {
+      if (this.getMeta(metaId).settings.color) {
         if (this.getCard(cardId) === undefined) return '#777'
         else return this.getCard(cardId).meta.color || '#777'
       } else return ''

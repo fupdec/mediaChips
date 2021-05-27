@@ -187,7 +187,11 @@ export default {
           icon: this.metaIcon,
           metaInCard: [],
         },
-        state: {},
+        state: {
+          visibility: {
+            name: true,
+          },
+        },
       }
       this.$store.dispatch('addComplexMeta', meta)
 
