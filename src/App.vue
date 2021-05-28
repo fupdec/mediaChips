@@ -64,6 +64,8 @@
 
     <BottomBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
+    <ContextMenu />
+
     <VideosGridElements />
 
     <ScanVideos 
@@ -167,6 +169,7 @@ export default {
     StatusBar: () => import('@/components/app/StatusBar.vue'),
     BottomBar: () => import('@/components/app/BottomBar.vue'),
     DialogFolder: () => import('@/components/app/DialogFolder.vue'),
+    ContextMenu: () => import('@/components/app/ContextMenu.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
     vuescroll,
