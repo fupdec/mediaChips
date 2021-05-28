@@ -79,6 +79,37 @@
     
     <DialogEditMetaCard v-if="$store.state.Meta.dialogEditMetaCard"/>
     <DialogEditMetaCardImages v-if="$store.state.Meta.dialogEditMetaCardImages"/>
+    
+    <v-dialog v-if="$store.state.Meta.dialogDeleteMetaCard" v-model="$store.state.Meta.dialogDeleteMetaCard" persistent scrollable max-width="600">
+      <v-card>
+        <v-toolbar color="error">
+          <span class="headline">Are you sure?</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="$store.state.Meta.dialogDeleteMetaCard=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteMetaCard" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
+        <vuescroll>
+          <v-card-text style="white-space: pre-wrap;">
+            <div> You want to delete {{meta.settings.name.toLowerCase()}} ({{selectedMeta.length}}): </div>
+            <div v-for="(m,i) in selectedMeta" :key="i">{{i+1}}) {{getCard(m).meta.name}}</div>
+          </v-card-text>
+        </vuescroll>
+        <!-- <v-card-actions class="mx-4">
+          <v-checkbox v-model="deleteVideos" color="red" hide-details class="mr-6"> 
+            <template v-slot:label>
+              <span class="red--text">Delete videos with this performer from database</span>
+            </template>
+          </v-checkbox>
+          <v-spacer></v-spacer>
+          <v-checkbox v-model="$store.state.Videos.deleteFile" color="red" hide-details 
+            :disabled="!deleteVideos"> 
+            <template v-slot:label>
+              <span class="red--text">Also delete files</span>
+            </template>
+          </v-checkbox>
+        </v-card-actions> -->
+      </v-card>
+    </v-dialog>
   </vuescroll>
 </template>
 
@@ -150,6 +181,7 @@ export default {
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     filteredMeta() { return this.$store.state.Meta.filteredMeta },
     filters() { return this.$store.state.Meta.filters },
+    selectedMeta() { return this.$store.state.Meta.selectedMeta },
   },
   methods: {
     initSelection() {
@@ -208,6 +240,14 @@ export default {
     clearChars() {
       this.$store.state.Meta.firstChar = []
       this.$store.dispatch('filterMetaCards')
+    },
+    deleteMetaCard() {
+      this.$store.dispatch('deleteMetaCard')
+      // let selected = this.selectedMeta
+      // for (let i = 0; i < selected.length; i++) {
+      //   let j     =   this.$store.getters.metaCards.find({id:selected[i]}).value()
+      //   console.log(j)
+      // }
     },
   },
   watch: {

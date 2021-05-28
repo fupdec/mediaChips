@@ -19,15 +19,15 @@
             <v-spacer></v-spacer>
             <v-btn @click="addNewCard" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
           </v-toolbar>
-          <v-card-text class="pb-0">
+          <v-card-text>
             <v-form ref="formAddCard" v-model="validCardName">
               <v-textarea v-model="cardNames" label="Names" outlined required :rules="nameRules"
                 hint="Write a name on a new line to add several websites at once" no-resize/>
-              <v-alert v-if="dupCards.length" border="left" text dismissible class="mt-6"
+              <v-alert v-if="dupCards.length" border="left" dense text dismissible class="mt-4 mb-0"
                 icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
               > Already in the database: {{dupCards}} </v-alert>
-              <v-alert v-if="newCards.length" border="left" text icon="mdi-plus-circle"
-                close-text="Close" type="success" dismissible class="mt-6" 
+              <v-alert v-if="newCards.length" border="left" dense text icon="mdi-plus-circle"
+                close-text="Close" type="success" dismissible class="mt-4 mb-0" 
               > Added: {{newCards}} </v-alert>
             </v-form>
           </v-card-text>
@@ -323,7 +323,7 @@ export default {
       }
 
       addCardInDb().then(() => {
-        this.dupCards = dups.join(', ')
+        this.dupCards = dups.join(', ') // TODO check for dups
         this.newCards = newCards.join(', ')
         this.cardNames = '',
         this.$store.dispatch('filterMetaCards')

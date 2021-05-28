@@ -1,6 +1,6 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" height="100%"
+    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
       <div v-if="meta.settings.images" class="img-container">
@@ -98,6 +98,7 @@ export default {
     isAltImgExist() { return this.meta.settings.imageTypes.includes('alt') && !this.imgAlt.includes('not_exist') },
     isCustom1ImgExist() { return this.meta.settings.imageTypes.includes('custom1') && !this.imgCustom1.includes('not_exist') },
     isCustom2ImgExist() { return this.meta.settings.imageTypes.includes('custom2') && !this.imgCustom2.includes('not_exist') },
+    isSelectedSingleMetaCard() { return this.$store.state.Meta.selectedMeta.length == 1 },
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
@@ -128,6 +129,23 @@ export default {
       if (code === undefined) return ''
       else return code.code
     },
+    showContextMenu(e) {
+      e.preventDefault()
+      setTimeout(() => {
+        this.$store.state.x = e.clientX
+        this.$store.state.y = e.clientY
+        this.$store.state.contextMenuContent = [
+          { name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true}, disabled: !this.isSelectedSingleMetaCard },
+          { name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard },
+          { type: 'divider' },
+          { name: `Delete ${this.meta.settings.nameSingular}`, type: 'item', icon: 'delete', color: 'red', function: ()=>{this.$store.state.Meta.dialogDeleteMetaCard=true} },
+        ]
+        this.$store.state.contextMenu = true
+      }, 300)
+    },
+    asj() {
+      console.log(this.findCountryCode('Germany'))
+    }, 
   },
   watch: {
     updateCardIds(newValue) {

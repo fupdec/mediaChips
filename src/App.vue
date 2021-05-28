@@ -10,7 +10,7 @@
       <router-view :key="$route.fullPath" />
     </v-main>
 
-    <v-dialog v-model="disableRunApp" scrollable persistent width="400" overlay-opacity="1">
+    <v-dialog v-if="disableRunApp" v-model="disableRunApp" scrollable persistent width="400" overlay-opacity="1">
       <v-form ref="pass" v-model="validPass" lazy-validation @submit.prevent>
         <v-card>
           <v-card-title primary-title class="headline">
@@ -44,7 +44,7 @@
       </v-form>
     </v-dialog>
 
-    <v-bottom-sheet v-model="updateApp" hide-overlay no-click-animation persistent width="600">
+    <v-bottom-sheet v-if="updateApp" v-model="updateApp" hide-overlay no-click-animation persistent width="600">
       <v-card class="pb-6">
         <v-card-title>
           <span>New version {{appVersion.replace(/ /gm,'')}} is available!</span>
@@ -68,16 +68,11 @@
 
     <VideosGridElements />
 
-    <ScanVideos 
-      v-if="$store.state.Settings.dialogScanVideos" 
-      @close="closeScanVideos" :newFiles="newFiles" :stage="stage"
-    />
+    <ScanVideos v-if="$store.state.Settings.dialogScanVideos" @close="closeScanVideos" :newFiles="newFiles" :stage="stage"/>
 
-    <img 
-      v-show="$store.state.hoveredImage" class="list-img-preview"
+    <img v-show="$store.state.hoveredImage" class="list-img-preview"
       :src="getHoveredImage" height="160" max-width="160"
-      :style="`top:${$store.state.hoveredImageY+30}px;left:${$store.state.hoveredImageX+30}px;`"
-    />
+      :style="`top:${$store.state.hoveredImageY+30}px;left:${$store.state.hoveredImageX+30}px;`"/>
 
     <!-- Console Logs -->
     <v-bottom-sheet :value="isLogVisible" ref="sheet" :retain-focus="false"
@@ -199,18 +194,6 @@ export default {
         }
         if(event.altKey && event.keyCode === 86) { // alt+v
           this.$router.push('/videos/:default?tabId=default')
-          return
-        }
-        if(event.altKey && event.keyCode === 82) { // alt+r
-          this.$router.push('/performers/:default?tabId=default')
-          return
-        }
-        if(event.altKey && event.keyCode === 84) { // alt+t
-          this.$router.push('/tags/:default?tabId=default')
-          return
-        }
-        if(event.altKey && event.keyCode === 87) { // alt+w
-          this.$router.push('/websites/:default?tabId=default')
           return
         }
         if(event.altKey && event.keyCode === 80) { // alt+p

@@ -3,8 +3,10 @@
     leave-absolute absolute offset-y z-index="1000" min-width="150">
     <v-list dense class="context-menu">
       <div v-for="(item, i) in content" :key="i">
-        <v-list-item v-if="item.type=='item'" @mouseup="close(item.function)" class="pr-1" link>
-          <v-list-item-title> <v-icon left size="18">mdi-{{item.icon}}</v-icon> {{item.name}} </v-list-item-title>
+        <v-list-item v-if="item.type=='item'" @mouseup="close(item.function)" :disabled="item.disabled" class="pr-1" link>
+          <v-list-item-title> 
+            <v-icon left size="18" :color="item.color">mdi-{{item.icon}}</v-icon> {{item.name}} 
+          </v-list-item-title>
           <div class="px-3"/>
         </v-list-item>
 

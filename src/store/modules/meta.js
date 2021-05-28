@@ -1,4 +1,5 @@
 const {app} = require('electron').remote
+const fs = require("fs")
 const path = require("path")
 const rimraf = require("rimraf")
 const FileSync = require('lowdb/adapters/FileSync')
@@ -103,6 +104,7 @@ const Meta = {
     dialogEditMetaCard: false,
     dialogEditMetaCardImages: false,
     dialogFilterMetaCards: false,
+    dialogDeleteMetaCard: false,
   }),
   mutations: {
     updateMetaCards(state, ids) {
@@ -155,8 +157,37 @@ const Meta = {
     addMetaCard({commit, getters}, newMetaCard) {
       let metaCard = { ...defaultMetaCard, ...newMetaCard }
       getters.metaCards.push(metaCard).write()
-      // TODO change 'card' to meta name
-      commit('addLog', {type:'info', color:'green', text:`Added card "${metaCard.meta.name}"`})
+      const metaId = router.currentRoute.query.metaId
+      const metaName = getters.meta.find({id:metaId}).value().settings.nameSingular.toLowerCase()
+      commit('addLog', {type:'info', color:'green', text:`Added ${metaName} "${metaCard.meta.name}"`})
+    },
+    deleteMetaCard({state, rootState, commit, dispatch, getters}) {
+      const metaId = router.currentRoute.query.metaId
+      const metaName = getters.meta.find({id:metaId}).value().settings.nameSingular
+      state.selectedMeta.map(id => {
+        let cardName = getters.metaCards.find({id}).value().meta.name
+        getters.metaCards.remove({id}).write() // remove card from database
+        getters.metaCards.each(mc => { // remove card from other cards
+          let arr = mc.meta[metaId]
+          if (arr && arr.length) {
+            let index = mc.meta[metaId].indexOf(id)
+            if (index !== -1) mc.meta[metaId].splice(index, 1)
+          }
+        }).write()
+        // TODO remove from videos in array
+        // TODO remove from filters
+        // let tab = _.find(getters.tabs, {'id': id }) // close tab with this performer
+        // if (tab) dispatch('closeTab', id)
+        let imageTypes = ['main','alt','custom1','custom2','avatar','header']
+        imageTypes.map(img => { // remove images of card
+          let imgPath = path.join(getters.getPathToUserData, 'media', 'meta', metaId, `${id}_${img}.jpg`)
+          fs.unlink(imgPath, (err) => {})
+        })
+        commit('addLog', {type:'info',color:'red',text:`${metaName} "${cardName}" has been removed 🗑️`})
+      })
+      dispatch('filterMetaCards')
+      state.dialogDeleteMetaCard = false
+      state.selectedMeta = []
     },
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()

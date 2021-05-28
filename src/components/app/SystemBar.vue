@@ -178,24 +178,6 @@
               <div class="shortcut"><span>Videos</span> <span>Alt + V</span></div>
             </v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="$router.push('/performers/:default?tabId=default')">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-account</v-icon> 
-              <div class="shortcut"><span>Performers</span> <span>Alt + R</span></div>
-            </v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/tags/:default?tabId=default')">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-tag</v-icon> 
-              <div class="shortcut"><span>Tags</span> <span>Alt + T</span></div>
-            </v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/websites/:default?tabId=default')">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-web</v-icon> 
-              <div class="shortcut"><span>Websites</span> <span>Alt + W</span></div>
-            </v-list-item-title>
-          </v-list-item>
           <v-list-item link @click="$router.push('/playlists/:default?tabId=default')">
             <v-list-item-title>
               <v-icon left size="18">mdi-format-list-bulleted</v-icon> 
