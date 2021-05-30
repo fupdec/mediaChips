@@ -199,7 +199,7 @@ export default {
     getConditions(type) {
       if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty', 'not empty']
       if (type === 'string') return ['includes', 'excludes', 'empty', 'not empty']
-      if (type === 'array' || type === 'select') return ['includes all', 'includes one of', 'excludes', 'empty', 'not empty']
+      if (type === 'array' || type === 'select') return ['includes one of', 'includes all', 'excludes', 'empty', 'not empty']
       if (type === 'boolean') return ['yes', 'no']
       return []
     },

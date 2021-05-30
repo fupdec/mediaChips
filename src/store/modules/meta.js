@@ -279,8 +279,14 @@ const Meta = {
             if (c.meta[by]===undefined) return false
             else return _.isEqual(c.meta[by].sort(), val.sort())
           })
-          else if (cond === 'includes one of') mc = mc.filter(c=>_.difference(val, c.meta[by]).length===0)
-          else if (cond === 'excludes') mc = mc.filter(c=>_.difference(val, c.meta[by]).length!==0)
+          else if (cond === 'includes one of') mc = mc.filter(c=>{
+            if (c.meta[by]===undefined || c.meta[by].length===0) return false
+            else return _.difference(val, c.meta[by]).length!==0
+          })
+          else if (cond === 'excludes') mc = mc.filter(c=>{
+            if (c.meta[by]===undefined || c.meta[by].length===0) return true
+            else return _.difference(val, c.meta[by]).length===0
+          })
         }
       }
       // sort meta
