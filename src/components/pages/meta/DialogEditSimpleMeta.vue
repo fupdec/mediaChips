@@ -3,7 +3,7 @@
     <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable max-width="700">
       <v-card>
         <v-toolbar color="primary">
-          <v-card-title class="headline pl-0">Settings for meta "{{this.meta.settings.name}}"</v-card-title>
+          <v-card-title class="headline pl-0">Settings for meta <b class="ml-2">{{this.meta.settings.name}}</b></v-card-title>
           <v-spacer></v-spacer>
           <v-btn @click="saveSettings" outlined large>
             <v-icon left>mdi-content-save</v-icon> Save </v-btn>
@@ -72,9 +72,10 @@
         <v-toolbar color="error">
           <v-card-title class="headline pl-0">Are you sure?</v-card-title>
           <v-spacer></v-spacer>
-          <v-icon>mdi-delete-alert</v-icon>
+          <v-btn @click="dialogDeleteItem=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="addItemToDeleted" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
-        <v-card-text class="pt-8">
+        <v-card-text class="py-8">
           <div class="text-center">Delete item
             <v-chip small class="mx-1">
               {{meta.settings.items[deleteItemIndex].name}}
@@ -82,13 +83,6 @@
             <div>This item will be removed from all meta.</div>
           </div>
         </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn @click="dialogDeleteItem=false" small class="ma-4">
-            <v-icon left>mdi-close</v-icon> Cancel </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="deleteItem" small class="ma-4" color="red" dark> 
-            <v-icon left>mdi-delete-alert</v-icon> Delete </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
   </div>
@@ -127,6 +121,7 @@ export default {
     validItemName: false,
     dialogDeleteItem: false,
     deleteItemIndex: 0,
+    deletedItems: [],
     drag: false,
     dragOptions: {
       animation: 200,
@@ -162,6 +157,7 @@ export default {
       this.$refs.form.validate()
       if (!this.valid) return
       this.$store.getters.simpleMeta.find({id: this.meta.id}).set('edit', Date.now()).set('settings', this.settings).write()
+      this.parseDeletedItems()
       this.$emit('closeSettings')
     },
     closeSettings() { this.$emit('closeSettings') },
@@ -177,20 +173,25 @@ export default {
       this.dialogDeleteItem = true
       this.deleteItemIndex = index
     },
-    deleteItem() {
-      this.dialogDeleteItem = false
-      let itemId = this.meta.settings.items[this.deleteItemIndex].id
-      let metaId =  this.meta.id
-      this.$store.getters.metaCards.filter(i=>{
-        let metaInCard = i.meta[metaId]
-        if (metaInCard) return i.meta[metaId].includes(itemId)
-        else return false
-      }).each(i=>{
-        const index = i.meta[metaId].indexOf(itemId)
-        if (index > -1) i.meta[metaId].splice(index, 1) 
-      }).write()
-      this.$store.getters.meta.find({id:metaId}).get('settings').get('items').remove({id:itemId}).write()
+    addItemToDeleted() {
+      this.deletedItems.push(this.meta.settings.items[this.deleteItemIndex].id)
       this.meta.settings.items.splice(this.deleteItemIndex, 1)
+      this.dialogDeleteItem = false
+    },
+    parseDeletedItems() {
+      let ids = this.deletedItems
+      let metaId =  this.meta.id
+      for (let id = 0; id < ids.length; id++) { // delete from meta cards
+        let itemId = ids[id]
+        this.$store.getters.metaCards.filter(i=>{
+          let metaInCard = i.meta[metaId]
+          if (metaInCard) return i.meta[metaId].includes(itemId)
+          else return false
+        }).each(i=>{
+          const index = i.meta[metaId].indexOf(itemId)
+          if (index > -1) i.meta[metaId].splice(index, 1) 
+        }).write()
+      }
     },
     itemNameRules(string) {
       let items = this.meta.settings.items.map(i => i.name.toLowerCase())

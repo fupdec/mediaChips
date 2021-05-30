@@ -3,7 +3,7 @@
     <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable width="80vw" max-width="700">
       <v-card>
         <v-toolbar color="primary">
-          <v-card-title class="headline pl-0">Settings for meta "{{this.meta.settings.name}}"</v-card-title>
+          <v-card-title class="headline pl-0">Settings for meta <b class="ml-2">{{meta.settings.name}}</b></v-card-title>
           <v-spacer></v-spacer>
           <v-btn @click="saveSettings" outlined large>
             <v-icon left>mdi-content-save</v-icon> Save </v-btn>
@@ -63,8 +63,7 @@
                                   <span v-if="meta.scraperField" class="caption text--secondary">scraper: {{meta.scraperField}}</span>
                                 </span>
                                 <span>
-                                  <!-- TODO add function for removing -->
-                                  <v-btn color="red" icon><v-icon>mdi-close</v-icon></v-btn>
+                                  <v-btn @click="openDialogDeleteMetaFromCards(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
                                 </span>
                               </div>
                             </v-list-item>
@@ -201,6 +200,26 @@
         </vuescroll>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-if="dialogDeleteMetaFromCards" :value="dialogDeleteMetaFromCards" persistent max-width="450">
+      <v-card>
+        <v-toolbar color="error">
+          <v-card-title class="headline pl-0">Are you sure?</v-card-title>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogDeleteMetaFromCards=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="addMetaToDeleted" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
+        <v-card-text class="py-8">
+          <div class="text-center">Remove meta 
+            <v-chip small class="mx-2">
+              <v-icon small left>mdi-{{getMeta(metaInCard[selectedMetaIndex].id).settings.icon}}</v-icon>
+              <b>{{getMeta(metaInCard[selectedMetaIndex].id).settings.name}}</b>
+            </v-chip> from meta {{meta.settings.name}}?
+            <div>This meta will be removed from all {{meta.settings.name.toLowerCase()}} cards.</div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     
     <DialogEditScraperFields v-if="dialogSetUpScraper" :dialog="dialogSetUpScraper" :metaInCards="settings.metaInCard" @closeDialog="getScraperFields($event)"/>
   </div>
@@ -230,6 +249,7 @@ export default {
   data: () => ({
     dialogAddMetaToCard: false,
     dialogSetUpScraper: false,
+    dialogDeleteMetaFromCards: false,
     icons: icons,
     selectedMetaForCard: null,
     valid: false,
@@ -257,6 +277,8 @@ export default {
       disabled: false,
       ghostClass: "ghost"
     },
+    selectedMetaIndex: 0,
+    deletedMetaFromCards: [],
   }),
   computed: {
     complexMetaList() { return this.$store.getters.complexMeta.value() },
@@ -301,6 +323,7 @@ export default {
       this.$refs.form.validate()
       if (!this.valid) return
       this.$store.getters.meta.find({id: this.meta.id}).set('edit', Date.now()).set('settings', this.settings).write()
+      this.parseDeletedMetaFromCards()
       this.$store.commit('getMetaListFromDb')
       this.closeSettings()
     },
@@ -317,6 +340,21 @@ export default {
       }
     },
     getRandomColor() { return '#'+Math.floor(Math.random()*16777215).toString(16) },
+    openDialogDeleteMetaFromCards(i) { 
+      this.dialogDeleteMetaFromCards = true
+      this.selectedMetaIndex = i
+    },
+    addMetaToDeleted() {
+      this.deletedMetaFromCards.push(this.metaInCard[this.selectedMetaIndex].id)
+      this.settings.metaInCard.splice(this.selectedMetaIndex, 1)
+      this.dialogDeleteMetaFromCards = false
+    },
+    parseDeletedMetaFromCards() {
+      let ids = this.deletedMetaFromCards
+      for (let i = 0; i < ids.length; i++) { // delete from meta cards
+        this.$store.getters.metaCards.filter({metaId:this.meta.id}).each(card=>{card.meta[ids[i]]=undefined}).write() 
+      }
+    },
   },
 }
 </script>

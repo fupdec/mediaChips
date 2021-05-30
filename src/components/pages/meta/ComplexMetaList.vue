@@ -85,25 +85,19 @@
         <v-toolbar color="error">
           <v-card-title class="headline pl-0">Are you sure?</v-card-title>
           <v-spacer></v-spacer>
-          <v-icon>mdi-delete-alert</v-icon>
+          <v-btn @click="dialogDeleteMeta=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteMeta" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
-        <v-divider></v-divider>
-        <v-card-text class="pt-8">
+        <v-card-text class="py-8">
           <div class="text-center">Delete <b>complex</b> meta?
             <v-chip small class="mx-2">
               <v-icon small left>mdi-{{complexMetaList[selectedMetaIndex].settings.icon}}</v-icon>
               <b>{{complexMetaList[selectedMetaIndex].settings.name}}</b>
             </v-chip>
             <div>This meta will be removed <br> from all assigned complex meta and cards.</div>
+            <div>And it will also delete all cards.</div>
           </div>
         </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn @click="dialogDeleteMeta=false" small class="ma-4">
-            <v-icon left>mdi-close</v-icon> Cancel </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="deleteMeta" small class="ma-4" color="red" dark> 
-            <v-icon left>mdi-delete-alert</v-icon> Delete</v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
 
