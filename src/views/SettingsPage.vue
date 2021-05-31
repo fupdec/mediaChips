@@ -261,6 +261,7 @@
       </v-tab-item>
       <v-tab-item value="meta-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <MetaInVideoCard/>
           <ComplexMetaList/>
           <SimpleMetaList/>
         </v-card>
@@ -693,6 +694,7 @@ const axios = require("axios")
 const cheerio = require("cheerio")
 const { webFrame } = require('electron')
 
+import MetaInVideoCard from '@/components/pages/meta/MetaInVideoCard.vue'
 import ComplexMetaList from '@/components/pages/meta/ComplexMetaList.vue'
 import SimpleMetaList from '@/components/pages/meta/SimpleMetaList.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
@@ -704,9 +706,12 @@ import EditTagItemsOfParameter from '@/components/pages/settings/EditTagItemsOfP
 import Registration from '@/components/pages/settings/Registration.vue'
 import vuescroll from 'vuescroll'
 
+// TODO separate each tab to components
+
 export default {
   name: 'SettingsPage',
   components: {
+    MetaInVideoCard,
     ComplexMetaList,
     SimpleMetaList,
     ThemeColors,

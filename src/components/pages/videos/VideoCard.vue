@@ -97,7 +97,7 @@
       </v-card-actions>
       <v-divider v-if="$store.state.Settings.ratingAndFavoriteInCard"></v-divider>
 
-      <v-card-actions class="px-1 py-0 performers" :class="{hidden: isPerformersHidden}">
+      <!-- <v-card-actions class="px-1 py-0 performers" :class="{hidden: isPerformersHidden}">
         <v-chip-group column >
           <v-icon left>mdi-account-outline</v-icon>
           <v-chip v-for="performer in video.performers" :key="performer"
@@ -137,11 +137,33 @@
             @click.middle="addNewTabWebsite(website)"
           > {{ website }} </v-chip>
         </v-chip-group>
-      </v-card-actions>
+      </v-card-actions> -->
 
-      <!-- <div v-for="(meta, i) in simpleMetaList" :key="i" class="meta pa-1">
-        <span class="key">{{meta.settings.name}}:</span> <span class="value">{{video[meta.id]}}</span>
-      </div> -->
+      <!-- Parse meta -->
+      <div v-for="(m,i) in metaInCard" :key="i">
+        <div v-if="visibility[m.id]" class="d-flex px-1">
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+            </template>
+            <span>{{getMeta(m.id).settings.name}}</span>
+          </v-tooltip>
+          <v-chip-group v-if="m.type=='complex'" column>
+            <v-chip v-for="v in video[m.id]" :key="v" 
+              :color="getColor(m.id,v)" 
+              :label="getMeta(m.id).settings.chipLabel"
+              :outlined="getMeta(m.id).settings.chipOutlined"
+              @mouseover.stop="showImage($event,v,'meta',m.id)" 
+              @mouseleave.stop="$store.state.hoveredImage=false"> 
+                {{ getCard(v).meta.name }} </v-chip>
+          </v-chip-group>
+          <div v-else-if="m.type=='simple'">
+            <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+            <span v-else-if="getMeta(m.id).dataType=='boolean'">{{video[m.id]?'Yes':'No'}}</span>
+            <span v-else>{{video[m.id]}}</span>
+          </div>
+        </div>
+      </div>
       
       <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
         mdi-bookmark
@@ -164,6 +186,7 @@ import Functions from '@/mixins/Functions'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'VideoCard',
@@ -172,7 +195,7 @@ export default {
     i: Number,
     reg: Boolean,
   },
-  mixins: [ShowImageFunction, Functions, LabelFunctions],
+  mixins: [ShowImageFunction, Functions, LabelFunctions, MetaGetters],
   mounted() {
     this.$nextTick(function () {
       this.cardKey = this.video.id
@@ -230,8 +253,8 @@ export default {
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
     ratingInCard() { return this.$store.state.Settings.videoRatingInCard },
     isVideoExist() { return fs.existsSync(this.video.path) },
-    metaList() { return this.$store.getters.meta.value() },
-    simpleMetaList() { return this.$store.getters.simpleMeta.value() },
+    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    visibility() { return this.$store.state.Settings.videoVisibility },
   },
   methods: {
     stopSmoothScroll(event) {

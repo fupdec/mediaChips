@@ -97,25 +97,14 @@
           <v-icon size="20" class="pl-10" :color="!isFileInfoHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
         </v-list-item>
 
-        <v-list-item link @click="togglePerformerVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-account</v-icon> Performers
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isPerformersHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+        <v-divider class="ma-1"></v-divider>
 
-        <v-list-item link @click="toggleTagsVisibilty()">
+        <v-list-item v-for="(mc,i) in metaInCard" :key="i" link @click="toggleVisibility(mc.id)">
           <v-list-item-title>
-            <v-icon left size="18">mdi-tag</v-icon> Tags
+            <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
+            {{getMeta(mc.id).settings.name}}
           </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isTagsHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
-
-        <v-list-item link @click="toggleWebsiteVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-web</v-icon> Websites
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isWebsiteHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+          <v-icon size="20" class="pl-10" :color="visibility[mc.id]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
         </v-list-item>
       </v-list>
     </v-menu>
@@ -124,9 +113,14 @@
 
 
 <script>
+import MetaGetters from '@/mixins/MetaGetters'
+
 export default {
   name: 'VideosAppbarCardView',
-  components: {
+  components: {},
+  mixins: [MetaGetters],
+  beforeMount() {
+    this.initVisibility()
   },
   mounted() {
     this.$nextTick(function () {
@@ -137,95 +131,62 @@ export default {
   }),
   computed: {
     isChipsColored: {
-      get() {
-        return this.$store.state.Settings.videoChipsColored
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoChipsColored', value})
-      },
+      get() { return this.$store.state.Settings.videoChipsColored },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoChipsColored', value}) },
     },
     isEditBtnHidden: {
-      get() {
-        return this.$store.state.Settings.videoEditBtnHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoEditBtnHidden', value})
-      },
+      get() { return this.$store.state.Settings.videoEditBtnHidden },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoEditBtnHidden', value}) },
     },
     isFileNameHidden: {
-      get() {
-        return this.$store.state.Settings.videoFileNameHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoFileNameHidden', value})
-      },
+      get() { return this.$store.state.Settings.videoFileNameHidden },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoFileNameHidden', value}) },
     },
     isFileInfoHidden: {
-      get() {
-        return this.$store.state.Settings.videoFileInfoHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoFileInfoHidden', value})
-      },
+      get() { return this.$store.state.Settings.videoFileInfoHidden },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoFileInfoHidden', value}) },
     },
     isRatingHidden: {
-      get() {
-        return this.$store.state.Settings.videoRatingHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoRatingHidden', value})
-      },
+      get() { return this.$store.state.Settings.videoRatingHidden },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoRatingHidden', value}) },
     },
     isFavoriteHidden: {
-      get() {
-        return this.$store.state.Settings.videoFavoriteHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoFavoriteHidden', value})
-      },
+      get() { return this.$store.state.Settings.videoFavoriteHidden },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoFavoriteHidden', value}) },
     },
     isQualityLabelHidden: {
-      get() {
-        return this.$store.state.Settings.videoQualityLabelHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoQualityLabelHidden', value})
-      },
+      get() { return this.$store.state.Settings.videoQualityLabelHidden },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoQualityLabelHidden', value}) },
     },
     isDurationHidden: {
-      get() {
-        return this.$store.state.Settings.videoDurationHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoDurationHidden', value})
-      },
+      get() { return this.$store.state.Settings.videoDurationHidden },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoDurationHidden', value}) },
     },
-    isPerformersHidden: {
-      get() {
-        return this.$store.state.Settings.videoPerformersHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoPerformersHidden', value})
-      },
-    },
-    isTagsHidden: {
-      get() {
-        return this.$store.state.Settings.videoTagsHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoTagsHidden', value})
-      },
-    },
-    isWebsiteHidden: {
-      get() {
-        return this.$store.state.Settings.videoWebsiteHidden
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoWebsiteHidden', value})
-      },
+    // isPerformersHidden: {
+    //   get() { return this.$store.state.Settings.videoPerformersHidden },
+    //   set(value) { this.$store.dispatch('updateSettingsState', {key:'videoPerformersHidden', value}) },
+    // },
+    // isTagsHidden: {
+    //   get() { return this.$store.state.Settings.videoTagsHidden },
+    //   set(value) { this.$store.dispatch('updateSettingsState', {key:'videoTagsHidden', value}) },
+    // },
+    // isWebsiteHidden: {
+    //   get() { return this.$store.state.Settings.videoWebsiteHidden },
+    //   set(value) { this.$store.dispatch('updateSettingsState', {key:'videoWebsiteHidden', value}) },
+    // },
+    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    visibility: {
+      get() { return this.$store.state.Settings.videoVisibility },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoVisibility', value}) },
     },
   },
   methods: {
+    initVisibility() {
+      let visibility = {}
+      for (let i = 0; i < this.metaInCard.length; i++) visibility[this.metaInCard[i].id] = true
+      visibility = {...visibility, ...this.visibility}
+      this.visibility = _.pickBy(visibility, (val, key) => _.find(this.metaInCard, i=>i.id===key) )
+    },
     changeCardSize(value) {
       this.$store.dispatch('updateSettingsState', {key:'videoCardSize', value})
       this.getCardSizeIcon()
@@ -233,47 +194,26 @@ export default {
     getCardSizeIcon() {
       let size = ''
       switch(this.$store.state.Settings.videoCardSize) {
-        case 1: size = 'xs'; break;
-        case 2: size = 's'; break;
-        case 3: size = 'm'; break;
-        case 4: size = 'l'; break;
-        case 5: size = 'xl'; break;
+        case 1: size = 'xs'; break
+        case 2: size = 's'; break
+        case 3: size = 'm'; break
+        case 4: size = 'l'; break
+        case 5: size = 'xl'; break
       }
       return size
     },
-    toggleChipsColored() {
-      this.isChipsColored = !this.isChipsColored
-    },
-    toggleEditBtnVisibilty() {
-      this.isEditBtnHidden = !this.isEditBtnHidden
-    },
-    toggleFileNameVisibilty() {
-      this.isFileNameHidden = !this.isFileNameHidden
-    },
-    toggleQualityLabelVisibilty() {
-      this.isQualityLabelHidden = !this.isQualityLabelHidden
-    },
-    toggleDurationVisibilty() {
-      this.isDurationHidden = !this.isDurationHidden
-    },
-    toggleRatingVisibilty() {
-      this.isRatingHidden = !this.isRatingHidden
-    },
-    toggleFavoriteVisibilty() {
-      this.isFavoriteHidden = !this.isFavoriteHidden
-    },
-    toggleFileInfoVisibilty() {
-      this.isFileInfoHidden = !this.isFileInfoHidden
-    },
-    togglePerformerVisibilty() {
-      this.isPerformersHidden = !this.isPerformersHidden
-    },
-    toggleTagsVisibilty() {
-      this.isTagsHidden = !this.isTagsHidden
-    },
-    toggleWebsiteVisibilty() {
-      this.isWebsiteHidden = !this.isWebsiteHidden
-    },
+    toggleChipsColored() { this.isChipsColored = !this.isChipsColored },
+    toggleEditBtnVisibilty() { this.isEditBtnHidden = !this.isEditBtnHidden },
+    toggleFileNameVisibilty() { this.isFileNameHidden = !this.isFileNameHidden },
+    toggleQualityLabelVisibilty() { this.isQualityLabelHidden = !this.isQualityLabelHidden },
+    toggleDurationVisibilty() { this.isDurationHidden = !this.isDurationHidden },
+    toggleRatingVisibilty() { this.isRatingHidden = !this.isRatingHidden },
+    toggleFavoriteVisibilty() { this.isFavoriteHidden = !this.isFavoriteHidden },
+    toggleFileInfoVisibilty() { this.isFileInfoHidden = !this.isFileInfoHidden },
+    // togglePerformerVisibilty() { this.isPerformersHidden = !this.isPerformersHidden },
+    // toggleTagsVisibilty() { this.isTagsHidden = !this.isTagsHidden },
+    // toggleWebsiteVisibilty() { this.isWebsiteHidden = !this.isWebsiteHidden },
+    toggleVisibility(item) { this.$store.state.Settings.videoVisibility[item] = !this.visibility[item] },
   },
   watch: {
   },
