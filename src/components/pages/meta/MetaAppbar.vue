@@ -167,7 +167,7 @@
             </v-list-item-title>
             <v-icon size="20" class="pl-10" :color="visibility[s]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
-          <v-divider class="ma-2"></v-divider>
+          <v-divider class="ma-1"></v-divider>
           <v-list-item v-for="(mc,i) in metaInCard" :key="i" link @click="toggleVisibility(mc.id)">
             <v-list-item-title>
               <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
@@ -292,7 +292,8 @@ export default {
       let visibility = {}
       for (let i = 0; i < this.specificMeta.length; i++) visibility[this.specificMeta[i]] = true
       for (let i = 0; i < this.metaInCard.length; i++) visibility[this.metaInCard[i].id] = true
-      this.$store.state.Meta.visibility = {...visibility, ...this.meta.state.visibility}
+      visibility = {...visibility, ...this.meta.state.visibility}
+      this.$store.state.Meta.visibility = _.pickBy(visibility, (val, key) => _.find(this.metaInCard, i=>i.id===key) )
     },
     addNewCard() {
       this.$refs.formAddCard.validate()
