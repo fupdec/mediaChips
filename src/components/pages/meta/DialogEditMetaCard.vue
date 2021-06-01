@@ -86,8 +86,8 @@
                               mdi-{{getMeta(m.id).settings.icon}}</v-icon>
                           </span>
                           <span>{{data.item.meta.name}}</span>
-                          <span v-if="getMeta(m.id).settings.synonyms" class="aliases"> a.k.a.
-                            {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ').slice(0,50)}}
+                          <span v-if="getMeta(m.id).settings.synonyms" class="aliases">
+                            {{getCard(data.item.id).meta.synonyms===undefined? '' : getCard(data.item.id).meta.synonyms.join(', ').slice(0,50)}}
                           </span>
                         </div>
                       </template>

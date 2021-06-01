@@ -158,7 +158,7 @@
                 {{ getCard(v).meta.name }} </v-chip>
           </v-chip-group>
           <div v-else-if="m.type=='simple'">
-            <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+            <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id, 'video')}}</span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{video[m.id]?'Yes':'No'}}</span>
             <span v-else>{{video[m.id]}}</span>
           </div>

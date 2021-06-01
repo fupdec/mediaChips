@@ -25,15 +25,10 @@ export default {
     },
     getCard(cardId) { return this.$store.getters.metaCards.find({id:cardId}).value() },
     getCards(metaId) { return this.$store.getters.metaCards.filter({metaId}).value() },
-    getArrayValuesForCard(metaId) { 
-      let array = this.card.meta[metaId]
-      if (array === undefined) return ''
-      let items = this.getMeta(metaId).settings.items
-      let values = array.map(itemId=>(_.find(items, {id: itemId}).name))
-      return values.join(', ') 
-    },
-    getArrayValuesForCard(metaId) { 
-      let array = this.card.meta[metaId]
+    getArrayValuesForCard(metaId, cardType) { 
+      let array
+      if (cardType === 'video') array = this.video[metaId]
+      else array = this.card.meta[metaId]
       if (array === undefined) return ''
       let items = this.getMeta(metaId).settings.items
       let values = array.map(itemId=>(_.find(items, {id: itemId}).name))
