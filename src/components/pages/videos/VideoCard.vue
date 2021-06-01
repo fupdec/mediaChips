@@ -38,7 +38,9 @@
 
         <div label outlined class="resolution"
           :class="{hidden: isQualityLabelHidden}">
-          <div class="text text-no-wrap">{{calcHeightTitle(video.resolution)}}</div>
+          <div class="text text-no-wrap" :class="calcHeightTitle(video.resolution).toLowerCase()">
+            {{calcHeightTitle(video.resolution)}}
+          </div>
           <div class="value">
             <span>{{calcHeightValue(video.resolution)}}</span>
           </div>
@@ -489,6 +491,21 @@ export default {
       color: #000;
       line-height: 1;
       padding: 0px 2px;
+      &.sd {
+        background-color: #db8e6b;
+      }
+      &.hd {
+        background-color: #e2e2e2;
+      }
+      &.fhd {
+        background-color: #ffee00;
+      }
+      &.uhd {
+        background-color: #00ffff;
+      }
+      &.phone {
+        background-color: #e674b6;
+      }
     }
     .value {
       font-size: 10px;
