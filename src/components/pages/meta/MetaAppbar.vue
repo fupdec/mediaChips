@@ -14,7 +14,7 @@
           </v-tooltip>
         </template>
         <v-card width="500">
-          <v-toolbar color="primary" height="50">
+          <v-toolbar color="primary">
             <span class="headline">Adding New {{meta.settings.nameSingular}}</span>
             <v-spacer></v-spacer>
             <v-btn @click="addNewCard" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
@@ -22,7 +22,7 @@
           <v-card-text>
             <v-form ref="formAddCard" v-model="validCardName">
               <v-textarea v-model="cardNames" label="Names" outlined required :rules="nameRules"
-                hint="Write a name on a new line to add several websites at once" no-resize/>
+                :hint="`Write a name on a new line to add several ${meta.settings.name.toLowerCase()} at once`" no-resize/>
               <v-alert v-if="dupCards.length" border="left" dense text dismissible class="mt-4 mb-0"
                 icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
               > Already in the database: {{dupCards}} </v-alert>
@@ -298,9 +298,7 @@ export default {
     addNewCard() {
       this.$refs.formAddCard.validate()
       if (!this.validCardName) return
-      console.log('ok')
       let cardsArray = this.cardNames.trim()
-      cardsArray = cardsArray.replace(/[\/\%"?<>{}\[\]]/g, '')
       cardsArray = cardsArray.split(/\r?\n/)
       cardsArray = cardsArray.filter((el)=>(el != ''))
       cardsArray = cardsArray.map(s => s.trim())
