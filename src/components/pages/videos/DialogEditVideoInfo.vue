@@ -399,24 +399,69 @@
               </v-card>
             </v-responsive>
             <v-row class="mx-2">
-              <!-- <v-col v-for="meta in simpleMetaList" :key="meta.id" cols="6" sm="4">
-                <v-text-field v-if="meta.type==='string'" 
-                  @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.settings.name" clearable/>
+              <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
+                <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
+                  @input="setVal($event,m.id)" :value="values[m.id]"
+                  multiple hide-selected hide-details dense
+                  :label="getMeta(m.id).settings.name" item-value="id"
+                  :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
+                > <!--  TODO fix filtering when type smth in search field -->
+                  <template v-slot:selection="data">
+                    <v-chip v-bind="data.attrs" class="my-1 px-2" small
+                      @click="data.select" :input-value="data.selected"
+                      @click:close="removeItemMeta(data.item.id,m.id)" close
+                      :color="getColor(m.id,data.item.id)" 
+                      :label="getMeta(m.id).settings.chipLabel"
+                      :outlined="getMeta(m.id).settings.chipOutlined"
+                      @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                      @mouseleave.stop="$store.state.hoveredImage=false">
+                      <span>{{ data.item.meta.name }}</span>
+                    </v-chip>
+                  </template>
+                  <template v-slot:item="data">
+                    <div class="list-item" 
+                      @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                    > 
+                      <span v-if="getMeta(m.id).settings.favorite">
+                        <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
+                      </span>
+                      <span v-if="getMeta(m.id).settings.color">
+                        <v-icon :color="data.item.meta.color || ''" left small>
+                          mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                      </span>
+                      <span>{{data.item.meta.name}}</span>
+                      <span v-if="getMeta(m.id).settings.synonyms" class="aliases">
+                        {{getCard(data.item.id).meta.synonyms===undefined? '' : getCard(data.item.id).meta.synonyms.join(', ').slice(0,50)}}
+                      </span>
+                    </div>
+                  </template>
+                </v-autocomplete>
 
-                <v-text-field v-if="meta.type==='number'" :value="values[meta.id]"
-                  @input="setVal($event,meta.id)" :label="meta.settings.name" clearable type="number"/>
+                <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
+                  @input="setVal($event,m.id)" :value="values[m.id]"
+                  :label="getMeta(m.id).settings.name" hide-details dense
+                  clearable @click:clear="setVal('', m.id)"/>
 
-                <v-autocomplete v-if="meta.type==='array'" :items="meta.settings.array"
-                  @input="setVal($event,meta.id)" :value="values[meta.id]" :label="meta.settings.name" multiple/>
+                <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
+                  @input="setVal($event,m.id)" :value="values[m.id]" type="number"
+                  :label="getMeta(m.id).settings.name" hide-details dense/>
 
-                <v-switch v-if="meta.type==='boolean'" inset :label="meta.settings.name"
-                  @change="setVal($event,meta.id)" :value="values[meta.id]"/>
-                    
-                <v-text-field v-if="meta.type==='date'" readonly
-                  :value="values[meta.id]" @focus="picker=true, pickerMeta=meta.id"
-                  :label="meta.settings.name" placeholder=" " hint='YYYY-MM-DD' persistent-hint
-                  clearable @click:clear="setVal('', meta.id)"/>
-              </v-col> -->
+                <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
+                  :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
+                  @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
+                  :label="getMeta(m.id).settings.name" dense/>
+                
+                <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
+                  :label="getMeta(m.id).settings.name" hide-details 
+                  @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
+                  
+                <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
+                  :value="values[m.id]" @click="calendarId=m.id,calendar=true" dense
+                  :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
+                  clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
+
+              </v-col>
               <v-col cols="12" class="mt-6">
                 <v-card-actions>
                   <span class="mr-6">
@@ -689,12 +734,11 @@
         </div>
       </div>
     </v-bottom-sheet>
-
-    <v-dialog v-if="picker" v-model="picker" width="300px">
-      <v-date-picker @input="setVal($event, pickerMeta)"
+    
+    <v-dialog v-model="calendar" width="300px">
+      <v-date-picker @change="setVal($event, calendarId), calendar=false"
         :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
-        :value="values[pickerMeta]" no-title color="primary" full-width/>
-      <v-btn @click="picker=false" color="success">Confirm date</v-btn>
+        :value="values[calendarId]" no-title color="primary" full-width/>
     </v-dialog>
 
     <v-btn v-if="sheet" @click="close" fab class="close-btn-float">
@@ -788,13 +832,14 @@ import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import { ipcRenderer } from 'electron'
 import Functions from '@/mixins/Functions'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: "DialogEditPerformer",
   components: {
     vuescroll,
   },
-  mixins: [ShowImageFunction, Functions],
+  mixins: [ShowImageFunction, Functions, MetaGetters],
   mounted () {
     this.$nextTick(function () {
       // get info of video
@@ -824,21 +869,14 @@ export default {
         setTimeout(() => {
           this.playPreview()
         }, 300)
-        for (let meta in this.simpleMetaList) {
-          this.values[this.simpleMetaList[meta].id] = this.video[this.simpleMetaList[meta].id]
-        }
       } else this.dialog = true
     })
   },
   beforeDestroy() {
-    try {
-      this.$refs.video.src = ''
-    } catch (error) {}
+    try {this.$refs.video.src = '' } catch (error) {}
   },
   destroyed() {
-    for (const timeout in this.timeouts) {
-      clearTimeout(this.timeouts[timeout])
-    }
+    for (const timeout in this.timeouts) { clearTimeout(this.timeouts[timeout]) }
     clearInterval(this.timeouts.z)
   },
   data: () => ({
@@ -878,60 +916,35 @@ export default {
     // }, TODO highlight filtered letters
     // meta
     values: {},
-    picker: false,
-    pickerMeta: null,
+    calendar: false,
+    calendarId: null,
   }),
   computed: {
-    isSelectedSingleVideo() {
-      return this.$store.getters.getSelectedVideos.length == 1
-    },
+    isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
     video() {
       let videoId = this.$store.getters.getSelectedVideos[0]
       return this.$store.getters.videos.find({id:videoId}).value()
     },
-    fileName() {
-      return path.parse(this.video.path).name
-    },
+    fileName() { return path.parse(this.video.path).name },
     sortButtonsPerformers: {
-      get() {
-        return this.$store.state.Settings.videoEditPerformersSortBy
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoEditPerformersSortBy', value})
-      },
+      get() { return this.$store.state.Settings.videoEditPerformersSortBy },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoEditPerformersSortBy', value}) },
     },
     sortButtonsTags: {
-      get() {
-        return this.$store.state.Settings.videoEditTagsSortBy
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoEditTagsSortBy', value})
-      },
+      get() { return this.$store.state.Settings.videoEditTagsSortBy },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoEditTagsSortBy', value}) },
     },
     sortButtonsWebsites: {
-      get() {
-        return this.$store.state.Settings.videoEditWebsitesSortBy
-      },
-      set(value) {
-        this.$store.dispatch('updateSettingsState', {key:'videoEditWebsitesSortBy', value})
-      },
+      get() { return this.$store.state.Settings.videoEditWebsitesSortBy },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoEditWebsitesSortBy', value}) },
     },
-    darkMode() {
-      return this.$vuetify.theme.isDark
-    },
-    gradient() {
+    darkMode() { return this.$vuetify.theme.isDark },
+    gradient() { 
       let color = this.darkMode ? 'rgb(30 30 30)' : 'rgb(255 255 255)'
       return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0))`
     },
-    fileExtension() {
-      return path.parse(this.video.path).ext.replace('.', '').toLowerCase()
-    },
-    metaList() {
-      return this.$store.getters.meta.value()
-    },
-    simpleMetaList() {
-      return this.$store.getters.simpleMeta.value()
-    },
+    fileExtension() { return path.parse(this.video.path).ext.replace('.', '').toLowerCase() },
+    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
   },
   methods: {
     playPreview() {
@@ -965,9 +978,7 @@ export default {
         }, 50000)
       }
     },
-    setVideoProgress(percent) {
-      this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
-    },
+    setVideoProgress(percent) { this.$refs.video.currentTime = Math.floor(this.video.duration*percent) },
     sortItems(items, type) {
       const sortBy = this[`sortButtons${type}`]
       let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
@@ -1067,14 +1078,12 @@ export default {
     close() {
       this.sheet = false
       this.$store.state.Bookmarks.bookmarkText = ''
-      setTimeout(() => {
-        this.$store.state.Videos.dialogEditVideoInfo = false
-      }, 300)
+      setTimeout(() => { this.$store.state.Videos.dialogEditVideoInfo = false }, 300)
     },
-    validate () {
-      this.$refs.form.validate()
-    },
+    validate () { this.$refs.form.validate() },
     saveVideoInfo() {
+        console.log(this.values)
+      return
       if (this.isSelectedSingleVideo) {
         this.validate()
         if (this.valid === false) return false
@@ -1175,11 +1184,8 @@ export default {
       this.$store.state.Bookmarks.bookmarkText = ''
     },
     getPathRules(stringPath) {
-      if (stringPath.length===0) {
-        return 'Path is required'
-      } else {
-        return true
-      }
+      if (stringPath.length===0) return 'Path is required'
+      else return true
     },
     getImg() {
       let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
@@ -1189,9 +1195,7 @@ export default {
         return path.join(this.$store.getters.getPathToUserData, '/img/templates/thumb.jpg')
       }
     },
-    getTag(tagName) {
-      return this.$store.getters.tags.find({name:tagName}).value()
-    },
+    getTag(tagName) { return this.$store.getters.tags.find({name:tagName}).value() },
     removeItem(item, type) { 
       const index = this[type].indexOf(item.name)
       if (index >= 0) this[type].splice(index, 1)
@@ -1219,12 +1223,8 @@ export default {
       let tags = this.$store.getters.tags.filter(t=>(t.type.includes('video')))
       return this.sortItems(tags, 'Tags')
     },
-    performersAll() {
-      return this.sortItems(this.$store.getters.performers, 'Performers')
-    },
-    websitesAll() {
-      return this.sortItems(this.$store.getters.websites, 'Websites')
-    },
+    performersAll() {return this.sortItems(this.$store.getters.performers, 'Performers')},
+    websitesAll() {return this.sortItems(this.$store.getters.websites, 'Websites')},
     getNewTagNameRules(name) {
       let duplicate = this.$store.getters.tags.find(t=>(t.name.toLowerCase()===name.toLowerCase())).value()
       if (name.length > 100) {
@@ -1285,21 +1285,16 @@ export default {
       this.newWebsiteName = ''
       ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window
     },
-    setVal(value, meta) {
-      this.values[meta] = value
+    setVal(value, metaId) { this.values[metaId] = value },
+    removeItemMeta(item, id) { 
+      const index = this.values[id].indexOf(item)
+      if (index > -1) this.values[id].splice(index, 1)
+      this.$store.state.hoveredImage = false
     },
   },
   watch: {
-    clearRating(newValue) {
-      if (newValue) {
-        this.rating = 0
-      }
-    },
-    rating(newValue) {
-      if (newValue>0) {
-        this.clearRating = false
-      }
-    },
+    clearRating(newValue) { if (newValue) this.rating = 0 },
+    rating(newValue) { if (newValue>0) this.clearRating = false },
   },
 }
 </script>
