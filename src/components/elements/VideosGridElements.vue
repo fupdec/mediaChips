@@ -55,7 +55,10 @@
       </v-card>
     </v-dialog>
 
-    <div v-if="$store.state.Videos.dialogEditVideoInfo"><DialogEditVideoInfo /></div>
+    <div v-if="$store.state.Videos.dialogEditVideoInfo">
+      <DialogEditSingleVideoInfo v-if="isSelectedSingleVideo"/>
+      <DialogEditMultipleVideosInfo v-if="selectedVideosLength>1"/>
+    </div>
 
     <v-dialog v-model="dialogAddToPlaylist" max-width="420">
       <v-card class="add-playlist">
@@ -387,7 +390,8 @@ export default {
   name: 'VideosGridElements',
   components: {
     vuescroll,
-    DialogEditVideoInfo: () => import('@/components/pages/videos/DialogEditVideoInfo.vue'),
+    DialogEditSingleVideoInfo: () => import('@/components/pages/videos/DialogEditSingleVideoInfo.vue'),
+    DialogEditMultipleVideosInfo: () => import('@/components/pages/videos/DialogEditMultipleVideosInfo.vue'),
   },
   mounted() {
     this.$nextTick(function () {
@@ -405,9 +409,7 @@ export default {
     selectedPlaylist: null,
   }),
   computed: {
-    selectedVideosLength() {
-      return this.$store.getters.getSelectedVideos.length
-		},
+    selectedVideosLength() { return this.$store.getters.getSelectedVideos.length },
     selectedVideosPaths() {
       let ids = this.$store.getters.getSelectedVideos
       let vids = this.$store.getters.videos
@@ -416,21 +418,11 @@ export default {
         return paths.join(', ')
       } else return ''
     },
-    isSelectedSingleVideo() {
-      return this.$store.getters.getSelectedVideos.length == 1
-    },
-    isPerformersClipboardEmpty() {
-      return this.performersClipboard.length == 0
-    },
-    isTagsClipboardEmpty() {
-      return this.tagsClipboard.length == 0
-    },
-    isWebsitesClipboardEmpty() {
-      return this.websitesClipboard.length == 0
-    },
-    playlists() {
-      return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value()
-    },
+    isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
+    isPerformersClipboardEmpty() { return this.performersClipboard.length == 0 },
+    isTagsClipboardEmpty() { return this.tagsClipboard.length == 0 },
+    isWebsitesClipboardEmpty() { return this.websitesClipboard.length == 0 },
+    playlists() { return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value() },
     videoTags() {
       if (this.$store.getters.getSelectedVideos.length>0) {
         let id = this.$store.getters.getSelectedVideos[0]

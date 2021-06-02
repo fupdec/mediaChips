@@ -1,0 +1,646 @@
+<template>
+  <div v-if="$store.state.Videos.dialogEditVideoInfo">
+    <v-bottom-sheet v-model="sheet" inset scrollable persistent content-class="video-sheet">
+      <v-card>
+        <v-card-actions class="pa-0">
+          <v-btn @click="close" class="close-btn" fab small>
+            <v-icon>mdi-close</v-icon></v-btn>
+          <v-responsive :aspect-ratio="16/9">
+            <div class="video-container">
+              <img :src="'file://' + getImg()">
+              <video ref="video" autoplay loop :poster="'file://' + getImg()" muted></video>
+            </div>
+            <div class="gradient" :style="gradient"></div>
+            <v-card-actions class="actions">
+              <v-btn @click="playVideo" small outlined fab :disabled="!videoExists" :color="darkMode?'#ccc':'#777'">
+                <v-icon large>mdi-play</v-icon> </v-btn>
+              <v-btn @click="toggleMuted" small outlined fab class="mr-4" :color="darkMode?'#ccc':'#777'">
+                <v-icon v-if="muted">mdi-volume-off</v-icon>
+                <v-icon v-else>mdi-volume-high</v-icon>
+              </v-btn>
+              <v-rating v-model="rating" clearable hover half-increments size="30"
+                :color="darkMode?'#ccc':'#777'" :background-color="darkMode?'#ccc':'#777'" 
+                empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/>
+              <v-btn @click="favorite=!favorite" class="mx-2" :color="darkMode?'#ccc':'#777'" icon large> 
+                <v-icon size="25">mdi-heart{{favorite? '':'-outline'}}</v-icon>
+              </v-btn>
+              <v-spacer></v-spacer>
+              <v-btn @click="saveVideoInfo" large outlined rounded :color="darkMode?'#ccc':'#777'" class="pr-3">
+                <v-icon left>mdi-content-save</v-icon> save </v-btn>
+            </v-card-actions>
+            <div class="headline video-title text--secondary text-h4">{{fileName}}</div>
+            <v-btn class="file-info-icon" fab x-small>
+              <v-icon>mdi-information-variant</v-icon>
+            </v-btn>
+            <v-card class="file-info">
+              <div>
+                <v-icon left size="18">mdi-monitor-screenshot</v-icon>
+                Resolution: {{video.resolution}}
+              </div>
+              <div>
+                <v-icon left size="18">mdi-file-video</v-icon>
+                File extension: .{{fileExtension}}
+              </div>
+              <div>
+                <v-icon left size="18">mdi-harddisk</v-icon>
+                File size: {{calcSize(video.size)}}
+              </div>
+              <div>
+                <v-icon left size="18">mdi-calendar-plus</v-icon>
+                Added: {{added}}
+              </div>
+              <div>
+                <v-icon left size="18">mdi-calendar-edit</v-icon>
+                Last edit: {{edit}}
+              </div>
+            </v-card>
+          </v-responsive>
+        </v-card-actions>
+        <vuescroll>
+          <v-card-text class="pa-0">
+            <v-row class="mx-2 mt-4">
+              <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" sm="6">
+                <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
+                  @input="setVal($event,m.id)" :value="values[m.id]"
+                  multiple hide-selected hide-details dense
+                  :label="getMeta(m.id).settings.name" item-value="id"
+                  append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
+                  append-icon="mdi-chevron-down" @click:append="dialogListView=true"
+                  :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
+                > <!--  TODO fix filtering when type smth in search field -->
+                  <template v-slot:selection="data">
+                    <v-chip v-bind="data.attrs" class="my-1 px-2" small
+                      @click="data.select" :input-value="data.selected"
+                      @click:close="removeItemMeta(data.item.id,m.id)" close
+                      :color="getColor(m.id,data.item.id)" 
+                      :label="getMeta(m.id).settings.chipLabel"
+                      :outlined="getMeta(m.id).settings.chipOutlined"
+                      @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                      @mouseleave.stop="$store.state.hoveredImage=false">
+                      <span>{{ data.item.meta.name }}</span>
+                    </v-chip>
+                  </template>
+                  <template v-slot:item="data">
+                    <div class="list-item" 
+                      @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"
+                    > 
+                      <span v-if="getMeta(m.id).settings.favorite">
+                        <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
+                      </span>
+                      <span v-if="getMeta(m.id).settings.color">
+                        <v-icon :color="data.item.meta.color || ''" left small>
+                          mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                      </span>
+                      <span>{{data.item.meta.name}}</span>
+                      <span v-if="getMeta(m.id).settings.synonyms" class="aliases">
+                        {{getCard(data.item.id).meta.synonyms===undefined? '' : getCard(data.item.id).meta.synonyms.join(', ').slice(0,50)}}
+                      </span>
+                    </div>
+                  </template>
+                </v-autocomplete>
+
+                <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
+                  @input="setVal($event,m.id)" :value="values[m.id]"
+                  :label="getMeta(m.id).settings.name" hide-details dense
+                  clearable @click:clear="setVal('', m.id)"/>
+
+                <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
+                  @input="setVal($event,m.id)" :value="values[m.id]" type="number"
+                  :label="getMeta(m.id).settings.name" hide-details dense/>
+
+                <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
+                  :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
+                  @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
+                  :label="getMeta(m.id).settings.name" dense
+                  append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
+                
+                <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
+                  :label="getMeta(m.id).settings.name" hide-details 
+                  @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
+                  
+                <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
+                  :value="values[m.id]" @click="calendarId=m.id,calendar=true" dense
+                  :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
+                  clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
+
+              </v-col>
+              <v-col cols="12" class="d-flex mt-4">
+                <div class="overline edit-path-title">
+                  <v-checkbox :value="pathEditable" @change="changePathEditable" hide-details 
+                    class="mt-0 mr-2" off-icon="mdi-pencil" on-icon="mdi-pencil-off"/>
+                </div>
+                <v-form ref="form" v-model="valid" style="width: 100%;">
+                  <v-text-field v-model="pathToFile" 
+                    :rules="[value => !!value || 'Path is required']" :disabled="!pathEditable"
+                    placeholder="Write file path here" label="File path" class="pt-0 mt-0" />
+                </v-form>
+              </v-col>
+              <v-col cols="12" class="pt-0">
+                <div class="text-center mb-1">Bookmark</div>
+                <v-textarea v-model="bookmarkText" hide-details clearable
+                  auto-grow outlined placeholder="Write bookmark text here"/>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </vuescroll>
+      </v-card>
+      <div @click="close" class="left-close-panel">
+        <div class="content">
+          <v-icon color="red" size="15vw">mdi-close</v-icon>
+          <span class="red--text">Close</span>
+        </div>
+      </div>
+      <div @click="saveVideoInfo" class="right-close-panel">
+        <div class="content">
+          <v-icon color="green" size="15vw">mdi-check</v-icon>
+          <span class="green--text">Save</span>
+        </div>
+      </div>
+    </v-bottom-sheet>
+    
+    <v-dialog v-model="calendar" width="300px">
+      <v-date-picker @change="setVal($event, calendarId), calendar=false"
+        :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
+        :value="values[calendarId]" no-title color="primary" full-width/>
+    </v-dialog>
+
+    <v-btn v-if="sheet" @click="close" fab class="close-btn-float">
+      <v-icon large>mdi-close</v-icon>
+    </v-btn>
+
+    <v-btn v-if="sheet" @click="saveVideoInfo" fab large class="save-btn">
+      <v-icon large>mdi-content-save</v-icon>
+    </v-btn>
+    
+    <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">New {{getMeta(metaIdForNewCard).settings.nameSingular.toLowerCase()}}</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewCard" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+          <v-form v-model="validNewCard" ref="formNewCard" class="flex-grow-1" @submit.prevent>
+            <v-text-field v-model="nameForNewCard" :rules="[nameRules]" label="Name"/>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    
+    <v-dialog v-if="dialogAddNewItem" v-model="dialogAddNewItem" width="700">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">New item for meta <b>{{getMeta(metaIdForNewItem).settings.name}}</b></span>
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewItem" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+          <v-form v-model="validNewItem" ref="formNewItem" class="flex-grow-1" @submit.prevent>
+            <v-text-field v-model="nameForNewItem" :rules="[nameRules]" label="Name"/>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    
+    <v-dialog v-model="dialogListView" width="500">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">List view</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="saveListView" outlined> <v-icon left>mdi-content-save</v-icon> save </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
+
+<script>
+const fs = require("fs")
+const path = require("path")
+const shortid = require('shortid')
+const shell = require('electron').shell
+
+import vuescroll from 'vuescroll'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
+import { ipcRenderer } from 'electron'
+import Functions from '@/mixins/Functions'
+import MetaGetters from '@/mixins/MetaGetters'
+import NameRules from '@/mixins/NameRules'
+
+export default {
+  name: "DialogEditSingleVideoInfo",
+  components: {
+    vuescroll,
+  },
+  mixins: [ShowImageFunction, Functions, MetaGetters, NameRules],
+  beforeMount() {
+    this.initAll()
+  },
+  mounted() {
+    this.$nextTick(function () {})
+  },
+  beforeDestroy() {
+    try {this.$refs.video.src = '' } catch (error) {}
+  },
+  destroyed() {
+    for (const timeout in this.timeouts) { clearTimeout(this.timeouts[timeout]) }
+    clearInterval(this.timeouts.z)
+  },
+  data: () => ({
+    valid: false,
+    pathEditable: false,
+    videoExists: true,
+    // info
+    rating: 0,
+    favorite: false,
+    pathToFile: '',
+    edit: '',
+    added: '',
+    bookmarkText: '',
+    // header
+    timeouts: {},
+    muted: true,
+    sheet: false,
+    // meta
+    values: {},
+    calendar: false,
+    calendarId: null,
+    key: Date.now(),
+    // add new items 
+    dialogAddNewCard: false,
+    metaIdForNewCard: null,
+    nameForNewCard: '',
+    validNewCard: false,
+    dialogAddNewItem: false,
+    metaIdForNewItem: null,
+    nameForNewItem: '',
+    validNewItem: false,
+    dialogListView: false,
+  }),
+  computed: {
+    video() {
+      let videoId = this.$store.getters.getSelectedVideos[0]
+      return this.$store.getters.videos.find({id:videoId}).value()
+    },
+    fileName() { return path.parse(this.video.path).name },
+    darkMode() { return this.$vuetify.theme.isDark },
+    gradient() { 
+      let color = this.darkMode ? 'rgb(30 30 30)' : 'rgb(255 255 255)'
+      return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0))`
+    },
+    fileExtension() { return path.parse(this.video.path).ext.replace('.', '').toLowerCase() },
+    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+  },
+  methods: {
+    initAll() {
+      this.sheet = true
+      let video = _.cloneDeep(this.video)
+      
+      // get info of video
+      this.rating = video.rating
+      this.favorite = video.favorite
+      this.pathToFile = video.path
+
+      // get bookmark text
+      if (video.bookmark) {
+        let text = this.$store.getters.bookmarks.get('videos').find({itemId:video.id}).value().text
+        this.bookmarkText = text
+      }
+
+      // get date added and date of last edit text
+      let dateAdded = new Date(video.date)
+      this.added = dateAdded.toLocaleDateString() + ' ' + dateAdded.toLocaleTimeString()
+      let dateEdit = new Date(video.edit)
+      this.edit = dateEdit.toLocaleDateString() + ' ' + dateEdit.toLocaleTimeString()
+      setTimeout(() => { this.playPreview() }, 300)
+
+      // parse meta 
+      for (let i = 0; i < this.metaInCard.length; i++) {
+        const id = this.metaInCard[i].id
+        const type = this.metaInCard[i].type
+        if (type=='complex') { this.values[id] = _.cloneDeep(this.video[id]) || []; continue }
+        const simpleMetaType = this.getMeta(id).dataType
+        let defaultValue = ''
+        if (simpleMetaType=='array') defaultValue = []
+        if (simpleMetaType=='boolean') defaultValue = false
+        if (simpleMetaType=='number') defaultValue = 0
+        this.values[id] = _.cloneDeep(this.video[id]) || defaultValue
+      }
+    },
+    playPreview() {
+      if (!fs.existsSync(this.video.path)) return
+      this.$refs.video.src = this.video.path
+      if (this.video.duration > 65) {
+        this.setVideoProgress(0.1)
+        this.timeouts.a = setTimeout(this.setVideoProgress, 5000, 0.2)
+        this.timeouts.b = setTimeout(this.setVideoProgress, 10000, 0.3)
+        this.timeouts.c = setTimeout(this.setVideoProgress, 15000, 0.4)
+        this.timeouts.d = setTimeout(this.setVideoProgress, 20000, 0.5)
+        this.timeouts.e = setTimeout(this.setVideoProgress, 25000, 0.6)
+        this.timeouts.f = setTimeout(this.setVideoProgress, 30000, 0.7)
+        this.timeouts.g = setTimeout(this.setVideoProgress, 35000, 0.8)
+        this.timeouts.h = setTimeout(this.setVideoProgress, 40000, 0.9)
+        this.timeouts.i = setTimeout(this.setVideoProgress, 45000, 0.95)
+        this.timeouts.z = setInterval(() => {
+          for (const timeout in this.timeouts) {
+            clearTimeout(this.timeouts[timeout])
+          }
+          this.setVideoProgress(0.1)
+          this.timeouts.a = setTimeout(this.setVideoProgress, 5000, 0.2)
+          this.timeouts.b = setTimeout(this.setVideoProgress, 10000, 0.3)
+          this.timeouts.c = setTimeout(this.setVideoProgress, 15000, 0.4)
+          this.timeouts.d = setTimeout(this.setVideoProgress, 20000, 0.5)
+          this.timeouts.e = setTimeout(this.setVideoProgress, 25000, 0.6)
+          this.timeouts.f = setTimeout(this.setVideoProgress, 30000, 0.7)
+          this.timeouts.g = setTimeout(this.setVideoProgress, 35000, 0.8)
+          this.timeouts.h = setTimeout(this.setVideoProgress, 40000, 0.9)
+          this.timeouts.i = setTimeout(this.setVideoProgress, 45000, 0.95)
+        }, 50000)
+      }
+    },
+    setVideoProgress(percent) { this.$refs.video.currentTime = Math.floor(this.video.duration*percent) },
+    sortItems(items, type) {
+      const sortBy = this[`sortButtons${type}`]
+      let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
+      if (sortBy !== 'name') {
+        if (sortBy == 'color') {
+          let swatches = this.$store.state.swatches
+          itemsSorted = itemsSorted.orderBy(i=>swatches.indexOf(i.color.toLowerCase()),['asc']).value()
+        } else {
+          itemsSorted = itemsSorted.orderBy(i=>i[sortBy],['desc']).value()
+        }
+        return itemsSorted
+      } else return itemsSorted.value()
+    },
+    filterItems(itemF, queryText) {
+      let item = _.cloneDeep(itemF)
+      let query = queryText.toLowerCase()
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
+      }
+
+      let synonym = 'altNames' in item ? 'altNames' : 'aliases'
+      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
+
+      if (filtersDefault) {
+        let index = item.name.toLowerCase().indexOf(query)
+        if (index > -1) {
+          // this.matched.tags.push({
+          //   index: index,
+          //   text: item.name,
+          //   query: query,
+          //   type: 'name',
+          //   item: item,
+          // })
+          return true
+        } else {
+          for (let i=0; i<item[synonym].length; i++) {
+            let indexSub = item[synonym][i].toLowerCase().indexOf(query)
+            if (indexSub > -1) {
+              // this.matched.tags.push({
+              //   index: indexSub,
+              //   text: item[synonym][i],
+              //   query: query,
+              //   type: synonym,
+              //   item: item,
+              // })
+              return true
+            } 
+          }
+          return false
+        }
+      } else {
+        if (foundByChars(item.name, query)) return true
+        else {
+          for (let i=0; i<item[synonym].length; i++) {
+            return foundByChars(item[synonym][i], query)
+          }
+        }
+      }
+    },
+    changePathEditable() {
+      if (this.pathEditable) this.pathToFile = _.cloneDeep(this.video.path)
+      this.pathEditable = !this.pathEditable
+    },
+    close() {
+      this.sheet = false
+      setTimeout(() => { this.$store.state.Videos.dialogEditVideoInfo = false }, 300)
+    },
+    saveVideoInfo() {
+      this.$refs.form.validate()
+      if (this.valid === false) return false
+
+      let videoId = this.$store.getters.getSelectedVideos[0]
+      // TODO remake bookmark system
+      let bookmarkValue = this.bookmarkText ? true : false
+      if (!this.bookmarkText) this.$store.getters.bookmarks.get('videos').remove({itemId:videoId}).write()
+      else {
+        let bookmark = this.$store.getters.bookmarks.get('videos').find({itemId:videoId})
+        if (bookmark.value()) bookmark.assign({ text: this.bookmarkText, date: Date.now() }).write()
+        else {
+          this.$store.getters.bookmarks.get('videos').push({id: shortid.generate(), 
+            itemId: videoId, text: this.bookmarkText, date: Date.now() }).write()
+        }
+      }
+
+      let presetValues = { 
+        rating: this.rating,
+        favorite: this.favorite,
+        bookmark: bookmarkValue,
+        path: this.pathToFile,
+        edit: Date.now(),
+      }
+
+      let newValues = {...presetValues, ...this.values}
+
+      this.$store.getters.videos.find({ id: videoId }).assign(newValues).write()
+
+      this.$store.commit('updateVideos', [videoId])
+      this.$store.dispatch('filterVideos', true)
+      this.$store.commit('addLog', {type:'info',text:`📹 Video "${this.fileName}" has been edited ✏️`})
+      this.close()
+
+      if (this.pathEditable && this.pathToFile!==this.video.path) {
+        setTimeout(() => {this.$store.state.updateFoldersData = Date.now()}, 1000)
+      }
+    },
+    getImg() {
+      let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
+      if (fs.existsSync(imgPath)) return imgPath
+      else return path.join(this.$store.getters.getPathToUserData, '/img/templates/thumb.jpg')
+    },
+    getTag(tagName) { return this.$store.getters.tags.find({name:tagName}).value() },
+    removeItem(item, type) { 
+      const index = this[type].indexOf(item.name)
+      if (index >= 0) this[type].splice(index, 1)
+    },
+    sort(items) { this[items] = this[items].sort((a, b) => a.localeCompare(b)) },
+    playVideo() {
+      const pathToVideo = this.video.path
+      if (fs.existsSync(pathToVideo)) {
+        this.videoExists = false
+        if (this.$store.state.Settings.isPlayVideoInSystemPlayer) shell.openPath(pathToVideo)
+        else {
+          let data = { videos: [this.video], id: this.video.id, }
+          ipcRenderer.send('openPlayer', data)
+        }
+        setTimeout(() => { this.videoExists = true }, 1500)
+      } else this.videoExists = false
+    },
+    toggleMuted() {
+      this.muted = !this.muted
+      this.$refs.video.muted = this.muted
+    },
+    setVal(value, metaId) { this.values[metaId] = value },
+    removeItemMeta(item, id) { 
+      const index = this.values[id].indexOf(item)
+      if (index > -1) this.values[id].splice(index, 1)
+      this.$store.state.hoveredImage = false
+    },
+    openDialogAddNewCard(metaId) {
+      this.dialogAddNewCard = true
+      this.metaIdForNewCard = metaId
+    },
+    addNewCard() {
+      this.$refs.formNewCard.validate()
+      if (!this.validNewCard) return
+      this.$store.dispatch('addMetaCard', { 
+        id: shortid.generate(),
+        metaId: this.metaIdForNewCard,
+        meta: { name: this.nameForNewCard },
+      })
+      this.dialogAddNewCard = false
+      this.nameForNewCard = ''
+    },
+    openDialogAddNewItem(metaId) {
+      this.dialogAddNewItem = true
+      this.metaIdForNewItem = metaId
+    },
+    addNewItem() {
+      this.$refs.formNewItem.validate()
+      if (!this.validNewItem) return
+      this.$store.getters.meta.find({id:this.metaIdForNewItem}).get('settings.items')
+        .push({ id:shortid.generate(), name: this.nameForNewItem }).write()
+      this.key = Date.now()
+      this.dialogAddNewItem = false
+      this.nameForNewItem = ''
+    },
+    saveListView() {
+    },
+  },
+  watch: {},
+}
+</script>
+
+
+<style lang="less">
+.video-sheet {
+  padding-bottom: 20px;
+  &>.v-sheet.v-card {
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+  }
+  .close-btn {
+    top: 10px;
+    right: 10px;
+    position: absolute;
+    z-index: 3;
+  }
+  .video-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+    position: absolute;
+    img {
+      width: 100%;
+      position: absolute;
+      z-index: 0;
+      opacity: 1;
+      filter: blur(10px);
+    }
+    video {
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: contain;
+      z-index: 1;
+    }
+  }
+  .video-title {
+    word-break: break-word;
+    position: absolute;
+    bottom: 80px;
+    z-index: 3;
+    margin: 0 20px;
+  }
+  .gradient {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    bottom: 0;
+    z-index: 1;
+  }
+  .actions {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+    .v-rating {
+      display: inline-flex;
+      .v-icon {
+        padding: 0;
+      }
+    }
+  }
+  .file-info-icon {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    z-index: 3;
+    &:hover + .file-info {
+      opacity: 1;
+    }
+  }
+  .file-info {
+    opacity: 0;
+    transition: .3s all;
+    position: absolute;
+    left: 50px;
+    top: 10px;
+    padding: 10px;
+    z-index: 2;
+  }
+  &.v-bottom-sheet.v-dialog.v-bottom-sheet--inset {
+    max-width: 55% !important;
+    min-width: 600px;
+  }
+  &.v-dialog:not(.v-dialog--fullscreen) {
+    max-height: calc(100% - 60px) !important;
+  }
+}
+.rating-favorite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.edit-path-title {
+  display: flex;
+  justify-content: center;
+}
+</style> 
