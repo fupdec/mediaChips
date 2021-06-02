@@ -25,10 +25,10 @@
                 :hint="`Write a name on a new line to add several ${meta.settings.name.toLowerCase()} at once`" no-resize/>
               <v-alert v-if="dupCards.length" border="left" dense text dismissible class="mt-4 mb-0"
                 icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
-              > Already in the database: {{dupCards}} </v-alert>
+              > Already in the database: {{dupCards.join(', ')}} </v-alert>
               <v-alert v-if="newCards.length" border="left" dense text icon="mdi-plus-circle"
                 close-text="Close" type="success" dismissible class="mt-4 mb-0" 
-              > Added: {{newCards}} </v-alert>
+              > Added: {{newCards.join(', ')}} </v-alert>
             </v-form>
           </v-card-text>
         </v-card>
@@ -160,15 +160,15 @@
         </template>
         
         <v-list dense class="context-menu">
-          <v-list-item v-for="(s) in specificMeta" :key="s" link @click="toggleVisibility(s)">
+          <v-list-item v-for="(item) in specificMeta" :key="item" link @click="toggleVisibility(item)">
             <v-list-item-title> 
-              <v-icon left size="18">mdi-{{getMeta(s).settings.icon}}</v-icon>
-              {{getMeta(s).settings.name}}
+              <v-icon left size="18">mdi-{{getMeta(item).settings.icon}}</v-icon>
+              {{getMeta(item).settings.name}}
             </v-list-item-title>
-            <v-icon size="20" class="pl-10" :color="visibility[s]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            <v-icon size="20" class="pl-10" :color="visibility[item]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
-          <v-list-item v-for="(mc,i) in metaInCard" :key="i" link @click="toggleVisibility(mc.id)">
+          <v-list-item v-for="(mc) in metaInCard" :key="mc.id" link @click="toggleVisibility(mc.id)">
             <v-list-item-title>
               <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
               {{getMeta(mc.id).settings.name}}
@@ -205,8 +205,8 @@ export default {
   data: () => ({
     validCardName: false,
     nameRules: [v => !!v || 'Name is required'],
-    dupCards: '',
-    newCards: '',
+    dupCards: [],
+    newCards: [],
     cardNames: '',
     searchString: '',
     sort: [
@@ -292,8 +292,7 @@ export default {
       let visibility = {}
       for (let i = 0; i < this.specificMeta.length; i++) visibility[this.specificMeta[i]] = true
       for (let i = 0; i < this.metaInCard.length; i++) visibility[this.metaInCard[i].id] = true
-      visibility = {...visibility, ...this.meta.state.visibility}
-      this.$store.state.Meta.visibility = _.pickBy(visibility, (val, key) => _.find(this.metaInCard, i=>i.id===key) )
+      this.$store.state.Meta.visibility = {...visibility, ...this.meta.state.visibility}
     },
     addNewCard() {
       this.$refs.formAddCard.validate()
@@ -303,27 +302,25 @@ export default {
       cardsArray = cardsArray.filter((el)=>(el != ''))
       cardsArray = cardsArray.map(s => s.trim())
 
-      const cardsDb = this.$store.getters.websites
-      let dups = []
-      let newCards = []
+      const cardsDb = this.$store.getters.metaCards.filter({metaId:this.meta.id})
+      this.dupCards = []
+      this.newCards = []
       let vm = this
 
       async function addCardInDb() {
         for (const card of cardsArray) {
-          let duplicate = cardsDb.find(i=>(i.name.toLowerCase()===card.toLowerCase())).value()
-          if (duplicate) { dups.push(duplicate.name); continue }
+          let duplicate = cardsDb.find(i=>(i.meta.name.toLowerCase()===card.toLowerCase())).value()
+          if (duplicate) { vm.dupCards.push(duplicate.meta.name); continue }
           vm.$store.dispatch('addMetaCard', { 
             id: shortid.generate(),
             metaId: vm.metaId,
             meta: { name: card },
           })
-          newCards.push(card)
+          vm.newCards.push(card)
         }
       }
 
       addCardInDb().then(() => {
-        this.dupCards = dups.join(', ') // TODO check for dups
-        this.newCards = newCards.join(', ')
         this.cardNames = '',
         this.$store.dispatch('filterMetaCards')
         // ipcRenderer.send('updatePlayerDb', 'websites') // TODO update meta in player window
@@ -389,8 +386,7 @@ export default {
       this.$store.getters.meta.find({id:this.meta.id}).get('state.visibility').set(item,value).write()
     },
   },
-  watch: {
-  },
+  watch: {},
 }
 </script>
 

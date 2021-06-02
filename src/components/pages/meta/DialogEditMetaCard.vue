@@ -59,6 +59,8 @@
                       @input="setVal($event,m.id)" :value="values[m.id]"
                       multiple hide-selected hide-details dense
                       :label="getMeta(m.id).settings.name" item-value="id"
+                      append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
+                      append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                       :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
                     > <!--  TODO fix filtering when type smth in search field -->
                       <template v-slot:selection="data">
@@ -105,7 +107,8 @@
                     <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                       :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                       @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
-                      :label="getMeta(m.id).settings.name" dense/>
+                      :label="getMeta(m.id).settings.name" dense 
+                      append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
                     
                     <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
                       :label="getMeta(m.id).settings.name" hide-details 
@@ -118,7 +121,7 @@
 
                   </v-col>
                   <v-col v-if="meta.settings.color" cols="12" sm="6">
-                    <v-btn @click="dialogColor=true" :color="color">Pick another color for card</v-btn>
+                    <v-btn @click="dialogColor=true" :color="color" block rounded>Pick another color for card</v-btn>
                   </v-col>
                 </v-row>
               </v-container>
@@ -149,6 +152,48 @@
     <v-dialog v-model="dialogColor" width="300">
       <v-color-picker v-model="color" hide-mode-switch/>
     </v-dialog>
+    
+    <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">New {{getMeta(metaIdForNewCard).settings.nameSingular.toLowerCase()}}</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewCard" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+          <v-form v-model="validNewCard" ref="formNewCard" class="flex-grow-1" @submit.prevent>
+            <v-text-field v-model="nameForNewCard" :rules="[nameRules]" label="Name"/>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    
+    <v-dialog v-if="dialogAddNewItem" v-model="dialogAddNewItem" width="700">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">New item for meta <b>{{getMeta(metaIdForNewItem).settings.name}}</b></span>
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewItem" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+          <v-form v-model="validNewItem" ref="formNewItem" class="flex-grow-1" @submit.prevent>
+            <v-text-field v-model="nameForNewItem" :rules="[nameRules]" label="Name"/>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    
+    <v-dialog v-model="dialogListView" width="500">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">List view</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="saveListView" outlined> <v-icon left>mdi-content-save</v-icon> save </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+        </v-card-text>
+      </v-card>
+    </v-dialog>
 
     <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="valuesForScraper"
       @closeScraper="dialogScraper=false" @getValues="getScraperValues($event)" @updateKey="key=Date.now()"/>
@@ -157,6 +202,7 @@
 
 <script>
 const { clipboard } = require('electron')
+const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
 import NameRules from '@/mixins/NameRules'
@@ -199,6 +245,16 @@ export default {
     dialogScraper: false,
     tooltipCopyName: false,
     key: Date.now(),
+    // add new items 
+    dialogAddNewCard: false,
+    metaIdForNewCard: null,
+    nameForNewCard: '',
+    validNewCard: false,
+    dialogAddNewItem: false,
+    metaIdForNewItem: null,
+    nameForNewItem: '',
+    validNewItem: false,
+    dialogListView: false,
   }),
   computed: {
     metaCardId() { return this.$route.query.cardId },
@@ -307,6 +363,36 @@ export default {
       this.tooltipCopyName = true
       clipboard.writeText(this.card.meta.name)
       setTimeout(() => { this.tooltipCopyName = false }, 3000)
+    },
+    openDialogAddNewCard(metaId) {
+      this.dialogAddNewCard = true
+      this.metaIdForNewCard = metaId
+    },
+    addNewCard() {
+      this.$refs.formNewCard.validate()
+      if (!this.validNewCard) return
+      this.$store.dispatch('addMetaCard', { 
+        id: shortid.generate(),
+        metaId: this.metaIdForNewCard,
+        meta: { name: this.nameForNewCard },
+      })
+      this.dialogAddNewCard = false
+      this.nameForNewCard = ''
+    },
+    openDialogAddNewItem(metaId) {
+      this.dialogAddNewItem = true
+      this.metaIdForNewItem = metaId
+    },
+    addNewItem() {
+      this.$refs.formNewItem.validate()
+      if (!this.validNewItem) return
+      this.$store.getters.meta.find({id:this.metaIdForNewItem}).get('settings.items')
+        .push({ id:shortid.generate(), name: this.nameForNewItem }).write()
+      this.key = Date.now()
+      this.dialogAddNewItem = false
+      this.nameForNewItem = ''
+    },
+    saveListView() {
     },
   },
 };

@@ -399,11 +399,13 @@
               </v-card>
             </v-responsive>
             <v-row class="mx-2">
-              <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" sm="6">
+              <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" sm="6">
                 <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                   @input="setVal($event,m.id)" :value="values[m.id]"
                   multiple hide-selected hide-details dense
                   :label="getMeta(m.id).settings.name" item-value="id"
+                  append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
+                  append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                   :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
                 > <!--  TODO fix filtering when type smth in search field -->
                   <template v-slot:selection="data">
@@ -450,7 +452,8 @@
                 <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                   :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                   @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
-                  :label="getMeta(m.id).settings.name" dense/>
+                  :label="getMeta(m.id).settings.name" dense
+                  append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
                 
                 <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
                   :label="getMeta(m.id).settings.name" hide-details 
@@ -818,6 +821,48 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    
+    <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">New {{getMeta(metaIdForNewCard).settings.nameSingular.toLowerCase()}}</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewCard" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+          <v-form v-model="validNewCard" ref="formNewCard" class="flex-grow-1" @submit.prevent>
+            <v-text-field v-model="nameForNewCard" :rules="[nameRules]" label="Name"/>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    
+    <v-dialog v-if="dialogAddNewItem" v-model="dialogAddNewItem" width="700">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">New item for meta <b>{{getMeta(metaIdForNewItem).settings.name}}</b></span>
+          <v-spacer></v-spacer>
+          <v-btn @click="addNewItem" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+          <v-form v-model="validNewItem" ref="formNewItem" class="flex-grow-1" @submit.prevent>
+            <v-text-field v-model="nameForNewItem" :rules="[nameRules]" label="Name"/>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    
+    <v-dialog v-model="dialogListView" width="500">
+      <v-card>
+        <v-toolbar color="primary">
+          <span class="headline">List view</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="saveListView" outlined> <v-icon left>mdi-content-save</v-icon> save </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -833,13 +878,14 @@ import ShowImageFunction from '@/mixins/ShowImageFunction'
 import { ipcRenderer } from 'electron'
 import Functions from '@/mixins/Functions'
 import MetaGetters from '@/mixins/MetaGetters'
+import NameRules from '@/mixins/NameRules'
 
 export default {
   name: "DialogEditPerformer",
   components: {
     vuescroll,
   },
-  mixins: [ShowImageFunction, Functions, MetaGetters],
+  mixins: [ShowImageFunction, Functions, MetaGetters, NameRules],
   mounted () {
     this.$nextTick(function () {
       // get info of video
@@ -918,6 +964,17 @@ export default {
     values: {},
     calendar: false,
     calendarId: null,
+    key: Date.now(),
+    // add new items 
+    dialogAddNewCard: false,
+    metaIdForNewCard: null,
+    nameForNewCard: '',
+    validNewCard: false,
+    dialogAddNewItem: false,
+    metaIdForNewItem: null,
+    nameForNewItem: '',
+    validNewItem: false,
+    dialogListView: false,
   }),
   computed: {
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
@@ -1290,6 +1347,36 @@ export default {
       const index = this.values[id].indexOf(item)
       if (index > -1) this.values[id].splice(index, 1)
       this.$store.state.hoveredImage = false
+    },
+    openDialogAddNewCard(metaId) {
+      this.dialogAddNewCard = true
+      this.metaIdForNewCard = metaId
+    },
+    addNewCard() {
+      this.$refs.formNewCard.validate()
+      if (!this.validNewCard) return
+      this.$store.dispatch('addMetaCard', { 
+        id: shortid.generate(),
+        metaId: this.metaIdForNewCard,
+        meta: { name: this.nameForNewCard },
+      })
+      this.dialogAddNewCard = false
+      this.nameForNewCard = ''
+    },
+    openDialogAddNewItem(metaId) {
+      this.dialogAddNewItem = true
+      this.metaIdForNewItem = metaId
+    },
+    addNewItem() {
+      this.$refs.formNewItem.validate()
+      if (!this.validNewItem) return
+      this.$store.getters.meta.find({id:this.metaIdForNewItem}).get('settings.items')
+        .push({ id:shortid.generate(), name: this.nameForNewItem }).write()
+      this.key = Date.now()
+      this.dialogAddNewItem = false
+      this.nameForNewItem = ''
+    },
+    saveListView() {
     },
   },
   watch: {

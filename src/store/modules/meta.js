@@ -157,8 +157,7 @@ const Meta = {
     addMetaCard({commit, getters}, newMetaCard) {
       let metaCard = { ...defaultMetaCard, ...newMetaCard }
       getters.metaCards.push(metaCard).write()
-      const metaId = router.currentRoute.query.metaId
-      const metaName = getters.meta.find({id:metaId}).value().settings.nameSingular.toLowerCase()
+      const metaName = getters.meta.find({id:metaCard.metaId}).value().settings.nameSingular.toLowerCase()
       commit('addLog', {type:'info', color:'green', text:`Added ${metaName} "${metaCard.meta.name}"`})
     },
     deleteMetaCard({state, rootState, commit, dispatch, getters}) {
