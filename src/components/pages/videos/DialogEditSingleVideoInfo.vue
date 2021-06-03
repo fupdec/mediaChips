@@ -59,7 +59,7 @@
         <vuescroll>
           <v-card-text class="pa-0">
             <v-row class="mx-2 mt-4">
-              <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" sm="6">
+              <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" lg="6">
                 <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                   @input="setVal($event,m.id)" :value="values[m.id]"
                   multiple hide-selected hide-details dense
@@ -67,8 +67,8 @@
                   append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
                   append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                   :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
-                > <!--  TODO fix filtering when type smth in search field -->
-                  <template v-slot:selection="data">
+                  :filter="filterCards"
+                > <template v-slot:selection="data">
                     <v-chip v-bind="data.attrs" class="my-1 px-2" small
                       @click="data.select" :input-value="data.selected"
                       @click:close="removeItemMeta(data.item.id,m.id)" close
@@ -376,9 +376,10 @@ export default {
         return itemsSorted
       } else return itemsSorted.value()
     },
-    filterItems(itemF, queryText) {
-      let item = _.cloneDeep(itemF)
+    filterCards(cardObject, queryText, itemText) {
+      let card = _.cloneDeep(cardObject)
       let query = queryText.toLowerCase()
+
       function foundByChars(text, query) {
         text = text.toLowerCase()
         let foundCharIndex = 0
@@ -392,42 +393,27 @@ export default {
         return foundAllChars
       }
 
-      let synonym = 'altNames' in item ? 'altNames' : 'aliases'
       let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
 
       if (filtersDefault) {
-        let index = item.name.toLowerCase().indexOf(query)
-        if (index > -1) {
-          // this.matched.tags.push({
-          //   index: index,
-          //   text: item.name,
-          //   query: query,
-          //   type: 'name',
-          //   item: item,
-          // })
-          return true
-        } else {
-          for (let i=0; i<item[synonym].length; i++) {
-            let indexSub = item[synonym][i].toLowerCase().indexOf(query)
-            if (indexSub > -1) {
-              // this.matched.tags.push({
-              //   index: indexSub,
-              //   text: item[synonym][i],
-              //   query: query,
-              //   type: synonym,
-              //   item: item,
-              // })
-              return true
-            } 
+        let index = card.name.toLowerCase().indexOf(query)
+        if (index > -1) return true
+        else {
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            let indexSub = card.meta.synonyms[i].toLowerCase().indexOf(query)
+            if (indexSub > -1) return true
           }
           return false
         }
       } else {
-        if (foundByChars(item.name, query)) return true
+        if (foundByChars(card.meta.name, query)) return true
         else {
-          for (let i=0; i<item[synonym].length; i++) {
-            return foundByChars(item[synonym][i], query)
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            return foundByChars(card.meta.synonyms[i], query)
           }
+          return false
         }
       }
     },

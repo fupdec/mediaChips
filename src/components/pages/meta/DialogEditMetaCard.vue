@@ -28,13 +28,13 @@
             <v-form v-model="valid" ref="form" @submit.prevent>
               <v-container fluid>
                 <v-row>
-                  <v-col cols="12" sm="6" class="pb-0 remove-details-margin">
+                  <v-col cols="12" md="6" class="pb-0 remove-details-margin">
                     <v-text-field v-model="name" :rules="[nameRules]" label="Name" dense/>
                   </v-col>
-                  <v-col v-if="meta.settings.synonyms" cols="12" sm="6" class="pb-0 remove-details-margin">
+                  <v-col v-if="meta.settings.synonyms" cols="12" md="6" class="pb-0 remove-details-margin">
                     <v-text-field v-model="synonyms" label="Synonyms" hide-details dense/>
                   </v-col>
-                  <v-col v-if="meta.settings.country" cols="12" sm="6">
+                  <v-col v-if="meta.settings.country" cols="12" md="6">
                     <v-autocomplete v-model="country" :items="countries" multiple 
                       item-text="name" item-value="name" label="Country" dense
                       class="nation-chips hidden-close nation-select" hide-selected hide-details
@@ -54,7 +54,7 @@
                     </v-autocomplete>
                   </v-col>
 
-                  <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" sm="6">
+                  <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" md="6">
                     <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
                       multiple hide-selected hide-details dense
@@ -62,7 +62,8 @@
                       append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
                       append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                       :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
-                    > <!--  TODO fix filtering when type smth in search field -->
+                      :filter="filterCards"
+                    >
                       <template v-slot:selection="data">
                         <v-chip v-bind="data.attrs" class="my-1 px-2" small
                           @click="data.select" :input-value="data.selected"
@@ -120,7 +121,7 @@
                       clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
 
                   </v-col>
-                  <v-col v-if="meta.settings.color" cols="12" sm="6">
+                  <v-col v-if="meta.settings.color" cols="12" md="6">
                     <v-btn @click="dialogColor=true" :color="color" block rounded>Pick another color for card</v-btn>
                   </v-col>
                 </v-row>
@@ -393,6 +394,47 @@ export default {
       this.nameForNewItem = ''
     },
     saveListView() {
+    },
+    filterCards(cardObject, queryText, itemText) {
+      let card = _.cloneDeep(cardObject)
+      let query = queryText.toLowerCase()
+
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
+      }
+
+      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
+
+      if (filtersDefault) {
+        let index = card.name.toLowerCase().indexOf(query)
+        if (index > -1) return true
+        else {
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            let indexSub = card.meta.synonyms[i].toLowerCase().indexOf(query)
+            if (indexSub > -1) return true
+          }
+          return false
+        }
+      } else {
+        if (foundByChars(card.meta.name, query)) return true
+        else {
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            return foundByChars(card.meta.synonyms[i], query)
+          }
+          return false
+        }
+      }
     },
   },
 };
