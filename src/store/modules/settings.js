@@ -136,6 +136,7 @@ dbs.defaults({
   registration: '',
   colorScroll: false,
   tabBorders: true,
+  showIconsOfMetaInEditingDialog: true,
 }).write()
 
 const Settings = {
@@ -274,6 +275,7 @@ const Settings = {
     registration: dbs.get('registration').value(),
     colorScroll: dbs.get('colorScroll').value(),
     tabBorders: dbs.get('tabBorders').value(),
+    showIconsOfMetaInEditingDialog: dbs.get('showIconsOfMetaInEditingDialog').value(),
   }),
   mutations: {
     updateBackups(state, value) {

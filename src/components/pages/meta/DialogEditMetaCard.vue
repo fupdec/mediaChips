@@ -28,17 +28,20 @@
             <v-form v-model="valid" ref="form" @submit.prevent>
               <v-container fluid>
                 <v-row>
-                  <v-col cols="12" md="6" class="pb-0 remove-details-margin">
-                    <v-text-field v-model="name" :rules="[nameRules]" label="Name" dense/>
+                  <v-col cols="12" lg="6" class="pb-0 remove-details-margin">
+                    <v-text-field v-model="name" :rules="[nameRules]" label="Name" 
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta('name').settings.icon}`:''"/>
                   </v-col>
-                  <v-col v-if="meta.settings.synonyms" cols="12" md="6" class="pb-0 remove-details-margin">
-                    <v-text-field v-model="synonyms" label="Synonyms" hide-details dense/>
+                  <v-col v-if="meta.settings.synonyms" cols="12" lg="6" class="pb-0 remove-details-margin">
+                    <v-text-field v-model="synonyms" label="Synonyms" hide-details 
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta('synonyms').settings.icon}`:''"/>
                   </v-col>
-                  <v-col v-if="meta.settings.country" cols="12" md="6">
+                  <v-col v-if="meta.settings.country" cols="12" lg="6">
                     <v-autocomplete v-model="country" :items="countries" multiple 
-                      item-text="name" item-value="name" label="Country" dense
+                      item-text="name" item-value="name" label="Country" 
                       class="nation-chips hidden-close nation-select" hide-selected hide-details
-                      :menu-props="{contentClass:'list-with-preview'}">
+                      :menu-props="{contentClass:'list-with-preview'}"
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta('country').settings.icon}`:''">
                       <template v-slot:selection="data">
                         <v-chip @click="data.select" @click:close="removeCountry(data.item)"
                           v-bind="data.attrs" class="my-1" outlined close small
@@ -54,11 +57,12 @@
                     </v-autocomplete>
                   </v-col>
 
-                  <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" md="6">
+                  <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" lg="6">
                     <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
-                      multiple hide-selected hide-details dense
+                      multiple hide-selected hide-details 
                       :label="getMeta(m.id).settings.name" item-value="id"
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                       append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
                       append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                       :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
@@ -98,31 +102,36 @@
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
-                      :label="getMeta(m.id).settings.name" hide-details dense
-                      clearable @click:clear="setVal('', m.id)"/>
+                      :label="getMeta(m.id).settings.name" hide-details 
+                      clearable @click:clear="setVal('', m.id)"
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
                       @input="setVal($event,m.id)" :value="values[m.id]" type="number"
-                      :label="getMeta(m.id).settings.name" hide-details dense/>
+                      :label="getMeta(m.id).settings.name" hide-details 
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                     <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                       :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                       @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
-                      :label="getMeta(m.id).settings.name" dense 
+                      :label="getMeta(m.id).settings.name" 
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" 
                       append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
                     
                     <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
                       :label="getMeta(m.id).settings.name" hide-details 
-                      @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"/>
+                      @change="setVal($event,m.id)" :value="values[m.id]"
+                      :prepend-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
                       
                     <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
-                      :value="values[m.id]" @click="calendarId=m.id,calendar=true" dense
+                      :value="values[m.id]" @click="calendarId=m.id,calendar=true" 
                       :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
-                      clearable @click:clear="setVal('', m.id)" readonly persistent-hint/>
+                      clearable @click:clear="setVal('', m.id)" readonly persistent-hint
+                      :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                   </v-col>
-                  <v-col v-if="meta.settings.color" cols="12" md="6">
-                    <v-btn @click="dialogColor=true" :color="color" block rounded>Pick another color for card</v-btn>
+                  <v-col v-if="meta.settings.color" cols="12" lg="6">
+                    <v-btn @click="dialogColor=true" :color="color" block rounded class="mt-3">Pick another color for card</v-btn>
                   </v-col>
                 </v-row>
               </v-container>
@@ -284,6 +293,7 @@ export default {
       if (this.meta.settings.synonyms) values.synonyms = this.synonyms
       return values
     },
+    showIcons() { return this.$store.state.Settings.showIconsOfMetaInEditingDialog },
   },
   methods: {
     parseMetaInCard() {

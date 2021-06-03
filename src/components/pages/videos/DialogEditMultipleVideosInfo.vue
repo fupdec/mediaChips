@@ -49,6 +49,7 @@
                     @input="setVal($event,m.id)" :value="values[m.id]"
                     multiple hide-selected hide-details :disabled="edits[m.id]===0"
                     :label="getMeta(m.id).settings.name" item-value="id"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
                     append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                     :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
@@ -89,28 +90,33 @@
                     @input="setVal($event,m.id)" :value="values[m.id]"
                     :label="getMeta(m.id).settings.name" hide-details
                     clearable @click:clear="setVal('', m.id)"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     :disabled="edits[m.id]===0"/>
 
                   <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
                     @input="setVal($event,m.id)" :value="values[m.id]" type="number"
                     :label="getMeta(m.id).settings.name" hide-details
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     :disabled="edits[m.id]===0"/>
 
                   <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                     :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                     @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
                     :label="getMeta(m.id).settings.name" :disabled="edits[m.id]===0"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
                   
                   <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
                     :label="getMeta(m.id).settings.name" hide-details
                     @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     :disabled="edits[m.id]===0"/>
                     
                   <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
                     :value="values[m.id]" @click="calendarId=m.id,calendar=true"
                     :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
                     clearable @click:clear="setVal('', m.id)" readonly persistent-hint
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     :disabled="edits[m.id]===0"/>
                 </v-col>
                 <v-col v-if="metaInCard.length==0" cols="12" class="d-flex align-center justify-center flex-column">
@@ -218,6 +224,7 @@ export default {
   }),
   computed: {
     metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    showIcons() { return this.$store.state.Settings.showIconsOfMetaInEditingDialog },
   },
   methods: {
     parseMetaInCard() {

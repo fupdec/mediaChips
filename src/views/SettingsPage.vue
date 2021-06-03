@@ -325,6 +325,11 @@
                 :label="ratingAndFavoriteInCard?'Card description':'Card image'"/>
             </div>
             <div class="pt-7 d-flex">
+              <span class="mr-6">Icons of meta in editing dialog:</span>
+              <v-switch v-model="showIconsOfMetaInEditingDialog" inset hide-details 
+                class="mt-0 pt-0 d-inline-flex" :label="showIconsOfMetaInEditingDialog?'Show':'Hide'"/>
+            </div>
+            <div class="pt-7 d-flex">
               <span class="mr-6">Tab borders:</span>
               <v-switch v-model="tabBorders" inset hide-details 
                 class="mt-0 pt-0 d-inline-flex" :label="tabBorders?'Show':'Hide'"/>
@@ -821,6 +826,10 @@ export default {
     tabBorders: {
       get() {return this.$store.state.Settings.tabBorders},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'tabBorders', value})},
+    },
+    showIconsOfMetaInEditingDialog: {
+      get() {return this.$store.state.Settings.showIconsOfMetaInEditingDialog},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'showIconsOfMetaInEditingDialog', value})},
     },
     darkMode: {
       get() {return this.$store.state.Settings.darkMode},
