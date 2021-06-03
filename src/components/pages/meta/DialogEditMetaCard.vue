@@ -130,13 +130,13 @@
           </v-card-text>
         </vuescroll>
       </v-card>
-      <div @click="close" class="left-close-panel">
+      <div v-if="panels" @click="close" class="left-close-panel">
         <div class="content">
           <v-icon color="red" size="15vw">mdi-close</v-icon>
           <span class="red--text">Close</span>
         </div>
       </div>
-      <div @click="save" class="right-close-panel">
+      <div v-if="panels" @click="save" class="right-close-panel">
         <div class="content">
           <v-icon color="green" size="15vw">mdi-check</v-icon>
           <span class="green--text">Save</span>
@@ -221,15 +221,16 @@ export default {
     CountryFlag,
 	},
   beforeMount () {
+    this.name = this.card.meta.name || ''
+    this.color = this.card.meta.color || '#777777'
+    this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
+    this.country = this.card.meta.country || []
     this.parseMetaInCard()
   },
   mixins: [ShowImageFunction, NameRules, MetaGetters, Countries,], 
   mounted () {
     this.$nextTick(function () {
-      this.name = this.card.meta.name || ''
-      this.color = this.card.meta.color || '#777777'
-      this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
-      this.country = this.card.meta.country || []
+      setTimeout(() => { this.panels = true }, 1000)
     })
   },
   data: () => ({
@@ -246,6 +247,7 @@ export default {
     dialogScraper: false,
     tooltipCopyName: false,
     key: Date.now(),
+    panels: false,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,
