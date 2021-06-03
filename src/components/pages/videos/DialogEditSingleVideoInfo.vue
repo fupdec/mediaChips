@@ -71,7 +71,7 @@
                 > <template v-slot:selection="data">
                     <v-chip v-bind="data.attrs" class="my-1 px-2" small
                       @click="data.select" :input-value="data.selected"
-                      @click:close="removeItemMeta(data.item.id,m.id)" close
+                      @click:close="removeItem(data.item.id,m.id)" close
                       :color="getColor(m.id,data.item.id)" 
                       :label="getMeta(m.id).settings.chipLabel"
                       :outlined="getMeta(m.id).settings.chipOutlined"
@@ -137,7 +137,7 @@
                 </v-form>
               </v-col>
               <v-col cols="12" class="pt-0">
-                <div class="text-center mb-1">Bookmark</div>
+                <div class="text-center text--secondary mb-1">Bookmark</div>
                 <v-textarea v-model="bookmarkText" hide-details clearable
                   auto-grow outlined placeholder="Write bookmark text here"/>
               </v-col>
@@ -165,11 +165,11 @@
         :value="values[calendarId]" no-title color="primary" full-width/>
     </v-dialog>
 
-    <v-btn v-if="sheet" @click="close" fab class="close-btn-float">
+    <v-btn @click="close" fab class="close-btn-float">
       <v-icon large>mdi-close</v-icon>
     </v-btn>
 
-    <v-btn v-if="sheet" @click="saveVideoInfo" fab large class="save-btn">
+    <v-btn @click="saveVideoInfo" fab large class="save-btn">
       <v-icon large>mdi-content-save</v-icon>
     </v-btn>
     
@@ -469,10 +469,6 @@ export default {
       else return path.join(this.$store.getters.getPathToUserData, '/img/templates/thumb.jpg')
     },
     getTag(tagName) { return this.$store.getters.tags.find({name:tagName}).value() },
-    removeItem(item, type) { 
-      const index = this[type].indexOf(item.name)
-      if (index >= 0) this[type].splice(index, 1)
-    },
     sort(items) { this[items] = this[items].sort((a, b) => a.localeCompare(b)) },
     playVideo() {
       const pathToVideo = this.video.path
@@ -491,7 +487,7 @@ export default {
       this.$refs.video.muted = this.muted
     },
     setVal(value, metaId) { this.values[metaId] = value },
-    removeItemMeta(item, id) { 
+    removeItem(item, id) { 
       const index = this.values[id].indexOf(item)
       if (index > -1) this.values[id].splice(index, 1)
       this.$store.state.hoveredImage = false

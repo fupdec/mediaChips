@@ -1,339 +1,121 @@
 <template>
   <div v-if="$store.state.Videos.dialogEditVideoInfo">
-    <v-dialog v-model="dialog" scrollable persistent max-width="1200">
+    <v-dialog v-model="dialog" scrollable persistent max-width="700">
       <v-card>
-        <v-card-title class="edit-card-title">
+        <v-toolbar color="primary">
           <div class="headline">
-            <span class="ml-4">Edit videos info </span>
-            <v-tooltip right>
+            <span>Edit multiple videos info </span>
+            <v-tooltip bottom>
               <template v-slot:activator="{ on }">
-                <v-icon v-on="on" class="mb-4" small dark>mdi-help-circle-outline</v-icon>
+                <v-icon v-on="on">mdi-help-circle-outline</v-icon>
               </template>
-              <span>Performers, tags, and websites added in this dialog will be added to the existing ones. <br>
-                Clearing information will affect the selected videos! Use this option carefully. <br>
-                Click the <v-icon dark small>mdi-plus-circle-outline</v-icon> to the left of the select to add a new item.</span>
+              <span>The entered information will be processed in accordance <br>with the selected icon on the left of the field:<br>
+                <v-icon v-html="`mdi-cancel`" dark small left/> will remain the same <br>
+                <v-icon v-html="`mdi-reload-alert`" dark small left/> will be replaced (leave blank field to remove information) <br>
+                <v-icon v-html="`mdi-plus-circle-outline`" dark small left/>  will be added to the existing one (only for arrays) </span>
             </v-tooltip>
           </div>
           <v-spacer></v-spacer>
-          <v-btn @click="$store.state.Videos.dialogEditVideoInfo=false" class="ma-4" dark outlined> Cancel </v-btn>
-          <v-btn @click="saveVideoInfo" color="primary">
-            <v-icon left>mdi-content-save-outline</v-icon> Save </v-btn>
-        </v-card-title>
+          <v-btn @click="$store.state.Videos.dialogEditVideoInfo=false" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
+          <v-btn @click="saveVideoInfo" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+        </v-toolbar>
         <vuescroll>
-          <v-card-text class="py-0">
+          <v-card-text class="px-0 pt-0">
             <v-container fluid>
               <v-row>
-                <v-col cols="12" md="6">
-                  <v-card-actions>
-                    <span class="overline ml-6"><v-icon left>mdi-account-outline</v-icon> performers</span>
-                    <v-spacer></v-spacer>
-                    <span class="caption mr-2">Sort list by</span>
-                    <v-btn-toggle v-model="sortButtonsPerformers" mandatory color="primary">
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="name" v-on="on">
-                            <v-icon color="grey">mdi-alphabetical-variant</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>name</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="favorite" v-on="on">
-                            <v-icon color="grey">mdi-heart-outline</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>favorite</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="rating" v-on="on">
-                            <v-icon color="grey">mdi-star-outline</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>rating</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="date" v-on="on">
-                            <v-icon color="grey">mdi-calendar-plus</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>date added</span>
-                      </v-tooltip>
-                    </v-btn-toggle>
-                  </v-card-actions>
-                  <v-autocomplete :disabled="clearPerformers"
-                    v-model="performers" outlined clearable
-                    :items="performersAll()" label="Performers"
-                    item-text="name" class="hidden-close"
-                    item-value="name" no-data-text="No more performers"
-                    @blur="sort('performers')" multiple hide-selected hide-details  
-                    @click:prepend="dialogAddNewPerformer=true" prepend-icon="mdi-plus-circle-outline"
-                    :menu-props="{contentClass:'list-with-preview'}" :filter="filterItems"
-                  >
-                    <template v-slot:selection="data">
-                      <v-chip v-bind="data.attrs" close close-icon="mdi-close"
-                        :input-value="data.selected" label class="px-2"
-                        @click="data.select" @click:close="removeItem(data.item, 'performers')"
-                        @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-                        @mouseleave.stop="$store.state.hoveredImage=false"
-                      > <span> <v-icon v-if="data.item.favorite" small color="pink">
-                        mdi-heart </v-icon> {{ data.item.name }}</span>
+                <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" class="d-flex align-center">
+                  <v-btn @click="toggleEditMode(m)" small icon class="mt-5 mr-2"> 
+                    <v-tooltip v-if="edits[m.id]===1" top>
+                      <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" v-html="`mdi-reload-alert`" size="20" color="red"/>
+                      </template>
+                      <span>Replace</span>
+                    </v-tooltip>
+                    <v-tooltip v-else-if="edits[m.id]===2" top>
+                      <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" v-html="`mdi-plus-circle-outline`" size="20" color="green"/>
+                      </template>
+                      <span>Add</span>
+                    </v-tooltip>
+                    <v-tooltip v-else top>
+                      <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" v-html="`mdi-cancel`" size="18"/>
+                      </template>
+                      <span>No action</span>
+                    </v-tooltip>
+                  </v-btn>
+
+                  <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
+                    @input="setVal($event,m.id)" :value="values[m.id]"
+                    multiple hide-selected hide-details :disabled="edits[m.id]===0"
+                    :label="getMeta(m.id).settings.name" item-value="id"
+                    append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
+                    append-icon="mdi-chevron-down" @click:append="dialogListView=true"
+                    :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
+                    :filter="filterCards"
+                  > <template v-slot:selection="data">
+                      <v-chip v-bind="data.attrs" class="my-1 px-2" small
+                        @click="data.select" :input-value="data.selected"
+                        @click:close="removeItem(data.item.id,m.id)" close
+                        :color="getColor(m.id,data.item.id)" 
+                        :label="getMeta(m.id).settings.chipLabel"
+                        :outlined="getMeta(m.id).settings.chipOutlined"
+                        @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
+                        @mouseleave.stop="$store.state.hoveredImage=false">
+                        <span>{{ data.item.meta.name }}</span>
                       </v-chip>
                     </template>
                     <template v-slot:item="data">
-                      <div class="list-item"
-                        @mouseover.stop="showImage($event, data.item.id, 'performer')" 
+                      <div class="list-item" 
+                        @mouseover.stop="showImage($event, data.item.id, 'meta', m.id)" 
                         @mouseleave.stop="$store.state.hoveredImage=false"
                       > 
-                        <v-icon 
-                          left size="14" 
-                          :color="data.item.favorite===false ? 'grey' : 'pink'"
-                        >
-                          mdi-heart
-                        </v-icon>
-                        <v-rating 
-                          class="rating-inline small mr-2"
-                          v-model="data.item.rating"
-                          color="yellow darken-3"
-                          background-color="grey darken-1"
-                          empty-icon="$ratingFull" 
-                          half-icon="mdi-star-half-full"
-                          dense half-increments readonly size="12"
-                        />
-                        <span>{{data.item.name}}</span>
-                        <span v-if="data.item.aliases.length" class="aliases"> 
-                          aka {{data.item.aliases.join(', ').slice(0,80)}}
+                        <span v-if="getMeta(m.id).settings.favorite">
+                          <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
+                        </span>
+                        <span v-if="getMeta(m.id).settings.color">
+                          <v-icon :color="data.item.meta.color || ''" left small>
+                            mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                        </span>
+                        <span>{{data.item.meta.name}}</span>
+                        <span v-if="getMeta(m.id).settings.synonyms" class="aliases">
+                          {{getCard(data.item.id).meta.synonyms===undefined? '' : getCard(data.item.id).meta.synonyms.join(', ').slice(0,50)}}
                         </span>
                       </div>
                     </template>
                   </v-autocomplete>
+
+                  <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
+                    @input="setVal($event,m.id)" :value="values[m.id]"
+                    :label="getMeta(m.id).settings.name" hide-details
+                    clearable @click:clear="setVal('', m.id)"
+                    :disabled="edits[m.id]===0"/>
+
+                  <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
+                    @input="setVal($event,m.id)" :value="values[m.id]" type="number"
+                    :label="getMeta(m.id).settings.name" hide-details
+                    :disabled="edits[m.id]===0"/>
+
+                  <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
+                    :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
+                    @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
+                    :label="getMeta(m.id).settings.name" :disabled="edits[m.id]===0"
+                    append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
+                  
+                  <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
+                    :label="getMeta(m.id).settings.name" hide-details
+                    @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"
+                    :disabled="edits[m.id]===0"/>
+                    
+                  <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
+                    :value="values[m.id]" @click="calendarId=m.id,calendar=true"
+                    :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
+                    clearable @click:clear="setVal('', m.id)" readonly persistent-hint
+                    :disabled="edits[m.id]===0"/>
                 </v-col>
-                <v-col cols="12" md="6">
-                  <v-card-actions>
-                    <span class="overline ml-6"><v-icon left>mdi-tag-outline</v-icon> tags</span>
-                    <v-spacer></v-spacer>
-                    <span class="caption mr-2">Sort list by</span>
-                    <v-btn-toggle v-model="sortButtonsTags" mandatory color="primary">
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="name" v-on="on">
-                            <v-icon color="grey">mdi-alphabetical-variant</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>name</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="favorite" v-on="on">
-                            <v-icon color="grey">mdi-heart-outline</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>favorite</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="color" v-on="on">
-                            <v-icon color="grey">mdi-palette</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>color</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="date" v-on="on">
-                            <v-icon color="grey">mdi-calendar-plus</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>date added</span>
-                      </v-tooltip>
-                    </v-btn-toggle>
-                  </v-card-actions>
-                  <v-autocomplete :disabled="clearTags"
-                    v-model="tags" outlined clearable
-                    :items="tagsAll()" label="Tags"
-                    item-text="name" class="hidden-close"
-                    item-value="name" no-data-text="No more tags"
-                    multiple hide-selected hide-details
-                    @click:prepend="dialogAddNewTag=true" prepend-icon="mdi-plus-circle-outline"
-                    @blur="sort('tags')" :menu-props="{contentClass:'list-with-preview'}"
-                    :filter="filterItems"
-                  >
-                    <template v-slot:selection="data">
-                      <v-chip
-                        v-bind="data.attrs" close
-                        :input-value="data.selected" 
-                        @click="data.select" text-color="white"
-                        @click:close="removeItem(data.item, 'tags')" close-icon="mdi-close"
-                        @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                        @mouseleave.stop="$store.state.hoveredImage=false"
-                        :color="getTag(data.item.name).color" 
-                      > <span>{{ data.item.name }}</span>
-                      </v-chip>
-                    </template>
-                    <template v-slot:item="data">
-                      <div class="list-item"
-                        @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                        @mouseleave.stop="$store.state.hoveredImage=false"
-                      > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
-                          left size="14"> mdi-heart </v-icon>
-                        <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
-                        <span>{{data.item.name}}</span>
-                        <span v-if="data.item.altNames.length" class="aliases"> 
-                          {{data.item.altNames.join(', ').slice(0,80)}}
-                        </span>
-                      </div>
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-card-actions>
-                    <span class="overline ml-6"><v-icon left>mdi-web</v-icon> websites</span>
-                    <v-spacer></v-spacer>
-                    <span class="caption mr-2">Sort list by</span>
-                    <v-btn-toggle v-model="sortButtonsWebsites" mandatory color="primary">
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="name" v-on="on">
-                            <v-icon color="grey">mdi-alphabetical-variant</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>name</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="favorite" v-on="on">
-                            <v-icon color="grey">mdi-heart-outline</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>favorite</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="color" v-on="on">
-                            <v-icon color="grey">mdi-palette</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>color</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <template v-slot:activator="{ on }">
-                          <v-btn small outlined value="date" v-on="on">
-                            <v-icon color="grey">mdi-calendar-plus</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>date added</span>
-                      </v-tooltip>
-                    </v-btn-toggle>
-                  </v-card-actions>
-                  <v-autocomplete :disabled="clearWebsites"
-                    v-model="websites" outlined clearable
-                    :items="websitesAll()" label="Websites"
-                    item-text="name" class="mt-0 hidden-close" 
-                    item-value="name" multiple hide-selected hide-details
-                    @click:prepend="dialogAddNewWebsite=true" prepend-icon="mdi-plus-circle-outline"
-                    no-data-text="No more websites" :filter="filterItems"
-                    :menu-props="{contentClass:'list-with-preview'}"
-                  >
-                    <template v-slot:selection="data">
-                      <v-chip
-                        v-bind="data.attrs" label close close-icon="mdi-close"
-                        @click="data.select" @click:close="removeItem(data.item, 'websites')" 
-                        @mouseover.stop="showImage($event, data.item.id, 'website')" 
-                        @mouseleave.stop="$store.state.hoveredImage=false"
-                        :input-value="data.selected" 
-                        :color="data.item.color" text-color="white"
-                      > <span>{{ data.item.name }}</span>
-                      </v-chip>
-                    </template>
-                    <template v-slot:item="data">
-                      <div class="list-item"
-                        @mouseover.stop="showImage($event, data.item.id, 'website')" 
-                        @mouseleave.stop="$store.state.hoveredImage=false"
-                      > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
-                          left size="14"> mdi-heart </v-icon>
-                        <v-icon left size="16" :color="data.item.color"> mdi-web </v-icon>
-                        <span>{{data.item.name}}</span>
-                        <span v-if="data.item.altNames.length" class="aliases"> 
-                          {{data.item.altNames.join(', ').slice(0,80)}}
-                        </span>
-                      </div>
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-                <v-col cols="8" md="4" align="center" justify="center">
-                  <div class="overline mb-3">Rating</div>
-                  <v-rating style="display:inline-flex;" :readonly="clearRating"
-                    v-model="rating" clearable :disabled="clearRating"
-                    color="yellow darken-2"
-                    background-color="grey"
-                    empty-icon="mdi-star-outline"
-                    half-icon="mdi-star-half-full"
-                    half-increments hover size="36"
-                  ></v-rating>
-                </v-col>
-                <v-col cols="4" md="2" align="center" justify="center">
-                  <div class="overline mb-3">Favorite</div>
-                  <v-btn @click="favorite=!favorite" :disabled="clearFavorite" color="pink" icon x-large>
-                    <v-icon size="36" v-if="favorite===false" color="grey">mdi-heart-outline</v-icon>
-                    <v-icon size="36" v-else color="pink">mdi-heart</v-icon>
-                  </v-btn>
-                </v-col>
-                <v-col cols="12" class="mt-6 py-0">
-                  <div class="overline text-center">Clear Information</div>
-                  <div cols="12" class="d-flex justify-space-between">
-                    <v-switch inset v-model="clearPerformers" color="red">
-                      <template v-slot:label>
-                        <span v-if="clearPerformers" class="red--text">
-                          <v-icon left color="red">mdi-account-outline</v-icon> Performers
-                        </span>
-                        <span v-else>
-                          <v-icon left>mdi-account-outline</v-icon> Performers
-                        </span>
-                      </template>
-                    </v-switch>
-                    <v-switch inset v-model="clearTags" color="red">
-                      <template v-slot:label>
-                        <span v-if="clearTags" class="red--text">
-                          <v-icon left color="red">mdi-tag-outline</v-icon> Tags
-                        </span>
-                        <span v-else>
-                          <v-icon left>mdi-tag-outline</v-icon> Tags
-                        </span>
-                      </template>
-                    </v-switch>
-                    <v-switch inset v-model="clearWebsites" color="red">
-                      <template v-slot:label>
-                        <span v-if="clearWebsites" class="red--text">
-                          <v-icon left color="red">mdi-web</v-icon> Websites
-                        </span>
-                        <span v-else>
-                          <v-icon left>mdi-web</v-icon> Websites
-                        </span>
-                      </template>
-                    </v-switch>
-                    <v-switch inset v-model="clearRating" color="red">
-                      <template v-slot:label>
-                        <span v-if="clearRating" class="red--text">
-                          <v-icon left color="red">mdi-star-outline</v-icon> Rating
-                        </span>
-                        <span v-else>
-                          <v-icon left>mdi-star-outline</v-icon> Rating
-                        </span>
-                      </template>
-                    </v-switch>
-                    <v-switch inset v-model="clearFavorite" color="red">
-                      <template v-slot:label>
-                        <span v-if="clearFavorite" class="red--text">
-                          <v-icon left color="red">mdi-heart-outline</v-icon> Favorite
-                        </span>
-                        <span v-else>
-                          <v-icon left>mdi-heart-outline</v-icon> Favorite
-                        </span>
-                      </template>
-                    </v-switch>
-                  </div>
+                <v-col v-if="metaInCard.length==0" cols="12" class="d-flex align-center justify-center flex-column">
+                  <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
+                  <div>No meta assigned to the video. Please assign them in the settings.</div>
                 </v-col>
               </v-row>
             </v-container>
@@ -394,14 +176,10 @@
 
 
 <script>
-const fs = require("fs")
-const path = require("path")
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
-import { ipcRenderer } from 'electron'
-import Functions from '@/mixins/Functions'
 import MetaGetters from '@/mixins/MetaGetters'
 import NameRules from '@/mixins/NameRules'
 
@@ -410,56 +188,20 @@ export default {
   components: {
     vuescroll,
   },
-  mixins: [ShowImageFunction, Functions, MetaGetters, NameRules],
+  mixins: [ShowImageFunction, MetaGetters, NameRules],
+  beforeMount () {
+    this.parseMetaInCard()
+  },
   mounted () {
     this.$nextTick(function () {
-      if (!this.isSelectedSingleVideo) this.dialog = true
+      this.dialog = true
     })
   },
-  beforeDestroy() {
-    try {this.$refs.video.src = '' } catch (error) {}
-  },
-  destroyed() {
-    for (const timeout in this.timeouts) { clearTimeout(this.timeouts[timeout]) }
-    clearInterval(this.timeouts.z)
-  },
   data: () => ({
-    valid: false,
-    performers: [],
-    tags: [],
-    websites: [],
-    rating: 0,
-    favorite: false,
-    clearPerformers: false,
-    clearTags: false,
-    clearWebsites: false,
-    clearRating: false,
-    clearFavorite: false,
-    pathToFile: '',
-    pathEditable: false,
-    videoExists: true,
-    edit: '',
-    added: '',
-    timeouts: {},
-    muted: true,
     dialog: false,
-    sheet: false,
-    dialogAddNewTag: false,
-    newTagName: '',
-    validNewTagName: false,
-    dialogAddNewPerformer: false,
-    newPerformerName: '',
-    validNewPerformerName: false,
-    dialogAddNewWebsite: false,
-    newWebsiteName: '',
-    validNewWebsiteName: false,
-    // matched: {
-    //   tags: [],
-    //   performers: [],
-    //   websites: [],
-    // }, TODO highlight filtered letters
     // meta
     values: {},
+    edits: {},
     calendar: false,
     calendarId: null,
     key: Date.now(),
@@ -475,33 +217,22 @@ export default {
     dialogListView: false,
   }),
   computed: {
-    isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
-    video() {
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      return this.$store.getters.videos.find({id:videoId}).value()
-    },
-    fileName() { return path.parse(this.video.path).name },
-    sortButtonsPerformers: {
-      get() { return this.$store.state.Settings.videoEditPerformersSortBy },
-      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoEditPerformersSortBy', value}) },
-    },
-    sortButtonsTags: {
-      get() { return this.$store.state.Settings.videoEditTagsSortBy },
-      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoEditTagsSortBy', value}) },
-    },
-    sortButtonsWebsites: {
-      get() { return this.$store.state.Settings.videoEditWebsitesSortBy },
-      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoEditWebsitesSortBy', value}) },
-    },
-    darkMode() { return this.$vuetify.theme.isDark },
-    gradient() { 
-      let color = this.darkMode ? 'rgb(30 30 30)' : 'rgb(255 255 255)'
-      return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0))`
-    },
-    fileExtension() { return path.parse(this.video.path).ext.replace('.', '').toLowerCase() },
     metaInCard() { return this.$store.state.Settings.videoMetaInCard },
   },
   methods: {
+    parseMetaInCard() {
+      for (let i = 0; i < this.metaInCard.length; i++) {
+        const id = this.metaInCard[i].id
+        const type = this.metaInCard[i].type
+        this.edits[id] = 0
+        if (type=='complex') { this.values[id] = []; continue }
+        const simpleMetaType = this.getMeta(id).dataType
+        if (simpleMetaType=='array') this.values[id] = []
+        else if (simpleMetaType=='boolean') this.values[id] = false
+        else if (simpleMetaType=='number') this.values[id] = 0
+        else this.values[id] = ''
+      }
+    },
     sortItems(items, type) {
       const sortBy = this[`sortButtons${type}`]
       let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
@@ -515,9 +246,10 @@ export default {
         return itemsSorted
       } else return itemsSorted.value()
     },
-    filterItems(itemF, queryText) {
-      let item = _.cloneDeep(itemF)
+    filterCards(cardObject, queryText, itemText) {
+      let card = _.cloneDeep(cardObject)
       let query = queryText.toLowerCase()
+
       function foundByChars(text, query) {
         text = text.toLowerCase()
         let foundCharIndex = 0
@@ -531,269 +263,50 @@ export default {
         return foundAllChars
       }
 
-      let synonym = 'altNames' in item ? 'altNames' : 'aliases'
       let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
 
       if (filtersDefault) {
-        let index = item.name.toLowerCase().indexOf(query)
-        if (index > -1) {
-          // this.matched.tags.push({
-          //   index: index,
-          //   text: item.name,
-          //   query: query,
-          //   type: 'name',
-          //   item: item,
-          // })
-          return true
-        } else {
-          for (let i=0; i<item[synonym].length; i++) {
-            let indexSub = item[synonym][i].toLowerCase().indexOf(query)
-            if (indexSub > -1) {
-              // this.matched.tags.push({
-              //   index: indexSub,
-              //   text: item[synonym][i],
-              //   query: query,
-              //   type: synonym,
-              //   item: item,
-              // })
-              return true
-            } 
+        let index = card.name.toLowerCase().indexOf(query)
+        if (index > -1) return true
+        else {
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            let indexSub = card.meta.synonyms[i].toLowerCase().indexOf(query)
+            if (indexSub > -1) return true
           }
           return false
         }
       } else {
-        if (foundByChars(item.name, query)) return true
+        if (foundByChars(card.meta.name, query)) return true
         else {
-          for (let i=0; i<item[synonym].length; i++) {
-            return foundByChars(item[synonym][i], query)
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            return foundByChars(card.meta.synonyms[i], query)
           }
+          return false
         }
       }
-    },
-    // highlightText(text, type, typeSub, id) {
-    //   let match = _.cloneDeep(_.find(this.matched[type], i=>i.item.id==id))
-    //   // console.log(match)
-    //   if (!match || match.type !== typeSub) {
-    //     if (typeof text == 'string') return text
-    //     else return text.join(', ').slice(0,100)
-    //   } 
-    //   let start = match.index
-    //   let end = match.query.length + start
-    //   // console.log(this.matched[type][i].query)
-    //   if (this.$store.state.Settings.typingFiltersDefault) {
-    //     // console.log(text, start, end)
-    //     if (match.type == 'name') return transformText(text, start, end)
-    //     else {
-    //       let synonyms = match.item[match.type]
-    //       console.log(synonyms)
-    //       let synonymIndex = synonyms.indexOf(match.text)
-    //       let textSynonym = synonyms[synonymIndex]
-    //       synonyms[synonymIndex] = transformText(textSynonym, start, end)
-    //       return synonyms.join(', ').slice(0,100)
-    //     } 
-    //   }
-      
-    //   function transformText(text, start, end) {
-    //     // console.log(`${text.substring(0, start)}<b>${text.substring(start, end)}</b>${text.substring(end)}`)
-    //     return `${text.substring(0, start)}<b>${text.substring(start, end)}</b>${text.substring(end)}`
-    //   }
-    // },
-    close() {
-      this.sheet = false
-      this.$store.state.Bookmarks.bookmarkText = ''
-      setTimeout(() => { this.$store.state.Videos.dialogEditVideoInfo = false }, 300)
     },
     validate () { this.$refs.form.validate() },
     saveVideoInfo() {
-        console.log(this.values)
-      return
-      if (this.isSelectedSingleVideo) {
-        this.validate()
-        if (this.valid === false) return false
-      }
-      let videos = this.$store.getters.getSelectedVideos
-      videos.map(videoId => {
-        let video = _.cloneDeep(this.$store.getters.videos.find({ id: videoId }).value())
-        let newPerformers, newTags, newWebsites, newRating, newFavorite, newBookmark, newPath
-
-        if (this.clearPerformers) {
-          newPerformers = []
-        } else if (!this.isSelectedSingleVideo) {
-          newPerformers = _.union(this.performers, video.performers).sort()
-        } else if (this.isSelectedSingleVideo) {
-          newPerformers = this.performers
+      let videoIds = this.$store.getters.getSelectedVideos
+      videoIds.map(videoId => {
+        let arr = _.pickBy(this.values, (v,k)=>{return this.edits[k]!==0})
+        arr = { ...arr, ...{edit: Date.now()} }
+        let video = this.$store.getters.videos.find({ id: videoId }).value()
+        for (let metaId in arr) {
+          if (this.edits[metaId]===2) arr[metaId] = _.union(video[metaId] || [], arr[metaId])
         }
-
-        if (this.clearTags) {
-          newTags = []
-        } else if (!this.isSelectedSingleVideo) {
-          newTags = _.union(this.tags, video.tags).sort()
-        } else if (this.isSelectedSingleVideo) {
-          newTags = this.tags
-        }
-
-        if (this.clearWebsite) {
-          newWebsites = []
-        } else if (!this.isSelectedSingleVideo) {
-          newWebsites = _.union(this.websites, video.websites).sort()
-        } else if (this.isSelectedSingleVideo) {
-          newWebsites = this.websites
-        }
-
-        if (this.clearRating) {
-          newRating = 0
-        } else if (this.rating == 0 && !this.isSelectedSingleVideo) {
-          newRating = video.rating
-        } else {
-          newRating = this.rating
-        }
-        
-        if (this.clearFavorite) {
-          newFavorite = false
-        } else if (this.favorite == false && !this.isSelectedSingleVideo) {
-          newFavorite = video.favorite
-        } else {
-          newFavorite = this.favorite
-        }
-        
-        if (this.$store.state.Bookmarks.bookmarkText) {
-          let bookmark = this.$store.getters.bookmarks.get('videos').find({itemId:videoId})
-          newBookmark = true
-          if (bookmark.value()) {
-            bookmark.assign({ 
-              text: this.$store.state.Bookmarks.bookmarkText,
-              date: Date.now(),
-            }).write()
-          } else {
-            this.$store.getters.bookmarks.get('videos').push({
-              id: shortid.generate(),
-              itemId: videoId,
-              text: this.$store.state.Bookmarks.bookmarkText,
-              date: Date.now(),
-            }).write()
-          }
-        } else {
-          this.$store.getters.bookmarks.get('videos').remove({'itemId':videoId}).write()
-          newBookmark = false
-        }
-
-        if (this.pathToFile && this.pathEditable) {
-          newPath = this.pathToFile
-          setTimeout(() => {this.$store.state.updateFoldersData = Date.now()}, 1000)
-        } else {
-          newPath = video.path
-        }
-
-        this.$store.getters.videos.find({ id: videoId }).assign({ 
-          performers: newPerformers,
-          tags: newTags,
-          websites: newWebsites,
-          rating: newRating,
-          favorite: newFavorite,
-          bookmark: newBookmark,
-          path: newPath,
-          edit: Date.now(),
-        })
-        // .assign(this.values)
-        .write()
-
-        console.log(this.values)
-        this.$store.commit('updateVideos', [videoId])
-        this.$store.dispatch('filterVideos', true)
+        this.$store.getters.videos.find({ id: videoId }).assign(arr).write()
       })
-      // TODO slow close animation
-      this.$store.commit('addLog', {type:'info',text:`📹 Video "${this.fileName}" has been edited ✏️`})
+// TODO add sorting for arrays
+      this.$store.commit('updateVideos', videoIds)
+      this.$store.dispatch('filterVideos', true)
       this.$store.state.Videos.dialogEditVideoInfo = false
-      this.$store.state.Bookmarks.bookmarkText = ''
     },
-    getPathRules(stringPath) {
-      if (stringPath.length===0) return 'Path is required'
-      else return true
-    },
-    getImg() {
-      let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
-        return path.join(this.$store.getters.getPathToUserData, '/img/templates/thumb.jpg')
-      }
-    },
-    getTag(tagName) { return this.$store.getters.tags.find({name:tagName}).value() },
-    removeItem(item, type) { 
-      const index = this[type].indexOf(item.name)
-      if (index >= 0) this[type].splice(index, 1)
-    },
-    sort(items) {
-      this[items] = this[items].sort((a, b) => a.localeCompare(b))
-    },
-    tagsAll() {
-      let tags = this.$store.getters.tags.filter(t=>(t.type.includes('video')))
-      return this.sortItems(tags, 'Tags')
-    },
-    performersAll() {return this.sortItems(this.$store.getters.performers, 'Performers')},
-    websitesAll() {return this.sortItems(this.$store.getters.websites, 'Websites')},
-    getNewTagNameRules(name) {
-      let duplicate = this.$store.getters.tags.find(t=>(t.name.toLowerCase()===name.toLowerCase())).value()
-      if (name.length > 100) {
-        return 'Name must be less than 100 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
-        return 'Name must not content \\/\%\"<>{}\[\]'
-      } else if (duplicate!==undefined) {
-        return 'Tag with that name already exists'
-      } else {
-        return true
-      }
-    },
-    getNewPerformerNameRules(name) {
-      let duplicate = this.$store.getters.performers.find(i=>(i.name.toLowerCase()===name.toLowerCase())).value()
-      if (name.length > 100) {
-        return 'Name must be less than 100 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
-        return 'Name must not content \\/\%\"<>{}\[\]'
-      } else if (duplicate!==undefined) {
-        return 'Performer with that name already exists'
-      } else {
-        return true
-      }
-    },
-    getNewWebsiteNameRules(name) {
-      let duplicate = this.$store.getters.websites.find(i=>(i.name.toLowerCase()===name.toLowerCase())).value()
-      if (name.length > 100) {
-        return 'Name must be less than 100 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
-        return 'Name must not content \\/\%\"<>{}\[\]'
-      } else if (duplicate!==undefined) {
-        return 'Website with that name already exists'
-      } else {
-        return true
-      }
-    },
-    addNewTag() {
-      this.$store.dispatch('addTag', { id: shortid.generate(), name: this.newTagName })
-      this.dialogAddNewTag = false
-      this.newTagName = ''
-      ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
-    },
-    addNewPerformer() {
-      this.$store.dispatch('addPerformer', { id: shortid.generate(), name: this.newPerformerName })
-      this.dialogAddNewPerformer = false
-      this.newPerformerName = ''
-      ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window
-    },
-    addNewWebsite() {
-      this.$store.dispatch('addWebsite', { id: shortid.generate(), name: this.newWebsiteName })
-      this.dialogAddNewWebsite = false
-      this.newWebsiteName = ''
-      ipcRenderer.send('updatePlayerDb', 'websites') // update websites in player window
-    },
+    sort(items) { return items.sort((a, b) => a.localeCompare(b)) },
     setVal(value, metaId) { this.values[metaId] = value },
-    removeItemMeta(item, id) { 
+    removeItem(item, id) { 
       const index = this.values[id].indexOf(item)
       if (index > -1) this.values[id].splice(index, 1)
       this.$store.state.hoveredImage = false
@@ -828,10 +341,17 @@ export default {
     },
     saveListView() {
     },
+    toggleEditMode(meta) {
+      // 0 - disabled, 1 - replace, 2 - add (for arrays)
+      let type
+      if (meta.type === 'complex') type = 'array'
+      else type = this.getMeta(meta.id).dataType
+      if (this.edits[meta.id]===1 && type!=='array') this.edits[meta.id] = 0
+      else if (this.edits[meta.id]===2 && type==='array') this.edits[meta.id] = 0
+      else this.edits[meta.id] = ++this.edits[meta.id]
+      this.key = Date.now()
+    },
   },
-  watch: {
-    clearRating(newValue) { if (newValue) this.rating = 0 },
-    rating(newValue) { if (newValue>0) this.clearRating = false },
-  },
+  watch: {},
 }
 </script>
