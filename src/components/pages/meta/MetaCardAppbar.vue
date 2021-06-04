@@ -36,7 +36,7 @@
     <VideosAppbarCardView />
 
 
-    <DialogEditMetaCard v-if="$store.state.Meta.dialogEditMetaCard"/>
+    <DialogEditSingleMetaCard v-if="$store.state.Meta.dialogEditMetaCard"/>
     <DialogEditMetaCardImages v-if="$store.state.Meta.dialogEditMetaCardImages"/>
   </div>
 </template>
@@ -51,7 +51,7 @@ export default {
   components: {
     VideosAppbarActions: () => import('@/components/elements/VideosAppbarActions.vue'),
     VideosAppbarCardView: () => import('@/components/elements/VideosAppbarCardView.vue'),
-    DialogEditMetaCard: () => import('@/components/pages/meta/DialogEditMetaCard.vue'),
+    DialogEditSingleMetaCard: () => import('@/components/pages/meta/DialogEditSingleMetaCard.vue'),
     DialogEditMetaCardImages: () => import('@/components/pages/meta/DialogEditMetaCardImages.vue'),
     vuescroll,
   },

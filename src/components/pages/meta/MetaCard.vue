@@ -20,7 +20,7 @@
       <v-divider/>
 
       <div v-if="visibility.name" class="px-1">{{card.meta.name}}</div>
-      <div v-if="meta.settings.synonyms && visibility.synonyms" class="px-1 caption"><span class="px-2"></span> {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}} </div>
+      <div v-if="meta.settings.synonyms && visibility.synonyms" class="px-1 caption synonyms"> {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}} </div>
       
       <!-- Parse meta from cards -->
       <div v-for="(m,i) in metaInCard" :key="i">
@@ -135,7 +135,7 @@ export default {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
         this.$store.state.contextMenuContent = [
-          { name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true}, disabled: !this.isSelectedSingleMetaCard },
+          { name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true}, },
           { name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard },
           { type: 'divider' },
           { name: `Delete ${this.meta.settings.nameSingular}`, type: 'item', icon: 'delete', color: 'red', function: ()=>{this.$store.state.Meta.dialogDeleteMetaCard=true} },

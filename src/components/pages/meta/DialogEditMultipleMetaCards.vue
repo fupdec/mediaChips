@@ -1,10 +1,10 @@
 <template>
-  <div v-if="$store.state.Videos.dialogEditVideoInfo">
-    <v-dialog v-model="dialog" scrollable persistent max-width="700">
+  <div>
+    <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="700" width="70vw">
       <v-card>
         <v-toolbar color="primary">
-          <div class="headline">
-            <span>Edit multiple videos info </span>
+          <span class="headline">
+            <span>Edit multiple {{meta.settings.name.toLowerCase()}} info </span>
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
                 <v-icon v-on="on">mdi-help-circle-outline</v-icon>
@@ -14,10 +14,10 @@
                 <v-icon v-html="`mdi-reload-alert`" dark small left/> will be replaced (leave blank field to remove information) <br>
                 <v-icon v-html="`mdi-plus-circle-outline`" dark small left/>  will be added to the existing one (only for arrays) </span>
             </v-tooltip>
-          </div>
+          </span>
           <v-spacer></v-spacer>
-          <v-btn @click="$store.state.Videos.dialogEditVideoInfo=false" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
-          <v-btn @click="saveVideoInfo" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+          <v-btn @click="close" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> Close</v-btn>
+          <v-btn @click="save" outlined> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
         </v-toolbar>
         <vuescroll>
           <v-card-text class="px-0 pt-0">
@@ -54,7 +54,8 @@
                     append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                     :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
                     :filter="filterCards"
-                  > <template v-slot:selection="data">
+                  >
+                    <template v-slot:selection="data">
                       <v-chip v-bind="data.attrs" class="my-1 px-2" small
                         @click="data.select" :input-value="data.selected"
                         @click:close="removeItem(data.item.id,m.id)" close
@@ -88,52 +89,64 @@
 
                   <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
                     @input="setVal($event,m.id)" :value="values[m.id]"
-                    :label="getMeta(m.id).settings.name" hide-details
-                    clearable @click:clear="setVal('', m.id)"
-                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
-                    :disabled="edits[m.id]===0"/>
+                    :label="getMeta(m.id).settings.name" hide-details 
+                    clearable @click:clear="setVal('', m.id)" :disabled="edits[m.id]===0"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                   <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
                     @input="setVal($event,m.id)" :value="values[m.id]" type="number"
-                    :label="getMeta(m.id).settings.name" hide-details
-                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
-                    :disabled="edits[m.id]===0"/>
+                    :label="getMeta(m.id).settings.name" hide-details :disabled="edits[m.id]===0"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                   <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                     :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                     @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
                     :label="getMeta(m.id).settings.name" :disabled="edits[m.id]===0"
-                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" 
                     append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
                   
                   <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
-                    :label="getMeta(m.id).settings.name" hide-details
-                    @change="setVal($event,m.id)" :value="values[m.id]" class="ma-0"
-                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
-                    :disabled="edits[m.id]===0"/>
+                    :label="getMeta(m.id).settings.name" hide-details :disabled="edits[m.id]===0"
+                    @change="setVal($event,m.id)" :value="values[m.id]"
+                    :prepend-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
                     
                   <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
-                    :value="values[m.id]" @click="calendarId=m.id,calendar=true"
+                    :value="values[m.id]" @click="calendarId=m.id,calendar=true" :disabled="edits[m.id]===0"
                     :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
                     clearable @click:clear="setVal('', m.id)" readonly persistent-hint
-                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
-                    :disabled="edits[m.id]===0"/>
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
                 </v-col>
                 <v-col v-if="metaInCard.length==0" cols="12" class="d-flex align-center justify-center flex-column">
                   <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
-                  <div>No meta assigned to the video. Please assign them in the settings.</div>
+                  <div>No meta assigned to the {{meta.settings.name.toLowerCase()}}. Please assign them in the settings.</div>
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
         </vuescroll>
       </v-card>
+      <div v-if="panels" @click="close" class="left-close-panel">
+        <div class="content">
+          <v-icon color="red" size="15vw">mdi-close</v-icon>
+          <span class="red--text">Close</span>
+        </div>
+      </div>
+      <div v-if="panels" @click="save" class="right-close-panel">
+        <div class="content">
+          <v-icon color="green" size="15vw">mdi-check</v-icon>
+          <span class="green--text">Save</span>
+        </div>
+      </div>
     </v-dialog>
-    
+
     <v-dialog v-model="calendar" width="300px">
       <v-date-picker @change="setVal($event, calendarId), calendar=false"
         :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
         :value="values[calendarId]" no-title color="primary" full-width/>
+    </v-dialog>
+    
+    <v-dialog v-model="dialogColor" width="300">
+      <v-color-picker v-model="color" hide-mode-switch/>
     </v-dialog>
     
     <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
@@ -180,37 +193,37 @@
   </div>
 </template>
 
-
 <script>
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
+import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
-import NameRules from '@/mixins/NameRules'
 
 export default {
-  name: "DialogEditMultipleVideosInfo",
+  name: "DialogEditMultipleMetaCards",
   components: {
     vuescroll,
-  },
-  mixins: [ShowImageFunction, MetaGetters, NameRules],
+	},
   beforeMount () {
     this.parseMetaInCard()
   },
+  mixins: [ShowImageFunction, NameRules, MetaGetters,], 
   mounted () {
     this.$nextTick(function () {
-      this.dialog = true
+      setTimeout(() => { this.panels = true }, 1000)
     })
   },
   data: () => ({
-    dialog: false,
-    // meta
     values: {},
     edits: {},
+    dialogColor: false,
+    color: '#777777',
     calendar: false,
     calendarId: null,
     key: Date.now(),
+    panels: false,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,
@@ -223,14 +236,15 @@ export default {
     dialogListView: false,
   }),
   computed: {
-    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    selectedMeta() { return this.$store.state.Meta.selectedMeta },
     showIcons() { return this.$store.state.Settings.showIconsOfMetaInEditingDialog },
   },
   methods: {
     parseMetaInCard() {
-      for (let i = 0; i < this.metaInCard.length; i++) {
-        const id = this.metaInCard[i].id
-        const type = this.metaInCard[i].type
+      let metaInCard = this.meta.settings.metaInCard
+      for (let i = 0; i < metaInCard.length; i++) {
+        const id = metaInCard[i].id
+        const type = metaInCard[i].type
         this.edits[id] = 0
         if (type=='complex') { this.values[id] = []; continue }
         const simpleMetaType = this.getMeta(id).dataType
@@ -240,18 +254,56 @@ export default {
         else this.values[id] = ''
       }
     },
-    sortItems(items, type) {
-      const sortBy = this[`sortButtons${type}`]
-      let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
-      if (sortBy !== 'name') {
-        if (sortBy == 'color') {
-          let swatches = this.$store.state.swatches
-          itemsSorted = itemsSorted.orderBy(i=>swatches.indexOf(i.color.toLowerCase()),['asc']).value()
-        } else {
-          itemsSorted = itemsSorted.orderBy(i=>i[sortBy],['desc']).value()
+    removeItem(item, id) { 
+      const index = this.values[id].indexOf(item)
+      if (index > -1) this.values[id].splice(index, 1)
+      this.$store.state.hoveredImage = false
+    },
+    setVal(value, id) { this.values[id] = value },
+    close() { this.$store.state.Meta.dialogEditMetaCard = false },
+    save() {
+      this.selectedMeta.map(id => {
+        let arr = _.pickBy(this.values, (v,k)=>{return this.edits[k]!==0})
+        let old = this.$store.getters.metaCards.find({id:id}).get('meta').value()
+        for (let metaId in arr) {
+          if (this.edits[metaId]===2) arr[metaId] = _.union(old[metaId] || [], arr[metaId])
         }
-        return itemsSorted
-      } else return itemsSorted.value()
+        console.log(arr)
+        this.$store.getters.metaCards.find({id:id}).assign({edit: Date.now()}).get('meta').assign(arr).write()
+      })
+// TODO add sorting for arrays
+      this.$store.commit('updateMetaCards', this.selectedMeta)
+      this.$store.state.Meta.dialogEditMetaCard = false 
+    },
+    openDialogAddNewCard(metaId) {
+      this.dialogAddNewCard = true
+      this.metaIdForNewCard = metaId
+    },
+    addNewCard() {
+      this.$refs.formNewCard.validate()
+      if (!this.validNewCard) return
+      this.$store.dispatch('addMetaCard', { 
+        id: shortid.generate(),
+        metaId: this.metaIdForNewCard,
+        meta: { name: this.nameForNewCard },
+      })
+      this.dialogAddNewCard = false
+      this.nameForNewCard = ''
+    },
+    openDialogAddNewItem(metaId) {
+      this.dialogAddNewItem = true
+      this.metaIdForNewItem = metaId
+    },
+    addNewItem() {
+      this.$refs.formNewItem.validate()
+      if (!this.validNewItem) return
+      this.$store.getters.meta.find({id:this.metaIdForNewItem}).get('settings.items')
+        .push({ id:shortid.generate(), name: this.nameForNewItem }).write()
+      this.key = Date.now()
+      this.dialogAddNewItem = false
+      this.nameForNewItem = ''
+    },
+    saveListView() {
     },
     filterCards(cardObject, queryText, itemText) {
       let card = _.cloneDeep(cardObject)
@@ -294,59 +346,6 @@ export default {
         }
       }
     },
-    validate () { this.$refs.form.validate() },
-    saveVideoInfo() {
-      let videoIds = this.$store.getters.getSelectedVideos
-      videoIds.map(videoId => {
-        let arr = _.pickBy(this.values, (v,k)=>{return this.edits[k]!==0})
-        arr = { ...arr, ...{edit: Date.now()} }
-        let video = this.$store.getters.videos.find({ id: videoId }).value()
-        for (let metaId in arr) {
-          if (this.edits[metaId]===2) arr[metaId] = _.union(video[metaId] || [], arr[metaId])
-        }
-        this.$store.getters.videos.find({ id: videoId }).assign(arr).write()
-      })
-// TODO add sorting for arrays
-      this.$store.commit('updateVideos', videoIds)
-      this.$store.state.Videos.dialogEditVideoInfo = false
-    },
-    sort(items) { return items.sort((a, b) => a.localeCompare(b)) },
-    setVal(value, metaId) { this.values[metaId] = value },
-    removeItem(item, id) { 
-      const index = this.values[id].indexOf(item)
-      if (index > -1) this.values[id].splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    openDialogAddNewCard(metaId) {
-      this.dialogAddNewCard = true
-      this.metaIdForNewCard = metaId
-    },
-    addNewCard() {
-      this.$refs.formNewCard.validate()
-      if (!this.validNewCard) return
-      this.$store.dispatch('addMetaCard', { 
-        id: shortid.generate(),
-        metaId: this.metaIdForNewCard,
-        meta: { name: this.nameForNewCard },
-      })
-      this.dialogAddNewCard = false
-      this.nameForNewCard = ''
-    },
-    openDialogAddNewItem(metaId) {
-      this.dialogAddNewItem = true
-      this.metaIdForNewItem = metaId
-    },
-    addNewItem() {
-      this.$refs.formNewItem.validate()
-      if (!this.validNewItem) return
-      this.$store.getters.meta.find({id:this.metaIdForNewItem}).get('settings.items')
-        .push({ id:shortid.generate(), name: this.nameForNewItem }).write()
-      this.key = Date.now()
-      this.dialogAddNewItem = false
-      this.nameForNewItem = ''
-    },
-    saveListView() {
-    },
     toggleEditMode(meta) {
       // 0 - disabled, 1 - replace, 2 - add (for arrays)
       let type
@@ -358,6 +357,5 @@ export default {
       this.key = Date.now()
     },
   },
-  watch: {},
-}
+};
 </script>

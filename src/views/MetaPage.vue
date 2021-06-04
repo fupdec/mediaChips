@@ -77,7 +77,10 @@
       <v-icon>mdi-chevron-up</v-icon>
     </v-btn>
     
-    <DialogEditMetaCard v-if="$store.state.Meta.dialogEditMetaCard"/>
+    <div v-if="$store.state.Meta.dialogEditMetaCard">
+      <DialogEditSingleMetaCard v-if="selectedMeta.length==1"/>
+      <DialogEditMultipleMetaCards v-if="selectedMeta.length>1"/>
+    </div>
     <DialogEditMetaCardImages v-if="$store.state.Meta.dialogEditMetaCardImages"/>
     
     <v-dialog v-if="$store.state.Meta.dialogDeleteMetaCard" v-model="$store.state.Meta.dialogDeleteMetaCard" persistent scrollable max-width="600">
@@ -126,7 +129,8 @@ export default {
     MetaCard,
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),
-    DialogEditMetaCard: () => import('@/components/pages/meta/DialogEditMetaCard.vue'),
+    DialogEditSingleMetaCard: () => import('@/components/pages/meta/DialogEditSingleMetaCard.vue'),
+    DialogEditMultipleMetaCards: () => import('@/components/pages/meta/DialogEditMultipleMetaCards.vue'),
     DialogEditMetaCardImages: () => import('@/components/pages/meta/DialogEditMetaCardImages.vue'),
     FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },

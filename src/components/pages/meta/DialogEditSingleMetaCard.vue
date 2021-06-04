@@ -223,7 +223,7 @@ import CountryFlag from 'vue-country-flag'
 import Countries from '@/mixins/Countries'
 
 export default {
-  name: "DialogEditMetaCard",
+  name: "DialogEditSingleMetaCard",
   components: {
     vuescroll,
     Scraper,
@@ -244,7 +244,6 @@ export default {
   },
   data: () => ({
     valid: false,
-    isSelectedSingle: null,
     values: {},
     calendar: false,
     calendarId: null,
@@ -273,11 +272,9 @@ export default {
     oldValues() { return this.$store.getters.metaCards.find({id:this.card.id}).get('meta').cloneDeep().value() },
     card() {
       let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
-      if (this.metaCardId) { this.isSelectedSingle=true; return metaCards.find({id:this.metaCardId}).value() }
+      if (this.metaCardId) return metaCards.find({id:this.metaCardId}).value()
       let ids = this.$store.state.Meta.selectedMeta
-      ids.length > 1 ? this.isSelectedSingle=false : this.isSelectedSingle=true 
-      if (this.isSelectedSingle) return metaCards.find({id:ids[0]}).value()
-      else return metaCards.filter(i=>ids.includes(i.id)).value()
+      return metaCards.find({id:ids[0]}).value()
     },
     dateAdded() {
       let date = new Date(this.card.date)
