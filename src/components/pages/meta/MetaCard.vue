@@ -11,7 +11,7 @@
         <div v-if="isCustom1ImgExist" class="custom1-img-button">1</div> <v-img v-if="isCustom1ImgExist" :src="imgCustom1" class="custom1-img"/>
         <div v-if="isCustom2ImgExist" class="custom2-img-button">2</div> <v-img v-if="isCustom2ImgExist" :src="imgCustom2" class="custom2-img"/>
         <v-btn v-if="meta.settings.favorite && visibility.favorite" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
-        <div v-if="meta.settings.rating && visibility.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable size="18" color="yellow darken-2" background-color="grey darken-1" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
+        <div v-if="meta.settings.rating && visibility.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable color="yellow darken-2" background-color="grey" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
       </div>
       <!-- <div v-else class="d-flex flex-column align-center py-1">
         <v-icon>mdi-{{meta.settings.icon}}</v-icon>
@@ -19,8 +19,8 @@
       </div> -->
       <v-divider/>
 
-      <div v-if="visibility.name" class="px-1">{{card.meta.name}}</div>
-      <div v-if="meta.settings.synonyms && visibility.synonyms" class="px-1 caption synonyms"> {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}} </div>
+      <div v-if="visibility.name" class="px-1 name">{{card.meta.name}}</div>
+      <div v-if="meta.settings.synonyms && visibility.synonyms" class="px-1 synonyms"> {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}} </div>
       
       <!-- Parse meta from cards -->
       <div v-for="(m,i) in metaInCard" :key="i">

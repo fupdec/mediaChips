@@ -1657,7 +1657,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
 .meta-grid {
   display: grid;
   grid-gap: 10px;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   &.gap-size {
     &-xs {
       grid-gap: 10px;
@@ -1677,19 +1677,60 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
   &.card-size {
     &-1 {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      .meta-card {
+        font-size: 0.7rem;
+      }
+      .v-btn .v-icon,
+      .v-icon {
+        font-size: 1rem;
+      }
+      .fav-btn {
+        width: 24px;
+        height: 24px;
+      }
     }
     &-2 {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-    &-3 {
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      .meta-card {
+        font-size: 0.9rem;
+      }
+      .v-btn .v-icon,
+      .v-icon {
+        font-size: 1.2rem;
+      }
+      .fav-btn {
+        width: 30px;
+        height: 30px;
+      }
     }
     &-4 {
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      .meta-card {
+        font-size: 1.2rem;
+      }
+      .v-btn .v-icon,
+      .v-icon {
+        font-size: 1.6rem;
+      }
+      .fav-btn {
+        width: 44px;
+        height: 44px;
+      }
     }
     &-5 {
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      .meta-card {
+        font-size: 1.4rem;
+      }
+      .v-btn .v-icon,
+      .v-icon {
+        font-size: 2rem;
+      }
+      .fav-btn {
+        width: 54px;
+        height: 54px;
+      }
     }
   }
 }
@@ -1893,14 +1934,13 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     right: 25%;
     opacity: 0.4;
   }
-  .card-color {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 50px 50px 0 0;
+  .name {
+    line-height: 1.4 !important;
+    font-size: 1.2em;
+  }
+  .synonyms {
+    line-height: 1.4 !important;
+    font-size: 0.9em;
   }
   .v-chip {
     margin: 0 2px 2px !important;
