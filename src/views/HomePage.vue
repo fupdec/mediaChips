@@ -1,6 +1,6 @@
 <template>
   <vuescroll>
-    <div class="headline text-h3 d-flex align-center justify-center my-6">
+    <div class="headline text-h3 d-flex align-center justify-center py-6">
       <v-icon x-large left>mdi-home-outline</v-icon> Home </div>
 
     <v-container class="text-center">
@@ -12,6 +12,21 @@
         </v-btn>
       </div>
       <v-row v-else>
+        <v-col cols="12">
+          <v-card>
+            <v-alert type="warning" text>Starting from version 0.8.4 of the application, 
+              all information that the user fills in for the video will use the new meta system. <br>
+              To transfer your information and continue using the application,
+              migrate to the new meta system.</v-alert>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn @click="migrateToMeta=true" class="mb-4" color="warning">
+                <v-icon left>mdi-firework</v-icon> Start migration</v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+
         <v-col cols="12">
           <v-card>
             <v-list-item>
@@ -46,7 +61,8 @@
             </v-card-actions>
           </v-card>
         </v-col>
-        <v-col cols="12">
+
+        <!-- <v-col cols="12">
           <v-card>
             <v-list-item>
               <v-list-item-content>
@@ -160,7 +176,8 @@
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
-        </v-col>
+        </v-col> -->
+
         <v-col cols="12">
           <v-card hover to="/settings" draggable="false">
             <v-list-item>
@@ -186,6 +203,8 @@
       </div>
     </v-container>
 
+    <MigrateToMeta v-if="migrateToMeta" :dialog="migrateToMeta" @finish="migrateToMeta=false"/>
+
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
   </vuescroll>
 </template>
@@ -205,25 +224,26 @@ export default {
   components: {
     vuescroll,
     apexchart: VueApexCharts,
+    MigrateToMeta: () => import("@/components/pages/meta/MigrateToMeta.vue"),
   },
   mixins: [LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
-      if (!this.$store.getters.settings.get('appNewVersionUpdatePerformerViews').value()) {
-        this.$store.getters.performers.each(p => p.views = 0).write()
-        this.$store.getters.settings.set('appNewVersionUpdatePerformerViews', true).write()
-      } // remove this in the next version (0.7.3), added in v0.7.2
+      // if (!this.$store.getters.settings.get('appNewVersionUpdatePerformerViews').value()) {
+      //   this.$store.getters.performers.each(p => p.views = 0).write()
+      //   this.$store.getters.settings.set('appNewVersionUpdatePerformerViews', true).write()
+      // } // remove this in the next version (0.7.3), added in v0.7.2
 
-      if (!this.$store.getters.settings.get('appNewVersionUpdateWebsitesAltNames').value()) {
-        this.$store.getters.websites.each(i => {i.views = 0; i.altNames = []}).write()
-        this.$store.getters.videos.each(i => {i.views = 0; i.viewed = undefined}).write()
-        this.$store.getters.settings.set('appNewVersionUpdateWebsitesAltNames', true).write()
-      } // remove this in the next version (0.7.4), added in v0.7.3
+      // if (!this.$store.getters.settings.get('appNewVersionUpdateWebsitesAltNames').value()) {
+      //   this.$store.getters.websites.each(i => {i.views = 0; i.altNames = []}).write()
+      //   this.$store.getters.videos.each(i => {i.views = 0; i.viewed = undefined}).write()
+      //   this.$store.getters.settings.set('appNewVersionUpdateWebsitesAltNames', true).write()
+      // } // remove this in the next version (0.7.4), added in v0.7.3
 
-      if (!this.$store.getters.settings.get('appNewVersionUpdateWebsitesUrl').value()) {
-        this.$store.getters.websites.each(i => i.url = '').write()
-        this.$store.getters.settings.set('appNewVersionUpdateWebsitesUrl', true).write()
-      } // remove this in the next version (0.7.4), added in v0.7.3
+      // if (!this.$store.getters.settings.get('appNewVersionUpdateWebsitesUrl').value()) {
+      //   this.$store.getters.websites.each(i => i.url = '').write()
+      //   this.$store.getters.settings.set('appNewVersionUpdateWebsitesUrl', true).write()
+      // } // remove this in the next version (0.7.4), added in v0.7.3
     })
   },
   data: ()=>({
@@ -234,26 +254,15 @@ export default {
     seriesTags: [],
     seriesWebsites: [],
     isScrollToTopVisible: false,
+    migrateToMeta: false,
   }),
   computed: {
-    settings() {
-      return this.$store.getters.settings.value()
-    },
-    previewsNumber() {
-      return this.$store.state.quantityRecentVideos
-    },
-    recentVideos() {
-      return this.$store.getters.videos.orderBy('date', ['desc']).take(this.previewsNumber).value()
-    },
-    topPerformers() {
-      return this.$store.getters.performers.orderBy('rating', ['desc']).take(this.previewsNumber).value()
-    },
-    topViewedPerformers() {
-      return this.$store.getters.performers.orderBy('name', ['asc']).orderBy('views', ['desc']).take(this.previewsNumber).value()
-    },
-    topTags() {
-      return this.$store.getters.tags.orderBy(['videos'], ['desc']).value().slice(0,9)
-    },
+    settings() { return this.$store.getters.settings.value() },
+    previewsNumber() { return this.$store.state.quantityRecentVideos },
+    recentVideos() { return this.$store.getters.videos.orderBy('date', ['desc']).take(this.previewsNumber).value() },
+    topPerformers() { return this.$store.getters.performers.orderBy('rating', ['desc']).take(this.previewsNumber).value() },
+    topViewedPerformers() { return this.$store.getters.performers.orderBy('name', ['asc']).orderBy('views', ['desc']).take(this.previewsNumber).value() },
+    topTags() { return this.$store.getters.tags.orderBy(['videos'], ['desc']).value().slice(0,9) },
     chartOptionsTags(){
       let chartOptions = {
         labels: [], // push here name of tag
@@ -276,15 +285,12 @@ export default {
       for (const tag of this.topTags) {
         this.seriesTags.push(tag.videos)
         chartOptions.labels.push(tag.name)
-        if (tag.color) {
-          chartOptions.colors.push(tag.color)
-        } else chartOptions.colors.push('#9b9b9b')
+        if (tag.color) chartOptions.colors.push(tag.color)
+        else chartOptions.colors.push('#9b9b9b')
       }
       return chartOptions
     },
-    topWebsites() {
-      return this.$store.getters.websites.orderBy(['videos'], ['desc']).value().slice(0,9)
-    },
+    topWebsites() { return this.$store.getters.websites.orderBy(['videos'], ['desc']).value().slice(0,9) },
     chartOptionsWebsites(){
       let chartOptions = {
         labels: [], // push here name of website
@@ -313,12 +319,8 @@ export default {
       }
       return chartOptions
     },
-    pathToUserData() {
-      return this.$store.getters.getPathToUserData
-    },
-    logoPath() {
-      return path.join('file://', __static, '/icons/icon.png')
-    },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
+    logoPath() { return path.join('file://', __static, '/icons/icon.png') },
   },
   methods: {
     stopSmoothScroll(event) {
@@ -331,11 +333,8 @@ export default {
       return 'file://' + this.checkVideoImageExist(imgPath)
     },
     checkVideoImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
-        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
-      }
+      if (fs.existsSync(imgPath)) return imgPath
+      else return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
     },
     playVideo(video) {
       if (!fs.existsSync(video.path)) {
@@ -358,17 +357,11 @@ export default {
       return path.join(this.pathToUserData, `/media/performers/${img}`)
     },
     checkAvatarImageExist(imgAvaPath, imgMainPath) {
-      if (fs.existsSync(imgAvaPath)) {
-        return imgAvaPath
-      } else if (fs.existsSync(imgMainPath)) {
-        return imgMainPath
-      } else {
-        return path.join(this.pathToUserData, '/img/templates/performer.png')
-      }
+      if (fs.existsSync(imgAvaPath)) return imgAvaPath
+      else if (fs.existsSync(imgMainPath)) return imgMainPath
+      else return path.join(this.pathToUserData, '/img/templates/performer.png')
     },
-    openPerformerPage(id) {
-      this.$router.push(`/performer/:${id}?tabId=default`)
-    },
+    openPerformerPage(id) { this.$router.push(`/performer/:${id}?tabId=default`) },
   },
 }
 </script>

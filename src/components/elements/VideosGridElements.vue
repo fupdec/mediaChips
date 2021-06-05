@@ -118,9 +118,9 @@
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
 
-        <v-divider class="ma-1"></v-divider>
+        <!-- <v-divider class="ma-1"></v-divider> -->
 
-        <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+        <!-- <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on" :disabled="!isSelectedSingleVideo">
               <v-list-item-title> 
@@ -142,7 +142,7 @@
               </v-list-item-title>
             </v-list-item>
           </v-list>
-        </v-menu>
+        </v-menu> -->
 
         <v-divider class="ma-1"></v-divider>
 
@@ -423,13 +423,14 @@ export default {
     isTagsClipboardEmpty() { return this.tagsClipboard.length == 0 },
     isWebsitesClipboardEmpty() { return this.websitesClipboard.length == 0 },
     playlists() { return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value() },
-    videoTags() {
-      if (this.$store.getters.getSelectedVideos.length>0) {
-        let id = this.$store.getters.getSelectedVideos[0]
-        let videos = this.$store.getters.videos
-        return videos.find({id}).value().tags
-      } else return []
-    },
+    // videoTags() {
+    //   if (this.$store.getters.getSelectedVideos.length>0) {
+    //     let id = this.$store.getters.getSelectedVideos[0]
+    //     let videos = this.$store.getters.videos
+    //     return videos.find({id}).value().tags
+    //   } else return []
+    // },
+    // TODO recreate dynamic context menu
   },
   methods: {
 		initSelection() {
