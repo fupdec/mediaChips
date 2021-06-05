@@ -1654,94 +1654,14 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
 }
 // meta
-.meta-grid {
-  display: grid;
-  grid-gap: 10px;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  &.gap-size {
-    &-xs {
-      grid-gap: 10px;
-    }
-    &-s {
-      grid-gap: 15px;
-    }
-    &-m {
-      grid-gap: 20px;
-    }
-    &-l {
-      grid-gap: 25px;
-    }
-    &-xl {
-      grid-gap: 30px;
-    }
-  }
-  &.card-size {
-    &-1 {
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      .meta-card {
-        font-size: 0.7rem;
-      }
-      .v-btn .v-icon,
-      .v-icon {
-        font-size: 1rem;
-      }
-      .fav-btn {
-        width: 24px;
-        height: 24px;
-      }
-    }
-    &-2 {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      .meta-card {
-        font-size: 0.9rem;
-      }
-      .v-btn .v-icon,
-      .v-icon {
-        font-size: 1.2rem;
-      }
-      .fav-btn {
-        width: 30px;
-        height: 30px;
-      }
-    }
-    &-4 {
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      .meta-card {
-        font-size: 1.2rem;
-      }
-      .v-btn .v-icon,
-      .v-icon {
-        font-size: 1.6rem;
-      }
-      .fav-btn {
-        width: 44px;
-        height: 44px;
-      }
-    }
-    &-5 {
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      .meta-card {
-        font-size: 1.4rem;
-      }
-      .v-btn .v-icon,
-      .v-icon {
-        font-size: 2rem;
-      }
-      .fav-btn {
-        width: 54px;
-        height: 54px;
-      }
-    }
-  }
-}
 .meta-card {
   box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.12);
   cursor: default;
   position: relative;
   overflow: visible;
   &:hover {
-    .bookmark {
-      opacity: 0.7;
+    .bookmark.v-icon {
+      opacity: 0.9;
       &:hover {
         opacity: 1;
       }
@@ -1885,8 +1805,8 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   // end images
   .country {
     position: absolute;
-    top: 5px;
-    left: 5px;
+    top: 0.3em;
+    left: 0.3em;
     z-index: 1;
     display: flex;
     flex-direction: column;
@@ -1906,15 +1826,18 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       bottom: -100%;
     }
   }
-  .meta-color {
+  .meta-color.v-icon {
     position: absolute;
     left: 0;
     top: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 30px 30px 0 0;
     z-index: 1;
+    text-shadow: 0 0 3px #00000070;
+    &:before {
+      font-size: 1.3em;
+    }
+    &+.country {
+      top: 2em;
+    }
   }
   .rating-wrapper {
     position: absolute;
@@ -1928,11 +1851,16 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       padding: 0;
     }
   }
-  .bookmark {
+  .fav-btn .v-icon:before {
+    font-size: 1.4em;
+  }
+  .bookmark.v-icon {
     position: absolute;
     top: -6px;
     right: 25%;
-    opacity: 0.4;
+    opacity: 0.8;
+    font-size: 2em;
+    text-shadow: 2px 2px 3px #00000070;
   }
   .name {
     line-height: 1.4 !important;
@@ -1959,5 +1887,105 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
   .btn-edit {
     bottom: 5px;
+  }
+}
+.meta-grid {
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  &.gap-size {
+    &-xs {
+      grid-gap: 10px;
+    }
+    &-s {
+      grid-gap: 15px;
+    }
+    &-m {
+      grid-gap: 20px;
+    }
+    &-l {
+      grid-gap: 25px;
+    }
+    &-xl {
+      grid-gap: 30px;
+    }
+  }
+  &.card-size {
+    &-1 {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      .meta-card {
+        font-size: 0.7rem;
+      }
+      .fav-btn .v-icon,
+      .v-icon {
+        font-size: 1rem;
+      }
+      .fav-btn {
+        width: 24px;
+        height: 24px;
+      }
+      .flag-icon {
+        height: 1.5em;
+        width: 2em;
+        transform: scale(0.8);
+      }
+    }
+    &-2 {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      .meta-card {
+        font-size: 0.9rem;
+      }
+      .fav-btn .v-icon,
+      .v-icon {
+        font-size: 1.2rem;
+      }
+      .fav-btn {
+        width: 30px;
+        height: 30px;
+      }
+      .flag-icon {
+        height: 1.5em;
+        width: 2em;
+        transform: scale(0.9);
+      }
+    }
+    &-4 {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      .meta-card {
+        font-size: 1.2rem;
+      }
+      .fav-btn .v-icon,
+      .v-icon {
+        font-size: 1.6rem;
+      }
+      .fav-btn {
+        width: 44px;
+        height: 44px;
+      }
+      .flag-icon {
+        height: 1.5em;
+        width: 1.5em;
+        transform: scale(1.3);
+      }
+    }
+    &-5 {
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      .meta-card {
+        font-size: 1.4rem;
+      }
+      .fav-btn .v-icon,
+      .v-icon {
+        font-size: 2rem;
+      }
+      .fav-btn {
+        width: 54px;
+        height: 54px;
+      }
+      .flag-icon {
+        height: 2em;
+        width: 2em;
+        transform: scale(1.8);
+      }
+    }
   }
 }

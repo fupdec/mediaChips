@@ -285,6 +285,7 @@ export default {
       if (this.meta.settings.synonyms) this.specificMeta.push('synonyms')
       if (this.meta.settings.favorite) this.specificMeta.push('favorite')
       if (this.meta.settings.rating) this.specificMeta.push('rating')
+      if (this.meta.settings.bookmark) this.specificMeta.push('bookmark')
       if (this.meta.settings.country) this.specificMeta.push('country')
       if (this.meta.settings.color) this.specificMeta.push('color')
     },

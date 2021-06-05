@@ -102,6 +102,18 @@
                     <span class="overline text-center">Specific meta</span>
                     <v-row>
                       <v-col cols="6" class="d-flex align-center">
+                        <v-icon left color="pink">mdi-heart</v-icon>
+                        <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
+                      </v-col>
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-icon left color="yellow darken-2">mdi-star</v-icon>
+                        <v-switch v-model="settings.rating" :label="`Ratings: ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
+                      </v-col>
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-icon left color="red">mdi-bookmark</v-icon>
+                        <v-switch v-model="settings.bookmark" :label="`Bookmarks: ${settings.bookmark?'On':'Off'}`" class="ma-0" hide-details/>
+                      </v-col>
+                      <v-col cols="6" class="d-flex align-center">
                         <v-tooltip top>
                           <template v-slot:activator="{ on }">
                             <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -109,14 +121,6 @@
                           <span>This will allow you to add multiple names to one card.</span>
                         </v-tooltip>
                         <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
-                      </v-col>
-                      <v-col cols="6" class="d-flex align-center">
-                        <v-icon left color="pink">mdi-heart</v-icon>
-                        <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
-                      </v-col>
-                      <v-col cols="6" class="d-flex align-center">
-                        <v-icon left color="yellow darken-2">mdi-star</v-icon>
-                        <v-switch v-model="settings.rating" :label="`Ratings: ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left>mdi-flag</v-icon>
@@ -151,8 +155,8 @@
                         <v-radio-group v-if="settings.images" v-model="settings.imageAspectRatio" column mandatory hide-details>
                           <span class="mb-2">Aspect ratio of images:</span>
                           <v-radio :value="1"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
-                          <v-radio :value="16/9"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
                           <v-radio :value="5/8"><template v-slot:label><v-icon left>mdi-image-album</v-icon> 5:8 </template></v-radio>
+                          <v-radio :value="16/9"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
                         </v-radio-group>
                       </v-col>
                       <v-col cols="12" sm="6" v-if="settings.images">
@@ -257,15 +261,16 @@ export default {
       name: '',
       nameSingular: '',
       icon: 'shape',
-      images: true,
+      images: false,
       imageAspectRatio: '',
       imageTypes: ['main'],
       chipLabel: false,
       chipOutlined: false,
       color: false,
-      synonyms: false,
-      favorite: true,
+      favorite: false,
       rating: false,
+      synonyms: false,
+      bookmark: false,
       country: false,
       scraper: false,
       metaInCard: [],

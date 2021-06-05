@@ -65,7 +65,7 @@
     
     <div v-else class="text-center"> 
       <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
-      There are no matching videos for the selected filters.
+      There are no matching {{meta.settings.name.toLowerCase()}} for the selected filters.
     </div>
 
     <Loading />

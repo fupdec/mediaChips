@@ -133,6 +133,10 @@
                   <v-col v-if="meta.settings.color" cols="12" lg="6">
                     <v-btn @click="dialogColor=true" :color="color" block rounded class="mt-3">Pick another color for card</v-btn>
                   </v-col>
+                  <v-col v-if="meta.settings.bookmark" cols="12" lg="6">
+                    <v-textarea v-model="bookmark" hide-details clearable auto-grow outlined label="Bookmark" 
+                      :prepend-icon="showIcons?`mdi-${getMeta('bookmark').settings.icon}`:''"/>
+                  </v-col>
                 </v-row>
               </v-container>
             </v-form>
@@ -234,6 +238,7 @@ export default {
     this.color = this.card.meta.color || '#777777'
     this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
     this.country = this.card.meta.country || []
+    this.bookmark = this.card.meta.bookmark || ''
     this.parseMetaInCard()
   },
   mixins: [ShowImageFunction, NameRules, MetaGetters, Countries,], 
@@ -252,6 +257,7 @@ export default {
     country: [],
     dialogColor: false,
     color: '#777777',
+    bookmark: '',
     dialogScraper: false,
     tooltipCopyName: false,
     key: Date.now(),
@@ -339,6 +345,7 @@ export default {
       if (this.meta.settings.synonyms) presetValues.synonyms = this.parseStringToArray(this.synonyms)
       if (this.meta.settings.color) presetValues.color = this.color
       if (this.meta.settings.country) presetValues.country = this.country
+      if (this.meta.settings.bookmark) presetValues.bookmark = this.bookmark
 
       let newValues = {...this.oldValues, ...presetValues, ...this.values}
       this.$store.getters.metaCards.find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()

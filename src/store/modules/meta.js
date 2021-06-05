@@ -51,6 +51,14 @@ const specificMeta = [
     }
   },
   {
+    id: 'bookmark',
+    type: 'specific',
+    settings: {
+      name: 'Bookmark',
+      icon: 'bookmark'
+    }
+  },
+  {
     id: 'color',
     type: 'specific',
     settings: {
