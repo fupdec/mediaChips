@@ -238,8 +238,8 @@ export default {
       this.$store.dispatch('filterMetaCards') 
     },
     removeAllFilters() {
-      this.$store.getters.meta.find({id:this.meta.id}).set('filters', []).write()
-      this.initFilters()
+      this.$store.state.Meta.filters = []
+      this.$store.dispatch('filterMetaCards')
     },
     clearChars() {
       this.$store.state.Meta.firstChar = []
