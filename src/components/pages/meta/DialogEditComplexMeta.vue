@@ -87,7 +87,7 @@
                             </template>
                             <span>This will allow you to take information from the internet for your meta.</span>
                           </v-tooltip>            
-                          <v-switch v-model="settings.scraper" :label="`Data scraper: ${settings.scraper?'On':'Off'}`" class="my-0 py-0" hide-details/>
+                          <v-switch v-model="settings.scraper" :label="`Data scraper - ${settings.scraper?'On':'Off'}`" class="my-0 py-0" hide-details/>
                         </div>
                       </v-col>
                       <v-col cols="6" align="right">
@@ -103,15 +103,15 @@
                     <v-row>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left color="pink">mdi-heart</v-icon>
-                        <v-switch v-model="settings.favorite" :label="`Favorites: ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.favorite" :label="`Favorites - ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left color="yellow darken-2">mdi-star</v-icon>
-                        <v-switch v-model="settings.rating" :label="`Ratings: ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.rating" :label="`Ratings - ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left color="red">mdi-bookmark</v-icon>
-                        <v-switch v-model="settings.bookmark" :label="`Bookmarks: ${settings.bookmark?'On':'Off'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.bookmark" :label="`Bookmarks - ${settings.bookmark?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-tooltip top>
@@ -120,11 +120,11 @@
                           </template>
                           <span>This will allow you to add multiple names to one card.</span>
                         </v-tooltip>
-                        <v-switch v-model="settings.synonyms" :label="`Synonyms: ${settings.synonyms?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                        <v-switch v-model="settings.synonyms" :label="`Synonyms - ${settings.synonyms?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left>mdi-flag</v-icon>
-                        <v-switch v-model="settings.country" :label="`Countries: ${settings.country?'On':'Off'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.country" :label="`Countries - ${settings.country?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -151,7 +151,7 @@
                         <span class="overline text-center">Card Appearance</span>
                       </v-col>
                       <v-col cols="12" sm="6">
-                        <v-switch v-model="settings.images" :label="`Images: ${settings.images?'Yes':'No'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.images" :label="`Images - ${settings.images?'Yes':'No'}`" class="ma-0" hide-details/>
                         <v-radio-group v-if="settings.images" v-model="settings.imageAspectRatio" column mandatory hide-details>
                           <span class="mb-2">Aspect ratio of images:</span>
                           <v-radio :value="1"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
@@ -167,6 +167,10 @@
                         <v-checkbox v-model="settings.imageTypes" label="Custom 2" value="custom2" class="ma-0 pa-0" hide-details/>
                         <v-checkbox v-model="settings.imageTypes" label="Avatar" value="avatar" class="ma-0 pa-0" hide-details/>
                         <v-checkbox v-model="settings.imageTypes" label="Header" value="header" class="ma-0 pa-0" hide-details/>
+                      </v-col>
+                      <v-col cols="12" class="d-flex align-center">
+                        <v-icon left>mdi-file-tree</v-icon>
+                        <v-switch v-model="settings.nested" :label="`Nested view - ${settings.nested?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -273,6 +277,7 @@ export default {
       bookmark: false,
       country: false,
       scraper: false,
+      nested: false,
       metaInCard: [],
     },
     drag: false,

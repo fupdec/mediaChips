@@ -36,7 +36,7 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="$store.state.Meta.dialogFilterMetaCards=true" v-on="on" icon tile>
-            <v-badge :value="filterBadge" :content="filteredVideosTotal" overlap bottom style="z-index: 5;"> 
+            <v-badge :value="filterBadge" :content="filteredTotal" overlap bottom style="z-index: 5;"> 
               <v-icon>mdi-filter</v-icon> </v-badge>
           </v-btn>
         </template>
@@ -116,8 +116,18 @@
         </template>
         <span>Add New Tab</span>
       </v-tooltip>
+
+      <v-tooltip v-if="meta.settings.nested" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" @click="dialogNested=true" icon tile>
+            <v-icon>mdi-file-tree</v-icon>
+          </v-btn>
+        </template>
+        <span>Show Tree of Cards</span>
+      </v-tooltip>
     </div>
     <DialogFilterMetaCards v-if="$store.state.Meta.dialogFilterMetaCards"/>
+    <DialogNestedMetaCards v-if="dialogNested" @close="dialogNested=false"/>
 
 
     <v-spacer></v-spacer>
@@ -191,6 +201,7 @@ export default {
   name: 'MetaAppbar',
   components: {
     DialogFilterMetaCards: () => import('@/components/pages/meta/DialogFilterMetaCards.vue'),
+    DialogNestedMetaCards: () => import('@/components/pages/meta/DialogNestedMetaCards.vue'),
   },
   mixins: [MetaGetters],
   beforeMount() {
@@ -229,6 +240,7 @@ export default {
     sortBy: 'name',
     cardSizes: ['XS','S','M','L','XL'],
     specificMeta: ['name'],
+    dialogNested: false,
   }),
   computed: {
     sortIcon() {
@@ -251,7 +263,7 @@ export default {
         return filters.length > 0
       } else return false
     },
-    filteredVideosTotal() {
+    filteredTotal() {
       let filters = this.filters
       if (filters.length) {
         filters = _.filter(filters, f => {
