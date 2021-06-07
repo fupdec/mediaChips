@@ -123,7 +123,7 @@
             <v-icon>mdi-file-tree</v-icon>
           </v-btn>
         </template>
-        <span>Show Tree of Cards</span>
+        <span>Show Tree of {{meta.settings.name}}</span>
       </v-tooltip>
     </div>
     <DialogFilterMetaCards v-if="$store.state.Meta.dialogFilterMetaCards"/>
