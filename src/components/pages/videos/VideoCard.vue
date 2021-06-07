@@ -18,14 +18,14 @@
           unable to find thumb for this video
         </div>
 
-        <v-rating v-if="!$store.state.Settings.ratingAndFavoriteInCard" 
+        <v-rating v-if="!ratingAndFavoriteInCard" 
           :value="video.rating" @input="changeRating($event, video.id)"
           class="rating rating-wrapper" :class="{hidden: isRatingHidden}"
           color="yellow darken-2" background-color="grey darken-1"
           empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
           dense half-increments hover size="18" clearable />
         
-        <v-btn v-if="!$store.state.Settings.ratingAndFavoriteInCard" 
+        <v-btn v-if="!ratingAndFavoriteInCard" 
           @click="isFavorite = !isFavorite" icon absolute small
           :color="isFavorite===false ? 'white' : 'pink'"
           class="fav-btn" :class="{hidden: isFavoriteHidden}"
@@ -86,7 +86,7 @@
       <v-divider v-if="!isFileInfoHidden"></v-divider>
       <!-- END Video meta -->
 
-      <v-card-actions v-if="$store.state.Settings.ratingAndFavoriteInCard" class="px-1 py-0">
+      <v-card-actions v-if="ratingAndFavoriteInCard" class="px-1 py-0">
         <v-rating :value="video.rating" @input="changeRating($event, video.id)"
           color="yellow darken-2" background-color="grey"
           empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
@@ -97,7 +97,7 @@
           <v-icon v-else color="grey">mdi-heart-outline</v-icon>
         </v-btn>
       </v-card-actions>
-      <v-divider v-if="$store.state.Settings.ratingAndFavoriteInCard"></v-divider>
+      <v-divider v-if="ratingAndFavoriteInCard"></v-divider>
 
       <!-- <v-card-actions class="px-1 py-0 performers" :class="{hidden: isPerformersHidden}">
         <v-chip-group column >
@@ -204,14 +204,10 @@ export default {
     })
   },
   beforeDestroy() {
-    try {
-      this.$refs.video.src = ''
-    } catch (error) {}
+    try { this.$refs.video.src = '' } catch (error) {}
   },
   destroyed() {
-    for (const timeout in this.timeouts) {
-      clearTimeout(this.timeouts[timeout])
-    }
+    for (const timeout in this.timeouts) clearTimeout(this.timeouts[timeout])
   },
   data: () => ({
     errorThumb: false,
@@ -223,7 +219,6 @@ export default {
   }),
   computed: {
     updateCardIds() { return this.$store.state.Videos.updateCardIds},
-    getVideoPath() {return this.video.path},
     isChipsColored() {return this.$store.state.Settings.videoChipsColored},
     isEditBtnHidden() {return this.$store.state.Settings.videoEditBtnHidden },
     isFileNameHidden() {return this.$store.state.Settings.videoFileNameHidden },
@@ -232,9 +227,9 @@ export default {
     isFavoriteHidden() {return this.$store.state.Settings.videoFavoriteHidden},
     isQualityLabelHidden() {return this.$store.state.Settings.videoQualityLabelHidden},
     isDurationHidden() { return this.$store.state.Settings.videoDurationHidden },
-    isPerformersHidden() { return this.$store.state.Settings.videoPerformersHidden },
-    isTagsHidden() { return this.$store.state.Settings.videoTagsHidden },
-    isWebsiteHidden() { return this.$store.state.Settings.videoWebsiteHidden },
+    // isPerformersHidden() { return this.$store.state.Settings.videoPerformersHidden },
+    // isTagsHidden() { return this.$store.state.Settings.videoTagsHidden },
+    // isWebsiteHidden() { return this.$store.state.Settings.videoWebsiteHidden },
     videoPath() { return path.parse(this.video.path).dir },
     fileName() { return path.parse(this.video.path).name },
     fileExtension() { return path.parse(this.video.path).ext.replace('.', '').toLowerCase() },
@@ -253,7 +248,7 @@ export default {
     videoPreviewStatic() { return this.$store.state.Settings.videoPreviewStatic },
     videoPreviewHover() { return this.$store.state.Settings.videoPreviewHover },
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
-    ratingInCard() { return this.$store.state.Settings.videoRatingInCard },
+    ratingAndFavoriteInCard() { return this.$store.state.Settings.ratingAndFavoriteInCard },
     isVideoExist() { return fs.existsSync(this.video.path) },
     metaInCard() { return this.$store.state.Settings.videoMetaInCard },
     visibility() { return this.$store.state.Settings.videoVisibility },
@@ -264,24 +259,21 @@ export default {
       event.preventDefault()
       event.stopPropagation()
     },
-    setVideoProgress(percent) {
-      this.$refs.video.currentTime = Math.floor(this.video.duration*percent)
-    },
+    setVideoProgress(percent) { this.$refs.video.currentTime = Math.floor(this.video.duration*percent) },
     playPreview() {
       if (this.isVideoHovered) return
       this.isVideoHovered = true
-      if (this.videoPreviewHover == 'video') {
-        this.timeouts.z = setTimeout(()=>{
-          // play original video
-          if (!this.isVideoExist) return
-          this.$refs.video.src = this.video.path
-          this.setVideoProgress(0.2)
-          this.timeouts.a = setTimeout(this.setVideoProgress, 3000, 0.4)
-          this.timeouts.b = setTimeout(this.setVideoProgress, 6000, 0.6)
-          this.timeouts.c = setTimeout(this.setVideoProgress, 9000, 0.8)
-          this.timeouts.d = setTimeout(this.setVideoProgress, 12000, 0.2)
-        }, this.delayVideoPreview * 1000 + 500)
-      }
+      if (this.videoPreviewHover !== 'video') return
+      this.timeouts.z = setTimeout(()=>{
+        // play original video
+        if (!this.isVideoExist) return
+        this.$refs.video.src = this.video.path
+        this.setVideoProgress(0.2)
+        this.timeouts.a = setTimeout(this.setVideoProgress, 3000, 0.4)
+        this.timeouts.b = setTimeout(this.setVideoProgress, 6000, 0.6)
+        this.timeouts.c = setTimeout(this.setVideoProgress, 9000, 0.8)
+        this.timeouts.d = setTimeout(this.setVideoProgress, 12000, 0.2)
+      }, this.delayVideoPreview * 1000 + 500)
     },
     stopPlayingPreview() {
       if (this.videoPreviewHover != 'none') this.isVideoHovered = false
@@ -320,22 +312,18 @@ export default {
         ipcRenderer.send('openPlayer', data)
       } 
     },
-    changeRating(stars, videoID) {
-      this.$store.getters.videos.find({id:videoID}).assign({rating:stars,edit:Date.now()}).write()
-    },
-    getPerformerByName(performer) {return this.$store.getters.performers.find({name:performer}).value()},
-    performerLink(performer) { return `/performer/:${this.getPerformerByName(performer).id}?tabId=default`},
-    isFavoritePerformer(performer) { return this.getPerformerByName(performer).favorite },
-    colorTag(tag) {
-      if (this.isChipsColored) {
-        return this.$store.getters.tags.find({name:tag}).value().color
-      } else return ''
-    },
-    colorWebsite(website) {
-      if (this.isChipsColored) {
-        return this.$store.getters.websites.find({name: website}).value().color
-      } else return ''
-    },
+    changeRating(stars, videoID) { this.$store.getters.videos.find({id:videoID}).assign({rating:stars,edit:Date.now()}).write() },
+    // getPerformerByName(performer) {return this.$store.getters.performers.find({name:performer}).value()},
+    // performerLink(performer) { return `/performer/:${this.getPerformerByName(performer).id}?tabId=default`},
+    // isFavoritePerformer(performer) { return this.getPerformerByName(performer).favorite },
+    // colorTag(tag) {
+    //   if (this.isChipsColored) return this.$store.getters.tags.find({name:tag}).value().color
+    //   else return ''
+    // },
+    // colorWebsite(website) {
+    //   if (this.isChipsColored) return this.$store.getters.websites.find({name: website}).value().color
+    //   else return ''
+    // },
     showContextMenu(e) {
       e.preventDefault()
       this.$store.state.menuTabs = false
@@ -345,12 +333,12 @@ export default {
         this.$store.state.y = e.clientY
         this.$store.state.Videos.menuCard = true
       }, 300)
-    },
-    filterByTag(tag) {
-      let filter = {param:'tags',cond:'one of',val:[tag],type:'array',flag:null,lock:false}
-      this.$store.state.Settings.videoFilters.push(filter)
-      this.$store.dispatch('filterVideos')
-    },
+    }, // TODO context menu
+    // filterByTag(tag) {
+    //   let filter = {param:'tags',cond:'one of',val:[tag],type:'array',flag:null,lock:false}
+    //   this.$store.state.Settings.videoFilters.push(filter)
+    //   this.$store.dispatch('filterVideos')
+    // },
   },
   watch: {
     updateCardIds(newValue) {
@@ -361,7 +349,9 @@ export default {
 }
 </script>
 
+
 <style lang="less">
+// TODO move styles to app.scss
 .video-card {
   box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.12);
   cursor: default;
