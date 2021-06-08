@@ -56,7 +56,7 @@
         <div v-else style="min-width:80px;"></div>
       </v-container>
 
-      <v-container fluid class="meta-grid" :class="[cardSize, gapSize]">
+      <v-container fluid class="card-grid" :class="[cardSize, gapSize]">
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
       
@@ -190,7 +190,7 @@ export default {
   methods: {
     initSelection() {
       this.$store.state.Meta.selection = new Selection({
-        boundaries: ['.meta-grid'],
+        boundaries: ['.card-grid'],
         selectables: ['.meta-card'],
         allowTouch: false,
       }).on('beforestart', ({store, event}) => {

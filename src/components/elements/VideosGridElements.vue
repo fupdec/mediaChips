@@ -435,7 +435,7 @@ export default {
   methods: {
 		initSelection() {
 			this.$store.state.Videos.selection = new Selection({
-        boundaries: ['.videos-grid'],
+        boundaries: ['.card-grid'],
         selectables: ['.video-card'],
       }).on('beforestart', ({store, event}) => {
         const targetEl = event.target.closest('.video-card')

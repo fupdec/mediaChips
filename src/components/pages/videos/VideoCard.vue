@@ -1,7 +1,7 @@
 <template>
   <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
-      :class="{favorite: isFavorite}" class="video-card" height="100%"
+      :class="{favorite: isFavorite}" class="video-card meta-card"
       :data-id="video.id" outlined hover @contextmenu="showContextMenu"
       :key="cardKey" :disabled="!reg && i>4"
     >
@@ -11,33 +11,29 @@
       >
         <div v-if="!reg && i>4" class="reg-block"> <div>App not registered</div> </div>
         <v-img :src="getImgUrl()" :aspect-ratio="16/9" class="thumb" contain/>
-        <v-btn @click="playVideo" icon x-large outlined class="btn-play" :color="isVideoExist?'white':'red'">
-          <v-icon size="40">mdi-play</v-icon> </v-btn>
+        <v-btn @click="playVideo" icon outlined class="btn-play" :color="isVideoExist?'white':'red'">
+          <v-icon>mdi-play</v-icon> </v-btn>
 
         <div v-if="errorThumb" class="error-load-thumb">
           unable to find thumb for this video
         </div>
 
-        <v-rating v-if="!ratingAndFavoriteInCard" 
+        <v-rating v-if="!ratingAndFavoriteInCard && !isRatingHidden" 
           :value="video.rating" @input="changeRating($event, video.id)"
-          class="rating rating-wrapper" :class="{hidden: isRatingHidden}"
+          class="rating rating-wrapper"
           color="yellow darken-2" background-color="grey darken-1"
           empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
-          dense half-increments hover size="18" clearable />
+          dense half-increments hover clearable />
         
-        <v-btn v-if="!ratingAndFavoriteInCard" 
-          @click="isFavorite = !isFavorite" icon absolute small
-          :color="isFavorite===false ? 'white' : 'pink'"
-          class="fav-btn" :class="{hidden: isFavoriteHidden}"
+        <v-btn v-if="!ratingAndFavoriteInCard && !isFavoriteHidden" 
+          @click="isFavorite = !isFavorite" icon absolute 
+          :color="isFavorite===false ? 'white' : 'pink'" class="fav-btn"
         > <v-icon :color="isFavorite===false?'grey':'pink'">mdi-heart-outline</v-icon>
         </v-btn>
         
-        <div class="duration" :class="{hidden: isDurationHidden}">
-          {{calcDur(video.duration)}}
-        </div>
+        <div v-if="!isDurationHidden" class="duration">{{calcDur(video.duration)}}</div>
 
-        <div label outlined class="resolution"
-          :class="{hidden: isQualityLabelHidden}">
+        <div v-if="!isQualityLabelHidden" label outlined class="resolution">
           <div class="text text-no-wrap" :class="calcHeightTitle(video.resolution).toLowerCase()">
             {{calcHeightTitle(video.resolution)}}
           </div>
@@ -57,28 +53,27 @@
           </div>
         </div>
       </v-responsive>
-      <v-card-text class="px-2 py-1 video-card-title" :class="{hidden: isFileNameHidden}">
-        <span :title="fileName">{{ fileName }}</span> 
-      </v-card-text>
+
+      <div v-if="!isFileNameHidden" class="video-card-title" :title="fileName" v-html="fileName"/>
 
       <v-divider></v-divider>
 
       <!-- Video meta -->
-      <v-card-actions class="props pa-1" :class="{hidden: isFileInfoHidden}">
+      <v-card-actions v-if="!isFileInfoHidden" class="props pa-1">
         <div label outlined class="prop" :title="videoPath">
-          <v-icon size="16">mdi-file-search</v-icon>
+          <v-icon>mdi-file-search</v-icon>
           <span class="value">Path</span>
         </div>
         <div label outlined class="prop">
-          <v-icon left class="mr-1" size="16">mdi-monitor-screenshot</v-icon>
+          <v-icon>mdi-monitor-screenshot</v-icon>
           {{video.resolution}}
         </div>
         <div label outlined class="prop">
-          <v-icon left class="mr-1" size="16">mdi-file-video</v-icon>
+          <v-icon>mdi-file-video</v-icon>
           {{fileExtension}}
         </div>
         <div label outlined class="prop">
-          <v-icon left class="mr-1" size="16">mdi-harddisk</v-icon>
+          <v-icon>mdi-harddisk</v-icon>
           {{calcSize(video.size)}}
         </div>
       </v-card-actions>
@@ -90,56 +85,14 @@
         <v-rating :value="video.rating" @input="changeRating($event, video.id)"
           color="yellow darken-2" background-color="grey"
           empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
-          dense half-increments hover size="18" clearable />
+          dense half-increments hover clearable />
         <v-spacer></v-spacer>
-        <v-btn @click="isFavorite = !isFavorite" small icon color="pink"> 
+        <v-btn @click="isFavorite = !isFavorite" icon color="pink" x-small class="fav-in-card"> 
           <v-icon v-if="isFavorite" color="pink">mdi-heart</v-icon>
           <v-icon v-else color="grey">mdi-heart-outline</v-icon>
         </v-btn>
       </v-card-actions>
       <v-divider v-if="ratingAndFavoriteInCard"></v-divider>
-
-      <!-- <v-card-actions class="px-1 py-0 performers" :class="{hidden: isPerformersHidden}">
-        <v-chip-group column >
-          <v-icon left>mdi-account-outline</v-icon>
-          <v-chip v-for="performer in video.performers" :key="performer"
-            :to="performerLink(performer)" label
-            @mouseover.stop="showImage($event, getPerformerId(performer), 'performer')" 
-            @mouseleave.stop="$store.state.hoveredImage=false"
-            @click="$store.state.hoveredImage=false"
-            @click.middle="addNewTabPerformer(performer)"
-          >
-            <v-icon v-if="isFavoritePerformer(performer)" 
-              class="mr-1" color="pink" size="11"
-            > mdi-heart </v-icon> {{ performer }} 
-          </v-chip>
-        </v-chip-group>
-      </v-card-actions>
-
-      <v-card-actions class="px-1 py-0 video-tags" :class="{hidden: isTagsHidden}">
-        <v-chip-group column>
-          <v-icon left>mdi-tag-outline</v-icon>
-          <v-chip v-for="tag in video.tags" :key="tag" @click="filterByTag(tag)"
-            :outlined="isChipsColored" :color="colorTag(tag)"
-            @mouseover.stop="showImage($event, getTagId(tag), 'tag')" 
-            @mouseleave.stop="$store.state.hoveredImage=false"
-          > {{ tag }}
-          </v-chip>
-        </v-chip-group>
-      </v-card-actions>
-
-      <v-card-actions class="px-1 py-0 websites" :class="{hidden: isWebsiteHidden}">
-        <v-chip-group column>
-          <v-icon left>mdi-web</v-icon>
-          <v-chip v-for="website in video.websites" :key="website" label 
-            :outlined="isChipsColored" :color="colorWebsite(website)" :to="websiteLink(website)"
-            @mouseover.stop="showImage($event, getWebsiteId(website), 'website')" 
-            @mouseleave.stop="$store.state.hoveredImage=false"
-            @click="$store.state.hoveredImage=false"
-            @click.middle="addNewTabWebsite(website)"
-          > {{ website }} </v-chip>
-        </v-chip-group>
-      </v-card-actions> -->
 
       <!-- Parse meta -->
       <div v-for="(m,i) in metaInCard" :key="i">
@@ -167,14 +120,10 @@
         </div>
       </div>
       
-      <v-icon v-if="video.bookmark" class="bookmark" color="red" size="28" :title="bookmark">
-        mdi-bookmark
-      </v-icon>
+      <v-icon v-if="video.bookmark" class="bookmark" color="red" :title="bookmark">mdi-bookmark</v-icon>
 
-      <v-btn @click="$store.state.Videos.dialogEditVideoInfo=true"
-        color="secondary" fab x-small class="btn-edit" :class="{hidden: isEditBtnHidden}">
-        <v-icon>mdi-pencil</v-icon>
-      </v-btn>
+      <v-btn v-if="!isEditBtnHidden" @click="$store.state.Videos.dialogEditVideoInfo=true"
+        color="secondary" fab x-small class="btn-edit"> <v-icon>mdi-pencil</v-icon> </v-btn>
     </v-card>
   </v-lazy>
 </template>
@@ -227,9 +176,6 @@ export default {
     isFavoriteHidden() {return this.$store.state.Settings.videoFavoriteHidden},
     isQualityLabelHidden() {return this.$store.state.Settings.videoQualityLabelHidden},
     isDurationHidden() { return this.$store.state.Settings.videoDurationHidden },
-    // isPerformersHidden() { return this.$store.state.Settings.videoPerformersHidden },
-    // isTagsHidden() { return this.$store.state.Settings.videoTagsHidden },
-    // isWebsiteHidden() { return this.$store.state.Settings.videoWebsiteHidden },
     videoPath() { return path.parse(this.video.path).dir },
     fileName() { return path.parse(this.video.path).name },
     fileExtension() { return path.parse(this.video.path).ext.replace('.', '').toLowerCase() },
@@ -313,17 +259,6 @@ export default {
       } 
     },
     changeRating(stars, videoID) { this.$store.getters.videos.find({id:videoID}).assign({rating:stars,edit:Date.now()}).write() },
-    // getPerformerByName(performer) {return this.$store.getters.performers.find({name:performer}).value()},
-    // performerLink(performer) { return `/performer/:${this.getPerformerByName(performer).id}?tabId=default`},
-    // isFavoritePerformer(performer) { return this.getPerformerByName(performer).favorite },
-    // colorTag(tag) {
-    //   if (this.isChipsColored) return this.$store.getters.tags.find({name:tag}).value().color
-    //   else return ''
-    // },
-    // colorWebsite(website) {
-    //   if (this.isChipsColored) return this.$store.getters.websites.find({name: website}).value().color
-    //   else return ''
-    // },
     showContextMenu(e) {
       e.preventDefault()
       this.$store.state.menuTabs = false
@@ -334,11 +269,6 @@ export default {
         this.$store.state.Videos.menuCard = true
       }, 300)
     }, // TODO context menu
-    // filterByTag(tag) {
-    //   let filter = {param:'tags',cond:'one of',val:[tag],type:'array',flag:null,lock:false}
-    //   this.$store.state.Settings.videoFilters.push(filter)
-    //   this.$store.dispatch('filterVideos')
-    // },
   },
   watch: {
     updateCardIds(newValue) {
@@ -348,387 +278,3 @@ export default {
   }
 }
 </script>
-
-
-<style lang="less">
-// TODO move styles to app.scss
-.video-card {
-  box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.12);
-  cursor: default;
-  .v-image {
-    cursor: pointer;
-  }
-  .reg-block {
-    position: absolute;
-    z-index: 3;
-    background-color: hsla(0, 0%, 0%, 0.7);
-    text-transform: uppercase;
-    text-align: center;
-    padding: 5px;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
-    font-size: 12px;
-    justify-content: center;
-    color: #fff;
-  }
-  &:hover {
-    .bookmark {
-      opacity: 0.7;
-      &:hover {
-        opacity: 1;
-      }
-    }
-    .btn-edit {
-      opacity: 0.5;
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
-  .btn-edit {
-    position: absolute;
-    right: 5px;
-    bottom: 5px;
-    opacity: 0;
-    &.hidden {
-      display: none;
-    }
-  }
-  &.favorite {
-    &:before {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      left: 0;
-      top: 0;
-      border-radius: 4px;
-      pointer-events: none;
-      box-shadow: 0px 2px 8px 3px rgba(255, 0, 75, 0.25), 0 0 0 1px rgba(255, 0, 75, 1);
-    }
-    .video-preview-container {
-      &:before {
-        opacity: 1;
-      }
-    }
-  }
-  .v-input__append-inner {
-    display: none;
-  }
-  .v-text-field input {
-    font-size: 12px;
-  }
-  .v-chip {
-    margin: 1px 2px !important;
-    padding: 3px 4px;
-    line-height: 1;
-    height: auto !important;
-  }
-  .v-card__actions {
-    .v-chip {
-      .v-icon.mdi-heart {
-        font-size: 1em !important;
-      }
-    }
-  }
-  .v-rating .v-icon::before {
-    font-size: 1.3em !important;
-  }
-  .duration {
-    position: absolute;
-    right: 2px;
-    bottom: 2px;
-    padding: 1px;
-    line-height: 1;
-    font-weight: 300;
-    font-size: 12px;
-    border-radius: 3px;
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.3);
-    user-select: none;
-    &.hidden {
-      display: none;
-    }
-  }
-  .resolution {
-    position: absolute;
-    left: 1px;
-    top: 1px;
-    font-weight: 300;
-    color: #fff !important;
-    user-select: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: stretch;
-    text-align: center;
-    border-radius: 2px;
-    overflow: hidden;
-    opacity: .7;
-    &.hidden {
-      display: none;
-    }
-    .text {
-      font-size: 9px;
-      font-weight: 600;
-      width: 100%;
-      background-color: rgb(236, 197, 22);
-      color: #000;
-      line-height: 1;
-      padding: 0px 2px;
-      &.sd {
-        background-color: #db8e6b;
-      }
-      &.hd {
-        background-color: #e2e2e2;
-      }
-      &.fhd {
-        background-color: #ffee00;
-      }
-      &.uhd {
-        background-color: #00ffff;
-      }
-      &.phone {
-        background-color: #e674b6;
-      }
-    }
-    .value {
-      font-size: 10px;
-      width: 100%;
-      background-color: #000;
-      color: #ffffff;
-      line-height: 1.1;
-      padding: 0px 2px;
-    }
-  }
-  .prop {
-    display: flex;
-    align-items: center;
-    font-weight: 300;
-    font-size: 10px;
-    user-select: none;
-    .v-icon {
-      opacity: 0.65;
-    }
-    .value {
-      margin-left: 2px;
-    }
-    &s {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      &.hidden {
-        display: none;
-      }
-    }
-  }
-  .performers {
-    &.hidden {
-      display: none;
-    }
-  }
-  &.theme--dark {
-    .video-card-title {
-      &:before {
-        background-image: linear-gradient(to right, transparent, #1e1e1e);
-      }
-    }
-  }
-  .theme--light.v-text-field > .v-input__control > .v-input__slot:before {
-    border-color: rgba(0, 0, 0, 0.1);
-  }
-  .theme--dark.v-text-field > .v-input__control > .v-input__slot:before {
-    border-color: rgba(255, 255, 255, 0.05);
-  }
-  .websites {
-    &.hidden {
-      display: none;
-    }
-  }
-  .v-chip-group .v-slide-group__content {
-    padding: 2px 0;
-  }
-  .bookmark {
-    position: absolute;
-    top: -6px;
-    right: 25%;
-    opacity: 0.4;
-  }
-  .timeline {
-    display: flex;
-    justify-content: center;
-    height: 100%;
-    width: 100%;
-    background-color: #000;
-    position: absolute;
-    animation: appearing 0.3s both;
-    img {
-      height: 100%;
-    }
-    .sections {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      display: flex;
-    }
-    .section {
-      height: 100%;
-      width: 100%;
-      position: relative;
-      &:before {
-        content: '';
-        position: absolute;
-        height: 5px;
-        left: 1px;
-        right: 1px;
-        bottom: 1px;
-        border-radius: 1px;
-        background-color: white;
-        box-shadow: 0 0 3px #333;
-        opacity: 0.5;
-        transition: .3s all;
-      }
-      &:hover {
-        &:before {
-          opacity: 1;
-          height: 8px;
-        }
-      }
-    }
-  }
-}
-.error-load-thumb {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  height: 100%;
-  color: #fff;
-  pointer-events: none;
-  user-select: none;
-}
-.video-preview-container {
-  transition: .2s all ease;
-  border-radius: 5px 5px 0 0;
-  &:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 1;
-    opacity: 0;
-    background-image: linear-gradient(225deg, #ff004b 0%, rgba(0, 0, 0, 0) 13%, rgba(0, 0, 0, 0));
-    transition: 1s all ease;
-    pointer-events: none;
-  }
-  .thumb {
-    width: 100%;
-    position: absolute;
-    background-color: #000;
-  }
-  .preview {
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    overflow: hidden;
-    position: absolute;
-    animation-fill-mode: both;
-    animation-duration: 0.5s;
-    animation-delay: 0.7s;
-    video {
-      min-width: 100%;
-      min-height: 100%;
-      object-fit: contain;
-    }
-  }
-  .rating,
-  .duration,
-  .resolution,
-  .btn-play {
-    z-index: 1;
-  }
-  .duration,
-  .resolution {
-    pointer-events: none;
-  }
-  &:hover {
-    .preview {
-      animation-name: preview;
-    }
-    .btn-play {
-      opacity: 0.2;
-      &:hover {
-        opacity: 1;
-      }
-    }
-    .v-icon.mdi-star:not(.yellow--text) {
-      color: rgba(255, 255, 255, 0.5) !important;
-    }
-  }
-}
-.rating {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  line-height: 1;
-  border-radius: 5px;
-  &.hidden {
-    display: none;
-  }
-  .v-icon {
-    padding: 0;
-  }
-  &-wrapper {
-    background-color: rgba(0, 0, 0, 0.1);
-    border-top-right-radius: 3px;
-  }
-}
-.btn-play {
-  opacity: 0;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  margin: auto;
-}
-.video-card-title {
-  font-size: 12px;
-  letter-spacing: -0.2px !important;
-  overflow:hidden;
-  white-space: nowrap;
-  position: relative;
-  &:before {
-    content: '';
-    position: absolute;
-    right: 0;
-    height: 100%;
-    width: 20px;
-    background-image: linear-gradient(to right, transparent, #fff);
-  }
-  &.hidden {
-    display: none;
-  }
-}
-@keyframes preview {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.video-tags {
-  &.hidden {
-    display: none;
-  }
-}
-</style>

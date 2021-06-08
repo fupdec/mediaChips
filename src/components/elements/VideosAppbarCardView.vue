@@ -27,7 +27,7 @@
       </v-card>
     </v-menu>
 
-    <v-tooltip bottom>
+    <!-- <v-tooltip bottom>
       <template v-slot:activator="{ on }">
 				<v-badge :value="isChipsColored" class="colored" overlap offset-x="25" offset-y="25">
           <v-btn @click="toggleChipsColored()" v-on="on" icon tile>
@@ -37,7 +37,7 @@
       </template>
       <span v-if="isChipsColored">Make labels grey</span>
       <span v-else>Make labels colored</span>
-    </v-tooltip>
+    </v-tooltip> -->
 
     
     <v-menu bottom offset-y min-width="160">

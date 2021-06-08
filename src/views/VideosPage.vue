@@ -1,7 +1,7 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
 
-    <div class="headline text-h3 d-flex align-center justify-center my-6">
+    <div class="headline text-h3 d-flex align-center justify-center my-4">
       <v-icon x-large left>mdi-video-outline</v-icon> Videos
       <span class="text-h5 ml-2">({{$store.getters.filteredVideosTotal}})</span>
     </div>
@@ -10,7 +10,7 @@
       <FiltersChips :filters="filters" type="Video" />
     </v-container>
 
-    <v-container fluid v-if="!$store.state.Videos.filteredEmpty" class="pagination-container my-6">
+    <v-container fluid v-if="!$store.state.Videos.filteredEmpty" class="pagination-container my-4">
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
         :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
         class="items-per-page-dropdown"
@@ -44,7 +44,7 @@
 
     <Loading />
 
-    <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
+    <v-container fluid class="card-grid" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
       <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
     </v-container>

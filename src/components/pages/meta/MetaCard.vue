@@ -1,6 +1,6 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
+    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
       <div v-if="meta.settings.images" class="img-container">

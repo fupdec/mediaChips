@@ -79,7 +79,7 @@
 
     <Loading />
 
-    <v-container fluid class="videos-grid" :class="[cardSize, gapSize]">
+    <v-container fluid class="card-grid" :class="[cardSize, gapSize]">
       <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
     </v-container>
 
