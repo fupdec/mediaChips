@@ -187,29 +187,6 @@ export default {
       if (this.watchFolders) this.watchDir(this.folders.map(f=>f.path))
       // keyboard shortcuts
       // TODO: disable shift+enter and shift+click because that add new window
-      window.addEventListener('keyup', event => {
-        if(event.altKey && event.keyCode === 83) { // alt+s
-          this.$router.push('/settings')
-          return
-        }
-        if(event.altKey && event.keyCode === 86) { // alt+v
-          this.$router.push('/videos/:default?tabId=default')
-          return
-        }
-        if(event.altKey && event.keyCode === 80) { // alt+p
-          this.$router.push('/playlists/:default?tabId=default')
-          return
-        }
-        if(event.altKey && event.keyCode === 88) { // alt+x
-          this.$router.push('/home')
-          return
-        }
-        if(event.altKey && event.keyCode === 68) { // alt+d
-          this.darkMode = !this.$store.state.Settings.darkMode
-          ipcRenderer.send('toggleDarkMode', this.darkMode)
-          return
-        }
-      })
     })
   },
   beforeDestroy() {

@@ -153,41 +153,7 @@
           <v-list-item class="pr-2" link @click="toggleDarkMode">
             <v-list-item-title>
               <v-icon left size="18">mdi-theme-light-dark</v-icon>
-              <div class="shortcut"><span>Toggle Dark Mode</span> <span>Alt + D</span></div>
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-
-      <v-menu v-if="!disableRunApp" bottom offset-y min-width="160">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn v-bind="attrs" v-on="on" :ripple="false" small tile text height="28">
-            Navigation
-          </v-btn>
-        </template>
-        <v-list dense class="context-menu">
-          <v-list-item link @click="$router.push('/home')">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-home</v-icon> 
-              <div class="shortcut"><span>Home</span> <span>Alt + X</span></div>
-            </v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/videos/:default?tabId=default')">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-video</v-icon> 
-              <div class="shortcut"><span>Videos</span> <span>Alt + V</span></div>
-            </v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/playlists/:default?tabId=default')">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-format-list-bulleted</v-icon> 
-              <div class="shortcut"><span>Playlists</span> <span>Alt + P</span></div>
-            </v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/settings')">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-cog</v-icon> 
-              <div class="shortcut"><span>Settings</span> <span>Alt + S</span></div>
+              <div class="shortcut"><span>Toggle Dark Mode</span></div>
             </v-list-item-title>
           </v-list-item>
         </v-list>
