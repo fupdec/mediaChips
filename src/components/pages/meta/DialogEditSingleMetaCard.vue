@@ -15,12 +15,12 @@
           <v-btn @click="close" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> Close</v-btn>
           <v-btn @click="save" outlined> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
         </v-toolbar>
-        <div class="d-flex justify-space-between px-4 pt-4">
+        <div class="d-flex justify-space-between pa-4">
           <v-btn v-if="meta.settings.scraper" @click="dialogScraper=true" small rounded color="secondary"> 
             <v-icon left>mdi-magnify</v-icon> Scrap data </v-btn>
           <v-spacer v-if="meta.settings.scraper"></v-spacer>
           <v-chip label outlined small> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
-          <span class="caption mx-4">id: {{meta.id}}</span>
+          <span class="caption mx-4">id: {{card.id}}</span>
           <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>
         </div>
         <vuescroll>
@@ -28,18 +28,18 @@
             <v-form v-model="valid" ref="form" @submit.prevent>
               <v-container fluid>
                 <v-row>
-                  <v-col cols="12" lg="6" class="pb-0 remove-details-margin">
+                  <v-col cols="12" lg="6" class="pt-0 remove-details-margin">
                     <v-text-field v-model="name" :rules="[nameRules]" label="Name" 
                       :prepend-inner-icon="showIcons?`mdi-${getMeta('name').settings.icon}`:''"/>
                   </v-col>
-                  <v-col v-if="meta.settings.synonyms" cols="12" lg="6" class="pb-0 remove-details-margin">
-                    <v-text-field v-model="synonyms" label="Synonyms" hide-details 
+                  <v-col v-if="meta.settings.synonyms" cols="12" lg="6" class="pt-0 remove-details-margin">
+                    <v-text-field v-model="synonyms" label="Synonyms"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta('synonyms').settings.icon}`:''"/>
                   </v-col>
-                  <v-col v-if="meta.settings.country" cols="12" lg="6">
+                  <v-col v-if="meta.settings.country" cols="12" lg="6" class="pt-0">
                     <v-autocomplete v-model="country" :items="countries" multiple 
                       item-text="name" item-value="name" label="Country" 
-                      class="nation-chips hidden-close nation-select" hide-selected hide-details
+                      class="nation-chips hidden-close nation-select" hide-selected
                       :menu-props="{contentClass:'list-with-preview'}"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta('country').settings.icon}`:''">
                       <template v-slot:selection="data">
@@ -57,10 +57,10 @@
                     </v-autocomplete>
                   </v-col>
 
-                  <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" lg="6">
+                  <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" lg="6" class="pt-0">
                     <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
-                      multiple hide-selected hide-details 
+                      multiple hide-selected 
                       :label="getMeta(m.id).settings.name" item-value="id"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                       append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
@@ -102,18 +102,18 @@
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
-                      :label="getMeta(m.id).settings.name" hide-details 
+                      :label="getMeta(m.id).settings.name" 
                       clearable @click:clear="setVal('', m.id)"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
                       @input="setVal($event,m.id)" :value="values[m.id]" type="number"
-                      :label="getMeta(m.id).settings.name" hide-details 
+                      :label="getMeta(m.id).settings.name" 
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                     <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                       :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
-                      @input="setVal($event,m.id)" :value="values[m.id]" multiple hide-details
+                      @input="setVal($event,m.id)" :value="values[m.id]" multiple
                       :label="getMeta(m.id).settings.name" 
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" 
                       append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
@@ -125,7 +125,7 @@
                       
                     <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
                       :value="values[m.id]" @click="calendarId=m.id,calendar=true" 
-                      :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD' hide-details
+                      :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD'
                       clearable @click:clear="setVal('', m.id)" readonly persistent-hint
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
