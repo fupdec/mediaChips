@@ -345,19 +345,21 @@ export default {
           for (const e of metaForParsingPerformer) {
             if (e.type == 'number') {
               let val = Number(p[e.name])
-              if (typeof val == 'number') otherMeta[e.id] = val
+              if (val) otherMeta[e.id] = val
               else otherMeta[e.id] = 0
             }
             else if (e.type == 'array') {
-              otherMeta[e.id] = p[e.name].filter(j => {return j!==''&&j!==null&&j!==undefined})
-                .map(j => { 
-                  let el = _.find(e.items,{name:j})
-                  if (el!==undefined) return el.id 
-                })
+              let arr = p[e.name].filter(j => {if (j) return j})
+              let arrVal = []
+              for (const j of arr) {
+                let el = _.find(e.items,{name:j})
+                if (el) arrVal.push(el.id)
+              }
+              otherMeta[e.id] = arrVal
             }
             else {
               let val = p[e.name]
-              if (typeof val == 'string') otherMeta[e.id] = val
+              if (val) otherMeta[e.id] = val
               else otherMeta[e.id] = ''
             }
           }
@@ -380,7 +382,7 @@ export default {
           
           this.$store.dispatch('addMetaCard', card)
           
-          await this.sleep(10)
+          await this.sleep(1)
           ++this.status.performers
         }
 
@@ -480,7 +482,7 @@ export default {
 
           this.$store.dispatch('addMetaCard', card)
           
-          await this.sleep(10)
+          await this.sleep(1)
           ++this.status.tags
         }
         //-update tags in videos db
@@ -572,7 +574,7 @@ export default {
 
           this.$store.dispatch('addMetaCard', card)
 
-          await this.sleep(10)
+          await this.sleep(1)
           ++this.status.websites
         }
 
