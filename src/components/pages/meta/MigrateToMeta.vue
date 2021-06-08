@@ -602,23 +602,21 @@ export default {
       })
     },
     parseTagsForPerformers(performersId, tagsId) {
-      // let tagCards = this.$store.getters.metaCards.filter({metaId:tagsId}).value()
-      // let performerCards = this.$store.getters.metaCards.filter({metaId:performersId}).value()
-      let tagCards = this.$store.getters.metaCards.filter({metaId:'TwuRa6gsps'})
-      let performerCards = this.$store.getters.metaCards.filter({metaId:'1AUq5nxz0'})
+      let tagCards = this.$store.getters.metaCards.filter({metaId:tagsId})
+      let performerCards = this.$store.getters.metaCards.filter({metaId:performersId})
       let performers = this.$store.getters.performers
       
       performerCards.each(i=>{
         let perf = performers.find({id:i.id}).value()
         if (perf) {
-          let t = perf.tags 
+          let foundTags = []
+          for (const tag of perf.tags) {
+            let ft = tagCards.find(j=>tag===j.meta.name).value()
+            if (ft) foundTags.push(ft.id)
+          }
+          i.meta[tagsId] = foundTags
         }
-        // console.log(perf)
-      }).value()
-      
-      // tagCard.settings.name
-      // console.log(tagCards)
-      // console.log(performerCards)
+      }).write()
     },
     moveImages(performersId, tagsId, websitesId) {
       //-operations with images

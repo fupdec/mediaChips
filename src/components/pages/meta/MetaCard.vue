@@ -25,10 +25,10 @@
       
       <!-- Parse meta from cards -->
       <div v-for="(m,i) in metaInCard" :key="i">
-        <div v-if="visibility[m.id]" class="d-flex px-1"> 
+        <div v-if="visibility[m.id]" class="d-flex px-1 meta-in-card"> 
           <v-tooltip top>
             <template v-slot:activator="{ on }">
-              <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+              <v-icon v-on="on">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
             </template>
             <span>{{getMeta(m.id).settings.name}}</span>
           </v-tooltip>

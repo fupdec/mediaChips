@@ -1870,10 +1870,20 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     line-height: 1.4 !important;
     font-size: 0.9em;
   }
+  .meta-in-card {
+    .v-icon {
+      padding-right: 0.2em;
+    }
+  }
   .v-chip {
-    margin: 0 2px 2px !important;
-    padding: 0 4px;
+    margin: 0.2em 0.4em 0.2em 0 !important;
+    padding: 0 0.4em;
+    line-height: 1.4;
+    font-size: inherit !important;
     height: auto !important;
+  }
+  .v-slide-group__content {
+    padding: 0 !important;
   }
   .btn-edit-images,
   .btn-edit {
