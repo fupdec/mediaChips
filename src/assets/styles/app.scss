@@ -1500,6 +1500,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     .main-img:before {
       opacity: 1;
     }
+    .img-container {
+      &:before {
+        opacity: 1;
+      }
+    }
   }
   // images
   .img-container {
@@ -1553,8 +1558,8 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     min-height: 100%;
     transition: .3s opacity ease-out;
     &-button {
-      width: 30px;
-      height: 30px;
+      width: 3em;
+      height: 3em;
       background: rgba(10, 10, 10, 0.7);
       display: flex;
       align-items: center;
@@ -1575,7 +1580,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
   .custom2-img {
     &-button {
-      bottom: calc(50% - 30px);
+      bottom: calc(50% - 3em);
     }
   }
   .custom1-img-button {
@@ -1669,7 +1674,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     margin: 0.2em 0.4em 0.2em 0 !important;
     padding: 0 0.4em;
     line-height: 1.4;
-    font-size: inherit !important;
+    font-size: 0.9em !important;
     height: auto !important;
   }
   .v-slide-group__content {
@@ -1808,6 +1813,23 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       .fav-in-card {
         margin-right: 10px;
       }
+    }
+  }
+}
+.card-grid.wide-image {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+  &.card-size {
+    &-1 {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    }
+    &-2 {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+    }
+    &-4 {
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+    }
+    &-5 {
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)) !important;
     }
   }
 }
