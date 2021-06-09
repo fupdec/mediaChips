@@ -96,14 +96,14 @@
 
       <!-- Parse meta -->
       <div v-for="(m,i) in metaInCard" :key="i">
-        <div v-if="visibility[m.id]" class="d-flex px-1">
-          <v-tooltip top>
-            <template v-slot:activator="{ on }">
-              <v-icon v-on="on" class="mr-2">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-            </template>
-            <span>{{getMeta(m.id).settings.name}}</span>
-          </v-tooltip>
+        <div v-if="visibility[m.id]" class="meta-in-card">
           <v-chip-group v-if="m.type=='complex'" column>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+              </template>
+              <span>{{getMeta(m.id).settings.name}}</span>
+            </v-tooltip>
             <v-chip v-for="v in video[m.id]" :key="v" 
               :color="getColor(m.id,v)" 
               :label="getMeta(m.id).settings.chipLabel"
@@ -112,7 +112,13 @@
               @mouseleave.stop="$store.state.hoveredImage=false"> 
                 {{ getCard(v).meta.name }} </v-chip>
           </v-chip-group>
-          <div v-else-if="m.type=='simple'">
+          <div v-else-if="m.type=='simple'" class="simple-meta">
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+              </template>
+              <span>{{getMeta(m.id).settings.name}}</span>
+            </v-tooltip>
             <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id, 'video')}}</span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{video[m.id]?'Yes':'No'}}</span>
             <span v-else>{{video[m.id]}}</span>

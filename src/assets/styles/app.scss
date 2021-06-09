@@ -1668,12 +1668,20 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     font-size: 0.9em;
   }
   .meta-in-card {
+    padding-left: 0.2em;
+    padding-right: 0.2em;
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
+    .simple-meta {
+      display: flex;
+      align-items: center;
+    }
     .v-icon {
       padding-right: 0.2em;
     }
   }
   .v-chip {
-    margin: 0.2em 0.4em 0.2em 0 !important;
+    margin: 0.2em !important;
     padding: 0 0.4em;
     line-height: 1.4;
     font-size: 0.9em !important;
