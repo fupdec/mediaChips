@@ -10,20 +10,12 @@
     </v-tooltip>
     <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary" 
       small close :disabled="filter.lock" @click:close="removeFilter(i)">
-      <span v-if="type=='Meta'" class="mr-1">"{{getMetaBy(filter.by)}}"</span>
-      <span v-else class="mr-1">"{{filter.param}}"</span>
+      <span class="mr-1">"{{getMeta(filter.by).settings.name}}"</span>
       <span>{{filter.cond}}</span> 
-      <div v-if="type=='Meta'">
-        <!-- TODO remove empty quotes and create function for getting values -->
-        <span v-if="filter.type=='array'||filter.type=='select'" class="ml-1">"{{getMetaItems(filter.by, filter.val)}}"</span>
-        <span v-else-if="filter.type=='boolean'"></span>
-        <span v-else class="ml-1">"{{filter.val}}"</span>
-      </div>
-      <div v-else>
-        <span v-if="filter.type=='array'" class="ml-1">"{{filter.val.join(', ')}}"</span>
-        <span v-else-if="filter.type=='boolean'"></span>
-        <span v-else class="ml-1">"{{filter.val}}"</span>
-      </div>
+      <span v-if="filter.type=='array'||filter.type=='select'" class="ml-1">"{{getMetaItems(filter.by, filter.val)}}"</span>
+      <span v-else-if="filter.type=='boolean'"></span>
+      <span v-else class="ml-1">"{{filter.val}}"</span>
+      <!-- TODO remove empty quotes and create function for getting values -->
     </v-chip>
   </div>
 </template>
@@ -68,10 +60,6 @@ export default {
       }
       this.filters.splice(i, 1)
       this.$store.dispatch(`filter${this.type}s`)
-    },
-    getMetaBy(filterBy) {
-      if (this.specificMeta.includes(filterBy)) return filterBy
-      else return this.getMeta(filterBy).settings.name
     },
     getMetaItems(metaId, items) {
       let meta = this.getMeta(metaId)

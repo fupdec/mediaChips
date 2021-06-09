@@ -20,12 +20,12 @@
               </v-btn>
             </v-badge>
           </template>
-          <span>Search</span>
+          <span>Search by File Path</span>
         </v-tooltip>
       </template>
       <v-card width="350">
         <div class="pa-2 d-flex">
-          <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" 
+          <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" autofocus
             @click:clear="clearSearch" outlined dense hide-details clearable class="pt-0"/>
           <v-btn @click="search" class="ml-2" color="primary" depressed height="40">
             <v-icon>mdi-magnify</v-icon>
@@ -255,35 +255,21 @@ export default {
       return 'mdi-help'
     },
     sortButtons: {
-      get() {
-        return this.$store.state.Settings.videoSortBy
-      },
-      set(value) {
-        this.$store.state.Settings.videoSortBy = value
-      },
+      get() { return this.$store.state.Settings.videoSortBy },
+      set(value) { this.$store.state.Settings.videoSortBy = value },
     },
-    sortDirection() {
-      return this.$store.state.Settings.videoSortDirection
-    },
-    isTreeEmpty() {
-      if (this.$store.state.Videos.tree.length) {
-        return false
-      } else return true
-    },
-    treeBadgeContent() {
-      return this.$store.state.Videos.tree.length  
-    },
-    tabId() {
-      return this.$route.query.tabId
-    },
+    sortDirection() { return this.$store.state.Settings.videoSortDirection },
+    isTreeEmpty() { return !this.$store.state.Videos.tree.length },
+    treeBadgeContent() { return this.$store.state.Videos.tree.length },
+    tabId() { return this.$route.query.tabId },
     searchStringComputed() {
       let filters = this.$store.state.Settings.videoFilters
-      let search = _.find(filters, {param: 'path', flag: 'search'})
+      let search = _.find(filters, {by: 'path', appbar: true})
       if (search) return search.val
       else return ''
     },
     favoritesFilterExist() {
-      let favorite = {param:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
       let filters = this.$store.state.Settings.videoFilters
       let index = _.findIndex(filters, favorite)
       return index > -1
@@ -293,42 +279,33 @@ export default {
     search() {
       if (this.searchString == null || this.searchString.length == 0) return
       let filters = this.$store.state.Settings.videoFilters
-      let index = _.findIndex(filters, {param: 'path', flag: 'search'})
-      if (index >= 0) filters.splice(index, 1)
+      let index = _.findIndex(filters, {by: 'path', appbar: true})
+      if (index > -1) filters.splice(index, 1)
       this.$store.state.Settings.videoFilters.push({
-        param: 'path',
-        cond: 'includes',
-        val: this.searchString,
-        type: 'string',
-        flag: 'search',
-        lock: true
+        by: 'path', cond: 'includes', val: this.searchString,
+        type: 'string', flag: null, appbar: true, lock: false
       })
       this.$store.dispatch('filterVideos')
     },
+    changeSearchString(e) { this.searchString = e },
     clearSearch() {
       let filters = this.$store.state.Settings.videoFilters
-      let index = _.findIndex(filters, {param: 'path', flag: 'search'})
-      if (index >= 0) filters.splice(index, 1)
+      let index = _.findIndex(filters, {by: 'path', appbar: true})
+      if (index > -1) filters.splice(index, 1)
       else return
       this.$store.dispatch('filterVideos')
     },
     toggleFavorites() {
       let filters = this.$store.state.Settings.videoFilters
-      let favorite = {param:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
       let index = _.findIndex(filters, favorite)
       if (index > -1) filters.splice(index, 1)
       else this.$store.state.Settings.videoFilters.push(favorite)
       this.$store.dispatch('filterVideos')
     },
-    changeSearchString(e) {
-      this.searchString = e
-    },
     toggleSortDirection() {
       this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
-      setTimeout(()=>{
-        this.$store.dispatch('filterVideos')
-        // this.$store.dispatch('saveFiltersOfVideos', this.$route)
-      },200)
+      setTimeout(()=>{ this.$store.dispatch('filterVideos') },200)
     },
     selectAllVideos() {
       this.$store.state.Videos.selection.clearSelection()

@@ -35,59 +35,115 @@ let defaultMetaCard = {
 
 const specificMeta = [
   {
-    id: 'favorite',
-    type: 'specific',
-    settings: {
-      name: 'Favorite',
-      icon: 'heart'
+    "id": "path",
+    "type": "specific",
+    "settings": {
+      "name": "File path",
+      "icon": "file-search"
     }
   },
   {
-    id: 'rating',
-    type: 'specific',
-    settings: {
-      name: 'Rating',
-      icon: 'star'
+    "id": "favorite",
+    "type": "specific",
+    "settings": {
+      "name": "Favorite",
+      "icon": "heart"
     }
   },
   {
-    id: 'bookmark',
-    type: 'specific',
-    settings: {
-      name: 'Bookmark',
-      icon: 'bookmark'
+    "id": "rating",
+    "type": "specific",
+    "settings": {
+      "name": "Rating",
+      "icon": "star"
     }
   },
   {
-    id: 'color',
-    type: 'specific',
-    settings: {
-      name: 'Color',
-      icon: 'palette'
+    "id": "bookmark",
+    "type": "specific",
+    "settings": {
+      "name": "Bookmark",
+      "icon": "bookmark"
     }
   },
   {
-    id: 'name',
-    type: 'specific',
-    settings: {
-      name: 'Name',
-      icon: 'alphabetical-variant'
+    "id": "color",
+    "type": "specific",
+    "settings": {
+      "name": "Color",
+      "icon": "palette"
     }
   },
   {
-    id: 'synonyms',
-    type: 'specific',
-    settings: {
-      name: 'Synonyms',
-      icon: 'alphabetical'
+    "id": "name",
+    "type": "specific",
+    "settings": {
+      "name": "Name",
+      "icon": "alphabetical-variant"
     }
   },
   {
-    id: 'country',
-    type: 'specific',
-    settings: {
-      name: 'Country',
-      icon: 'flag'
+    "id": "synonyms",
+    "type": "specific",
+    "settings": {
+      "name": "Synonyms",
+      "icon": "alphabetical"
+    }
+  },
+  {
+    "id": "country",
+    "type": "specific",
+    "settings": {
+      "name": "Country",
+      "icon": "flag"
+    }
+  },
+  {
+    "id": "duration",
+    "type": "specific",
+    "settings": {
+      "name": "Duration",
+      "icon": "timer-outline"
+    }
+  },
+  {
+    "id": "size",
+    "type": "specific",
+    "settings": {
+      "name": "Filesize",
+      "icon": "harddisk"
+    }
+  },
+  {
+    "id": "width",
+    "type": "specific",
+    "settings": {
+      "name": "Width",
+      "icon": "monitor-screenshot"
+    }
+  },
+  {
+    "id": "height",
+    "type": "specific",
+    "settings": {
+      "name": "Height",
+      "icon": "monitor-screenshot"
+    }
+  },
+  {
+    "id": "date",
+    "type": "specific",
+    "settings": {
+      "name": "Date added",
+      "icon": "calendar-plus"
+    }
+  },
+  {
+    "id": "edit",
+    "type": "specific",
+    "settings": {
+      "name": "Editing date",
+      "icon": "calendar-edit"
     }
   },
 ]
@@ -288,11 +344,19 @@ const Meta = {
           })
           else if (cond === 'includes one of') mc = mc.filter(c=>{
             if (c.meta[by]===undefined || c.meta[by].length===0) return false
-            else return _.difference(val, c.meta[by]).length!==0
+            else {
+              let include = false
+              for (let i of val) if (c.meta[by].includes(i)) {include=true;break}
+              return include
+            }
           })
           else if (cond === 'excludes') mc = mc.filter(c=>{
-            if (c.meta[by]===undefined || c.meta[by].length===0) return true
-            else return _.difference(val, c.meta[by]).length===0
+            if (c.meta[by]===undefined || c.meta[by].length===0) return false
+            else {
+              let include = false
+              for (let i of val) if (c.meta[by].includes(i)) {include=true;break}
+              return !include
+            }
           })
         }
       }

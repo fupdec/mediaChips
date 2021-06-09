@@ -14,7 +14,7 @@
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
               <v-select @input="setBy($event,i)" :value="filters[i].by" 
-                :items="computedBy" label="By" outlined dense class="param"
+                :items="computedBy" label="By" outlined dense class="by"
                 :disabled="filters[i].lock" item-value="by">
                 <template v-slot:selection="data">
                   <v-icon left>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
@@ -74,9 +74,11 @@
                 label="Values" item-value="id" class="val"
                 :menu-props="{contentClass:'list-with-preview'}"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
+                :filter="filterCards"
               >
                 <template v-slot:selection="data">
-                  <v-chip v-bind="data.attrs" close 
+                  <v-chip v-bind="data.attrs" close class="my-1 px-2" small
+                    @click="data.select" :input-value="data.selected"
                     @click:close="removeItem(data.item.id,i)"
                     :color="getColor(filters[i].by,data.item.id)" 
                     :label="getMeta(filters[i].by).settings.chipLabel"
@@ -99,8 +101,8 @@
                         mdi-{{getMeta(filters[i].by).settings.icon}}</v-icon>
                     </span>
                     <span>{{data.item.meta.name}}</span>
-                    <span v-if="getMeta(filters[i].by).settings.synonyms" class="aliases"> a.k.a.
-                      {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ').slice(0,50)}}
+                    <span v-if="getMeta(filters[i].by).settings.synonyms" class="aliases"> 
+                      {{data.item.meta.synonyms===undefined? '' : data.item.meta.synonyms.join(', ').slice(0,50)}}
                     </span>
                   </div>
                 </template>
@@ -136,6 +138,7 @@
 
 
 <script>
+import DialogFilters from '@/mixins/DialogFilters'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import vuescroll from 'vuescroll'
 import MetaGetters from '@/mixins/MetaGetters'
@@ -146,7 +149,7 @@ export default {
     vuescroll,
     SavedFilters: () => import('@/components/elements/SavedFilters.vue'),
   },
-  mixins: [ShowImageFunction, MetaGetters], 
+  mixins: [DialogFilters, ShowImageFunction, MetaGetters], 
   mounted() {
     this.$nextTick(function () {
       this.initMetaList()
@@ -155,12 +158,12 @@ export default {
   },
   data: () => ({
     filters: [],
-    metaList: [],
+    metaList: ['name','date','edit'],
     metaType: {
       number: [],
-      string: [],
+      string: ['name'],
       array: [],
-      date: [],
+      date: ['date','edit'],
       boolean: [],
       select: [],
     },
@@ -168,7 +171,6 @@ export default {
     datePickerIndex: 0,
   }),
   computed: {
-    tabId() { return this.$route.query.tabId },
     computedBy() {
       let filtersBoolean = _.filter(this.filters, {type: 'boolean'}).map(i=>i.by)
       return this.metaList.map(by => {
@@ -178,8 +180,6 @@ export default {
   },
   methods: {
     initMetaList() {
-      this.metaList.push('name')
-      this.metaType.string.push('name')
       if (this.meta.settings.favorite) {
         this.metaList.push('favorite')
         this.metaType.boolean.push('favorite')
@@ -206,90 +206,11 @@ export default {
         else if (meta.dataType=='date') this.metaType.date.push(meta.id)
       }
     },
-    getConditions(type) {
-      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty', 'not empty']
-      if (type === 'string') return ['includes', 'excludes', 'empty', 'not empty']
-      if (type === 'array' || type === 'select') return ['includes one of', 'includes all', 'excludes', 'empty', 'not empty']
-      if (type === 'boolean') return ['yes', 'no']
-      return []
-    },
-    getIconCond(cond) {
-      if (cond === 'equal') return 'mdi-equal'
-      if (cond === 'not equal') return 'mdi-not-equal-variant'
-      if (cond === 'greater than') return 'mdi-greater-than'
-      if (cond === 'less than') return 'mdi-less-than'
-      if (cond === 'greater than or equal') return 'mdi-greater-than-or-equal'
-      if (cond === 'less than or equal') return 'mdi-less-than-or-equal'
-      if (cond === 'includes all' || cond === 'includes') return 'mdi-equal'
-      if (cond === 'includes one of') return 'mdi-math-norm'
-      if (cond === 'excludes') return 'mdi-not-equal-variant'
-      if (cond === 'yes') return 'mdi-check'
-      if (cond === 'no') return 'mdi-close'
-      if (cond === 'empty') return 'mdi-code-brackets'
-      if (cond === 'not empty') return 'mdi-dots-horizontal'
-      return 'mdi-help'
-    },
-    getItems(id) { return this.getMeta(id).settings.items || [] },
-    addFilter() {
-      this.filters.push({
-        by: null,
-        cond: null,
-        val: null,
-        type: null,
-        flag: null,
-        lock: false,
-      })
-    },
-    duplicateFilter(i) {
-      let newFilter = _.cloneDeep(this.filters[i])
-      newFilter.lock = false
-      this.filters.push(newFilter)
-    },
-    removeItem(item, i) { 
-      const index = this.filters[i].val.indexOf(item)
-      if (index >= 0) this.filters[i].val.splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    removeFilter(i) { this.filters.splice(i, 1) },
-    removeAll() { this.filters = _.filter(this.filters, {lock: true}) },
     applyFilters() {
       this.$store.state.Meta.filters = _.cloneDeep(this.filters)
       this.$store.dispatch('filterMetaCards')
       this.$store.state.Meta.dialogFilterMetaCards = false 
     },
-    setBy(e, i) {
-      this.filters[i].by = e
-      if (this.metaType.number.includes(e)) {
-        this.filters[i].type = 'number'
-        this.filters[i].val = 0
-      } else if (this.metaType.string.includes(e)) {
-        this.filters[i].type = 'string'
-        this.filters[i].val = ''
-      } else if (this.metaType.array.includes(e)) {
-        this.filters[i].type = 'array'
-        this.filters[i].val = []
-      } else if (this.metaType.date.includes(e)) {
-        this.filters[i].type = 'date'
-        this.filters[i].val = ''
-      } else if (this.metaType.boolean.includes(e)) {
-        this.filters[i].type = 'boolean'
-        this.filters[i].val = ''
-        if (e == 'favorite') this.filters[i].appbar = true
-      } else if (this.metaType.select.includes(e)) {
-        this.filters[i].type = 'select'
-        this.filters[i].val = []
-      }
-      this.filters[i].cond = this.getConditions(this.filters[i].type)[0]
-    },
-    setCond(e, i) { this.filters[i].cond = e },
-    setVal(e, i) { this.filters[i].val = e },
-    setFlag(e, i) { this.filters[i].flag = e },
-    removeChip(item, i) { 
-      const index = this.filters[i].val.indexOf(item.name)
-      if (index >= 0) this.filters[i].val.splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    loadFilters(filters) { this.filters = filters },
   },
 }
 </script>
