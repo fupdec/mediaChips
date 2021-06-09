@@ -66,6 +66,7 @@ export default {
       await this.createTags(tagsId)
       await this.createWebsites(websitesId)
       this.parseTagsForPerformers(performersId, tagsId)
+      this.parseVideosForBookmarks()
       this.isMigrationRunning = false
 
       // TODO close all tabs, update meta in player window, add migration state to settings
@@ -616,6 +617,13 @@ export default {
           }
           i.meta[tagsId] = foundTags
         }
+      }).write()
+    },
+    parseVideosForBookmarks() {
+      const bookmarks = this.$store.getters.bookmarks.get('videos')
+      this.$store.getters.videos.each(video=>{
+        if (video.bookmark) video.bookmark = bookmarks.find({itemId:video.id}).value().text
+        else video.bookmark = undefined
       }).write()
     },
     moveImages(performersId, tagsId, websitesId) {

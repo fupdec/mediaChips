@@ -143,9 +143,8 @@
                 </v-form>
               </v-col>
               <v-col cols="12" class="pt-0">
-                <div class="text-center text--secondary mb-1">Bookmark</div>
-                <v-textarea v-model="bookmarkText" hide-details clearable
-                  auto-grow outlined placeholder="Write bookmark text here"/>
+                <v-textarea v-model="bookmark" hide-details clearable auto-grow outlined label="Bookmark" 
+                  :prepend-icon="showIcons?`mdi-bookmark`:''"/>
               </v-col>
             </v-row>
           </v-card-text>
@@ -266,7 +265,7 @@ export default {
     pathToFile: '',
     edit: '',
     added: '',
-    bookmarkText: '',
+    bookmark: '',
     // header
     timeouts: {},
     muted: true,
@@ -308,15 +307,10 @@ export default {
       let video = _.cloneDeep(this.video)
       
       // get info of video
-      this.rating = video.rating
-      this.favorite = video.favorite
-      this.pathToFile = video.path
-
-      // get bookmark text
-      if (video.bookmark) {
-        let text = this.$store.getters.bookmarks.get('videos').find({itemId:video.id}).value().text
-        this.bookmarkText = text
-      }
+      this.rating = video.rating || 0
+      this.favorite = video.favorite || false
+      this.pathToFile = video.path || ''
+      this.bookmark = video.bookmark || ''
 
       // get date added and date of last edit text
       let dateAdded = new Date(video.date)
@@ -436,32 +430,19 @@ export default {
       this.$refs.form.validate()
       if (this.valid === false) return false
 
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      // TODO remake bookmark system
-      let bookmarkValue = this.bookmarkText ? true : false
-      if (!this.bookmarkText) this.$store.getters.bookmarks.get('videos').remove({itemId:videoId}).write()
-      else {
-        let bookmark = this.$store.getters.bookmarks.get('videos').find({itemId:videoId})
-        if (bookmark.value()) bookmark.assign({ text: this.bookmarkText, date: Date.now() }).write()
-        else {
-          this.$store.getters.bookmarks.get('videos').push({id: shortid.generate(), 
-            itemId: videoId, text: this.bookmarkText, date: Date.now() }).write()
-        }
-      }
-
       let presetValues = { 
         rating: this.rating,
         favorite: this.favorite,
-        bookmark: bookmarkValue,
+        bookmark: this.bookmark || '',
         path: this.pathToFile,
         edit: Date.now(),
       }
 
       let newValues = {...presetValues, ...this.values}
 
-      this.$store.getters.videos.find({ id: videoId }).assign(newValues).write()
+      this.$store.getters.videos.find({ id: this.video.id }).assign(newValues).write()
 
-      this.$store.commit('updateVideos', [videoId])
+      this.$store.commit('updateVideos', [this.video.id])
       this.$store.dispatch('filterVideos', true)
       this.$store.commit('addLog', {type:'info',text:`📹 Video "${this.fileName}" has been edited ✏️`})
       this.close()
