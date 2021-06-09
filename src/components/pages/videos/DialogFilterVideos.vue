@@ -2,46 +2,48 @@
   <div>
     <v-dialog v-model="$store.state.Videos.dialogFilterVideos" scrollable width="1000">
       <v-card>
-        <v-card-title class="py-1 px-4">
-          <span class="headline">Filter videos</span>
+        <v-toolbar color="primary">
+          <span class="headline">Filter Videos</span>
           <v-spacer></v-spacer>
-          <v-icon>mdi-filter</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters=true" class="mx-4" outlined>
+            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
+          <v-btn @click="applyFilters" outlined>
+            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
               <v-select @input="setParam($event,i)" :value="filters[i].param" 
-                :items="computedParams" label="Parameter" outlined dense class="param overline"
+                :items="computedParams" label="Parameter" outlined dense class="param"
                 :prepend-icon="getIconParam(filters[i].param)" :disabled="filters[i].lock"
                 item-value="name" item-text="name">
                 <template v-slot:item="data">
                   <div class="list-item"> 
                     <v-icon left>{{getIconParam(data.item.name)}}</v-icon>
-                    <span class="overline">{{data.item.name}}</span>
+                    <span>{{data.item.name}}</span>
                   </div>
                 </template>
               </v-select>
 
-              <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
+              <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond"
                 :items="getConditions(filters[i].type)" outlined dense label="Condition"
                 :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
                 <template v-slot:item="data">
                   <div class="list-item"> 
                     <v-icon left>{{getIconCond(data.item)}}</v-icon>
-                    <span class="overline">{{data.item}}</span>
+                    <span>{{data.item}}</span>
                   </div>
                 </template>
               </v-select>
 
               <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-                label="Value" outlined dense class="val overline" 
+                label="Value" outlined dense class="val" 
                 :disabled="filters[i].lock || filters[i].cond==='empty'"/>
 
               <v-text-field v-if="filters[i].type==='date'" :disabled="filters[i].cond==='empty'"
                 :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
-                label="Date" outlined dense readonly class="val overline"/>
+                label="Date" outlined dense readonly class="val"/>
               <v-dialog v-model="datePicker" width="300px">
                 <v-date-picker v-if="filters[i].type==='date'"
                   @change="setVal($event,datePickerIndex), datePicker=false"
@@ -52,7 +54,7 @@
               <v-autocomplete v-if="filters[i].param==='performers'"
                 @input="setVal($event,i)" :value="filters[i].val" :items="performers"
                 item-text="name" item-value="name" no-data-text="No more performers"
-                class="mb-4 select-small-chips hidden-close val overline" label="Performers" 
+                class="mb-4 select-small-chips hidden-close val" label="Performers" 
                 multiple hide-selected hide-details clearable dense outlined
                 :menu-props="{contentClass:'list-with-preview'}"
                 :filter="filterItems" :disabled="filters[i].lock || filters[i].cond==='empty'"
@@ -95,7 +97,7 @@
                 
               <v-autocomplete v-if="filters[i].param==='tags'"
                 @input="setVal($event,i)" :value="filters[i].val" :items="tags" 
-                class="mb-4 select-small-chips hidden-close val overline"
+                class="mb-4 select-small-chips hidden-close val"
                 item-text="name" dense label="Tags"
                 item-value="name" no-data-text="No more tags" 
                 multiple hide-selected hide-details clearable outlined
@@ -128,7 +130,7 @@
 
               <v-autocomplete v-if="filters[i].param==='websites'"
                 @input="setVal($event,i)" :value="filters[i].val" :items="websites" 
-                class="mb-4 select-small-chips hidden-close val overline"
+                class="mb-4 select-small-chips hidden-close val"
                 item-text="name" dense label="Websites"
                 item-value="name" no-data-text="No more websites" 
                 multiple hide-selected hide-details clearable outlined
@@ -166,20 +168,16 @@
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </div>
-            <v-btn @click="addFilter" color="green" outlined rounded>
-              <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
-            <v-btn v-if="filters.length" @click="removeAll" class="ml-4" color="red" outlined rounded>
-              <v-icon left>mdi-close</v-icon>Remove all</v-btn>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-btn @click="$store.state.Videos.dialogFilterVideos=false" class="ma-4">
-            <v-icon left>mdi-cancel</v-icon> Cancel </v-btn>
+        <div v-if="filters.length==0" class="text-center pb-10 overline">No filters</div>
+        <v-card-actions class="pt-0">
           <v-spacer></v-spacer>
-          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters = true" class="ma-4" color="secondary">
-            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
-          <v-btn @click="applyFilters" class="ma-4" color="primary">
-            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
+          <v-btn @click="addFilter" class="ma-4 mt-0 pr-4" color="green" outlined rounded>
+            <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
+          <v-btn v-if="filters.length" @click="removeAll" class="ma-4 mt-0 pr-4" color="red" outlined rounded>
+            <v-icon left>mdi-close</v-icon>Remove all</v-btn>
+          <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -334,6 +332,7 @@ export default {
       if (this.paramTypeBoolean.includes(e)) {
         this.filters[i].type = 'boolean'
         this.filters[i].val = ''
+        if (e == 'favorite') this.filters[i].appbar = true
       }
       this.filters[i].cond = this.getConditions(this.filters[i].type)[0]
     },

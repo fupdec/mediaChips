@@ -283,10 +283,10 @@ export default {
       else return ''
     },
     favoritesFilterExist() {
+      let favorite = {param:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
       let filters = this.$store.state.Settings.videoFilters
-      let index = _.findIndex(filters, {param: 'favorite'})
-      if (index >= 0) return true 
-      else return false
+      let index = _.findIndex(filters, favorite)
+      return index > -1
     },
   },
   methods: {
@@ -314,41 +314,15 @@ export default {
     },
     toggleFavorites() {
       let filters = this.$store.state.Settings.videoFilters
-      let index = _.findIndex(filters, {param: 'favorite'})
-      if (index >= 0) {
-        filters.splice(index, 1)
-      } else {
-        this.$store.state.Settings.videoFilters.push({
-          param: 'favorite',
-          cond: 'yes',
-          val: '',
-          type: 'boolean',
-          flag: null,
-          lock: true
-        })
-      }
+      let favorite = {param:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
+      let index = _.findIndex(filters, favorite)
+      if (index > -1) filters.splice(index, 1)
+      else this.$store.state.Settings.videoFilters.push(favorite)
       this.$store.dispatch('filterVideos')
     },
     changeSearchString(e) {
       this.searchString = e
     },
-    // async pastePath() {
-    //   let text = await navigator.clipboard.readText()
-    //   let path = this.$store.state.Videos.filters.path
-    //   if (path) {
-    //     text = path + text
-    //   }
-    //   this.updateFiltersOfVideos('path', text)
-    // },
-    // async pastePerformers() {
-    //   let text = await navigator.clipboard.readText()
-    //   let perfs = text.split(', ')
-    //   perfs = this.$store.getters.performers.filter(p=>(perfs.includes(p.name))).value()
-    //   perfs = perfs.map(p=>{return p.name})
-    //   if (perfs.length) {
-    //     this.updateFiltersOfVideos('performers', perfs)
-    //   }
-    // },
     toggleSortDirection() {
       this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{

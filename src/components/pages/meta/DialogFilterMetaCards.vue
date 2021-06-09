@@ -43,7 +43,7 @@
                 @input="setVal($event,i)" :value="filters[i].val"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
                 label="Value" outlined dense class="val"/>
-              <v-checkbox v-if="filters[i].by==='name'" label="Synonyms" class="mt-1 ml-4"
+              <v-checkbox v-if="filters[i].by==='name' && meta.settings.synonyms" label="Synonyms" class="mt-1 ml-4"
                 @change="setFlag($event,i)" :value="filters[i].flag" indeterminate 
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"/>
 
@@ -116,12 +116,17 @@
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </div>
-            <v-btn @click="addFilter" color="green" outlined rounded>
-              <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
-            <v-btn v-if="filters.length" @click="removeAll" class="ml-4" color="red" outlined rounded>
-              <v-icon left>mdi-close</v-icon>Remove all</v-btn>
           </v-card-text>
         </vuescroll>
+        <div v-if="filters.length==0" class="text-center pb-10 overline">No filters</div>
+        <v-card-actions class="pt-0">
+          <v-spacer></v-spacer>
+          <v-btn @click="addFilter" class="ma-4 mt-0 pr-4" color="green" outlined rounded>
+            <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
+          <v-btn v-if="filters.length" @click="removeAll" class="ma-4 mt-0 pr-4" color="red" outlined rounded>
+            <v-icon left>mdi-close</v-icon>Remove all</v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -183,6 +188,11 @@ export default {
         this.metaList.push('rating')
         this.metaType.number.push('rating')
       } 
+      if (this.meta.settings.bookmark) {
+        this.metaList.push('bookmark')
+        this.metaType.string.push('bookmark')
+      } 
+      // TODO country filter
       for (let i = 0; i < this.metaInCard.length; i++) {
         let id = this.metaInCard[i].id
         let type = this.metaInCard[i].type
@@ -264,6 +274,7 @@ export default {
       } else if (this.metaType.boolean.includes(e)) {
         this.filters[i].type = 'boolean'
         this.filters[i].val = ''
+        if (e == 'favorite') this.filters[i].appbar = true
       } else if (this.metaType.select.includes(e)) {
         this.filters[i].type = 'select'
         this.filters[i].val = []

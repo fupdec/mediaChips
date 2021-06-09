@@ -285,8 +285,7 @@ export default {
     favoritesFilterExist() {
       let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
       let index = _.findIndex(this.filters, favorite)
-      if (index > -1) return true 
-      else return false
+      return index > -1
     },
     sortDirection() { return this.meta.state.sortDirection || 'asc' },
     metaInCard() { return this.meta.settings.metaInCard || [] },
