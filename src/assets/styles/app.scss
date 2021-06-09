@@ -1651,11 +1651,13 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
   .bookmark.v-icon {
     position: absolute;
-    top: -6px;
-    right: 25%;
+    top: -0.25em;
+    right: 20%;
     opacity: 0.8;
-    font-size: 2em;
     text-shadow: 2px 2px 3px #00000070;
+    &::before {
+      font-size: 1.8em;
+    }
   }
   .name {
     line-height: 1.4 !important;
