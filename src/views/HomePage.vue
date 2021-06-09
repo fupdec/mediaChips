@@ -14,7 +14,7 @@
       <v-row v-else>
         <v-col cols="12">
           <v-card>
-            <v-alert type="warning" text>Starting from version 0.8.4 of the application, 
+            <v-alert type="warning" text>Starting from version 0.9.0 of the application, 
               all information that the user fills in for the video will use the new meta system. <br>
               To transfer your information and continue using the application,
               migrate to the new meta system.</v-alert>
