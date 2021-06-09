@@ -60,25 +60,13 @@
         <span v-on="on" class="px-4 d-flex"><v-icon size="18" class="mb-1">mdi-database-outline</v-icon></span>
       </template>
       <span>
-        <div class="overline text-center">Total</div>
+        <div class="overline text-center">Total videos</div>
         <div class="d-flex align-center">
-          <v-icon size="20" dark>mdi-video</v-icon>
+          <v-icon size="20" left dark>mdi-video</v-icon> Number: 
           <span class="ml-1" v-text="$store.getters.videosTotal"/>
         </div>
         <div class="d-flex align-center">
-          <v-icon size="20" dark>mdi-account</v-icon>
-          <span class="ml-1" v-text="$store.getters.performersTotal"/>
-        </div>
-        <div class="d-flex align-center">
-          <v-icon size="16" dark>mdi-tag</v-icon>
-          <span class="ml-1" v-text="$store.getters.tagsTotal"/>
-        </div>
-        <div class="d-flex align-center">
-          <v-icon size="18" dark>mdi-web</v-icon>
-          <span class="ml-1" v-text="$store.getters.websitesTotal"/>
-        </div>
-        <div class="d-flex align-center">
-          <v-icon size="20" dark>mdi-harddisk</v-icon>
+          <v-icon size="20" left dark>mdi-harddisk</v-icon> Size:
           <span class="ml-1" v-text="$store.getters.videosTotalSize"/>
           <!-- TODO fix wrong file size -->
         </div>
@@ -165,39 +153,26 @@ export default {
     penultLog: {},
   }),
   computed: {
-    log() {
-      return this.$store.state.log
-    },
-    logsNumber() {
-      return this.$store.state.log.length
-    },
+    log() { return this.$store.state.log },
+    logsNumber() { return this.$store.state.log.length },
     lastLog() {
       let numberOfLogs = this.$store.state.log.length
       return this.$store.state.log[numberOfLogs-1]
     },
-    getCurrentTime() {
-      return new Date().toLocaleTimeString() + ' '
-    },
-    notifications() {
-      return this.$store.getters.getNotifications
-    },
+    getCurrentTime() { return new Date().toLocaleTimeString() + ' ' },
+    notifications() { return this.$store.getters.getNotifications },
     notificationsHeader() {
-      if (this.$store.getters.getNotifications.length) {
-        return 'Notifications'
-      } else { return 'No new notifications' }
+      if (this.$store.getters.getNotifications.length) return 'Notifications'
+      else return 'No new notifications'
     },
     isNotificationsEmpty() {
-      if (this.$store.getters.getNotifications.length) {
-        return true
-      } else { return false }
+      if (this.$store.getters.getNotifications.length) return true
+      else return false
     },
     getNumberSelectedItems() {
       let number = 0
       if (this.isVideosPage) number = this.$store.getters.getSelectedVideos.length
       else if (this.$route.path.includes('/meta/')) number = this.$store.state.Meta.selectedMeta.length
-      else if (this.$route.path.includes('/performers/:')) number = this.$store.getters.getSelectedPerformers.length
-      else if (this.$route.path.includes('/tags/:')) number = this.$store.getters.getSelectedTags.length
-      else if (this.$route.path.includes('/websites/:')) number = this.$store.getters.getSelectedWebsites.length
       return number
     },
     getTypeSelectedItems() {
@@ -206,9 +181,6 @@ export default {
       else if (this.$route.path.includes('/meta/')) {
         type = this.$store.getters.meta.find({id: this.$route.query.metaId}).value().settings.nameSingular.toLowerCase()
       } 
-      else if (this.$route.path.includes('/performers/:')) type = 'performer'
-      else if (this.$route.path.includes('/tags/:')) type = 'tag'
-      else if (this.$route.path.includes('/websites/:')) type = 'website'
       return type
     },
     getSelectedVideosSize() {
@@ -220,9 +192,7 @@ export default {
       let videos = this.$store.getters.filteredVideos.value()
       return this.getVideosTotalSize(videos)
     },
-    getTotalVideosNumber() {
-      return this.$store.getters.filteredVideos.value().length
-    },
+    getTotalVideosNumber() { return this.$store.getters.filteredVideos.value().length },
     isVideosPage() {
       const pages = ['/videos/:','/performer/:','/website/:']
       return pages.some(page => this.$route.path.includes(page))

@@ -4,7 +4,7 @@
 
     <AppBar />
 
-    <SideBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
+    <SideBar v-if="navigationSide=='1'" @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
     <v-main app v-if="!disableRunApp">
       <router-view :key="$route.fullPath" />
@@ -62,7 +62,7 @@
       </v-card>
     </v-bottom-sheet>
 
-    <BottomBar @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
+    <BottomBar v-if="navigationSide=='2'" @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
 
     <ContextMenu />
 

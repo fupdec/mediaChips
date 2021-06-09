@@ -1,5 +1,5 @@
 <template>
-  <v-bottom-navigation v-if="navigationSide=='2'" absolute style="bottom:20px" shift>
+  <v-bottom-navigation absolute style="bottom:20px" shift>
     <!-- TODO custom background color depends on current route -->
     <vuescroll :ops="ops">
       <div class="bottom-menu">
@@ -13,7 +13,7 @@
           <v-icon>mdi-video-outline</v-icon>
         </v-btn>
 
-        <v-btn to="/performers/:default?tabId=default" @click.middle="addNewTabPerformers" text color="secondary">
+        <!-- <v-btn to="/performers/:default?tabId=default" @click.middle="addNewTabPerformers" text color="secondary">
           <span>Performers</span>
           <v-icon>mdi-account-outline</v-icon>
         </v-btn>
@@ -36,7 +36,7 @@
         <v-btn v-if="isShowWebsiteBtn" :to="$router.currentRoute" text color="secondary">
           <span>Website</span>
           <v-icon>mdi-web-box</v-icon>
-        </v-btn>
+        </v-btn> -->
 
         <v-btn v-for="meta in metaList" :key="meta.id" exact @click.middle="addNewTabMetaCards(meta)"
           :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary">
@@ -90,8 +90,8 @@ export default {
   },
   data: () => ({
     navigationMenu: 1,
-    isShowPerformerBtn: false,
-    isShowWebsiteBtn: false,
+    // isShowPerformerBtn: false,
+    // isShowWebsiteBtn: false,
     folderHovered: false,
     ops: {
       scrollPanel: {
@@ -103,7 +103,6 @@ export default {
     },
   }),
   computed: {
-    navigationSide() { return this.$store.state.Settings.navigationSide },
     tabId() { return this.$route.query.tabId },
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
@@ -141,56 +140,56 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
     },
-    addNewTabPerformers() {
-      let tabId = Date.now()
-      let tab = { 
-        name: this.$store.getters.performerFiltersForTabName, 
-        link: `/performers/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
-        sortBy: this.$store.state.Settings.performerSortBy,
-        sortDirection: this.$store.state.Settings.performerSortDirection,
-        page: 1,
-        firstChar: this.$store.state.Settings.performerFirstChar,
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$router.push(tab.link)
-    },
-    addNewTabTags() {
-      let tabId = Date.now()
-      let tab = {
-        name: this.$store.getters.tagFiltersForTabName, 
-        link: `/tags/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.tagFilters),
-        sortBy: this.$store.state.Settings.tagSortBy,
-        sortDirection: this.$store.state.Settings.tagSortDirection,
-        page: 1,
-        firstChar: this.$store.state.Settings.tagFirstChar,
-        color: this.$store.state.Settings.tagColor,
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$router.push(tab.link)
-    },
-    addNewTabWebsites() {
-      let tabId = Date.now()
-      let tab = {
-        name: this.$store.getters.websiteFiltersForTabName, 
-        link: `/websites/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
-        sortBy: this.$store.state.Settings.websiteSortBy,
-        sortDirection: this.$store.state.Settings.websiteSortDirection,
-        page: 1,
-        firstChar: this.$store.state.Settings.websiteFirstChar,
-        color: this.$store.state.Settings.websiteColor,
-        icon: 'web'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$router.push(tab.link)
-    },
+    // addNewTabPerformers() {
+    //   let tabId = Date.now()
+    //   let tab = { 
+    //     name: this.$store.getters.performerFiltersForTabName, 
+    //     link: `/performers/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
+    //     sortBy: this.$store.state.Settings.performerSortBy,
+    //     sortDirection: this.$store.state.Settings.performerSortDirection,
+    //     page: 1,
+    //     firstChar: this.$store.state.Settings.performerFirstChar,
+    //     icon: 'account-outline'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    //   this.$router.push(tab.link)
+    // },
+    // addNewTabTags() {
+    //   let tabId = Date.now()
+    //   let tab = {
+    //     name: this.$store.getters.tagFiltersForTabName, 
+    //     link: `/tags/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Settings.tagFilters),
+    //     sortBy: this.$store.state.Settings.tagSortBy,
+    //     sortDirection: this.$store.state.Settings.tagSortDirection,
+    //     page: 1,
+    //     firstChar: this.$store.state.Settings.tagFirstChar,
+    //     color: this.$store.state.Settings.tagColor,
+    //     icon: 'tag-outline'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    //   this.$router.push(tab.link)
+    // },
+    // addNewTabWebsites() {
+    //   let tabId = Date.now()
+    //   let tab = {
+    //     name: this.$store.getters.websiteFiltersForTabName, 
+    //     link: `/websites/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
+    //     sortBy: this.$store.state.Settings.websiteSortBy,
+    //     sortDirection: this.$store.state.Settings.websiteSortDirection,
+    //     page: 1,
+    //     firstChar: this.$store.state.Settings.websiteFirstChar,
+    //     color: this.$store.state.Settings.websiteColor,
+    //     icon: 'web'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    //   this.$router.push(tab.link)
+    // },
     addNewTabPlaylists() {
       let tabId = Date.now()
       let tab = {
@@ -223,10 +222,10 @@ export default {
     },
   },
   watch: {
-    $route(newValue, oldValue) {
-      this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
-      this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
-    },
+    // $route(newValue, oldValue) {
+    //   this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
+    //   this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
+    // },
   },
 }
 </script>

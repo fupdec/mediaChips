@@ -1,7 +1,5 @@
 <template>
-  <v-navigation-drawer v-if="navigationSide=='1'" 
-    app permanent mini-variant expand-on-hover clipped
-  >
+  <v-navigation-drawer app permanent mini-variant expand-on-hover clipped>
     <vuescroll :ops="ops">
       <v-list nav dense>
         <v-list-item link to="/home" color="secondary" draggable="false"> 
@@ -18,8 +16,8 @@
           </v-list-item-icon>
           <v-list-item-title>Videos</v-list-item-title>
         </v-list-item>
-        
-        <v-list-item link to="/performers/:default?tabId=default"
+
+        <!-- <v-list-item link to="/performers/:default?tabId=default"
           @click.middle="addNewTabPerformers" color="secondary" draggable="false">
           <v-list-item-icon>
             <v-icon>mdi-account-outline</v-icon>
@@ -55,9 +53,9 @@
             <v-icon>mdi-web-box</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Website</v-list-item-title>
-        </v-list-item>
+        </v-list-item> -->
         
-        <v-list-item v-for="meta in metaList" :key="meta.edit" @click.middle="addNewTabMetaCards(meta)"
+        <v-list-item v-for="meta in metaList" :key="meta.id" @click.middle="addNewTabMetaCards(meta)"
           link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
           <v-list-item-icon>
             <v-icon>mdi-{{meta.settings.icon}}</v-icon>
@@ -117,8 +115,8 @@ export default {
     })
   },
   data: () => ({
-    isShowPerformerBtn: false,
-    isShowWebsiteBtn: false,
+    // isShowPerformerBtn: false,
+    // isShowWebsiteBtn: false,
     ops: {
       scrollPanel: {
         scrollingX: false
@@ -130,7 +128,6 @@ export default {
     folderHovered: false,
   }),
   computed: {
-    navigationSide() { return this.$store.state.Settings.navigationSide },
     tabId() { return this.$route.query.tabId },
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
@@ -168,56 +165,56 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
     },
-    addNewTabPerformers() {
-      let tabId = Date.now()
-      let tab = { 
-        name: this.$store.getters.performerFiltersForTabName, 
-        link: `/performers/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
-        sortBy: this.$store.state.Settings.performerSortBy,
-        sortDirection: this.$store.state.Settings.performerSortDirection,
-        page: 1,
-        firstChar: this.$store.state.Settings.performerFirstChar,
-        icon: 'account-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$router.push(tab.link)
-    },
-    addNewTabTags() {
-      let tabId = Date.now()
-      let tab = {
-        name: this.$store.getters.tagFiltersForTabName, 
-        link: `/tags/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.tagFilters),
-        sortBy: this.$store.state.Settings.tagSortBy,
-        sortDirection: this.$store.state.Settings.tagSortDirection,
-        page: 1,
-        firstChar: this.$store.state.Settings.tagFirstChar,
-        color: this.$store.state.Settings.tagColor,
-        icon: 'tag-outline'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$router.push(tab.link)
-    },
-    addNewTabWebsites() {
-      let tabId = Date.now()
-      let tab = {
-        name: this.$store.getters.websiteFiltersForTabName, 
-        link: `/websites/:${tabId}?tabId=${tabId}`,
-        id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
-        sortBy: this.$store.state.Settings.websiteSortBy,
-        sortDirection: this.$store.state.Settings.websiteSortDirection,
-        page: 1,
-        firstChar: this.$store.state.Settings.websiteFirstChar,
-        color: this.$store.state.Settings.websiteColor,
-        icon: 'web'
-      }
-      this.$store.dispatch('addNewTab', tab)
-      this.$router.push(tab.link)
-    },
+    // addNewTabPerformers() {
+    //   let tabId = Date.now()
+    //   let tab = { 
+    //     name: this.$store.getters.performerFiltersForTabName, 
+    //     link: `/performers/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
+    //     sortBy: this.$store.state.Settings.performerSortBy,
+    //     sortDirection: this.$store.state.Settings.performerSortDirection,
+    //     page: 1,
+    //     firstChar: this.$store.state.Settings.performerFirstChar,
+    //     icon: 'account-outline'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    //   this.$router.push(tab.link)
+    // },
+    // addNewTabTags() {
+    //   let tabId = Date.now()
+    //   let tab = {
+    //     name: this.$store.getters.tagFiltersForTabName, 
+    //     link: `/tags/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Settings.tagFilters),
+    //     sortBy: this.$store.state.Settings.tagSortBy,
+    //     sortDirection: this.$store.state.Settings.tagSortDirection,
+    //     page: 1,
+    //     firstChar: this.$store.state.Settings.tagFirstChar,
+    //     color: this.$store.state.Settings.tagColor,
+    //     icon: 'tag-outline'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    //   this.$router.push(tab.link)
+    // },
+    // addNewTabWebsites() {
+    //   let tabId = Date.now()
+    //   let tab = {
+    //     name: this.$store.getters.websiteFiltersForTabName, 
+    //     link: `/websites/:${tabId}?tabId=${tabId}`,
+    //     id: tabId,
+    //     filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
+    //     sortBy: this.$store.state.Settings.websiteSortBy,
+    //     sortDirection: this.$store.state.Settings.websiteSortDirection,
+    //     page: 1,
+    //     firstChar: this.$store.state.Settings.websiteFirstChar,
+    //     color: this.$store.state.Settings.websiteColor,
+    //     icon: 'web'
+    //   }
+    //   this.$store.dispatch('addNewTab', tab)
+    //   this.$router.push(tab.link)
+    // },
     addNewTabPlaylists() {
       let tabId = Date.now()
       let tab = {
@@ -250,10 +247,10 @@ export default {
     },
   },
   watch: {
-    $route() {
-      this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
-      this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
-    },
+    // $route() {
+    //   this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
+    //   this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
+    // },
   },
 }
 </script>
