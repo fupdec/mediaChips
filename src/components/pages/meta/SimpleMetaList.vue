@@ -58,7 +58,7 @@
         <v-toolbar color="primary">
           <div class="headline">New simple meta</div>
           <v-spacer></v-spacer>
-          <v-btn @click="addMeta" outlined large> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-btn @click="addMeta" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
         </v-toolbar>
         <v-divider></v-divider>
         <vuescroll>
@@ -76,6 +76,7 @@
                   <span v-html="data.item.name"></span>
                 </template>
               </v-autocomplete>
+              <v-text-field v-model="metaHint" label="Hint for meta" hint="This text under the field is the hint"/>
               <v-autocomplete v-model="dataType" label="Data type of meta"
                 :items="['string', 'number', 'boolean', 'array', 'date']" class="mt-4"
                 :rules="[value => !!value || 'Type is required']" persistent-hint :hint="hint">
@@ -178,6 +179,7 @@ export default {
     // simple meta
     validMeta: false,
     metaName: '',
+    metaHint: '',
     dataType: '',
     validItemName: false,
     items: [],
@@ -236,7 +238,8 @@ export default {
 
       let settings = { 
         name: this.metaName, 
-        icon: this.metaIcon 
+        icon: this.metaIcon,
+        hint: this.metaHint,
       }
       if (this.dataType=='array') settings.items = this.items
 
@@ -250,6 +253,7 @@ export default {
 
       this.dialogAddNewMeta = false
       this.metaName = ''
+      this.metaHint = ''
       this.metaIcon = 'shape'
       this.dataType = ''
       this.items = []

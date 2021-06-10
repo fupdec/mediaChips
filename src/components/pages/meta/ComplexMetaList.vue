@@ -55,7 +55,7 @@
         <v-toolbar color="primary">
           <div class="headline">New complex meta</div>
           <v-spacer></v-spacer>
-          <v-btn @click="addMeta" outlined large> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+          <v-btn @click="addMeta" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
         </v-toolbar>
         <v-divider></v-divider>
         <vuescroll>
@@ -63,6 +63,7 @@
             <v-form v-model="valid" ref="form" class="flex-grow-1" @submit.prevent>
               <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
               <v-text-field v-model="nameSingular" :rules="[nameRules]" label="Name singular"/>
+              <v-text-field v-model="metaHint" label="Hint for meta" hint="This text under the field is the hint"/>
               <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
                 item-text="name" item-value="name" label="Icon" class="mt-4"
                 :rules="[value => !!value || 'Icon is required']">
@@ -140,6 +141,7 @@ export default {
     // complex meta (with cards)
     valid: false,
     metaName: '',
+    metaHint: '',
     nameSingular: '',
     metaIcon: 'shape',
   }),
@@ -178,6 +180,7 @@ export default {
         settings: { 
           name: this.metaName,
           nameSingular: this.nameSingular,
+          hint: this.metaHint,
           icon: this.metaIcon,
           metaInCard: [],
         },
@@ -195,6 +198,7 @@ export default {
       this.dialogAddNewMeta = false
       this.metaName = ''
       this.nameSingular = ''
+      this.metaHint = ''
       this.metaIcon = 'shape'
     },
     openSettings(index) {

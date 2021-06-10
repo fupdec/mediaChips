@@ -25,6 +25,11 @@ export default {
       return 'mdi-help'
     },
     getItems(id) { return this.getMeta(id).settings.items || [] },
+    getHint(id) { 
+      let meta = this.getMeta(id)
+      if (meta) return this.getMeta(id).settings.hint || '' 
+      else return ''
+    },
     addFilter() {
       this.filters.push({
         by: null,

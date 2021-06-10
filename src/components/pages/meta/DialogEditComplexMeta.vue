@@ -5,8 +5,7 @@
         <v-toolbar color="primary">
           <v-card-title class="headline pl-0">Settings for meta <b class="ml-2">{{meta.settings.name}}</b></v-card-title>
           <v-spacer></v-spacer>
-          <v-btn @click="saveSettings" outlined large>
-            <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+          <v-btn @click="saveSettings" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>
         </v-toolbar>
         <vuescroll>
           <v-card-text class="px-4">
@@ -25,6 +24,7 @@
                   <v-text-field v-model="settings.nameSingular" :rules="[nameRules]" label="Name singular"/>
                 </v-col>
                 <v-col cols="12" sm="6">
+                  <v-text-field v-model="settings.hint" label="Hint of meta" hint="This text under the field is the hint"/>
                   <v-autocomplete v-model="settings.icon" :items="icons" :filter="filterIcons"
                     item-text="name" item-value="name" label="Icon"
                     :rules="[value => !!value || 'Icon is required']">
@@ -264,6 +264,7 @@ export default {
     settings: {
       name: '',
       nameSingular: '',
+      hint: '',
       icon: 'shape',
       images: false,
       imageAspectRatio: '',

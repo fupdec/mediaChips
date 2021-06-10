@@ -66,7 +66,7 @@
                       append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
                       append-icon="mdi-chevron-down" @click:append="dialogListView=true"
                       :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
-                      :filter="filterCards"
+                      :filter="filterCards" :hint="getMeta(m.id).settings.hint" persistent-hint
                     >
                       <template v-slot:selection="data">
                         <v-chip v-bind="data.attrs" class="my-1 px-2" small
@@ -102,30 +102,30 @@
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='string')" 
                       @input="setVal($event,m.id)" :value="values[m.id]"
-                      :label="getMeta(m.id).settings.name" 
+                      :label="getMeta(m.id).settings.name" :hint="getMeta(m.id).settings.hint" persistent-hint
                       clearable @click:clear="setVal('', m.id)"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                     <v-text-field v-if="m.type=='simple'&&(getMeta(m.id).dataType==='number')" 
                       @input="setVal($event,m.id)" :value="values[m.id]" type="number"
-                      :label="getMeta(m.id).settings.name" 
+                      :label="getMeta(m.id).settings.name" :hint="getMeta(m.id).settings.hint" persistent-hint
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
                     <v-autocomplete v-if="m.type=='simple'&&getMeta(m.id).dataType==='array'" 
                       :items="getMeta(m.id).settings.items" item-value="id" item-text="name"
                       @input="setVal($event,m.id)" :value="values[m.id]" multiple
-                      :label="getMeta(m.id).settings.name" 
+                      :label="getMeta(m.id).settings.name" :hint="getMeta(m.id).settings.hint" persistent-hint
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" 
                       append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewItem(m.id)"/>
                     
                     <v-switch v-if="m.type=='simple'&&getMeta(m.id).dataType==='boolean'" 
-                      :label="getMeta(m.id).settings.name" hide-details 
+                      :label="getMeta(m.id).settings.name" :hint="getMeta(m.id).settings.hint" persistent-hint
                       @change="setVal($event,m.id)" :value="values[m.id]"
                       :prepend-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
                       
                     <v-text-field v-if="m.type=='simple'&&getMeta(m.id).dataType==='date'" 
                       :value="values[m.id]" @click="calendarId=m.id,calendar=true" 
-                      :label="getMeta(m.id).settings.name" hint='YYYY-MM-DD'
+                      :label="getMeta(m.id).settings.name" :hint="getMeta(m.id).settings.hint"
                       clearable @click:clear="setVal('', m.id)" readonly persistent-hint
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 

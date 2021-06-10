@@ -42,16 +42,18 @@
               <v-text-field v-if="filters[i].type==='string'||filters[i].type===null"
                 @input="setVal($event,i)" :value="filters[i].val"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
-                label="Value" outlined dense class="val"/>
+                label="Value" outlined dense class="val" :hint="getHint(filters[i].by)" persistent-hint/>
                 
               <v-text-field v-if="filters[i].type==='number'" label="Value" outlined dense class="val"
                 @input="setVal($event,i)" :value="filters[i].val" type="number"
-                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"/>
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
+                :hint="getHint(filters[i].by)" persistent-hint/>
 
               <v-text-field v-if="filters[i].type==='date'" 
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
                 :value="filters[i].val" @click="datePicker=true, datePickerIndex=i"
-                label="Date" outlined dense readonly class="val"/>
+                label="Date" outlined dense readonly class="val"
+                :hint="getHint(filters[i].by)" persistent-hint/>
               <v-dialog v-model="datePicker" width="300px">
                 <v-date-picker v-if="filters[i].type==='date'"
                   @change="setVal($event,datePickerIndex), datePicker=false"
@@ -63,15 +65,15 @@
                 @input="setVal($event,i)" :value="filters[i].val" class="val"
                 :items="getItems(filters[i].by)" label="Values" item-text="name" item-value="id"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
-                 outlined dense multiple />
+                 outlined dense multiple :hint="getHint(filters[i].by)" persistent-hint/>
               
               <v-autocomplete v-if="filters[i].type==='select'" :items="getCards(filters[i].by)" 
                 @input="setVal($event,i)" :value="filters[i].val"
-                outlined multiple hide-selected hide-details dense
+                outlined multiple hide-selected dense
                 label="Values" item-value="id" class="val hidden-close"
                 :menu-props="{contentClass:'list-with-preview'}"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
-                :filter="filterCards"
+                :filter="filterCards" :hint="getHint(filters[i].by)" persistent-hint
               >
                 <template v-slot:selection="data">
                   <v-chip v-bind="data.attrs" close class="my-1 px-2" small

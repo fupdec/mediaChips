@@ -5,8 +5,7 @@
         <v-toolbar color="primary">
           <v-card-title class="headline pl-0">Settings for meta <b class="ml-2">{{this.meta.settings.name}}</b></v-card-title>
           <v-spacer></v-spacer>
-          <v-btn @click="saveSettings" outlined large>
-            <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+          <v-btn @click="saveSettings" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>
         </v-toolbar>
         <v-divider></v-divider>
         <div class="d-flex justify-space-between px-4 pt-2">
@@ -24,6 +23,7 @@
               <v-row>
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="settings.name" :rules="[nameRules]" label="Name of meta"/>
+                  <v-text-field v-model="settings.hint" label="Hint of meta" hint="This text under the field is the hint"/>
                 </v-col>
                 <v-col cols="12" sm="6">
                   <v-autocomplete v-model="settings.icon" :items="icons" :filter="filterIcons"
@@ -114,6 +114,7 @@ export default {
     valid: false,
     settings: {
       name: '',
+      hint: '',
       icon: 'shape',
     },
     // for data type array

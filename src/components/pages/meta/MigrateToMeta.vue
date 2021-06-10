@@ -10,6 +10,7 @@
       </v-card-text>
       <v-card-text v-else class="text-center">
         <v-alert color="success" text class="mt-4">Migration finished!</v-alert>
+        <v-alert type="info" text class="mt-4">Now you can customize meta in more detail in the settings</v-alert>
       </v-card-text>
       <v-card-text>
         <div>Creating performers... {{status.performers}} of {{performers.length}}</div>
@@ -95,6 +96,7 @@ export default {
           scraperField: 'birthday',
           settings: { 
             name: 'Birthday', 
+            hint: 'YYYY-MM-DD', 
             icon: 'cake-variant',
           },
         },
@@ -105,6 +107,7 @@ export default {
           scraperField: 'career_start',
           settings: { 
             name: 'Career start', 
+            hint: 'YYYY', 
             icon: 'calendar',
           },
         },
@@ -115,6 +118,7 @@ export default {
           scraperField: 'career_end',
           settings: { 
             name: 'Career end', 
+            hint: 'YYYY', 
             icon: 'calendar',
           },
         },
@@ -125,6 +129,7 @@ export default {
           scraperField: 'height',
           settings: { 
             name: 'Height', 
+            hint: 'cm', 
             icon: 'human-male-height',
           },
         },
@@ -135,6 +140,7 @@ export default {
           scraperField: 'weight',
           settings: { 
             name: 'Weight', 
+            hint: 'kg', 
             icon: 'weight',
           },
         },
@@ -145,6 +151,7 @@ export default {
           scraperField: 'bra',
           settings: { 
             name: 'Bra', 
+            hint: 'inch', 
             icon: 'tape-measure',
           },
         },
@@ -155,6 +162,7 @@ export default {
           scraperField: 'waist',
           settings: { 
             name: 'Waist', 
+            hint: 'inch', 
             icon: 'tape-measure',
           },
         },
@@ -165,6 +173,7 @@ export default {
           scraperField: 'hip',
           settings: { 
             name: 'Hip', 
+            hint: 'inch', 
             icon: 'tape-measure',
           },
         },
@@ -175,6 +184,7 @@ export default {
           scraperField: 'ethnicity',
           settings: { 
             name: 'Ethnicity', 
+            hint: '', 
             icon: 'account-group',
             items: this.parseItems(this.$store.state.Settings.performerInfoEthnicity),
           },
@@ -186,6 +196,7 @@ export default {
           scraperField: 'hair',
           settings: { 
             name: 'Hair', 
+            hint: '', 
             icon: 'face-woman-shimmer-outline',
             items: this.parseItems(this.$store.state.Settings.performerInfoHair),
           },
@@ -197,6 +208,7 @@ export default {
           scraperField: 'eyes',
           settings: { 
             name: 'Eyes', 
+            hint: '', 
             icon: 'eye',
             items: this.parseItems(this.$store.state.Settings.performerInfoEyes),
           },
@@ -208,6 +220,7 @@ export default {
           scraperField: 'cups',
           settings: { 
             name: 'Cups', 
+            hint: '', 
             icon: 'coffee',
             items: this.parseItems(this.$store.state.Settings.performerInfoCups),
           },
@@ -219,6 +232,7 @@ export default {
           scraperField: 'boobs',
           settings: { 
             name: 'Boobs',
+            hint: '', 
             icon: 'circle',
             items: this.parseItems(this.$store.state.Settings.performerInfoBoobs),
           },
@@ -229,7 +243,8 @@ export default {
           dataType: 'array',
           scraperField: 'category',
           settings: { 
-            name: 'Category', 
+            name: 'Category',
+            hint: 'Profession',  
             icon: 'shape',
             items: this.parseItems(this.$store.state.Settings.performerInfoCategory),
           },
@@ -245,6 +260,7 @@ export default {
             dataType: cp.type,
             settings: {
               name: cp.name,
+              hint: '',
               icon: 'shape',
             }
           }
@@ -274,6 +290,7 @@ export default {
           settings: { 
             name: 'Performers',
             nameSingular: 'Performer',
+            hint: 'People in the video',  
             icon: 'account-outline',
             images: true,
             imageAspectRatio: 0.625,
@@ -410,6 +427,7 @@ export default {
           settings: { 
             name: 'Tags',
             nameSingular: 'Tag',
+            hint: 'For a quick search',
             icon: 'tag-outline',
             images: true,
             imageAspectRatio: 1,
@@ -454,6 +472,7 @@ export default {
           dataType: 'array',
           settings: { 
             name: 'Category', 
+            hint: 'For a quick search',
             icon: 'shape',
             items: tagCategoriesItems,
           },
@@ -510,6 +529,7 @@ export default {
           settings: { 
             name: 'Websites',
             nameSingular: 'Website',
+            hint: 'Studios',
             icon: 'web',
             images: true,
             imageAspectRatio: 1,
@@ -547,6 +567,7 @@ export default {
           dataType: 'string',
           settings: {
             name: 'URL',
+            hint: 'Address in the internet',
             icon: 'link',
           },
         }
