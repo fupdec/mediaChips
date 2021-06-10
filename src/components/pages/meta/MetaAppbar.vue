@@ -157,7 +157,7 @@
         </v-card>
       </v-menu>
 
-      <v-menu bottom offset-y min-width="160">
+      <v-menu bottom offset-y min-width="160" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
           <v-tooltip bottom>
             <template #activator="{ on: onTooltip }">
@@ -170,21 +170,25 @@
         </template>
         
         <v-list dense class="context-menu">
-          <v-list-item v-for="(item) in specificMeta" :key="item" link @click="toggleVisibility(item)">
-            <v-list-item-title> 
-              <v-icon left size="18">mdi-{{getMeta(item).settings.icon}}</v-icon>
-              {{getMeta(item).settings.name}}
-            </v-list-item-title>
-            <v-icon size="20" class="pl-10" :color="visibility[item]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-          </v-list-item>
-          <v-divider class="ma-1"></v-divider>
-          <v-list-item v-for="(mc) in metaInCard" :key="mc.id" link @click="toggleVisibility(mc.id)">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
-              {{getMeta(mc.id).settings.name}}
-            </v-list-item-title>
-            <v-icon size="20" class="pl-10" :color="visibility[mc.id]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-          </v-list-item>
+          <vuescroll>
+            <div class="wrapper">
+              <v-list-item v-for="(item) in specificMeta" :key="item" link @click="toggleVisibility(item)">
+                <v-list-item-title> 
+                  <v-icon left size="18">mdi-{{getMeta(item).settings.icon}}</v-icon>
+                  {{getMeta(item).settings.name}}
+                </v-list-item-title>
+                <v-icon size="20" class="pl-10" :color="visibility[item]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+              </v-list-item>
+              <v-divider class="ma-1"></v-divider>
+              <v-list-item v-for="(mc) in metaInCard" :key="mc.id" link @click="toggleVisibility(mc.id)">
+                <v-list-item-title>
+                  <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
+                  {{getMeta(mc.id).settings.name}}
+                </v-list-item-title>
+                <v-icon size="20" class="pl-10" :color="visibility[mc.id]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+              </v-list-item>
+            </div>
+          </vuescroll>
         </v-list>
       </v-menu>
     </div>
@@ -196,10 +200,12 @@
 const shortid = require('shortid')
 
 import MetaGetters from '@/mixins/MetaGetters'
+import vuescroll from 'vuescroll'
 
 export default {
   name: 'MetaAppbar',
   components: {
+    vuescroll,
     DialogFilterMetaCards: () => import('@/components/pages/meta/DialogFilterMetaCards.vue'),
     DialogNestedMetaCards: () => import('@/components/pages/meta/DialogNestedMetaCards.vue'),
   },

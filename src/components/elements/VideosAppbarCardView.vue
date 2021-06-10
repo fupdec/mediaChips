@@ -40,7 +40,7 @@
     </v-tooltip> -->
 
     
-    <v-menu bottom offset-y min-width="160">
+    <v-menu bottom offset-y min-width="160" :close-on-content-click="false">
       <template v-slot:activator="{ on, attrs }">
         <v-btn v-bind="attrs" v-on="on" icon tile>
           <v-icon>mdi-dots-vertical</v-icon>
@@ -48,64 +48,68 @@
       </template>
       
       <v-list dense class="context-menu">
-        <v-list-item link @click="toggleEditBtnVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-account-edit</v-icon> Edit Buttons
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isEditBtnHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+        <vuescroll>
+          <div class="wrapper">
+            <v-list-item link @click="toggleEditBtnVisibilty()">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-account-edit</v-icon> Edit Buttons
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="!isEditBtnHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
 
-        <v-list-item link @click="toggleQualityLabelVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-video-box</v-icon> Quality Label
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isQualityLabelHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+            <v-list-item link @click="toggleQualityLabelVisibilty()">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-video-box</v-icon> Quality Label
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="!isQualityLabelHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
 
-        <v-list-item link @click="toggleDurationVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-timer</v-icon> Duration
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isDurationHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+            <v-list-item link @click="toggleDurationVisibilty()">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-timer</v-icon> Duration
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="!isDurationHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
 
-        <v-list-item v-if="!$store.state.Settings.ratingAndFavoriteInCard" link @click="toggleRatingVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-star</v-icon> Rating
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isRatingHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+            <v-list-item v-if="!$store.state.Settings.ratingAndFavoriteInCard" link @click="toggleRatingVisibilty()">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-star</v-icon> Rating
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="!isRatingHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
 
-        <v-list-item v-if="!$store.state.Settings.ratingAndFavoriteInCard" link @click="toggleFavoriteVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-heart</v-icon> Favorite
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isFavoriteHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+            <v-list-item v-if="!$store.state.Settings.ratingAndFavoriteInCard" link @click="toggleFavoriteVisibilty()">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-heart</v-icon> Favorite
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="!isFavoriteHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
 
-        <v-list-item link @click="toggleFileNameVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-alphabetical-variant</v-icon> Filename
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isFileNameHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+            <v-list-item link @click="toggleFileNameVisibilty()">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-alphabetical-variant</v-icon> Filename
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="!isFileNameHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
 
-        <v-list-item link @click="toggleFileInfoVisibilty()">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-filmstrip</v-icon> File Information
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="!isFileInfoHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+            <v-list-item link @click="toggleFileInfoVisibilty()">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-filmstrip</v-icon> File Information
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="!isFileInfoHidden?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
 
-        <v-divider class="ma-1"></v-divider>
+            <v-divider class="ma-1"></v-divider>
 
-        <v-list-item v-for="(mc,i) in metaInCard" :key="i" link @click="toggleVisibility(mc.id)">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
-            {{getMeta(mc.id).settings.name}}
-          </v-list-item-title>
-          <v-icon size="20" class="pl-10" :color="visibility[mc.id]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-        </v-list-item>
+            <v-list-item v-for="(mc,i) in metaInCard" :key="i" link @click="toggleVisibility(mc.id)">
+              <v-list-item-title>
+                <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
+                {{getMeta(mc.id).settings.name}}
+              </v-list-item-title>
+              <v-icon size="20" class="pl-10" :color="visibility[mc.id]?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
+            </v-list-item>
+          </div>
+        </vuescroll>
       </v-list>
     </v-menu>
 	</div>
@@ -114,10 +118,11 @@
 
 <script>
 import MetaGetters from '@/mixins/MetaGetters'
+import vuescroll from 'vuescroll'
 
 export default {
   name: 'VideosAppbarCardView',
-  components: {},
+  components: {vuescroll},
   mixins: [MetaGetters],
   beforeMount() {
     this.initVisibility()
