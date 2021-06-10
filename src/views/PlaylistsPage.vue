@@ -53,28 +53,20 @@
       class="scroll-to-top" fixed fab color="primary">
       <v-icon>mdi-chevron-up</v-icon>
     </v-btn>
-    <v-dialog v-model="$store.state.Playlists.dialogDeletePlaylist" scrollable persistent max-width="600">
+    <v-dialog v-model="$store.state.Playlists.dialogDeletePlaylist" scrollable persistent max-width="500">
       <v-card>
-        <v-card-title class="headline red--text">Are you sure?
+        <v-toolbar color="error">
+          <div class="headline"> Are you sure? </div>
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="$store.state.Playlists.dialogDeletePlaylist=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deletePlaylists" outlined> <v-icon left>mdi-check</v-icon>Yes</v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text style="white-space: pre-wrap;">
             <div>You want to delete playlist<span v-if="selectedPlaylistsLength>1">s</span></div>
             {{selectedPlaylists(true)}}
           </v-card-text>
         </vuescroll>
-        <v-card-actions>
-          <v-btn class="ma-4" 
-            @click="$store.state.Playlists.dialogDeletePlaylist = false">No, Keep it
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn color="red" class="ma-4" dark @click="deletePlaylists">
-            <v-icon left>mdi-delete-alert</v-icon> Yes, delete
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
     <DialogEditPlaylist v-if="$store.state.Playlists.dialogEditPlaylist"/>

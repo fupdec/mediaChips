@@ -248,20 +248,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogDeleteImage" max-width="360px" persistent>
+    <v-dialog v-model="dialogDeleteImage" max-width="500px" persistent>
       <v-card>
-        <v-card-title class="headline red--text px-4 py-1"> Delete image?
+        <v-toolbar color="error">
+          <div class="headline"> Delete image? </div>
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete-alert</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-text class="text-center red--text pt-8">The image will be permanently deleted!</v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn @click="dialogDeleteImage = false" class="ma-4"> No </v-btn>
-          <v-spacer/>
-          <v-btn @click="deleteImage(deleteImageType)" class="red ma-4" dark> 
-            <v-icon left>mdi-delete-alert</v-icon> Yes </v-btn>
-        </v-card-actions>
+          <v-btn @click="dialogDeleteImage=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteImage(deleteImageType)" outlined> <v-icon left>mdi-check</v-icon>Yes</v-btn>
+        </v-toolbar>
+        <v-card-text class="text-center red--text py-8">The image will be permanently deleted!</v-card-text>
       </v-card>
     </v-dialog>
   </div>

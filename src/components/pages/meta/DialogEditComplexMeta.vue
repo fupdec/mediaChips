@@ -212,7 +212,7 @@
     <v-dialog v-if="dialogDeleteMetaFromCards" :value="dialogDeleteMetaFromCards" persistent max-width="450">
       <v-card>
         <v-toolbar color="error">
-          <v-card-title class="headline pl-0">Are you sure?</v-card-title>
+          <div class="headline">Are you sure?</div>
           <v-spacer></v-spacer>
           <v-btn @click="dialogDeleteMetaFromCards=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="addMetaToDeleted" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>

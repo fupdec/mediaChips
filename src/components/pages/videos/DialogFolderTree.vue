@@ -1,12 +1,23 @@
 <template>
-  <v-dialog v-model="$store.state.Videos.dialogFolderTree" persistent scrollable max-width="600">
+  <v-dialog v-model="$store.state.Videos.dialogFolderTree" persistent scrollable max-width="700">
     <v-card>
-      <v-card-title primary-title class="py-1">
-        <div class="headline">Folder tree (experimentally)</div>
+      <v-toolbar color="primary">
+        <div class="headline">Folder tree</div>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on" right>mdi-help-circle-outline</v-icon>
+          </template>
+          <span>You can filter videos by selected folders. <br>
+            An experimental feature to be improved.</span>
+        </v-tooltip>
         <v-spacer></v-spacer>
-        <v-icon>mdi-file-tree</v-icon>
-      </v-card-title>
-      <v-divider></v-divider>
+        <v-btn @click="cancelFilterByTree" outlined class="ml-4">
+          <v-icon left>mdi-close</v-icon> Close</v-btn>
+        <v-btn @click="clearSelectedFolders" outlined class="mx-4">
+          <v-icon left>mdi-cancel</v-icon> Clear all</v-btn>
+        <v-btn @click="filterByTree" :disabled="updatingFolderTree" outlined>
+          <v-icon left>mdi-filter</v-icon>Filter</v-btn>
+      </v-toolbar>
       <v-card-actions>
         <v-select v-model="selectedDisk" :items="disks" label="Choose disk" solo dense
           prepend-icon="mdi-harddisk" hide-details class="mx-8 disks" @change="selectDisk"
@@ -44,14 +55,6 @@
           </v-treeview>
         </v-card-text>
       </vuescroll>
-      <v-card-actions>
-        <v-btn @click="cancelFilterByTree" small class="ma-2">Cancel</v-btn>
-        <v-btn @click="clearSelectedFolders" small class="ma-2" color="secondary">
-          <v-icon left>mdi-cancel</v-icon> Clear all</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn @click="filterByTree" :disabled="updatingFolderTree" small color="primary" class="ma-2">
-          <v-icon left>mdi-filter</v-icon>Filter by selected folders</v-btn>
-      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>

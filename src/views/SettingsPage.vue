@@ -181,12 +181,11 @@
 
         <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
           <v-card>
-            <v-card-title>
-              <div class="headline">Updating data from video</div>
+            <v-toolbar color="error">
+              <div class="primary"> Updating data from video </div>
               <v-spacer></v-spacer>
-              <v-icon>mdi-video-outline</v-icon>
-            </v-card-title>
-            <v-divider></v-divider>
+              <v-btn @click="dialogUpdateNumberOfVideos=false" :disabled="updatingNumberOfVideos" outlined> <v-icon left>mdi-close</v-icon> Close </v-btn>
+            </v-toolbar>
             <v-card-text class="pt-10">
               <div v-if="updatingNumberOfVideos" class="text-center">
                 <h3 class="mb-2">Update in progress...</h3>
@@ -196,24 +195,16 @@
                 <h3 class="mb-2">Data updated!</h3>
               </div>
             </v-card-text>
-            <v-card-actions>
-              <v-spacer/>
-              <v-btn @click="dialogUpdateNumberOfVideos=false" :disabled="updatingNumberOfVideos"
-                color="primary" class="ma-4">OK</v-btn>
-              <v-spacer/>
-            </v-card-actions>
           </v-card>
         </v-dialog>
 
         <v-dialog v-model="dialogUpdatePath" scrollable persistent>
           <v-card>
-            <v-card-title class="edit-card-title pa-4">
-              <div class="headline">Update path in videos</div>
+            <v-toolbar color="primary">
+              <div class="headline"> Update path in videos </div>
               <v-spacer></v-spacer>
-              <v-btn outlined @click="dialogUpdatePath=false" dark>
-                <v-icon left>mdi-close</v-icon>Close
-              </v-btn>
-            </v-card-title>
+              <v-btn @click="dialogUpdatePath=false" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
+            </v-toolbar>
             <v-card-actions class="text-center pb-2">
               <v-container>
                 <v-row>

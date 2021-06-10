@@ -40,34 +40,34 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-dialog v-model="dialogCreateBackup" width="400" persistent>
-      <v-card :loading="isCreatingBackupRun" loader-height="5">
-        <v-card-title class="headline py-1 px-4">Create a backup?
+    <v-dialog v-model="dialogCreateBackup" width="600" persistent>
+      <v-card>
+        <v-toolbar color="success">
+          <span class="headline">Create a backup?</span>
           <v-spacer></v-spacer>
-          <v-icon color="green">mdi-database-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-text class="pt-4 text-center">
-          <div>All images, video previews and data will be archived.</div>
-        </v-card-text>
-        <v-card-actions class="pa-0">
           <v-btn @click="dialogCreateBackup=false" :disabled="isCreatingBackupRun"
-            class="ma-4">Cancel</v-btn>
-          <v-spacer/>
-          <v-btn @click="createBackup" :disabled="isCreatingBackupRun"
-            class="ma-4" color="green"> 
+            class="mx-4" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
+          <v-btn @click="createBackup" :disabled="isCreatingBackupRun" outlined> 
             <v-icon left>mdi-database-plus</v-icon> Create
           </v-btn>
-        </v-card-actions>
+        </v-toolbar>
+        <v-card-text v-if="isCreatingBackupRun" class="text-center">
+          <h3 class="py-4">Creating in progress...</h3>
+          <v-icon x-large class="loading-animation">mdi-loading</v-icon>
+        </v-card-text>
+        <v-card-text v-else class="py-6 text-center">
+          <div>All images, video previews and data will be archived.</div>
+        </v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogRestoreBackup" width="400" persistent>
-      <v-card :loading="isRestoringBackupRun" loader-height="5">
-        <v-card-title class="headline py-1 px-4">Restore the backup?
+    <v-dialog v-model="dialogRestoreBackup" width="600" persistent>
+      <v-card>
+        <v-toolbar color="warning">
+          <div class="headline"> Restore the backup? </div>
           <v-spacer></v-spacer>
-          <v-icon color="orange">mdi-database-refresh</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="dialogRestoreBackup=false" :disabled="isRestoringBackupRun" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> close </v-btn>
+          <v-btn @click="restoreBackup" :disabled="isRestoringBackupRun" outlined> <v-icon left>mdi-backup-restore</v-icon>Restore</v-btn>
+        </v-toolbar>
         <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
           <div class="py-6">
             This will replace current state of the database.
@@ -82,37 +82,20 @@
         <v-card-text v-if="isBackupRestoredError" class="text-center py-6">
           An error occurred while restoring.
         </v-card-text>
-        <v-card-actions v-if="!isBackupRestoredSuccessfully" class="pa-0">
-          <v-btn @click="dialogRestoreBackup = false" :disabled="isRestoringBackupRun" 
-            class="ma-4">Cancel</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="restoreBackup" :disabled="isRestoringBackupRun" 
-            class="ma-4" depressed color="orange" dark>
-            <v-icon left>mdi-backup-restore</v-icon> Restore
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogDeleteBackup" width="400" persistent>
+    <v-dialog v-model="dialogDeleteBackup" width="550" persistent>
       <v-card>
-        <v-card-title class="headline red--text py-1 px-4">Delete the backup?
+        <v-toolbar color="error">
+          <div class="headline"> Delete the backup? </div>
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-database-remove</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="dialogDeleteBackup=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteBackup" outlined> <v-icon left>mdi-check</v-icon>Yes</v-btn>
+        </v-toolbar>
         <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
-          <div class="py-4">
-            This action will remove selected backup from application.
-          </div>
+          <div class="py-4">This action will remove selected backup from application.</div>
           <v-icon size="72" color="red">mdi-alert-outline</v-icon>
         </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn @click="dialogDeleteBackup=false" class="ma-4">Cancel</v-btn>
-          <v-spacer/>
-          <v-btn @click="deleteBackup" class="ma-4" color="red" dark>
-            <v-icon left>mdi-delete-alert</v-icon> Delete
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
   </div>

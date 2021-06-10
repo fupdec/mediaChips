@@ -2,12 +2,13 @@
 	<div>
 		<v-dialog v-model="$store.state.Videos.dialogDeleteVideo" scrollable persistent max-width="800">
       <v-card>
-        <v-card-title class="headline py-2 red--text">
-          Are you sure?
+        <v-toolbar color="error">
+          <div class="headline"> Are you sure? </div>
           <v-spacer></v-spacer>
-          <v-icon color="red" class="ml-6">mdi-delete</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-checkbox v-model="$store.state.Videos.deleteFile" class="mx-4" color=" " hide-details label="Also delete files"/>
+          <v-btn @click="$store.state.Videos.dialogDeleteVideo=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteVideos" outlined> <v-icon left>mdi-check</v-icon>Yes</v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text style="white-space: pre-wrap;">
             <div>
@@ -16,42 +17,20 @@
             </div> {{selectedVideos(true)}}
           </v-card-text>
         </vuescroll>
-        <v-card-actions>
-          <v-btn @click="$store.state.Videos.dialogDeleteVideo=false" class="ma-4">
-            No, Keep it
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-checkbox v-model="$store.state.Videos.deleteFile" 
-            class="mt-0 mr-6 mb-2" color="red" hide-details>
-            <template v-slot:label>
-              <span class="red--text">Also delete files</span>
-            </template>
-          </v-checkbox>
-          <v-btn color="red" class="ma-4" dark @click="deleteVideos">
-            <v-icon left>mdi-delete-alert</v-icon> Yes, delete
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
     
-		<v-dialog v-model="$store.state.Videos.dialogErrorPlayVideo" scrollable persistent max-width="800">
+		<v-dialog v-model="$store.state.Videos.dialogErrorPlayVideo" max-width="800">
       <v-card>
-        <v-card-title class="headline py-2 red--text">Error play video
+        <v-toolbar color="error">
+          <div class="headline"> Error play video </div>
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-alert-circle</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <vuescroll>
-          <v-card-text>
-            The file on this path does not exist
-            <br>{{$store.state.Videos.errorPlayVideoPath}}
-          </v-card-text>
-        </vuescroll>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="$store.state.Videos.dialogErrorPlayVideo=false" class="ma-4">OK</v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
+          <v-btn @click="$store.state.Videos.dialogErrorPlayVideo=false" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
+        </v-toolbar>
+        <v-card-text class="py-6 text-center">
+          The file on this path does not exist:
+          <br>{{$store.state.Videos.errorPlayVideoPath}}
+        </v-card-text>
       </v-card>
     </v-dialog>
 
@@ -62,13 +41,13 @@
 
     <v-dialog v-model="dialogAddToPlaylist" max-width="420">
       <v-card class="add-playlist">
-        <v-card-title class="headline py-1">Add to Playlist
+        <v-toolbar color="primary">
+          <div class="headline">Add to Playlist</div>
           <v-spacer></v-spacer>
-          <v-icon>mdi-playlist-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="addToPlaylist" :disabled="typeof this.selectedPlaylist!=='number'" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
         <vuescroll>
-          <v-card-text class="py-0" v-if="playlists.length">
+          <v-card-text v-if="playlists.length">
             <v-list dense>
               <v-list-item-group color="primary" v-model="selectedPlaylist">
                 <v-list-item v-for="(item, i) in playlists" :key="i">
@@ -78,15 +57,8 @@
               </v-list-item-group>
             </v-list>
           </v-card-text>
+          <v-card-text v-else class="text-center">No playlist</v-card-text>
         </vuescroll>
-        <v-card-actions>
-          <v-btn @click="dialogAddToPlaylist=false" small class="ma-2">Cancel</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="addToPlaylist" :disabled="typeof this.selectedPlaylist!=='number'" 
-            small class="ma-2" color="primary">
-            <v-icon left>mdi-plus</v-icon> Add
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
 

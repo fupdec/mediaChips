@@ -1,14 +1,11 @@
 <template>
   <v-dialog v-model="$store.state.dialogFolder" scrollable width="1200">
     <v-card class="pb-4">
-      <v-card-title primary-title class="py-1 pl-4 pr-2">
+      <v-toolbar color="primary">
         <div class="headline"><v-icon left>mdi-folder</v-icon>{{folder.folder}}</div>
         <v-spacer></v-spacer>
-        <v-btn @click="$store.state.dialogFolder=false" icon>
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-      <v-divider></v-divider>
+        <v-btn @click="$store.state.dialogFolder=false" outlined><v-icon left>mdi-close</v-icon>Close</v-btn>
+      </v-toolbar>
       <v-card-actions v-if="folder.lostFiles.length" class="pa-4">
         <v-btn @click="toggleListLostFiles" color="orange" dark>
           <v-icon left>mdi-format-list-numbered</v-icon> Toggle full list

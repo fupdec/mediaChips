@@ -251,18 +251,13 @@
 
     <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
       <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">
-            Marker with tag on {{msToTime(seekTime*1000)}}
-          </div>
+        <v-toolbar color="primary">
+          <div class="headline">Marker with tag on {{msToTime(seekTime*1000)}}</div>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogMarkerTag=false" icon>
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="addMarker('tag')" :disabled="!markerTag" outlined><v-icon left>mdi-plus</v-icon>Add</v-btn>
+        </v-toolbar>
         <vuescroll>
-          <v-card-text class="pb-0">
+          <v-card-text>
             <v-autocomplete
               v-model="markerTag" outlined clearable hide-details dense
               :items="tagsAll" label="Tag" placeholder="Choose a tag for the marker"
@@ -298,13 +293,6 @@
             </v-autocomplete>
           </v-card-text>
         </vuescroll>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="addMarker('tag')" :disabled="!markerTag" class="ma-4" color="primary">
-            <v-icon left>mdi-plus</v-icon> Add marker
-          </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="dialogAddNewTag" max-width="400">

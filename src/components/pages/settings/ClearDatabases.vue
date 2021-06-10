@@ -5,25 +5,21 @@
     </v-btn>
     <v-dialog v-model="dialogConfirmClearAllFiles" max-width="520">
       <v-card>
-        <v-card-title class="headline red--text">Are you sure?
+        <v-toolbar color="error">
+          <div class="headline">Are you sure?</div>
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete-alert</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="dialogConfirmClearAllFiles=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="clearDB(nameDB)" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
         <v-card-text class="text-center mt-6">
           <v-icon size="60" color="red">mdi-alert</v-icon> 
         </v-card-text>
         <v-card-text class="text-center red--text">
+          <!-- TODO add to deleting dialogs icon like this -->
           This will <span class="text-uppercase">delete all {{nameDB}}</span> from the database!
           <br>Before deleting, make a backup and if you are ready then press 
           the <br><span class="text-uppercase">red button</span>. 
         </v-card-text>
-        <v-card-actions>
-          <v-btn @click="dialogConfirmClearAllFiles=false" class="ma-4"> Cancel </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="clearDB(nameDB)" color="error" class="ma-4">
-            <v-icon size="20" left>mdi-alert-circle-outline</v-icon>Delete</v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="dialogDatabaseCleared" max-width="300">

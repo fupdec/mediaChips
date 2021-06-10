@@ -1,12 +1,15 @@
 <template> 
-  <v-dialog v-model="$store.state.Settings.dialogHeaderGradient" width="400" scrollable persistent>
+  <v-dialog v-model="$store.state.Settings.dialogHeaderGradient" width="680" scrollable persistent>
     <v-card>
-      <v-card-title class="headline pa-4" :style="{background: gradient}">
-        <div v-if="themeDark" class="white--text">Gradient for dark theme</div>
-        <div v-else class="black--text">Gradient for light theme</div>
+      <v-toolbar :style="{background: gradient}">
+        <div class="headline">Gradient for dark theme</div>
         <v-spacer></v-spacer>
-        <v-icon left :color="themeDark?'white':'black'">mdi-palette</v-icon>
-      </v-card-title>
+        <v-btn @click="$store.state.Settings.dialogHeaderGradient=false" 
+          class="mx-4" outlined>
+          <v-icon left>mdi-close</v-icon> close </v-btn>
+        <v-btn @click="saveHeaderGradient" outlined>
+          <v-icon left>mdi-content-save</v-icon> Save </v-btn>
+      </v-toolbar>
       <vuescroll>
         <v-card-text class="px-10">
           <transition-group name="flip-list">
@@ -42,15 +45,6 @@
         <v-spacer></v-spacer>
         <v-btn @click="generateGradient" class="ma-4" >
           <v-icon left>mdi-dice-5</v-icon> Random
-        </v-btn>
-      </v-card-actions>
-      <v-card-actions>
-        <v-btn @click="$store.state.Settings.dialogHeaderGradient=false" class="ma-4">
-          Cancel
-        </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn @click="saveHeaderGradient" class="ma-4" color="primary">
-          <v-icon left>mdi-content-save</v-icon> Save
         </v-btn>
       </v-card-actions>
     </v-card>

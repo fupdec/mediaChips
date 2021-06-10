@@ -1,28 +1,21 @@
 <template>
   <v-dialog v-model="$store.state.Playlists.dialogEditPlaylist" scrollable persistent width="1200">
     <v-card>
-      <v-card-title class="edit-card-title py-2">
-        <div class="pl-4">
-          <div class="font-weight-light headline body-1">Editing the playlist</div>
-          <div class="font-weight-bold headline">{{playlist.name}} 
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-icon right @click="copyPlaylistNameToClipboard"
-                  size="16" v-on="on" color="grey">mdi-content-copy</v-icon>
-              </template>
-              <span>Copy name to clipboard</span>
-            </v-tooltip>
-          </div> 
+      <v-toolbar color="primary">
+        <div class="headline"> Editing the playlist
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <b @click="copyPlaylistNameToClipboard" v-on="on"> {{playlist.name}} </b>
+            </template>
+            <span>Copy name to clipboard</span>
+          </v-tooltip>
+          <!-- TODO make the same function for copy text -->
         </div>
         <v-spacer></v-spacer>
-        <div>
-          <v-btn outlined dark class="mr-6" @click="close">Cancel</v-btn>
-          <v-btn 
-            :disabled="!valid" color="primary" @click="savePlaylistInfo"
-          ><v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
-        </div>
-      </v-card-title>
-
+        <v-btn outlined class="mx-4" @click="close"><v-icon left>mdi-close</v-icon>close</v-btn>
+        <v-btn @click="savePlaylistInfo" :disabled="!valid" outlined>
+          <v-icon left>mdi-content-save-outline</v-icon>Save</v-btn>
+      </v-toolbar>
       <vuescroll>
         <v-card-text>
           <v-container fluid>

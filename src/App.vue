@@ -10,17 +10,17 @@
       <router-view :key="$route.fullPath" />
     </v-main>
 
-    <v-dialog v-if="disableRunApp" v-model="disableRunApp" scrollable persistent width="400" overlay-opacity="1">
+    <v-dialog v-if="disableRunApp" v-model="disableRunApp" scrollable persistent width="500" overlay-opacity="1">
       <v-form ref="pass" v-model="validPass" lazy-validation @submit.prevent>
         <v-card>
-          <v-card-title primary-title class="headline">
-            <div>Log in to the application</div>
+          <v-toolbar color="primary">
+            <div class="headline">Welcome!</div>
             <v-spacer></v-spacer>
-            <v-icon>mdi-account-box</v-icon>
-          </v-card-title>
-          <v-divider></v-divider>
+            <v-btn @click="close" outlined class="mx-4"> <v-icon left>mdi-logout</v-icon>Exit</v-btn>
+            <v-btn @click="logIn" outlined> <v-icon left>mdi-login</v-icon> Log in </v-btn>
+          </v-toolbar>
           <v-card-text>
-            <div class="mt-6 mb-4">Password required to enter the application</div>
+            <v-alert type="warning" text dense>Password required to enter the application</v-alert>
             <v-text-field
               v-model="password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
               :rules="[getPasswordRules]" :type="showPassword ? 'text' : 'password'" 
@@ -31,15 +31,6 @@
               Wrong password
             </v-alert>
           </v-card-text>
-          <v-card-actions class="pt-0">
-            <v-btn @click="close" class="ma-4">
-              <v-icon left>mdi-logout</v-icon>Exit
-            </v-btn>
-            <v-spacer></v-spacer>
-            <v-btn @click="logIn" color="primary" class="ma-4">
-              <v-icon left>mdi-login</v-icon> Log in
-            </v-btn>
-          </v-card-actions>
         </v-card>
       </v-form>
     </v-dialog>
