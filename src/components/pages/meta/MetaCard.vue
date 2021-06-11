@@ -150,9 +150,6 @@ export default {
         this.$store.state.contextMenu = true
       }, 300)
     },
-    asj() {
-      console.log(this.findCountryCode('Germany'))
-    }, 
   },
   watch: {
     updateCardIds(newValue) {
