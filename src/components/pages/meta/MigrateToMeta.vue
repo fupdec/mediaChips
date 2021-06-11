@@ -87,7 +87,7 @@ export default {
     parseItems(items) { return items.map(i=>{ if (i.length) return{ id:shortid.generate(), name:i } }) },
     async createPerformers(performersId, tagsId) {
       return new Promise(resolve => {
-        let customParams = this.$store.state.Settings.customParametersPerformer
+        let customParams = this.$store.getters.settings.get('customParametersPerformer').cloneDeep().value()
         let newMetaArr = []
         newMetaArr.push(
         {
@@ -187,7 +187,7 @@ export default {
             name: 'Ethnicity', 
             hint: '', 
             icon: 'account-group',
-            items: this.parseItems(this.$store.state.Settings.performerInfoEthnicity),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoEthnicity').cloneDeep().value()),
           },
         },
         {
@@ -199,7 +199,7 @@ export default {
             name: 'Hair', 
             hint: '', 
             icon: 'face-woman-shimmer-outline',
-            items: this.parseItems(this.$store.state.Settings.performerInfoHair),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoHair').cloneDeep().value()),
           },
         },
         {
@@ -211,7 +211,7 @@ export default {
             name: 'Eyes', 
             hint: '', 
             icon: 'eye',
-            items: this.parseItems(this.$store.state.Settings.performerInfoEyes),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoEyes').cloneDeep().value()),
           },
         },
         {
@@ -223,7 +223,7 @@ export default {
             name: 'Cups', 
             hint: '', 
             icon: 'coffee',
-            items: this.parseItems(this.$store.state.Settings.performerInfoCups),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoCups').cloneDeep().value()),
           },
         },
         {
@@ -235,7 +235,7 @@ export default {
             name: 'Boobs',
             hint: '', 
             icon: 'circle',
-            items: this.parseItems(this.$store.state.Settings.performerInfoBoobs),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoCategory').cloneDeep().value()),
           },
         },
         {
@@ -247,7 +247,7 @@ export default {
             name: 'Category',
             hint: 'Profession',  
             icon: 'shape',
-            items: this.parseItems(this.$store.state.Settings.performerInfoCategory),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoBoobs').cloneDeep().value()),
           },
         },
       )
@@ -460,7 +460,7 @@ export default {
         this.$store.dispatch('addComplexMeta', complexMetaTags)
 
         //-simple meta
-        let tagCategories = this.$store.state.Settings.tagInfoCategory || []
+        let tagCategories = this.$store.getters.settings.get('tagInfoCategory').cloneDeep().value() || []
         for (let i = 0; i < tags.length; i++) {
           let el = tags[i].category
           if (el!==undefined&&el.length) tagCategories = _.union(tagCategories, el)
@@ -652,48 +652,55 @@ export default {
       //-operations with images
       const currPathPerformers  = path.join(this.pathToUserData, `/media/performers`)
       const newPathPerformers  = path.join(this.pathToUserData, `/media/meta/${performersId}`)
-      try {
-        fs.renameSync(currPathPerformers, newPathPerformers)
-        console.log("Successfully renamed performers directory.")
-      } catch(err) {
-        console.log(err)
-      } 
+      
+      if (fs.existsSync(currPathPerformers)) {
+        try {
+          fs.renameSync(currPathPerformers, newPathPerformers)
+          this.$store.commit('addLog', {type:'info',text:`Folder with performers images renamed successfully`})
+        } catch(err) {
+          console.log(err)
+        } 
+      } else this.$store.commit('addLog', {type:'error',text:`Folder with performers images was not found`})
 
       const currPathTags  = path.join(this.pathToUserData, `/media/tags`)
       const newPathTags  = path.join(this.pathToUserData, `/media/meta/${tagsId}`)
-      //-rename tag images to tag_main.jpg
-      for (const oldFile of fs.readdirSync(currPathTags)) {
-        const extension = path.extname(oldFile)
-        const name = path.basename(oldFile, extension)
-        const oldFileName = path.join(currPathTags, oldFile)
-        const newFileName = path.join(currPathTags, `${name}main${extension}`)
-        fs.renameSync(oldFileName, newFileName)
-      }
-      //-move folder with tag images
-      try {
-        fs.renameSync(currPathTags, newPathTags)
-        console.log("Successfully renamed tags directory.")
-      } catch(err) {
-        console.log(err)
-      }
+      if (fs.existsSync(currPathTags)) {
+        //-rename tag images to tag_main.jpg
+        for (const oldFile of fs.readdirSync(currPathTags)) {
+          const extension = path.extname(oldFile)
+          const name = path.basename(oldFile, extension)
+          const oldFileName = path.join(currPathTags, oldFile)
+          const newFileName = path.join(currPathTags, `${name}main${extension}`)
+          fs.renameSync(oldFileName, newFileName)
+        }
+        //-move folder with tag images
+        try {
+          fs.renameSync(currPathTags, newPathTags)
+          this.$store.commit('addLog', {type:'info',text:`Folder with tags images renamed successfully`})
+        } catch(err) {
+          console.log(err)
+        }
+      } else this.$store.commit('addLog', {type:'error',text:`Folder with tags images was not found`})
       
       const currPathWebsites  = path.join(this.pathToUserData, `/media/websites`)
       const newPathWebsites  = path.join(this.pathToUserData, `/media/meta/${websitesId}`)
-      //-rename website images to website_main.jpg
-      for (const oldFile of fs.readdirSync(currPathWebsites)) {
-        const extension = path.extname(oldFile)
-        const name = path.basename(oldFile, extension)
-        const oldFileName = path.join(currPathWebsites, oldFile)
-        const newFileName = path.join(currPathWebsites, `${name}main${extension}`)
-        fs.renameSync(oldFileName, newFileName)
-      }
-      //-move folder with website images
-      try {
-        fs.renameSync(currPathWebsites, newPathWebsites)
-        console.log("Successfully renamed websites directory.")
-      } catch(err) {
-        console.log(err)
-      }
+      if (fs.existsSync(currPathWebsites)) {
+        //-rename website images to website_main.jpg
+        for (const oldFile of fs.readdirSync(currPathWebsites)) {
+          const extension = path.extname(oldFile)
+          const name = path.basename(oldFile, extension)
+          const oldFileName = path.join(currPathWebsites, oldFile)
+          const newFileName = path.join(currPathWebsites, `${name}main${extension}`)
+          fs.renameSync(oldFileName, newFileName)
+        }
+        //-move folder with website images
+        try {
+          fs.renameSync(currPathWebsites, newPathWebsites)
+          this.$store.commit('addLog', {type:'info',text:`Folder with websites images renamed successfully`})
+        } catch(err) {
+          console.log(err)
+        }
+      } else this.$store.commit('addLog', {type:'error',text:`Folder with websites images was not found`})
     },
     closeDialog() { this.$emit('finish') },
   },
