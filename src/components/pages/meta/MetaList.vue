@@ -1,6 +1,44 @@
 <template>
   <div>
-    <v-btn class="mb-4" color="primary" block x-large rounded> <v-icon left>mdi-plus</v-icon> Add new meta</v-btn>
+    <v-btn @click="dialogAddMeta=true" class="mb-4" color="primary" block x-large rounded> <v-icon left>mdi-plus</v-icon> Add new meta</v-btn>
+
+    <v-dialog v-model="dialogAddMeta" scrollable max-width="800">
+      <v-card>
+        <v-card-actions class="pa-4">
+          <v-card @click="dialogAddComplexMeta=true, dialogAddMeta=false" hover height="100%">
+            <v-toolbar color="primary" class="headline">Complex</v-toolbar>
+            <v-card-text class="text-center">
+              <span>Complex meta has a separate page with cards <br> 
+                that can be customized in detail:<br>
+                images, rating, favorite, color and etc.</span>
+              <div class="mt-2">
+                <v-icon size="40">mdi-card-bulleted</v-icon>
+                <v-icon size="50" class="mx-1">mdi-card-account-details</v-icon>
+                <v-icon size="40">mdi-card-text</v-icon>
+                <v-icon size="30">mdi-card-bulleted-outline</v-icon>
+              </div>
+            </v-card-text>
+          </v-card>
+          <v-spacer/>
+          <v-card @click="dialogAddSimpleMeta=true, dialogAddMeta=false" hover height="100%">
+            <v-toolbar class="headline">Simple</v-toolbar>
+            <v-card-text class="text-center">
+              <span>Simple meta doesn't have a separate page or cards.<br> 
+                They are simply displayed as a line on cards<br>
+                and can be of different types:<br>
+                string, number, array, date, boolean and etc.</span>
+              <div class="mt-2">
+                <v-icon size="40">mdi-alphabetical</v-icon>
+                <v-icon size="40">mdi-numeric</v-icon>
+                <v-icon size="50">mdi-calendar</v-icon>
+                <v-icon size="40">mdi-code-brackets</v-icon>
+                <v-icon size="30">mdi-toggle-switch</v-icon>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <v-card outlined>
       <v-data-iterator :items="metaList" :items-per-page.sync="itemsPerPage" :page.sync="page" :search="search" :sort-by="sortBy" :sort-desc="sortDesc" hide-default-footer no-data-text="Please add meta first" no-results-text="No meta found">
@@ -23,10 +61,10 @@
               <v-hover>
                 <template v-slot:default="{ hover }">
                   <v-card outlined height="100%" class="meta-list-card">
-                    <div class="px-2 py-1 d-flex align-center">
+                    <v-toolbar :color="item.type=='complex'?'primary':''">
                       <v-icon size="20" left>mdi-{{ item.settings.icon }}</v-icon>
                       {{ item.settings.name }} 
-                    </div>
+                    </v-toolbar>
                     <v-divider></v-divider>
                     <v-list dense class="list-zebra caption">
                       <v-list-item v-for="(key, index) in filteredKeys" :key="index" class="px-2 py-1">
@@ -63,11 +101,11 @@
                     </v-list>
 
                     <v-fade-transition>
-                      <v-overlay v-if="hover" absolute color="secondary">
+                      <v-overlay v-if="hover" absolute color="secondary" z-index="1">
                         <div class="d-flex flex-column">
-                          <v-btn rounded small class="mb-2"> <v-icon left>mdi-cog</v-icon> Edit </v-btn>
-                          <v-btn v-if="item.dataType==='array'" rounded small class="mb-2"> <v-icon left>mdi-card</v-icon> cards </v-btn>
-                          <v-btn rounded small color="error"> <v-icon left>mdi-delete</v-icon> Delete </v-btn>
+                          <v-btn @click="openEditMeta(item)" rounded small class="mb-2"> <v-icon left>mdi-cog</v-icon> Edit </v-btn>
+                          <v-btn v-if="item.dataType==='array'" @click="setSelectedMeta(item),dialogTransferMeta=true" rounded small class="mb-2" color="warning"> <v-icon left>mdi-transfer</v-icon> transfer </v-btn>
+                          <v-btn @click="setSelectedMeta(item),dialogDeleteMeta=true" rounded small color="error"> <v-icon left>mdi-delete</v-icon> Delete </v-btn>
                         </div>
                       </v-overlay>
                     </v-fade-transition>
@@ -92,6 +130,7 @@
             </v-menu>
             <span class="ml-2">meta per page</span>
             <v-spacer></v-spacer>
+            <!-- TODO swtich between detailed and simple view of meta items -->
             <span>Total meta: {{ metaList.length }}</span>
             <v-spacer></v-spacer>
             <span> Page {{ page }} of {{ numberOfPages }} </span>
@@ -101,14 +140,68 @@
         </template>
       </v-data-iterator>
     </v-card>
+
+    <DialogAddComplexMeta v-if="dialogAddComplexMeta" :dialog="dialogAddComplexMeta" @close="dialogAddComplexMeta=false"/>
+    <DialogEditComplexMeta v-if="dialogEditComplexMeta" :dialogEditMeta="dialogEditComplexMeta" :metaObj="selectedMeta"  @closeSettings="dialogEditComplexMeta=false"/>
+    <DialogAddSimpleMeta v-if="dialogAddSimpleMeta" :dialog="dialogAddSimpleMeta" @close="dialogAddSimpleMeta=false"/>
+    <DialogEditSimpleMeta v-if="dialogEditSimpleMeta" :dialogEditMeta="dialogEditSimpleMeta" :metaObj="selectedMeta" @closeSettings="dialogEditSimpleMeta=false"/>
+    <v-dialog v-if="dialogDeleteMeta" v-model="dialogDeleteMeta" persistent max-width="450">
+      <v-card>
+        <v-toolbar color="error">
+          <v-card-title class="headline pl-0">Are you sure?</v-card-title>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogDeleteMeta=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteMeta" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
+        <v-card-text class="py-8">
+          <div class="text-center">Deleting the <b>{{selectedMeta.type}}</b> meta
+            <v-chip small class="mx-2">
+              <v-icon small left>mdi-{{selectedMeta.settings.icon}}</v-icon>
+              <b>{{selectedMeta.settings.name}}</b>
+            </v-chip>
+            <div>will remove it from all assigned complex meta and cards.</div>
+            <div v-if="selectedMeta.type=='complex'">And it will also delete all cards.</div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-if="dialogTransferMeta" v-model="dialogTransferMeta" persistent max-width="450">
+      <v-card>
+        <v-toolbar color="warning">
+          <v-card-title class="headline pl-0">Are you sure?</v-card-title>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogTransferMeta=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="transferMeta" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
+        <v-card-text class="py-8">
+          <div class="text-center"> Type of meta 
+            <v-chip small class="mx-2">
+              <v-icon small left>mdi-{{selectedMeta.settings.icon}}</v-icon>
+              <b>{{selectedMeta.settings.name}}</b>
+            </v-chip>
+            <div>will be changed from <b>Simple</b> to <b>Complex</b>.
+              <br> A card will be created for each item in the array.</div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
 import MetaGetters from '@/mixins/MetaGetters'
 
+const fs = require("fs-extra")
+const path = require("path")
+
 export default {
   name: 'MetaList',
+  components: {
+    DialogAddComplexMeta: () => import("@/components/pages/meta/DialogAddComplexMeta.vue"),
+    DialogEditComplexMeta: () => import("@/components/pages/meta/DialogEditComplexMeta.vue"),
+    DialogAddSimpleMeta: () => import("@/components/pages/meta/DialogAddSimpleMeta.vue"),
+    DialogEditSimpleMeta: () => import("@/components/pages/meta/DialogEditSimpleMeta.vue"),
+  },
   mixins: [MetaGetters],
   mounted() {
     this.$nextTick(function () {
@@ -232,6 +325,15 @@ export default {
         iron: '6%',
       },
     ],
+    // dialogs
+    selectedMeta: null,
+    dialogAddMeta: false,
+    dialogAddComplexMeta: false,
+    dialogEditComplexMeta: false,
+    dialogAddSimpleMeta: false,
+    dialogEditSimpleMeta: false,
+    dialogDeleteMeta: false,
+    dialogTransferMeta: false,
   }),
   computed: {
     numberOfPages() { return Math.ceil(this.metaList.length / this.itemsPerPage) },
@@ -244,6 +346,7 @@ export default {
       })
       return allMeta.value() 
     },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
     nextPage() { if (this.page + 1 <= this.numberOfPages) this.page += 1 },
@@ -257,6 +360,71 @@ export default {
       date = new Date(date)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
+    setSelectedMeta(item) { this.selectedMeta = this.$store.getters.meta.find({id:item.id}).cloneDeep().value() },
+    openEditMeta(item) {
+      this.setSelectedMeta(item)
+      if (item.type == 'complex') this.dialogEditComplexMeta = true
+      else if (item.type == 'simple') this.dialogEditSimpleMeta = true
+    },
+    transferMeta() {
+      let meta = this.selectedMeta
+      let items = meta.settings.items
+      let complexMeta = {
+        id: meta.id,
+        date: meta.date,
+        edit: Date.now(),
+        type: 'complex',
+        settings: { 
+          name: meta.settings.name,
+          nameSingular: meta.settings.name,
+          hint: meta.settings.hint || '',
+          icon: meta.settings.icon || 'shape',
+          images: true,
+          imageTypes: ['main'],
+          metaInCard: [],
+        },
+        state: {
+          visibility: {
+            name: true,
+          },
+        },
+      }
+      this.$store.getters.meta.remove({id:meta.id}).write() // delete from database
+      this.$store.dispatch('addComplexMeta', complexMeta)
+
+      const metaFolder = path.join(this.pathToUserData, 'media', 'meta', meta.id)
+      if (!fs.existsSync(metaFolder)) fs.mkdirSync(metaFolder)
+
+      for (let item of items) {
+        this.$store.dispatch('addMetaCard', { 
+          id: item.id,
+          metaId: meta.id,
+          meta: { name: item.name },
+        })
+      }
+
+      // change type from simple to complex in assigned complex meta
+      this.$store.getters.meta.filter(i=>_.some(i.settings.metaInCard,{id:meta.id}))
+        .each(i=>{ 
+          let updMeta = _.find(i.settings.metaInCard, {id:meta.id})
+          if (updMeta) updMeta.type = 'complex'
+        }).write()
+      // change type from simple to complex in assigned video cards
+      if (_.find(this.$store.state.Settings.videoMetaInCard, {id: meta.id})) {
+        let newAssignedMeta = { id: meta.id, type: 'complex' }
+        let newMetaInCard = _.unionBy([newAssignedMeta], this.$store.state.Settings.videoMetaInCard, 'id')
+        this.$store.dispatch('updateSettingsState', {key:'videoMetaInCard', value:_.cloneDeep(newMetaInCard)})
+      }
+
+      this.dialogTransferMeta = false
+      // TODO create function for search changing meta in filters, tabs and etc. ant then change this items
+    },
+    deleteMeta() {
+      let meta = this.selectedMeta
+      if (meta.type == 'complex') this.$store.dispatch('deleteComplexMeta', {id:meta.id, name:meta.settings.name})
+      else if (meta.type == 'simple') this.$store.dispatch('deleteSimpleMeta', {id:meta.id, name:meta.settings.name})
+      this.dialogDeleteMeta = false
+    },
   },
 }
 </script>
@@ -264,6 +432,14 @@ export default {
 
 <style lang="less">
 .meta-list-card {
+  .v-toolbar,
+  .v-toolbar__content {
+    height: auto !important;
+    box-shadow: none !important;
+  }
+  .v-toolbar__content {
+    padding: 2px 4px;
+  }
   .v-list-item {
     min-height: auto;
   }

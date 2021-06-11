@@ -207,15 +207,17 @@ const Meta = {
       rimraf(metaFolder, () => { /*console.log("done")*/ }) // remove folder with images
       commit('getMetaListFromDb')
       commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
+      // TODO remove from assigned video card
     },
     deleteSimpleMeta({commit, getters}, {id, name}) {
       let ids = getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).map('id').value()
       for (let i = 0; i < ids.length; i++) { // delete from meta cards
         getters.metaCards.filter({metaId:ids[i]}).each(card=>{card.meta[id]=undefined}).write() 
       }
-      getters.remove({id}).write() // delete from database
+      getters.meta.remove({id}).write() // delete from database
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})) // delete from complex meta 
         .each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
+      // TODO remove from assigned video card
       commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
     },
     addMetaCard({commit, getters}, newMetaCard) {

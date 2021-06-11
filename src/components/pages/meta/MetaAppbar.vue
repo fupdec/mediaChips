@@ -319,7 +319,7 @@ export default {
       cardsArray = cardsArray.split(/\r?\n/)
       cardsArray = cardsArray.filter((el)=>(el != ''))
       cardsArray = cardsArray.map(s => s.trim())
-
+// TODO checking for dups
       const cardsDb = this.$store.getters.metaCards.filter({metaId:this.meta.id})
       this.dupCards = []
       this.newCards = []

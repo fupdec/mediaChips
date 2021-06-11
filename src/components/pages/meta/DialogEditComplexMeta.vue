@@ -52,15 +52,15 @@
                       <v-list dense class="list-zebra pa-0">
                         <draggable v-model="settings.metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
                           <transition-group type="transition">
-                            <v-list-item v-for="(meta, i) in settings.metaInCard" :key="i" class="pr-1 pl-2">
+                            <v-list-item v-for="(m, i) in settings.metaInCard" :key="i" class="pr-1 pl-2">
                               <div class="d-flex justify-space-between align-center" style="width:100%">
                                 <span>
-                                  <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
-                                  <span>{{getMeta(meta.id).settings.name}}</span>
-                                  <span class="text--secondary px-2">({{meta.type}})</span>
-                                  <span class="caption text--secondary px-2">id: {{meta.id}}</span>
-                                  <span v-if="meta.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(meta.id).dataType}}</span>
-                                  <span v-if="meta.scraperField" class="caption text--secondary">scraper: {{meta.scraperField}}</span>
+                                  <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                                  <span>{{getMeta(m.id).settings.name}}</span>
+                                  <span class="text--secondary px-2">({{m.type}})</span>
+                                  <span class="caption text--secondary px-2">id: {{m.id}}</span>
+                                  <span v-if="m.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(m.id).dataType}}</span>
+                                  <span v-if="m.scraperField" class="caption text--secondary">scraper: {{m.scraperField}}</span>
                                 </span>
                                 <span>
                                   <v-btn @click="openDialogDeleteMetaFromCards(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
@@ -192,7 +192,8 @@
         <vuescroll>
           <v-card-text class="px-4">
             <v-autocomplete v-model="selectedMetaForCard" label="Meta name" :items="metaForCard"
-              :rules="[value => !!value || 'Meta is required']" item-value="id">
+              :rules="[value => !!value || 'Meta is required']" item-value="id" autofocus>
+              <!-- TODO remake it with draggable and allow multiple meta -->
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
                 <span>{{data.item.settings.name}}</span>
@@ -244,7 +245,7 @@ import DialogEditScraperFields from '@/components/pages/meta/DialogEditScraperFi
 export default {
   props: {
     dialogEditMeta: false,
-    metaIndex: Number,
+    metaObj: Object,
   },
   name: "DialogEditMeta",
   components: { vuescroll, draggable, DialogEditScraperFields },
@@ -292,9 +293,7 @@ export default {
     deletedMetaFromCards: [],
   }),
   computed: {
-    complexMetaList() { return this.$store.getters.complexMeta.value() },
-    simpleMetaList() { return this.$store.getters.simpleMeta.value() },
-    meta() { return _.cloneDeep(this.complexMetaList[this.metaIndex]) },
+    meta() { return this.metaObj },
     metaForCard() {
       let metaInCardIds = this.settings.metaInCard.map(i=>i.id)
       let freeMetaList = this.$store.getters.meta.filter(i=>!metaInCardIds.includes(i.id))

@@ -3,7 +3,7 @@
     <v-dialog v-if="dialogEditMeta" :value="dialogEditMeta" @input="closeSettings" scrollable max-width="700">
       <v-card>
         <v-toolbar color="primary">
-          <v-card-title class="headline pl-0">Settings for meta <b class="ml-2">{{this.meta.settings.name}}</b></v-card-title>
+          <v-card-title class="headline pl-0">Settings for meta <b class="ml-2">{{meta.settings.name}}</b></v-card-title>
           <v-spacer></v-spacer>
           <v-btn @click="saveSettings" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>
         </v-toolbar>
@@ -99,7 +99,7 @@ import NameRules from '@/mixins/NameRules'
 export default {
   props: {
     dialogEditMeta: false,
-    metaIndex: Number,
+    metaObj: Object,
   },
   name: "DialogEditMeta",
   components: { vuescroll, draggable, },
@@ -132,8 +132,7 @@ export default {
     },
   }),
   computed: {
-    simpleMetaList() { return this.$store.getters.simpleMeta.value() },
-    meta() { return _.cloneDeep(this.simpleMetaList[this.metaIndex]) },
+    meta() { return this.metaObj },
     dateAdded() {
       let date = new Date(this.meta.date)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()

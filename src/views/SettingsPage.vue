@@ -9,8 +9,6 @@
       <v-tab href="#app-settings" draggable="false">App<v-icon>mdi-application</v-icon></v-tab>
       <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
       <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
-      <v-tab href="#performers-settings" draggable="false">Performers<v-icon>mdi-account</v-icon></v-tab>
-      <v-tab href="#tags-settings" draggable="false">Tags<v-icon>mdi-tag</v-icon></v-tab>
       <v-tab href="#privacy-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
       <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
       <v-tab href="#about-settings" draggable="false">About<v-icon>mdi-information-variant</v-icon></v-tab>
@@ -252,9 +250,7 @@
       </v-tab-item>
       <v-tab-item value="meta-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <MetaInVideoCard/>
-          <ComplexMetaList/>
-          <SimpleMetaList/>
+          <MetaList/>
         </v-card>
       </v-tab-item>
       <v-tab-item value="appearance-settings">
@@ -357,26 +353,7 @@
       </v-tab-item>
       <v-tab-item value="videos-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <!-- <div class="subtitle mt-10 mb-1">
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
-              </template>
-              <span>This is necessary to play video from a specific time. <br> 
-                Works only with Media Player Classic.</span>
-            </v-tooltip>
-            Path to system player:
-          </div>
-          <v-row>
-            <v-col cols="10">
-              <v-text-field v-model="pathToSystemPlayer" outlined dense
-                hint="e.g. C:\Program Files\MPC-HC64\mpc-hc64.exe" />
-            </v-col>
-            <v-col cols="2">
-              <v-btn color="secondary" @click="testPathToSystemPlayer" block height="calc(100% - 26px)">Test</v-btn>
-            </v-col>
-          </v-row> -->
-          <!-- TODO remove this option from settings JSON -->
+          <MetaInVideoCard/>
           
           <v-card outlined class="pb-4 px-4">
             <div class="headline text-h5 text-center py-4"> Video preview</div>
@@ -442,74 +419,6 @@
                 <div class="caption text-center">Delay before starting playback (in seconds): {{delayVideoPreview}}</div>
               </v-col>
             </v-row>
-          </v-card>
-        </v-card>
-      </v-tab-item>
-      <v-tab-item value="performers-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <v-card outlined class="pb-4 px-4">
-            <div class="headline text-h5 text-center py-4"> Parameters </div>
-            <v-btn @click="$store.state.Settings.dialogManagePerformerParameters=true" 
-              class="my-4" block color="primary">
-              <v-icon left>mdi-shape</v-icon> Manage custom parameters
-            </v-btn>
-            <ManagePerformerParameters v-if="$store.state.Settings.dialogManagePerformerParameters"/>
-
-            <div class="mt-8">Edit items of parameter:</div>
-            <EditPerformerItemsOfParameter/>
-          </v-card>
-          
-          <v-card outlined class="mt-10 px-4">
-            <div class="headline text-h5 text-center py-4"> Meter
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
-                </template>
-                <v-card class="my-2">
-                  <v-card-actions>
-                    <div class="text-center mx-4">
-                      You can use a meter to <br>see how hot the performer is. <br>
-                      The larger the tag value, <br>the more the meter will fill. <br><br>
-                      Tags from the video are used <br> in which the performer is involved. <br><br>
-                      Most likely none of your performers <br> will have a fully filled scale. <br>
-                      To increase the scale, <br>you can use a multiplier<br> in the settings -> performer.
-                    </div>
-                    <v-img :src="getMeterImg" width="165"/><br>
-                  </v-card-actions>
-                </v-card>
-              </v-tooltip>
-            </div>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <div class="text-center">Height</div>
-                <v-slider v-model="meterHeight" :min="1" :max="20"
-                  hide-details :thumb-size="32" thumb-label />
-                <div class="caption text-center">{{meterHeight}} pixels</div>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <div class="text-center">
-                  <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                    </template>
-                    <span>Change if the meter of tags shows an incorrect value</span>
-                  </v-tooltip>
-                  Multiplier
-                </div>
-                <v-slider v-model="meterMultiplier" :min="1" :max="100"
-                  hide-details :thumb-size="32" thumb-label />
-                <div class="caption text-center">Value: {{meterMultiplier}} %</div>
-              </v-col>
-            </v-row>
-          </v-card>
-        </v-card>
-      </v-tab-item>
-      <v-tab-item value="tags-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <v-card outlined class="pb-4 px-4">
-            <div class="headline text-h5 text-center py-4"> Parameters </div>
-            <div>Edit items of parameter:</div>
-            <EditTagItemsOfParameter/>
           </v-card>
         </v-card>
       </v-tab-item>
@@ -690,9 +599,8 @@ const axios = require("axios")
 const cheerio = require("cheerio")
 const { webFrame } = require('electron')
 
+import MetaList from '@/components/pages/meta/MetaList.vue'
 import MetaInVideoCard from '@/components/pages/meta/MetaInVideoCard.vue'
-import ComplexMetaList from '@/components/pages/meta/ComplexMetaList.vue'
-import SimpleMetaList from '@/components/pages/meta/SimpleMetaList.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
@@ -707,9 +615,8 @@ import vuescroll from 'vuescroll'
 export default {
   name: 'SettingsPage',
   components: {
+    MetaList,
     MetaInVideoCard,
-    ComplexMetaList,
-    SimpleMetaList,
     ThemeColors,
     ManageBackups,
     ClearDatabases,
