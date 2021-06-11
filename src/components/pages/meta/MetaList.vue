@@ -74,16 +74,18 @@
                         <v-list-item-content class="py-0 align-end" :class="{'primary--text':sortBy===key}" >
                           <span v-if="key=='date'">{{ dateAdded(item[key]) }}</span>
                           <span v-else-if="key=='edit'">{{ dateEdit(item[key]) }}</span>
+                          <span v-else-if="key=='dataType'"><v-icon small left>{{ getIconDataType(item[key]) }}</v-icon>{{ item[key] }}</span>
                           <span v-else>{{ item[key] }}</span>
                         </v-list-item-content>
                       </v-list-item>
                       <div v-if="item.type==='complex'">
                         <div class="px-2 py-1 d-flex align-center justify-space-between">
                           <span class="mr-2">Assigned meta:</span>
-                          <span class="d-flex align-center flex-wrap"> 
+                          <span v-if="item.metaInCard.length" class="d-flex align-center flex-wrap"> 
                             <v-icon v-for="(m, i) in item.metaInCard" :key="i" small> 
                               mdi-{{getMeta(m.id).settings.icon}} </v-icon> 
                           </span>
+                          <span v-else>—</span>
                         </div>
                         <div class="px-2 py-1 d-flex align-center justify-space-between">
                           <span class="mr-2">Settings:</span>
@@ -94,6 +96,7 @@
                             <v-icon v-if="item.bookmark" small>mdi-bookmark</v-icon>
                             <v-icon v-if="item.synonyms" small>mdi-alphabetical-variant</v-icon>
                             <v-icon v-if="item.country" small>mdi-flag</v-icon>
+                            <v-icon v-if="item.scraper" small>mdi-magnify</v-icon>
                             <v-icon v-if="item.nested" small>mdi-file-tree</v-icon>
                           </span>
                         </div>
@@ -103,9 +106,9 @@
                     <v-fade-transition>
                       <v-overlay v-if="hover" absolute color="secondary" z-index="1">
                         <div class="d-flex flex-column">
-                          <v-btn @click="openEditMeta(item)" rounded small class="mb-2"> <v-icon left>mdi-cog</v-icon> Edit </v-btn>
-                          <v-btn v-if="item.dataType==='array'" @click="setSelectedMeta(item),dialogTransferMeta=true" rounded small class="mb-2" color="warning"> <v-icon left>mdi-transfer</v-icon> transfer </v-btn>
-                          <v-btn @click="setSelectedMeta(item),dialogDeleteMeta=true" rounded small color="error"> <v-icon left>mdi-delete</v-icon> Delete </v-btn>
+                          <v-btn @click="openEditMeta(item)" rounded x-small class="mb-2"> <v-icon small left>mdi-pencil</v-icon> Edit </v-btn>
+                          <v-btn v-if="item.dataType==='array'" @click="setSelectedMeta(item),dialogTransferMeta=true" rounded x-small class="mb-2" color="warning"> <v-icon small left>mdi-transfer</v-icon> transfer </v-btn>
+                          <v-btn @click="setSelectedMeta(item),dialogDeleteMeta=true" rounded x-small color="error"> <v-icon small left>mdi-delete</v-icon> Delete </v-btn>
                         </div>
                       </v-overlay>
                     </v-fade-transition>
@@ -130,8 +133,7 @@
             </v-menu>
             <span class="ml-2">meta per page</span>
             <v-spacer></v-spacer>
-            <!-- TODO swtich between detailed and simple view of meta items -->
-            <span>Total meta: {{ metaList.length }}</span>
+            <v-switch v-model="detailed" label="Detailed" hide-details color="secondary"/>
             <v-spacer></v-spacer>
             <span> Page {{ page }} of {{ numberOfPages }} </span>
             <v-btn small outlined class="mx-2" @click="formerPage"> <v-icon>mdi-arrow-left</v-icon> </v-btn>
@@ -217,10 +219,10 @@ export default {
     sortBy: 'if',
     keys: [
       'name',
-      'date',
-      'edit',
       'type',
       'dataType',
+      'date',
+      'edit',
       'id',
     ],
     items: [
@@ -325,6 +327,12 @@ export default {
         iron: '6%',
       },
     ],
+    detailed: false,
+    detailedKeys: [
+      'date',
+      'edit',
+      'id',
+    ],
     // dialogs
     selectedMeta: null,
     dialogAddMeta: false,
@@ -337,7 +345,10 @@ export default {
   }),
   computed: {
     numberOfPages() { return Math.ceil(this.metaList.length / this.itemsPerPage) },
-    filteredKeys() { return this.keys.filter(key => key !== 'name') },
+    filteredKeys() { return this.keys.filter(key => {
+      if (this.detailed) return key!=='name' 
+      else return !this.detailedKeys.includes(key)&&key!=='name'
+    } ) },
     metaList() { 
       let allMeta = this.$store.getters.meta.filter(i=>['simple','complex'].includes(i.type))
       allMeta = allMeta.map(i=>{ 
@@ -351,15 +362,9 @@ export default {
   methods: {
     nextPage() { if (this.page + 1 <= this.numberOfPages) this.page += 1 },
     formerPage() { if (this.page - 1 >= 1) this.page -= 1 },
-    updateItemsPerPage(number) { this.itemsPerPage = number },
-    dateAdded(date) {
-      date = new Date(date)
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
-    },
-    dateEdit(date) {
-      date = new Date(date)
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
-    },
+    updateItemsPerPage(number) { this.itemsPerPage = number; if (this.numberOfPages>this.page) this.page = 1 },
+    dateAdded(date) { date = new Date(date); return date.toLocaleDateString() },
+    dateEdit(date) { date = new Date(date); return date.toLocaleDateString() },
     setSelectedMeta(item) { this.selectedMeta = this.$store.getters.meta.find({id:item.id}).cloneDeep().value() },
     openEditMeta(item) {
       this.setSelectedMeta(item)
@@ -424,6 +429,15 @@ export default {
       if (meta.type == 'complex') this.$store.dispatch('deleteComplexMeta', {id:meta.id, name:meta.settings.name})
       else if (meta.type == 'simple') this.$store.dispatch('deleteSimpleMeta', {id:meta.id, name:meta.settings.name})
       this.dialogDeleteMeta = false
+    },
+    getIconDataType(type) {
+      if (type === 'string') return 'mdi-alphabetical'
+      if (type === 'date') return 'mdi-calendar'
+      if (type === 'number') return 'mdi-numeric'
+      if (type === 'array') return 'mdi-code-array'
+      if (type === 'boolean') return 'mdi-toggle-switch'
+      if (type === 'cards') return 'mdi-card-bulleted'
+      return 'mdi-shape'
     },
   },
 }

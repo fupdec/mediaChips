@@ -86,9 +86,9 @@
                         <div class="d-flex align-center"> 
                           <v-tooltip top>
                             <template v-slot:activator="{ on }">
-                              <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+                              <v-icon v-on="on" left>mdi-magnify</v-icon>
                             </template>
-                            <span>This will allow you to take information from the internet for your meta.</span>
+                            <span>Search information in the internet for cards</span>
                           </v-tooltip>            
                           <v-switch v-model="settings.scraper" :label="`Data scraper - ${settings.scraper?'On':'Off'}`" class="my-0 py-0" hide-details/>
                         </div>
