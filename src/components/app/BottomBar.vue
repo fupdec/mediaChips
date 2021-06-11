@@ -44,6 +44,24 @@
           <v-icon>mdi-{{meta.settings.icon}}</v-icon>
         </v-btn>
 
+        <v-menu v-if="hiddenMetaList.length" offset-y top open-on-hover>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder">
+              <span>Hidden</span>
+              <v-icon>mdi-chevron-up</v-icon>
+            </v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item v-for="meta in hiddenMetaList" :key="meta.id+1" link exact text color="secondary"
+              @click.middle="addNewTabMetaCards(meta)"
+              :to="`/meta/?metaId=${meta.id}&tabId=default`">
+              <v-icon left>mdi-{{meta.settings.icon}}</v-icon>
+              <span class="pr-2">{{meta.settings.name}}</span>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
         <v-btn to="/playlists/:default?tabId=default" @click.middle="addNewTabPlaylists" text color="secondary">
           <span>Playlists</span>
           <v-icon>mdi-format-list-bulleted</v-icon>
@@ -89,7 +107,6 @@ export default {
     vuescroll,
   },
   data: () => ({
-    navigationMenu: 1,
     // isShowPerformerBtn: false,
     // isShowWebsiteBtn: false,
     folderHovered: false,
@@ -107,7 +124,8 @@ export default {
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
-    metaList() { return this.$store.state.Meta.metaList },
+    metaList() { return _.filter(this.$store.state.Meta.metaList, i=>i.settings.hidden!==true) },
+    hiddenMetaList() { return this.$store.getters.meta.filter(i=>i.settings.hidden===true).value() },
   },
   methods: {
     addNewTabVideos() {

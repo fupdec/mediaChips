@@ -62,6 +62,23 @@
           </v-list-item-icon>
           <v-list-item-title>{{meta.settings.name}}</v-list-item-title>
         </v-list-item>
+
+        <v-list-item v-if="hiddenMetaList.length" @click="showHidden=!showHidden" color="secondary" draggable="false">
+          <v-list-item-icon>
+            <v-icon>mdi-chevron-{{showHidden?'up':'down'}}</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Toggle hidden</v-list-item-title>
+        </v-list-item>
+
+        <div v-if="showHidden">
+          <v-list-item v-for="meta in hiddenMetaList" :key="meta.id+1" @click.middle="addNewTabMetaCards(meta)"
+            link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
+            <v-list-item-icon>
+              <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>{{meta.settings.name}}</v-list-item-title>
+          </v-list-item>
+        </div>
         
         <v-list-item link to="/playlists/:default?tabId=default"
           @click.middle="addNewTabPlaylists" color="secondary" draggable="false">
@@ -117,6 +134,7 @@ export default {
   data: () => ({
     // isShowPerformerBtn: false,
     // isShowWebsiteBtn: false,
+    showHidden: false,
     ops: {
       scrollPanel: {
         scrollingX: false
@@ -132,7 +150,8 @@ export default {
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
-    metaList() { return this.$store.state.Meta.metaList },
+    metaList() { return _.filter(this.$store.state.Meta.metaList, i=>i.settings.hidden!==true) },
+    hiddenMetaList() { return this.$store.getters.meta.filter(i=>i.settings.hidden===true).value() },
   },
   methods: {
     addNewTabVideos() {

@@ -37,6 +37,9 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
+                <v-col cols="12" sm="6" class="pt-0">
+                  <v-switch v-model="settings.hidden" :label="`Hide in the menu - ${settings.hidden?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                </v-col>
                 <v-col cols="12" align="center">
                   <v-card outlined class="pa-4">
                     <span class="text-center">
@@ -103,28 +106,33 @@
                     <v-row>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left color="pink">mdi-heart</v-icon>
-                        <v-switch v-model="settings.favorite" :label="`Favorites - ${settings.favorite?'On':'Off'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.favorite" :label="`Favorites - ${settings.favorite?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left color="yellow darken-2">mdi-star</v-icon>
-                        <v-switch v-model="settings.rating" :label="`Ratings - ${settings.rating?'On':'Off'}`" class="ma-0" hide-details/>
-                      </v-col>
-                      <v-col cols="6" class="d-flex align-center">
-                        <v-icon left color="red">mdi-bookmark</v-icon>
-                        <v-switch v-model="settings.bookmark" :label="`Bookmarks - ${settings.bookmark?'On':'Off'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.rating" :label="`Ratings - ${settings.rating?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-tooltip top>
                           <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
+                            <v-icon v-on="on" left color="red">mdi-bookmark</v-icon>
                           </template>
-                          <span>This will allow you to add multiple names to one card.</span>
+                          <span>Text area for notes</span>
+                        </v-tooltip>
+                        <v-switch v-model="settings.bookmark" :label="`Bookmarks - ${settings.bookmark?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                      </v-col>
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on }">
+                            <v-icon v-on="on" left>mdi-alphabetical-variant</v-icon>
+                          </template>
+                          <span>Multiple names for one card</span>
                         </v-tooltip>
                         <v-switch v-model="settings.synonyms" :label="`Synonyms - ${settings.synonyms?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left>mdi-flag</v-icon>
-                        <v-switch v-model="settings.country" :label="`Countries - ${settings.country?'On':'Off'}`" class="ma-0" hide-details/>
+                        <v-switch v-model="settings.country" :label="`Countries - ${settings.country?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -267,6 +275,7 @@ export default {
       nameSingular: '',
       hint: '',
       icon: 'shape',
+      hidden: false,
       images: false,
       imageAspectRatio: '',
       imageTypes: ['main'],
