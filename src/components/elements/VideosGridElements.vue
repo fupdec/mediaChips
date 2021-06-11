@@ -134,12 +134,12 @@
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
         </v-list-item>
 
-        <v-list-item class="pr-1" link @mouseup="parseMetadata">
+        <!-- <v-list-item class="pr-1" link @mouseup="parseMetadata">
           <v-list-item-title>
             <v-icon left size="18">mdi-movie-search</v-icon> Parse Metadata
           </v-list-item-title>
           <v-icon size="22" color="rgba(0,0,0,0)">mdi-menu-right</v-icon>
-        </v-list-item>
+        </v-list-item> -->
 
         <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
           <template v-slot:activator="{ on, attrs }">
@@ -193,7 +193,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
+        <!-- <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
           <template v-slot:activator="{ on, attrs }">
             <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
               <v-list-item-title> 
@@ -291,9 +291,9 @@
               </v-list-item-title>
             </v-list-item>
           </v-list>
-        </v-menu>
+        </v-menu> -->
 
-        <v-divider class="ma-1"></v-divider>
+        <!-- <v-divider class="ma-1"></v-divider>
         
         <v-menu open-on-hover offset-x nudge-top="3" min-width="50">
           <template v-slot:activator="{ on, attrs }">
@@ -333,7 +333,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        
+         -->
         <v-divider class="ma-1"></v-divider>
         
         <v-list-item class="pr-1" link @mouseup="$store.state.Videos.dialogDeleteVideo = true">
@@ -374,9 +374,9 @@ export default {
     this.$store.state.Videos.selection.destroy()
   },
   data: () => ({
-    performersClipboard: [],
-    tagsClipboard: [],
-    websitesClipboard: [],
+    // performersClipboard: [],
+    // tagsClipboard: [],
+    // websitesClipboard: [],
     dialogAddToPlaylist: false,
     selectedPlaylist: null,
   }),
@@ -391,9 +391,9 @@ export default {
       } else return ''
     },
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
-    isPerformersClipboardEmpty() { return this.performersClipboard.length == 0 },
-    isTagsClipboardEmpty() { return this.tagsClipboard.length == 0 },
-    isWebsitesClipboardEmpty() { return this.websitesClipboard.length == 0 },
+    // isPerformersClipboardEmpty() { return this.performersClipboard.length == 0 },
+    // isTagsClipboardEmpty() { return this.tagsClipboard.length == 0 },
+    // isWebsitesClipboardEmpty() { return this.websitesClipboard.length == 0 },
     playlists() { return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value() },
     // videoTags() {
     //   if (this.$store.getters.getSelectedVideos.length>0) {
@@ -541,108 +541,108 @@ export default {
       })
       this.$store.commit('updateVideos')
     },
-    copyPerformers() {
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      this.performersClipboard = this.$store.getters.videos.find({id:videoId}).value().performers
-    },
-    addPerformers() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          let vid = vids.find({id:i})
-          let performers = vid.value().performers
-          performers = _.union(performers, this.performersClipboard).sort()
-          vid.assign({performers:performers, edit:Date.now()}).write()
-        })
-      }
-    },
-    replacePerformers() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          vids.find({id:i}).assign({performers: this.performersClipboard, edit:Date.now()}).write()
-        })
-      }
-    },
-    removePerformers() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          vids.find({id:i}).assign({performers:[], edit:Date.now()}).write()
-        })
-      }
-    },
-    copyTags() {
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      this.tagsClipboard = this.$store.getters.videos.find({id:videoId}).value().tags
-    },
-    addTags() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          let vid = vids.find({id:i})
-          let tags = vid.value().tags
-          tags = _.union(tags, this.tagsClipboard).sort()
-          vid.assign({tags:tags, edit:Date.now()}).write()
-        })
-      }
-    },
-    replaceTags() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          vids.find({id:i}).assign({tags:this.tagsClipboard, edit:Date.now()}).write()
-        })
-      }
-    },
-    removeTags() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          vids.find({id:i}).assign({tags:[], edit:Date.now()}).write()
-        })
-      }
-    },
-    copyWebsites() {
-      let videoId = this.$store.getters.getSelectedVideos[0]
-      this.websitesClipboard = this.$store.getters.videos.find({id:videoId}).value().websites
-    },
-    addWebsites() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          let vid = vids.find({id:i})
-          let websites = vid.value().websites
-          websites = _.union(websites, this.websitesClipboard).sort()
-          vid.assign({websites:websites, edit:Date.now()}).write()
-        })
-      }
-    },
-    replaceWebsites() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          vids.find({id:i}).assign({websites:this.websitesClipboard, edit:Date.now()}).write()
-        })
-      }
-    },
-    removeWebsites() {
-      let ids = this.$store.getters.getSelectedVideos
-      let vids = this.$store.getters.videos
-      if (ids.length!==0) {
-        ids.map(i => {
-          vids.find({id:i}).assign({websites:[], edit:Date.now()}).write()
-        })
-      }
-    },
+    // copyPerformers() {
+    //   let videoId = this.$store.getters.getSelectedVideos[0]
+    //   this.performersClipboard = this.$store.getters.videos.find({id:videoId}).value().performers
+    // },
+    // addPerformers() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       let vid = vids.find({id:i})
+    //       let performers = vid.value().performers
+    //       performers = _.union(performers, this.performersClipboard).sort()
+    //       vid.assign({performers:performers, edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // replacePerformers() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       vids.find({id:i}).assign({performers: this.performersClipboard, edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // removePerformers() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       vids.find({id:i}).assign({performers:[], edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // copyTags() {
+    //   let videoId = this.$store.getters.getSelectedVideos[0]
+    //   this.tagsClipboard = this.$store.getters.videos.find({id:videoId}).value().tags
+    // },
+    // addTags() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       let vid = vids.find({id:i})
+    //       let tags = vid.value().tags
+    //       tags = _.union(tags, this.tagsClipboard).sort()
+    //       vid.assign({tags:tags, edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // replaceTags() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       vids.find({id:i}).assign({tags:this.tagsClipboard, edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // removeTags() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       vids.find({id:i}).assign({tags:[], edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // copyWebsites() {
+    //   let videoId = this.$store.getters.getSelectedVideos[0]
+    //   this.websitesClipboard = this.$store.getters.videos.find({id:videoId}).value().websites
+    // },
+    // addWebsites() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       let vid = vids.find({id:i})
+    //       let websites = vid.value().websites
+    //       websites = _.union(websites, this.websitesClipboard).sort()
+    //       vid.assign({websites:websites, edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // replaceWebsites() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       vids.find({id:i}).assign({websites:this.websitesClipboard, edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
+    // removeWebsites() {
+    //   let ids = this.$store.getters.getSelectedVideos
+    //   let vids = this.$store.getters.videos
+    //   if (ids.length!==0) {
+    //     ids.map(i => {
+    //       vids.find({id:i}).assign({websites:[], edit:Date.now()}).write()
+    //     })
+    //   }
+    // },
     copyVideoPathToClipboard(){
       clipboard.writeText(this.selectedVideosPaths)
     },
@@ -704,75 +704,75 @@ export default {
         edit: Date.now(),
       }).write()
     },
-    parseMetadata() {
-      function filterString(string) {
-        return string.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, "").toLowerCase()
-      }
+    // parseMetadata() {
+    //   function filterString(string) {
+    //     return string.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, "").toLowerCase()
+    //   }
 
-      const vm = this
-      function parseFilePath(filePath) {
-        const string = filterString(filePath)
+    //   const vm = this
+    //   function parseFilePath(filePath) {
+    //     const string = filterString(filePath)
 
-        let performers = vm.$store.getters.performers.filter(i => {
-          let foundName = string.includes(filterString(i.name))
-          let foundAliases 
-          if (i.aliases.length) {
-            let aliases = filterString(i.aliases.join())
-            foundAliases = string.includes(aliases)
-          } else foundAliases = false 
-          return foundName || foundAliases
-        }).value().map(i => i.name)
-        performers = [...new Set(performers)] // remove duplicates
+    //     let performers = vm.$store.getters.performers.filter(i => {
+    //       let foundName = string.includes(filterString(i.name))
+    //       let foundAliases 
+    //       if (i.aliases.length) {
+    //         let aliases = filterString(i.aliases.join())
+    //         foundAliases = string.includes(aliases)
+    //       } else foundAliases = false 
+    //       return foundName || foundAliases
+    //     }).value().map(i => i.name)
+    //     performers = [...new Set(performers)] // remove duplicates
 
-        let tags = vm.$store.getters.tags.filter({type: ['video']}).filter(i => {
-          let foundName = string.includes(filterString(i.name))
-          let foundAltName 
-          if (i.altNames.length) {
-            let altNames = filterString(i.altNames.join())
-            foundAltName = string.includes(altNames)
-          } else foundAltName = false 
-          return foundName || foundAltName
-        }).value().map(i => i.name)
-        tags = [...new Set(tags)] // remove duplicates
+    //     let tags = vm.$store.getters.tags.filter({type: ['video']}).filter(i => {
+    //       let foundName = string.includes(filterString(i.name))
+    //       let foundAltName 
+    //       if (i.altNames.length) {
+    //         let altNames = filterString(i.altNames.join())
+    //         foundAltName = string.includes(altNames)
+    //       } else foundAltName = false 
+    //       return foundName || foundAltName
+    //     }).value().map(i => i.name)
+    //     tags = [...new Set(tags)] // remove duplicates
 
-        let websites = vm.$store.getters.websites.filter(i => {
-          let foundName = string.includes(filterString(i.name))
-          let foundAltName 
-          if (i.altNames.length) {
-            let altNames = filterString(i.altNames.join())
-            foundAltName = string.includes(altNames)
-          } else foundAltName = false 
-          return foundName || foundAltName
-        }).value().map(i => i.name)
-        websites = [...new Set(websites)] // remove duplicates
+    //     let websites = vm.$store.getters.websites.filter(i => {
+    //       let foundName = string.includes(filterString(i.name))
+    //       let foundAltName 
+    //       if (i.altNames.length) {
+    //         let altNames = filterString(i.altNames.join())
+    //         foundAltName = string.includes(altNames)
+    //       } else foundAltName = false 
+    //       return foundName || foundAltName
+    //     }).value().map(i => i.name)
+    //     websites = [...new Set(websites)] // remove duplicates
 
-        return { performers, tags, websites }
-      }
+    //     return { performers, tags, websites }
+    //   }
 
-      let ids = this.$store.getters.getSelectedVideos
+    //   let ids = this.$store.getters.getSelectedVideos
 
-      this.$store.getters.videos.filter(i=>ids.includes(i.id)).each(video => {
-        const meta = parseFilePath(video.path)
-        video.performers = meta.performers
-        video.tags = meta.tags
-        video.websites = meta.websites
-      }).write()
-    },
-    filterByTag(tag) {
-      let filter = {
-        param: 'tags',
-        cond: 'one of',
-        val: [tag],
-        type: 'array',
-        flag: null,
-        lock: false,
-      }
-      this.$store.state.Settings.videoFilters.push(filter)
-      this.$store.dispatch('filterVideos')
-    },
-    getTagColor(tag) {
-      return this.$store.getters.tags.find({name: tag}).value().color
-    },
+    //   this.$store.getters.videos.filter(i=>ids.includes(i.id)).each(video => {
+    //     const meta = parseFilePath(video.path)
+    //     video.performers = meta.performers
+    //     video.tags = meta.tags
+    //     video.websites = meta.websites
+    //   }).write()
+    // },
+    // filterByTag(tag) {
+    //   let filter = {
+    //     param: 'tags',
+    //     cond: 'one of',
+    //     val: [tag],
+    //     type: 'array',
+    //     flag: null,
+    //     lock: false,
+    //   }
+    //   this.$store.state.Settings.videoFilters.push(filter)
+    //   this.$store.dispatch('filterVideos')
+    // },
+    // getTagColor(tag) {
+    //   return this.$store.getters.tags.find({name: tag}).value().color
+    // },
   },
   watch: {
   },
