@@ -12,7 +12,7 @@
         </v-btn>
       </div>
       <v-row v-else>
-        <v-col cols="12">
+        <v-col v-if="!isMigratedToMeta" cols="12">
           <v-card>
             <v-alert type="warning" text>Starting from version 0.9.0 of the application, 
               all information that the user fills in for the video will use the new meta system. <br>
@@ -321,6 +321,13 @@ export default {
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     logoPath() { return path.join('file://', __static, '/icons/icon.png') },
+    isMigratedToMeta() { 
+      let lastVersion = '0.9.0'
+      let currentVersion = this.$store.state.Settings.databaseVersion || '0.8.2'
+      lastVersion = lastVersion.split('.').map( s => s.padStart(10) ).join('.')
+      currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
+      return currentVersion >= lastVersion
+    },
   },
   methods: {
     stopSmoothScroll(event) {
@@ -348,20 +355,20 @@ export default {
         ipcRenderer.send('openPlayer', data)
       }
     },
-    getPerformerImg(id) {
-      let imgAvaPath = this.getPerformerImgUrl(id + '_avatar.jpg')
-      let imgMainPath = this.getPerformerImgUrl(id + '_main.jpg')
-      return 'file://' + this.checkAvatarImageExist(imgAvaPath, imgMainPath)
-    },
-    getPerformerImgUrl(img) {
-      return path.join(this.pathToUserData, `/media/performers/${img}`)
-    },
-    checkAvatarImageExist(imgAvaPath, imgMainPath) {
-      if (fs.existsSync(imgAvaPath)) return imgAvaPath
-      else if (fs.existsSync(imgMainPath)) return imgMainPath
-      else return path.join(this.pathToUserData, '/img/templates/performer.png')
-    },
-    openPerformerPage(id) { this.$router.push(`/performer/:${id}?tabId=default`) },
+    // getPerformerImg(id) {
+    //   let imgAvaPath = this.getPerformerImgUrl(id + '_avatar.jpg')
+    //   let imgMainPath = this.getPerformerImgUrl(id + '_main.jpg')
+    //   return 'file://' + this.checkAvatarImageExist(imgAvaPath, imgMainPath)
+    // },
+    // getPerformerImgUrl(img) {
+    //   return path.join(this.pathToUserData, `/media/performers/${img}`)
+    // },
+    // checkAvatarImageExist(imgAvaPath, imgMainPath) {
+    //   if (fs.existsSync(imgAvaPath)) return imgAvaPath
+    //   else if (fs.existsSync(imgMainPath)) return imgMainPath
+    //   else return path.join(this.pathToUserData, '/img/templates/performer.png')
+    // },
+    // openPerformerPage(id) { this.$router.push(`/performer/:${id}?tabId=default`) },
   },
 }
 </script>

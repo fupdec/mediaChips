@@ -31,7 +31,7 @@
 const shortid = require('shortid')
 const fs = require("fs-extra")
 const path = require("path")
-// TODO add hint setting to meta
+
 export default {
   name: 'MigrateToMeta',
   props: {
@@ -81,6 +81,7 @@ export default {
       this.$store.state.Settings.videoMetaInCard = this.$store.getters.settings.get('videoMetaInCard').value()
     
       this.moveImages(performersId, tagsId, websitesId)
+      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.0'})
     },
     sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) },
     parseItems(items) { return items.map(i=>{ if (i.length) return{ id:shortid.generate(), name:i } }) },
