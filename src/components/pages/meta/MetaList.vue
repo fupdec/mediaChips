@@ -43,12 +43,12 @@
     <v-card outlined>
       <v-data-iterator :items="metaList" :items-per-page.sync="itemsPerPage" :page.sync="page" :search="search" :sort-by="sortBy" :sort-desc="sortDesc" hide-default-footer no-data-text="Please add meta first" no-results-text="No meta found">
         <template v-slot:header>
-          <v-toolbar color="primary" class="mb-4">
+          <v-toolbar color="secondary" class="mb-4">
             <v-text-field v-model="search" dense clearable flat solo-inverted hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
             <v-spacer></v-spacer>
             <v-select v-model="sortBy" dense flat solo-inverted hide-details :items="keys" prepend-inner-icon="mdi-magnify" label="Sort by"></v-select>
             <v-spacer></v-spacer>
-            <v-btn-toggle v-model="sortDesc" dense mandatory background-color="primary">
+            <v-btn-toggle v-model="sortDesc" dense mandatory background-color="secondary">
               <v-btn outlined :value="false"> <v-icon>mdi-arrow-up</v-icon> </v-btn>
               <v-btn outlined :value="true"> <v-icon>mdi-arrow-down</v-icon> </v-btn>
             </v-btn-toggle>
@@ -120,7 +120,7 @@
         </template>
 
         <template v-slot:footer>
-          <v-toolbar color="primary" class="mt-4" dense>
+          <v-toolbar color="secondary" class="mt-4" dense>
             <v-menu offset-y top open-on-hover>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn v-bind="attrs" v-on="on" outlined small>{{ itemsPerPage }}</v-btn>
@@ -133,7 +133,7 @@
             </v-menu>
             <span class="ml-2">meta per page</span>
             <v-spacer></v-spacer>
-            <v-switch v-model="detailed" label="Detailed" hide-details color="secondary"/>
+            <v-switch v-model="detailed" label="Detailed" hide-details color="primary"/>
             <v-spacer></v-spacer>
             <span> Page {{ page }} of {{ numberOfPages }} </span>
             <v-btn small outlined class="mx-2" @click="formerPage"> <v-icon>mdi-arrow-left</v-icon> </v-btn>
