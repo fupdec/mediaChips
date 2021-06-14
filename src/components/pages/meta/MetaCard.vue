@@ -3,7 +3,7 @@
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
-      <div v-if="meta.settings.images" class="img-container">
+      <div v-if="meta.settings.images" @click="openMetaCardPage" :title="`Open ${meta.settings.nameSingular} page`" class="img-container ma-0 link">
         <v-icon v-if="meta.settings.color && visibility.color" class="meta-color" :color="card.meta.color || '#777777'">mdi-circle</v-icon>
         <div v-if="meta.settings.country && visibility.country" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
         <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img"/>
@@ -14,10 +14,10 @@
         <div v-if="meta.settings.rating && visibility.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable color="yellow darken-2" background-color="grey" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
         <v-icon v-if="meta.settings.bookmark && visibility.bookmark && card.meta.bookmark" class="bookmark" color="red" :title="card.meta.bookmark">mdi-bookmark</v-icon>
       </div>
-      <!-- <div v-else class="d-flex flex-column align-center py-1">
+      <div v-else class="d-flex flex-column align-center py-1 ma-0 link">
         <v-icon>mdi-{{meta.settings.icon}}</v-icon>
         <span>Open {{meta.settings.nameSingular}} page</span>
-      </div> -->
+      </div>
       <v-divider/>
 
       <div v-if="visibility.name" class="px-1 name">{{card.meta.name}}</div>
