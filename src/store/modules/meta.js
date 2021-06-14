@@ -383,7 +383,13 @@ const Meta = {
         firstChar:  state.firstChar,
       }
       if (tabId === 'default') getters.meta.find({id:metaId}).get('state').assign(data).write()
-      else { getters.tabsDb.find({id: tabId}).assign({...data,...{name:getters.metaFiltersForTabName}} ).write(); commit('getTabsFromDb') }
+      else { 
+        const dataForTab = {
+          name: getters.metaFiltersForTabName,
+          icon: getters.meta.find({id:metaId}).value().settings.icon,
+        }
+        getters.tabsDb.find({id: tabId}).assign({...data,...dataForTab} ).write(); commit('getTabsFromDb') 
+      }
     },
   },
   getters: {

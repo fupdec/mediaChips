@@ -1,7 +1,7 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-responsive :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
-      <img v-if="meta.settings.imageTypes.includes('header')&&isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
+    <v-responsive v-if="checkImageSettings('main')" :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
+      <img v-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
       <div v-else class="images">
         <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
         <v-responsive :aspect-ratio="5/9" />
@@ -13,11 +13,11 @@
 
     <div v-if="!isHeaderImageExists" class="profile-spacer"></div>
     <v-container class="profile-container" :class="{images: isHeaderImageExists}">
-      <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
+      <v-avatar v-if="checkImageSettings('avatar')" max-width="160" width="160" height="160" class="profile-avatar"> 
         <img :src="getImgUrl('avatar')">
       </v-avatar>
       
-      <v-tooltip right>
+      <v-tooltip v-if="checkImageSettings('avatar')" right>
         <template v-slot:activator="{ on, attrs }">
           <v-progress-circular v-bind="attrs" v-on="on" :value="cardInfoComplete" 
             size="168" rotate="270" width="2" class="profile-complete-progress" color="primary"/> 
@@ -52,7 +52,7 @@
       <v-expansion-panels v-model="profile" multiple focusable>
         <v-expansion-panel :style="profileBackground" :key="0">
           <v-expansion-panel-header class="pa-6" ripple hide-actions>
-            <div class="profile-name text-center">{{card.meta.name}}</div>
+            <div class="text-center meta-card-name" :class="[{'avatar':checkImageSettings('avatar')}]">{{card.meta.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
             <v-container class="px-0">
@@ -89,9 +89,9 @@
                 <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" md="4" sm="6" class="d-flex align-start">
                   <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
                   <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
-                  <v-chip-group v-if="m.type=='complex'" column>
+                  <v-chip-group v-if="m.type=='complex'" column class="chips-remove-padding">
                     <v-chip v-for="c in card.meta[m.id]" :key="c" 
-                      :color="getColor(m.id,c)" small
+                      :color="getColor(m.id,c)" small class="px-2"
                       :label="getMeta(m.id).settings.chipLabel"
                       :outlined="getMeta(m.id).settings.chipOutlined"
                       @mouseover.stop="showImage($event,c,'meta',m.id)" 
@@ -100,7 +100,8 @@
                   </v-chip-group>
                   <div v-else-if="m.type=='simple'" class="simple-meta">
                     <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
-                    <span v-else>{{JSON.stringify(card.meta[m.id])}}</span>
+                    <span v-else-if="getMeta(m.id).dataType=='boolean'">{{JSON.stringify(card.meta[m.id])}}</span>
+                    <span v-else>{{card.meta[m.id]}}</span>
                     </div>
                 </v-col>
               </v-row>
@@ -112,53 +113,50 @@
       </v-expansion-panels>
     </v-container>
     
-    <v-spacer class="py-4"></v-spacer>
     
-    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
-      <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
-    </v-container>
+    <div v-if="isMetaAssignedToVideo">
+      <v-spacer class="py-4"></v-spacer>
+    
+      <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
+        <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
+      </v-container>
 
-    <v-container v-if="!$store.state.Videos.filteredEmpty" fluid class="pagination-container">
-      <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
-        :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
-        class="items-per-page-dropdown"
-      ></v-overflow-btn>
-      <v-spacer></v-spacer>
-      <v-pagination v-model="videosCurrentPage" :length="videosPagesSum"
-        :total-visible="getNumberOfPagesLimit" style="z-index:1"/>
-      <v-spacer></v-spacer>
-      <v-overflow-btn v-if="videosPagesSum > 5"
-        v-model="videosCurrentPage" :items="pages" dense height="36" solo
-        class="items-per-page-dropdown jump-to-page-menu" 
-        disable-lookup hint="jump to page" persistent-hint hide-no-data
-        :menu-props="{ 
-          auto:true, 
-          contentClass:'jump-to-page-menu',
-          nudgeBottom: -110,
-          origin:'center center', 
-          transition:'scale-transition'
-        }"
-      ></v-overflow-btn>
-      <div v-else style="min-width:80px;"></div>
-    </v-container>
+      <v-container v-if="!$store.state.Videos.filteredEmpty" fluid class="pagination-container">
+        <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
+          :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
+          class="items-per-page-dropdown"
+        ></v-overflow-btn>
+        <v-spacer></v-spacer>
+        <v-pagination v-model="videosCurrentPage" :length="videosPagesSum"
+          :total-visible="getNumberOfPagesLimit" style="z-index:1"/>
+        <v-spacer></v-spacer>
+        <v-overflow-btn v-if="videosPagesSum > 5"
+          v-model="videosCurrentPage" :items="pages" dense height="36" solo
+          class="items-per-page-dropdown jump-to-page-menu" 
+          disable-lookup hint="jump to page" persistent-hint hide-no-data
+          :menu-props="{ 
+            auto:true, 
+            contentClass:'jump-to-page-menu',
+            nudgeBottom: -110,
+            origin:'center center', 
+            transition:'scale-transition'
+          }"
+        ></v-overflow-btn>
+        <div v-else style="min-width:80px;"></div>
+      </v-container>
 
-    <div v-if="$store.state.Videos.filteredEmpty" class="text-center pt-10">
-      <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
-      There are no matching videos for the selected filters.
+      <div v-if="$store.state.Videos.filteredEmpty" class="text-center pt-10">
+        <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
+        There are no matching videos for the selected filters.
+      </div>
+
+      <Loading />
+      <v-container fluid class="card-grid wide-image" :class="[cardSize, gapSize]">
+        <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
+      </v-container>
+
+      <v-pagination v-if="!$store.state.Videos.filteredEmpty" v-model="videosCurrentPage" :length="videosPagesSum" :total-visible="getNumberOfPagesLimit" class="pt-4 pb-10"/>
     </div>
-
-    <Loading />
-<!-- TODO if this meta not assigned to videos, than skip grid rendering  -->
-    <v-container fluid class="card-grid" :class="[cardSize, gapSize]">
-      <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
-    </v-container>
-
-    <v-pagination class="pt-4 pb-10"
-      v-if="!$store.state.Videos.filteredEmpty"
-      v-model="videosCurrentPage"
-      :length="videosPagesSum"
-      :total-visible="getNumberOfPagesLimit"
-    ></v-pagination>
     
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 
@@ -267,7 +265,8 @@ export default {
       else return this.$store.getters.tabsDb.find({id:this.tabId}).value()   
     },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
-    filters() { return this.$store.getters.meta.find({id:this.metaId}).cloneDeep().value().filters || [] },
+    filters() { return this.$store.state.Settings.videoFilters },
+    isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.videoMetaInCard, {id: this.meta.id}) !== undefined },
   },
   methods: {
     removeAllFilters() {
@@ -312,19 +311,23 @@ export default {
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${imgType}.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
-      else return 'file://' + this.checkImageExist(imgPath, imgType)
+      else return 'file://' + this.checkImageExist(imgType)
     },
-    checkImageExist(imgPath, imgType) {
+    checkImageExist(imgType) {
       if (imgType === "avatar") {
-        let imgMainPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_main.jpg`)
+        let imgMainPath = path.join(this.pathToUserData, `/media/meta/${this.metaId}/${this.card.id}_main.jpg`)
         if (fs.existsSync(imgMainPath)) return imgMainPath
         else return path.join(this.pathToUserData, '/img/templates/avatar.png')
       } else if (imgType === "header") {
         this.isHeaderImageExists = false
-        let imgMainPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_main.jpg`)
+        let imgMainPath = path.join(this.pathToUserData, `/media/meta/${this.metaId}/${this.card.id}_main.jpg`)
         if (fs.existsSync(imgMainPath)) return imgMainPath
         else return path.join(this.pathToUserData, '/img/templates/header.png')
       } else return path.join(this.pathToUserData, '/img/templates/tag.png')
+    },
+    checkImageSettings(imgType) {
+      if (!this.meta.settings.images) return false 
+      return this.meta.settings.imageTypes.includes(imgType)
     },
   },
   watch: {
@@ -399,12 +402,14 @@ export default {
       top: 0;
     }
   }
-  .profile-name {
-    padding-top: 80px;
+  .meta-card-name {
     font-size: 2rem;
     letter-spacing: 0.1666666667em !important;
     line-height: 2rem;
     text-transform: uppercase;
+    &.avatar {
+      padding-top: 80px;
+    }
   }
   .profile-complete-progress {
     top: -74px;
@@ -488,6 +493,9 @@ export default {
         color: #fff;
       }
     }
+  }
+  .chips-remove-padding .v-slide-group__content {
+    padding: 0;
   }
 }
 .age-container {
