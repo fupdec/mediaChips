@@ -106,6 +106,7 @@ export default {
     isCustom1ImgExist() { return this.meta.settings.imageTypes.includes('custom1') && !this.imgCustom1.includes('not_exist') },
     isCustom2ImgExist() { return this.meta.settings.imageTypes.includes('custom2') && !this.imgCustom2.includes('not_exist') },
     isSelectedSingleMetaCard() { return this.$store.state.Meta.selectedMeta.length == 1 },
+    isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.videoMetaInCard, {id:this.meta.id}) !== undefined },
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
@@ -141,14 +142,35 @@ export default {
       setTimeout(() => {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
-        this.$store.state.contextMenuContent = [
+        let contextMenu = [
           { name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true}, },
           { name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard },
           { type: 'divider' },
-          { name: `Delete ${this.meta.settings.nameSingular}`, type: 'item', icon: 'delete', color: 'red', function: ()=>{this.$store.state.Meta.dialogDeleteMetaCard=true} },
         ]
+        if (this.isMetaAssignedToVideo) contextMenu = [...contextMenu, ...[{ name: `Filter Videos by ${this.meta.settings.nameSingular}`, type: 'item', icon: 'filter', function: ()=>{this.filterVideosBy()}, },{ type: 'divider' },]]
+        contextMenu = [...contextMenu,...[{ name: `Delete ${this.meta.settings.nameSingular}`, type: 'item', icon: 'delete', color: 'red', function: ()=>{this.$store.state.Meta.dialogDeleteMetaCard=true} },]]
+        this.$store.state.contextMenuContent = contextMenu
         this.$store.state.contextMenu = true
       }, 300)
+    },
+    filterVideosBy() {
+      let tabId = Date.now()
+      let tab = { 
+        name: this.$store.getters.videoFiltersForTabName, 
+        link: `/videos/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: [{
+          by: this.meta.id, cond: 'includes one of',
+          val: _.cloneDeep(this.$store.state.Meta.selectedMeta),
+          type: 'select', flag: null, lock: false,
+        }],
+        sortBy: 'name',
+        sortDirection: 'asc',
+        page: 1,
+        icon: 'video-outline'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      setTimeout(() => { this.$router.push(tab.link) }, 100)
     },
   },
   watch: {
