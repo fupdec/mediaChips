@@ -17,13 +17,12 @@
         <img :src="getImgUrl('avatar')">
       </v-avatar>
       
-      <v-tooltip left>
+      <v-tooltip right>
         <template v-slot:activator="{ on, attrs }">
-          <v-progress-circular v-bind="attrs" v-on="on" :value="44" 
+          <v-progress-circular v-bind="attrs" v-on="on" :value="cardInfoComplete" 
             size="168" rotate="270" width="2" class="profile-complete-progress" color="primary"/> 
         </template>
-        <span>Profile completed {{44}} %</span>
-        <!-- TODO fix card complete progress -->
+        <span>Information about the {{meta.settings.nameSingular.toLowerCase()}} is {{cardInfoComplete}}% complete</span>
       </v-tooltip>
       <div class="buttons-left">
         <v-tooltip top>
@@ -222,8 +221,6 @@ export default {
       'December'
     ],
     isScrollToTopVisible: false,
-    percentValue: 5.263,
-    meter: 0,
     header: '',
     isHeaderImageExists: true,
     activeTags: [],
@@ -251,6 +248,20 @@ export default {
     profileBackground() {
       let color = this.$vuetify.theme.isDark ? '30,30,30':'255,255,255'
       return `background-color: rgba(${color},.3)`
+    },
+    cardInfoComplete() {
+      let completed = []
+      for (let m of _.cloneDeep(this.metaInCard)) {
+        console.log()
+        const val = this.card.meta[m.id]
+        if (val===undefined) completed.push(0)
+        else if (typeof val == 'boolean') completed.push(1)
+        else if (typeof val == 'number') val > 0 ? completed.push(1) : completed.push(0)
+        else val.length > 0 ? completed.push(1) : completed.push(0)
+      }
+      let completedValue = 0
+      for (let i of completed) completedValue = completedValue + i
+      return Math.ceil(completedValue / completed.length * 100)
     },
     videosOnPage() { return this.$store.getters.videosOnPage },
     cardSize() { return `card-size-${this.$store.state.Settings.videoCardSize}` },
