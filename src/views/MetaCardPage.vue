@@ -26,8 +26,29 @@
         <!-- TODO fix card complete progress -->
       </v-tooltip>
       <div class="buttons-left">
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn @click="copyCardNameToClipboard" icon v-on="on"> 
+              <v-icon>mdi-content-copy</v-icon></v-btn>
+          </template>
+          <span>Copy {{meta.settings.nameSingular}} name to clipboard</span>
+        </v-tooltip>
       </div>
       <div class="buttons-right">
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" icon v-on="on"> 
+              <v-icon>mdi-pencil</v-icon></v-btn>
+          </template>
+          <span>Edit {{meta.settings.nameSingular}}</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" icon v-on="on"> 
+              <v-icon>mdi-image-edit-outline</v-icon></v-btn>
+          </template>
+          <span>Edit Images</span>
+        </v-tooltip>
       </div>
       <v-expansion-panels v-model="profile" multiple focusable>
         <v-expansion-panel :style="profileBackground" :key="0">
@@ -36,6 +57,59 @@
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
             <v-container class="px-0">
+              <v-row>
+                <v-col cols="12" class="d-flex justify-space-between pb-0">
+                  <v-chip label outlined>
+                    <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+                  </v-chip>
+                  <v-chip label outlined class="mx-4">
+                    <v-icon left size="20">mdi-eye</v-icon> Views: {{card.views}}
+                  </v-chip>
+                  <v-chip label outlined>
+                    <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+                  </v-chip>
+                </v-col>
+                <v-col cols="12" md="4" sm="6">
+                  <div v-if="meta.settings.rating" class="param"><b class="mr-2">Rating</b>
+                    <v-rating v-model="card.meta.rating" dense
+                      color="yellow darken-3" background-color="grey darken-1"
+                      empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+                      half-increments size="20" style="display: inline;"/>
+                  </div>
+                  <div v-if="meta.settings.favorite" class="param ml-6"><b class="mr-2">Favorite</b>
+                    <v-btn @click="card.meta.favorite=!card.meta.favorite" icon>
+                      <v-icon v-if="card.meta.favorite" size="20" color="pink">mdi-heart</v-icon>
+                      <v-icon v-else size="20" color="grey">mdi-heart-outline </v-icon>
+                    </v-btn>
+                  </div><br>
+                </v-col>
+                <v-col cols="12" md="4" sm="6">
+                  <div v-if="meta.settings.synonyms" class="param"><b class="mr-2">Synonyms:</b> {{card.meta.synonyms.join(', ')}}</div>
+                </v-col>
+                <!-- Parse meta from cards -->
+                <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" md="4" sm="6">
+                  <div class="meta-in-card">
+                    <v-chip-group v-if="m.type=='complex'" column>
+                      <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                      <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
+                      <v-chip v-for="c in card.meta[m.id]" :key="c" 
+                        :color="getColor(m.id,c)" 
+                        :label="getMeta(m.id).settings.chipLabel"
+                        :outlined="getMeta(m.id).settings.chipOutlined"
+                        @mouseover.stop="showImage($event,c,'meta',m.id)" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"> 
+                          {{ getCard(c).meta.name }} </v-chip>
+                    </v-chip-group>
+                    <div v-else-if="m.type=='simple'" class="simple-meta">
+                      <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                      <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
+                      <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+                      <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
+                      <span v-else>{{card.meta[m.id]}}</span>
+                    </div>
+                  </div>
+                </v-col>
+              </v-row>
             </v-container>
           </v-expansion-panel-content>
           <div class="profile-hover-btn show">Show Profile</div>
@@ -44,6 +118,7 @@
       </v-expansion-panels>
     </v-container>
     
+    <v-spacer class="py-4"></v-spacer>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
       <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
@@ -79,7 +154,7 @@
     </div>
 
     <Loading />
-
+<!-- TODO if this meta not assigned to videos, than skip grid rendering  -->
     <v-container fluid class="card-grid" :class="[cardSize, gapSize]">
       <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
     </v-container>
@@ -92,7 +167,7 @@
     ></v-pagination>
     
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
-    ass
+
     <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
       class="scroll-to-top" fixed fab color="primary">
       <v-icon>mdi-chevron-up</v-icon>
@@ -158,11 +233,11 @@ export default {
     metaCardId() { return this.$route.query.cardId },
     card() { return this.$store.getters.metaCards.find({id: this.metaCardId}).value() },
     dateAdded() {
-      let date = new Date(this.meta.date)
+      let date = new Date(this.card.date)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
     dateEdit() {
-      let date = new Date(this.meta.edit)
+      let date = new Date(this.card.edit)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
     gradient() {
@@ -199,9 +274,8 @@ export default {
       else value = false
       // this.$store.dispatch('updateSettingsState', {key:'performerProfile', value: value})
     },
-    scrollToTop() {
-      this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
-    },
+    copyCardNameToClipboard() { clipboard.writeText(this.card.meta.name) },
+    scrollToTop() { this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad") },
     handleScroll(vertical) {
       if (vertical.scrollTop > 500) this.isScrollToTopVisible = true
       else this.isScrollToTopVisible = false
