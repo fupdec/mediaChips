@@ -277,10 +277,11 @@ export default {
     metaCardId() { return this.$route.query.cardId },
     oldValues() { return this.$store.getters.metaCards.find({id:this.card.id}).get('meta').cloneDeep().value() },
     card() {
-      let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
-      if (this.metaCardId) return metaCards.find({id:this.metaCardId}).value()
       let ids = this.$store.state.Meta.selectedMeta
-      return metaCards.find({id:ids[0]}).value()
+      let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
+      let cardId = this.$router.currentRoute.query.cardId
+      if (this.$route.path.includes('/metacard/') && cardId) return metaCards.find({id:cardId}).value()
+      else return metaCards.find({id:ids[0]}).value()
     },
     dateAdded() {
       let date = new Date(this.card.date)

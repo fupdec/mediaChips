@@ -352,10 +352,9 @@ export default {
     card() {
       let ids = this.$store.state.Meta.selectedMeta
       let metaCards = this.$store.getters.metaCards.filter({metaId:this.metaId})
-      let id = this.$router.currentRoute.params.id
-      if (this.$route.path.includes('/meta/:') && id) {
-        if (id.substring(1)) return metaCards.find({id:id.substring(1)}).value()
-      } else return metaCards.find({id:ids[0]}).value()
+      let cardId = this.$router.currentRoute.query.cardId
+      if (this.$route.path.includes('/metacard/') && cardId) return metaCards.find({id:cardId}).value()
+      else return metaCards.find({id:ids[0]}).value()
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     recomendedSizeText() {
