@@ -1,7 +1,7 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
     <v-responsive :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
-      <img v-if="isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
+      <img v-if="meta.settings.imageTypes.includes('header')&&isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
       <div v-else class="images">
         <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
         <v-responsive :aspect-ratio="5/9" />
@@ -86,27 +86,22 @@
                   <div v-if="meta.settings.synonyms" class="param"><b class="mr-2">Synonyms:</b> {{card.meta.synonyms.join(', ')}}</div>
                 </v-col>
                 <!-- Parse meta from cards -->
-                <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" md="4" sm="6">
-                  <div class="meta-in-card">
-                    <v-chip-group v-if="m.type=='complex'" column>
-                      <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-                      <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
-                      <v-chip v-for="c in card.meta[m.id]" :key="c" 
-                        :color="getColor(m.id,c)" 
-                        :label="getMeta(m.id).settings.chipLabel"
-                        :outlined="getMeta(m.id).settings.chipOutlined"
-                        @mouseover.stop="showImage($event,c,'meta',m.id)" 
-                        @mouseleave.stop="$store.state.hoveredImage=false"> 
-                          {{ getCard(c).meta.name }} </v-chip>
-                    </v-chip-group>
-                    <div v-else-if="m.type=='simple'" class="simple-meta">
-                      <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-                      <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
-                      <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
-                      <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
-                      <span v-else>{{card.meta[m.id]}}</span>
+                <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" md="4" sm="6" class="d-flex align-start">
+                  <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                  <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
+                  <v-chip-group v-if="m.type=='complex'" column>
+                    <v-chip v-for="c in card.meta[m.id]" :key="c" 
+                      :color="getColor(m.id,c)" small
+                      :label="getMeta(m.id).settings.chipLabel"
+                      :outlined="getMeta(m.id).settings.chipOutlined"
+                      @mouseover.stop="showImage($event,c,'meta',m.id)" 
+                      @mouseleave.stop="$store.state.hoveredImage=false"> 
+                        {{ getCard(c).meta.name }} </v-chip>
+                  </v-chip-group>
+                  <div v-else-if="m.type=='simple'" class="simple-meta">
+                    <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+                    <span v-else>{{JSON.stringify(card.meta[m.id])}}</span>
                     </div>
-                  </div>
                 </v-col>
               </v-row>
             </v-container>
@@ -317,7 +312,19 @@ export default {
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${imgType}.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
-      else return 'file://' + path.join(this.pathToUserData, '/img/templates/tag.png')
+      else return 'file://' + this.checkImageExist(imgPath, imgType)
+    },
+    checkImageExist(imgPath, imgType) {
+      if (imgType === "avatar") {
+        let imgMainPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_main.jpg`)
+        if (fs.existsSync(imgMainPath)) return imgMainPath
+        else return path.join(this.pathToUserData, '/img/templates/avatar.png')
+      } else if (imgType === "header") {
+        this.isHeaderImageExists = false
+        let imgMainPath = path.join(this.pathToUserData, `/media/performers/${this.performerId}_main.jpg`)
+        if (fs.existsSync(imgMainPath)) return imgMainPath
+        else return path.join(this.pathToUserData, '/img/templates/header.png')
+      } else return path.join(this.pathToUserData, '/img/templates/tag.png')
     },
   },
   watch: {
