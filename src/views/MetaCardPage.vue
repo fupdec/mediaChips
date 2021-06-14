@@ -1,6 +1,6 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <!-- <v-responsive :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
+    <v-responsive :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
       <img v-if="isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
       <div v-else class="images">
         <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
@@ -23,6 +23,7 @@
             size="168" rotate="270" width="2" class="profile-complete-progress" color="primary"/> 
         </template>
         <span>Profile completed {{44}} %</span>
+        <!-- TODO fix card complete progress -->
       </v-tooltip>
       <div class="buttons-left">
       </div>
@@ -31,7 +32,7 @@
       <v-expansion-panels v-model="profile" multiple focusable>
         <v-expansion-panel :style="profileBackground" :key="0">
           <v-expansion-panel-header class="pa-6" ripple hide-actions>
-            <div class="profile-name text-center">{{card.settings.name}}</div>
+            <div class="profile-name text-center">{{card.meta.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
             <v-container class="px-0">
@@ -42,7 +43,7 @@
         </v-expansion-panel>
       </v-expansion-panels>
     </v-container>
-     -->
+    
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
       <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
@@ -125,6 +126,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
+      // console.log(this.$route)
     })
   },
   data: () => ({
@@ -195,7 +197,7 @@ export default {
       let value
       if (this.profile.length) value = true
       else value = false
-      this.$store.dispatch('updateSettingsState', {key:'performerProfile', value: value})
+      // this.$store.dispatch('updateSettingsState', {key:'performerProfile', value: value})
     },
     scrollToTop() {
       this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
@@ -205,7 +207,28 @@ export default {
       else this.isScrollToTopVisible = false
       this.header = `top:${vertical.scrollTop * 0.7}px` // parallax effect
     },
-    initFilters() { this.$store.dispatch('filterMetaCards') },
+    initFilters() { 
+      let defaultFilters = [{
+        by: this.meta.id,
+        cond: 'includes one of',
+        val: [this.metaCardId],
+        type: 'select',
+        flag: null,
+        lock: true,
+      }]
+      if (this.tabId === 'default' || typeof this.tab === 'undefined') {
+        this.$store.state.Settings.videoFilters = _.cloneDeep(defaultFilters)
+        this.$store.state.Settings.videoSortBy = 'name'
+        this.$store.state.Settings.videoSortDirection = 'asc'
+        this.$store.state.Settings.videoPage = 1
+      } else {
+        this.$store.state.Settings.videoFilters = _.cloneDeep(this.tab.filters) || _.cloneDeep(defaultFilters)
+        this.$store.state.Settings.videoSortBy = this.tab.sortBy || 'name'
+        this.$store.state.Settings.videoSortDirection = this.tab.sortDirection || 'asc'
+        this.$store.state.Settings.videoPage = this.tab.page || 1
+      }
+      this.$store.dispatch('filterVideos', true)
+    },
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${imgType}.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
