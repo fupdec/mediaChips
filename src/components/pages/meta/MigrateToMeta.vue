@@ -235,7 +235,7 @@ export default {
             name: 'Boobs',
             hint: '', 
             icon: 'circle',
-            items: this.parseItems(this.$store.getters.settings.get('performerInfoCategory').cloneDeep().value()),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoBoobs').cloneDeep().value()),
           },
         },
         {
@@ -247,7 +247,7 @@ export default {
             name: 'Category',
             hint: 'Profession',  
             icon: 'shape',
-            items: this.parseItems(this.$store.getters.settings.get('performerInfoBoobs').cloneDeep().value()),
+            items: this.parseItems(this.$store.getters.settings.get('performerInfoCategory').cloneDeep().value()),
           },
         },
       )
