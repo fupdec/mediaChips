@@ -383,7 +383,7 @@ const Meta = {
         firstChar:  state.firstChar,
       }
       if (tabId === 'default') getters.meta.find({id:metaId}).get('state').assign(data).write()
-      else { getters.tabsDb.find({id: tabId}).assign(data).write(); commit('getTabsFromDb') }
+      else { getters.tabsDb.find({id: tabId}).assign({...data,...{name:getters.metaFiltersForTabName}} ).write(); commit('getTabsFromDb') }
     },
   },
   getters: {
@@ -415,6 +415,39 @@ const Meta = {
       let pages = []
       for (let i = 0; i < state.pageTotal; i++) pages.push(i+1)
       return pages
+    },
+    metaFiltersForTabName: (state, store, rootState, getters) => {
+      const metaId = router.currentRoute.query.metaId
+      let filters = []
+      const equals = ['equal', 'includes all', 'includes one of', 'yes']
+      const notEquals = ['not equal', 'excludes', 'no']
+      console.log(metaId)
+      let meta = getters.meta.find({id:metaId}).value()
+      
+      for (let filter of state.filters) {
+        let by = filter.by
+        let cond = filter.cond
+        let val = filter.val
+        let type = filter.type
+        let flag = filter.flag
+        
+        let metaBy = getters.meta.find({id:by}).value()
+        if (metaBy) by = metaBy.settings.name
+
+        if (val === null || val.length === 0) continue
+        
+        if (equals.includes(cond)) cond = '='
+        if (notEquals.includes(cond)) cond = '!='
+        
+        if (type === 'array' || type === 'select') {
+          if (type === 'select') val = val.map(id=>getters.metaCards.find({id}).value().meta.name)
+          if (type === 'array') val = val.map(id=>_.find(metaBy.settings.items, {id}).name)
+          let arr = `"${by}" ${cond}`
+          arr = `${arr} "${val.join(', ')}"` 
+          filters.push(arr)
+        } else filters.push(`"${by}" ${cond} "${val}"`)
+      }
+      return meta.settings.name + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
   }
 }

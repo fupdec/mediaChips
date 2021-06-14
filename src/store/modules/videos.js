@@ -111,8 +111,16 @@ const Videos = {
         }
         
         if (type === 'string') {
-          if (cond=='includes') videos=videos.filter(c=>c[by].toLowerCase().includes(val))
-          else videos=videos.filter(c=>!c[by].toLowerCase().includes(val))
+          if (cond=='includes') videos=videos.filter(c=>{
+            let videoMeta = c[by]
+            if (videoMeta) return videoMeta.toLowerCase().includes(val)
+            else return false
+          })
+          else videos=videos.filter(c=>{
+            let videoMeta = c[by]
+            if (videoMeta) return !videoMeta.toLowerCase().includes(val)
+            else return true
+          })
           continue
         }
 
@@ -329,10 +337,10 @@ const Videos = {
       // console.log(state.filteredVideos)
       return videos
     },
-    videoFiltersForTabName: (state, store, rootState) => {
+    videoFiltersForTabName: (state, store, rootState, getters) => {
       let filters = []
-      let equals = ['equal', 'includes all', 'includes one of', 'yes']
-      let notEquals = ['not equal', 'excludes']
+      const equals = ['equal', 'includes all', 'includes one of', 'yes']
+      const notEquals = ['not equal', 'excludes', 'no']
       
       for (let filter in rootState.Settings.videoFilters) {
         let by = rootState.Settings.videoFilters[filter].by
@@ -340,6 +348,9 @@ const Videos = {
         let val = rootState.Settings.videoFilters[filter].val
         let type = rootState.Settings.videoFilters[filter].type
         let flag = rootState.Settings.videoFilters[filter].flag
+        
+        let metaBy = getters.meta.find({id:by}).value()
+        if (metaBy) by = metaBy.settings.name
 
         if (flag === 'lostVideos') return 'Lost Videos'
         if (val === null || val.length === 0) continue
@@ -347,13 +358,13 @@ const Videos = {
         if (equals.includes(cond)) cond = '='
         if (notEquals.includes(cond)) cond = '!='
         
-        if (type === 'array') {
+        if (type === 'array' || type === 'select') {
+          if (type === 'select') val = val.map(id=>getters.metaCards.find({id}).value().meta.name)
+          if (type === 'array') val = val.map(id=>_.find(metaBy.settings.items, {id}).name)
           let arr = `"${by}" ${cond}`
-          arr = `${arr} "${val.join(',')}"` 
+          arr = `${arr} "${val.join(', ')}"` 
           filters.push(arr)
-        } else {
-          filters.push(`"${by}" ${cond} "${val}"`)
-        }
+        } else filters.push(`"${by}" ${cond} "${val}"`)
       }
       return 'Videos' + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
