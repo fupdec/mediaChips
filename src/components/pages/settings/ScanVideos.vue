@@ -21,9 +21,7 @@
             <vuescroll>
               <v-card-text class="text-center">
                 <v-textarea v-model="folderPaths" outlined no-resize
-                  label="Path to folder with videos"
-                  hint="each path starts on a new line"
-                />
+                  label="Path to folder with videos" hint="each path starts on a new line" />
 
                 <v-btn @click="chooseMultipleDir" outlined>
                   <v-icon left>mdi-folder-open</v-icon>Choose folders
@@ -48,43 +46,29 @@
             <vuescroll>
               <v-card-text>
                 <div class="text-center">
-                  <v-icon left color="info">mdi-alert-circle-outline</v-icon>
-                  Metadata will be automatically added during the scan.
-                  It is recommended to add performers (<v-icon small>mdi-account</v-icon>)
-                  , tags (<v-icon size="14">mdi-tag</v-icon>)
-                  and websites (<v-icon small>mdi-web</v-icon>) before scanning.<br>
-                  
-                  <v-tooltip bottom>
-                    <template v-slot:activator="{ on }">
-                      <v-icon v-on="on">mdi-help-circle</v-icon> How it works
-                    </template>
-                    <span>The file path and all meta items (performer, tag, website) are filtered first. <br>
-                      The filter removes all characters except numbers and letters and converts them to lower case. <br>
-                      The filtered file path is searched for a match with any of the meta items. <br> <br>
-                      Parsing works inaccurately, since the search does not match the entire string, but a part. <br>
-                      For example in the file path "BestCumshots.mp4" will be found and added tags "Cumshot" and "Hot". <br> <br>
-                      * Only tags with the "video" type are parsed.
-                    </span>
-                  </v-tooltip>
+                  <v-alert type="info" text dense>
+                    Metadata will be automatically added during the scan.
+                    It is recommended to add meta in <v-icon small color="info">mdi-cog</v-icon> Settings and then add cards on this meta page before scanning.
+                    <v-tooltip bottom>
+                      <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" color="info">mdi-help-circle-outline</v-icon> How does parser work?
+                      </template>
+                      <span>The file path and all meta items are filtered first. <br>
+                        The filter removes all characters except numbers and letters and converts them to lower case. <br>
+                        The filtered file path is searched for a match with any of the meta card names. <br> <br>
+                        Parsing works inaccurately, since the search does not match the entire string, but a part. <br>
+                      </span>
+                    </v-tooltip>
+                  </v-alert>
                 </div>
               </v-card-text>
             </vuescroll>
-            <v-card-actions class="px-6 pb-6">
-              <v-spacer></v-spacer>
-              <div class="d-flex flex-column mx-10">
-                <v-checkbox v-model="parsePerformers" label="Parse Performers" class="mt-0" hide-details prepend-icon="mdi-account" />
-                <v-checkbox v-model="parsePerformersAliases" :disabled="!parsePerformers" class="ml-8" label="Include aliases" hide-details />
+            <div class="d-flex flex-wrap justify-center">
+              <div v-for="m of complexMetaAssignedToVideo" :key="m.id + parseKey" class="d-flex flex-column mx-4">
+                <v-checkbox v-model="parseMeta[m.id].parse" @change="parseKey=Date.now()" :label="`Parse ${getMeta(m.id).settings.name}`" class="mt-0" hide-details :prepend-icon="`mdi-${getMeta(m.id).settings.icon}`" />
+                <v-checkbox v-model="parseMeta[m.id].synonyms" :disabled="!parseMeta[m.id].parse" class="ml-8 mt-2 mb-6" label="Include synonyms" hide-details />
               </div>
-              <div class="d-flex flex-column mx-10">
-                <v-checkbox v-model="parseTags" label="Parse Tags" class="mt-0" hide-details prepend-icon="mdi-tag" />
-                <v-checkbox v-model="parseTagsAltNames" :disabled="!parseTags" class="ml-8" label="Include alternate names" hide-details />
-              </div>
-              <div class="d-flex flex-column mx-10">
-                <v-checkbox v-model="parseWebsites" label="Parse Websites" class="mt-0" hide-details prepend-icon="mdi-web" />
-                <v-checkbox v-model="parseWebsitesAltNames" :disabled="!parseWebsites" class="ml-8" label="Include alternate names" hide-details />
-              </div>
-              <v-spacer></v-spacer>
-            </v-card-actions>
+            </div>
             <v-card-actions>
               <v-btn @click="$store.state.Settings.dialogScanVideos = false" class="ma-2">
                 <v-icon left>mdi-cancel</v-icon> Cancel
@@ -218,6 +202,7 @@ ffmpeg.setFfmpegPath(pathToFfmpeg)
 ffmpeg.setFfprobePath(pathToFfprobe)
 
 import vuescroll from 'vuescroll'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'ScanVideos',
@@ -228,11 +213,15 @@ export default {
   components: {
     vuescroll
 	},
+  mixins: [MetaGetters],
   mounted() {
     this.$nextTick(function () {
       if (this.stage>0) this.scanVideosForm = this.stage
       this.folderPaths = this.$store.state.Settings.folders.map(f=>f.path).join('\n')
     })
+  },
+  beforeMount() {
+    this.initParseMeta()
   },
   beforeDestroy() {
     this.$emit('close')
@@ -261,63 +250,41 @@ export default {
     textNoVideosAdded: '',
     stop: false,
     fileInfo: {},
-    // parsing
-    parsePerformers: true,
-    parseTags: true,
-    parseWebsites: true,
-    parsePerformersAliases: false,
-    parseTagsAltNames: false,
-    parseWebsitesAltNames: false,
+    parseMeta: {},
+    parseKey: 0,
   }),
   computed: {
-    errorScanFolders() {
-      return this.errorFolders.join(', \n')
-    },
-    errorScanVideos() {
-      return this.errorVideos.join(', \n')
-    },
-    parsedDuplicateVideos() {
-      return this.duplicateVideos.join(', \n')
-    },
-    parsedNewVideos() {
-      return this.newVideos.join(', \n')
-    },
-    isProcessRun() {
-      return this.$store.state.Settings.scanProcRun
-    },
-    pathToUserData() {
-      return this.$store.getters.getPathToUserData
-    },
+    errorScanFolders() { return this.errorFolders.join(', \n') },
+    errorScanVideos() { return this.errorVideos.join(', \n') },
+    parsedDuplicateVideos() { return this.duplicateVideos.join(', \n') },
+    parsedNewVideos() { return this.newVideos.join(', \n') },
+    isProcessRun() { return this.$store.state.Settings.scanProcRun },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
+    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('videoMetaInCard').filter({type:'complex'}).value() },
   },
   methods: {
-    alertScanErrorHeightChange() {
-      if (this.alertScanErrorHeight == 100) {
-        this.alertScanErrorHeight = undefined
-      } else {
-        this.alertScanErrorHeight = 100
+    initParseMeta() {
+      for (let i of this.complexMetaAssignedToVideo) {
+        this.parseMeta[i.id] = { parse: true, synonyms: true }
       }
+    },
+    alertScanErrorHeightChange() {
+      if (this.alertScanErrorHeight == 100) this.alertScanErrorHeight = undefined
+      else this.alertScanErrorHeight = 100
     },
     alertDuplicateVideosHeightChange() {
-      if (this.alertDuplicateVideosHeight == 100) {
-        this.alertDuplicateVideosHeight = undefined
-      } else {
-        this.alertDuplicateVideosHeight = 100
-      }
+      if (this.alertDuplicateVideosHeight == 100) this.alertDuplicateVideosHeight = undefined
+      else this.alertDuplicateVideosHeight = 100
     },
     alertAddNewVideosHeightChange() {
-      if (this.alertAddNewVideosHeight == 100) {
-        this.alertAddNewVideosHeight = undefined
-      } else {
-        this.alertAddNewVideosHeight = 100
-      }
+      if (this.alertAddNewVideosHeight == 100) this.alertAddNewVideosHeight = undefined
+      else this.alertAddNewVideosHeight = 100
     },
     chooseMultipleDir() {
       dialog.showOpenDialog(null, {
         properties: ['openDirectory','multiSelections']
       }).then(result => {
-        if (result.filePaths.length !== 0) {
-          this.folderPaths = result.filePaths.join('\n')
-        }
+        if (result.filePaths.length !== 0) this.folderPaths = result.filePaths.join('\n')
       }).catch(err => {
         this.$store.commit('addLog', {type:'error',text:'Video scanning process: '+err})
       })
@@ -347,16 +314,9 @@ export default {
 
       let folders = this.folderPaths.split('\n')
       let filesArray = []
-      if (this.newFiles.length) {
-        filesArray = this.newFiles
-      } else {
-        for (const folder of folders) {
-          filesArray = filesArray.concat(vm.findInDir(folder, formats))
-        }
-      }
-      function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms))
-      }
+      if (this.newFiles.length) filesArray = this.newFiles
+      else for (const folder of folders) filesArray = filesArray.concat(vm.findInDir(folder, formats))
+      function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 
       async function processArray(files) {
         let percentsPerFile = 100/files.length 
@@ -380,9 +340,7 @@ export default {
           }
           ++vm.currentNumberOfScanVideos
           vm.videoScanProgressBar += percentsPerFile
-          if (vm.videoScanProgressBar > 100) {
-            vm.videoScanProgressBar = 100
-          }
+          if (vm.videoScanProgressBar > 100) vm.videoScanProgressBar = 100
           // console.log(vm.videoScanProgressBar)
           // console.log(fileProcResult)
           await sleep(10)
@@ -436,11 +394,8 @@ export default {
           return
         }
 
-        if (fileStat.isDirectory()) {
-          this.findInDir(filePath, filter, fileList)
-        } else if (filter.test(filePath.toLowerCase())) {
-          fileList.push(filePath)
-        }
+        if (fileStat.isDirectory()) this.findInDir(filePath, filter, fileList)
+        else if (filter.test(filePath.toLowerCase())) fileList.push(filePath)
       })
 
       return fileList
@@ -489,9 +444,7 @@ export default {
           }
           // console.log(`getVideoMetadata: ` + JSON.stringify(videoInfo.format))
           this.fileInfo.meta = info
-          if (this.fileInfo.meta.streams[0].duration < 1) {
-            return reject('duration less than 1 sec.')
-          } 
+          if (this.fileInfo.meta.streams[0].duration < 1) return reject('duration less than 1 sec.')
           return resolve()
         })
       })
@@ -508,8 +461,6 @@ export default {
         }
 
         let pathToFile = this.fileInfo.meta.format.filename
-        // parse file path for contains performer name or website
-        let parsed = this.parsePathForMeta(pathToFile)
             
         // get file info 
         let videoMetadata = {
@@ -518,16 +469,17 @@ export default {
           duration: duration,
           size: this.fileInfo.meta.format.size,
           resolution: resolution,
-          tags: parsed.tags,
-          performers: parsed.performers,
-          websites: parsed.websites,
           rating: 0,
           favorite: false,
-          bookmark: false,
+          bookmark: '',
           date: Date.now(),
           edit: Date.now(),
           views: 0,
         }
+
+        let parsed = this.parsePathForMeta(pathToFile)
+
+        videoMetadata = {...videoMetadata, ...parsed}
         
         let outputPathThumbs = path.join(this.$store.getters.getPathToUserData, '/media/thumbs/')
         // creating the thumb of the video
@@ -554,77 +506,36 @@ export default {
       }
       const string = filterString(filePath)
 
-      let performers = []
-      if (this.parsePerformers && !this.parsePerformersAliases) {
-        performers = this.$store.getters.performers.filter(i => 
-          string.includes(filterString(i.name))
-        ).value().map(i => i.name)
-        performers = [...new Set(performers)] // remove duplicates
-      } else if (this.parsePerformers && this.parsePerformersAliases) {
-        performers = this.$store.getters.performers.filter(i => {
-          let foundName = string.includes(filterString(i.name))
-          let foundAliases 
-          if (i.aliases.length) {
-            let aliases = filterString(i.aliases.join())
-            foundAliases = string.includes(aliases)
-          } else foundAliases = false 
-          return foundName || foundAliases
-        }).value().map(i => i.name)
-        performers = [...new Set(performers)] // remove duplicates
+      let parsed = {}
+      for (let m of this.complexMetaAssignedToVideo) {
+        if (this.parseMeta[m.id].parse && !this.parseMeta[m.id].synonyms) {
+          parsed[m.id] = this.$store.getters.metaCards.filter(mc =>
+            mc.metaId===m.id && string.includes(filterString(mc.meta.name))
+          ).value().map(mc => mc.id)
+        } else if (this.parseMeta[m.id].parse && this.parseMeta[m.id].synonyms) {
+          parsed[m.id] = this.$store.getters.metaCards.filter(mc => {
+            if (mc.metaId!==m.id) return false
+            let foundName = string.includes(filterString(mc.meta.name))
+            let foundSynonyms
+            if (mc.meta.synonyms && mc.meta.synonyms.length) {
+              const synonyms = filterString(mc.meta.synonyms.join())
+              foundSynonyms = string.includes(synonyms)
+            } else foundSynonyms = false 
+            return foundName || foundSynonyms
+          }).value().map(mc => mc.id)
+        }
+        parsed[m.id] = [...new Set(parsed[m.id])] // remove duplicates
       }
 
-      let tags = []
-      if (this.parseTags && !this.parseTagsAltNames) {
-        tags = this.$store.getters.tags.filter({type: ['video']}).filter(i => 
-          string.includes(filterString(i.name))
-        ).value().map(i => i.name)
-        tags = [...new Set(tags)] // remove duplicates
-      } else if (this.parseTags && this.parseTagsAltNames) {
-        tags = this.$store.getters.tags.filter({type: ['video']}).filter(i => {
-          let foundName = string.includes(filterString(i.name))
-          let foundAltName 
-          if (i.altNames.length) {
-            let altNames = filterString(i.altNames.join())
-            foundAltName = string.includes(altNames)
-          } else foundAltName = false 
-          return foundName || foundAltName
-        }).value().map(i => i.name)
-        tags = [...new Set(tags)] // remove duplicates
-      }
-
-      let websites = []
-      if (this.parseWebsites && !this.parseWebsitesAltNames) {
-        websites = this.$store.getters.websites.filter(i => 
-          string.includes(filterString(i.name))
-        ).value().map(i => i.name)
-        websites = [...new Set(websites)] // remove duplicates
-      } else if (this.parseWebsites && this.parseWebsitesAltNames) {
-        websites = this.$store.getters.websites.filter(i => {
-          let foundName = string.includes(filterString(i.name))
-          let foundAltName 
-          if (i.altNames.length) {
-            let altNames = filterString(i.altNames.join())
-            foundAltName = string.includes(altNames)
-          } else foundAltName = false 
-          return foundName || foundAltName
-        }).value().map(i => i.name)
-        websites = [...new Set(websites)] // remove duplicates
-      }
-
-      return { performers, tags, websites }
+      return parsed
     },
     getPathRules(path) {
-      if (path.length===0) {
-        return 'Path is required'
-      } else {
-        return true
-      }
+      if (path.length===0) return 'Path is required'
+      else return true
     },
     startScanProcess() {
       this.scanVideosForm = 3
-      setTimeout(()=>{
-        this.scanDir()
-      },500)
+      setTimeout(()=>{ this.scanDir() },500)
     },
     endScanProcess() {
       this.$store.state.Settings.dialogScanVideos = false
@@ -633,21 +544,9 @@ export default {
     },
   },
   watch: {
-    alertScanError(val) {
-      if (!val) {
-        // Custom action when the alert was hidden
-        this.errorVideos = []
-      }
-    },
-    alertDuplicateVideos(val) {
-      if (!val) {
-        // Custom action when the alert was hidden
-        this.duplicateVideos = []
-      }
-    },
-    alertAddNewVideos(val) {
-      if (!val) { this.newVideos = [] }
-    },
+    alertScanError(val) { if (!val) this.errorVideos = [] }, 
+    alertDuplicateVideos(val) { if (!val) this.duplicateVideos = [] },
+    alertAddNewVideos(val) { if (!val) { this.newVideos = [] } },
   },
 }
 </script>
