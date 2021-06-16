@@ -1,7 +1,6 @@
 .DS_Store
 node_modules
 /dist
-src/mixins/Keys.vue
 
 # local env files
 .env.local
