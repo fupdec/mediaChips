@@ -3,7 +3,7 @@
 
     <div class="headline text-h3 d-flex align-center justify-center my-4">
       <v-icon x-large left>mdi-video-outline</v-icon> Videos
-      <span class="text-h5 ml-2">({{$store.getters.filteredVideosTotal}})</span>
+      <span class="text-h5 ml-2">({{$store.state.Videos.filteredVideos.length}})</span>
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">

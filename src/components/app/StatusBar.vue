@@ -188,13 +188,10 @@ export default {
       let selectedVideos = this.$store.getters.videos.filter(v=>(ids.includes(v.id))).value()
       return this.getVideosTotalSize(selectedVideos)
     },
-    getTotalVideosSize() {
-      let videos = this.$store.getters.filteredVideos.value()
-      return this.getVideosTotalSize(videos)
-    },
-    getTotalVideosNumber() { return this.$store.getters.filteredVideos.value().length },
+    getTotalVideosSize() { return this.getVideosTotalSize(this.$store.state.Videos.filteredVideos) },
+    getTotalVideosNumber() { return this.$store.state.Videos.filteredVideos.length },
     isVideosPage() {
-      const pages = ['/videos/:','/performer/:','/website/:']
+      const pages = ['/videos/:','/metacard/']
       return pages.some(page => this.$route.path.includes(page))
     },
   },
@@ -203,9 +200,7 @@ export default {
       let date = new Date(ms)
       return date.toLocaleDateString() + ', ' + date.toLocaleTimeString()
     },
-    close(id){
-      this.$store.dispatch('removeNotification', id)
-    },
+    close(id) { this.$store.dispatch('removeNotification', id) },
     clearAllNotifications(){
       this.$store.dispatch('clearAllNotifications')
       this.notificationsMenu = false
@@ -219,9 +214,7 @@ export default {
       this.$store.commit('updateSelectedWebsites', [])
     },
     lastLog(log) {
-      setTimeout(() => {
-        this.penultLog = log
-      }, 1000)
+      setTimeout(() => { this.penultLog = log }, 1000)
     },
   },
 }

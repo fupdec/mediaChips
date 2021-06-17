@@ -3,7 +3,7 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn @click="$store.state.Videos.dialogFilterVideos=true" v-on="on" icon tile>
-          <v-badge :value="filterBadge" :content="filteredVideosTotal" overlap bottom style="z-index: 5;"> 
+          <v-badge :value="filtersNumber!=0" :content="filtersNumber" overlap bottom style="z-index: 5;"> 
           <v-icon>mdi-filter</v-icon> </v-badge>
         </v-btn>
       </template>
@@ -216,33 +216,18 @@ export default {
     searchString: '',
   }),
   computed: {
-    filterBadge() {
+    filtersNumber() {
       let filters = _.cloneDeep(this.$store.state.Settings.videoFilters)
-      if (filters.length) {
-        filters = _.filter(filters, f => {
-          if (f.type == null) return false 
-          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
-            if (f.val.length) return true 
-            else return false
-          } 
-          if (f.type == 'boolean') return true
-        })
-        return filters.length > 0
-      } else return false
-    },
-    filteredVideosTotal() {
-      let filters = _.cloneDeep(this.$store.state.Settings.videoFilters)
-      if (filters.length) {
-        filters = _.filter(filters, f => {
-          if (f.type == null) return false 
-          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
-            if (f.val.length) return true 
-            else return false
-          } 
-          if (f.type == 'boolean') return true
-        })
-        return filters.length
-      } else return 0
+      if (!filters.length) return 0
+      filters = _.filter(filters, f => {
+        if (f.type == null) return false 
+        if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+          if (f.val.length) return true 
+          else return false
+        } 
+        if (f.type == 'boolean') return true
+      })
+      return filters.length
     },
     sortIcon() {
       if (this.sortButtons=='name') return 'mdi-alphabetical-variant'

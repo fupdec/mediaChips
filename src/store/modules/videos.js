@@ -199,18 +199,8 @@ const Videos = {
       //     // console.log('videos filtered by quality')
       //   }
       // }
-      let filteredVideos = []
-      if (videos != getters.videos) { // TODO check if that block can be removed
-        if (videos.value().length == 0) {
-          state.filteredEmpty = true
-          filteredVideos = videos
-        } else {
-          state.filteredEmpty = false
-          filteredVideos = videos
-        }
-      }
       commit('resetLoading')
-      state.filteredVideos = filteredVideos
+      state.filteredVideos = videos.value()
       if (!stayOnCurrentPage) rootState.Settings.videoPage = 1
       dispatch('saveFiltersOfVideos')
     },
@@ -324,12 +314,6 @@ const Videos = {
     videosDatabase(state, store) {
       return store.dbv
     },
-    filteredVideos(state, store) {
-      let videos 
-      if (state.filteredVideos.length===0) videos = store.videos
-      else videos = state.filteredVideos
-      return videos
-    },
     videoFiltersForTabName: (state, store, rootState, getters) => {
       let filters = []
       const equals = ['equal', 'includes all', 'includes one of', 'yes']
@@ -362,10 +346,6 @@ const Videos = {
       return 'Videos' + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
     videosTotal(state, store) { return store.videos.value().length },
-    filteredVideosTotal(state, store) {
-      if (state.filteredVideos.length==0) return state.filteredVideos.length
-      else return state.filteredVideos.value().length
-    },
     videosTotalSize: (state, store) => {
       let sizes = store.videos.map('size').value()
       let total = 0
@@ -378,31 +358,20 @@ const Videos = {
       return total
     },
     videosOnPage(state, store, rootState) {
-      const videos = store.filteredVideos.value(), 
+      const videos = state.filteredVideos, 
             videosCount = rootState.Settings.videosPerPage
-      // console.log(videos)
-      let l = videos.length,
-          c = videosCount
-      state.pageTotal = Math.ceil(l/c)
-      // console.log(state.pageTotal)
-      if(rootState.Settings.videoPage > state.pageTotal) {
-        rootState.Settings.videoPage = state.pageTotal
-      }
-      
-      const end = rootState.Settings.videoPage * videosCount,
-            start = end - videosCount;
+      state.pageTotal = Math.ceil(videos.length/videosCount)
+      if(rootState.Settings.videoPage > state.pageTotal) rootState.Settings.videoPage = state.pageTotal
+      if (rootState.Settings.videoPage == 0) rootState.Settings.videoPage = 1
+      const end = rootState.Settings.videoPage * videosCount, start = end - videosCount
       return videos.slice(start, end)
     },
     videosPages(state) {
       let pages = []
-      for (let i = 0; i < state.pageTotal; i++) {
-        pages.push(i+1)
-      }
+      for (let i = 0; i < state.pageTotal; i++) pages.push(i+1)
       return pages
     },
-    getSelectedVideos(state) {
-      return state.selectedVideos
-    },
+    getSelectedVideos(state) { return state.selectedVideos },
   }
 }
 

@@ -51,15 +51,11 @@ export default {
   },
   methods: {
     openRandomVideo() {
-      const videos = this.$store.getters.filteredVideos.value()
+      const videos = this.$store.state.Videos.filteredVideos
       if (videos.length == 0) return
-      if (videos.length == 1) {
-        this.playVideo(videos[0])
-        return
-      }
+      if (videos.length == 1) { this.playVideo(videos[0]); return }
       const rand = this.getRandomIntInclusive(1, videos.length)
-      const video = videos[rand-1]
-      this.playVideo(video)
+      this.playVideo(videos[rand-1])
     },
     getRandomIntInclusive(min, max) {
       min = Math.ceil(min)
