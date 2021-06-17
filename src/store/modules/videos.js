@@ -24,10 +24,10 @@ const Videos = {
     dialogErrorPlayVideo: false,
     dialogFolderTree: false,
     dialogFilterVideos: false,
+    dialogAddToPlaylist: false,
     errorPlayVideoPath: '',
     deleteFile: false,
     rating: 0,
-    menuCard: false,
     updateCardIds: [],
     tree: [],
   }),
@@ -326,15 +326,8 @@ const Videos = {
     },
     filteredVideos(state, store) {
       let videos 
-      if (state.filteredVideos.length===0) {
-        videos = store.videos
-        // console.log('get videos from db')
-      } else {
-        videos = state.filteredVideos
-        // console.log('get filtered videos')
-      }
-      // console.log(state.filteredVideos.length)
-      // console.log(state.filteredVideos)
+      if (state.filteredVideos.length===0) videos = store.videos
+      else videos = state.filteredVideos
       return videos
     },
     videoFiltersForTabName: (state, store, rootState, getters) => {
@@ -368,35 +361,20 @@ const Videos = {
       }
       return 'Videos' + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
-    videosTotal: (state, store) => {
-      return store.videos.value().length
-    },
+    videosTotal(state, store) { return store.videos.value().length },
     filteredVideosTotal(state, store) {
-      if (state.filteredVideos.length==0) {
-        // console.log(state.filteredVideos.length)
-        return state.filteredVideos.length
-      } else {
-        // console.log(state.filteredVideos.value().length)
-        return state.filteredVideos.value().length
-      }
+      if (state.filteredVideos.length==0) return state.filteredVideos.length
+      else return state.filteredVideos.value().length
     },
     videosTotalSize: (state, store) => {
       let sizes = store.videos.map('size').value()
       let total = 0
-      for (let i=0; i<sizes.length; i++) {
-        total += sizes[i]
-      }
-      if (total > 1000000000000) {
-        total = (total/1024/1024/1024/1024-0.01).toFixed(2) + ' TB'
-      } else if (total > 1000000000) {
-        total = (total/1024/1024/1024-0.01).toFixed(2) + ' GB'
-      } else if (total > 1000000) {
-        total = (total/1024/1024-0.01).toFixed(2) + ' MB'
-      } else if (total > 1000) {
-        total = (total/1024-0.01).toFixed(2) + ' KB'
-      } else {
-        total += ' B'
-      }
+      for (let i=0; i<sizes.length; i++) total += sizes[i]
+      if (total > 1000000000000) total = (total/1024/1024/1024/1024-0.01).toFixed(2) + ' TB'
+      else if (total > 1000000000) total = (total/1024/1024/1024-0.01).toFixed(2) + ' GB'
+      else if (total > 1000000) total = (total/1024/1024-0.01).toFixed(2) + ' MB'
+      else if (total > 1000) total = (total/1024-0.01).toFixed(2) + ' KB'
+      else total += ' B'
       return total
     },
     videosOnPage(state, store, rootState) {

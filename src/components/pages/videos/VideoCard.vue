@@ -1,8 +1,9 @@
 <template>
   <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
+      @mousedown.right="$store.state.contextMenu=false" @contextmenu="showContextMenu"
       :class="{favorite: isFavorite}" class="video-card meta-card"
-      :data-id="video.id" outlined hover @contextmenu="showContextMenu"
+      :data-id="video.id" outlined hover 
       :key="cardKey" :disabled="!reg && i>4"
     >
       <v-responsive 
@@ -135,6 +136,8 @@
 </template>
 
 <script>
+const { clipboard } = require('electron')
+const { dialog } = require('electron').remote
 const shell = require('electron').shell
 const fs = require('fs')
 const path = require('path')
@@ -204,6 +207,8 @@ export default {
     isVideoExist() { return fs.existsSync(this.video.path) },
     metaInCard() { return this.$store.state.Settings.videoMetaInCard },
     visibility() { return this.$store.state.Settings.videoVisibility },
+    isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
+    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('videoMetaInCard').filter({type:'complex'}).value() },
   },
   methods: {
     stopSmoothScroll(event) {
@@ -267,14 +272,163 @@ export default {
     changeRating(stars, videoID) { this.$store.getters.videos.find({id:videoID}).assign({rating:stars,edit:Date.now()}).write() },
     showContextMenu(e) {
       e.preventDefault()
-      this.$store.state.menuTabs = false
-      this.$store.state.Videos.menuCard = false
+      const vm = this
+      function getFilterMeta() {
+        let menuMetaAssignedToVideo = []
+        for (let m of vm.complexMetaAssignedToVideo) {
+          const meta = vm.getMeta(m.id)
+          let menuMetaCards = []
+          let videoId = vm.$store.getters.getSelectedVideos[0]
+          let video = vm.$store.getters.videos.find({id:videoId}).value()
+          let metaCardIds
+          if (video) metaCardIds = video[m.id]
+          if (metaCardIds) for (let metaCardId of metaCardIds) {
+            const card = vm.getCard(metaCardId)
+            menuMetaCards.push({name: card.meta.name, type: 'item', icon: 'circle', color: card.meta.color, function: ()=>{vm.filterVideosBy(m.id,metaCardId)}})
+          }
+          if (menuMetaCards.length==0) menuMetaCards.push({name:'No added meta', type: 'item', function: ()=>{}, disabled: true})
+          menuMetaAssignedToVideo.push({name: meta.settings.name, type: 'menu', icon: meta.settings.icon, disabled: !vm.isSelectedSingleVideo, menu:menuMetaCards})
+        }
+        if (menuMetaAssignedToVideo.length==0) menuMetaAssignedToVideo.push({name:'No assigned meta', type: 'item', function: ()=>{}, disabled: true})
+        return menuMetaAssignedToVideo
+      }
       setTimeout(() => {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
-        this.$store.state.Videos.menuCard = true
-      }, 300)
-    }, // TODO context menu
+        let contextMenu = [
+          { name: `Edit Info`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Videos.dialogEditVideoInfo=true}},
+          { type: 'divider' },
+          { name: `Filter Videos by`, type: 'menu', icon: 'filter', disabled: !this.isSelectedSingleVideo, menu: getFilterMeta()},
+          { name: `Parse Metadata`, type: 'item', icon: 'movie-search', function: ()=>{this.parseMetadata()}},
+          { name: `Rating`, type: 'menu', icon: 'star', menu: [
+            { name: `5`, type: 'item', icon: 'star', function: ()=>{this.changeRating(5)}},
+            { name: `4.5`, type: 'item', icon: 'star-half-full', function: ()=>{this.changeRating(4.5)}},
+            { name: `4`, type: 'item', icon: 'star', function: ()=>{this.changeRating(4)}},
+            { name: `3.5`, type: 'item', icon: 'star-half-full', function: ()=>{this.changeRating(3.5)}},
+            { name: `3`, type: 'item', icon: 'star', function: ()=>{this.changeRating(3)}},
+            { name: `2.5`, type: 'item', icon: 'star-half-full', function: ()=>{this.changeRating(2.5)}},
+            { name: `2`, type: 'item', icon: 'star', function: ()=>{this.changeRating(2)}},
+            { name: `1.5`, type: 'item', icon: 'star-half-full', function: ()=>{this.changeRating(1.5)}},
+            { name: `1`, type: 'item', icon: 'star', function: ()=>{this.changeRating(1)}},
+            { name: `0.5`, type: 'item', icon: 'star-half-full', function: ()=>{this.changeRating(0.5)}},
+            { name: `0`, type: 'item', icon: 'star-outline', function: ()=>{this.changeRating(0)}},
+          ]},
+          { name: `Favorite`, type: 'menu', icon: 'heart', menu: [
+            { name: `Add to Favorite `, type: 'item', icon: 'heart-plus', function: ()=>{this.changeFavorite(true)}},
+            { name: `Remove from Favorite`, type: 'item', icon: 'heart-remove', function: ()=>{this.changeFavorite(false)}},
+          ]},
+          // TODO add copy/paste meta for fast changing and copy to clipboard function
+          { type: 'divider' },
+          { name: `Add to Playlist`, type: 'item', icon: 'playlist-plus', function: ()=>{this.$store.state.Videos.dialogAddToPlaylist=true}, },
+          { name: `Add to "Watch later"`, type: 'item', icon: 'bookmark-plus', function: ()=>{this.watchLater()}, },
+          { type: 'divider' },
+          { name: `Reveal in File Explorer`, type: 'item', icon: 'folder-open', function: ()=>{this.revealInFileExplorer()}, disabled: !this.isSelectedSingleVideo},
+          { name: `Move File to...`, type: 'item', icon: 'file-move', function: ()=>{this.moveFile()},},
+          { type: 'divider' },
+          { name: `Delete Video`, type: 'item', icon: 'delete', color: 'error', function: ()=>{this.$store.state.Videos.dialogDeleteVideo=true},},
+        ]
+        this.$store.state.contextMenuContent = contextMenu
+        this.$store.state.contextMenu = true
+      }, 300)  // TODO create menu with playlists and place into it button "Watch later"
+    },
+    watchLater() {
+      let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
+      let videosFromPlaylist = playlist.videos
+      this.$store.getters.getSelectedVideos.map(videoId => {
+        if (!videosFromPlaylist.includes(videoId)) videosFromPlaylist.push(videoId)
+      })
+      this.$store.getters.playlists.find({name:'Watch later'}).assign({
+        videos: videosFromPlaylist,
+        edit: Date.now(),
+      }).write()
+    },
+    revealInFileExplorer() {
+      let videoId = this.$store.getters.getSelectedVideos[0]
+      let videoPath = this.$store.getters.videos.find({id:videoId}).value().path
+      shell.showItemInFolder(videoPath)
+    },
+    moveFile() {
+      dialog.showOpenDialog(null, { properties: ['openDirectory'] }).then(result => {
+        if (result.filePaths.length === 0) return
+        let filePath = result.filePaths[0]
+        let ids = this.$store.getters.getSelectedVideos
+        let vids = this.$store.getters.videos
+        const vm = this
+        if (ids.length===0) return
+        ids.map(i => {
+          let oldPath = vids.find({id:i}).value().path
+          let fileName = path.basename(oldPath)
+          let newPath = path.join(filePath, fileName)
+          fs.rename(oldPath, newPath, function (err) {
+            if (err) {
+              vm.$store.commit('addLog', { type: 'error', text: `Failed to move file "${fileName}".` })
+              throw err
+            } else {
+              vids.find({id:i}).assign({ path: newPath, edit: Date.now() }).write()
+              vm.$store.commit('addLog', { type: 'info', text: `File "${fileName}" successfully moved!` })
+            }
+          })
+        })
+      }).catch(err => { this.$store.commit('addLog', {type: 'error', text: err}); return })
+    },
+    filterVideosBy(metaId, metaCardId) {
+      let filter = {
+        by: metaId,
+        cond: 'includes one of',
+        val: [metaCardId],
+        type: 'select',
+        flag: null,
+        lock: false,
+      }
+      this.$store.state.Settings.videoFilters.push(filter)
+      this.$store.dispatch('filterVideos')
+    },
+    changeRating(stars) {
+      this.$store.state.Videos.selectedVideos.map(id => {
+        this.$store.getters.videos.find({ id }).assign({ rating: stars, edit: Date.now() }).write()
+      })
+      this.$store.commit('updateVideos', this.$store.state.Videos.selectedVideos)
+    },
+    changeFavorite(value) {
+      this.$store.state.Videos.selectedVideos.map(id => {
+        this.$store.getters.videos.find({ id }).assign({favorite: value,edit: Date.now()}).write()
+      })
+      this.$store.commit('updateVideos', this.$store.state.Videos.selectedVideos)
+    },
+    parseMetadata() {
+      function filterString(string) {
+        return string.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, "").toLowerCase()
+      }
+
+      const vm = this
+      
+      function parseFilePath(filePath) {
+        const string = filterString(filePath)
+
+        let parsed = {}
+        for (let m of vm.complexMetaAssignedToVideo) {
+          parsed[m.id] = vm.$store.getters.metaCards.filter(mc => {
+            if (mc.metaId!==m.id) return false
+            let foundName = string.includes(filterString(mc.meta.name))
+            let foundSynonyms
+            if (mc.meta.synonyms && mc.meta.synonyms.length) {
+              const synonyms = filterString(mc.meta.synonyms.join())
+              foundSynonyms = string.includes(synonyms)
+            } else foundSynonyms = false 
+            return foundName || foundSynonyms
+          }).value().map(mc => mc.id)
+          parsed[m.id] = [...new Set(parsed[m.id])] // remove duplicates
+        }
+        return parsed
+      }
+
+      let ids = this.$store.getters.getSelectedVideos
+
+      this.$store.getters.videos.filter(i=>ids.includes(i.id)).each(video => {
+        const meta = parseFilePath(video.path)
+        for (let m in meta) video[m] = _.union(video[m], meta[m])
+      }).write()
+    },
   },
   watch: {
     updateCardIds(newValue) {

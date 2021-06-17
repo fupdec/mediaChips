@@ -13,7 +13,7 @@
       <div v-for="(itemSub, j) in item.menu" :key="j">
         <v-list-item v-if="itemSub.type=='item'" @mouseup="close(itemSub.function)" class="pr-1" link>
           <v-list-item-title>
-            <v-icon left size="18">mdi-{{itemSub.icon}}</v-icon> {{itemSub.name}} 
+            <v-icon left size="18" :color="itemSub.color">mdi-{{itemSub.icon}}</v-icon> {{itemSub.name}} 
           </v-list-item-title>
           <div class="px-3"/>
         </v-list-item>
