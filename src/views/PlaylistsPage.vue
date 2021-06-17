@@ -70,25 +70,6 @@
       </v-card>
     </v-dialog>
     <DialogEditPlaylist v-if="$store.state.Playlists.dialogEditPlaylist"/>
-
-    <v-menu v-model="$store.state.Playlists.menuCard" :position-x="$store.state.x" 
-      :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
-      <v-list dense class="context-menu">
-        <v-list-item link @mouseup="$store.state.Playlists.dialogEditPlaylist = true"
-          :disabled="!isSelectedSinglePlaylist">
-          <v-list-item-title>
-            <v-icon left size="18">mdi-pencil</v-icon> Edit playlist
-          </v-list-item-title>
-        </v-list-item>
-        <v-divider class="ma-1"></v-divider>
-        <v-list-item link @mouseup="$store.state.Playlists.dialogDeletePlaylist = true"
-          :disabled="isSelectedWatchLater">
-          <v-list-item-title>
-            <v-icon left size="18" color="red">mdi-delete</v-icon> Delete playlist
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
   </vuescroll>
 </template>
 
@@ -146,94 +127,52 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
-    getNumberOfPagesLimit() {
-      return this.$store.state.Settings.numberOfPagesLimit
-    },
-    pages() {
-      return this.$store.getters.playlistsPagesSum
-    },
-    playlistsOnPage() {
-      return this.$store.getters.playlistsOnPage
-    },
+    getNumberOfPagesLimit() { return this.$store.state.Settings.numberOfPagesLimit },
+    pages() { return this.$store.getters.playlistsPagesSum },
+    playlistsOnPage() { return this.$store.getters.playlistsOnPage },
     playlistsPerPage: {
-      get() {
-        return this.$store.state.Settings.playlistsPerPage
-      },
-      set(number) {
-        this.$store.dispatch('changePlaylistsPerPage', number)
-      },
+      get() { return this.$store.state.Settings.playlistsPerPage },
+      set(number) { this.$store.dispatch('changePlaylistsPerPage', number) },
     },
     playlistsPagesSum: {
-      get() {
-        return this.$store.state.Playlists.pageTotal
-      },
-      set(number) {
-        this.$store.state.Playlists.pageTotal = number
-      },
+      get() { return this.$store.state.Playlists.pageTotal },
+      set(number) { this.$store.state.Playlists.pageTotal = number },
     },
     playlistsCurrentPage: {
-      get() {
-        return this.$store.state.Settings.playlistPage
-      },
+      get() { return this.$store.state.Settings.playlistPage },
       set(number) {
         this.$store.state.Settings.playlistPage = number
         this.$store.dispatch('saveFiltersOfPlaylists')
       },
     },
-    selectedPlaylistsLength() {
-      return this.$store.getters.getSelectedPlaylists.length
-    },
-    isSelectedSinglePlaylist() {
-      return this.$store.getters.getSelectedPlaylists.length == 1
-    },
-    isSelectedWatchLater() {
-      return this.$store.getters.getSelectedPlaylists.includes('123123123')
-    },
-    tabId() {
-      return this.$route.query.tabId
-    },
-    gapSize() {
-      return `gap-size-${this.$store.state.Settings.gapSize}`
-    },
+    selectedPlaylistsLength() { return this.$store.getters.getSelectedPlaylists.length },
+    tabId() { return this.$route.query.tabId },
+    gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     tab() {
-      if (this.tabId === 'default') {
-        return undefined
-      } else {
-        return this.$store.getters.tabsDb.find({id: +this.tabId}).value()    
-      }
+      if (this.tabId === 'default') return undefined
+      else return this.$store.getters.tabsDb.find({id: +this.tabId}).value()    
     },
-    filters() {
-      return this.$store.state.Settings.playlistFilters
-    },
+    filters() { return this.$store.state.Settings.playlistFilters },
   },
   methods: {
     selectedPlaylists(list) {
       let ids = this.$store.getters.getSelectedPlaylists
       let playlists = this.$store.getters.playlists
-      if (ids.length!==0) {
-        let names = ids.map(i=>(playlists.find({id:i}).value().name))
-        if (list) {
-          return names.map((n,i) => (`${i+1}) ${n}`)).join('\r\n')
-        } else {
-          return names.join(', ')
-        }
-      }
+      if (ids.length===0) return ''
+      let names = ids.map(i=>(playlists.find({id:i}).value().name))
+      if (list) return names.map((n,i) => (`${i+1}) ${n}`)).join('\r\n')
+      else return names.join(', ')
     },
-    scrollToTop() {
-      this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
-    },
+    scrollToTop() { this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad") },
     handleScroll(vertical) {
-      if (vertical.scrollTop > 150) {
-        this.isScrollToTopVisible = true
-      } else this.isScrollToTopVisible = false
+      if (vertical.scrollTop > 150) this.isScrollToTopVisible = true
+      else this.isScrollToTopVisible = false
     },
-    getSelectedPlaylists(selectedPlaylists){
+    getSelectedPlaylists(selectedPlaylists) {
       let ids = selectedPlaylists.map(item => (item.dataset.id))
       this.$store.commit('updateSelectedPlaylists', ids)
     },
-    copyPlaylistNameToClipboard(){
-      clipboard.writeText(this.selectedPlaylists())
-    },
+    copyPlaylistNameToClipboard() { clipboard.writeText(this.selectedPlaylists()) },
     deletePlaylists(){
       this.$store.dispatch('deletePlaylists'), 
       this.$store.state.Playlists.dialogDeletePlaylist = false

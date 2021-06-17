@@ -1,6 +1,8 @@
 <template>
   <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" height="100%"
+    <v-card @mousedown="stopSmoothScroll($event)"
+      @mousedown.right="$store.state.contextMenu=false" 
+      @contextmenu="showContextMenu" height="100%"
       :data-id="playlist.id" class="playlist-card" outlined hover 
       :class="{favorite: isFavorite}" v-ripple="{ class: 'accent--text' }">
       <v-btn @click="isFavorite = !isFavorite" icon absolute large class="fav-btn"
@@ -62,16 +64,10 @@ export default {
         return (index === -1) ? this.playlist.videos.length : index;
       })
     },
-    thumbs() {
-      return this.videos.map(video=>(video.id)).slice(0, 6)
-    },
-    pathToUserData() {
-      return this.$store.getters.getPathToUserData
-    },
+    thumbs() { return this.videos.map(video=>(video.id)).slice(0, 6) },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
     isFavorite: {
-      get() {
-        return this.playlist.favorite
-      },
+      get() { return this.playlist.favorite },
       set(value) {
         this.playlist.favorite = value
         this.$store.getters.playlists.find({id: this.playlist.id}).assign({
@@ -107,21 +103,24 @@ export default {
       return 'file://' + this.checkImageExist(imgPath)
     },
     checkImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
+      if (fs.existsSync(imgPath)) return imgPath
+      else {
         this.errorThumb = true
         return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
       }
     },
     showContextMenu(e) {
       e.preventDefault()
-      this.$store.state.menuTabs = false
-      this.$store.state.Playlists.menuCard = false
       setTimeout(() => {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
-        this.$store.state.Playlists.menuCard = true
+        let contextMenu = [
+          { name: `Edit Playlist`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Playlists.dialogEditPlaylist=true}, disabled: this.$store.getters.getSelectedPlaylists.length!==1},
+          { type: 'divider'},
+          { name: `Delete Playlist`, type: 'item', icon: 'delete', color:'error', function: ()=>{this.$store.state.Playlists.dialogDeletePlaylist=true}, disabled: this.$store.getters.getSelectedPlaylists.includes('123123123') },
+        ]
+        this.$store.state.contextMenuContent = contextMenu
+        this.$store.state.contextMenu = true
       }, 300)
     },
   },

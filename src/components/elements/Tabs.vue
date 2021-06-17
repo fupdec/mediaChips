@@ -8,6 +8,7 @@
         <v-tab 
           v-for="tab in tabs" :key="tab.id" :id="tab.id" exact
           @click.middle.prevent.stop="closeTab($event, tab.id)"
+          @mousedown.right="$store.state.contextMenu=false" 
           @contextmenu="showContextMenu($event, tab.id)"
           :to="tab.link" :ripple="false" class="tabs-group-item"
         >
@@ -48,27 +49,57 @@ export default {
     },
   }),
   computed: {
-    tabs() { return this.$store.getters.tabs },
+    tabs:{
+      get() { return this.$store.getters.tabs },
+      set(tabs) { return this.$store.dispatch('updateTabs', tabs) },
+    },
     tabBorders() { return this.$store.state.Settings.tabBorders },
+    tabId() { return this.$route.query.tabId },
   },
   methods: {
     closeTab(e, tabId) {
       e.preventDefault()
       this.$store.dispatch('closeTab', tabId)
+      this.$store.state.contextMenu = false
+    },
+    closeRightTabs(tabId) {
+      this.$store.getters.tabs.length = this.getTabIndexById(tabId) + 1
+      const tabs = this.$store.getters.tabs
+      this.$store.dispatch('updateTabs', tabs)
+      if (this.tabId !== 'default' && this.tabId !== undefined) {
+        if (!this.$store.getters.tabsDb.find({id: this.tabId}).value()) {
+          const link = this.$store.getters.tabs[this.getTabIndexById(tabId)].link
+          this.$router.push(link)
+        }
+      }
+    },
+    closeOtherTabs(tabId) {
+      const tab = this.$store.getters.tabsDb.filter({id: tabId}).value()
+      this.$store.dispatch('updateTabs', tab)
+      if (this.tabId !== 'default' && this.tabId !== tabId && this.tabId !== undefined) {
+        const link = this.$store.getters.tabs[this.getTabIndexById(tabId)].link
+        this.$router.push(link)
+      }
+    },
+    closeAllTabs() {
+      this.$store.dispatch('updateTabs', [])
+      if (this.tabId !== 'default') this.$router.push('/home')
       this.$store.state.menuTabs = false
     },
+    getTabIndexById(tabId) { return this.$store.getters.tabsDb.findIndex({id: tabId}).value() },
     showContextMenu(e, tabId) {
       e.preventDefault()
-      this.$store.state.contextTab = tabId
-      this.$store.state.Videos.menuCard = false
-      this.$store.state.Performers.menuCard = false
-      this.$store.state.Tags.menuCard = false
-      this.$store.state.Websites.menuCard = false
-      this.$store.state.menuTabs = false
       setTimeout(() => {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
-        this.$store.state.menuTabs = true
+        let contextMenu = [
+          { name: `Close Tab`, type: 'item', icon: 'close', function: ()=>{this.$store.dispatch('closeTab', tabId)}},
+          { name: `Close Tabs on the Right`, type: 'item', icon: 'format-horizontal-align-right', function: ()=>{this.closeRightTabs(tabId)}, disabled: this.tabs.length==this.getTabIndexById(tabId)+1},
+          { name: `Close Other Tabs`, type: 'item', icon: 'swap-horizontal', function: ()=>{this.closeOtherTabs(tabId)}, disabled: this.tabs.length<2},
+          { name: `Close All Tabs`, type: 'item', icon: 'table-row-remove', function: ()=>{this.closeAllTabs()}},
+        ]
+        this.$store.state.contextMenuContent = contextMenu
+        this.$store.state.contextMenu = true
       }, 300)
     },
   },

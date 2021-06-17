@@ -35,8 +35,6 @@ export default new Vuex.Store({
     contextMenu: false,
     contextMenuContent: [],
     pathToUserData: '',
-    menuTabs: false,
-    contextTab: '',
     videoPlayerVideoId: null,
     videoPlayerPlaylist: null,
     foldersData: [],
