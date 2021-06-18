@@ -41,11 +41,11 @@
             <div class="tooltip text-center">
               <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb"/>
               <div>
-                <v-icon v-if="marker.type.toLowerCase()=='tag'" small :color="getTagColor(marker.name)">mdi-tag</v-icon>
-                <v-icon v-if="marker.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
-                <v-icon v-if="marker.type.toLowerCase()=='favorite'" small color="pink">mdi-heart</v-icon>
-                <v-icon v-if="marker.type.toLowerCase()=='bookmark'" small color="red">mdi-bookmark</v-icon>
-                {{marker.name}}
+                <v-icon v-if="marker.type=='favorite'" small left color="pink">mdi-heart</v-icon>
+                <v-icon v-else-if="marker.type=='bookmark'" small left color="red">mdi-bookmark</v-icon>
+                <v-icon v-else small left :color="getCard(marker.name).meta.color">mdi-{{getMeta(marker.type).settings.icon}}</v-icon>
+                <span v-if="marker.type=='bookmark'||marker.type=='favorite'">{{marker.name}}</span>
+                <span v-else>{{getCard(marker.name).meta.name}}</span>
               </div>
               <div>{{msToTime(marker.time*1000)}}</div>
             </div>
@@ -93,17 +93,14 @@
               </template>
               
               <v-btn-toggle class="remove-active">
-                <v-btn @click="openDialogMarkerTag">
-                  <v-icon size="20">mdi-tag</v-icon>
-                </v-btn>
-                <v-btn>
-                  <v-icon @click="openDialogMarkerPerformer" size="20">mdi-account</v-icon> 
-                </v-btn>
                 <v-btn @click="addMarker('favorite')">
                   <v-icon size="20">mdi-heart</v-icon> 
                 </v-btn>
                 <v-btn @click="openDialogMarkerBookmark">
                   <v-icon size="20">mdi-bookmark</v-icon> 
+                </v-btn>
+                <v-btn v-for="m in metaMarkers" :key="m.id" :value="m.id" @click="openDialogMarkerMeta(m.id)">
+                  <v-icon size="20">mdi-{{m.settings.icon}}</v-icon>
                 </v-btn>
               </v-btn-toggle>
             </v-menu>
@@ -146,17 +143,14 @@
       </v-card-actions>
       <v-card-actions class="pa-0">
         <v-btn-toggle v-model="markersType" tile dense mandatory multiple color="primary" class="toggle">
-          <v-btn value="tag">
-            <v-icon>mdi-tag</v-icon>
-          </v-btn>
-          <v-btn value="performer">
-            <v-icon>mdi-account</v-icon>
-          </v-btn>
-          <v-btn value="favorite">
+          <v-btn value="favorite" :style="`width:${100/(metaMarkers.length+2)}%`">
             <v-icon>mdi-heart</v-icon>
           </v-btn>
-          <v-btn value="bookmark">
+          <v-btn value="bookmark" :style="`width:${100/(metaMarkers.length+2)}%`">
             <v-icon>mdi-bookmark</v-icon>
+          </v-btn>
+          <v-btn v-for="m in metaMarkers" :key="m.id" :value="m.id" :style="`width:${100/(metaMarkers.length+2)}%`">
+            <v-icon>mdi-{{m.settings.icon}}</v-icon>
           </v-btn>
         </v-btn-toggle>
       </v-card-actions>
@@ -164,21 +158,23 @@
         <v-card-text class="pa-0">
           <div v-if="markers.length">
             <div v-for="marker in markers" :key="marker.id" class="marker-wrapper">
-              <div @click="jumpTo(marker.time)" v-if="(markersType.includes(marker.type.toLowerCase()))" class="marker">
-                <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb" :gradient="markerGradient">
-                  <span class="time">{{msToTime(marker.time*1000)}}</span>
-                  <div class="name">
-                    <v-icon v-if="marker.type.toLowerCase()=='tag'" left small :color="getTagColor(marker.name)">mdi-tag</v-icon>
-                    <v-icon v-if="marker.type.toLowerCase()=='performer'" left small>mdi-account</v-icon>
-                    <v-icon v-if="marker.type.toLowerCase()=='favorite'" left small color="pink">mdi-heart</v-icon>
-                    <v-icon v-if="marker.type.toLowerCase()=='bookmark'" left small color="red">mdi-bookmark</v-icon>
-                    <span>{{marker.name}}</span>
-                  </div>
-                </v-img>
+              <div v-if="(markersType.includes(marker.type))">
+                <div @click="jumpTo(marker.time)" class="marker">
+                  <v-img :src="getMarkerImgUrl(marker.id)" :aspect-ratio="16/9" class="thumb" :gradient="markerGradient">
+                    <span class="time">{{msToTime(marker.time*1000)}}</span>
+                    <div class="name">
+                      <v-icon v-if="marker.type=='favorite'" small left color="pink">mdi-heart</v-icon>
+                      <v-icon v-else-if="marker.type=='bookmark'" small left color="red">mdi-bookmark</v-icon>
+                      <v-icon v-else small left :color="getCard(marker.name).meta.color">mdi-{{getMeta(marker.type).settings.icon}}</v-icon>
+                      <span v-if="marker.type=='bookmark'||marker.type=='favorite'">{{marker.name}}</span>
+                      <span v-else>{{getCard(marker.name).meta.name}}</span>
+                    </div>
+                  </v-img>
+                </div>
+                <v-btn @click="openDialogRemoveMarker(marker)" height="25" width="25" outlined icon color="red" class="delete">
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
               </div>
-              <v-btn @click="openDialogRemoveMarker(marker)" height="25" width="25" outlined icon color="red" class="delete">
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
             </div>
           </div>
           <div v-else class="text-center pt-6">
@@ -249,44 +245,48 @@
     </v-card>
 
 
-    <v-dialog v-model="dialogMarkerTag" max-width="500" scrollable eager>
+    <v-dialog v-if="dialogMarkerMeta" v-model="dialogMarkerMeta" @input="metaForMarker=''" max-width="600" scrollable eager>
       <v-card>
         <v-toolbar color="primary">
-          <div class="headline">Marker with tag on {{msToTime(seekTime*1000)}}</div>
+          <div class="headline">Marker with {{getMeta(markerMetaId).settings.nameSingular}} on {{msToTime(seekTime*1000)}}</div>
           <v-spacer></v-spacer>
-          <v-btn @click="addMarker('tag')" :disabled="!markerTag" outlined><v-icon left>mdi-plus</v-icon>Add</v-btn>
+          <v-btn @click="addMarker('meta')" :disabled="!metaForMarker" outlined><v-icon left>mdi-plus</v-icon>Add</v-btn>
         </v-toolbar>
         <vuescroll>
           <v-card-text>
-            <v-autocomplete
-              v-model="markerTag" outlined clearable hide-details dense
-              :items="tagsAll" label="Tag" placeholder="Choose a tag for the marker"
-              item-text="name" class="hidden-close"
-              item-value="name" no-data-text="No more tags"
+            <v-autocomplete v-model="metaForMarker" :items="metaCardsForMarker" hide-selected 
+              :label="getMeta(markerMetaId).settings.name" item-value="id" autofocus clearable
+              :prepend-inner-icon="`mdi-${getMeta(markerMetaId).settings.icon}`"
+              append-outer-icon="mdi-plus" @click:append-outer="dialogAddNewMetaCard=true"
+              append-icon="mdi-chevron-down" @click:append="dialogListView=true"
               :menu-props="{contentClass:'list-with-preview'}"
-              @click:prepend="dialogAddNewTag=true" prepend-icon="mdi-plus-circle-outline"
-              :filter="filterItemsTags" 
+              :filter="filterCards" :hint="getMeta(markerMetaId).settings.hint" persistent-hint
             >
               <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs" :input-value="data.selected" 
-                  @click="data.select" text-color="white" 
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                  :color="getTagColor(data.item.name)" 
-                > <span>{{ data.item.name }}</span>
+                <v-chip v-bind="data.attrs" 
+                  :color="getColor(markerMetaId,data.item.id)" 
+                  :label="getMeta(markerMetaId).settings.chipLabel"
+                  :outlined="getMeta(markerMetaId).settings.chipOutlined"
+                  @mouseover.stop="showImage($event, data.item.id, 'meta', markerMetaId)" 
+                  @mouseleave.stop="$store.state.hoveredImage=false">
+                  <span>{{ data.item.meta.name }}</span>
                 </v-chip>
               </template>
               <template v-slot:item="data">
-                <div class="list-item"
-                  @mouseover.stop="showImage($event, data.item.id, 'tag')" 
+                <div class="list-item" 
+                  @mouseover.stop="showImage($event, data.item.id, 'meta', markerMetaId)" 
                   @mouseleave.stop="$store.state.hoveredImage=false"
-                > <v-icon :color="data.item.favorite===false ? 'grey':'pink'"
-                    left size="14"> mdi-heart </v-icon>
-                  <v-icon left size="16" :color="data.item.color"> mdi-tag </v-icon>
-                  <span>{{data.item.name}}</span>
-                  <span v-if="data.item.altNames.length" class="aliases"> 
-                    {{data.item.altNames.join(', ').slice(0,50)}}
+                > 
+                  <span v-if="getMeta(markerMetaId).settings.favorite">
+                    <v-icon :color="data.item.meta.favorite? 'pink':''" left size="14">mdi-heart</v-icon>
+                  </span>
+                  <span v-if="getMeta(markerMetaId).settings.color">
+                    <v-icon :color="data.item.meta.color || ''" left small>
+                      mdi-{{getMeta(markerMetaId).settings.icon}}</v-icon>
+                  </span>
+                  <span>{{data.item.meta.name}}</span>
+                  <span v-if="getMeta(markerMetaId).settings.synonyms" class="aliases">
+                    {{getCard(data.item.id).meta.synonyms===undefined? '' : getCard(data.item.id).meta.synonyms.join(', ').slice(0,50)}}
                   </span>
                 </div>
               </template>
@@ -295,152 +295,48 @@
         </vuescroll>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogAddNewTag" max-width="400">
+    <v-dialog v-if="dialogAddNewMetaCard" v-model="dialogAddNewMetaCard" @input="nameForNewMetaCard=''" width="450">
       <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">
-            Add new tag
-          </div>
+        <v-toolbar color="primary">
+          <span class="headline">New {{getMeta(markerMetaId).settings.nameSingular.toLowerCase()}}</span>
           <v-spacer></v-spacer>
-          <v-icon>mdi-tag-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-actions class="pb-0">
-          <v-form ref="tagform" v-model="validNewTagName" style="width:100%">
-            <v-text-field v-model="newTagName" :rules="[getNewTagNameRules]" label="Tag name" outlined dense/>
-          </v-form>
-        </v-card-actions>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="addNewTag" class="ma-4 mt-0" color="green" :disabled="!validNewTagName">
-            <v-icon left>mdi-plus</v-icon> Add </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
+          <v-btn @click="addNewMetaCard" :disabled="!nameForNewMetaCard" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-card-text class="pt-4">
+          <v-text-field v-model="nameForNewMetaCard" label="Name" autofocus/>
+        </v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogMarkerPerformer" max-width="500" scrollable eager>
+    <v-dialog v-if="dialogMarkerBookmark" v-model="dialogMarkerBookmark" max-width="550" scrollable eager>
       <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">
-            Marker with performer on {{msToTime(seekTime*1000)}}
-          </div>
+        <v-toolbar color="primary">
+          <span class="headline">Marker with bookmark on {{msToTime(seekTime*1000)}}</span>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogMarkerPerformer=false" icon>
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-divider></v-divider>
-        <vuescroll>
-          <v-card-text class="pb-0">
-            <v-autocomplete
-              v-model="markerPerformer" outlined clearable hide-details dense
-              :items="performersAll" label="Performer" placeholder="Choose a performer for the marker"
-              item-text="name" class="hidden-close"
-              item-value="name" no-data-text="No more performers"
-              :menu-props="{contentClass:'list-with-preview'}"
-              @click:prepend="dialogAddNewPerformer=true" prepend-icon="mdi-plus-circle-outline"
-              :filter="filterItemsPerformers"
-            >
-              <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs" :input-value="data.selected" 
-                  @click="data.select" text-color="white" 
-                  @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"
-                > <span>{{ data.item.name }}</span>
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <div class="list-item"
-                  @mouseover.stop="showImage($event, data.item.id, 'performer')" 
-                  @mouseleave.stop="$store.state.hoveredImage=false"> 
-                  <v-icon left size="14" :color="data.item.favorite==false?'grey':'pink'">mdi-heart</v-icon>
-                  <v-rating v-model="data.item.rating" class="rating-inline small mr-2"
-                    color="yellow darken-3" background-color="grey darken-1"
-                    empty-icon="$ratingFull" half-icon="mdi-star-half-full"
-                    dense half-increments readonly size="12"/>
-                  <span>{{data.item.name}}</span>
-                  <span v-if="data.item.aliases.length" class="aliases"> 
-                    aka {{data.item.aliases.join(', ').slice(0,50)}}
-                  </span>
-                </div>
-              </template>
-            </v-autocomplete>
-          </v-card-text>
-        </vuescroll>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="addMarker('performer')" :disabled="!markerPerformer" class="ma-4" color="primary">
-            <v-icon left>mdi-plus</v-icon> Add marker
-          </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="dialogAddNewPerformer" max-width="400">
-      <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">
-            Add new performer
-          </div>
-          <v-spacer></v-spacer>
-          <v-icon>mdi-account-plus</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-actions class="pb-0">
-          <v-form ref="performerform" v-model="validNewPerformerName" style="width:100%">
-            <v-text-field v-model="newPerformerName" :rules="[getNewPerformerNameRules]" label="Performer name" outlined dense/>
-          </v-form>
-        </v-card-actions>
-        <v-card-actions class="pa-0">
-          <v-spacer></v-spacer>
-          <v-btn @click="addNewPerformer" class="ma-4 mt-0" color="green" :disabled="!validNewPerformerName">
-            <v-icon left>mdi-plus</v-icon> Add </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="dialogMarkerBookmark" max-width="550" scrollable eager>
-      <v-card>
-        <v-card-title class="px-4 py-1">
-          <div class="headline">
-            Marker with bookmark on {{msToTime(seekTime*1000)}}
-          </div>
-          <v-spacer></v-spacer>
-          <v-btn @click="dialogMarkerBookmark=false" icon>
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="addMarker('bookmark')" :disabled="!markerBookmarkText" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text>
-            <v-textarea v-model="markerBookmarkText" label="Bookmark text" solo hide-details/>
+            <v-textarea v-model="markerBookmarkText" label="Bookmark text" solo hide-details autofocus/>
           </v-card-text>
         </vuescroll>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="addMarker('bookmark')" :disabled="!markerBookmarkText" class="ma-4" color="primary">
-            <v-icon left>mdi-plus</v-icon> Add marker
-          </v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogRemoveMarker" max-width="420">
+    <v-dialog v-if="dialogRemoveMarker" v-model="dialogRemoveMarker" max-width="420">
       <v-card>
-        <v-card-title class="headline red--text px-4 py-1">Remove marker?
+        <v-toolbar color="error">
+          <span class="headline">Remove marker?</span>
           <v-spacer></v-spacer>
-          <v-icon color="red">mdi-delete</v-icon>
-        </v-card-title>
-        <v-divider class="mb-4"></v-divider>
-        <v-card-text class="text-center" v-if="markerForRemove.time">
+          <v-btn @click="dialogRemoveMarker=false" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="removeMarker" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
+        <v-card-text class="text-center py-6">
           <v-card outlined class="pb-2">
             <v-chip outlined class="my-2">
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='tag'" small :color="getTagColor(markerForRemove.name)">mdi-tag</v-icon>
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='performer'" small>mdi-account</v-icon>
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='favorite'" small color="pink">mdi-heart</v-icon>
-              <v-icon v-if="markerForRemove.type.toLowerCase()=='bookmark'" small color="red">mdi-bookmark</v-icon>
-              <span class="ml-2">{{markerForRemove.name}}</span>
+              <v-icon v-if="markerForRemove.type=='favorite'" small left color="pink">mdi-heart</v-icon>
+              <v-icon v-else-if="markerForRemove.type=='bookmark'" small left color="red">mdi-bookmark</v-icon>
+              <v-icon v-else small left :color="getCard(markerForRemove.name).meta.color">mdi-{{getMeta(markerForRemove.type).settings.icon}}</v-icon>
+              <span v-if="markerForRemove.type=='bookmark'||markerForRemove.type=='favorite'">{{markerForRemove.name}}</span>
+              <span v-else>{{getCard(markerForRemove.name).meta.name}}</span>
             </v-chip> 
             <v-img :src="getMarkerImgUrl(markerForRemove.id)" :aspect-ratio="16/9" class="thumb"/>
             <div class="mt-2">
@@ -456,15 +352,12 @@
             </div>
           </v-card>
         </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn @click="dialogRemoveMarker = false" class="ma-4">Cancel</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="removeMarker" class="ma-4" dark color="red">
-            <v-icon left>mdi-delete-alert</v-icon> Remove
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <img v-show="$store.state.hoveredImage" class="list-img-preview"
+      :src="getHoveredImage" height="160" max-width="160"
+      :style="`top:${$store.state.hoveredImageY+30}px;left:${$store.state.hoveredImageX+30}px;`"/>
     
     <v-menu v-model="menu" :position-x="$store.state.x" leave-absolute
       :position-y="$store.state.y" absolute offset-y z-index="1000" min-width="150">
@@ -536,6 +429,7 @@ export default {
   },
   async mounted() {
     this.initPlayer()
+    setTimeout(() => {this.initMarkerType()}, 1000)
 
     document.addEventListener("mousemove", this.controlsMove, false)
     document.addEventListener("mouseup", this.controlsUp, false)
@@ -548,7 +442,8 @@ export default {
     })
     ipcRenderer.on('updateDb', async (event, dbType) => {
       await this.$store.dispatch('getDb', dbType)
-      if (dbType == 'tags') setTimeout(() => {this.getMarkers()}, 1000)
+      if (dbType == 'metaCards') setTimeout(() => {this.getMarkers()}, 1000)
+      if (dbType == 'meta') setTimeout(() => {this.initMarkerType()}, 1000)
     })
     window.addEventListener('resize', this.getCanvasSizes)
   },
@@ -579,26 +474,21 @@ export default {
     playlistShuffle: [],
     playIndex: null,
     playlistMode: ['autoplay'],
+    dialogAddToPlaylist: false,
     // Markers
     isMarkersVisible: false,
     markers: [],
-    markerTag: '',
-    markerPerformer: '',
     markerBookmarkText: '',
-    dialogMarkerTag: false,
-    dialogMarkerPerformer: false,
+    metaForMarker: '',
+    markerMetaId: null,
+    nameForNewMetaCard: '',
+    dialogMarkerMeta: false,
+    dialogAddNewMetaCard: false,
+    dialogListView: false,
     dialogMarkerBookmark: false,
     dialogRemoveMarker: false,
-    dialogAddToPlaylist: false,
     markerForRemove: {},
-    markersType: ['tag','performer','favorite','bookmark'],
-    // add new items to db
-    dialogAddNewTag: false,
-    newTagName: '',
-    validNewTagName: false,
-    dialogAddNewPerformer: false,
-    newPerformerName: '',
-    validNewPerformerName: false,
+    markersType: ['favorite','bookmark'],
   }),
   computed: {
     showSystemBar() {return process.platform === 'win32'},
@@ -614,20 +504,11 @@ export default {
       return 'mdi-volume-low'
     },
     // data from main window
-    tagsAll() {
-      if (this.tagsDb === null) return []
-      let tags = _.filter(this.tagsDb, t=>(t.type.includes('video')))
-      return _.orderBy(tags, 'name', ['asc'])
-    },
-    performersAll() {
-      if (this.performersDb === null) return []
-      return this.performersDb
-    },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     videosDb() { return this.$store.state.videosDb },
-    performersDb() { return this.$store.state.performersDb },
-    tagsDb() { return this.$store.state.tagsDb },
     playlistsDb() { return this.$store.state.playlistsDb },
+    metaDb() { return this.$store.state.metaDb },
+    metaCardsDb() { return this.$store.state.metaCardsDb },
     markersDb() { return this.$store.state.markersDb },
     settingsDb() { return this.$store.state.settingsDb },
     markerGradient() {
@@ -645,6 +526,14 @@ export default {
         let shuffleIndex = this.playlistShuffle.indexOf(this.playIndex)
         return shuffleIndex+1>=this.videos.length && !this.playlistMode.includes('loop')
       } else return this.playIndex+1>=this.videos.length && !this.playlistMode.includes('loop')
+    },
+    metaMarkers() { return _.filter(this.metaDb, i=>i.settings.markers) },
+    metaCardsForMarker() { return _.filter(this.metaCardsDb, { metaId: this.markerMetaId }) },
+    getHoveredImage() { 
+      let cardId = this.$store.state.hoveredImageId, metaId = this.$store.state.hoveredImageMetaId
+      let imgPath = path.join(this.pathToUserData, `/media/meta/${metaId}/${cardId}_main.jpg`)
+      if (fs.existsSync(imgPath)) return 'file://' + imgPath
+      else return path.join('file://', this.pathToUserData, '/img/templates/tag.png')
     },
   },
   methods: {
@@ -833,11 +722,8 @@ export default {
       this.volume = this.player.volume
     },
     changeVolume(e) {
-      if (e.deltaY>0) {
-        if (this.player.volume == 0) return
-      } else {
-        if (this.player.volume >= 1) return
-      }
+      if (e.deltaY>0) { if (this.player.volume == 0) return }
+      else if (this.player.volume >= 1) return
       this.player.volume = (this.player.volume - e.deltaY / 1000 / 2).toFixed(2)
       this.volume = this.player.volume
     },
@@ -856,10 +742,8 @@ export default {
         case e.key === 'z': this.prev(); break
         case e.key === 'c': this.next(); break
         case e.key === 'x': this.stop(); break
-        case e.key === '1': this.openDialogMarkerTag(); break
-        case e.key === '2': this.openDialogMarkerPerformer(); break
-        case e.key === '3': this.addMarker('favorite'); break
-        case e.key === '4': this.openDialogMarkerBookmark(); break
+        case e.key === '1': this.addMarker('favorite'); break
+        case e.key === '2': this.openDialogMarkerBookmark(); break
       }
     },
     handleMouseCanvas(e) {
@@ -880,6 +764,10 @@ export default {
       }
     },
     // MARKERS
+    initMarkerType() {
+      this.markersType = ['favorite','bookmark']
+      for (let m of this.metaMarkers) this.markersType.push(m.id)
+    },
     toggleMarkers() {
       this.isMarkersVisible=!this.isMarkersVisible
       setTimeout(() => { this.getCanvasSizes() }, 100)
@@ -924,18 +812,9 @@ export default {
       if (fs.existsSync(imgPath)) return imgPath 
       else return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
     },
-    getTag(tagName) { return _.find(this.tagsDb, {name:tagName}) },
-    getTagColor(tagName) {
-      let tag = _.find(this.tagsDb, {name:tagName})
-      if (tag) return tag.color 
-      else return ''
-    },
-    openDialogMarkerTag() {
-      this.dialogMarkerTag = true
-      this.seekTime = this.player.currentTime
-    },
-    openDialogMarkerPerformer() {
-      this.dialogMarkerPerformer = true
+    openDialogMarkerMeta(metaId) {
+      this.dialogMarkerMeta = true
+      this.markerMetaId = metaId
       this.seekTime = this.player.currentTime
     },
     openDialogMarkerBookmark() {
@@ -945,18 +824,14 @@ export default {
     addMarker(type) { 
       let text = ''
       let time = Math.floor(this.seekTime)
-      if (type === 'tag') {
-        text = this.markerTag
-        this.dialogMarkerTag = false
-      }
-      if (type === 'performer') {
-        text = this.markerPerformer
-        this.dialogMarkerPerformer = false
-      }
       if (type === 'favorite') time = Math.floor(this.player.currentTime)
-      if (type === 'bookmark') {
+      else if (type === 'bookmark') {
         text = this.markerBookmarkText
         this.dialogMarkerBookmark = false
+      } else if (type === 'meta') {
+        type = this.markerMetaId
+        text = this.metaForMarker
+        this.dialogMarkerMeta = false
       }
     
       let videoId = _.cloneDeep(this.videos[this.playIndex].id)
@@ -970,7 +845,7 @@ export default {
 
       ipcRenderer.send('addMarker', marker, videoId)
 
-      this.markerTag = ''
+      this.metaForMarker = ''
       this.markerBookmarkText = ''
       this.getMarkers()
     },
@@ -984,26 +859,6 @@ export default {
       this.markerForRemove = {}
       this.dialogRemoveMarker = false
       this.getMarkers()
-    },
-    filterItemsTags(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const alternateNames = item.altNames
-      let found = false
-      for (let i=0;i<alternateNames.length;i++) {
-        if (alternateNames[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
-    }, // TODO replace this function with function "filterItems" from main window
-    filterItemsPerformers(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
     },
     // PLAYLIST
     playItemFromPlaylist(index) {
@@ -1044,32 +899,59 @@ export default {
     },
     getFileNameFromPath(videoPath) { return path.parse(videoPath).name },
     getFileFromPath(videoPath) { return path.basename(videoPath) },
-    // Add new items to db
-    getNewTagNameRules(name) {
-      let duplicate = _.find(this.tagsDb, t=>(t.name.toLowerCase()===name.toLowerCase()))
-      if (name.length > 100) return 'Name must be less than 100 characters'
-      else if (name.length===0) return 'Name is required'
-      else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) return 'Name must not content \\/\%\"<>{}\[\]'
-      else if (duplicate!==undefined) return 'Tag with that name already exists'
-      else return true
+    // META
+    getMeta(id) { return _.find(this.metaDb, {id}) },
+    getCard(cardId) { return _.find(this.metaCardsDb, {id:cardId}) },
+    getCards(metaId) { return _.filter(this.metaCardsDb, {metaId}) },
+    getColor(metaId, cardId) {
+      if (this.getMeta(metaId).settings.color) {
+        if (this.getCard(cardId) === undefined) return '#777'
+        else return this.getCard(cardId).meta.color || '#777'
+      } else return ''
     },
-    addNewTag() {
-      ipcRenderer.send('addNewTag', this.newTagName)
-      this.dialogAddNewTag = false
-      this.newTagName = ''
+    filterCards(cardObject, queryText, itemText) {
+      let card = _.cloneDeep(cardObject)
+      let query = queryText.toLowerCase()
+
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
+      }
+
+      if (this.settingsDb.typingFiltersDefault) {
+        let index = card.name.toLowerCase().indexOf(query)
+        if (index > -1) return true
+        else {
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            let indexSub = card.meta.synonyms[i].toLowerCase().indexOf(query)
+            if (indexSub > -1) return true
+          }
+          return false
+        }
+      } else {
+        if (foundByChars(card.meta.name, query)) return true
+        else {
+          if (!card.meta.synonyms) return false
+          for (let i=0; i<card.meta.synonyms.length; i++) {
+            return foundByChars(card.meta.synonyms[i], query)
+          }
+          return false
+        }
+      }
     },
-    getNewPerformerNameRules(name) {
-      let duplicate = _.find(this.performersDb, t=>(t.name.toLowerCase()===name.toLowerCase()))
-      if (name.length > 100) return 'Name must be less than 100 characters'
-      else if (name.length===0) return 'Name is required'
-      else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) return 'Name must not content \\/\%\"<>{}\[\]'
-      else if (duplicate!==undefined) return 'Performer with that name already exists'
-      else return true
-    },
-    addNewPerformer() {
-      ipcRenderer.send('addNewPerformer', this.newPerformerName)
-      this.dialogAddNewPerformer = false
-      this.newPerformerName = ''
+    addNewMetaCard() {
+      ipcRenderer.send('addNewMetaCard', this.nameForNewMetaCard, this.markerMetaId)
+      this.dialogAddNewMetaCard = false
+      this.nameForNewMetaCard = ''
     },
   },
   watch: {
@@ -1383,9 +1265,10 @@ export default {
   }
   .toggle {
     width: 100%;
+    display: flex;
+    flex-wrap: wrap;
     .v-btn {
       min-width: 30px;
-      width: 25%;
       padding: 0;
     }
   }

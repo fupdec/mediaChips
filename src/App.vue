@@ -222,9 +222,9 @@ export default {
     hoveredImageId() {return this.$store.state.hoveredImageId},
     getHoveredImage() {
       let imgType = this.$store.state.hoveredImageType
-      if (imgType === 'performer') return this.getImgPerformersUrl(this.hoveredImageId)
-      if (imgType === 'tag') return this.getImgTagsUrl(this.hoveredImageId)
-      if (imgType === 'website') return this.getImgWebsiteUrl(this.hoveredImageId)
+      // if (imgType === 'performer') return this.getImgPerformersUrl(this.hoveredImageId)
+      // if (imgType === 'tag') return this.getImgTagsUrl(this.hoveredImageId)
+      // if (imgType === 'website') return this.getImgWebsiteUrl(this.hoveredImageId)
       if (imgType === 'meta') return this.getImgMetaUrl(this.hoveredImageId, this.$store.state.hoveredImageMetaId)
     },
     logoPath() {return path.join('file://', __static, '/icons/icon.png')},

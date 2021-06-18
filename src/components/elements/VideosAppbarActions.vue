@@ -26,7 +26,7 @@
       <v-card width="350">
         <div class="pa-2 d-flex">
           <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" autofocus
-            @click:clear="clearSearch" outlined dense hide-details clearable class="pt-0"/>
+            @click:clear="clearSearch" @keypress.enter="search" outlined dense hide-details clearable class="pt-0"/>
           <v-btn @click="search" class="ml-2" color="primary" depressed height="40">
             <v-icon>mdi-magnify</v-icon>
           </v-btn>

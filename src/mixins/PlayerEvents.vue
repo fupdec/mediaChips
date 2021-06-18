@@ -21,11 +21,8 @@ export default {
       ipcRenderer.on('removeMarker', (event, markerForRemove, video) => {
         this.removeMarker(markerForRemove, video)
       })
-      ipcRenderer.on('addNewTag', (event, tag) => {
-        this.addNewTag(tag)
-      })
-      ipcRenderer.on('addNewPerformer', (event, performer) => {
-        this.addNewPerformer(performer)
+      ipcRenderer.on('addNewMetaCard', (event, metaCardName, metaId) => {
+        this.addNewMetaCard(metaCardName, metaId)
       })
     })
   },
@@ -51,38 +48,27 @@ export default {
     addMarker(marker, videoId) {
       let video = _.cloneDeep(this.$store.getters.videos.find({id: videoId}).value())
       this.$store.getters.markers.push(marker).write()
-      if (marker.type.toLowerCase() == 'tag') {
-        if (!video.tags.includes(marker.name)) {
-          video.tags.push(marker.name)
-          video.tags.sort()
-          this.$store.getters.videos.find({ id: video.id }).assign({ 
-            tags: video.tags,
-            edit: Date.now(),
-          }).write()
-          this.$store.commit('updateVideos', [video.id])
-        }
-      } else if (marker.type == 'performer') {
-        if (!video.performers.includes(marker.name)) {
-          video.performers.push(marker.name)
-          video.performers.sort()
-          this.$store.getters.videos.find({ id: video.id }).assign({ 
-            performers: video.performers,
-            edit: Date.now(),
-          }).write()
-          this.$store.commit('updateVideos', [video.id])
-        }
+      if (marker.type !== 'favorite' && marker.type !== 'bookmark') {
+        if (video[marker.type]!==undefined && video[marker.type].includes(marker.name)) return
+        if (video[marker.type]===undefined) video[marker.type] = []
+        video[marker.type].push(marker.name)
+        this.$store.getters.videos.find({ id: video.id }).assign({ 
+          [marker.type]: video[marker.type],
+          edit: Date.now(),
+        }).write()
+        this.$store.commit('updateVideos', [video.id])
       }
     },
     removeMarker(markerForRemove) {
       this.$store.dispatch('deleteMarker' , markerForRemove)
     },
-    addNewTag(tagName) {
-      this.$store.dispatch('addTag', { id: shortid.generate(), name: tagName })
-      ipcRenderer.send('updatePlayerDb', 'tags') // update tag in player window
-    },
-    addNewPerformer(performerName) {
-      this.$store.dispatch('addPerformer', { id: shortid.generate(), name: performerName })
-      ipcRenderer.send('updatePlayerDb', 'performers') // update performers in player window
+    addNewMetaCard(metaCardName, metaId) {
+      this.$store.dispatch('addMetaCard', { 
+        id: shortid.generate(),
+        metaId: metaId,
+        meta: { name: metaCardName },
+      })
+      ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
     },
   },
 }

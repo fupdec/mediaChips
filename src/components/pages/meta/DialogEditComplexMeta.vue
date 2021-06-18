@@ -13,6 +13,7 @@
               <v-chip label small outlined class="mr-4">
                 <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}}
               </v-chip>
+              <span>ID: {{meta.id}}</span>
               <v-chip label small outlined>
                 <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
               </v-chip>
@@ -37,8 +38,18 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
-                <v-col cols="12" sm="6" class="pt-0">
+                <v-col cols="6" class="pt-0 d-flex align-center">
+                  <v-icon left>mdi-menu</v-icon>
                   <v-switch v-model="settings.hidden" :label="`Hide in the menu - ${settings.hidden?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                </v-col>
+                <v-col cols="6" class="pt-0 d-flex align-center">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on }">
+                      <v-icon v-on="on" left>mdi-map-marker</v-icon>
+                    </template>
+                    <span>Markers on timeline in built-in player</span>
+                  </v-tooltip>
+                  <v-switch v-model="settings.markers" :label="`Markers in player - ${settings.markers?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                 </v-col>
                 <v-col cols="12" align="center">
                   <v-card outlined class="pa-4">
@@ -289,6 +300,7 @@ export default {
       country: false,
       scraper: false,
       nested: false,
+      markers: false,
       metaInCard: [],
     },
     drag: false,

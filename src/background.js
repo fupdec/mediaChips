@@ -206,5 +206,4 @@ ipcMain.on('addMarker', (e, marker, markerTag, video) => { win.webContents.send(
 ipcMain.on('removeMarker', (event, markerForRemove, video) => { win.webContents.send( 'removeMarker', markerForRemove, video ) }) 
 ipcMain.on('toggleDarkMode', (e, value) => { player.webContents.send( 'toggleDarkMode', value ) })
 ipcMain.on('updatePlayerDb', (e, value) => { player.webContents.send( 'updateDb', value ) })
-ipcMain.on('addNewTag', (e, tagName) => { win.webContents.send( 'addNewTag', tagName ) }) 
-ipcMain.on('addNewPerformer', (e, performerName) => { win.webContents.send( 'addNewPerformer', performerName ) }) 
+ipcMain.on('addNewMetaCard', (e, metaCardName, metaId) => { win.webContents.send( 'addNewMetaCard', metaCardName, metaId ) }) 

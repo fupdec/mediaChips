@@ -68,6 +68,7 @@ export default {
       await this.createWebsites(websitesId)
       this.parseTagsForPerformers(performersId, tagsId)
       this.parseVideosForBookmarks()
+      this.fixMarkers(performersId, tagsId)
       this.isMigrationRunning = false
 
       // TODO close all tabs, update meta in player window, add migration state to settings
@@ -293,6 +294,7 @@ export default {
             nameSingular: 'Performer',
             hint: 'People in the video',  
             icon: 'account-outline',
+            hidden: false,
             images: true,
             imageAspectRatio: 0.625,
             imageTypes: [ 'main', 'alt', 'custom1', 'custom2', 'avatar', 'header' ],
@@ -306,6 +308,7 @@ export default {
             scraper: true,
             bookmark: true,
             nested: false,
+            markers: true,
             metaInCard: _.cloneDeep(metaInCardForPerformers),
           },
           state: {
@@ -430,6 +433,7 @@ export default {
             nameSingular: 'Tag',
             hint: 'For a quick search',
             icon: 'tag-outline',
+            hidden: false,
             images: true,
             imageAspectRatio: 1,
             imageTypes: ['main'],
@@ -443,6 +447,7 @@ export default {
             scraper: false,
             bookmark: true,
             nested: false,
+            markers: true,
             metaInCard: [
               {
                 id: simpleMetaCategoryId,
@@ -532,6 +537,7 @@ export default {
             nameSingular: 'Website',
             hint: 'Studios',
             icon: 'web',
+            hidden: false,
             images: true,
             imageAspectRatio: 1,
             imageTypes: ['main'],
@@ -545,6 +551,7 @@ export default {
             scraper: false,
             bookmark: true,
             nested: true,
+            markers: false,
             metaInCard: [
               {
                 id: simpleMetaUrlId,
@@ -701,6 +708,22 @@ export default {
           console.log(err)
         }
       } else this.$store.commit('addLog', {type:'error',text:`Folder with websites images was not found`})
+    },
+    fixMarkers(performersId, tagsId) {
+      let performerCards = this.$store.getters.metaCards.filter({metaId:performersId})
+      let tagCards = this.$store.getters.metaCards.filter({metaId:tagsId})
+      
+      this.$store.getters.markers.each(marker=>{
+        if (marker.type.toLowerCase()==='performer') {
+          let found = performerCards.find(i=>i.meta.name===marker.name).value()
+          if (found) marker.type = tagsId, marker.name = found.id
+          else marker.type = 'bookmark'
+        } else if (marker.type.toLowerCase()==='tag') {
+          let found = tagCards.find(i=>i.meta.name===marker.name).value()
+          if (found) marker.type = tagsId, marker.name = found.id
+          else marker.type = 'bookmark'
+        }
+      }).write()
     },
     closeDialog() { this.$emit('finish') },
   },

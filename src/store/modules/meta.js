@@ -393,21 +393,11 @@ const Meta = {
     },
   },
   getters: {
-    dbMeta() {
-      return dbMeta
-    },
-    meta(state, store) {
-      return store.dbMeta.get('meta')
-    },
-    metaCards(state, store) {
-      return store.dbMeta.get('cards')
-    },
-    complexMeta(state, store) {
-      return store.dbMeta.get('meta').filter({type:'complex'})
-    },
-    simpleMeta(state, store) {
-      return store.dbMeta.get('meta').filter({type:'simple'})
-    },
+    dbMeta() { return dbMeta },
+    meta(state, store) { return store.dbMeta.get('meta') },
+    metaCards(state, store) { return store.dbMeta.get('cards') },
+    complexMeta(state, store) { return store.dbMeta.get('meta').filter({type:'complex'}) },
+    simpleMeta(state, store) { return store.dbMeta.get('meta').filter({type:'simple'}) },
     metaCardsOnPage(state, store, rootState) {
       const meta = state.filteredMeta,
             metaCount = state.cardsPerPage

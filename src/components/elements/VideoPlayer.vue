@@ -49,6 +49,8 @@ export default {
     await this.$store.dispatch('getDb', 'performers')
     await this.$store.dispatch('getDb', 'playlists')
     await this.$store.dispatch('getDb', 'markers')
+    await this.$store.dispatch('getDb', 'meta')
+    await this.$store.dispatch('getDb', 'metaCards')
     await this.$store.dispatch('getDb', 'settings')
     // window events
     win.on('maximize', ()=>{ this.maximized = true })
@@ -71,6 +73,8 @@ export default {
     tagsDb() {return this.$store.state.tagsDb},
     playlistsDb() {return this.$store.state.playlistsDb},
     markersDb() {return this.$store.state.markersDb},
+    metaDb() {return this.$store.state.metaDb},
+    metaCardsDb() {return this.$store.state.metaCardsDb},
     settingsDb() {return this.$store.state.settingsDb},
     fullscreen() {return this.$store.state.fullscreen},
   },

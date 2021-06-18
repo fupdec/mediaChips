@@ -21,7 +21,7 @@
           </v-toolbar>
           <v-card-text>
             <v-form ref="formAddCard" v-model="validCardName">
-              <v-textarea v-model="cardNames" label="Names" outlined required :rules="nameRules"
+              <v-textarea v-model="cardNames" label="Names" outlined required :rules="nameRules" autofocus
                 :hint="`Write a name on a new line to add several ${meta.settings.name.toLowerCase()} at once`" no-resize/>
               <v-alert v-if="dupCards.length" border="left" dense text dismissible class="mt-4 mb-0"
                 icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
@@ -59,7 +59,7 @@
         <v-card width="350">
           <div class="pa-2 d-flex">
             <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" autofocus
-              @click:clear="clearSearch" outlined dense hide-details clearable class="pt-0"/>
+              @click:clear="clearSearch" @keypress.enter="search" outlined dense hide-details clearable class="pt-0"/>
             <v-btn @click="search" class="ml-2" color="primary" depressed height="40">
               <v-icon>mdi-magnify</v-icon>
             </v-btn>
@@ -341,7 +341,7 @@ export default {
       addCardInDb().then(() => {
         this.cardNames = '',
         this.$store.dispatch('filterMetaCards')
-        // ipcRenderer.send('updatePlayerDb', 'websites') // TODO update meta in player window
+        ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
       })
     },
     search() {
