@@ -18,8 +18,7 @@
       <v-tab-item value="app-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-btn @click="$store.state.Settings.dialogScanVideos=true" class="mb-10" block color="primary" x-large rounded>
-            <v-icon size="26" left>mdi-plus</v-icon> Add new videos
-          </v-btn>
+            <v-icon large class="mr-4">mdi-video-plus</v-icon> Add new videos </v-btn>
 
           <v-card outlined class="mt-10 px-4">
             <div class="headline text-h5 text-center my-4"> Folders
@@ -90,11 +89,7 @@
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
                 </template>
-                <span>The following data from the videos will be updated: <br>
-                  - number of videos for performers, tags and websites <br>
-                  - tags for performers and websites <br>
-                  - performers for tags and websites <br>
-                  - websites for performers</span>
+                <span>Will be updated number of videos for meta cards</span>
               </v-tooltip>
             </div>
 
@@ -179,8 +174,8 @@
 
         <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
           <v-card>
-            <v-toolbar color="error">
-              <div class="primary"> Updating data from video </div>
+            <v-toolbar color="primary">
+              <div class="headline"> Updating data from video </div>
               <v-spacer></v-spacer>
               <v-btn @click="dialogUpdateNumberOfVideos=false" :disabled="updatingNumberOfVideos" outlined> <v-icon left>mdi-close</v-icon> Close </v-btn>
             </v-toolbar>
@@ -255,12 +250,11 @@
       </v-tab-item>
       <v-tab-item value="appearance-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <v-btn @click="darkMode=!darkMode" color="primary" class="mb-10" block x-large rounded>
+            <v-icon large class="mr-4">mdi-theme-light-dark</v-icon> Toggle Dark Mode </v-btn>
+
           <v-card outlined class="px-4">
             <div class="headline text-h5 text-center py-4">Theme</div>
-            <div class="d-flex">
-              <span class="mr-6">Dark mode:</span>
-              <v-switch v-model="darkMode" :label="darkMode?'Enabled':'Disabled'" inset hide-details class="d-inline-flex mt-0 pt-0"/>
-            </div>
             <ThemeColors />
           </v-card>
 
@@ -468,26 +462,18 @@
         </v-card>
       </v-tab-item>
       <v-tab-item value="database-settings"> 
-        <!-- TODO create migration database to new version of app. backups with old version don't work with new -->
-        <v-card flat max-width="1000" style="margin: auto;" class="py-10">
-          <v-card outlined class="pb-4 px-4">
-            <div class="headline text-h5 text-center py-4">Backups</div>
-            <ManageBackups />
-          </v-card>
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <ManageBackups />
           
           <v-card outlined class="mt-10 pb-4 px-4">
             <div class="headline text-h5 text-center red--text py-4">Clear data</div>
-            <div class="red--text">Clear data:</div>
             <div class="caption mb-2 red--text">
               <v-icon size="18" color="red" left>mdi-alert-outline</v-icon>
               This will completely delete all data. Data recovery is possible only from a backup.
               Make sure you create a backup before clearing.
             </div>
             <ClearDatabases typeOfDB="videos" />
-            <ClearDatabases typeOfDB="performers" />
-            <ClearDatabases typeOfDB="tags" />
-            <ClearDatabases typeOfDB="websites" />
-            <ClearDatabases typeOfDB="bookmarks" />
+            <ClearDatabases typeOfDB="meta" />
             <ClearDatabases typeOfDB="saved filters" />
             <ClearDatabases typeOfDB="markers" />
           </v-card>

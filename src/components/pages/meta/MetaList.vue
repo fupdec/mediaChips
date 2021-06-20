@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-btn @click="dialogAddMeta=true" class="mb-4" color="primary" block x-large rounded> <v-icon left>mdi-plus</v-icon> Add new meta</v-btn>
+    <v-btn @click="dialogAddMeta=true" class="mb-6" color="primary" block x-large rounded> <v-icon large class="mr-4">mdi-plus</v-icon> Add new meta</v-btn>
 
     <v-dialog v-model="dialogAddMeta" scrollable max-width="800">
       <v-card>

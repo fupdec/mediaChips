@@ -95,56 +95,19 @@ export default new Vuex.Store({
     clearAllNotifications({ state, commit}) {
       commit('clearAllNotifications')
     },
-    updateDataFromVideos({getters}) {
+    updateDataFromVideos({getters, rootState}) {
       const videos = getters.videos
-        // update performer data
-      getters.performers.each(p=>{
-        const vids = videos.filter(v=>v.performers.includes(p.name))
-        p.videos = vids.value().length // write number of videos
-        // get tags of videos
-        let tagsAllVideos = vids.map('tags').value()
-        let tags = []
-        tagsAllVideos.map(vTags=>{ if (vTags.length>0) vTags.map(tag=>tags.push(tag)) })
-        tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-        tags = tags.filter(el => (el !== null && el !== undefined))
-        p.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
-        // get websites of videos
-        let websitesAllVideos = vids.map('websites').value()
-        let websites = []
-        websitesAllVideos.map(vWeb=>{ if (vWeb.length>0) vWeb.map(web=>websites.push(web)) })
-        websites = websites.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-        websites = websites.filter(el => (el !== null && el !== undefined))
-        p.websites = websites.sort((a, b) => a.localeCompare(b)) // write websites of videos
-      }).write()
-
-      // update tag data
-      getters.tags.each(t=>{
-        const vids = videos.filter(v=>v.tags.includes(t.name))
-        t.videos = vids.value().length // write number of videos
-        // get performers of tag
-        let performers = getters.performers.filter({tags:[t.name]}).map('name').value()
-        t.performers = performers.sort((a, b) => a.localeCompare(b)) // write performers of tag
-      }).write()
-
-      // update website data
-      getters.websites.each(w=>{
-        const vids = videos.filter(v=>v.websites.includes(w.name))
-        w.videos = vids.value().length // write number of videos
-        // get performers of videos
-        let performersAllVideos = vids.map('performers').value()
-        let performers = []
-        performersAllVideos.map(perfs=>{ if (perfs.length>0) perfs.map(p=>performers.push(p)) })
-        performers = performers.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-        performers = performers.filter(el => (el !== null && el !== undefined))
-        w.performers = performers.sort((a, b) => a.localeCompare(b)) // write performers of videos
-        // get tags of videos
-        let tagsAllVideos = vids.map('tags').value()
-        let tags = []
-        tagsAllVideos.map(vTags=>{ if (vTags.length>0) vTags.map(tag=>tags.push(tag)) })
-        tags = tags.filter((x, i, a) => a.indexOf(x) === i) // get unique values
-        tags = tags.filter(el => (el !== null && el !== undefined))
-        w.videoTags = tags.sort((a, b) => a.localeCompare(b)) // write tags of videos
-      }).write()
+      // update number of videos for meta cards
+      let metaAssignedToVideo = getters.meta.filter(m=>
+        rootState.Settings.videoMetaInCard.find(i=>i.id===m.id)).value()
+      for (let m of metaAssignedToVideo) {
+        getters.metaCards.filter({metaId:m.id}).each(mc => {
+          mc.videos = videos.filter(v=>{
+            if (v[m.id]) return v[m.id].includes(mc.id)
+            else return false
+          }).value().length
+        }).write()
+      }
     },
   },
   modules: {

@@ -69,6 +69,7 @@ export default {
       this.parseTagsForPerformers(performersId, tagsId)
       this.parseVideosForBookmarks()
       this.fixMarkers(performersId, tagsId)
+      this.$store.dispatch('updateDataFromVideos')
       this.isMigrationRunning = false
 
       // TODO close all tabs, update meta in player window, add migration state to settings

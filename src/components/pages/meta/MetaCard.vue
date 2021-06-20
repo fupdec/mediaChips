@@ -20,7 +20,7 @@
       </div>
       <v-divider/>
 
-      <div v-if="visibility.name" class="px-1 name">{{card.meta.name}}</div>
+      <div v-if="visibility.name" class="px-1 name">{{card.meta.name}} <span v-if="isMetaAssignedToVideo">({{card.videos||0}})</span></div>
       <div v-if="meta.settings.synonyms && visibility.synonyms" class="px-1 synonyms"> <span class="pl-2"/> {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}} </div>
       
       <!-- Parse meta from cards -->
