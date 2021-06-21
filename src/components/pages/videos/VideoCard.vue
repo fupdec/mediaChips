@@ -96,7 +96,7 @@
       <v-divider v-if="ratingAndFavoriteInCard"></v-divider>
 
       <!-- Parse meta -->
-      <div v-for="(m,i) in metaInCard" :key="i">
+      <div v-for="(m,i) in metaAssignedToVideos" :key="i">
         <div v-if="visibility[m.id]" class="meta-in-card">
           <v-chip-group v-if="m.type=='complex'" column>
             <v-tooltip top>
@@ -105,13 +105,14 @@
               </template>
               <span>{{getMeta(m.id).settings.name}}</span>
             </v-tooltip>
-            <v-chip v-for="v in video[m.id]" :key="v" 
-              :color="getColor(m.id,v)" 
+            <v-chip v-for="mc in video[m.id]" :key="mc" 
+              :color="getColor(m.id,mc)" 
               :label="getMeta(m.id).settings.chipLabel"
               :outlined="getMeta(m.id).settings.chipOutlined"
-              @mouseover.stop="showImage($event,v,'meta',m.id)" 
+              @click.middle="openMetaInNewTab(mc)"
+              @mouseover.stop="showImage($event,mc,'meta',m.id)" 
               @mouseleave.stop="$store.state.hoveredImage=false"> 
-                {{ getCard(v).meta.name }} </v-chip>
+                {{ getCard(mc).meta.name }} </v-chip>
           </v-chip-group>
           <div v-else-if="m.type=='simple'" class="simple-meta">
             <v-tooltip top>
@@ -205,7 +206,7 @@ export default {
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
     ratingAndFavoriteInCard() { return this.$store.state.Settings.ratingAndFavoriteInCard },
     isVideoExist() { return fs.existsSync(this.video.path) },
-    metaInCard() { return this.$store.state.Settings.metaAssignedToVideos },
+    metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
     visibility() { return this.$store.state.Settings.videoVisibility },
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
     complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
@@ -428,6 +429,28 @@ export default {
         const meta = parseFilePath(video.path)
         for (let m in meta) video[m] = _.union(video[m], meta[m])
       }).write()
+    },
+    openMetaInNewTab(cardId) {
+      let card = this.getCard(cardId)
+      let tabId = cardId
+      let tabName = card.meta.name
+      let meta = this.getMeta(card.metaId)
+
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with ${meta.settings.nameSingular.toLowerCase()} "${tabName}" already exists`
+        })
+        return
+      }
+
+      let tab = {
+        name: tabName,
+        link: `/metacard/?metaId=${meta.id}&cardId=${tabId}&tabId=${tabId}`,
+        id: tabId,
+        icon: meta.settings.icon
+      }
+      this.$store.dispatch('addNewTab', tab)
     },
   },
   watch: {
