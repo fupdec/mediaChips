@@ -64,19 +64,23 @@
           <v-btn @click="dialogRestoreBackup=false" :disabled="isRestoringBackupRun" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> close </v-btn>
           <v-btn @click="restoreBackup" :disabled="isRestoringBackupRun" outlined> <v-icon left>mdi-backup-restore</v-icon>Restore</v-btn>
         </v-toolbar>
-        <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
-          <div class="py-6">
-            This will replace current state of the database.
-            <br>It is recommended to create a backup before restoring to avoid data loss in case of an error.
-          </div>
-          <v-icon size="72" color="red">mdi-alert-outline</v-icon>
+        <v-card-text v-if="isRestoringBackupRun" class="text-center">
+          <h3 class="py-4">Restoring in progress...</h3>
+          <v-icon x-large class="loading-animation">mdi-loading</v-icon>
         </v-card-text>
-        <v-card-text v-else class="text-center py-6">
-          Backup restored. Need to restart application.
-          <v-btn @click="restartApp" class="ma-6" color="green">Restart</v-btn>
+        <v-card-text v-else class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div>This will replace current state of the database.<br>It is recommended to create a backup before restoring <br>to avoid data loss in case of an error.</div>
         </v-card-text>
-        <v-card-text v-if="isBackupRestoredError" class="text-center py-6">
-          An error occurred while restoring.
+        <v-card-text v-if="isBackupRestoredError" class="text-center py-6">An error occurred while restoring.</v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="isBackupRestoredSuccessfully" width="600" persistent>
+      <v-card>
+        <v-card-text class="text-center py-6  d-flex flex-column align-center">
+          Backup successfully restored. Need to restart application.
+          <v-btn @click="restartApp" class="mx-6 mt-6" color="primary">
+            <v-icon left>mdi-restart</v-icon> Restart </v-btn>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -89,8 +93,8 @@
           <v-btn @click="deleteBackup" outlined> <v-icon left>mdi-check</v-icon>Yes</v-btn>
         </v-toolbar>
         <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
-          <div class="py-4">This action will remove selected backup from application.</div>
-          <v-icon size="72" color="red">mdi-alert-outline</v-icon>
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div>This action will remove selected backup from application.</div>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -168,7 +172,7 @@ export default {
     clearFiles(directory) {
       return new Promise((resolve, reject) => {
          fs.readdir(directory, (err, files) => {
-          console.log(directory,files)
+          // console.log(directory,files)
           if (err) return reject(err)
           if (files.length == 0) return resolve()
           async function unlinkFiles(files) {
@@ -229,6 +233,7 @@ export default {
       archive.append(JSON.stringify(backupInfo), { name: 'info.json' })
       archive.file(settings, { name: 'dbs.json' })
       archive.finalize()
+      this.selectedBackup = []
     },
     openDialogRestoreBackup() {
       if (this.selectedBackup.length == 0) {
@@ -285,7 +290,7 @@ export default {
             this.$store.commit('addLog', { text: 'Backup successfully restored', type: 'success' })
             this.isRestoringBackupRun = false
             this.isBackupRestoredSuccessfully = true
-            console.log(`Extracted ${count} entries`)
+            // console.log(`Extracted ${count} entries`)
           }
           zip.close()
         })
@@ -295,6 +300,7 @@ export default {
         this.isBackupRestoredError = true
         console.log(err)
       })
+      this.selectedBackup = []
     },
     importBackup() {
       let importPath = path.join(this.pathToUserData, '/backups/')
@@ -344,6 +350,7 @@ export default {
           zip.close()
         })
       }).catch(err => { this.$store.commit('addLog', { text: err, type: 'error' }) })
+      this.selectedBackup = []
     },
     exportBackup() {
       if (this.selectedBackup.length == 0) { this.backupError = true; return false } 
@@ -358,6 +365,7 @@ export default {
           else this.$store.commit('addLog', { text: `Backup "${date}" successfully exported`, type: 'success' })
         })
       }).catch(err => { this.$store.commit('addLog', { text: err, type: 'error' }) })
+      this.selectedBackup = []
     },
     openDialogDeleteBackup() {
       if (this.selectedBackup.length == 0) {
@@ -378,6 +386,7 @@ export default {
         })
       } else this.deleteBackupFromDb(backupDate)
       this.dialogDeleteBackup = false
+      this.selectedBackup = []
     },
     deleteBackupFromDb(backupDate) {
       this.$store.commit('addLog', { text: `Backup "${backupDate}" successfully deleted`, type: 'info' })
@@ -391,10 +400,3 @@ export default {
   },
 }
 </script>
-
-<style lang="less">
-.backup-btn {
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-</style>

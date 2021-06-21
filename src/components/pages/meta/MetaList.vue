@@ -155,8 +155,9 @@
           <v-btn @click="dialogDeleteMeta=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="deleteMeta" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
-        <v-card-text class="py-8">
-          <div class="text-center">Deleting the <b>{{selectedMeta.type}}</b> meta
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div>Deleting the <b>{{selectedMeta.type}}</b> meta
             <v-chip small class="mx-2">
               <v-icon small left>mdi-{{selectedMeta.settings.icon}}</v-icon>
               <b>{{selectedMeta.settings.name}}</b>

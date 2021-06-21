@@ -75,8 +75,9 @@
           <v-btn @click="dialogDeleteItem=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="addItemToDeleted" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
-        <v-card-text class="py-8">
-          <div class="text-center">Delete item
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div>Delete item
             <v-chip small class="mx-1">
               {{meta.settings.items[deleteItemIndex].name}}
             </v-chip> from array?

@@ -13,23 +13,23 @@
           <v-card-text style="white-space: pre-wrap;">
             <div>
               You want to delete video<span v-if="selectedVideosLength>1">s
-              ({{selectedVideosLength}})</span>
+              ({{selectedVideosLength}})</span>:
             </div> {{selectedVideos(true)}}
           </v-card-text>
         </vuescroll>
       </v-card>
     </v-dialog>
     
-		<v-dialog v-model="$store.state.Videos.dialogErrorPlayVideo" max-width="800">
+		<v-dialog v-model="$store.state.Videos.dialogErrorPlayVideo" max-width="600">
       <v-card>
         <v-toolbar color="error">
           <div class="headline"> Error play video </div>
           <v-spacer></v-spacer>
           <v-btn @click="$store.state.Videos.dialogErrorPlayVideo=false" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
         </v-toolbar>
-        <v-card-text class="py-6 text-center">
-          The file on this path does not exist:
-          <br>{{$store.state.Videos.errorPlayVideoPath}}
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-circle-outline</v-icon>
+          <div class="red--text">The file on this path does not exist: <br>{{$store.state.Videos.errorPlayVideoPath}}</div>
         </v-card-text>
       </v-card>
     </v-dialog>

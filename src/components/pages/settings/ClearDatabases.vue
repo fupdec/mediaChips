@@ -10,14 +10,13 @@
           <v-btn @click="dialogConfirmClearAllFiles=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="clearDB(nameDB)" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
-        <v-card-text class="text-center mt-6">
-          <v-icon size="60" color="red">mdi-alert</v-icon> 
-        </v-card-text>
-        <v-card-text class="text-center red--text">
-          <!-- TODO add icon like this to all deleting dialogs -->
-          This will <span class="text-uppercase">delete all {{nameDB}}</span> from the database!
-          <br>Before deleting, make a backup and if you are ready then press 
-          the <br><span class="text-uppercase">red button</span>. 
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div class="red--text">
+            This will <span class="text-uppercase">delete all {{nameDB}}</span> from the database!
+            <br>Before deleting, make a backup and if you are ready then press 
+            the <br><span class="text-uppercase">red button</span>. 
+          </div>
         </v-card-text>
       </v-card>
     </v-dialog>

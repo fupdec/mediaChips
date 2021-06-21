@@ -82,23 +82,18 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-if="dialogDeleteFilters" :value="dialogDeleteFilters" width="400" persistent>
+    <v-dialog v-if="dialogDeleteFilters" :value="dialogDeleteFilters" width="500" persistent>
       <v-card>
         <v-toolbar color="error">
           <v-card-title class="headline pl-0">Are you sure?</v-card-title>
           <v-spacer></v-spacer>
-          <v-icon>mdi-delete-alert</v-icon>
+          <v-btn @click="dialogDeleteFilters=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> no </v-btn>
+          <v-btn @click="deleteSavedFilter" outlined> <v-icon left>mdi-check</v-icon> yes </v-btn>
         </v-toolbar>
-        <v-card-text class="pt-8">
-          <div class="text-center">Delete saved filters with name "<b>{{savedFilters[selected].name}}</b>"?</div>
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div>Delete saved filters with name "<b>{{savedFilters[selected].name}}</b>"?</div>
         </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn @click="dialogDeleteFilters=false" small class="ma-4">Cancel</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="deleteSavedFilter" small class="ma-4" color="red" dark> 
-            <v-icon left>mdi-delete-alert</v-icon> Delete
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
   </div>

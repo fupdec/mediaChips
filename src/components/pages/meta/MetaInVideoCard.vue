@@ -2,7 +2,7 @@
   <div>
     <v-card outlined class="py-2 mb-10">
       <div class="text-center">
-        <span class="overline">Meta in Video Card</span>
+        <span class="overline">Meta in Videos</span>
       </div>
       <v-list v-if="metaInCard.length" dense class="list-zebra">
         <draggable v-model="metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
@@ -73,12 +73,13 @@
           <v-btn @click="dialogDeleteMetaFromCard=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="deleteMetaFromCard" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
-        <v-card-text class="py-8">
-          <div class="text-center">Remove meta 
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div>Remove meta 
             <v-chip small class="mx-2">
               <v-icon small left>mdi-{{getMeta(metaInCard[selectedMetaIndex].id).settings.icon}}</v-icon>
               <b>{{getMeta(metaInCard[selectedMetaIndex].id).settings.name}}</b>
-            </v-chip> from video card?s
+            </v-chip> from videos?
           </div>
         </v-card-text>
       </v-card>

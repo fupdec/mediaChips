@@ -256,7 +256,10 @@
           <v-btn @click="dialogDeleteImage=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="deleteImage(deleteImageType)" outlined> <v-icon left>mdi-check</v-icon>Yes</v-btn>
         </v-toolbar>
-        <v-card-text class="text-center red--text py-8">The image will be permanently deleted!</v-card-text>
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div class="red--text">The image will be permanently deleted!</div>  
+        </v-card-text>
       </v-card>
     </v-dialog>
   </div>

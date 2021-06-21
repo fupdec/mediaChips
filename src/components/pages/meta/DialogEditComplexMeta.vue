@@ -237,8 +237,9 @@
           <v-btn @click="dialogDeleteMetaFromCards=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="addMetaToDeleted" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
-        <v-card-text class="py-8">
-          <div class="text-center">Remove meta 
+        <v-card-text class="text-center">
+          <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+          <div>Remove meta 
             <v-chip small class="mx-2">
               <v-icon small left>mdi-{{getMeta(metaInCard[selectedMetaIndex].id).settings.icon}}</v-icon>
               <b>{{getMeta(metaInCard[selectedMetaIndex].id).settings.name}}</b>
