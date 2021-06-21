@@ -59,7 +59,7 @@
         <vuescroll>
           <v-card-text class="pa-0">
             <v-row class="mx-2 mt-4">
-              <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" lg="6" class="pt-0">
+              <v-col v-for="(m,i) in metaAssignedToVideos" :key="i+key" cols="12" lg="6" class="pt-0">
                 <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                   @input="setVal($event,m.id)" :value="values[m.id]"
                   multiple hide-selected
@@ -298,7 +298,7 @@ export default {
       return `background: linear-gradient(to top, ${color}, rgba(0,0,0,.0))`
     },
     fileExtension() { return path.parse(this.video.path).ext.replace('.', '').toLowerCase() },
-    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
     showIcons() { return this.$store.state.Settings.showIconsOfMetaInEditingDialog },
   },
   methods: {
@@ -320,9 +320,9 @@ export default {
       setTimeout(() => { this.playPreview() }, 300)
 
       // parse meta 
-      for (let i = 0; i < this.metaInCard.length; i++) {
-        const id = this.metaInCard[i].id
-        const type = this.metaInCard[i].type
+      for (let i = 0; i < this.metaAssignedToVideos.length; i++) {
+        const id = this.metaAssignedToVideos[i].id
+        const type = this.metaAssignedToVideos[i].type
         if (type=='complex') { this.values[id] = _.cloneDeep(this.video[id]) || []; continue }
         const simpleMetaType = this.getMeta(id).dataType
         let defaultValue = ''

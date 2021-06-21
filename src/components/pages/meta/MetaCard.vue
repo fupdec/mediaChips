@@ -106,7 +106,7 @@ export default {
     isCustom1ImgExist() { return this.meta.settings.imageTypes.includes('custom1') && !this.imgCustom1.includes('not_exist') },
     isCustom2ImgExist() { return this.meta.settings.imageTypes.includes('custom2') && !this.imgCustom2.includes('not_exist') },
     isSelectedSingleMetaCard() { return this.$store.state.Meta.selectedMeta.length == 1 },
-    isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.videoMetaInCard, {id:this.meta.id}) !== undefined },
+    isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id:this.meta.id}) !== undefined },
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },

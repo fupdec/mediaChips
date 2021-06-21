@@ -176,14 +176,14 @@ export default {
         return { by, disabled: filtersBoolean.includes(by) }
       })
     },
-    metaInCard() { return this.$store.state.Settings.videoMetaInCard }
+    metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos }
   },
   methods: {
     // TODO: add paste from clipboard function for all input's type
     initMetaList() {
-      for (let i = 0; i < this.metaInCard.length; i++) {
-        let id = this.metaInCard[i].id
-        let type = this.metaInCard[i].type
+      for (let i = 0; i < this.metaAssignedToVideos.length; i++) {
+        let id = this.metaAssignedToVideos[i].id
+        let type = this.metaAssignedToVideos[i].type
         let meta = this.getMeta(id)
         this.metaList.push(meta.id)
         if (type == 'complex') { this.metaType.select.push(meta.id); continue }

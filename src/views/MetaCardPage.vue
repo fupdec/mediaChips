@@ -266,7 +266,7 @@ export default {
     },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     filters() { return this.$store.state.Settings.videoFilters },
-    isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.videoMetaInCard, {id: this.meta.id}) !== undefined },
+    isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id: this.meta.id}) !== undefined },
   },
   methods: {
     removeAllFilters() {

@@ -73,12 +73,12 @@ export default {
       this.updateSavedFilters(performersId, tagsId, websitesId)
      
       //-add meta to video meta in card settings
-      this.$store.getters.settings.get('videoMetaInCard')
+      this.$store.getters.settings.get('metaAssignedToVideos')
         .push({ id: performersId, type: 'complex' })
         .push({ id: tagsId, type: 'complex' })
         .push({ id: websitesId, type: 'complex' })
         .write()
-      this.$store.state.Settings.videoMetaInCard = this.$store.getters.settings.get('videoMetaInCard').value()
+      this.$store.state.Settings.metaAssignedToVideos = this.$store.getters.settings.get('metaAssignedToVideos').value()
       
       this.moveImages(performersId, tagsId, websitesId)
       this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.0'})

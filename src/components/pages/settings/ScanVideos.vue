@@ -260,7 +260,7 @@ export default {
     parsedNewVideos() { return this.newVideos.join(', \n') },
     isProcessRun() { return this.$store.state.Settings.scanProcRun },
     pathToUserData() { return this.$store.getters.getPathToUserData },
-    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('videoMetaInCard').filter({type:'complex'}).value() },
+    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
   },
   methods: {
     initParseMeta() {

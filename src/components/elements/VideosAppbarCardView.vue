@@ -101,7 +101,7 @@
 
             <v-divider class="ma-1"></v-divider>
 
-            <v-list-item v-for="(mc,i) in metaInCard" :key="i" link @click="toggleVisibility(mc.id)">
+            <v-list-item v-for="(mc,i) in metaAssignedToVideos" :key="i" link @click="toggleVisibility(mc.id)">
               <v-list-item-title>
                 <v-icon left size="18">mdi-{{getMeta(mc.id).settings.icon}}</v-icon>
                 {{getMeta(mc.id).settings.name}}
@@ -179,7 +179,7 @@ export default {
     //   get() { return this.$store.state.Settings.videoWebsiteHidden },
     //   set(value) { this.$store.dispatch('updateSettingsState', {key:'videoWebsiteHidden', value}) },
     // },
-    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
     visibility: {
       get() { return this.$store.state.Settings.videoVisibility },
       set(value) { this.$store.dispatch('updateSettingsState', {key:'videoVisibility', value}) },
@@ -188,9 +188,9 @@ export default {
   methods: {
     initVisibility() {
       let visibility = {}
-      for (let i = 0; i < this.metaInCard.length; i++) visibility[this.metaInCard[i].id] = true
+      for (let i in this.metaAssignedToVideos) visibility[this.metaAssignedToVideos[i].id] = true
       visibility = {...visibility, ...this.visibility}
-      this.visibility = _.pickBy(visibility, (val, key) => _.find(this.metaInCard, i=>i.id===key) )
+      this.visibility = _.pickBy(visibility, (val, key) => _.find(this.metaAssignedToVideos, i=>i.id===key) )
     },
     changeCardSize(value) {
       this.$store.dispatch('updateSettingsState', {key:'videoCardSize', value})

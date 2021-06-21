@@ -347,7 +347,7 @@
       </v-tab-item>
       <v-tab-item value="videos-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <MetaInVideoCard/>
+          <MetaAssignedToVideos/>
           
           <v-card outlined class="pb-4 px-4">
             <div class="headline text-h5 text-center py-4"> Video preview</div>
@@ -586,7 +586,7 @@ const cheerio = require("cheerio")
 const { webFrame } = require('electron')
 
 import MetaList from '@/components/pages/meta/MetaList.vue'
-import MetaInVideoCard from '@/components/pages/meta/MetaInVideoCard.vue'
+import MetaAssignedToVideos from '@/components/pages/meta/MetaAssignedToVideos.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
@@ -602,7 +602,7 @@ export default {
   name: 'SettingsPage',
   components: {
     MetaList,
-    MetaInVideoCard,
+    MetaAssignedToVideos,
     ThemeColors,
     ManageBackups,
     ClearDatabases,

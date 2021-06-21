@@ -205,10 +205,10 @@ export default {
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
     ratingAndFavoriteInCard() { return this.$store.state.Settings.ratingAndFavoriteInCard },
     isVideoExist() { return fs.existsSync(this.video.path) },
-    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    metaInCard() { return this.$store.state.Settings.metaAssignedToVideos },
     visibility() { return this.$store.state.Settings.videoVisibility },
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
-    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('videoMetaInCard').filter({type:'complex'}).value() },
+    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
   },
   methods: {
     stopSmoothScroll(event) {

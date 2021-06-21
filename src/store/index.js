@@ -99,7 +99,7 @@ export default new Vuex.Store({
       const videos = getters.videos
       // update number of videos for meta cards
       let metaAssignedToVideo = getters.meta.filter(m=>
-        rootState.Settings.videoMetaInCard.find(i=>i.id===m.id)).value()
+        rootState.Settings.metaAssignedToVideos.find(i=>i.id===m.id)).value()
       for (let m of metaAssignedToVideo) {
         getters.metaCards.filter({metaId:m.id}).each(mc => {
           mc.videos = videos.filter(v=>{

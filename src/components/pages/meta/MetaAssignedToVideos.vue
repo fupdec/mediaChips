@@ -2,12 +2,12 @@
   <div>
     <v-card outlined class="py-2 mb-10">
       <div class="text-center">
-        <span class="overline">Meta in Videos</span>
+        <span class="overline">Meta Assigned to Videos</span>
       </div>
-      <v-list v-if="metaInCard.length" dense class="list-zebra">
-        <draggable v-model="metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+      <v-list v-if="metaAssignedToVideos.length" dense class="list-zebra">
+        <draggable v-model="metaAssignedToVideos" v-bind="dragOptions" @start="drag=true" @end="drag=false">
           <transition-group type="transition">
-            <v-list-item v-for="(meta, i) in metaInCard" :key="i" class="pr-1 pl-2">
+            <v-list-item v-for="(meta, i) in metaAssignedToVideos" :key="i" class="pr-1 pl-2">
               <div class="d-flex justify-space-between align-center" style="width:100%">
                 <span>
                   <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
@@ -32,7 +32,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn @click="dialogAddMetaToCard=true" rounded class="pr-4" color="primary">
-          <v-icon left>mdi-plus</v-icon> <span>add meta to card</span>
+          <v-icon left>mdi-plus</v-icon> <span> Assign meta</span>
         </v-btn>
         <v-spacer></v-spacer>
       </v-card-actions>
@@ -41,7 +41,7 @@
     <v-dialog v-if="dialogAddMetaToCard" v-model="dialogAddMetaToCard" scrollable max-width="450">
       <v-card>
         <v-toolbar color="primary">
-          <div class="headline">Add Meta to Video Card</div>
+          <div class="headline">Assign Meta to Videos</div>
           <v-spacer></v-spacer>
           <v-btn @click="addMetaToCard" outlined><v-icon left>mdi-plus</v-icon> Add </v-btn>
         </v-toolbar>
@@ -77,8 +77,8 @@
           <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
           <div>Remove meta 
             <v-chip small class="mx-2">
-              <v-icon small left>mdi-{{getMeta(metaInCard[selectedMetaIndex].id).settings.icon}}</v-icon>
-              <b>{{getMeta(metaInCard[selectedMetaIndex].id).settings.name}}</b>
+              <v-icon small left>mdi-{{getMeta(metaAssignedToVideos[selectedMetaIndex].id).settings.icon}}</v-icon>
+              <b>{{getMeta(metaAssignedToVideos[selectedMetaIndex].id).settings.name}}</b>
             </v-chip> from videos?
           </div>
         </v-card-text>
@@ -93,7 +93,7 @@ import draggable from 'vuedraggable'
 import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
-  name: 'MetaInVideoCard',
+  name: 'MetaAssignedToVideos',
   components: { vuescroll, draggable },
   mixins: [MetaGetters], 
   mounted () {
@@ -114,12 +114,12 @@ export default {
     selectedMetaIndex: 0,
   }),
   computed: {
-    metaInCard: {
-      get() { return this.$store.state.Settings.videoMetaInCard },
-      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoMetaInCard', value}) },
+    metaAssignedToVideos: {
+      get() { return this.$store.state.Settings.metaAssignedToVideos },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'metaAssignedToVideos', value}) },
     },
     metaForCard() {
-      let metaInCardIds = this.metaInCard.map(i=>i.id)
+      let metaInCardIds = this.metaAssignedToVideos.map(i=>i.id)
       let freeMetaList = this.$store.getters.meta.filter(i=>!metaInCardIds.includes(i.id))
       freeMetaList = freeMetaList.filter(i=>i.type!=='specific')
       return freeMetaList.cloneDeep().value()
@@ -128,10 +128,10 @@ export default {
   methods: {
     addMetaToCard() {
       if (this.selectedMetaForCard == null || this.selectedMetaForCard.length == 0) return // check if empty
-      if (_.filter(this.metaInCard, {id:this.selectedMetaForCard}).length > 0) return // check for dups
+      if (_.filter(this.metaAssignedToVideos, {id:this.selectedMetaForCard}).length > 0) return // check for dups
       let meta = _.find(this.metaForCard, {id: this.selectedMetaForCard})
       let metaForAdding = { id: meta.id, type: meta.type } 
-      this.metaInCard.push(metaForAdding)
+      this.metaAssignedToVideos.push(metaForAdding)
       this.dialogAddMetaToCard = false
     },
     openDialogDeleteMetaFromCard(i) { 
@@ -139,9 +139,9 @@ export default {
       this.dialogDeleteMetaFromCard = true
     },
     deleteMetaFromCard() {
-      let metaId = this.metaInCard[this.selectedMetaIndex].id
+      let metaId = this.metaAssignedToVideos[this.selectedMetaIndex].id
       this.$store.getters.videos.filter(v=>v[metaId]!==undefined).each(v=>{v[metaId]=undefined}).write() 
-      this.metaInCard.splice(this.selectedMetaIndex, 1)
+      this.metaAssignedToVideos.splice(this.selectedMetaIndex, 1)
       this.dialogDeleteMetaFromCard = false
     },
   },

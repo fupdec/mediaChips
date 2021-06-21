@@ -23,7 +23,7 @@
           <v-card-text class="pl-2">
             <v-container fluid>
               <v-row>
-                <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" class="d-flex align-center pt-0">
+                <v-col v-for="(m,i) in metaAssignedToVideos" :key="i+key" cols="12" class="d-flex align-center pt-0">
                   <v-btn @click="toggleEditMode(m)" small icon class="mr-2"> 
                     <v-tooltip v-if="edits[m.id]===1" top>
                       <template v-slot:activator="{ on }">
@@ -120,7 +120,7 @@
                     :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     :disabled="edits[m.id]===0" :hint="getMeta(m.id).settings.hint"/>
                 </v-col>
-                <v-col v-if="metaInCard.length==0" cols="12" class="d-flex align-center justify-center flex-column">
+                <v-col v-if="metaAssignedToVideos.length==0" cols="12" class="d-flex align-center justify-center flex-column">
                   <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
                   <div>No meta assigned to the video. Please assign them in the settings.</div>
                 </v-col>
@@ -224,14 +224,14 @@ export default {
     dialogListView: false,
   }),
   computed: {
-    metaInCard() { return this.$store.state.Settings.videoMetaInCard },
+    metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
     showIcons() { return this.$store.state.Settings.showIconsOfMetaInEditingDialog },
   },
   methods: {
     parseMetaInCard() {
-      for (let i = 0; i < this.metaInCard.length; i++) {
-        const id = this.metaInCard[i].id
-        const type = this.metaInCard[i].type
+      for (let i = 0; i < this.metaAssignedToVideos.length; i++) {
+        const id = this.metaAssignedToVideos[i].id
+        const type = this.metaAssignedToVideos[i].type
         this.edits[id] = 0
         if (type=='complex') { this.values[id] = []; continue }
         const simpleMetaType = this.getMeta(id).dataType

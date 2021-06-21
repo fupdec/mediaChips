@@ -104,7 +104,7 @@ export default {
         .each(tab => this.$store.dispatch('closeTab', tab.id)).value()
       this.$store.getters.dbMeta.set('meta', [...SpecificMeta]).set('cards', []).write() // clear meta db
       this.$store.commit('getMetaListFromDb') // update menu
-      this.$store.dispatch('updateSettingsState', {key:'videoMetaInCard',value:[]}) // update assigned to video
+      this.$store.dispatch('updateSettingsState', {key:'metaAssignedToVideos',value:[]}) // update assigned to video
       this.$store.dispatch('updateSettingsState', {key:'videoVisibility',value:{}}) // update visibile meta in video
       this.clearFiles(path.join(this.pathToUserData, '/media/meta/'))
       ipcRenderer.send('updatePlayerDb', 'meta') // update db in player window
