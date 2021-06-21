@@ -31,6 +31,7 @@
 const shortid = require('shortid')
 const fs = require("fs-extra")
 const path = require("path")
+const { ipcRenderer } = require('electron')
 
 export default {
   name: 'MigrateToMeta',
@@ -69,11 +70,8 @@ export default {
       this.parseTagsForPerformers(performersId, tagsId)
       this.parseVideosForBookmarks()
       this.fixMarkers(performersId, tagsId)
-      this.$store.dispatch('updateDataFromVideos')
-      this.isMigrationRunning = false
-
-      // TODO close all tabs, update meta in player window, add migration state to settings
-      
+      this.updateSavedFilters(performersId, tagsId, websitesId)
+     
       //-add meta to video meta in card settings
       this.$store.getters.settings.get('videoMetaInCard')
         .push({ id: performersId, type: 'complex' })
@@ -81,9 +79,17 @@ export default {
         .push({ id: websitesId, type: 'complex' })
         .write()
       this.$store.state.Settings.videoMetaInCard = this.$store.getters.settings.get('videoMetaInCard').value()
-    
+      
       this.moveImages(performersId, tagsId, websitesId)
       this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.0'})
+            
+      this.$store.dispatch('updateDataFromVideos') // update numnber of videos
+      this.$store.dispatch('updateTabs', []) // close all tabs
+      ipcRenderer.send('updatePlayerDb', 'settings') // update settings in player window
+      ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
+      ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
+      
+      this.isMigrationRunning = false
     },
     sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) },
     parseItems(items) { return items.map(i=>{ if (i.length) return{ id:shortid.generate(), name:i } }) },
@@ -724,6 +730,15 @@ export default {
           if (found) marker.type = tagsId, marker.name = found.id
           else marker.type = 'bookmark'
         }
+      }).write()
+    },
+    updateSavedFilters(performersId, tagsId, websitesId) {
+      this.$store.getters.savedFiltersDatabase.set('savedFilters', {
+        videos: [],
+        playlists: [],
+        [performersId]: [],
+        [tagsId]: [],
+        [websitesId]: [],
       }).write()
     },
     closeDialog() { this.$emit('finish') },

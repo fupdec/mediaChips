@@ -8,9 +8,6 @@ const dbsf = low(adapterSavedFilters)
 dbsf.defaults({
   savedFilters: {
     videos: [],
-    performers: [],
-    tags: [],
-    websites: [],
     playlists: [],
   }
 }).write()
@@ -38,15 +35,9 @@ const SavedFilters = {
     },
   },
   getters: {
-    dbsf(state) {
-      return state.lastChanged, dbsf
-    },
-    savedFiltersDatabase(state, store) {
-      return store.dbsf
-    },
-    savedFilters(state, store) {
-      return store.dbsf.get('savedFilters')
-    },
+    dbsf(state) { return state.lastChanged, dbsf },
+    savedFiltersDatabase(state, store) { return store.dbsf },
+    savedFilters(state, store) { return store.dbsf.get('savedFilters') },
   }
 }
 
