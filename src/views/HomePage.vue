@@ -229,21 +229,6 @@ export default {
   mixins: [LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
-      // if (!this.$store.getters.settings.get('appNewVersionUpdatePerformerViews').value()) {
-      //   this.$store.getters.performers.each(p => p.views = 0).write()
-      //   this.$store.getters.settings.set('appNewVersionUpdatePerformerViews', true).write()
-      // } // remove this in the next version (0.7.3), added in v0.7.2
-
-      // if (!this.$store.getters.settings.get('appNewVersionUpdateWebsitesAltNames').value()) {
-      //   this.$store.getters.websites.each(i => {i.views = 0; i.altNames = []}).write()
-      //   this.$store.getters.videos.each(i => {i.views = 0; i.viewed = undefined}).write()
-      //   this.$store.getters.settings.set('appNewVersionUpdateWebsitesAltNames', true).write()
-      // } // remove this in the next version (0.7.4), added in v0.7.3
-
-      // if (!this.$store.getters.settings.get('appNewVersionUpdateWebsitesUrl').value()) {
-      //   this.$store.getters.websites.each(i => i.url = '').write()
-      //   this.$store.getters.settings.set('appNewVersionUpdateWebsitesUrl', true).write()
-      // } // remove this in the next version (0.7.4), added in v0.7.3
     })
   },
   data: ()=>({

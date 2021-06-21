@@ -53,14 +53,12 @@ dbs.defaults({
   playlistSortBy: 'name',
   playlistSortDirection: 'asc',
   playlistPage: 1,
-  backups: [],
   tabs: [],
   videosFiltersPresetDefault: false,
   videosPerPage: 20,
   playlistsPerPage: 20,
   gapSize: 's',
   isPlayVideoInSystemPlayer: false,
-  customParametersPerformer: [],
   updateIntervalDataFromVideos: 30,
   autoUpdateDataFromVideos: true,
   updateDataFromVideosOnStart: false,
@@ -127,11 +125,9 @@ const Settings = {
     playlistSortBy: 'name',
     playlistSortDirection: 'asc',
     playlistPage: 1,
-    backups: dbs.get('backups').value(),
     tab: null,
     tabs: _.cloneDeep(dbs.get('tabs').value()),
     videosFiltersPresetDefault: dbs.get('videosFiltersPresetDefault').value(),
-    performersFiltersPresetDefault: dbs.get('performersFiltersPresetDefault').value(),
     dialogHeaderGradient: false,
     gapSize: dbs.get('gapSize').value(),
     isPlayVideoInSystemPlayer: dbs.get('isPlayVideoInSystemPlayer').value(),
@@ -150,7 +146,6 @@ const Settings = {
     databaseVersion: dbs.get('databaseVersion').value(),
   }),
   mutations: {
-    updateBackups(state, value) { state.backups = value },
     closeTab(state, tabId) { state.tabs = _.filter(state.tabs, tab => tab.id !== tabId) },
     getTabsFromDb(state, tabs) { state.tabs = _.cloneDeep(dbs.get('tabs').value()) },
     updateTabs(state, tabs) { // TODO create mutation for update any value in settings
@@ -207,7 +202,6 @@ const Settings = {
   getters: {
     dbs(state) { return state.lastChanged, dbs },
     settings(state, store) { return store.dbs },
-    backups(state, store) { return store.dbs.get('backups').value() },
     tabsDb(state, store) { return store.dbs.get('tabs') },
     tabs(state, store) { return state.tabs },
   }
