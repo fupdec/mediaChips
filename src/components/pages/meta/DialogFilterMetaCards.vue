@@ -13,12 +13,12 @@
         <vuescroll>
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
-              <v-select @input="setBy($event,i)" :value="filters[i].by" 
+              <v-autocomplete @input="setBy($event,i)" :value="filters[i].by" 
                 :items="computedBy" label="By" outlined dense class="by"
-                :disabled="filters[i].lock" item-value="by">
+                :disabled="filters[i].lock" item-value="by" :filter="filterBy"> 
                 <template v-slot:selection="data">
-                  <v-icon left>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
-                  <span>{{getMeta(data.item.by).settings.name||''}}</span>
+                  <v-icon>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
+                  <span class="mx-2">{{getMeta(data.item.by).settings.name||''}}</span>
                 </template>
                 <template v-slot:item="data">
                   <div class="list-item"> 
@@ -26,7 +26,7 @@
                     <span>{{getMeta(data.item.by).settings.name||''}}</span>
                   </div>
                 </template>
-              </v-select>
+              </v-autocomplete>
 
               <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond"
                 :items="getConditions(filters[i].type)" outlined dense label="Condition"

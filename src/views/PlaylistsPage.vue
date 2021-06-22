@@ -2,7 +2,7 @@
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
     <div class="headline text-h3 d-flex align-center justify-center my-6">
       <v-icon x-large left>mdi-format-list-bulleted</v-icon> Playlists
-      <span class="text-h5 ml-2">({{$store.getters.filteredPlaylistsTotal}})</span>
+      <span class="text-h5 ml-2">({{$store.state.Playlists.filteredPlaylists.length}})</span>
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">

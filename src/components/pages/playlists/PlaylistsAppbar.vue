@@ -13,47 +13,32 @@
           </v-tooltip>
         </template>
         <v-card width="500">
-          <v-card-title class="py-1">
+          <v-toolbar color="primary">
             <span class="headline">Add New Playlist</span>
             <v-spacer></v-spacer>
-            <v-icon>mdi-playlist-plus</v-icon>
-          </v-card-title>
-          <v-divider></v-divider>
-            <v-card-text class="pb-0">
-              <v-form ref="form" v-model="validPlaylistName">
-                <v-textarea
-                  v-model="playlistName" label="Names" outlined required :rules="nameRules"
-                  hint="Write a name on a new line to add several playlists at once" no-resize
-                ></v-textarea>
-                <v-alert
-                  v-model="alertDuplicatePlaylists" border="left" text dismissible class="mt-6"
-                  icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"
-                > Already in the database: {{duplicatePlaylists}} </v-alert>
-                <v-alert
-                  v-model="alertAddNewPlaylists" border="left" text icon="mdi-plus-circle"
-                  close-text="Close" type="success" dismissible class="mt-6" 
-                > Added: {{newPlaylists}} </v-alert>
-              </v-form>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn @click="pasteText" color="secondary" class="mb-2 ml-2" small> 
-                <v-icon left>mdi-clipboard-text-outline</v-icon> Paste text
-              </v-btn>
-              <v-spacer></v-spacer>
-              <v-btn 
-                @click="addNewPlaylist" :disabled="!validPlaylistName" 
-                color="primary" class="mb-2 mr-2" small
-              > <v-icon left>mdi-plus</v-icon> Add
-              </v-btn>
-            </v-card-actions>
+            <v-btn @click="addNewPlaylist" :disabled="!validPlaylistName" outlined>
+              <v-icon left>mdi-plus</v-icon>Add</v-btn>
+          </v-toolbar>
+          <v-card-text>
+            <v-form ref="form" v-model="validPlaylistName">
+              <v-textarea v-model="playlistName" label="Names" outlined required :rules="nameRules"
+                hint="Write a name on a new line to add several playlists at once" no-resize autofocus/>
+              <v-alert v-model="alertDuplicatePlaylists" border="left" text dismissible class="mt-6"
+                icon="mdi-plus-circle-multiple-outline" close-text="Close" type="warning"> 
+                Already in the database: {{duplicatePlaylists}} </v-alert>
+              <v-alert v-model="alertAddNewPlaylists" border="left" text icon="mdi-plus-circle"
+                close-text="Close" type="success" dismissible class="mt-6"> 
+                Added: {{newPlaylists}} </v-alert>
+            </v-form>
+          </v-card-text>
         </v-card>
       </v-menu>
 
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="$store.state.Playlists.dialogFilterPlaylists=true" v-on="on" icon tile>
-            <v-badge :value="filterBadge" :content="filteredPlaylistsTotal" overlap bottom style="z-index: 5;"> 
-            <v-icon>mdi-filter</v-icon> </v-badge>
+          <v-badge :value="filtersNumber!=0" :content="filtersNumber" overlap bottom style="z-index: 5;"> 
+          <v-icon>mdi-filter</v-icon> </v-badge>
           </v-btn>
         </template>
         <span>Filter Playlists</span>
@@ -69,13 +54,13 @@
                 </v-btn>
               </v-badge>
             </template>
-            <span>Search</span>
+            <span>Search by Name</span>
           </v-tooltip>
         </template>
         <v-card width="350">
           <div class="pa-2 d-flex">
-            <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" 
-              @click:clear="clearSearch" outlined dense hide-details clearable class="pt-0"/>
+            <v-text-field :value="searchStringComputed" @input="changeSearchString($event)" autofocus
+              @click:clear="clearSearch" @keypress.enter="search" outlined dense hide-details clearable class="pt-0"/>
             <v-btn @click="search" class="ml-2" color="primary" depressed height="40">
               <v-icon>mdi-magnify</v-icon>
             </v-btn>
@@ -220,33 +205,18 @@ export default {
     searchString: '',
   }),
   computed: {
-    filterBadge() {
+    filtersNumber() {
       let filters = _.cloneDeep(this.$store.state.Settings.playlistFilters)
-      if (filters.length) {
-        filters = _.filter(filters, f => {
-          if (f.type == null) return false 
-          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
-            if (f.val.length) return true 
-            else return false
-          } 
-          if (f.type == 'boolean') return true
-        })
-        return filters.length > 0
-      } else return false
-    },
-    filteredPlaylistsTotal() {
-      let filters = _.cloneDeep(this.$store.state.Settings.playlistFilters)
-      if (filters.length) {
-        filters = _.filter(filters, f => {
-          if (f.type == null) return false 
-          if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
-            if (f.val.length) return true 
-            else return false
-          } 
-          if (f.type == 'boolean') return true
-        })
-        return filters.length
-      } else return 0
+      if (!filters.length) return 0
+      filters = _.filter(filters, f => {
+        if (f.type == null) return false 
+        if (f.type=='number'||f.type=='string'||f.type=='date'||f.type=='select'||f.type=='array') {
+          if (f.val.length) return true 
+          else return false
+        } 
+        if (f.type == 'boolean') return true
+      })
+      return filters.length
     },
     sortIcon() {
       if (this.sortButtons=='name') return 'mdi-alphabetical-variant'
@@ -256,79 +226,51 @@ export default {
       return 'mdi-help'
     },
     sortButtons: {
-      get() {
-        return this.$store.state.Settings.playlistSortBy
-      },
-      set(value) {
-        this.$store.state.Settings.playlistSortBy = value
-      },
+      get() { return this.$store.state.Settings.playlistSortBy },
+      set(value) { this.$store.state.Settings.playlistSortBy = value },
     },
-    sortDirection() {
-      return this.$store.state.Settings.playlistSortDirection
-    },
+    sortDirection() { return this.$store.state.Settings.playlistSortDirection },
     searchStringComputed() {
       let filters = this.$store.state.Settings.playlistFilters
-      let search = _.find(filters, {param: 'name', flag: 'search'})
+      let search = _.find(filters, {by: 'name', appbar: true})
       if (search) return search.val
       else return ''
     },
     favoritesFilterExist() {
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
       let filters = this.$store.state.Settings.playlistFilters
-      let index = _.findIndex(filters, {param: 'favorite'})
-      if (index >= 0) return true 
-      else return false
+      let index = _.findIndex(filters, favorite)
+      return index > -1
     },
   },
   methods: {
     search() {
       if (this.searchString == null || this.searchString.length == 0) return
       let filters = this.$store.state.Settings.playlistFilters
-      let index = _.findIndex(filters, {param: 'name', flag: 'search'})
-      if (index >= 0) filters.splice(index, 1)
+      let index = _.findIndex(filters, {by: 'name', appbar: true})
+      if (index > -1) filters.splice(index, 1)
       this.$store.state.Settings.playlistFilters.push({
-        param: 'name',
-        cond: 'includes',
-        val: this.searchString,
-        type: 'string',
-        flag: 'search',
-        lock: true
+        by: 'name', cond: 'includes', val: this.searchString, 
+        type: 'string', flag: null, appbar: true, lock: false
       })
       this.$store.dispatch('filterPlaylists')
     },
     clearSearch() {
       let filters = this.$store.state.Settings.playlistFilters
-      let index = _.findIndex(filters, {param: 'name', flag: 'search'})
-      if (index >= 0) filters.splice(index, 1)
+      let index = _.findIndex(filters, {by: 'name', appbar: true})
+      if (index > -1) filters.splice(index, 1)
       else return
       this.$store.dispatch('filterPlaylists')
     },
     toggleFavorites() {
       let filters = this.$store.state.Settings.playlistFilters
-      let index = _.findIndex(filters, {param: 'favorite'})
-      if (index >= 0) {
-        filters.splice(index, 1)
-      } else {
-        this.$store.state.Settings.playlistFilters.push({
-          param: 'favorite',
-          cond: 'yes',
-          val: '',
-          type: 'boolean',
-          flag: null,
-          lock: true
-        })
-      }
+      let favorite = {by:'favorite',cond:'yes',val:'',type:'boolean',flag:null,appbar:true,lock:false}
+      let index = _.findIndex(filters, favorite)
+      if (index > -1) filters.splice(index, 1)
+      else this.$store.state.Settings.playlistFilters.push(favorite)
       this.$store.dispatch('filterPlaylists')
     },
-    changeSearchString(e) {
-      this.searchString = e
-    },
-    async pasteText() {
-      let text = await navigator.clipboard.readText()
-      if (this.playlistName) {
-        text = this.playlistName + text
-      }
-      this.playlistName = text
-    },
+    changeSearchString(e) { this.searchString = e },
     addNewPlaylist() {
       let playlistsArray = this.playlistName.trim()
       playlistsArray = playlistsArray.replace(/[\/\%"?<>{}\[\]]/g, '')

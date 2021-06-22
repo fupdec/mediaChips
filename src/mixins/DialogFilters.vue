@@ -125,6 +125,12 @@ export default {
         }
       }
     },
+    filterBy(metaObj, queryText, itemText) {
+      let meta = this.getMeta(metaObj.by).settings.name.toLowerCase()
+      let query = queryText.toLowerCase()
+      if (meta) return meta.includes(query)
+      else false
+    },
     loadFilters(filters) { this.filters = filters },
   },
 }

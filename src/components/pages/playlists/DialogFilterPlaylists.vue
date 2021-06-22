@@ -2,51 +2,70 @@
   <div>
     <v-dialog v-model="$store.state.Playlists.dialogFilterPlaylists" scrollable width="1000">
       <v-card>
-        <v-card-title class="py-1 px-4">
+        <v-toolbar color="primary">
           <span class="headline">Filter Playlists</span>
           <v-spacer></v-spacer>
-          <v-icon>mdi-filter</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters=true" class="mx-4" outlined>
+            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
+          <v-btn @click="applyFilters" outlined>
+            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
+        </v-toolbar>
         <vuescroll>
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
-              <v-select @input="setParam($event,i)" :value="filters[i].param" 
-                :items="computedParams" label="Parameter" outlined dense class="param overline"
-                :prepend-icon="getIconParam(filters[i].param)" :disabled="filters[i].lock"
-                item-value="name" item-text="name">
+              <v-autocomplete @input="setBy($event,i)" :value="filters[i].by" 
+                :items="computedBy" label="By" outlined dense class="by"
+                :disabled="filters[i].lock" item-value="by" :filter="filterBy"> 
+                <template v-slot:selection="data">
+                  <v-icon>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
+                  <span class="mx-2">{{getMeta(data.item.by).settings.name||''}}</span>
+                </template>
                 <template v-slot:item="data">
                   <div class="list-item"> 
-                    <v-icon left>{{getIconParam(data.item.name)}}</v-icon>
-                    <span class="overline">{{data.item.name}}</span>
+                    <v-icon left>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
+                    <span>{{getMeta(data.item.by).settings.name||''}}</span>
                   </div>
                 </template>
-              </v-select>
+              </v-autocomplete>
 
-              <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond overline"
+              <v-select @input="setCond($event,i)" :value="filters[i].cond" class="cond"
                 :items="getConditions(filters[i].type)" outlined dense label="Condition"
                 :prepend-icon="getIconCond(filters[i].cond)" :disabled="filters[i].lock">
                 <template v-slot:item="data">
                   <div class="list-item"> 
                     <v-icon left>{{getIconCond(data.item)}}</v-icon>
-                    <span class="overline">{{data.item}}</span>
+                    <span>{{data.item}}</span>
                   </div>
                 </template>
               </v-select>
 
-              <v-text-field v-if="filters[i].type==='number'||filters[i].type==='string'||filters[i].type===null"
-                @input="setVal($event,i)" :value="filters[i].val" :rules="[getValueRules]"
-                label="Value" outlined dense class="val overline" :disabled="filters[i].lock"/>
+              <v-text-field v-if="filters[i].type==='string'||filters[i].type===null"
+                @input="setVal($event,i)" :value="filters[i].val"
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
+                label="Value" outlined dense class="val" :hint="getHint(filters[i].by)" persistent-hint/>
+                
+              <v-text-field v-if="filters[i].type==='number'" label="Value" outlined dense class="val"
+                @input="setVal($event,i)" :value="filters[i].val" type="number"
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
+                :hint="getHint(filters[i].by)" persistent-hint/>
 
               <v-text-field v-if="filters[i].type==='date'" 
-                :value="filters[i].val" @focus="datePicker=true, datePickerIndex=i"
-                label="Date" outlined dense readonly class="val overline"/>
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
+                :value="filters[i].val" @click="datePicker=true, datePickerIndex=i"
+                label="Date" outlined dense readonly class="val"
+                :hint="getHint(filters[i].by)" persistent-hint/>
               <v-dialog v-model="datePicker" width="300px">
                 <v-date-picker v-if="filters[i].type==='date'"
                   @change="setVal($event,datePickerIndex), datePicker=false"
                   :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
                   :value="filters[datePickerIndex].val" no-title color="primary" full-width/>
               </v-dialog>
+
+              <v-select v-if="filters[i].type==='array'" 
+                @input="setVal($event,i)" :value="filters[i].val" class="val"
+                :items="getItems(filters[i].by)" label="Values" item-text="name" item-value="id"
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
+                 outlined dense multiple :hint="getHint(filters[i].by)" persistent-hint/>
 
               <v-btn @click="duplicateFilter(i)" title="Duplicate filter" 
                 class="ml-2 mt-1" color="green" outlined icon fab x-small
@@ -58,20 +77,16 @@
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </div>
-            <v-btn @click="addFilter" color="green" outlined rounded>
-              <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
-            <v-btn v-if="filters.length" @click="removeAll" class="ml-4" color="red" outlined rounded>
-              <v-icon left>mdi-close</v-icon>Remove all</v-btn>
           </v-card-text>
         </vuescroll>
-        <v-card-actions class="pa-0">
-          <v-btn @click="$store.state.Playlists.dialogFilterPlaylists=false" class="ma-4">
-            <v-icon left>mdi-cancel</v-icon> Cancel </v-btn>
+        <div v-if="filters.length==0" class="text-center pb-10 overline">No filters</div>
+        <v-card-actions class="pt-0">
           <v-spacer></v-spacer>
-          <v-btn @click="$store.state.SavedFilters.dialogSavedFilters = true" class="ma-4" color="secondary">
-            <v-icon left>mdi-content-save</v-icon> Save / load filters </v-btn>
-          <v-btn @click="applyFilters" class="ma-4" color="primary">
-            <v-icon left>mdi-filter</v-icon>Apply filters</v-btn>
+          <v-btn @click="addFilter" class="ma-4 mt-0 pr-4" color="green" outlined rounded>
+            <v-icon left>mdi-plus</v-icon> Add filter </v-btn>
+          <v-btn v-if="filters.length" @click="removeAll" class="ma-4 mt-0 pr-4" color="red" outlined rounded>
+            <v-icon left>mdi-close</v-icon>Remove all</v-btn>
+          <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -82,6 +97,8 @@
 
 
 <script>
+import DialogFilters from '@/mixins/DialogFilters'
+import MetaGetters from '@/mixins/MetaGetters'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import vuescroll from 'vuescroll'
 
@@ -91,7 +108,7 @@ export default {
     vuescroll,
     SavedFilters: () => import('@/components/elements/SavedFilters.vue'),
   },
-  mixins: [ShowImageFunction], 
+  mixins: [DialogFilters, MetaGetters, ShowImageFunction], 
   mounted() {
     this.$nextTick(function () {
       this.filters = _.cloneDeep(this.$store.state.Settings.playlistFilters)
@@ -99,135 +116,33 @@ export default {
   },
   data: () => ({
     filters: [],
-    params: ['name','favorite','date','edit'],
-    paramTypeNumber: [],
-    paramTypeString: ['name'],
-    paramTypeArray: [],
-    paramTypeSelect: [],
-    paramTypeDate: ['date','edit'],
-    paramTypeBoolean: ['favorite'],
+    metaList: ['name','favorite','date','edit'],
+    metaType: {
+      number: [],
+      string: ['name'],
+      array: [],
+      date: ['date','edit'],
+      boolean: ['favorite'],
+      select: [],
+    },
     datePicker: false,
     datePickerIndex: 0,
   }),
   computed: {
-    tabId() {
-      return this.$route.query.tabId
-    },
-    computedParams() {
-      let filtersBoolean = _.filter(this.filters, {type: 'boolean'}).map(i=>i.param)
-      return this.params.map(param => {
-        return {
-          name: param, 
-          disabled: filtersBoolean.includes(param)
-        }
+    tabId() { return this.$route.query.tabId },
+    computedBy() {
+      let filtersBoolean = _.filter(this.filters, {type: 'boolean'}).map(i=>i.by)
+      return this.metaList.map(by => {
+        return { by, disabled: filtersBoolean.includes(by) }
       })
     },
   },
   methods: {
     // TODO: add paste from clipboard function for all input's type
-    getConditions(type) {
-      if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal']
-      if (type === 'string' || type === 'select') return ['includes', 'excludes']
-      if (type === 'array') return ['all', 'one of', 'not']
-      if (type === 'boolean') return ['yes', 'no']
-      return []
-    },
-    getIconParam(param) {
-      if (param === 'name') return 'mdi-alphabetical-variant'
-      if (param === 'date') return 'mdi-calendar-plus'
-      if (param === 'edit') return 'mdi-calendar-edit'
-      if (param === 'favorite') return 'mdi-heart'
-      return 'mdi-filter'
-    },
-    getIconCond(cond) {
-      if (cond === 'equal') return 'mdi-equal'
-      if (cond === 'not equal') return 'mdi-not-equal-variant'
-      if (cond === 'greater than') return 'mdi-greater-than'
-      if (cond === 'less than') return 'mdi-less-than'
-      if (cond === 'greater than or equal') return 'mdi-greater-than-or-equal'
-      if (cond === 'less than or equal') return 'mdi-less-than-or-equal'
-      if (cond === 'all') return 'mdi-equal'
-      if (cond === 'one of') return 'mdi-math-norm'
-      if (cond === 'not') return 'mdi-not-equal-variant'
-      if (cond === 'includes') return 'mdi-alphabetical'
-      if (cond === 'excludes') return 'mdi-alphabetical-off'
-      if (cond === 'yes') return 'mdi-check'
-      if (cond === 'no') return 'mdi-close'
-      return 'mdi-help'
-    },
-    addFilter() {
-      this.filters.push({
-        param: null,
-        cond: null,
-        val: null,
-        type: null,
-        flag: null,
-        lock: false,
-      })
-    },
-    duplicateFilter(i) {
-      let newFilter = _.cloneDeep(this.filters[i])
-      newFilter.lock = false
-      this.filters.push(newFilter)
-    },
-    removeFilter(i) {
-      this.filters.splice(i, 1)
-    },
-    removeAll() { 
-      this.filters = _.filter(this.filters, {lock: true})
-    },
     applyFilters() {
       this.$store.state.Settings.playlistFilters = _.cloneDeep(this.filters)
       this.$store.dispatch('filterPlaylists')
       this.$store.state.Playlists.dialogFilterPlaylists = false 
-    },
-    setParam(e, i) {
-      this.filters[i].param = e
-      if (this.paramTypeNumber.includes(e)) {
-        this.filters[i].type = 'number'
-        this.filters[i].val = ''
-      }
-      if (this.paramTypeString.includes(e)) {
-        this.filters[i].type = 'string'
-        this.filters[i].val = ''
-      }
-      if (this.paramTypeArray.includes(e)) {
-        this.filters[i].type = 'array'
-        this.filters[i].val = []
-      }
-      if (this.paramTypeSelect.includes(e)) {
-        this.filters[i].type = 'select'
-        this.filters[i].val = ''
-      }
-      if (this.paramTypeDate.includes(e)) {
-        this.filters[i].type = 'date'
-        this.filters[i].val = ''
-      }
-      if (this.paramTypeBoolean.includes(e)) {
-        this.filters[i].type = 'boolean'
-        this.filters[i].val = ''
-      }
-      this.filters[i].cond = this.getConditions(this.filters[i].type)[0]
-    },
-    setCond(e, i) {
-      this.filters[i].cond = e
-    },
-    setVal(e, i) {
-      this.filters[i].val = e
-    },
-    setFlag(e, i) {
-      this.filters[i].flag = e
-    },
-    getValueRules(value) {
-      return true
-    },
-    removeChip(item, i) { 
-      const index = this.filters[i].val.indexOf(item.name)
-      if (index >= 0) this.filters[i].val.splice(index, 1)
-      this.$store.state.hoveredImage = false
-    },
-    loadFilters(filters) {
-      this.filters = filters
     },
   },
 }

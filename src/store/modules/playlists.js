@@ -37,15 +37,8 @@ const Playlists = {
       console.log(':::::::playlists UPDATED:::::::')
       state.lastChanged = Date.now()
     },
-    filterPlaylists(state, filteredPlaylists) {
-      state.filteredPlaylists = filteredPlaylists
-    },
-    updateSelectedPlaylists(state, ids) {
-      state.selectedPlaylists = ids
-    },
-    updatePlaylistsStateValue(state, {key, value}) {
-      state[key] = value
-    },
+    updateSelectedPlaylists(state, ids) { state.selectedPlaylists = ids },
+    updatePlaylistsStateValue(state, {key, value}) { state[key] = value },
   },
   actions: {
     updatePlaylistVideos({state, rootState, commit, dispatch, getters}, {id, videos}) {
@@ -66,6 +59,7 @@ const Playlists = {
       playlists = playlists.orderBy(playlist => playlist.name.toLowerCase(), ['asc'])
 
       function compare(sign, a, b) {
+        if (b===undefined||b===null||b.length==0) return false
         if (sign === 'equal') return a == b
         if (sign === 'not equal') return a != b
         if (sign === 'greater than') return a < b
@@ -74,63 +68,43 @@ const Playlists = {
         if (sign === 'less than or equal') return a >= b
       }
 
-      
-      for (let filter in rootState.Settings.playlistFilters) {
-        let param = rootState.Settings.playlistFilters[filter].param
-        let cond = rootState.Settings.playlistFilters[filter].cond
-        let val = rootState.Settings.playlistFilters[filter].val
-        let type = rootState.Settings.playlistFilters[filter].type
-        let flag = rootState.Settings.playlistFilters[filter].flag
+      let filters = rootState.Settings.playlistFilters
+      for (let filter in filters) {
+        let by = filters[filter].by
+        let cond = filters[filter].cond
+        let val = filters[filter].val
+        let type = filters[filter].type
+        let flag = filters[filter].flag
         
         if (type === 'boolean') {
-          if (cond === 'yes') {
-            playlists = playlists.filter(playlist=>playlist[param]===true)
-          } else playlists = playlists.filter(playlist=>playlist[param]===false)
+          if (cond === 'yes') playlists = playlists.filter(c => c[by]===true)
+          else playlists = playlists.filter(c => !c[by]===true)
+          continue
         }
         
-        if (val === null || val.length === 0) continue
-        
+        if (type=='number'||type=='date'||type=='string') val = val.toLowerCase().trim()
+        if ((val===null||val.length===0)&&(cond!='empty'&&cond!='not empty')) continue
+        if (cond=='empty') {playlists=playlists.filter(c=>c[by]===undefined||c[by]===null||c[by].length==0);continue} 
+        if (cond=='not empty') {playlists=playlists.filter(c=>c[by]!==undefined&&c[by]!==null&&c[by].length>0);continue}
+
         if (type === 'number' || type === 'date') {
-          if (type === 'number') val = +val
-          if (param === 'date' || param === 'edit') val = new Date(val).getTime()
-          playlists = playlists.filter(playlist => compare(cond, val, playlist[param]))
+          if (by==='date' || by==='edit') val = new Date(val).getTime()
+          playlists = playlists.filter(c => compare(cond, val, c[by]))
+          continue
         }
         
         if (type === 'string') {
-          let string = val.toLowerCase().trim()
-          if (string.length) {
-            if (cond === 'includes') {
-              playlists = playlists.filter(playlist => playlist[param].toLowerCase().includes(string))
-            } else playlists = playlists.filter(v => !v[param].toLowerCase().includes(string))
-          }
-        }
-
-        if (type === 'array') {
-          if (cond === 'all') {
-            playlists = playlists.filter({[param]: val})
-          } else if (cond === 'one of') {
-            playlists = playlists.filter(playlist=>{
-              let include = false
-              for (let i=0; i<val.length;i++) {
-                if ( playlist[param].includes(val[i]) ) include = true
-              }
-              return include
-            })
-          } else if (cond === 'not') {
-            playlists = playlists.filter(playlist=>{
-              let include = false
-              for (let i=0; i<val.length;i++) {
-                if ( playlist[param].includes(val[i]) ) include = true
-              }
-              return !include
-            })
-          }
-        }
-
-        if (type === 'select') {
-          if (cond === 'includes') {
-            playlists = playlists.filter(playlist=>val.includes(playlist[param]))
-          } else playlists = playlists.filter(playlist=>!val.includes(playlist[param]))
+          if (cond=='includes') playlists=playlists.filter(c=>{
+            let playlistsMeta = c[by]
+            if (playlistsMeta) return playlistsMeta.toLowerCase().includes(val)
+            else return false
+          })
+          else playlists=playlists.filter(c=>{
+            let playlistsMeta = c[by]
+            if (playlistsMeta) return !playlistsMeta.toLowerCase().includes(val)
+            else return true
+          })
+          continue
         }
       }
   
@@ -140,22 +114,10 @@ const Playlists = {
       } else {
         playlists = playlists.orderBy(rootState.Settings.playlistSortBy, [rootState.Settings.playlistSortDirection])
       }
-
-      let filteredPlaylists = []
-      if (playlists != getters.playlists) {
-        if (playlists.value().length == 0) {
-          state.filteredEmpty = true
-          filteredPlaylists = playlists
-        } else {
-          state.filteredEmpty = false
-          filteredPlaylists = playlists
-        }
-      }
+      
       commit('resetLoading')
-      commit('filterPlaylists', filteredPlaylists)
-      if (!stayOnCurrentPage) {
-        rootState.Settings.playlistPage = 1
-      }
+      state.filteredPlaylists = playlists.value()
+      if (!stayOnCurrentPage) rootState.Settings.playlistPage = 1
       dispatch('saveFiltersOfPlaylists')
     },
     saveFiltersOfPlaylists({state, commit, getters, rootState}) {
@@ -197,87 +159,58 @@ const Playlists = {
     },
   },
   getters: {
-    dbpl(state) {
-      return state.lastChanged, dbpl
-    },
-    playlists(state, store) {
-      return store.dbpl.get('playlists')
-    },
-    playlistsDatabase(state, store) {
-      return store.dbpl
-    },
-    playlistFiltersForTabName: (state, store, rootState) => {
+    dbpl(state) { return state.lastChanged, dbpl },
+    playlists(state, store) { return store.dbpl.get('playlists') },
+    playlistsDatabase(state, store) { return store.dbpl },
+    playlistFiltersForTabName: (state, store, rootState, getters) => {
       let filters = []
       let equals = ['equal', 'including', 'all', 'one of']
       let notEquals = ['not equal', 'not', 'excluding']
       
       for (let filter in rootState.Settings.playlistFilters) {
-        let param = rootState.Settings.playlistFilters[filter].param
+        let by = rootState.Settings.playlistFilters[filter].by
         let cond = rootState.Settings.playlistFilters[filter].cond
         let val = rootState.Settings.playlistFilters[filter].val
         let type = rootState.Settings.playlistFilters[filter].type
         let flag = rootState.Settings.playlistFilters[filter].flag
+
+        let metaBy = getters.meta.find({id:by}).value()
+        if (metaBy) by = metaBy.settings.name
 
         if (val === null || val.length === 0) continue
         
         if (equals.includes(cond)) cond = '='
         if (notEquals.includes(cond)) cond = '!='
         
-        if (type === 'array') {
-          let arr = `"${param}" ${cond}`
-          arr = `${arr} "${val.join(',')}"` 
+        if (type === 'array' || type === 'select') {
+          if (type === 'select') val = val.map(id=>getters.metaCards.find({id}).value().meta.name)
+          if (type === 'array') val = val.map(id=>_.find(metaBy.settings.items, {id}).name)
+          let arr = `"${by}" ${cond}`
+          arr = `${arr} "${val.join(', ')}"` 
           filters.push(arr)
-        } else {
-          filters.push(`"${param}" ${cond} "${val}"`)
-        }
+        } else filters.push(`"${by}" ${cond} "${val}"`)
       }
       return 'Playlists' + (filters.length ? ' with ': ' ') + filters.join('; ')
     },
-    filteredPlaylists(state, store) {
-      let playlists 
-      if (state.filteredPlaylists.length===0) {
-        playlists = store.playlists
-      } else {
-        playlists = state.filteredPlaylists
-      }
-      return playlists
-    },
-    filteredPlaylistsTotal(state, store) {
-      if (state.filteredPlaylists.length==0) {
-        return state.filteredPlaylists.length
-      } else {
-        return state.filteredPlaylists.value().length
-      }
-    },
-    playlistsTotal: (state, store) => {
-      return store.playlists.value().length
-    },
     playlistsOnPage(state, store, rootState) {
-      const playlists = store.filteredPlaylists.value(),
+      const playlists = state.filteredPlaylists,
             playlistsCount = rootState.Settings.playlistsPerPage
       state.pageTotal = Math.ceil(playlists.length / playlistsCount)
 
-      if (rootState.Settings.playlistPage > state.pageTotal) {
-        rootState.Settings.playlistPage = state.pageTotal
-      }
+      if (rootState.Settings.playlistPage > state.pageTotal) rootState.Settings.playlistPage = state.pageTotal
+      if (rootState.Settings.playlistPage == 0) rootState.Settings.playlistPage = 1
       
       const end = rootState.Settings.playlistPage * playlistsCount,
             start = end - playlistsCount
       return playlists.slice(start, end)
     },
-    playlistsPagesSum(state) {
-      return state.pageTotal
-    },
+    playlistsPagesSum(state) { return state.pageTotal },
     playlistsPages(state) {
       let pages = []
-      for (let i = 0; i < state.pageTotal; i++) {
-        pages.push(i+1)
-      }
+      for (let i = 0; i < state.pageTotal; i++) pages.push(i+1)
       return pages
     },
-    getSelectedPlaylists(state) {
-      return state.selectedPlaylists
-    },
+    getSelectedPlaylists(state) { return state.selectedPlaylists },
   }
 }
 
