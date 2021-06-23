@@ -131,7 +131,7 @@
       </v-card>
     </v-dialog>
 
-    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="videos" :filters="filters"/>
+    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="videos" :filters="filters.filter(f=>f.by)"/>
   </div>
 </template>
 
@@ -195,7 +195,8 @@ export default {
       }
     },
     applyFilters() {
-      this.$store.state.Settings.videoFilters = _.cloneDeep(this.filters)
+      let filters = this.filters.filter(f=>f.by)
+      this.$store.state.Settings.videoFilters = _.cloneDeep(filters)
       this.$store.dispatch('filterVideos')
       this.$store.state.Videos.dialogFilterVideos = false 
     },

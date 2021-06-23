@@ -49,7 +49,14 @@ export default {
     removeAll() { this.filters = _.filter(this.filters, {lock: true}) },
     setBy(e, i) {
       this.filters[i].by = e
-      if (this.metaType.number.includes(e)) {
+      if (!e) {
+        this.filters[i].cond = null
+        this.filters[i].val = null
+        this.filters[i].type = null
+        this.filters[i].flag = null
+        this.filters[i].lock = false
+        return
+      } else if (this.metaType.number.includes(e)) {
         this.filters[i].type = 'number'
         this.filters[i].val = 0
       } else if (this.metaType.string.includes(e)) {

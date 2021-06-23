@@ -91,7 +91,7 @@
       </v-card>
     </v-dialog>
 
-    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="playlists" :filters="filters"/>
+    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="playlists" :filters="filters.filter(f=>f.by)"/>
   </div>
 </template>
 
@@ -140,7 +140,8 @@ export default {
   methods: {
     // TODO: add paste from clipboard function for all input's type
     applyFilters() {
-      this.$store.state.Settings.playlistFilters = _.cloneDeep(this.filters)
+      let filters = this.filters.filter(f=>f.by)
+      this.$store.state.Settings.playlistFilters = _.cloneDeep(filters)
       this.$store.dispatch('filterPlaylists')
       this.$store.state.Playlists.dialogFilterPlaylists = false 
     },

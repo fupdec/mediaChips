@@ -134,7 +134,7 @@
       </v-card>
     </v-dialog>
 
-    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="meta" :filters="filters"/>
+    <SavedFilters v-if="$store.state.SavedFilters.dialogSavedFilters" @loadFilters="loadFilters" type="meta" :filters="filters.filter(f=>f.by)"/>
   </div>
 </template>
 
@@ -209,7 +209,8 @@ export default {
       }
     },
     applyFilters() {
-      this.$store.state.Meta.filters = _.cloneDeep(this.filters)
+      let filters = this.filters.filter(f=>f.by)
+      this.$store.state.Meta.filters = _.cloneDeep(filters)
       this.$store.dispatch('filterMetaCards')
       this.$store.state.Meta.dialogFilterMetaCards = false 
     },
