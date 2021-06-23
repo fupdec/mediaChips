@@ -1,4 +1,5 @@
 const {app} = require('electron').remote
+const { ipcRenderer } = require('electron')
 const fs = require("fs")
 const path = require("path")
 const rimraf = require("rimraf")
@@ -73,37 +74,44 @@ const Meta = {
       getters.savedFilters.set(meta.id, []).write()
       commit('getMetaListFromDb')
       commit('addLog', {type:'info', color:'green', text:`Added complex meta "${meta.settings.name}"`})
+      ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
     },
     addSimpleMeta({commit, getters, rootState}, metaObject) {
       let meta = { ...defaultMeta, ...metaObject }
       getters.meta.push(meta).write()
       commit('addLog', {type:'info', color:'green', text:`Added simple meta "${metaObject.settings.name}"`})
     },
-    deleteComplexMeta({commit, getters}, {id, name}) {
-      let ids = getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).map('id').value()
-      for (let i = 0; i < ids.length; i++) { // delete from meta cards
-        getters.metaCards.filter({metaId:ids[i]}).each(card=>{card.meta[id]=undefined}).write() 
-      }
+    deleteComplexMeta({commit, dispatch, getters}, {id, name}) {
       getters.meta.remove({id}).write() // delete from database
+      getters.meta.filter({type:'complex'}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
+      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
       getters.metaCards.remove({metaId:id}).write() // delete all cards from database
+      getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
       getters.savedFilters.unset(id).write() // delete saved filters from database
-      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ // setts
-        i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
-      const metaFolder = path.join(getters.getPathToUserData, 'media', 'meta', id)
-      rimraf(metaFolder, () => { /*console.log("done")*/ }) // remove folder with images
+      getters.savedFilters.each(sfType=>{ for (let sf of sfType) _.remove(sf.filters, f=>f.by===id) }).write() // delete from saved filters
+      getters.markers.each(marker=>{ // rename/delete markers
+        if (marker.type===id) {
+          let mc = getters.metaCards.find({id:marker.name}).value()
+          if (mc) marker.type = 'bookmark', marker.name = mc.meta.name
+          else dispatch('deleteMarker', marker)
+        }
+      }).write()
+      rimraf(path.join(getters.getPathToUserData, 'media', 'meta', id), () => { /*console.log("done")*/ }) // remove folder with images
       commit('getMetaListFromDb')
+      dispatch('removeMetaFromVideos', id) // VIDEOS
+      dispatch('removeMetaFromTabs', id) // TABS
       commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
-      // TODO remove from assigned video card
+      ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
+      ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
     },
     deleteSimpleMeta({commit, getters}, {id, name}) {
-      let ids = getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).map('id').value()
-      for (let i = 0; i < ids.length; i++) { // delete from meta cards
-        getters.metaCards.filter({metaId:ids[i]}).each(card=>{card.meta[id]=undefined}).write() 
-      }
       getters.meta.remove({id}).write() // delete from database
-      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})) // delete from complex meta 
-        .each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write()
-      // TODO remove from assigned video card
+      getters.meta.filter({type:'complex'}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
+      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
+      getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
+      getters.savedFilters.each(sfType=>{ for (let sf of sfType) _.remove(sf.filters, f=>f.by===id) }).write() // delete from saved filters
+      dispatch('removeMetaFromVideos', id) // VIDEOS
+      dispatch('removeMetaFromTabs', id) // TABS
       commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
     },
     addMetaCard({commit, getters}, newMetaCard) {
@@ -126,7 +134,7 @@ const Meta = {
           }
         }).write()
         // TODO remove from videos in array
-        // TODO remove from filters
+        // TODO remove from filters, saved filters value (same for simple meta item of type array)
         // let tab = _.find(getters.tabs, {'id': id }) // close tab with this performer
         // if (tab) dispatch('closeTab', id)
         let imageTypes = ['main','alt','custom1','custom2','avatar','header']
@@ -145,6 +153,21 @@ const Meta = {
     },
     updateMetaState({getters}, {id, key, value}) {
       getters.meta.find({id}).get('state').set(key, value).write()
+    },
+    removeMetaFromVideos({getters, commit}, id) {
+      getters.videos.each(video=>{delete video[id]}).write() // remove from all videos
+      getters.settings.get('metaAssignedToVideos').remove({id}).write() // remove from assigned videos
+      commit('updateSettingsState', 'metaAssignedToVideos')
+      getters.settings.get('videoFilters').remove({by:id}).write() // remove from video filters
+      getters.settings.get('videoVisibility').unset(id).write() // remove from videos visiblity 
+      // TODO remove from saved filters
+    },
+    removeMetaFromTabs({getters, commit}, id) {
+      getters.settings.get('tabs').remove(i=>i.link.includes(id)).write() // close tabs
+      getters.settings.get('tabs').each(tab=>{
+        tab.filters = _.filter(tab.filters, i=>i.by!==id)
+      }).write() // remove from tab's filters
+      commit('updateSettingsState', 'tabs') // update tabs
     },
     async filterMetaCards({ state, commit, dispatch, getters, rootState}) {
       const metaId = router.currentRoute.query.metaId

@@ -146,9 +146,7 @@ const Settings = {
   mutations: {
     closeTab(state, tabId) { state.tabs = _.filter(state.tabs, tab => tab.id !== tabId) },
     getTabsFromDb(state, tabs) { state.tabs = _.cloneDeep(dbs.get('tabs').value()) },
-    updateTabs(state, tabs) { // TODO create mutation for update any value in settings
-      state.tabs = _.cloneDeep(tabs)
-    },
+    updateSettingsState(state, name) { state[name] = dbs.get(name).cloneDeep().value() },
   },
   actions: {
     saveHeaderGradient({ state, commit, getters}, {gradient, themeDark}) {
@@ -182,10 +180,6 @@ const Settings = {
       }
       getters.tabsDb.remove({id: tabId}).write()
       commit('closeTab', tabId)
-    },
-    updateTabs({state, rootState, commit, dispatch, getters}, tabs) {
-      getters.settings.set('tabs', _.cloneDeep(tabs)).write()
-      commit('updateTabs', tabs)
     },
     updateSettingsState({state, rootState, commit, dispatch, getters}, {key, value}) {
       getters.settings.set(key, value).write()

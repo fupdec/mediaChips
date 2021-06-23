@@ -51,7 +51,7 @@ export default {
   computed: {
     tabs:{
       get() { return this.$store.getters.tabs },
-      set(tabs) { return this.$store.dispatch('updateTabs', tabs) },
+      set(tabs) { return this.$store.dispatch('updateSettingsState', {key:'tabs',value:_.cloneDeep(tabs)}) },
     },
     tabBorders() { return this.$store.state.Settings.tabBorders },
     tabId() { return this.$route.query.tabId },
@@ -64,8 +64,7 @@ export default {
     },
     closeRightTabs(tabId) {
       this.$store.getters.tabs.length = this.getTabIndexById(tabId) + 1
-      const tabs = this.$store.getters.tabs
-      this.$store.dispatch('updateTabs', tabs)
+      this.tabs = this.$store.getters.tabs
       if (this.tabId !== 'default' && this.tabId !== undefined) {
         if (!this.$store.getters.tabsDb.find({id: this.tabId}).value()) {
           const link = this.$store.getters.tabs[this.getTabIndexById(tabId)].link
@@ -74,15 +73,14 @@ export default {
       }
     },
     closeOtherTabs(tabId) {
-      const tab = this.$store.getters.tabsDb.filter({id: tabId}).value()
-      this.$store.dispatch('updateTabs', tab)
+      this.tabs = this.$store.getters.tabsDb.filter({id: tabId}).value()
       if (this.tabId !== 'default' && this.tabId !== tabId && this.tabId !== undefined) {
         const link = this.$store.getters.tabs[this.getTabIndexById(tabId)].link
         this.$router.push(link)
       }
     },
     closeAllTabs() {
-      this.$store.dispatch('updateTabs', [])
+      this.tabs = []
       if (this.tabId !== 'default') this.$router.push('/home')
       this.$store.state.menuTabs = false
     },

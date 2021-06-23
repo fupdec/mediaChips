@@ -84,7 +84,7 @@ export default {
       this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.0'})
             
       this.$store.dispatch('updateDataFromVideos') // update numnber of videos
-      this.$store.dispatch('updateTabs', []) // close all tabs
+      this.$store.dispatch('updateSettingsState', {key:'tabs', value:[]}) // close all tabs
       ipcRenderer.send('updatePlayerDb', 'settings') // update settings in player window
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
@@ -821,6 +821,8 @@ export default {
       this.$store.getters.settings.unset('appNewVersionUpdateWebsitesUrl').write()
       this.$store.getters.settings.unset('tagView').write()
       this.$store.getters.settings.unset('websiteView').write()
+      this.$store.dispatch('updateSettingsState', {key:'videoFilters', value:[]})
+      this.$store.dispatch('updateSettingsState', {key:'playlistFilters', value:[]})
     },
     closeDialog() { this.$emit('finish') },
   },
