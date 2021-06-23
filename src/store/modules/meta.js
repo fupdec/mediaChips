@@ -126,17 +126,55 @@ const Meta = {
       state.selectedMeta.map(id => {
         let cardName = getters.metaCards.find({id}).value().meta.name
         getters.metaCards.remove({id}).write() // remove card from database
-        getters.metaCards.each(mc => { // remove card from other cards
+        getters.metaCards.each(mc => { // remove from other meta cards
           let arr = mc.meta[metaId]
           if (arr && arr.length) {
             let index = mc.meta[metaId].indexOf(id)
-            if (index !== -1) mc.meta[metaId].splice(index, 1)
+            if (index > -1) mc.meta[metaId].splice(index, 1)
           }
         }).write()
-        // TODO remove from videos in array
-        // TODO remove from filters, saved filters value (same for simple meta item of type array)
-        // let tab = _.find(getters.tabs, {'id': id }) // close tab with this performer
-        // if (tab) dispatch('closeTab', id)
+        getters.videos.each(video => { // remove from videos meta array
+          let arr = video[metaId]
+          if (arr && arr.length) {
+            let index = video[metaId].indexOf(id)
+            if (index > -1) video[metaId].splice(index, 1)
+          }
+        }).write()
+        getters.meta.filter({type:'complex'}).each(m=>{ // remove from filters of all meta
+          for (let f of m.state.filters) {
+            if (f.by === metaId) {
+              let index = f.val.indexOf(id)
+              if (index > -1) f.val.splice(index, 1)
+            }
+          }
+        }).write()
+        getters.savedFilters.each(sfType=>{ // remove from filters of saved filters
+          for (let sf of sfType) {
+            for (let f of sf.filters) {
+              if (f.by === metaId) {
+                let index = f.val.indexOf(id)
+                if (index > -1) f.val.splice(index, 1)
+              }
+            }
+          }
+        }).write()
+        dispatch('updateSavedFilters')
+        getters.settings.get('videoFilters').each(f=>{ // remove from filters of videos
+          if (f.by === metaId) {
+            let index = f.val.indexOf(id)
+            if (index > -1) f.val.splice(index, 1)
+          }
+        }).write()
+        getters.settings.get('tabs').each(tab=>{ // remove  from filters of tabs
+          for (let f of tab.filters) {
+            if (f.by === metaId) {
+              let index = f.val.indexOf(id)
+              if (index > -1) f.val.splice(index, 1)
+            }
+          }
+        }).write()
+        commit('updateSettingsState', 'tabs') // update tabs
+        // TODO remove from videos and meta filters, saved filters value (same for simple meta item of type array)
         let imageTypes = ['main','alt','custom1','custom2','avatar','header']
         imageTypes.map(img => { // remove images of card
           let imgPath = path.join(getters.getPathToUserData, 'media', 'meta', metaId, `${id}_${img}.jpg`)
@@ -147,6 +185,7 @@ const Meta = {
       dispatch('filterMetaCards')
       state.dialogDeleteMetaCard = false
       state.selectedMeta = []
+      ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
     },
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()
