@@ -198,6 +198,7 @@
 
 <script>
 const shortid = require('shortid')
+const { ipcRenderer } = require('electron')
 
 import MetaGetters from '@/mixins/MetaGetters'
 import vuescroll from 'vuescroll'

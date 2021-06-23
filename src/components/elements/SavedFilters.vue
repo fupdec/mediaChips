@@ -1,6 +1,6 @@
 <template>
 	<div>
-    <v-dialog v-model="$store.state.SavedFilters.dialogSavedFilters" width="800" scrollable eager>
+    <v-dialog v-model="$store.state.SavedFilters.dialogSavedFilters" width="700" scrollable eager>
       <v-card class="pb-4">
         <v-toolbar color="primary">
           <span class="headline">Saved filters for {{type=='meta'?meta.settings.name:type}}</span>
@@ -8,53 +8,65 @@
           <v-btn @click="$store.state.SavedFilters.dialogSavedFilters=false" outlined>
             <v-icon left>mdi-close</v-icon> Close </v-btn>
         </v-toolbar>
-        <v-card-actions class="pa-0">
+        <div class="overline text-center pt-4">Save current filters</div>
+        <v-card-actions class="px-0">
           <v-container class="py-0 pl-4">
             <v-row>
-              <v-col cols="12" class="pb-0 pt-7">
+              <v-col cols="12" class="pb-0">
                 <v-form ref="form" v-model="valid">
                   <v-text-field v-model="savedFiltersName" :rules="[getNameRules]"
-                    dense outlined label="Name for saved filters"/>
+                    dense outlined label="Name for current filters"/>
                 </v-form>
               </v-col>
             </v-row>
           </v-container>
-          <v-spacer></v-spacer>
-          <v-btn @click="addNewSavedFilters" class="mt-1 mr-4" color="primary" depressed :disabled="!valid"> 
-            <v-icon left>mdi-plus</v-icon> Add saved filters
+          <v-spacer class="mx-1"></v-spacer>
+          <v-btn @click="addNewSavedFilters" :disabled="!valid" class="mb-4 mr-4 pr-4" color="primary" rounded outlined> 
+            <v-icon left>mdi-content-save</v-icon> Save
           </v-btn>
         </v-card-actions>
         <vuescroll>
-          <v-card-text class="py-0" v-if="savedFilters.length">
+          <div class="overline text-center py-2">List of saved filters</div>
+          <v-card-text v-if="savedFilters.length" class="py-0">
             <v-card outlined>
               <v-list dense class="list-zebra pa-0">
-                <v-list-item-group color="primary">
-                  <v-list-item v-for="(item, i) in savedFilters" :key="i">
-                    <div class="d-flex justify-space-between align-center" style="width:100%">
-                      <span>{{item.name}}</span>
-                      <span>
-                        <v-tooltip top>
-                          <template v-slot:activator="{ on }">
-                            <v-btn v-on="on" @click="selected=i, dialogDeleteFilters=true" color="red" icon><v-icon>mdi-delete</v-icon></v-btn>
-                          </template>
-                          <span>Delete</span>
-                        </v-tooltip>
-                        <v-tooltip top>
-                          <template v-slot:activator="{ on }">
-                            <v-btn v-on="on" @click="selected=i, openDialogEditSavedFiltersName()" icon><v-icon>mdi-pencil</v-icon></v-btn>
-                          </template>
-                          <span>Edit name</span>
-                        </v-tooltip>
-                        <v-tooltip top>
-                          <template v-slot:activator="{ on }">
-                            <v-btn v-on="on" @click="selected=i, loadFilters()" icon><v-icon>mdi-content-save-move</v-icon></v-btn>
-                          </template>
-                          <span>Load filters</span>
-                        </v-tooltip>
-                      </span>
-                    </div>
-                  </v-list-item>
-                </v-list-item-group>
+                <v-list-item v-for="(item, i) in savedFilters" :key="i" class="pr-0">
+                  <div class="d-flex justify-space-between align-center" style="width:100%">
+                    <span class="filter-name">{{item.name}}</span>
+                    <span class="d-flex">
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn v-on="on" @click="selected=i, dialogDeleteFilters=true" color="error" icon><v-icon>mdi-delete</v-icon></v-btn>
+                        </template>
+                        <span>Delete</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn v-on="on" @click="selected=i, rewriteFilter()" color="warning" icon><v-icon>mdi-content-save</v-icon></v-btn>
+                        </template>
+                        <div>
+                          <span>Rewrite with current filters</span>
+                          <FiltersChips :filters="filters" :type="type" :isTooltip="true"/>
+                        </div>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn v-on="on" @click="selected=i, openDialogEditSavedFiltersName()" icon><v-icon>mdi-pencil</v-icon></v-btn>
+                        </template>
+                        <span>Edit name</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on }">
+                          <v-btn v-on="on" @click="selected=i, loadFilters()" color="success" icon><v-icon>mdi-filter</v-icon></v-btn>
+                        </template>
+                        <div>
+                          <span>Load saved filters</span>
+                          <FiltersChips :filters="item.filters" :type="type" :isTooltip="true"/>
+                        </div>
+                      </v-tooltip>
+                    </span>
+                  </div>
+                </v-list-item>
               </v-list>
             </v-card>
           </v-card-text>
@@ -101,6 +113,8 @@
 
 
 <script>
+const shortid = require('shortid')
+
 import vuescroll from 'vuescroll'
 import MetaGetters from '@/mixins/MetaGetters'
 
@@ -112,6 +126,7 @@ export default {
   },
   components: {
     vuescroll,
+    FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
   mixins: [MetaGetters], 
   mounted() {
@@ -137,22 +152,16 @@ export default {
     getNameRules(name) {
       let type = this.type=='meta' ? this.metaId : this.type
       let duplicate = this.$store.getters.savedFilters.get([type]).find({name:name}).value()
-      if (name.length > 500) {
-        return 'Name must be less than 500 characters'
-      } else if (name.length===0) {
-        return 'Name is required'
-      } else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) {
-        return 'Name must not content \\/\%\"<>{}\[\]'
-      } else if (duplicate!==undefined && duplicate.name===name) {
-        return 'Saved filters with that name already exists'
-      } else {
-        return true
-      }
+      if (name.length > 50) return 'Name must be less than 50 characters'
+      else if (name.length===0) return 'Name is required'
+      else if (/[\\\/\%"?<>{}\[\]]/g.test(name)) return 'Name must not content \\/\%\"<>{}\[\]'
+      else if (duplicate!==undefined && duplicate.name===name) return 'Saved filters with that name already exists'
+      else return true
     },
     addNewSavedFilters() {
       if (!this.valid) return
       const savedFilters = {
-        id: Date.now(),
+        id: shortid.generate(),
         name: this.savedFiltersName,
         filters: _.cloneDeep(this.filters),
       }
@@ -186,7 +195,17 @@ export default {
         oldName: this.savedFilters[this.selected].name,
         newName: this.nameNew,
       }
-      this.$store.dispatch('updateSavedFiltersName', valuesForUpdate)
+      this.$store.dispatch('updateSavedFilterName', valuesForUpdate)
+      this.dialogEditSavedFiltersName = false
+    },
+    rewriteFilter() {
+      let type = this.type=='meta' ? this.metaId : this.type
+      const valuesForUpdate = {
+        type: type,
+        id: this.savedFilters[this.selected].id,
+        filters: _.cloneDeep(this.filters),
+      }
+      this.$store.dispatch('rewriteSavedFilter', valuesForUpdate)
       this.dialogEditSavedFiltersName = false
     },
     loadFilters() {
@@ -197,3 +216,9 @@ export default {
   },
 }
 </script>
+
+<style lang="scss">
+.filter-name {
+  word-break: break-all;
+}
+</style>

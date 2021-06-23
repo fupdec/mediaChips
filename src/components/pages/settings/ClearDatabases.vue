@@ -64,6 +64,7 @@ export default {
     },
   },
   methods: {
+    // TODO clear thumbs for markers and timeline. remake timline with 5%,15%,25%,35%,45%,55%,65%,75%,85%,95%,
     clearDB(db) {
       switch (db) {
         case 'videos': this.clearVideosDb(); break

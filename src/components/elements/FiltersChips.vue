@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-tooltip top>
+    <v-tooltip v-if="!isTooltip" top>
       <template v-slot:activator="{ on }">
         <v-btn @click="removeAllFilters" v-on="on" fab x-small dark color="red" class="mr-4">
           <v-icon>mdi-filter-off</v-icon>
@@ -8,8 +8,10 @@
       </template>
       <span>Remove All Filters</span>
     </v-tooltip>
-    <v-chip v-for="(filter, i) in filters" :key="i" class="ma-1" color="primary" 
-      small close :disabled="filter.lock" @click:close="removeFilter(i)">
+    <v-chip v-for="(filter, i) in filters" :key="i" 
+      @click:close="removeFilter(i)" :disabled="filter.lock" class="ma-1" small
+      :color="isTooltip?'#fff':'primary'" :outlined="isTooltip"
+      :close="!isTooltip" dark>
       <span class="mr-1">"{{getMeta(filter.by).settings.name}}"</span>
       <span>{{filter.cond}}</span> 
       <span v-if="filter.type=='array'||filter.type=='select'" class="ml-1">"{{getMetaItems(filter.by, filter.val)}}"</span>
@@ -28,7 +30,8 @@ export default {
   name: 'FiltersChips',
   props: {
     filters: Array,
-    type: String, // e.g. Video, Tag
+    type: String, // Video or Meta
+    isTooltip: Boolean, 
   },
   mixins: [MetaGetters],
   mounted() {

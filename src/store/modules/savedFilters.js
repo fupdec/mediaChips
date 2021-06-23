@@ -29,9 +29,16 @@ const SavedFilters = {
       getters.savedFilters.get(type).remove({ name: name }).write()
       state.savedFilters = _.cloneDeep(getters.savedFilters.value())
     },
-    updateSavedFiltersName({ state, commit, getters}, {type, oldName, newName}) {
-      getters.savedFilters.get(type).find({name:oldName}).assign({name:newName}).write()
+    updateSavedFilters({ state, commit, getters}) {
       state.savedFilters = _.cloneDeep(getters.savedFilters.value())
+    },
+    updateSavedFilterName({ state, dispatch, getters}, {type, oldName, newName}) {
+      getters.savedFilters.get(type).find({name:oldName}).assign({name:newName}).write()
+      dispatch('updateSavedFilters')
+    },
+    rewriteSavedFilter({ state, dispatch, getters}, {type, id, filters}) {
+      getters.savedFilters.get(type).find({id}).assign({filters}).write()
+      dispatch('updateSavedFilters')
     },
   },
   getters: {
