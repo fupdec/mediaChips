@@ -211,7 +211,7 @@
         <vuescroll>
           <v-card-text class="px-4">
             <v-autocomplete v-model="selectedMetaForCard" label="Meta name" :items="metaForCard"
-              :rules="[value => !!value || 'Meta is required']" item-value="id" autofocus>
+              :rules="[value => !!value || 'Meta is required']" item-value="id" autofocus :filter="filterMeta">
               <!-- TODO remake it with draggable and allow multiple meta -->
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
@@ -393,6 +393,7 @@ export default {
       this.$store.dispatch('updateSavedFilters')
       this.$store.commit('updateSettingsState', 'tabs') // update tabs
     },
+    filterMeta(metaObj, queryText) { return metaObj.settings.name.toLowerCase().includes(queryText.toLowerCase()) },
   },
 }
 </script>

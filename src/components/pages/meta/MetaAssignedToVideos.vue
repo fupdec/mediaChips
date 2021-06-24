@@ -48,7 +48,7 @@
         <vuescroll>
           <v-card-text class="px-4">
             <v-autocomplete v-model="selectedMetaForCard" label="Meta name" :items="metaForCard"
-              :rules="[value => !!value || 'Meta is required']" item-value="id">
+              :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
                 <span>{{data.item.settings.name}}</span>
@@ -144,6 +144,7 @@ export default {
       this.metaAssignedToVideos.splice(this.selectedMetaIndex, 1)
       this.dialogDeleteMetaFromCard = false
     },
+    filterMeta(metaObj, queryText) { return metaObj.settings.name.toLowerCase().includes(queryText.toLowerCase()) },
   },
 }
 </script>
