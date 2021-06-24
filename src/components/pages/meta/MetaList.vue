@@ -40,7 +40,7 @@
       </v-card>
     </v-dialog>
 
-    <v-card outlined>
+    <v-card :key="updateKey" outlined>
       <v-data-iterator :items="metaList" :items-per-page.sync="itemsPerPage" :page.sync="page" :search="search" :sort-by="sortBy" :sort-desc="sortDesc" hide-default-footer no-data-text="Please add meta first" no-results-text="No meta found">
         <template v-slot:header>
           <v-toolbar color="secondary" class="mb-4">
@@ -143,10 +143,10 @@
       </v-data-iterator>
     </v-card>
 
-    <DialogAddComplexMeta v-if="dialogAddComplexMeta" :dialog="dialogAddComplexMeta" @close="dialogAddComplexMeta=false"/>
-    <DialogEditComplexMeta v-if="dialogEditComplexMeta" :dialogEditMeta="dialogEditComplexMeta" :metaObj="selectedMeta"  @closeSettings="dialogEditComplexMeta=false"/>
-    <DialogAddSimpleMeta v-if="dialogAddSimpleMeta" :dialog="dialogAddSimpleMeta" @close="dialogAddSimpleMeta=false"/>
-    <DialogEditSimpleMeta v-if="dialogEditSimpleMeta" :dialogEditMeta="dialogEditSimpleMeta" :metaObj="selectedMeta" @closeSettings="dialogEditSimpleMeta=false"/>
+    <DialogAddComplexMeta v-if="dialogAddComplexMeta" :dialog="dialogAddComplexMeta" @close="dialogAddComplexMeta=false, ++updateKey"/>
+    <DialogEditComplexMeta v-if="dialogEditComplexMeta" :dialogEditMeta="dialogEditComplexMeta" :metaObj="selectedMeta"  @closeSettings="dialogEditComplexMeta=false, ++updateKey"/>
+    <DialogAddSimpleMeta v-if="dialogAddSimpleMeta" :dialog="dialogAddSimpleMeta" @close="dialogAddSimpleMeta=false, ++updateKey"/>
+    <DialogEditSimpleMeta v-if="dialogEditSimpleMeta" :dialogEditMeta="dialogEditSimpleMeta" :metaObj="selectedMeta" @closeSettings="dialogEditSimpleMeta=false, ++updateKey"/>
     <v-dialog v-if="dialogDeleteMeta" v-model="dialogDeleteMeta" persistent max-width="450">
       <v-card>
         <v-toolbar color="error">
@@ -217,6 +217,7 @@ export default {
     sortDesc: false,
     page: 1,
     itemsPerPage: 8,
+    updateKey: 1,
     sortBy: 'if',
     keys: [
       'name',
@@ -252,7 +253,7 @@ export default {
       let allMeta = this.$store.getters.meta.filter(i=>['simple','complex'].includes(i.type))
       allMeta = allMeta.map(i=>{ 
         if (i.type==='complex') return {...i, ...i.settings, ...{dataType:'cards'}}  
-        else return {...i, ...i.settings} 
+        else return {...i, ...i.settings, ...this.updateKey} 
       })
       return allMeta.value() 
     },
@@ -334,12 +335,14 @@ export default {
       }).write()
       this.$store.commit('updateSettingsState', 'tabs') // update tabs
       this.dialogTransferMeta = false
+      ++this.updateKey
     },
     deleteMeta() {
       let meta = this.selectedMeta
       if (meta.type == 'complex') this.$store.dispatch('deleteComplexMeta', {id:meta.id, name:meta.settings.name})
       else if (meta.type == 'simple') this.$store.dispatch('deleteSimpleMeta', {id:meta.id, name:meta.settings.name})
       this.dialogDeleteMeta = false
+      ++this.updateKey
     },
     getIconDataType(type) {
       if (type === 'string') return 'mdi-alphabetical'

@@ -106,7 +106,7 @@ const Meta = {
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
       ipcRenderer.send('updatePlayerDb', 'markers') // update markers in player window
     },
-    deleteSimpleMeta({commit, getters}, {id, name}) {
+    deleteSimpleMeta({commit, dispatch, getters}, {id, name}) {
       getters.meta.remove({id}).write() // delete from database
       getters.meta.filter({type:'complex'}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
