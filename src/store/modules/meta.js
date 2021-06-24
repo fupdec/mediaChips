@@ -51,6 +51,7 @@ const Meta = {
     updateCardIds: [],
     selection: null,
     selectedMeta: [],
+    updateKey: 1,
     metaList: dbMeta.get('meta').filter({type:'complex'}).value(),
     dialogEditMetaCard: false,
     dialogEditMetaCardImages: false,

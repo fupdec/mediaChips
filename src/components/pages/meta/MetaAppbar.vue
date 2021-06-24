@@ -370,7 +370,10 @@ export default {
       else this.$store.state.Meta.filters.push(favorite)
       this.$store.dispatch('filterMetaCards')
     },
-    updateMetaState(key, value) { this.$store.dispatch('updateMetaState', {id: this.metaId, key, value}) },
+    updateMetaState(key, value) { 
+      this.$store.dispatch('updateMetaState', {id: this.metaId, key, value}) 
+      ++this.$store.state.Meta.updateKey
+    },
     initSort() {
       this.sortBy = this.meta.state.sortBy || 'name'
       let color = { name: 'color', icon: 'palette', tip: 'Color', }

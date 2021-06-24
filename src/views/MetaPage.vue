@@ -56,7 +56,7 @@
         <div v-else style="min-width:80px;"></div>
       </v-container>
 
-      <v-container fluid class="card-grid" :class="[cardSize, gapSize, {'wide-image':isWideImage}]">
+      <v-container :key="updateKey" fluid class="card-grid" :class="[cardSize, gapSize, {'wide-image':isWideImage}]">
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
       
@@ -187,6 +187,7 @@ export default {
     filteredMeta() { return this.$store.state.Meta.filteredMeta },
     filters() { return this.$store.state.Meta.filters },
     selectedMeta() { return this.$store.state.Meta.selectedMeta },
+    updateKey() { return this.$store.state.Meta.updateKey },
   },
   methods: {
     initSelection() {
@@ -246,17 +247,9 @@ export default {
       this.$store.state.Meta.firstChar = []
       this.$store.dispatch('filterMetaCards')
     },
-    deleteMetaCard() {
-      this.$store.dispatch('deleteMetaCard')
-      // let selected = this.selectedMeta
-      // for (let i = 0; i < selected.length; i++) {
-      //   let j     =   this.$store.getters.metaCards.find({id:selected[i]}).value()
-      //   console.log(j)
-      // }
-    },
+    deleteMetaCard() { this.$store.dispatch('deleteMetaCard') },
   },
   watch: {
-    // $route(newRoute) { if (this.$route.path.includes('/meta/')) this.initFilters() },
   }
 }
 </script>
