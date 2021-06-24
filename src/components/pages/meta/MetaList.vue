@@ -4,8 +4,13 @@
 
     <v-dialog v-model="dialogAddMeta" scrollable max-width="800">
       <v-card>
-        <v-card-actions class="pa-4">
-          <v-card @click="dialogAddComplexMeta=true, dialogAddMeta=false" hover height="100%">
+        <v-toolbar color="primary">
+          <div class="headline">Choose type of meta</div>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogAddMeta=false" outlined><v-icon left>mdi-close</v-icon>Cancel</v-btn>
+        </v-toolbar>
+        <div class="py-4 d-flex justify-space-around">
+          <v-card @click="dialogAddComplexMeta=true, dialogAddMeta=false" class="mx-4" hover height="100%">
             <v-toolbar color="primary" class="headline">Complex</v-toolbar>
             <v-card-text class="text-center">
               <span>Complex meta has a separate page with cards <br> 
@@ -19,8 +24,7 @@
               </div>
             </v-card-text>
           </v-card>
-          <v-spacer/>
-          <v-card @click="dialogAddSimpleMeta=true, dialogAddMeta=false" hover height="100%">
+          <v-card @click="dialogAddSimpleMeta=true, dialogAddMeta=false" class="mx-4" hover height="100%">
             <v-toolbar class="headline">Simple</v-toolbar>
             <v-card-text class="text-center">
               <span>Simple meta doesn't have a separate page or cards.<br> 
@@ -36,7 +40,7 @@
               </div>
             </v-card-text>
           </v-card>
-        </v-card-actions>
+        </div>
       </v-card>
     </v-dialog>
 

@@ -5,9 +5,9 @@
     </div>
 
     <v-tabs v-model="tab" centered icons-and-text class="settings-tabs">
-      <v-tab href="#meta-settings" draggable="false">Meta<v-icon>mdi-shape</v-icon></v-tab>
       <v-tab href="#app-settings" draggable="false">App<v-icon>mdi-application</v-icon></v-tab>
       <v-tab href="#appearance-settings" draggable="false">Appearance<v-icon>mdi-palette</v-icon></v-tab>
+      <v-tab href="#meta-settings" draggable="false">Meta<v-icon>mdi-shape</v-icon></v-tab>
       <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
       <v-tab href="#privacy-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
       <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
@@ -243,11 +243,6 @@
           </v-card>
         </v-dialog>
       </v-tab-item>
-      <v-tab-item value="meta-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <MetaList/>
-        </v-card>
-      </v-tab-item>
       <v-tab-item value="appearance-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <v-btn @click="darkMode=!darkMode" color="primary" class="mb-10" block x-large rounded>
@@ -343,6 +338,11 @@
                 <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom </v-btn>
             </div>
           </v-card>
+        </v-card>
+      </v-tab-item>
+      <v-tab-item value="meta-settings">
+        <v-card flat max-width="800" style="margin: auto;" class="py-10">
+          <MetaList/>
         </v-card>
       </v-tab-item>
       <v-tab-item value="videos-settings">
