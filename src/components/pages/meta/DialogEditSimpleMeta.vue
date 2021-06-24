@@ -182,17 +182,7 @@ export default {
     parseDeletedItems() {
       let ids = this.deletedItems
       let metaId =  this.meta.id
-      for (let id = 0; id < ids.length; id++) { // delete from meta cards
-        let itemId = ids[id]
-        this.$store.getters.metaCards.filter(i=>{
-          let metaInCard = i.meta[metaId]
-          if (metaInCard) return i.meta[metaId].includes(itemId)
-          else return false
-        }).each(i=>{
-          const index = i.meta[metaId].indexOf(itemId)
-          if (index > -1) i.meta[metaId].splice(index, 1) 
-        }).write()
-      }
+      for (let id of ids) this.$store.dispatch('removeMetaItemFromFiltersAndCards', {metaId,id})
     },
     itemNameRules(string) {
       let items = this.meta.settings.items.map(i => i.name.toLowerCase())

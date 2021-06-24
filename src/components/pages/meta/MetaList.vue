@@ -319,9 +319,21 @@ export default {
         let newMetaInCard = _.unionBy([newAssignedMeta], this.$store.state.Settings.metaAssignedToVideos, 'id')
         this.$store.dispatch('updateSettingsState', {key:'metaAssignedToVideos', value:_.cloneDeep(newMetaInCard)})
       }
-
+      this.$store.getters.meta.filter({type:'complex'}).each(m=>{ // rename in filters of all meta
+        for (let f of m.state.filters) if (f.by === meta.id) type = 'select'
+      }).write()
+      this.$store.getters.settings.get('videoFilters').each(f=>{ // rename in filters of videos
+        if (f.by === meta.id) if (f.by === meta.id) type = 'select'
+      }).write()
+      this.$store.getters.savedFilters.each(sfType=>{ // rename in filters of saved filters
+        for (let sf of sfType) for (let f of sf.filters) if (f.by === meta.id) type = 'select'
+      }).write()
+      this.$store.dispatch('updateSavedFilters')
+      this.$store.getters.settings.get('tabs').each(tab=>{ // rename in filters of tabs
+        for (let f of tab.filters) if (f.by === meta.id) type = 'select'
+      }).write()
+      this.$store.commit('updateSettingsState', 'tabs') // update tabs
       this.dialogTransferMeta = false
-      // TODO create function for search changing meta in filters, tabs and etc. ant then change this items
     },
     deleteMeta() {
       let meta = this.selectedMeta

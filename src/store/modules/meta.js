@@ -89,6 +89,7 @@ const Meta = {
       getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
       getters.savedFilters.unset(id).write() // delete saved filters from database
       getters.savedFilters.each(sfType=>{ for (let sf of sfType) _.remove(sf.filters, f=>f.by===id) }).write() // delete from saved filters
+      dispatch('updateSavedFilters')
       getters.markers.each(marker=>{ // rename/delete markers
         if (marker.type===id) {
           let mc = getters.metaCards.find({id:marker.name}).value()
@@ -103,6 +104,7 @@ const Meta = {
       commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
+      ipcRenderer.send('updatePlayerDb', 'markers') // update markers in player window
     },
     deleteSimpleMeta({commit, getters}, {id, name}) {
       getters.meta.remove({id}).write() // delete from database
@@ -110,6 +112,7 @@ const Meta = {
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
       getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
       getters.savedFilters.each(sfType=>{ for (let sf of sfType) _.remove(sf.filters, f=>f.by===id) }).write() // delete from saved filters
+      dispatch('updateSavedFilters')
       dispatch('removeMetaFromVideos', id) // VIDEOS
       dispatch('removeMetaFromTabs', id) // TABS
       commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
@@ -126,55 +129,7 @@ const Meta = {
       state.selectedMeta.map(id => {
         let cardName = getters.metaCards.find({id}).value().meta.name
         getters.metaCards.remove({id}).write() // remove card from database
-        getters.metaCards.each(mc => { // remove from other meta cards
-          let arr = mc.meta[metaId]
-          if (arr && arr.length) {
-            let index = mc.meta[metaId].indexOf(id)
-            if (index > -1) mc.meta[metaId].splice(index, 1)
-          }
-        }).write()
-        getters.videos.each(video => { // remove from videos meta array
-          let arr = video[metaId]
-          if (arr && arr.length) {
-            let index = video[metaId].indexOf(id)
-            if (index > -1) video[metaId].splice(index, 1)
-          }
-        }).write()
-        getters.meta.filter({type:'complex'}).each(m=>{ // remove from filters of all meta
-          for (let f of m.state.filters) {
-            if (f.by === metaId) {
-              let index = f.val.indexOf(id)
-              if (index > -1) f.val.splice(index, 1)
-            }
-          }
-        }).write()
-        getters.savedFilters.each(sfType=>{ // remove from filters of saved filters
-          for (let sf of sfType) {
-            for (let f of sf.filters) {
-              if (f.by === metaId) {
-                let index = f.val.indexOf(id)
-                if (index > -1) f.val.splice(index, 1)
-              }
-            }
-          }
-        }).write()
-        dispatch('updateSavedFilters')
-        getters.settings.get('videoFilters').each(f=>{ // remove from filters of videos
-          if (f.by === metaId) {
-            let index = f.val.indexOf(id)
-            if (index > -1) f.val.splice(index, 1)
-          }
-        }).write()
-        getters.settings.get('tabs').each(tab=>{ // remove  from filters of tabs
-          for (let f of tab.filters) {
-            if (f.by === metaId) {
-              let index = f.val.indexOf(id)
-              if (index > -1) f.val.splice(index, 1)
-            }
-          }
-        }).write()
-        commit('updateSettingsState', 'tabs') // update tabs
-        // TODO remove from videos and meta filters, saved filters value (same for simple meta item of type array)
+        dispatch('removeMetaItemFromFiltersAndCards', {metaId,id})
         let imageTypes = ['main','alt','custom1','custom2','avatar','header']
         imageTypes.map(img => { // remove images of card
           let imgPath = path.join(getters.getPathToUserData, 'media', 'meta', metaId, `${id}_${img}.jpg`)
@@ -206,6 +161,56 @@ const Meta = {
       getters.settings.get('tabs').each(tab=>{
         tab.filters = _.filter(tab.filters, i=>i.by!==id)
       }).write() // remove from tab's filters
+      commit('updateSettingsState', 'tabs') // update tabs
+    },
+    removeMetaItemFromFiltersAndCards({commit, dispatch, getters}, {metaId, id}) {
+      getters.metaCards.each(mc => { // remove from other meta cards
+        let arr = mc.meta[metaId]
+        if (arr && arr.length) {
+          let index = mc.meta[metaId].indexOf(id)
+          if (index > -1) mc.meta[metaId].splice(index, 1)
+        }
+      }).write()
+      getters.videos.each(video => { // remove from videos meta array
+        let arr = video[metaId]
+        if (arr && arr.length) {
+          let index = video[metaId].indexOf(id)
+          if (index > -1) video[metaId].splice(index, 1)
+        }
+      }).write()
+      getters.meta.filter({type:'complex'}).each(m=>{ // remove from filters of all meta
+        for (let f of m.state.filters) {
+          if (f.by === metaId) {
+            let index = f.val.indexOf(id)
+            if (index > -1) f.val.splice(index, 1)
+          }
+        }
+      }).write()
+      getters.settings.get('videoFilters').each(f=>{ // remove from filters of videos
+        if (f.by === metaId) {
+          let index = f.val.indexOf(id)
+          if (index > -1) f.val.splice(index, 1)
+        }
+      }).write()
+      getters.savedFilters.each(sfType=>{ // remove from filters of saved filters
+        for (let sf of sfType) {
+          for (let f of sf.filters) {
+            if (f.by === metaId) {
+              let index = f.val.indexOf(id)
+              if (index > -1) f.val.splice(index, 1)
+            }
+          }
+        }
+      }).write()
+      dispatch('updateSavedFilters')
+      getters.settings.get('tabs').each(tab=>{ // remove from filters of tabs
+        for (let f of tab.filters) {
+          if (f.by === metaId) {
+            let index = f.val.indexOf(id)
+            if (index > -1) f.val.splice(index, 1)
+          }
+        }
+      }).write()
       commit('updateSettingsState', 'tabs') // update tabs
     },
     async filterMetaCards({ state, commit, dispatch, getters, rootState}) {
@@ -365,7 +370,6 @@ const Meta = {
       let filters = []
       const equals = ['equal', 'includes all', 'includes one of', 'yes']
       const notEquals = ['not equal', 'excludes', 'no']
-      console.log(metaId)
       let meta = getters.meta.find({id:metaId}).value()
       
       for (let filter of state.filters) {

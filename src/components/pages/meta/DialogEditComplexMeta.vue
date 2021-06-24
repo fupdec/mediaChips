@@ -382,10 +382,16 @@ export default {
       this.dialogDeleteMetaFromCards = false
     },
     parseDeletedMetaFromCards() {
-      let ids = this.deletedMetaFromCards
-      for (let i = 0; i < ids.length; i++) { // delete from meta cards
-        this.$store.getters.metaCards.filter({metaId:this.meta.id}).each(card=>{card.meta[ids[i]]=undefined}).write() 
+      let metaId = this.meta.id
+      for (let id of this.deletedMetaFromCards) { // delete from meta cards
+        this.$store.getters.metaCards.filter({metaId}).each(card=>{delete card.meta[id]}).write() 
+        this.$store.getters.savedFilters.get(metaId).each(sf=>{_.remove(sf.filters, f=>f.by===id)}).write() // delete from saved filters
+        this.$store.getters.meta.filter({id:metaId}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
+        this.$store.getters.settings.get('tabs').filter(tab=>tab.link.includes(metaId)).each(tab=>{
+          tab.filters = _.filter(tab.filters, i=>i.by!==id) }).write() // remove from tab's filters
       }
+      this.$store.dispatch('updateSavedFilters')
+      this.$store.commit('updateSettingsState', 'tabs') // update tabs
     },
   },
 }
