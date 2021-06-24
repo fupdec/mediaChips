@@ -88,9 +88,6 @@ const Meta = {
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
       getters.metaCards.remove({metaId:id}).write() // delete all cards from database
       getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
-      getters.savedFilters.unset(id).write() // delete saved filters from database
-      getters.savedFilters.each(sfType=>{ for (let sf of sfType) _.remove(sf.filters, f=>f.by===id) }).write() // delete from saved filters
-      dispatch('updateSavedFilters')
       getters.markers.each(marker=>{ // rename/delete markers
         if (marker.type===id) {
           let mc = getters.metaCards.find({id:marker.name}).value()
@@ -101,6 +98,7 @@ const Meta = {
       rimraf(path.join(getters.getPathToUserData, 'media', 'meta', id), () => { /*console.log("done")*/ }) // remove folder with images
       commit('getMetaListFromDb')
       dispatch('removeMetaFromVideos', id) // VIDEOS
+      dispatch('removeMetaFromSavedFilters', id) // SAVED FILTERS
       dispatch('removeMetaFromTabs', id) // TABS
       commit('addLog', {type:'info', color:'red', text:`Deleted complex meta "${name}"`})
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
@@ -112,9 +110,8 @@ const Meta = {
       getters.meta.filter({type:'complex'}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
       getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
       getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
-      getters.savedFilters.each(sfType=>{ for (let sf of sfType) _.remove(sf.filters, f=>f.by===id) }).write() // delete from saved filters
-      dispatch('updateSavedFilters')
       dispatch('removeMetaFromVideos', id) // VIDEOS
+      dispatch('removeMetaFromSavedFilters', id) // SAVED FILTERS
       dispatch('removeMetaFromTabs', id) // TABS
       commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
     },
@@ -155,7 +152,11 @@ const Meta = {
       commit('updateSettingsState', 'metaAssignedToVideos')
       getters.settings.get('videoFilters').remove({by:id}).write() // remove from video filters
       getters.settings.get('videoVisibility').unset(id).write() // remove from videos visiblity 
-      // TODO remove from saved filters
+    },
+    removeMetaFromSavedFilters({getters, commit, dispatch}, id) {
+      getters.savedFilters.unset(id).write() // delete saved filters from database
+      getters.savedFilters.each(sfType=>{ for (let sf of sfType) _.remove(sf.filters, f=>f.by===id) }).write() // delete from saved filters
+      dispatch('updateSavedFilters')
     },
     removeMetaFromTabs({getters, commit}, id) {
       getters.settings.get('tabs').remove(i=>i.link.includes(id)).write() // close tabs

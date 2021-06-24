@@ -139,8 +139,10 @@ export default {
       this.dialogDeleteMetaFromCard = true
     },
     deleteMetaFromCard() {
-      let metaId = this.metaAssignedToVideos[this.selectedMetaIndex].id
-      this.$store.getters.videos.filter(v=>v[metaId]!==undefined).each(v=>{v[metaId]=undefined}).write() 
+      let id = this.metaAssignedToVideos[this.selectedMetaIndex].id
+      this.$store.dispatch('removeMetaFromVideos', id) // VIDEOS
+      this.$store.dispatch('removeMetaFromSavedFilters', id) // SAVED FILTERS
+      this.$store.dispatch('removeMetaFromTabs', id) // TABS
       this.metaAssignedToVideos.splice(this.selectedMetaIndex, 1)
       this.dialogDeleteMetaFromCard = false
     },

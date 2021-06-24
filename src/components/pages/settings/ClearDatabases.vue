@@ -22,7 +22,7 @@
     </v-dialog>
     <v-dialog v-model="dialogDatabaseCleared" max-width="300">
       <v-card>
-        <p class="headline text-center pt-6">Database cleared</p>
+        <p class="headline text-center pt-6">Data cleared!</p>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn class="ma-4" outlined @click="dialogDatabaseCleared=false">OK</v-btn>
@@ -59,12 +59,10 @@ export default {
     nameDB: null,
   }),
   computed: {
-    pathToUserData() {
-      return this.$store.getters.getPathToUserData
-    },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
-    // TODO clear thumbs for markers and timeline. remake timline with 5%,15%,25%,35%,45%,55%,65%,75%,85%,95%,
+    // TODO add clearThumbs for markers and timeline. remake timline with 5%,15%,25%,35%,45%,55%,65%,75%,85%,95%,
     clearDB(db) {
       switch (db) {
         case 'videos': this.clearVideosDb(); break
@@ -77,43 +75,54 @@ export default {
       this.dialogDatabaseCleared = true
     },
     clearVideosDb() {
+      this.clearMarkersDb() // clear markers
       this.$store.getters.videosDatabase.set('videos', []).write()
-      this.$store.getters.markersDatabase.set('markers', []).write() // clear markers
-      this.$store.getters.performers.each(i => { i.videos = 0, i.videoTags = [], i.websites = [] }).write()
-      this.$store.getters.tags.each(i => { i.videos = 0, i.performers = [], i.websites = [] }).write()
-      this.$store.getters.websites.each(i => { i.videos = 0, i.performers = [], i.videoTags = [] }).write()
       this.$store.getters.playlists.each(i => i.videos = []).write()
       this.clearFiles(path.join(this.pathToUserData, '/media/thumbs/'))
       this.clearFiles(path.join(this.pathToUserData, '/media/previews/'))
+      this.clearFiles(path.join(this.pathToUserData, '/media/timeline/'))
       this.clearFiles(path.join(this.pathToUserData, '/media/markers/'))
+      this.$store.getters.savedFilters.set('videos', []).write() // delete saved filters
+      this.$store.dispatch('updateSavedFilters') // update saved filters
       ipcRenderer.send('updatePlayerDb', 'videos') // update markers in player window
       ipcRenderer.send('closePlayer') // stop playing video in separated window
-      this.$store.commit('updateVideos')
+      this.$store.commit('updateVideos', [])
+      this.$store.getters.settings.get('tabs').remove(i=>i.link.includes('videos')).write() // close tabs
+      this.$store.commit('updateSettingsState', 'tabs') // update tabs
     },
     clearMetaDb() {
-      // delete type for markers
-      let markers = this.$store.getters.markers.filter(marker => marker.type!=='favorite'&&marker.type!=='bookmark')
-      if (markers.value().length) {
-        markers.each(marker => {
+      this.$store.getters.markers.filter(i=>i.type!=='favorite'&&i.type!=='bookmark').each(marker=>{
           marker.type = 'bookmark'
           let markerName = this.getCard(marker.name)
           if (markerName) marker.name = markerName.meta.name
           else marker.name = ''
-        }).write()
-      }
+        }).write() // delete type for markers
+      ipcRenderer.send('updatePlayerDb', 'markers') // update markers in player window
       this.$store.getters.tabsDb.filter(tab => tab.link.includes('/meta')) // close tabs with meta type
         .each(tab => this.$store.dispatch('closeTab', tab.id)).value()
       this.$store.getters.dbMeta.set('meta', [...SpecificMeta]).set('cards', []).write() // clear meta db
-      this.$store.commit('getMetaListFromDb') // update menu
+      let metaInVideos = this.$store.getters.settings.get('metaAssignedToVideos').map('id').value()
+      for (let id of metaInVideos) {
+        this.$store.getters.settings.get('videoFilters').remove({by:id}).write() // remove from video filters
+        this.$store.getters.videos.each(v=>{delete v[id]}).write() // remove from all videos
+        this.$store.getters.settings.get('tabs').each(tab=>{
+          tab.filters = _.filter(tab.filters, i=>i.by!==id)
+        }).write() // remove from tab's filters
+      }
       this.$store.dispatch('updateSettingsState', {key:'metaAssignedToVideos',value:[]}) // update assigned to video
       this.$store.dispatch('updateSettingsState', {key:'videoVisibility',value:{}}) // update visibile meta in video
       this.clearFiles(path.join(this.pathToUserData, '/media/meta/'))
+      let metaIds = this.$store.getters.meta.filter({type:'complex'}).map('id').value()
+      for (let id in metaIds) this.$store.getters.savedFilters.unset(metaIds[id]).write() // delete from saved filters
+      this.$store.dispatch('updateSavedFilters')
       ipcRenderer.send('updatePlayerDb', 'meta') // update db in player window
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update db in player window
-      // TODO update in saved filters, videos and other...
+      this.$store.commit('getMetaListFromDb')
+      ++this.$store.state.Meta.updateKey
     },
     clearSavedFiltersDb() {
       this.$store.getters.filtersDatabase.set('savedFilters', { videos: [], playlists: [], }).write()
+      this.$store.dispatch('updateSavedFilters')
     },
     clearMarkersDb() {
       this.$store.getters.markersDatabase.set('markers', []).write()
