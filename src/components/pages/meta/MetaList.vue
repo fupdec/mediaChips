@@ -44,15 +44,17 @@
       </v-card>
     </v-dialog>
 
-    <v-card outlined>
-      <v-data-iterator :items="metaList" :items-per-page.sync="itemsPerPage" :page.sync="page" :search="search" :sort-by="sortBy" :sort-desc="sortDesc" hide-default-footer no-data-text="Please add meta first" no-results-text="No meta found">
+    <v-card outlined >
+      <v-data-iterator :items="metaList" :items-per-page.sync="itemsPerPage" :page.sync="page" :search="search" :sort-by="sortBy" :sort-desc="sortDesc"
+        hide-default-footer no-data-text="Please add meta first" no-results-text="No meta found">
         <template v-slot:header>
-          <v-toolbar color="secondary" class="mb-4">
-            <v-text-field v-model="search" dense clearable flat solo-inverted hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
+          <div class="headline text-center py-2">List of meta</div>
+          <v-toolbar class="mb-4" color="primary" elevation="0">
+            <v-text-field v-model="search" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
             <v-spacer></v-spacer>
-            <v-select v-model="sortBy" dense flat solo-inverted hide-details :items="keys" prepend-inner-icon="mdi-magnify" label="Sort by"></v-select>
+            <v-select v-model="sortBy" dense flat solo outlined hide-details :items="keys" prepend-inner-icon="mdi-sort" label="Sort by"></v-select>
             <v-spacer></v-spacer>
-            <v-btn-toggle v-model="sortDesc" dense mandatory background-color="secondary">
+            <v-btn-toggle v-model="sortDesc" dense mandatory>
               <v-btn outlined :value="false"> <v-icon>mdi-arrow-up</v-icon> </v-btn>
               <v-btn outlined :value="true"> <v-icon>mdi-arrow-down</v-icon> </v-btn>
             </v-btn-toggle>
@@ -124,7 +126,7 @@
         </template>
 
         <template v-slot:footer>
-          <v-toolbar color="secondary" class="mt-4" dense>
+          <v-toolbar class="mt-4" color="primary" dense elevation="0">
             <v-menu offset-y top open-on-hover>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn v-bind="attrs" v-on="on" outlined small>{{ itemsPerPage }}</v-btn>
@@ -221,7 +223,7 @@ export default {
     sortDesc: false,
     page: 1,
     itemsPerPage: 8,
-    sortBy: 'if',
+    sortBy: 'type',
     keys: [
       'name',
       'type',

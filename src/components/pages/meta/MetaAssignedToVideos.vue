@@ -1,9 +1,7 @@
 <template>
   <div>
     <v-card outlined class="py-2 mb-10">
-      <div class="text-center">
-        <span class="overline">Meta Assigned to Videos</span>
-      </div>
+      <div class="headline text-center py-2">Meta Assigned to Videos</div>
       <v-list v-if="metaAssignedToVideos.length" dense class="list-zebra">
         <draggable v-model="metaAssignedToVideos" v-bind="dragOptions" @start="drag=true" @end="drag=false">
           <transition-group type="transition">
