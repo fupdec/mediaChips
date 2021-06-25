@@ -56,7 +56,7 @@
         <div v-else style="min-width:80px;"></div>
       </v-container>
 
-      <v-container :key="updateKey" fluid class="card-grid" :class="[cardSize, gapSize, {'wide-image':isWideImage}]">
+      <v-container :key="$store.state.Meta.updateKey" fluid class="card-grid" :class="[cardSize, gapSize, {'wide-image':isWideImage}]">
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
       
