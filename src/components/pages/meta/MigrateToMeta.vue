@@ -406,7 +406,7 @@ export default {
             metaId: performersId,
             date: performer.date,
             edit: performer.edit,
-            views: 0,
+            views: performer.views,
             meta: resultForMeta,
           }
           

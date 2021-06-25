@@ -297,6 +297,7 @@ export default {
     sortDirection() { return this.meta.state.sortDirection || 'asc' },
     metaInCard() { return this.meta.settings.metaInCard || [] },
     visibility() { return this.$store.state.Meta.visibility },
+    metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
   },
   methods: {
     initSpecificMeta() {
@@ -376,8 +377,13 @@ export default {
     },
     initSort() {
       this.sortBy = this.meta.state.sortBy || 'name'
-      let color = { name: 'color', icon: 'palette', tip: 'Color', }
+      let color = { name: 'color', icon: 'palette', tip: 'Color' }
       if (this.meta.settings.color) this.sort.push(color)
+      let rating = { name: 'rating', icon: 'star-outline', tip: 'Rating' }
+      if (this.meta.settings.rating) this.sort.push(rating)
+      let videos = { name: 'videos', icon: 'video-outline', tip: 'Number of Videos' }
+      if (_.find(this.metaAssignedToVideos, {id:this.metaId})) this.sort.push(videos)
+      this.sort.push({ name: 'views', icon: 'eye-outline', tip: 'Number of Views' })
     },
     changeSortBy(e) { this.sortBy = e },
     sortMetaCards() {
