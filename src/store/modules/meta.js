@@ -222,12 +222,12 @@ const Meta = {
       
       if (state.firstChar.length) { // filter by first character
         let chars = ['0123456789','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!$@^&*\'+-_~']
-        let allChars = []
-        state.firstChar.forEach( char => { allChars.push(chars[char]) } )
-        if (allChars.length) {
+        let selectedChars = []
+        state.firstChar.forEach( char => { selectedChars.push(chars[char]) } )
+        if (selectedChars.length) {
           mc = mc.filter( c => {
-            let charTag = c.meta.name.charAt(0).toLowerCase()
-            return allChars.includes(charTag)
+            let firstChar = c.meta.name.charAt(0).toLowerCase()
+            return selectedChars.some(chars => chars.includes(firstChar))
           })
         }
       }
