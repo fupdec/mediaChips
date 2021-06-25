@@ -366,9 +366,9 @@ export default {
             color:'green',
             text:`${vm.newVideos.length} new videos have been added 😀`
           })
+          vm.$store.dispatch('updateDataFromVideos')
         }
         vm.$store.state.Settings.scanProcRun = false
-        vm.$store.commit('updateVideos')
         vm.$store.dispatch('filterVideos')
         vm.headerText = 'Video scanning process completed!'
       })

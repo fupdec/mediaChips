@@ -333,6 +333,7 @@ export default {
       } else clearInterval(this.intervalUpdateDataFromVideos) 
     },
     updateDataFromVideos() {
+      // TODO create tooltip with info about background processes
       ++this.$store.state.backgroundProcesses
       setTimeout(() => {
         this.$store.dispatch('updateDataFromVideos')
