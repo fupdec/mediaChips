@@ -174,7 +174,7 @@ export default {
     timeouts: {},
     cardKey: '',
     hoveredSection: 0,
-    timeline: [10, 20, 30, 40, 50, 60, 70, 80, 90],
+    timeline: [5, 15, 25, 35, 45, 55, 65, 75, 85, 95],
   }),
   computed: {
     updateCardIds() { return this.$store.state.Videos.updateCardIds},
@@ -241,7 +241,7 @@ export default {
     },
     getImgUrl() {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${this.video.id}.jpg`)
-      let gridPath = path.join(this.pathToUserData, `/media/previews/${this.video.id}.jpg`)
+      let gridPath = path.join(this.pathToUserData, `/media/grids/${this.video.id}.jpg`)
       return 'file://' + this.checkImageExist(imgPath, gridPath)
     },
     checkImageExist(imgPath, gridPath) {
@@ -253,7 +253,7 @@ export default {
       }
     },
     getTimelineImgUrl(progress) {
-      let imgPath = path.join(this.pathToUserData, `/media/timeline/${this.video.id}_${progress}.jpg`)
+      let imgPath = path.join(this.pathToUserData, `/media/timelines/${this.video.id}_${progress}.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
       else return 'file://' + path.join(this.pathToUserData, '/img/templates/thumb.jpg')
     },
@@ -349,6 +349,7 @@ export default {
       shell.showItemInFolder(videoPath)
     },
     moveFile() {
+      // TODO create progress line for this process. If file are moving to another disk this proc can be long
       dialog.showOpenDialog(null, { properties: ['openDirectory'] }).then(result => {
         if (result.filePaths.length === 0) return
         let filePath = result.filePaths[0]

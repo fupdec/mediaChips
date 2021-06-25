@@ -283,14 +283,14 @@ const Videos = {
           // if (err) console.log("failed to delete thumb: "+err)
           // else console.log('successfully deleted thumb')
         })
-        let gridPath = path.join(getters.getPathToUserData, `/media/previews/${id}.jpg`)
+        let gridPath = path.join(getters.getPathToUserData, `/media/grids/${id}.jpg`)
         fs.unlink(gridPath, (err) => {
           // if (err) console.log("failed to delete grid: "+err)
           // else console.log('successfully deleted grid')
         })
-        let frames =  [10, 20, 30, 40, 50, 60, 70, 80, 90]
+        let frames =  [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
         for (let f = 0; f < frames.length; f++) {
-          let framePath = path.join(getters.getPathToUserData, `/media/timeline/${id}_${frames[f]}.jpg`)
+          let framePath = path.join(getters.getPathToUserData, `/media/timelines/${id}_${frames[f]}.jpg`)
           fs.unlink(framePath, (err) => {
             // if (err) console.log("failed to delete grid: "+err)
             // else console.log('successfully deleted grid')

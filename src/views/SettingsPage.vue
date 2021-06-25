@@ -470,8 +470,8 @@
             <v-alert type="info" class="caption" dense text outlined>
               You can delete generated images to save disk space. They will be automatically recreated when needed.
             </v-alert>
-            <ClearData dataName="timeline" dataType="images" btnText='timeline'/>
-            <ClearData dataName="grid" dataType="images" btnText='grid'/>
+            <ClearData dataName="timelines" dataType="images" btnText='timelines'/>
+            <ClearData dataName="grids" dataType="images" btnText='grids'/>
             <ClearData dataName="markers" dataType="images" btnText='markers'/>
           </v-card>
           

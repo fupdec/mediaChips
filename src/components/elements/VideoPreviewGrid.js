@@ -6,14 +6,14 @@ ffmpeg.setFfmpegPath(pathToFfmpeg)
 
 class VideoPreviewGrid {
   constructor(opts) {
-    this.tmpDir = os.tmpdir();
-    this.input = opts.input;
-    this.output = opts.output;
-    this.cols = opts.cols;
-    this.rows = opts.rows;
-    this.width = opts.width;
-    this.duration = opts.duration;
-    this.tileCount = this.rows*this.cols;
+    this.tmpDir = os.tmpdir()
+    this.input = opts.input
+    this.output = opts.output
+    this.cols = opts.cols
+    this.rows = opts.rows
+    this.width = opts.width
+    this.duration = opts.duration
+    this.tileCount = this.rows*this.cols
     if (typeof this.input === 'undefined') throw new Error('input is required in options. got undefined.')
     if (typeof this.output === 'undefined') throw new Error('output is required in options. got undefined.')
     if (typeof this.cols === 'undefined') throw new Error('cols is required in options. got undefined.')
@@ -24,25 +24,15 @@ class VideoPreviewGrid {
 
   makeLayout (i) {
     // see https://ffmpeg.org/ffmpeg-filters.html#xstack for the madness
-    const currentColumn = i%this.cols;
-    const currentRow = Math.floor(i/this.cols);
-    let colSide = [];
-    let rowSide = [];
-    if (currentColumn === 0) {
-      colSide.push('0');
-    } else {
-      for (var j = 0; j<currentColumn; j++) {
-        colSide.push('w0');
-      }
-    }
-    if (currentRow === 0) {
-      rowSide.push('0');
-    } else {
-      for (var k = 0; k<currentRow; k++) {
-        rowSide.push('h0');
-      }
-    }
-    return `${colSide.join('+')}_${rowSide.join('+')}`;
+    const currentColumn = i%this.cols
+    const currentRow = Math.floor(i/this.cols)
+    let colSide = []
+    let rowSide = []
+    if (currentColumn === 0) colSide.push('0')
+    else for (var j = 0; j<currentColumn; j++) colSide.push('w0')
+    if (currentRow === 0) rowSide.push('0')
+    else for (var k = 0; k<currentRow; k++) rowSide.push('h0')
+    return `${colSide.join('+')}_${rowSide.join('+')}`
   }
 
 
@@ -55,20 +45,20 @@ class VideoPreviewGrid {
         .save(intermediateOutput)
         .on('end', function() {
           setTimeout(() => {
-            resolve(intermediateOutput);
-          }, 1000);
+            resolve(intermediateOutput)
+          }, 1000)
         })
         .on('error', function(e) {
-          reject(e);
-        });
+          reject(e)
+        })
     })
   }
 
   async ffmpegCombineP (inputFiles, streams, layouts) {
     return new Promise((resolve, reject) => {
-      const command = ffmpeg();
+      const command = ffmpeg()
       inputFiles.forEach((inputFile) => {
-        command.input(inputFile);
+        command.input(inputFile)
       })
       command
         .addOption('-y')
@@ -76,37 +66,43 @@ class VideoPreviewGrid {
         .addOption('-map', '[scaled]')
         .save(this.output)
         .on('end', function() {
-          resolve();
+          resolve()
         })
         .on('error', function(e) {
-          reject(e);
-        });
+          reject(e)
+        })
     })
   }
 
   async generate () {
     if (typeof this.duration !== 'number') return false
-    const durSlice = parseInt(this.duration/this.tileCount);
+    const durSlice = parseInt(this.duration/this.tileCount)
 
-    let framePromises = [];
+    let framePromises = []
     for (var i=0; i<this.tileCount; i++) {
-      const timestamp = new Date(1000*(i+0.5)*durSlice).toISOString().substr(11, 8);
-      const intermediateOutput = path.join(this.tmpDir, `thumb${i}.png`);
-      framePromises.push(this.ffmpegSeekP(timestamp, intermediateOutput));
+      const timestamp = new Date(1000*(i+0.5)*durSlice).toISOString().substr(11, 8)
+      const intermediateOutput = path.join(this.tmpDir, `thumb${i}.png`)
+      framePromises.push(this.ffmpegSeekP(timestamp, intermediateOutput))
     }
 
-    let result = await Promise.all(framePromises);
+    await Promise.all(framePromises)
+      .catch(err=>{
+        // console.log(err)
+      })
 
     // combine images together to make tile
-    let inputFiles = [];
-    let streams = [];
-    let layouts = [];
+    let inputFiles = []
+    let streams = []
+    let layouts = []
     for (var l=0; l<this.tileCount; l++) {
-      inputFiles.push(`${this.tmpDir}/thumb${l}.png`);
-      streams.push(`[${l}:v]`);
-      layouts.push(this.makeLayout(l));
+      inputFiles.push(`${this.tmpDir}/thumb${l}.png`)
+      streams.push(`[${l}:v]`)
+      layouts.push(this.makeLayout(l))
     }
-    await this.ffmpegCombineP(inputFiles, streams, layouts);
+    await this.ffmpegCombineP(inputFiles, streams, layouts)
+      .catch(err=>{
+        console.log(err)
+      })
 
     return {
       output: this.output

@@ -32,6 +32,7 @@ const shortid = require('shortid')
 const fs = require("fs-extra")
 const path = require("path")
 const { ipcRenderer } = require('electron')
+const rimraf = require("rimraf")
 
 export default {
   name: 'MigrateToMeta',
@@ -88,6 +89,8 @@ export default {
       ipcRenderer.send('updatePlayerDb', 'settings') // update settings in player window
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
+      rimraf(path.join(this.pathToUserData, `/media/previews`)) // remove folder with grid images
+      rimraf(path.join(this.pathToUserData, `/media/temp`)) // remove folder temp
       this.removeOldSettings()
       
       this.isMigrationRunning = false
@@ -665,8 +668,8 @@ export default {
     },
     moveImages(performersId, tagsId, websitesId) {
       //-operations with images
-      const currPathPerformers  = path.join(this.pathToUserData, `/media/performers`)
-      const newPathPerformers  = path.join(this.pathToUserData, `/media/meta/${performersId}`)
+      const currPathPerformers = path.join(this.pathToUserData, `/media/performers`)
+      const newPathPerformers = path.join(this.pathToUserData, `/media/meta/${performersId}`)
       
       if (fs.existsSync(currPathPerformers)) {
         try {

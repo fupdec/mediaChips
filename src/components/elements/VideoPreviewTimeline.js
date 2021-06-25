@@ -23,18 +23,20 @@ class VideoPreviewTimeline {
   }
 
   async generate () {
-    let parts = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    let parts = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
     let timestamps = parts.map(i=>(new Date(Math.floor(this.video.duration*(i/100)*1000)).toISOString().substr(11, 8))) 
     let framePromises = []
-
+    
+    const timelinesPath = path.join(this.pathToUserData, `/media/timelines/`)
     for (let i = 0; i < timestamps.length; i++) {
-      let output = path.join(this.pathToUserData, `/media/timeline/${this.video.id}_${parts[i]}.jpg`)
+      let output = path.join(timelinesPath, `${this.video.id}_${parts[i]}.jpg`)
       framePromises.push(this.createFrame(timestamps[i], output))
     }
 
-    let result = await Promise.all(framePromises);
-
-    return result
+    await Promise.all(framePromises)
+      .catch(err=>{
+        // console.log(err)
+      })
   }
 }
 

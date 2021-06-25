@@ -81,9 +81,7 @@ export default {
       else if (dataName=='meta' && dataType=='data') this.clearMetaDb()
       else if (dataName=='saved filters' && dataType=='data') this.clearSavedFiltersDb()
       else if (dataName=='markers' && dataType=='data') this.clearMarkersDb()
-      else if (dataName=='timeline' && dataType=='images') this.clearImages('timeline')
-      else if (dataName=='grid' && dataType=='images') this.clearImages('previews')
-      else if (dataName=='markers' && dataType=='images') this.clearImages('markers')
+      else if (['timelines','grids','markers'].includes(dataName) && dataType=='images') this.clearImages(dataName)
       if (dataType=='data') this.$store.commit('addLog', { type: 'info', text: `All ${dataName} was cleared 🗑️` })
       else if (dataType=='images') this.$store.commit('addLog', { type: 'info', text: `All ${dataName} images was cleared 🗑️` })
       this.dialogConfirmClearData = false
@@ -94,8 +92,8 @@ export default {
       this.$store.getters.videosDatabase.set('videos', []).write()
       this.$store.getters.playlists.each(i => i.videos = []).write()
       this.clearFiles(path.join(this.pathToUserData, '/media/thumbs/'))
-      this.clearFiles(path.join(this.pathToUserData, '/media/previews/'))
-      this.clearFiles(path.join(this.pathToUserData, '/media/timeline/'))
+      this.clearFiles(path.join(this.pathToUserData, '/media/grids/'))
+      this.clearFiles(path.join(this.pathToUserData, '/media/timelines/'))
       this.clearFiles(path.join(this.pathToUserData, '/media/markers/'))
       this.$store.getters.savedFilters.set('videos', []).write() // delete saved filters
       this.$store.dispatch('updateSavedFilters') // update saved filters

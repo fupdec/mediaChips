@@ -169,6 +169,7 @@ export default {
       })
       return backups
     },
+    // TODO replace with rimraf function
     clearFiles(directory) {
       return new Promise((resolve, reject) => {
          fs.readdir(directory, (err, files) => {
@@ -260,7 +261,7 @@ export default {
       await this.clearFiles(path.join(appFiles, 'previews/'))
       await this.clearFiles(path.join(appFiles, 'markers/'))
       await this.clearFiles(path.join(this.pathToUserData, '/databases/'))
-      
+      // TODO check folders (add grids, timelines, meta and other)
       let backupPath = path.join(this.pathToUserData, '/backups/'+date+'.zip')
       let backupDestinationPath = path.join(this.pathToUserData)
 
