@@ -307,11 +307,13 @@ export default {
     },
     addNewTab() {
       let tabId = Date.now()
+      let filters = _.cloneDeep(this.$store.state.Settings.videoFilters)
+      filters = filters.map(i=>{i.lock=false;return i})
       let tab = { 
         name: this.$store.getters.videoFiltersForTabName, 
         link: `/videos/:${tabId}?tabId=${tabId}`,
         id: tabId,
-        filters: _.cloneDeep(this.$store.state.Settings.videoFilters),
+        filters,
         sortBy: this.$store.state.Settings.videoSortBy,
         sortDirection: this.$store.state.Settings.videoSortDirection,
         page: 1,
