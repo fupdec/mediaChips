@@ -21,7 +21,7 @@
         </div>
       </v-card-title>
       <div class="video-player-container">
-        <VlcPlayer ref="player" @toggleFullscreen="toggleFullscreen" @nowPlaying="updateNowPlaying($event)"/>
+        <AppPlayer ref="player" @toggleFullscreen="toggleFullscreen" @nowPlaying="updateNowPlaying($event)"/>
       </div>
     </v-card>
   </div>
@@ -35,12 +35,12 @@ const { ipcRenderer } = require('electron')
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
 
-import VlcPlayer from '@/components/app/player/VlcPlayer'
+import AppPlayer from '@/components/app/AppPlayer'
 
 export default {
   name: 'VideoPlayer',
   components: {
-    VlcPlayer,
+    AppPlayer,
   },
   async beforeCreate() {
     // get databases from main window

@@ -417,7 +417,7 @@ import LabelFunctions from '@/mixins/LabelFunctions'
 import Keys from '@/mixins/Keys'
 
 export default {
-  name: "VlcPlayer",
+  name: "AppPlayer",
   components: {
     vuescroll,
   },
@@ -784,8 +784,8 @@ export default {
         if (fs.existsSync(imgPath)) continue
         let specificTime = new Date(1000*markers[i].time).toISOString().substr(11, 8)
         this.createMarkerThumb(specificTime, video.path, imgPath, 180)
-          .then(result => { console.log('thumb created') })
-          .catch(error => { console.log(error) })
+          .then(result => { /*console.log('thumb created')*/ })
+          .catch(error => { /*console.log(error)*/ })
       }
     },
     createMarkerThumb(timestamp, inputPath, outputPath, width) {
