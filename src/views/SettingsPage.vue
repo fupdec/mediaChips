@@ -21,7 +21,7 @@
             <v-icon large class="mr-4">mdi-video-plus</v-icon> Add new videos </v-btn>
 
           <v-card outlined class="mt-10 px-4">
-            <div class="headline text-h5 text-center my-4"> Folders
+            <div class="headline text-center my-4"> Folders
               <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
@@ -84,7 +84,7 @@
           </v-card>
           
           <v-card outlined class="mt-10 pb-4 px-4">
-            <div class="headline text-h5 text-center my-4"> Updating data from videos
+            <div class="headline text-center my-4"> Updating data from videos
               <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
@@ -249,12 +249,12 @@
             <v-icon large class="mr-4">mdi-theme-light-dark</v-icon> Toggle Dark Mode </v-btn>
 
           <v-card outlined class="px-4">
-            <div class="headline text-h5 text-center py-4">Theme</div>
+            <div class="headline text-center py-4">Theme</div>
             <ThemeColors />
           </v-card>
 
           <v-card outlined class="mt-10 px-4">
-            <div class="headline text-h5 text-center py-4">Fonts</div>
+            <div class="headline text-center py-4">Fonts</div>
             <v-row>
               <v-col cols="12" sm="6">
                 <v-autocomplete
@@ -350,7 +350,7 @@
           <MetaAssignedToVideos/>
           
           <v-card outlined class="pb-4 px-4">
-            <div class="headline text-h5 text-center py-4"> Video preview</div>
+            <div class="headline text-center py-4"> Video preview</div>
             <div class="d-flex align-center">
               <span class="mr-6">Static:</span>
               <v-radio-group v-model="videoPreviewStatic" mandatory hide-details row class="mt-0 pt-0">
@@ -419,7 +419,7 @@
       <v-tab-item value="privacy-settings">
         <v-card flat max-width="800" class="py-10" style="margin: auto;">
           <v-card outlined class="pb-4 px-4">
-            <div class="headline text-h5 text-center pt-4">Login</div>
+            <div class="headline text-center pt-4">Login</div>
             <v-row>
               <v-col cols="12">
                 <div class="mt-8 d-flex">
@@ -466,16 +466,25 @@
           <ManageBackups />
           
           <v-card outlined class="mt-10 pb-4 px-4">
-            <div class="headline text-h5 text-center red--text py-4">Clear data</div>
-            <div class="caption mb-2 red--text">
-              <v-icon size="18" color="red" left>mdi-alert-outline</v-icon>
+            <div class="headline text-center py-4">Clear generated images</div>
+            <v-alert type="info" class="caption" dense text outlined>
+              You can delete generated images to save disk space. They will be automatically recreated when needed.
+            </v-alert>
+            <ClearData dataName="timeline" dataType="images" btnText='timeline'/>
+            <ClearData dataName="grid" dataType="images" btnText='grid'/>
+            <ClearData dataName="markers" dataType="images" btnText='markers'/>
+          </v-card>
+          
+          <v-card outlined class="mt-10 pb-4 px-4">
+            <div class="headline text-center red--text py-4">Clear data</div>
+            <v-alert type="error" class="caption" dense text outlined>
               This will completely delete all data. Data recovery is possible only from a backup.
               Make sure you create a backup before clearing.
-            </div>
-            <ClearDatabases typeOfDB="videos" />
-            <ClearDatabases typeOfDB="meta" />
-            <ClearDatabases typeOfDB="saved filters" />
-            <ClearDatabases typeOfDB="markers" />
+            </v-alert>
+            <ClearData dataName="videos" dataType="data" btnText='Videos'/>
+            <ClearData dataName="meta" dataType="data" btnText='meta'/>
+            <ClearData dataName="saved filters" dataType="data" btnText='saved filters' />
+            <ClearData dataName="markers" dataType="data" btnText='markers' />
           </v-card>
         </v-card>
       </v-tab-item>
@@ -485,7 +494,7 @@
             <Registration />
           </v-card>
           <v-card outlined class="pa-4 mb-10">
-            <div class="headline text-h5 text-center pb-4">Updates</div>
+            <div class="headline text-center pb-4">Updates</div>
             <v-row>
               <v-col cols="12" sm="6">
                 <div class="d-flex align-center justify-center mt-2">
@@ -589,7 +598,7 @@ import MetaList from '@/components/pages/meta/MetaList.vue'
 import MetaAssignedToVideos from '@/components/pages/meta/MetaAssignedToVideos.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
-import ClearDatabases from '@/components/pages/settings/ClearDatabases.vue'
+import ClearData from '@/components/pages/settings/ClearData.vue'
 import ManagePerformerParameters from '@/components/pages/settings/ManagePerformerParameters.vue'
 import EditPerformerItemsOfParameter from '@/components/pages/settings/EditPerformerItemsOfParameter.vue'
 import EditTagItemsOfParameter from '@/components/pages/settings/EditTagItemsOfParameter.vue'
@@ -605,7 +614,7 @@ export default {
     MetaAssignedToVideos,
     ThemeColors,
     ManageBackups,
-    ClearDatabases,
+    ClearData,
     ManagePerformerParameters,
     EditPerformerItemsOfParameter,
     EditTagItemsOfParameter,

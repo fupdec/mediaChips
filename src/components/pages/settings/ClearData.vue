@@ -1,33 +1,46 @@
 <template>   
   <div class="d-inline-flex">
-    <v-btn @click.stop="dialogConfirmClearAllFiles = true" class="ma-2" rounded color="error">
-      <v-icon left>mdi-delete-alert</v-icon> {{nameDB}} </v-btn>
-    <v-dialog v-model="dialogConfirmClearAllFiles" max-width="520">
+    <v-btn @click="openDialogConfirmClearing" class="ma-2" rounded :color="dataType=='data'?'error':'primary'">
+      <v-icon left>mdi-delete</v-icon> {{btnText}} </v-btn>
+    <v-dialog v-if="dialogConfirmClearData" v-model="dialogConfirmClearData" max-width="520" persistent>
       <v-card>
         <v-toolbar color="error">
           <div class="headline">Are you sure?</div>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogConfirmClearAllFiles=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
-          <v-btn @click="clearDB(nameDB)" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+          <v-btn @click="dialogConfirmClearData=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="clearDB(dataType, dataName)" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
         <v-card-text class="text-center">
           <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
           <div class="red--text">
-            This will <span class="text-uppercase">delete all {{nameDB}}</span> from the database!
-            <br>Before deleting, make a backup and if you are ready then press 
-            the <br><span class="text-uppercase">red button</span>. 
+            This will <span class="text-uppercase">delete all {{dataName}}</span> from the database!
+            <br>Make a backup before deleting.
           </div>
         </v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogDatabaseCleared" max-width="300">
+    <v-dialog v-model="dialogResult" max-width="300">
       <v-card>
-        <p class="headline text-center pt-6">Data cleared!</p>
+        <p class="headline text-center pt-6">{{dataName}} cleared!</p>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn class="ma-4" outlined @click="dialogDatabaseCleared=false">OK</v-btn>
+          <v-btn class="ma-4" outlined @click="dialogResult=false">OK</v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-if="dialogConfirmClearImages" v-model="dialogConfirmClearImages" max-width="520" persistent>
+      <v-card>
+        <v-toolbar color="primary">
+          <div class="headline">Are you sure?</div>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogConfirmClearImages=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="clearDB(dataType, dataName)" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
+        <v-card-text class="text-center">
+          <v-icon size="72" color="info" class="py-4">mdi-information-outline</v-icon>
+          <div>This will delete all generated {{dataName}} images of videos. <br> They will be automatically recreated when needed.</div>
+        </v-card-text>
       </v-card>
     </v-dialog>
   </div>
@@ -43,36 +56,38 @@ import SpecificMeta from '@/components/elements/SpecificMeta'
 import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
-  name: 'ClearDatabases',
+  name: 'ClearData',
   props: {
-    typeOfDB: String
+    dataType: String,
+    dataName: String,
+    btnText: String,
   },
   mixins: [MetaGetters],
   mounted() {
     this.$nextTick(function () {
-      this.nameDB = this.typeOfDB
     })
   },
   data: () => ({
-    dialogConfirmClearAllFiles: false,
-    dialogDatabaseCleared: false,
-    nameDB: null,
+    dialogConfirmClearData: false,
+    dialogConfirmClearImages: false,
+    dialogResult: false,
   }),
   computed: {
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
-    // TODO add clearThumbs for markers and timeline. remake timline with 5%,15%,25%,35%,45%,55%,65%,75%,85%,95%,
-    clearDB(db) {
-      switch (db) {
-        case 'videos': this.clearVideosDb(); break
-        case 'meta': this.clearMetaDb(); break
-        case 'saved filters': this.clearSavedFiltersDb(); break
-        case 'markers': this.clearMarkersDb(); break
-      }
-      this.$store.commit('addLog', { type: 'info', text: `${db} was cleared` })
-      this.dialogConfirmClearAllFiles = false
-      this.dialogDatabaseCleared = true
+    clearDB(dataType, dataName) {
+      if (dataName=='videos' && dataType=='data') this.clearVideosDb()
+      else if (dataName=='meta' && dataType=='data') this.clearMetaDb()
+      else if (dataName=='saved filters' && dataType=='data') this.clearSavedFiltersDb()
+      else if (dataName=='markers' && dataType=='data') this.clearMarkersDb()
+      else if (dataName=='timeline' && dataType=='images') this.clearImages('timeline')
+      else if (dataName=='grid' && dataType=='images') this.clearImages('previews')
+      else if (dataName=='markers' && dataType=='images') this.clearImages('markers')
+      if (dataType=='data') this.$store.commit('addLog', { type: 'info', text: `All ${dataName} was cleared 🗑️` })
+      else if (dataType=='images') this.$store.commit('addLog', { type: 'info', text: `All ${dataName} images was cleared 🗑️` })
+      this.dialogConfirmClearData = false
+      this.dialogResult = true
     },
     clearVideosDb() {
       this.clearMarkersDb() // clear markers
@@ -131,6 +146,15 @@ export default {
     },
     clearFiles(directory) {
       rimraf(directory, () => { if (!fs.existsSync(directory)) fs.mkdirSync(directory) }) // remove folder with images
+    },
+    openDialogConfirmClearing() {
+      if (this.dataType=='data') this.dialogConfirmClearData = true
+      else if (this.dataType=='images') this.dialogConfirmClearImages = true
+    },
+    clearImages(type) {
+      this.clearFiles(path.join(this.pathToUserData, `/media/${type}/`))
+      this.dialogConfirmClearImages = false
+      this.dialogResult = true
     },
   },
 }
