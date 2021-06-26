@@ -181,6 +181,7 @@ const Meta = {
         }
       }).write()
       getters.meta.filter({type:'complex'}).each(m=>{ // remove from filters of all meta
+        if (!m.state.filters) return true
         for (let f of m.state.filters) {
           if (f.by === metaId) {
             let index = f.val.indexOf(id)
@@ -206,6 +207,7 @@ const Meta = {
       }).write()
       dispatch('updateSavedFilters')
       getters.settings.get('tabs').each(tab=>{ // remove from filters of tabs
+        if (!tab.filters) return true
         for (let f of tab.filters) {
           if (f.by === metaId) {
             let index = f.val.indexOf(id)
