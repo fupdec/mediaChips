@@ -12,7 +12,7 @@
       </v-col>
     </v-row>
     <div v-if="registration" class="mt-4">
-      <div>License key: {{registration.license_code || '??'}}</div>
+      <div>License key: <span class="user-select">{{registration.license_code || '??'}}</span></div>
       <div class="d-flex justify-space-between">
         <span>
           <div>Expiration date: {{registration.license_expiry || '??'}}</div>
@@ -46,7 +46,7 @@
             <v-card :loading="isConnectionBusy">
               <v-card-text class="text-center">
                 <v-form ref="license" v-model="validLicenseKey" class="d-flex" @submit.prevent>
-                  <v-text-field v-model="licenseKey" :rules="[getLicenseRules]"
+                  <v-text-field v-model="licenseKey" :rules="[getLicenseRules]" autofocus
                     label="License key" hint="XXXXXX-XXXXXX-XXXXXX-XXXXXX" @keyup.enter="checkLicense"/>
                 </v-form>
               </v-card-text>
@@ -150,25 +150,20 @@ export default {
   },
   methods: {
     getLicenseRules(key) {
-      if (key.length > 50) {
-        return 'Key must be less than 50 characters'
-      } else if (key.length===0) {
-        return 'Key is required'
-      } else {
-        return true
-      }
+      if (key.length > 50) return 'Key must be less than 50 characters'
+      else if (key.length===0) return 'Key is required'
+      else return true
     },
     openDialog() {
       this.registrationSteps = 1
+      this.licenseKey = this.registration.license_code || ''
       this.dialogRegistration = true
     },
     closeDialog() {
       this.dialogRegistration = false
       setTimeout(() => { this.registrationSteps = 1 }, 1000)
     },
-    openLink(link) {
-      shell.openExternal(link)
-    },
+    openLink(link) { shell.openExternal(link) },
     checkLicense() {
       this.$refs.license.validate()
       if (!this.validLicenseKey) return
