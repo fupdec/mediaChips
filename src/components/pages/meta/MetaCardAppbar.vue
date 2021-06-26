@@ -26,9 +26,15 @@
           <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" icon tile v-on="on"> 
             <v-icon>mdi-image-edit-outline</v-icon></v-btn>
         </template>
-        <span>Edit images</span>
+        <span>Edit Images</span>
       </v-tooltip>
-      <!-- TODO add function for delete meta -->
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="dialogDeleteMetaCard=true" icon tile v-on="on"> 
+            <v-icon>mdi-delete</v-icon></v-btn>
+        </template>
+        <span>Delete {{meta.settings.nameSingular}}</span>
+      </v-tooltip>
     </div>
     
     <v-spacer></v-spacer>
@@ -38,6 +44,22 @@
 
     <DialogEditSingleMetaCard v-if="$store.state.Meta.dialogEditMetaCard"/>
     <DialogEditMetaCardImages v-if="$store.state.Meta.dialogEditMetaCardImages"/>
+    <v-dialog v-if="dialogDeleteMetaCard" v-model="dialogDeleteMetaCard" persistent scrollable max-width="600">
+      <v-card>
+        <v-toolbar color="error">
+          <span class="headline">Are you sure?</span>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialogDeleteMetaCard=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteMetaCard" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+        </v-toolbar>
+        <vuescroll>
+          <v-card-text class="text-center">
+            <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
+            <div>You want to delete {{meta.settings.nameSingular.toLowerCase()}} {{card.meta.name}}</div>  
+          </v-card-text>
+        </vuescroll>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -61,7 +83,7 @@ export default {
     })
   },
   data: () => ({
-    dialogDeletePerformer: false,
+    dialogDeleteMetaCard: false,
     deleteVideos: false,
   }),
   computed: {
@@ -70,6 +92,14 @@ export default {
     tabId() { return this.$route.query.tabId },
   },
   methods: {
+    deleteMetaCard() { 
+      this.dialogDeleteMetaCard = false
+      this.$store.state.Meta.selectedMeta = [this.metaCardId]
+      this.$store.dispatch('deleteMetaCard') 
+      if (this.tabId !== 'default') this.$store.dispatch('closeTab', this.tabId)
+      else this.$router.push('/home')
+      this.$store.state.Settings.videoFilters = []
+    }
   },
   watch: {
   },
