@@ -259,9 +259,12 @@ export default {
       // clear folders with media
       await this.clearFiles(path.join(appFiles, 'thumbs/'))
       await this.clearFiles(path.join(appFiles, 'previews/'))
+      await this.clearFiles(path.join(appFiles, 'grids/'))
+      await this.clearFiles(path.join(appFiles, 'timelines/'))
+      await this.clearFiles(path.join(appFiles, 'meta/'))
       await this.clearFiles(path.join(appFiles, 'markers/'))
       await this.clearFiles(path.join(this.pathToUserData, '/databases/'))
-      // TODO check folders (add grids, timelines, meta and other)
+      
       let backupPath = path.join(this.pathToUserData, '/backups/'+date+'.zip')
       let backupDestinationPath = path.join(this.pathToUserData)
 
