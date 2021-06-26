@@ -170,7 +170,6 @@ export default {
       this.$store.dispatch('addSimpleMeta', meta)
 
       this.close()
-      // TODO update simple meta list
     },
     close() { this.$emit('close') },
   },

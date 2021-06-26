@@ -1,5 +1,8 @@
 <script>
+import Functions from '@/mixins/Functions'
+
 export default {
+  mixins: [Functions],
   methods: {
     getConditions(type) {
       if (type === 'number' || type === 'date') return ['equal', 'not equal', 'greater than', 'less than', 'greater than or equal', 'less than or equal', 'empty', 'not empty']
@@ -29,6 +32,11 @@ export default {
       let meta = this.getMeta(id)
       if (meta) return this.getMeta(id).settings.hint || '' 
       else return ''
+    },
+    getHintNumber(id, val) {
+      if (id==='size') return this.calcSize(val)
+      else if (id==='duration') return this.calcDur(val)
+      else return this.getHint(id)
     },
     addFilter() {
       this.filters.push({

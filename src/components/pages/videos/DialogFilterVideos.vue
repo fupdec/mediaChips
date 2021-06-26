@@ -47,7 +47,7 @@
               <v-text-field v-if="filters[i].type==='number'" label="Value" outlined dense class="val"
                 @input="setVal($event,i)" :value="filters[i].val" type="number"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
-                :hint="getHint(filters[i].by)" persistent-hint/>
+                :hint="getHintNumber(filters[i].by,filters[i].val)" persistent-hint/>
 
               <v-text-field v-if="filters[i].type==='date'" 
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"

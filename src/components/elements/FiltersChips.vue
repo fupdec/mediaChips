@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-flex flex-wrap justify-center">
     <v-tooltip v-if="!isTooltip" top>
       <template v-slot:activator="{ on }">
         <v-btn @click="removeAllFilters" v-on="on" fab x-small dark color="red" class="mr-4">
@@ -9,7 +9,7 @@
       <span>Remove All Filters</span>
     </v-tooltip>
     <v-chip v-for="(filter, i) in filters" :key="i" 
-      @click:close="removeFilter(i)" :disabled="filter.lock" class="ma-1" small
+      @click:close="removeFilter(i)" :disabled="filter.lock" class="ma-1 px-2" small
       :color="isTooltip?'#fff':'primary'" :outlined="isTooltip"
       :close="!isTooltip" dark>
       <span class="mr-1">"{{getMeta(filter.by).settings.name}}"</span>
