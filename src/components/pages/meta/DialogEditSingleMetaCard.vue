@@ -370,7 +370,7 @@ export default {
           } else if (meta.dataType === 'number') this.values[meta.id] = Number(values[key])
           else this.values[meta.id] = values[key]
         } else if (meta.type === 'complex') {
-          let metaCards = this.$store.getters.metaCards
+          let metaCards = this.$store.getters.metaCards.filter({metaId:meta.id})
           let arr = values[key].map(name => metaCards.find(card=>card.meta.name===name).value().id)
           this.values[meta.id] = arr
         }

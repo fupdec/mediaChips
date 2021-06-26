@@ -247,7 +247,7 @@ export default {
           this.transfer.current[key] = arr
         } else this.transfer.current[key] = values
       } else if (meta.type === 'complex') {
-        let metaCards = this.$store.getters.metaCards
+        let metaCards = this.$store.getters.metaCards.filter({metaId:meta.id})
         let arr = values.map(id => metaCards.find({id}).value().meta.name)
         this.transfer.current[key] = arr
       }
@@ -279,7 +279,7 @@ export default {
         for (let i = 0; i < value.length; i++) {
           let found
           if (meta.type === 'simple') found = _.find(meta.settings.items, j=>j.name.trim().toLowerCase()===value[i].trim().toLowerCase())
-          else found = metaCards.find(j=>j.meta.name.trim().toLowerCase()===value[i].trim().toLowerCase()).value()
+          else found = metaCards.filter({metaId:meta.id}).find(j=>j.meta.name.trim().toLowerCase()===value[i].trim().toLowerCase()).value()
           if (!found) nonexistent.push(value[i])
         }
         if (nonexistent.length) this.nonexistent[meta.type].push({[meta.id]:nonexistent})
