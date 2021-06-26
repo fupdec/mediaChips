@@ -251,12 +251,12 @@ const Videos = {
           if (fs.existsSync(filePath)) {
             fs.unlink(filePath, (err) => {
               if (err) commit('addLog',{type:'error',text:err})
-              else commit('addLog',{type:'info',text:`File ${fileName} was deleted successfully.`})
+              else commit('addLog',{type:'info',text:`File "${fileName}" was deleted successfully.`})
             })
           } else {
             commit('addLog',{
               type:'error',
-              text:`Unable to delete ${fileName}. The file does not exist in the path: "${video.path}".`
+              text:`Unable to delete "${fileName}". The file does not exist in the path: "${video.path}".`
             })
           }
         }

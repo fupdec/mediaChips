@@ -140,7 +140,7 @@ const axios = require("axios")
 const cheerio = require("cheerio")
 const shell = require('electron').shell
 const chokidar = require('chokidar')
-const { ipcRenderer } = require('electron')
+const shortid = require('shortid')
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -333,11 +333,12 @@ export default {
       } else clearInterval(this.intervalUpdateDataFromVideos) 
     },
     updateDataFromVideos() {
-      // TODO create tooltip with info about background processes
-      ++this.$store.state.backgroundProcesses
+      let bpId = shortid.generate()
+      let bp = { id: bpId, text: 'Updating number of videos', icon: 'video', }
+      this.$store.commit('addBackgroundProcess', bp)
       setTimeout(() => {
         this.$store.dispatch('updateDataFromVideos')
-        --this.$store.state.backgroundProcesses
+        this.$store.commit('removeBackgroundProcess', bpId)
         this.$store.commit('addLog', {type:'info',text:`Data from videos updated`})
       }, 1000)
     },

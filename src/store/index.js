@@ -40,7 +40,7 @@ export default new Vuex.Store({
     foldersData: [],
     dialogFolder: false,
     updateFoldersData: 0,
-    backgroundProcesses: 0,
+    backgroundProcesses: [],
     swatches: ["#cc0e00","#ff5722","#ff9800","#8bc34a","#2ac530","#009688",
       "#00bcd4","#2196f3","#2041f7","#ae0eff","#e8004f","#795548","#9b9b9b",],
   }),
@@ -61,6 +61,12 @@ export default new Vuex.Store({
         time: Date.now(),
       })
     },
+    addBackgroundProcess(state, backgroundProcess) { state.backgroundProcesses.push(backgroundProcess) },
+    updateTextBackgroundProcess(state, {id, text}) { 
+      const index = state.backgroundProcesses.findIndex(x => x.id === id)
+      if (index > -1) state.backgroundProcesses[index].text = text
+    },
+    removeBackgroundProcess(state, id) { state.backgroundProcesses = state.backgroundProcesses.filter(i=>i.id!==id) },
     setNotification(state, notification) {
       state.notifications.push({
         id: Math.ceil(Math.random()*new Date().getTime()),
@@ -69,32 +75,16 @@ export default new Vuex.Store({
         text: notification.text,
       })
     },
-    removeNotification(state, id) {
-      state.notifications = state.notifications.filter(n => n.id !== id)
-    },
-    clearAllNotifications(state) {
-      state.notifications = []
-    },
-    changeQuantityRecentVideos(state, value) {
-      state.quantityRecentVideos = value
-    },
-    stopLoading(state) {
-      state.itemsLoading = false
-    },
-    resetLoading(state) {
-      state.itemsLoading = true
-    },
+    removeNotification(state, id) { state.notifications = state.notifications.filter(n => n.id !== id) },
+    clearAllNotifications(state) { state.notifications = [] },
+    changeQuantityRecentVideos(state, value) { state.quantityRecentVideos = value },
+    stopLoading(state) { state.itemsLoading = false },
+    resetLoading(state) { state.itemsLoading = true },
   },
   actions: {
-    setNotification({ state, commit}, notification) {
-      commit('setNotification', notification)
-    },
-    removeNotification({ state, commit}, id) {
-      commit('removeNotification', id)
-    },
-    clearAllNotifications({ state, commit}) {
-      commit('clearAllNotifications')
-    },
+    setNotification({ state, commit}, notification) { commit('setNotification', notification) },
+    removeNotification({ state, commit}, id) { commit('removeNotification', id) },
+    clearAllNotifications({ state, commit}) { commit('clearAllNotifications') },
     updateDataFromVideos({getters, rootState}) {
       const videos = getters.videos
       // update number of videos for meta cards

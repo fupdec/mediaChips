@@ -41,16 +41,20 @@
       </transition>
     </div>
 
-    <v-tooltip v-if="$store.state.backgroundProcesses" top>
+    <v-tooltip v-if="backgroundProcesses.length" top>
       <template v-slot:activator="{ on }">
         <div v-on="on" class="d-flex align-center worker pr-2 pb-1">
           <v-divider vertical></v-divider>
           <span class="pl-2"></span>
           <v-icon size="20" class="loading-animation">mdi-loading</v-icon>
-          <span class="caption val" v-text="$store.state.backgroundProcesses"/>
+          <span class="caption val" v-text="backgroundProcesses.length"/>
         </div>
       </template>
-      <span>Number of background processes</span>
+      <div> <div class="overline">Background processes</div>
+        <div v-for="(bp) in backgroundProcesses" :key="bp.id">
+          <v-icon dark small>mdi-{{bp.icon}}</v-icon> {{bp.text}}
+        </div>
+      </div>
     </v-tooltip>
 
     <v-divider vertical></v-divider>
@@ -194,6 +198,7 @@ export default {
       const pages = ['/videos/:','/metacard/']
       return pages.some(page => this.$route.path.includes(page))
     },
+    backgroundProcesses() { return this.$store.state.backgroundProcesses },
   },
   methods: {
     msToTime(ms) {

@@ -5,6 +5,7 @@ import VideoPreviewTimeline from '@/components/elements/VideoPreviewTimeline'
 
 const fs = require("fs")
 const path = require("path")
+const shortid = require('shortid')
 
 export default {
   components: {
@@ -38,16 +39,23 @@ export default {
         this.$store.dispatch('saveFiltersOfVideos')
       },
     },
+    backgroundProcesses: {
+      get() { return this.$store.state.backgroundProcesses },
+      set(val) { this.$store.state.backgroundProcesses = val },
+    },
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
     async createGrids(videos) {
-      ++this.$store.state.backgroundProcesses
+      let bpId = shortid.generate()
+      let bp = { id: bpId, text: 'Generating grids images', icon: 'apps', }
+      this.$store.commit('addBackgroundProcess', bp)
       this.isProcessRun = true
       const gridsPath = path.join(this.pathToUserData, `/media/grids/`) 
       if (!fs.existsSync(gridsPath)) fs.mkdirSync(gridsPath)
       const vm = this
       for (let i = 0; i < videos.length; i++) {
+        this.$store.commit('updateTextBackgroundProcess', {id:bpId, text:`Generating grids images ${i+1} of ${videos.length}`})
         if (this.isProcessBreak) break
         const video = videos[i]
         if (!fs.existsSync(video.path)) continue
@@ -58,7 +66,7 @@ export default {
       if (this.numberOfCreatedGrid) this.$store.commit('updateVideos') // re render cards if grid added
       this.numberOfCreatedGrid = 0
       this.isProcessRun = false
-      --this.$store.state.backgroundProcesses
+      this.$store.commit('removeBackgroundProcess', bpId)
       // TODO stop process on page changed or items per page changed
     },
     async createVideoGrid(inputVideoPath, videoId, videoDuration) {
@@ -76,19 +84,23 @@ export default {
       if (result) ++this.numberOfCreatedGrid
     },
     async createTimelines(videos) {
-      ++this.$store.state.backgroundProcesses
+      let bpId = shortid.generate()
+      let bp = { id: bpId, text: 'Generating timelines images', icon: 'view-carousel', }
+      this.$store.commit('addBackgroundProcess', bp)
       this.isProcessRun = true
       const timelinesPath = path.join(this.pathToUserData, `/media/timelines/`) 
       if (!fs.existsSync(timelinesPath)) fs.mkdirSync(timelinesPath)
       const vm = this
-      for (let video of videos) {
+      for (let i = 0; i < videos.length; i++) {
+        this.$store.commit('updateTextBackgroundProcess', {id:bpId, text:`Generating timelines images ${i+1} of ${videos.length}`})
         if (this.isProcessBreak) break
+        const video = videos[i]
         if (!fs.existsSync(video.path)) continue
         const frame = path.join(vm.pathToUserData, `/media/timelines/${video.id}_5.jpg`)
         if (!fs.existsSync(frame)) await vm.createVideoTimeline(video)
       }
       this.isProcessRun = false
-      --this.$store.state.backgroundProcesses
+      this.$store.commit('removeBackgroundProcess', bpId)
       // TODO stop process on page changed or items per page changed
     },
     async createVideoTimeline(video) {
