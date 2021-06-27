@@ -25,7 +25,7 @@ let defaultTag = {
   performers: [],
 }
 
-dbt.defaults({ tags: [{ ...defaultTag }] }).write()
+dbt.defaults({ tags: [] }).write()
 
 const Tags = {
   state: () => ({

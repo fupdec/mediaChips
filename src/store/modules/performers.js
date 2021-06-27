@@ -40,9 +40,7 @@ let defaultPerformer = {
   views: 0,
 }
 
-dbp.defaults({ 
-  performers: [{ ...defaultPerformer }]
-}).write()
+dbp.defaults({ performers: [] }).write()
 
 const Performers = {
   state: () => ({

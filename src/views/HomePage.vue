@@ -4,15 +4,26 @@
       <v-icon x-large left>mdi-home-outline</v-icon> Home </div>
 
     <v-container class="text-center">
-      <div v-if="$store.getters.videosTotal==0">
-        <img alt="AMDB" width="200" height="200" :src="logoPath">
-        <h2 class="mt-8">Welcome to Adult Video Database application!</h2>
-        <v-btn @click="$store.state.Settings.dialogScanVideos=true" class="my-10" color="primary" x-large rounded>
-          <v-icon left>mdi-plus</v-icon> Add videos
-        </v-btn>
-      </div>
-      <v-row v-else>
-        <v-col v-if="!isMigratedToMeta" cols="12">
+      <v-row>
+        <v-col v-if="$store.getters.videosTotal==0" cols="12">
+          <img alt="AMDB" width="200" height="200" :src="logoPath">
+          <h2 class="my-8">Welcome to Adult Video Database application!</h2>
+      
+          <div v-if="metaNumber==0&&!isContentExists" cols="12">
+            <div class="mb-4"> First, create a meta for your videos. 
+              You can view and customize the meta in the settings. </div>
+            <v-btn @click="createAllMeta=true" class="mb-4" color="primary" x-large rounded block>
+              <v-icon left>mdi-auto-fix</v-icon> Create all meta </v-btn>
+          </div>
+
+          <div class="mb-4 mt-10">Then add videos from your computer by selecting folders.</div>
+          <v-btn @click="$store.state.Settings.dialogScanVideos=true" color="primary" x-large rounded block>
+            <v-icon left>mdi-plus</v-icon> Add videos </v-btn>
+        </v-col>
+      </v-row>
+
+      <v-row v-if="$store.getters.videosTotal>0">
+        <v-col v-if="!isMigratedToMeta&&isContentExists" cols="12">
           <v-card>
             <v-alert type="warning" text>Starting from version 0.9.0 of the application, 
               all information that the user fills in for the video will use the new meta system. <br>
@@ -56,7 +67,8 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="secondary" to="/videos/:default?tabId=default" draggable="false">Open Videos</v-btn>
+              <v-btn class="ma-2 pr-4" color="secondary" to="/videos/:default?tabId=default" draggable="false" outlined rounded>
+                <v-icon left>mdi-video</v-icon> Open Videos</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -190,7 +202,8 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2" color="secondary" to="/settings" draggable="false">Open settings</v-btn>
+              <v-btn class="ma-2 pr-4" color="secondary" to="/settings" draggable="false" outlined rounded> 
+                <v-icon left>mdi-cog</v-icon> Open settings</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -204,6 +217,7 @@
     </v-container>
 
     <MigrateToMeta v-if="migrateToMeta" :dialog="migrateToMeta" @finish="migrateToMeta=false"/>
+    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="createAllMeta=false"/>
 
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
   </vuescroll>
@@ -225,6 +239,7 @@ export default {
     vuescroll,
     apexchart: VueApexCharts,
     MigrateToMeta: () => import("@/components/pages/meta/MigrateToMeta.vue"),
+    CreateAllMeta: () => import("@/components/pages/meta/CreateAllMeta.vue"),
   },
   mixins: [LabelFunctions], 
   mounted() {
@@ -232,14 +247,11 @@ export default {
     })
   },
   data: ()=>({
-    dialogRestartApp: false,
-    dialogFixVideos: false,
-    fixingVideos: false,
-    errorFixVideos: [],
     seriesTags: [],
     seriesWebsites: [],
     isScrollToTopVisible: false,
     migrateToMeta: false,
+    createAllMeta: false,
   }),
   computed: {
     settings() { return this.$store.getters.settings.value() },
@@ -313,6 +325,12 @@ export default {
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
       return currentVersion >= lastVersion
     },
+    isContentExists() { return this.videosNumber>0 || this.performersNumber>0 || this.tagsNumber>0 || this.websitesNumber>0 },
+    videosNumber() { return this.$store.getters.videos.value().length },
+    performersNumber() { return this.$store.getters.performers.value().length },
+    tagsNumber() { return this.$store.getters.tags.value().length },
+    websitesNumber() { return this.$store.getters.websites.value().length },
+    metaNumber() { return this.$store.getters.meta.filter(i=>i.type!=='specific').value().length },
   },
   methods: {
     stopSmoothScroll(event) {

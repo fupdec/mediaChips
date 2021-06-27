@@ -27,7 +27,7 @@ let defaultWebsite = {
   url: '',
 }
 
-dbw.defaults({ websites: [{ ...defaultWebsite }] }).write()
+dbw.defaults({ websites: [] }).write()
 
 const Websites = {
   state: () => ({
