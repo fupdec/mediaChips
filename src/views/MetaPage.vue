@@ -56,6 +56,8 @@
         <div v-else style="min-width:80px;"></div>
       </v-container>
 
+      <Loading />
+
       <v-container :key="$store.state.Meta.updateKey" fluid class="card-grid" :class="[cardSize, gapSize, {'wide-image':isWideImage}]">
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
@@ -63,12 +65,23 @@
       <v-pagination v-model="currentPage" :length="pagesSum" :total-visible="getNumberOfPagesLimit" class="my-4"/>
     </div>
     
-    <div v-else class="text-center"> 
-      <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
-      There are no matching {{meta.settings.name.toLowerCase()}} for the selected filters.
+    <div v-else-if="metaCardsNumber==0" class="text-center">
+      <div><v-icon size="100" class="ma-10">mdi-{{meta.settings.icon}}</v-icon></div>
+      It's so empty... maybe add some {{meta.settings.name.toLowerCase()}}
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon v-on="on">mdi-help-circle-outline</v-icon>
+        </template>
+        <span>Click on the icon <v-icon dark small>mdi-plus</v-icon>
+          <v-icon dark>mdi-{{meta.settings.icon}}</v-icon> in the upper left corner, on appbar</span>
+      </v-tooltip>
     </div>
-
-    <Loading />
+    
+    <div v-else class="text-center"> 
+      <!-- TODO replace the icon with a nice .svg image -->
+      <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
+      There are no matching {{meta.settings.name.toLowerCase()}} for the selected filters
+    </div>
     
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-10"></div>
 
@@ -180,6 +193,7 @@ export default {
         this.$store.dispatch('filterMetaCards')
       },
     },
+    metaCardsNumber() { return this.$store.getters.metaCards.filter({metaId:this.meta.id}).value().length },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
     cardSize() { return `card-size-${this.meta.state.cardSize || 1}` },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },

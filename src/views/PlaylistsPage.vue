@@ -2,14 +2,14 @@
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
     <div class="headline text-h3 d-flex align-center justify-center my-6">
       <v-icon x-large left>mdi-format-list-bulleted</v-icon> Playlists
-      <span class="text-h5 ml-2">({{$store.state.Playlists.filteredPlaylists.length}})</span>
+      <span class="text-h5 ml-2">({{numberFilteredPlaylists}})</span>
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
       <FiltersChips :filters="filters" type="Playlist" />
     </v-container>
       
-    <v-container fluid v-if="!$store.state.Playlists.filteredEmpty" class="pagination-container my-6">
+    <v-container v-if="numberFilteredPlaylists" fluid class="pagination-container my-6">
       <v-overflow-btn v-model="playlistsPerPage" hint="items per page" persistent-hint
         :items="playlistsPerPagePreset" dense height="36" solo disable-lookup hide-no-data
         class="items-per-page-dropdown" />
@@ -31,7 +31,7 @@
       <div v-else style="min-width:80px;"></div>
     </v-container>
 
-    <div v-if="$store.state.Playlists.filteredEmpty" class="text-center"> 
+    <div v-if="numberFilteredPlaylists==0" class="text-center"> 
       <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
       There are no matching playlists for the selected filters.
     </div>
@@ -42,7 +42,7 @@
       <PlaylistCard v-for="(playlist) in playlistsOnPage" :key="playlist.id" :playlist="playlist"/>
     </v-container>
 
-    <v-pagination v-if="!$store.state.Playlists.filteredEmpty"
+    <v-pagination v-if="numberFilteredPlaylists"
       v-model="playlistsCurrentPage" :length="playlistsPagesSum"
       :total-visible="getNumberOfPagesLimit" class="mt-6 mb-10"
     ></v-pagination>
@@ -153,6 +153,7 @@ export default {
       else return this.$store.getters.tabsDb.find({id: +this.tabId}).value()    
     },
     filters() { return this.$store.state.Settings.playlistFilters },
+    numberFilteredPlaylists() { return this.$store.state.Playlists.filteredPlaylists.length },
   },
   methods: {
     selectedPlaylists(list) {

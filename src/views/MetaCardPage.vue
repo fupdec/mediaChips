@@ -121,7 +121,7 @@
         <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
       </v-container>
 
-      <v-container v-if="!$store.state.Videos.filteredEmpty" fluid class="pagination-container">
+      <v-container v-if="filteredVideosNumber" fluid class="pagination-container">
         <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
           :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
           class="items-per-page-dropdown"
@@ -144,10 +144,15 @@
         ></v-overflow-btn>
         <div v-else style="min-width:80px;"></div>
       </v-container>
+    
+      <div v-if="numberVideosMetaCard==0" class="text-center">
+        <div><v-icon size="100" class="ma-10">mdi-video</v-icon></div>
+        It's so empty... add this {{meta.settings.nameSingular.toLowerCase()}} to your videos so they appear here
+      </div>
 
-      <div v-if="$store.state.Videos.filteredEmpty" class="text-center pt-10">
+      <div v-if="filteredVideosNumber==0&&numberVideosMetaCard>0" class="text-center pt-10">
         <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
-        There are no matching videos for the selected filters.
+        There are no matching videos for the selected filters
       </div>
 
       <Loading />
@@ -155,7 +160,7 @@
         <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
       </v-container>
 
-      <v-pagination v-if="!$store.state.Videos.filteredEmpty" v-model="videosCurrentPage" :length="videosPagesSum" :total-visible="getNumberOfPagesLimit" class="pt-4 pb-10"/>
+      <v-pagination v-if="filteredVideosNumber" v-model="videosCurrentPage" :length="videosPagesSum" :total-visible="getNumberOfPagesLimit" class="pt-4 pb-10"/>
     </div>
     
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
@@ -257,6 +262,8 @@ export default {
       return Math.ceil(completedValue / completed.length * 100)
     },
     videosOnPage() { return this.$store.getters.videosOnPage },
+    numberVideosMetaCard() { return this.$store.getters.videos.filter(v=>v[this.metaId].includes(this.card.id)).value().length },
+    filteredVideosNumber() { return this.$store.state.Videos.filteredVideos.length },
     cardSize() { return `card-size-${this.$store.state.Settings.videoCardSize}` },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     tabId() { return this.$route.query.tabId },

@@ -30,7 +30,6 @@ const Playlists = {
     selection: null,
     selectedPlaylists: [],
     filteredPlaylists: [],
-    filteredEmpty: false,
   }),
   mutations: {
     updatePlaylists(state) {

@@ -3,14 +3,14 @@
 
     <div class="headline text-h3 d-flex align-center justify-center my-4">
       <v-icon x-large left>mdi-video-outline</v-icon> Videos
-      <span class="text-h5 ml-2">({{$store.state.Videos.filteredVideos.length}})</span>
+      <span class="text-h5 ml-2">({{numberFilteredVideos}})</span>
     </div>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
       <FiltersChips :filters="filters" type="Video" />
     </v-container>
 
-    <v-container fluid v-if="!$store.state.Videos.filteredEmpty" class="pagination-container my-4">
+    <v-container fluid v-if="numberFilteredVideos" class="pagination-container my-4">
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
         :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
         class="items-per-page-dropdown"
@@ -37,12 +37,22 @@
       <div v-else style="min-width:80px;"></div>
     </v-container>
     
-    <div v-if="$store.state.Videos.filteredEmpty" class="text-center"> 
-      <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
-      There are no matching videos for the selected filters.
+    <div v-if="totalVideos==0" class="text-center">
+      <div><v-icon size="100" class="ma-10">mdi-video</v-icon></div>
+      It's so empty... maybe add some videos
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon v-on="on">mdi-help-circle-outline</v-icon>
+        </template>
+        <span>Click on the icon <v-icon dark>mdi-video-plus</v-icon> in the upper left corner, on appbar</span>
+      </v-tooltip>
     </div>
-
-    <Loading />
+    
+    
+    <div v-if="numberFilteredVideos==0&&totalVideos>0" class="text-center"> 
+      <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
+      There are no matching videos for the selected filters
+    </div>
 
     <v-container fluid class="card-grid wide-image" :class="[cardSize, gapSize]">
       <!-- Video Blocks parsing -->
@@ -50,7 +60,7 @@
     </v-container>
 
     <v-pagination
-      v-if="!$store.state.Videos.filteredEmpty" class="my-10"
+      v-if="numberFilteredVideos" class="my-10"
       v-model="videosCurrentPage"
       :length="videosPagesSum"
       :total-visible="getNumberOfPagesLimit"
@@ -88,34 +98,22 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
-    cardSize() {
-      return `card-size-${this.$store.state.Settings.videoCardSize}`
-    },
-    gapSize() {
-      return `gap-size-${this.$store.state.Settings.gapSize}`
-    },
-    tabId() {
-      return this.$route.query.tabId
-    },
+    cardSize() { return `card-size-${this.$store.state.Settings.videoCardSize}` },
+    gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
+    tabId() { return this.$route.query.tabId },
     tab() {
-      if (this.tabId === 'default') {
-        return undefined
-      } else {
-        return this.$store.getters.tabsDb.find({id: +this.tabId}).value()  
-      }
+      if (this.tabId === 'default') return undefined
+      else return this.$store.getters.tabsDb.find({id: +this.tabId}).value()  
     },
-    filters() {
-      return this.$store.state.Settings.videoFilters
-    },
+    filters() { return this.$store.state.Settings.videoFilters },
+    numberFilteredVideos() { return this.$store.state.Videos.filteredVideos.length },
+    totalVideos() { return this.$store.getters.videos.value().length },
   },
   methods: {
-    scrollToTop() {
-      this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad")
-    },
+    scrollToTop() { this.$refs.mainContainer.scrollTo({y: 0},500,"easeInQuad") },
     handleScroll(vertical) {
-      if (vertical.scrollTop > 150) {
-        this.isScrollToTopVisible = true
-      } else this.isScrollToTopVisible = false
+      if (vertical.scrollTop > 150) this.isScrollToTopVisible = true 
+      else this.isScrollToTopVisible = false
     },
     initFilters() {
       let newFilters

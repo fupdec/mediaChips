@@ -222,7 +222,7 @@ export default {
     filter: {},
     sortDesc: false,
     page: 1,
-    itemsPerPage: 8,
+    itemsPerPage: 12,
     sortBy: 'type',
     keys: [
       'name',

@@ -16,7 +16,6 @@ const Videos = {
     pageTotal: 1,
     lastChanged: Date.now(),
     filteredVideos: [],
-    filteredEmpty: false,
     selection: null,
     selectedVideos: [],
     dialogDeleteVideo: false,
