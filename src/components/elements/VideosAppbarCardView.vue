@@ -14,12 +14,11 @@
         </v-tooltip>
       </template>
       <v-card width="300">
-        <v-card-title class="py-1">
-          <span class="headline">Card size</span>
+        <v-toolbar color="primary" height="50">
+          <span class="headline">Card Size</span>
           <v-spacer></v-spacer>
           <v-icon>mdi-card-bulleted-settings</v-icon>
-        </v-card-title>
-        <v-divider></v-divider>
+        </v-toolbar>
         <v-slider v-model="$store.state.Settings.videoCardSize"
           min="1" max="5" step="1" :tick-labels="cardSizes"
           @input="changeCardSize" class="pa-6"

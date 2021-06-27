@@ -147,7 +147,7 @@
           </v-tooltip>
         </template>
         <v-card width="300">
-          <v-toolbar color="primary" height="30">
+          <v-toolbar color="primary" height="50">
             <span class="headline">Card Size</span>
             <v-spacer></v-spacer>
             <v-icon>mdi-card-bulleted-settings</v-icon>
