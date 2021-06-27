@@ -11,6 +11,8 @@
       <v-card-text v-else class="text-center">
         <v-alert color="success" text class="mt-4">Migration finished!</v-alert>
         <v-alert type="info" text class="mt-4">Now you can customize meta in more detail in the settings</v-alert>
+        <v-alert type="info" text class="mt-4">You can see the details in the logs (located at the bottom of the application, in the status bar).
+          <br> Please clear them manually by clicking on the trash can icon.</v-alert>
       </v-card-text>
       <v-card-text>
         <div>Creating performers... {{status.performers}} of {{performers.length}}</div>
@@ -89,8 +91,8 @@ export default {
       ipcRenderer.send('updatePlayerDb', 'settings') // update settings in player window
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
-      rimraf(path.join(this.pathToUserData, `/media/previews`)) // remove folder with grid images
-      rimraf(path.join(this.pathToUserData, `/media/temp`)) // remove folder temp
+      rimraf(path.join(this.pathToUserData, `/media/previews`),() => {}) // remove folder with grid images
+      rimraf(path.join(this.pathToUserData, `/media/temp`),() => {}) // remove folder temp
       this.removeOldSettings()
       
       this.isMigrationRunning = false
