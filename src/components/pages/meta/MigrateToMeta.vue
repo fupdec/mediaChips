@@ -81,7 +81,7 @@ export default {
         .push({ id: tagsId, type: 'complex' })
         .push({ id: websitesId, type: 'complex' })
         .write()
-      this.$store.state.Settings.metaAssignedToVideos = this.$store.getters.settings.get('metaAssignedToVideos').value()
+      this.$store.commit('updateSettingsState', 'metaAssignedToVideos')
       
       this.moveImages(performersId, tagsId, websitesId)
       this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.0'})
@@ -746,6 +746,7 @@ export default {
         [tagsId]: [],
         [websitesId]: [],
       }).write()
+      this.$store.dispatch('updateSavedFilters')
     },
     removeOldSettings() {
       this.$store.getters.settings.unset('performerCardSize').write()

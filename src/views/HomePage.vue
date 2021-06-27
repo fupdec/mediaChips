@@ -12,7 +12,7 @@
           <div v-if="metaNumber==0&&!isContentExists" cols="12">
             <div class="mb-4"> First, create a meta for your videos. 
               You can view and customize the meta in the settings. </div>
-            <v-btn @click="createAllMeta=true" class="mb-4" color="primary" x-large rounded block>
+            <v-btn @click="createAllMeta=true" :disabled="isAllMetaCreated" class="mb-4" color="primary" x-large rounded block>
               <v-icon left>mdi-auto-fix</v-icon> Create all meta </v-btn>
           </div>
 
@@ -217,7 +217,7 @@
     </v-container>
 
     <MigrateToMeta v-if="migrateToMeta" :dialog="migrateToMeta" @finish="migrateToMeta=false"/>
-    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="createAllMeta=false"/>
+    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="closeDialogCreateAllMeta"/>
 
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
   </vuescroll>
@@ -252,6 +252,7 @@ export default {
     isScrollToTopVisible: false,
     migrateToMeta: false,
     createAllMeta: false,
+    isAllMetaCreated: false,
   }),
   computed: {
     settings() { return this.$store.getters.settings.value() },
@@ -357,6 +358,10 @@ export default {
         let data = { videos: this.recentVideos, id: video.id }
         ipcRenderer.send('openPlayer', data)
       }
+    },
+    closeDialogCreateAllMeta() {
+      this.createAllMeta = false
+      this.isAllMetaCreated = true
     },
     // getPerformerImg(id) {
     //   let imgAvaPath = this.getPerformerImgUrl(id + '_avatar.jpg')

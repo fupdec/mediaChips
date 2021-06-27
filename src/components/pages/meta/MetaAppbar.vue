@@ -137,7 +137,7 @@
         <template #activator="{ on: onMenu }">
           <v-tooltip bottom>
             <template #activator="{ on: onTooltip }">
-              <v-badge :content="cardSizes[meta.state.cardSize-1]" class="text-uppercase" color="secondary" overlap offset-x="25" offset-y="25">
+              <v-badge :content="cardSizes[cardSize-1]" class="text-uppercase" color="secondary" overlap offset-x="25" offset-y="25">
                 <v-btn v-on="{ ...onMenu, ...onTooltip }" icon tile>
                   <v-icon>mdi-card-bulleted</v-icon>
                 </v-btn>
@@ -152,7 +152,7 @@
             <v-spacer></v-spacer>
             <v-icon>mdi-card-bulleted-settings</v-icon>
           </v-toolbar>
-          <v-slider :value="meta.state.cardSize" min="1" max="5" step="1" class="pa-6"
+          <v-slider :value="cardSize" min="1" max="5" step="1" class="pa-6"
             @input="updateMetaState('cardSize', $event)" :tick-labels="cardSizes"/>
         </v-card>
       </v-menu>
@@ -298,6 +298,10 @@ export default {
     metaInCard() { return this.meta.settings.metaInCard || [] },
     visibility() { return this.$store.state.Meta.visibility },
     metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
+    cardSize() { 
+      let updateKey = this.$store.state.Meta.updateKey
+      return this.meta.state.cardSize || 3 
+    },
   },
   methods: {
     initSpecificMeta() {
