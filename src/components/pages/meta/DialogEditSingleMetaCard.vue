@@ -3,6 +3,7 @@
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="980" width="70vw">
       <v-card>
         <v-toolbar color="primary">
+          <!-- TODO add image with meta -->
           <span class="headline">Editing of {{meta.settings.nameSingular.toLowerCase()}} 
             <v-tooltip v-model="tooltipCopyName" bottom>
               <template v-slot:activator="{ click }">
@@ -131,7 +132,8 @@
 
                   </v-col>
                   <v-col v-if="meta.settings.color" cols="12" lg="6">
-                    <v-btn @click="dialogColor=true" :color="color" block rounded class="mt-3">Pick another color for card</v-btn>
+                    <v-btn @click="openDialogColor" :color="color" block rounded class="mt-3">
+                      <v-icon left>mdi-palette</v-icon> Pick another color for card</v-btn>
                   </v-col>
                   <v-col v-if="meta.settings.bookmark" cols="12" lg="6">
                     <v-textarea v-model="bookmark" hide-details clearable auto-grow outlined label="Bookmark" 
@@ -162,9 +164,14 @@
         :max="new Date().toISOString().substr(0, 10)" min="1950-01-01" 
         :value="values[calendarId]" no-title color="primary" full-width/>
     </v-dialog>
-    
-    <v-dialog v-model="dialogColor" width="300">
-      <v-color-picker v-model="color" hide-mode-switch/>
+
+    <v-dialog v-model="dialogColor" width="300"> 
+      <v-card>
+        <v-toolbar color="primary">
+          <v-btn @click="applyColor" outlined block><v-icon left>mdi-check</v-icon> apply color</v-btn>
+        </v-toolbar>
+        <v-color-picker @update:color="changeColor($event)" :value="colorPicker" hide-inputs/> 
+      </v-card>
     </v-dialog>
     
     <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
@@ -202,9 +209,11 @@
         <v-toolbar color="primary">
           <span class="headline">List view</span>
           <v-spacer></v-spacer>
-          <v-btn @click="saveListView" outlined> <v-icon left>mdi-content-save</v-icon> save </v-btn>
+          <v-btn @click="saveListView" outlined> <v-icon left>mdi-check</v-icon> ok </v-btn>
         </v-toolbar>
         <v-card-text class="pt-4">
+          Congratulations, you've found the missing feature! <br>
+          Customizing and sorting the list will be available in the next version of the application.
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -257,6 +266,7 @@ export default {
     country: [],
     dialogColor: false,
     color: '#777777',
+    colorPicker: '#777777',
     bookmark: '',
     dialogScraper: false,
     tooltipCopyName: false,
@@ -410,8 +420,7 @@ export default {
       this.dialogAddNewItem = false
       this.nameForNewItem = ''
     },
-    saveListView() {
-    },
+    saveListView() { this.dialogListView = false },
     filterCards(cardObject, queryText, itemText) {
       let card = _.cloneDeep(cardObject)
       let query = queryText.toLowerCase()
@@ -452,6 +461,15 @@ export default {
           return false
         }
       }
+    },
+    openDialogColor() {
+      this.dialogColor = true 
+      this.colorPicker = this.color
+    },
+    changeColor(e) { this.colorPicker = e.hex },
+    applyColor() {
+      this.color = this.colorPicker
+      this.dialogColor = false
     },
   },
 };

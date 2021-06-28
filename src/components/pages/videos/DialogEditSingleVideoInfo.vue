@@ -213,9 +213,11 @@
         <v-toolbar color="primary">
           <span class="headline">List view</span>
           <v-spacer></v-spacer>
-          <v-btn @click="saveListView" outlined> <v-icon left>mdi-content-save</v-icon> save </v-btn>
+          <v-btn @click="saveListView" outlined> <v-icon left>mdi-check</v-icon> ok </v-btn>
         </v-toolbar>
         <v-card-text class="pt-4">
+          Congratulations, you've found the missing feature! <br>
+          Customizing and sorting the list will be available in the next version of the application.
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -508,8 +510,7 @@ export default {
       this.dialogAddNewItem = false
       this.nameForNewItem = ''
     },
-    saveListView() {
-    },
+    saveListView() { this.dialogListView = false },
   },
   watch: {},
 }

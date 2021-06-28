@@ -149,10 +149,8 @@
         :value="values[calendarId]" no-title color="primary" full-width/>
     </v-dialog>
     
-    <v-dialog v-model="dialogColor" width="300">
-      <v-color-picker v-model="color" hide-mode-switch/>
-    </v-dialog>
-    
+    <!-- TODO add color editing like for single meta -->
+
     <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
       <v-card>
         <v-toolbar color="primary">
@@ -188,9 +186,11 @@
         <v-toolbar color="primary">
           <span class="headline">List view</span>
           <v-spacer></v-spacer>
-          <v-btn @click="saveListView" outlined> <v-icon left>mdi-content-save</v-icon> save </v-btn>
+          <v-btn @click="saveListView" outlined> <v-icon left>mdi-check</v-icon> ok </v-btn>
         </v-toolbar>
         <v-card-text class="pt-4">
+          Congratulations, you've found the missing feature! <br>
+          Customizing and sorting the list will be available in the next version of the application.
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -222,8 +222,6 @@ export default {
   data: () => ({
     values: {},
     edits: {},
-    dialogColor: false,
-    color: '#777777',
     calendar: false,
     calendarId: null,
     key: Date.now(),
@@ -307,8 +305,7 @@ export default {
       this.dialogAddNewItem = false
       this.nameForNewItem = ''
     },
-    saveListView() {
-    },
+    saveListView() { this.dialogListView = false },
     filterCards(cardObject, queryText, itemText) {
       let card = _.cloneDeep(cardObject)
       let query = queryText.toLowerCase()
