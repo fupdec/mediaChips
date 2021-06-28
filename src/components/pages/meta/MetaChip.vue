@@ -22,7 +22,7 @@ const path = require("path")
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
 import CountryFlag from 'vue-country-flag'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 
 export default {
   name: "MetaCard",
@@ -30,7 +30,7 @@ export default {
     card: Object,
   },
   components: { CountryFlag, },
-  mixins: [ShowImageFunction, MetaGetters, Countries],
+  mixins: [ShowImageFunction, MetaGetters],
   mounted() {
     this.$nextTick(function () {
       this.cardKey = this.card.id
@@ -85,7 +85,7 @@ export default {
     findCountryCode(country) {
       if (country == '') return ''
       let countryName = country.toLowerCase()
-      let code = _.filter(this.countries, country => (country.name.toLowerCase().includes(countryName)) )[0]
+      let code = _.filter(Countries, country => (country.name.toLowerCase().includes(countryName)) )[0]
       if (code === undefined) return ''
       else return code.code
     },

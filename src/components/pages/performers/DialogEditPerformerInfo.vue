@@ -531,7 +531,7 @@ const shortid = require('shortid')
 
 import CountryFlag from 'vue-country-flag'
 import {TheMask} from 'vue-the-mask'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import vuescroll from 'vuescroll'
 
@@ -542,7 +542,7 @@ export default {
     TheMask,
     vuescroll,
 	},
-  mixins: [Countries, ShowImageFunction], 
+  mixins: [ShowImageFunction], 
   mounted () {
     this.$nextTick(function () {
       this.performerName = this.performer.name
@@ -755,7 +755,7 @@ export default {
     findCountryCode(country) {
       if (!country == '') {
         let countryName = country.toLowerCase()
-        let code = _.filter(this.countries,
+        let code = _.filter(Countries,
           country => (country.name.toLowerCase().includes(countryName))
         )[0]
         if (code == undefined) {
@@ -864,7 +864,7 @@ export default {
           if (yearsActive[1]) {
             if (!yearsActive[1].match(/\D*/)[0]) profile.end = yearsActive[1] // if not contains words like "Now"
           }
-          let countries = this.countries.map(c=>c.name)
+          let countries = Countries.map(c=>c.name)
           if ( countries.includes($('[data-test="link-country"] span').text().trim()) ) {
             profile.nations = [$('[data-test="link-country"] span').text().trim()]
           }
@@ -1052,7 +1052,7 @@ export default {
             this.transfer.found.hip = sizes[2]
           }
           if (this.getBioString('birthplace', bio)) {
-            let countries = this.countries.map(c=>c.name)
+            let countries = Countries.map(c=>c.name)
             if (countries.includes(this.getBioString('birthplace', bio))) {
               this.transfer.found.nations = [this.getBioString('birthplace', bio)]
             }

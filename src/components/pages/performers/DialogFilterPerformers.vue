@@ -196,7 +196,7 @@
 
 <script>
 import ShowImageFunction from '@/mixins/ShowImageFunction'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 import CountryFlag from 'vue-country-flag'
 import vuescroll from 'vuescroll'
 
@@ -207,7 +207,7 @@ export default {
     vuescroll, 
     SavedFilters: () => import('@/components/elements/SavedFilters.vue'),
   },
-  mixins: [ShowImageFunction, Countries], 
+  mixins: [ShowImageFunction], 
   mounted() {
     this.$nextTick(function () {
       this.filters = _.cloneDeep(this.$store.state.Settings.performerFilters)

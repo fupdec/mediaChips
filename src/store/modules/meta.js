@@ -11,6 +11,7 @@ const dbMeta = low(adapterMeta)
 
 import router from '@/router'
 import SpecificMeta from '@/components/elements/SpecificMeta'
+import Countries from '@/components/elements/Countries'
 
 let defaultMeta = {
   id: "defaultMeta",
@@ -392,8 +393,9 @@ const Meta = {
         if (notEquals.includes(cond)) cond = '!='
         
         if (type === 'array' || type === 'select') {
-          if (type === 'select') val = val.map(id=>getters.metaCards.find({id}).value().meta.name)
-          if (type === 'array') val = val.map(id=>_.find(metaBy.settings.items, {id}).name)
+          if (by === 'Country') val = val.map(name=>_.find(Countries, {name}).name)
+          else if (type === 'select') val = val.map(id=>getters.metaCards.find({id}).value().meta.name)
+          else if (type === 'array') val = val.map(id=>_.find(metaBy.settings.items, {id}).name)
           let arr = `"${by}" ${cond}`
           arr = `${arr} "${val.join(', ')}"` 
           filters.push(arr)

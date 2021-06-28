@@ -14,7 +14,7 @@
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
               <v-autocomplete @input="setBy($event,i)" :value="filters[i].by" 
-                :items="computedBy" label="By" outlined dense class="by"
+                :items="computedBy" label="By" outlined dense class="by" hide-selected
                 :disabled="filters[i].lock" item-value="by" :filter="filterBy"> 
                 <template v-slot:selection="data">
                   <v-icon>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>
@@ -70,10 +70,10 @@
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
                 outlined dense multiple :hint="getHint(filters[i].by)" persistent-hint/>
               
-              <v-autocomplete v-if="filters[i].type==='select'" :items="getCards(filters[i].by)" 
+              <v-autocomplete v-if="filters[i].type==='select'&&filters[i].by!=='country'" :items="getCards(filters[i].by)" 
                 @input="setVal($event,i)" :value="filters[i].val"
                 outlined multiple hide-selected dense
-                label="Values" item-value="id" class="val"
+                label="Values" item-value="id" class="val" close-icon="mdi-close"
                 :menu-props="{contentClass:'list-with-preview'}"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
                 :filter="filterCards" :hint="getHint(filters[i].by)" persistent-hint
@@ -81,7 +81,7 @@
                 <template v-slot:selection="data">
                   <v-chip v-bind="data.attrs" close class="my-1 px-2" small
                     @click="data.select" :input-value="data.selected"
-                    @click:close="removeItem(data.item.id,i)"
+                    @click:close="removeItem(data.item.id,i)" close-icon="mdi-close"
                     :color="getColor(filters[i].by,data.item.id)" 
                     :label="getMeta(filters[i].by).settings.chipLabel"
                     :outlined="getMeta(filters[i].by).settings.chipOutlined"
@@ -107,6 +107,26 @@
                       {{data.item.meta.synonyms===undefined? '' : data.item.meta.synonyms.join(', ').slice(0,50)}}
                     </span>
                   </div>
+                </template>
+              </v-autocomplete>
+
+              <v-autocomplete v-if="filters[i].by==='country'" :items="countries" 
+                @input="setVal($event,i)" :value="filters[i].val" 
+                outlined multiple hide-selected dense
+                label="Country" item-text="name" item-value="name" class="val"
+                :menu-props="{contentClass:'list-with-preview'}" :filter="filterCountry"
+                :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'">
+                <template v-slot:selection="data">
+                  <v-chip v-bind="data.attrs" close class="my-1 px-2" small label outlined
+                    @click="data.select" :input-value="data.selected"
+                    @click:close="removeItem(data.item.name,i)" close-icon="mdi-close">
+                    <country-flag :country='data.item.code' size='normal'/> 
+                    <span class="pl-2">{{ data.item.name }}</span>
+                  </v-chip>
+                </template>
+                <template v-slot:item="data">
+                  <country-flag :country='data.item.code' size='normal'/>
+                  <span class="pl-2">{{data.item.name}}</span>
                 </template>
               </v-autocomplete>
 
@@ -144,12 +164,15 @@ import DialogFilters from '@/mixins/DialogFilters'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import vuescroll from 'vuescroll'
 import MetaGetters from '@/mixins/MetaGetters'
+import CountryFlag from 'vue-country-flag'
+import Countries from '@/components/elements/Countries'
 
 export default {
   name: 'DialogFilterMetaCards',
   components: {
     vuescroll,
     SavedFilters: () => import('@/components/elements/SavedFilters.vue'),
+    CountryFlag,
   },
   mixins: [DialogFilters, ShowImageFunction, MetaGetters], 
   mounted() {
@@ -171,6 +194,7 @@ export default {
     },
     datePicker: false,
     datePickerIndex: 0,
+    countries: Countries,
   }),
   computed: {
     computedBy() {
@@ -194,7 +218,10 @@ export default {
         this.metaList.push('bookmark')
         this.metaType.string.push('bookmark')
       } 
-      // TODO country filter
+      if (this.meta.settings.country) {
+        this.metaList.push('country')
+        this.metaType.select.push('country')
+      } 
       for (let i = 0; i < this.metaInCard.length; i++) {
         let id = this.metaInCard[i].id
         let type = this.metaInCard[i].type
@@ -213,6 +240,27 @@ export default {
       this.$store.state.Meta.filters = _.cloneDeep(filters)
       this.$store.dispatch('filterMetaCards')
       this.$store.state.Meta.dialogFilterMetaCards = false 
+    },
+    filterCountry(cardObject, queryText, itemText) {
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
+      }
+
+      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
+      let text = itemText.toLowerCase()
+      let query = queryText.toLowerCase()
+
+      if (filtersDefault) return text.indexOf(query) > -1
+      else return foundByChars(text, query)
     },
   },
 }

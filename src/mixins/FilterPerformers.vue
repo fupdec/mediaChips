@@ -2,13 +2,13 @@
 const fs = require("fs")
 const path = require("path")
 import CountryFlag from 'vue-country-flag'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 
 export default {
   components: {
     CountryFlag,
 	},
-  mixins: [Countries], 
+  mixins: [], 
   mounted () {
     this.$nextTick(function () {
     })

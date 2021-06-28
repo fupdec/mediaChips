@@ -91,12 +91,12 @@ export default {
     setFlag(e, i) { this.filters[i].flag = e },
     removeChip(item, i) { 
       const index = this.filters[i].val.indexOf(item.name)
-      if (index >= 0) this.filters[i].val.splice(index, 1)
+      if (index > -1) this.filters[i].val.splice(index, 1)
       this.$store.state.hoveredImage = false
     },
     removeItem(item, i) { 
       const index = this.filters[i].val.indexOf(item)
-      if (index >= 0) this.filters[i].val.splice(index, 1)
+      if (index > -1) this.filters[i].val.splice(index, 1)
       this.$store.state.hoveredImage = false
     },
     filterCards(cardObject, queryText, itemText) {

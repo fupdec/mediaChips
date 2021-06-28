@@ -143,7 +143,7 @@ const fs = require("fs")
 const path = require("path")
 
 import CountryFlag from 'vue-country-flag'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
 
@@ -155,7 +155,7 @@ export default {
   components: {
     CountryFlag,
 	},
-  mixins: [Countries, ShowImageFunction, LabelFunctions], 
+  mixins: [ShowImageFunction, LabelFunctions], 
   mounted () {
     this.$nextTick(function () {
       this.cardKey = this.performer.id
@@ -412,7 +412,7 @@ export default {
     findCountryCode(country) {
       if (!country == '') {
         let countryName = country.toLowerCase()
-        let code = _.filter(this.countries,
+        let code = _.filter(Countries,
           country => (country.name.toLowerCase().includes(countryName))
         )[0]
         if (code == undefined) {

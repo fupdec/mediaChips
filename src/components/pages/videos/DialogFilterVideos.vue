@@ -14,7 +14,7 @@
           <v-card-text class="text-center">
             <div v-for="(filter,i) in filters" :key="i" class="filter-row">
               <v-autocomplete @input="setBy($event,i)" :value="filters[i].by" 
-                :items="computedBy" label="By" outlined dense class="by"
+                :items="computedBy" label="By" outlined dense class="by" hide-selected
                 :disabled="filters[i].lock" item-value="by" :filter="filterBy"> 
                 <template v-slot:selection="data">
                   <v-icon>mdi-{{getMeta(data.item.by).settings.icon||''}}</v-icon>

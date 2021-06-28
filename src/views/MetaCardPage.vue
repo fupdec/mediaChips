@@ -180,7 +180,7 @@ const path = require("path")
 
 import CountryFlag from 'vue-country-flag'
 import VideosGrid from '@/mixins/VideosGrid'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
@@ -189,7 +189,7 @@ import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'MetaCardPage',
-  mixins: [VideosGrid, Countries, ShowImageFunction, LabelFunctions, Keys, MetaGetters],
+  mixins: [VideosGrid, ShowImageFunction, LabelFunctions, Keys, MetaGetters],
   components: {
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),

@@ -40,12 +40,12 @@
                   <v-col v-if="meta.settings.country" cols="12" lg="6" class="pt-0">
                     <v-autocomplete v-model="country" :items="countries" multiple 
                       item-text="name" item-value="name" label="Country" 
-                      class="nation-chips hidden-close nation-select" hide-selected
-                      :menu-props="{contentClass:'list-with-preview'}"
+                      class="hidden-close" hide-selected
+                      :menu-props="{contentClass:'list-with-preview'}" :filter="filterCountry"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta('country').settings.icon}`:''">
                       <template v-slot:selection="data">
                         <v-chip @click="data.select" @click:close="removeCountry(data.item)"
-                          v-bind="data.attrs" class="my-1" outlined close small
+                          v-bind="data.attrs" class="my-1 px-2" outlined close small label
                           :input-value="data.selected" close-icon="mdi-close"> 
                           <country-flag :country='data.item.code' size='normal'/> 
                           <span class="pl-2">{{ data.item.name }}</span>
@@ -233,7 +233,7 @@ import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
 import Scraper from '@/components/pages/meta/Scraper.vue'
 import CountryFlag from 'vue-country-flag'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 
 export default {
   name: "DialogEditSingleMetaCard",
@@ -250,7 +250,7 @@ export default {
     this.bookmark = this.card.meta.bookmark || ''
     this.parseMetaInCard()
   },
-  mixins: [ShowImageFunction, NameRules, MetaGetters, Countries,], 
+  mixins: [ShowImageFunction, NameRules, MetaGetters ], 
   mounted () {
     this.$nextTick(function () {
       setTimeout(() => { this.panels = true }, 1000)
@@ -272,6 +272,7 @@ export default {
     tooltipCopyName: false,
     key: Date.now(),
     panels: false,
+    countries: Countries,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,
@@ -461,6 +462,27 @@ export default {
           return false
         }
       }
+    },
+    filterCountry(cardObject, queryText, itemText) {
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
+      }
+
+      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
+      let text = itemText.toLowerCase()
+      let query = queryText.toLowerCase()
+
+      if (filtersDefault) return text.indexOf(query) > -1
+      else return foundByChars(text, query)
     },
     openDialogColor() {
       this.dialogColor = true 

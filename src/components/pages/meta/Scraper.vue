@@ -181,7 +181,7 @@ const { clipboard } = require('electron')
 import vuescroll from 'vuescroll'
 import CountryFlag from 'vue-country-flag'
 import Scrapers from '@/mixins/Scrapers'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
@@ -192,7 +192,7 @@ export default {
   },
   name: "Scraper",
   components: { vuescroll, CountryFlag },
-  mixins: [Countries, Scrapers, MetaGetters], 
+  mixins: [Scrapers, MetaGetters], 
   beforeMount() {
     this.queryString = this.name
     if (this.meta.settings.synonyms) this.specificMeta.push('synonyms')
@@ -344,7 +344,7 @@ export default {
     findCountryCode(country) {
       if (country == '' || country === undefined) return ''
       let countryName = country.toLowerCase()
-      let code = _.filter(this.countries, country => (country.name.toLowerCase().includes(countryName)) )[0]
+      let code = _.filter(Countries, country => (country.name.toLowerCase().includes(countryName)) )[0]
       if (code == undefined) return ''
       else return code.code
     },

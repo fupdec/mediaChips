@@ -293,7 +293,7 @@ const path = require("path")
 
 import CountryFlag from 'vue-country-flag'
 import VideosGrid from '@/mixins/VideosGrid'
-import Countries from '@/mixins/Countries'
+import Countries from '@/components/elements/Countries'
 import vuescroll from 'vuescroll'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
@@ -301,7 +301,7 @@ import Keys from '@/mixins/Keys'
 
 export default {
   name: 'PerformerPage',
-  mixins: [VideosGrid, Countries, ShowImageFunction, LabelFunctions, Keys],
+  mixins: [VideosGrid, ShowImageFunction, LabelFunctions, Keys],
   components: {
     CountryFlag,
     DialogEditPerformerInfo: () => import('@/components/pages/performers/DialogEditPerformerInfo.vue'),
@@ -599,13 +599,13 @@ export default {
     },
     getCountryCode(nationality) {
       if (this.performer.nations.length==0) return ''
-      let countryIndex = this.countries.findIndex(country => country.name === nationality)
-      return this.countries[countryIndex].code
+      let countryIndex = Countries.findIndex(country => country.name === nationality)
+      return Countries[countryIndex].code
     },
     getCountry(nationality) {
       if (this.performer.nations.length==0) return 'Nationality unknown'
-      let countryIndex = this.countries.findIndex(country => country.name === nationality)
-      return this.countries[countryIndex].name
+      let countryIndex = Countries.findIndex(country => country.name === nationality)
+      return Countries[countryIndex].name
     },
     toggleProfile() {
       let value

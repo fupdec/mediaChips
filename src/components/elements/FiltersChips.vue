@@ -25,6 +25,7 @@
 
 <script>
 import MetaGetters from '@/mixins/MetaGetters'
+import Countries from '@/components/elements/Countries'
 
 export default {
   name: 'FiltersChips',
@@ -64,11 +65,14 @@ export default {
       this.filters.splice(i, 1)
       this.$store.dispatch(`filter${this.type}s`)
     },
-    getMetaItems(metaId, items) {
+    getMetaItems(metaId, val) {
       let meta = this.getMeta(metaId)
       let metaCards = this.getCards(metaId)
-      if (meta.type == 'simple') return items.map(id=>_.find(meta.settings.items, {id}).name).join(', ')
-      else return items.map(id=>_.find(metaCards, {id}).meta.name).join(', ')
+      if (meta.type == 'specific') {
+        if (metaId == 'country') return val.map(name=>_.find(Countries, {name}).name).join(', ')
+      } 
+      else if (meta.type == 'simple') return val.map(id=>_.find(meta.settings.items, {id}).name).join(', ')
+      else if (meta.type == 'complex')  return val.map(id=>_.find(metaCards, {id}).meta.name).join(', ')
     },
   },
 }
