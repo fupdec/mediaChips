@@ -83,7 +83,10 @@
                   </div><br>
                 </v-col>
                 <v-col cols="12" md="4" sm="6">
-                  <div v-if="meta.settings.synonyms" class="param"><b class="mr-2">Synonyms:</b> {{card.meta.synonyms.join(', ')}}</div>
+                  <div v-if="meta.settings.synonyms" class="param">
+                    <b class="mr-2">Synonyms:</b> 
+                    <span v-if="card.meta.synonyms">{{card.meta.synonyms.join(', ')}}</span>
+                  </div>
                 </v-col>
                 <!-- Parse meta from cards -->
                 <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" md="4" sm="6" class="d-flex align-start">
