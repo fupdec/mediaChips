@@ -133,7 +133,7 @@
       </v-col>
     </v-row>
 
-    <HeaderGradient :themeDark="gradientThemeDark"/>
+    <HeaderGradient v-if="dialogHeaderGradient" :themeDark="gradientThemeDark" @close="dialogHeaderGradient=false"/>
 
     <v-divider class="my-4"></v-divider>
     <div class="d-flex">
@@ -165,6 +165,7 @@ export default {
     dialogAppColorDarkSecondary: false,
     dialogAppColorDarkAccent: false,
     dialogAppColorDarkHeader: false,
+    dialogHeaderGradient: false,
     gradientThemeDark: null,
   }),
   computed: {
@@ -304,11 +305,11 @@ export default {
   methods: {
     openDialogHeaderGradientLight() {
       this.gradientThemeDark = false
-      this.$store.state.Settings.dialogHeaderGradient = true
+      this.dialogHeaderGradient = true
     },
     openDialogHeaderGradientDark() {
       this.gradientThemeDark = true
-      this.$store.state.Settings.dialogHeaderGradient = true
+      this.dialogHeaderGradient = true
     },
   },
 }
