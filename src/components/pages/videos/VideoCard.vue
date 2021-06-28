@@ -160,6 +160,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.cardKey = this.video.id
+      this.isVideoExist = fs.existsSync(this.video.path)
     })
   },
   beforeDestroy() {
@@ -169,6 +170,7 @@ export default {
     for (const timeout in this.timeouts) clearTimeout(this.timeouts[timeout])
   },
   data: () => ({
+    isVideoExist: false,
     errorThumb: false,
     isVideoHovered: false,
     timeouts: {},
@@ -205,7 +207,6 @@ export default {
     videoPreviewHover() { return this.$store.state.Settings.videoPreviewHover },
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
     ratingAndFavoriteInCard() { return this.$store.state.Settings.ratingAndFavoriteInCard },
-    isVideoExist() { return fs.existsSync(this.video.path) },
     metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
     visibility() { return this.$store.state.Settings.videoVisibility },
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
