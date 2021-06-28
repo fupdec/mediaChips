@@ -106,7 +106,7 @@ export default {
       if (fs.existsSync(imgPath)) return imgPath
       else {
         this.errorThumb = true
-        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+        return path.join(__static, '/img/forbidden.jpg')
       }
     },
     showContextMenu(e) {

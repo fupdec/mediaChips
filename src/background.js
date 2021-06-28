@@ -136,7 +136,6 @@ if (process.env.PORTABLE_EXECUTABLE_DIR) {
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
   // create folder for user's files
-  const srcUserDataFolder = path.join(__static, 'userfiles')
   const destUserDataFolder = path.join(app.getPath('userData'), 'userfiles')
   if (!fs.existsSync(destUserDataFolder)) {
     fs.mkdirSync(destUserDataFolder)
@@ -147,7 +146,6 @@ app.on('ready', async () => {
     fs.mkdirSync(path.join(destUserDataFolder, 'media/timelines'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/thumbs'))
     fs.mkdirSync(path.join(destUserDataFolder, 'media/markers'))
-    fs.copy(srcUserDataFolder, destUserDataFolder, (err) => {if (err) console.error(err)}) 
   }
   const metaFolder = path.join(destUserDataFolder, 'media', 'meta')
   if (!fs.existsSync(metaFolder)) fs.mkdirSync(metaFolder)

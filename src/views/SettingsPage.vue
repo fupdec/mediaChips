@@ -1,6 +1,6 @@
 <template>
   <vuescroll>
-    <div class="headline text-h3 d-flex align-center justify-center my-6">
+    <div class="headline text-h3 d-flex align-center justify-center py-6">
       <v-icon x-large left>mdi-cog-outline</v-icon> Settings
     </div>
 
@@ -571,6 +571,12 @@
                 <span @click="openLink('https://github.com/SortableJS/Vue.Draggable')" class="link">vuedraggable</span>
                 <span @click="openLink('https://github.com/YvesCoding/vuescroll')" class="link">vuescroll</span>
                 <span @click="openLink('https://github.com/Simonwep/selection')" class="link">selection</span>
+              </div>
+              <div class="mt-4">Thanks to these wonderful artists for the images:</div>
+              <div class="d-flex flex-column flex-wrap">
+                <span @click="openLink('https://www.vecteezy.com/members/dollyheidi')" class="link">Contour Topography Background by dollyheidi from Vecteezy</span>
+                <span @click="openLink('https://www.flaticon.com/authors/xnimrodx')" class="link">Forbidden Icon made by xnimrodx from Flaticon</span>
+                <span @click="openLink('https://www.flaticon.com/authors/payungkead')" class="link">Image Icon made by Payungkead from Flaticon</span>
               </div>
             </div>
           </v-card>

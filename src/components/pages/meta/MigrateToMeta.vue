@@ -514,6 +514,7 @@ export default {
               synonyms: tag.altNames || [],
               favorite: tag.favorite || false,
               color: tag.color || '#777777',
+              meterValue: tag.value,
               bookmark: bookmark,
               [simpleMetaCategoryId]: tag.category.map(i=>_.find(tagCategoriesItems ,{name:i}).id),
             },

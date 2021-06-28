@@ -211,11 +211,10 @@ export default {
       return 'file://' + this.checkImageExist(imgPath)
     },
     checkImageExist(imgPath) {
-      if (fs.existsSync(imgPath)) {
-        return imgPath
-      } else {
+      if (fs.existsSync(imgPath)) return imgPath
+      else {
         this.errorThumb = true
-        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+        return path.join(__static, '/img/forbidden.jpg')
       }
     },
     getFileName(videoPath) {

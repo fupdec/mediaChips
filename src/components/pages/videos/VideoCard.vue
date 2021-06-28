@@ -250,13 +250,13 @@ export default {
       else if (fs.existsSync(imgPath)) return imgPath
       else {
         this.errorThumb = true
-        return path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+        return path.join(__static, '/img/forbidden.jpg')
       }
     },
     getTimelineImgUrl(progress) {
       let imgPath = path.join(this.pathToUserData, `/media/timelines/${this.video.id}_${progress}.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
-      else return 'file://' + path.join(this.pathToUserData, '/img/templates/thumb.jpg')
+      else return 'file://' + path.join(__static, '/img/forbidden.jpg')
     },
     playVideo() {
       const pathToVideo = this.video.path

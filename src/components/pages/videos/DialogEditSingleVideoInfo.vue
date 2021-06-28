@@ -456,7 +456,7 @@ export default {
     getImg() {
       let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
       if (fs.existsSync(imgPath)) return imgPath
-      else return path.join(this.$store.getters.getPathToUserData, '/img/templates/thumb.jpg')
+      else return path.join(__static, '/img/forbidden.jpg')
     },
     getTag(tagName) { return this.$store.getters.tags.find({name:tagName}).value() },
     sort(items) { this[items] = this[items].sort((a, b) => a.localeCompare(b)) },

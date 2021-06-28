@@ -37,7 +37,7 @@ export default {
         let p = {}
         p.img = $(e).find('.image-content').attr('src')
         if (p.img == undefined) p.img = $(e).find('.image-content').attr('data-src')
-        if (p.img == undefined) p.img = path.join(this.pathToUserData, '/img/templates/performer.png') // replace with logo image
+        if (p.img == undefined) p.img = path.join(__static, '/img/forbidden.jpg') // replace with logo image
         p.name = $(e).find('[data-test="subject-name"]').text().trim()
         p.link = p.name.replace(' ', '-').toLowerCase()
         let flag =  $(e).find('.flag-icon').attr('title') || ''

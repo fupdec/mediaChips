@@ -324,13 +324,13 @@ export default {
       if (imgType === "avatar") {
         let imgMainPath = path.join(this.pathToUserData, `/media/meta/${this.metaId}/${this.card.id}_main.jpg`)
         if (fs.existsSync(imgMainPath)) return imgMainPath
-        else return path.join(this.pathToUserData, '/img/templates/avatar.png')
+        else return path.join(__static, '/img/forbidden.jpg')
       } else if (imgType === "header") {
         this.isHeaderImageExists = false
         let imgMainPath = path.join(this.pathToUserData, `/media/meta/${this.metaId}/${this.card.id}_main.jpg`)
         if (fs.existsSync(imgMainPath)) return imgMainPath
-        else return path.join(this.pathToUserData, '/img/templates/header.png')
-      } else return path.join(this.pathToUserData, '/img/templates/tag.png')
+        else return path.join(__static, '/img/forbidden.jpg')
+      } else return path.join(__static, '/img/forbidden.jpg')
     },
     checkImageSettings(imgType) {
       if (!this.meta.settings.images) return false 
