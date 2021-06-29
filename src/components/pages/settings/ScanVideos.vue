@@ -481,7 +481,8 @@ export default {
 
         videoMetadata = {...videoMetadata, ...parsed}
         
-        let outputPathThumbs = path.join(this.$store.getters.getPathToUserData, '/media/thumbs/')
+        let outputPathThumbs = path.join(this.pathToUserData, '/media/thumbs/')
+        if (!fs.existsSync(outputPathThumbs)) fs.mkdirSync(outputPathThumbs)
         // creating the thumb of the video
         ffmpeg()
           .input(pathToFile)

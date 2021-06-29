@@ -23,7 +23,6 @@ const shortid = require('shortid')
 const fs = require("fs-extra")
 const path = require("path")
 const { ipcRenderer } = require('electron')
-const rimraf = require("rimraf")
 
 export default {
   name: 'CreateAllMeta',
@@ -387,9 +386,11 @@ export default {
       })
     },
     createFolders(performersId, tagsId, websitesId) {
+      const pathMeta = path.join(this.pathToUserData, `/media/meta`)
       const newPathPerformers = path.join(this.pathToUserData, `/media/meta/${performersId}`)
       const newPathTags  = path.join(this.pathToUserData, `/media/meta/${tagsId}`)
       const newPathWebsites  = path.join(this.pathToUserData, `/media/meta/${websitesId}`)
+      if (!fs.existsSync(pathMeta)) fs.mkdirSync(pathMeta)
       if (!fs.existsSync(newPathPerformers)) fs.mkdirSync(newPathPerformers)
       if (!fs.existsSync(newPathTags)) fs.mkdirSync(newPathTags)
       if (!fs.existsSync(newPathWebsites)) fs.mkdirSync(newPathWebsites)

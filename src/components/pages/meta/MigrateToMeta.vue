@@ -93,6 +93,7 @@ export default {
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
       rimraf(path.join(this.pathToUserData, `/media/previews`),() => {}) // remove folder with grid images
       rimraf(path.join(this.pathToUserData, `/media/temp`),() => {}) // remove folder temp
+      rimraf(path.join(this.pathToUserData, `/img`),() => {}) // remove folder image templates
       this.removeOldSettings()
       
       this.isMigrationRunning = false
@@ -327,7 +328,7 @@ export default {
           state: {
             visibility: {
               name: true,
-              cardSize: 3,
+              cardSize: 2,
             },
           },
         }
@@ -471,7 +472,7 @@ export default {
           state: {
             visibility: {
               name: true,
-              cardSize: 3,
+              cardSize: 1,
             },
           },
         }
@@ -576,7 +577,7 @@ export default {
           state: {
             visibility: {
               name: true,
-              cardSize: 3,
+              cardSize: 1,
             },
           },
         }
@@ -671,6 +672,9 @@ export default {
     },
     moveImages(performersId, tagsId, websitesId) {
       //-operations with images
+      const pathMeta = path.join(this.pathToUserData, `/media/meta`)
+      if (!fs.existsSync(pathMeta)) fs.mkdirSync(pathMeta)
+
       const currPathPerformers = path.join(this.pathToUserData, `/media/performers`)
       const newPathPerformers = path.join(this.pathToUserData, `/media/meta/${performersId}`)
       

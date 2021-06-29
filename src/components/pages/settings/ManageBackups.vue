@@ -41,18 +41,19 @@
         <v-toolbar color="success">
           <span class="headline">Create a backup?</span>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogCreateBackup=false" :disabled="isCreatingBackupRun"
+          <v-btn @click="dialogCreateBackup=false" :disabled="isProcessRun"
             class="mx-4" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
-          <v-btn @click="createBackup" :disabled="isCreatingBackupRun" outlined> 
+          <v-btn @click="createBackup" :disabled="isProcessRun" outlined> 
             <v-icon left>mdi-database-plus</v-icon> Create
           </v-btn>
         </v-toolbar>
-        <v-card-text v-if="isCreatingBackupRun" class="text-center">
+        <v-card-text v-if="isProcessRun" class="text-center">
           <h3 class="py-4">Creating in progress...</h3>
           <v-icon x-large class="loading-animation">mdi-loading</v-icon>
         </v-card-text>
         <v-card-text v-else class="py-6 text-center">
-          <div>All images, video previews and data will be archived.</div>
+          <v-icon size="72" color="info" class="py-4">mdi-information-outline</v-icon>
+          <div>All data, settings and images will be archived</div>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -61,24 +62,33 @@
         <v-toolbar color="warning">
           <div class="headline"> Restore the backup? </div>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogRestoreBackup=false" :disabled="isRestoringBackupRun" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> close </v-btn>
-          <v-btn @click="restoreBackup" :disabled="isRestoringBackupRun" outlined> <v-icon left>mdi-backup-restore</v-icon>Restore</v-btn>
+          <v-btn @click="dialogRestoreBackup=false, isBackupRestoredError=false" :disabled="isProcessRun" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> close </v-btn>
+          <v-btn @click="restoreBackup" :disabled="isProcessRun" outlined> <v-icon left>mdi-backup-restore</v-icon>Restore</v-btn>
         </v-toolbar>
-        <v-card-text v-if="isRestoringBackupRun" class="text-center">
+        <v-card-text v-if="isProcessRun" class="text-center">
           <h3 class="py-4">Restoring in progress...</h3>
           <v-icon x-large class="loading-animation">mdi-loading</v-icon>
         </v-card-text>
         <v-card-text v-else class="text-center">
           <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
           <div>This will replace current state of the database.<br>It is recommended to create a backup before restoring <br>to avoid data loss in case of an error.</div>
+          <v-alert v-if="isBackupRestoredError" type="error" text dense outlined class="mt-6">An error occurred while restoring</v-alert>
         </v-card-text>
-        <v-card-text v-if="isBackupRestoredError" class="text-center py-6">An error occurred while restoring.</v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="isBackupRestoredSuccessfully" width="600" persistent>
+    <v-dialog v-model="isBackupRestoredSuccessfully" width="500" persistent>
       <v-card>
         <v-card-text class="text-center py-6  d-flex flex-column align-center">
           Backup successfully restored. Need to restart application.
+          <v-btn @click="restartApp" class="mx-6 mt-6" color="primary">
+            <v-icon left>mdi-restart</v-icon> Restart </v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogRestoreBackupError" width="500" persistent>
+      <v-card>
+        <v-card-text class="text-center py-6  d-flex flex-column align-center">
+          <div class="red--text">An error occurred while restoring a backup. Need to restart application.</div>
           <v-btn @click="restartApp" class="mx-6 mt-6" color="primary">
             <v-icon left>mdi-restart</v-icon> Restart </v-btn>
         </v-card-text>
@@ -92,7 +102,7 @@
           <v-btn @click="dialogDeleteBackup=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
           <v-btn @click="deleteBackup" outlined> <v-icon left>mdi-check</v-icon>Yes</v-btn>
         </v-toolbar>
-        <v-card-text v-if="!isBackupRestoredSuccessfully" class="text-center">
+        <v-card-text class="text-center">
           <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
           <div>This action will remove selected backup from application.</div>
         </v-card-text>
@@ -102,12 +112,14 @@
 </template>
 
 <script>
+import { async } from 'node-stream-zip'
 const fs = require('fs-extra')
 const path = require("path")
 const { dialog } = require('electron').remote
 const { ipcRenderer } = require('electron')
 const archiver = require('archiver')
 const StreamZip = require('node-stream-zip')
+const rimraf = require("rimraf")
 
 import vuescroll from 'vuescroll'
 
@@ -121,8 +133,7 @@ export default {
   data: () => ({
     backups: [],
     selectedBackup: [],
-    isCreatingBackupRun: false,
-    isRestoringBackupRun: false,
+    isProcessRun: false,
     headers: [
       { text: 'Date, time', value: 'date' },
       { text: 'Videos', value: 'videos' },
@@ -135,6 +146,7 @@ export default {
     dialog: false,
     dialogCreateBackup: false,
     dialogRestoreBackup: false,
+    dialogRestoreBackupError: false,
     dialogDeleteBackup: false,
     compatibleVersions: ['0.9.0'],
   }),
@@ -169,26 +181,16 @@ export default {
       })
       return backups
     },
-    // TODO replace with rimraf function
     clearFiles(directory) {
-      return new Promise((resolve, reject) => {
-         fs.readdir(directory, (err, files) => {
-          // console.log(directory,files)
-          if (err) return reject(err)
-          if (files.length == 0) return resolve()
-          async function unlinkFiles(files) {
-            for (const file of files) {
-              const filePath = path.join(directory, file)
-              try { fs.promises.unlink(filePath) } 
-              catch (error) { return reject(err) }
-            }
-          }
-          unlinkFiles(files).then(() => { return resolve() })
+      return new Promise((resolve) => {
+        rimraf(directory, () => { 
+          if (!fs.existsSync(directory)) fs.mkdirSync(directory) 
+          resolve()
         })
       })
     },
     createBackup() {
-      this.isCreatingBackupRun = true
+      this.isProcessRun = true
       let currentdate = new Date(),
           date = currentdate.getDate(),
           month = currentdate.getMonth()+1,
@@ -218,7 +220,7 @@ export default {
         backupInfo.size = archive.pointer()
         vm.$store.dispatch('setNotification', {type:'success', text:'Backup successfully created'})
         vm.$store.commit('addLog', {text:'💾 Backup successfully created', type:'success'})
-        vm.isCreatingBackupRun = false
+        vm.isProcessRun = false
         vm.backups = vm.getBackups()
         // console.log(archive.pointer() + ' total bytes')
         // console.log('archiver has been finalized and the output file descriptor has closed.')
@@ -253,55 +255,97 @@ export default {
       }
     },
     async restoreBackup() {
-      this.isRestoringBackupRun = true
-      let date = this.selectedBackup[0].date,
-          appFiles = path.join(this.pathToUserData, '/media/')
-      // clear folders with media
-      await this.clearFiles(path.join(appFiles, 'thumbs/'))
-      await this.clearFiles(path.join(appFiles, 'previews/'))
-      await this.clearFiles(path.join(appFiles, 'grids/'))
-      await this.clearFiles(path.join(appFiles, 'timelines/'))
-      await this.clearFiles(path.join(appFiles, 'meta/'))
-      await this.clearFiles(path.join(appFiles, 'markers/'))
-      await this.clearFiles(path.join(this.pathToUserData, '/databases/'))
+      this.isProcessRun = true
+      let date = this.selectedBackup[0].date
+      const pathMedia = path.join(this.pathToUserData, '/media/')
+      const pathDatabases = path.join(this.pathToUserData, '/databases/')
+      const pathSettings = path.join(this.pathToUserData, '/dbs.json')
+      const pathTemp = path.join(this.pathToUserData, '/temp')
+
+      function copyDirToTemp (srcDir, destName) {
+        return new Promise((resolve, reject) => {
+          try {
+            fs.copySync(srcDir, path.join(pathTemp, destName))
+            console.log('success!')
+            resolve()
+          } catch (err) {
+            console.error(err)
+            reject()
+          }
+        })
+      }
+
+      function copyFromTempDir (destDir, srcName) {
+        return new Promise((resolve, reject) => {
+          try {
+            fs.copySync(path.join(pathTemp, srcName), destDir )
+            console.log('success!')
+            resolve()
+          } catch (err) {
+            console.error(err)
+            reject()
+          }
+        })
+      }
       
       let backupPath = path.join(this.pathToUserData, '/backups/'+date+'.zip')
       let backupDestinationPath = path.join(this.pathToUserData)
 
       if (!fs.existsSync(backupPath)) {
-        this.isRestoringBackupRun = false
+        this.isProcessRun = false
         this.isBackupRestoredError = true
         this.$store.dispatch('setNotification', {
           type: 'error',
           text: 'Archive with this backup does not exist'
         })
       }
-      // TODO hide error message in restore dialog after close dialog
       
-      const zip = new StreamZip({
-        file: backupPath,
-        storeEntries: true
-      })
-      zip.on('ready', () => {
-        zip.extract(null, backupDestinationPath, (err, count) => {
+      const zip = new StreamZip({ file: backupPath, storeEntries: true })
+      zip.on('ready', async () => {
+        if (fs.existsSync(pathTemp)) await this.clearFiles(pathTemp)
+        else fs.mkdirSync(pathTemp) 
+        console.log('folder TEmp created!')
+
+        await copyDirToTemp(pathMedia, '/media')
+        await copyDirToTemp(pathDatabases, '/databases')
+        fs.copyFile(pathSettings, path.join(pathTemp, '/dbs.json'), (err) => {
+          if (err) console.error(err)
+          else console.log("success!")
+        })
+
+        await this.clearFiles(pathMedia)
+        await this.clearFiles(pathDatabases)
+
+        zip.extract(null, backupDestinationPath, async (err, count) => {
           if (err) {
-            this.isRestoringBackupRun = false
+            this.isProcessRun = false
             this.isBackupRestoredError = true
             console.log(err)
           } else {
             let backupInfoPath = path.join(this.pathToUserData, '/info.json')
             fs.unlink(backupInfoPath)
+            await this.clearFiles(pathTemp)
             this.$store.commit('addLog', { text: 'Backup successfully restored', type: 'success' })
-            this.isRestoringBackupRun = false
+            this.isProcessRun = false
             this.isBackupRestoredSuccessfully = true
             // console.log(`Extracted ${count} entries`)
           }
           zip.close()
         })
       })
-      zip.on('error', err => {
-        this.isRestoringBackupRun = false
+      zip.on('error', async (err) => {
         this.isBackupRestoredError = true
+        await this.clearFiles(pathMedia)
+        await this.clearFiles(pathDatabases)
+        fs.copyFile(path.join(pathTemp, '/dbs.json'), pathSettings, (err) => {
+          if (err) console.error(err)
+          else console.log("success!")
+        })
+        await copyFromTempDir(pathMedia, '/media')
+        await copyFromTempDir(pathDatabases, '/databases')
+        await this.clearFiles(pathTemp)
+        this.isProcessRun = false
+        this.dialogRestoreBackupError = true
         console.log(err)
       })
       this.selectedBackup = []
