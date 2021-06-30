@@ -92,7 +92,7 @@ const Meta = {
       getters.markers.each(marker=>{ // rename/delete markers
         if (marker.type===id) {
           let mc = getters.metaCards.find({id:marker.name}).value()
-          if (mc) marker.type = 'bookmark', marker.name = mc.meta.name
+          if (mc) {marker.type = 'bookmark'; marker.name = mc.meta.name}
           else dispatch('deleteMarker', marker)
         }
       }).write()
@@ -134,12 +134,16 @@ const Meta = {
           let imgPath = path.join(getters.getPathToUserData, 'media', 'meta', metaId, `${id}_${img}.jpg`)
           fs.unlink(imgPath, (err) => {})
         })
+        getters.markers.filter({type:metaId}).each(marker=>{ // rename/delete markers
+          if (marker.name === id) {marker.type = 'bookmark'; marker.name = cardName}
+        }).write()
         commit('addLog', {type:'info',color:'red',text:`${metaName} "${cardName}" has been removed 🗑️`})
       })
       dispatch('filterMetaCards')
       state.dialogDeleteMetaCard = false
       state.selectedMeta = []
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
+      ipcRenderer.send('updatePlayerDb', 'markers') // update markers in player window
     },
     updateMetaSettings({getters}, {id, key, value}) {
       getters.meta.find({id}).get('settings').set(key, value).write()
