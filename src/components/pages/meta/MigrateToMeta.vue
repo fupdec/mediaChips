@@ -685,7 +685,10 @@ export default {
         } catch(err) {
           console.log(err)
         } 
-      } else this.$store.commit('addLog', {type:'error',text:`Folder with performers images was not found`})
+      } else {
+        if (!fs.existsSync(newPathPerformers)) fs.mkdirSync(newPathPerformers)
+        this.$store.commit('addLog', {type:'error',text:`Folder with performers images was not found`})
+      }
 
       const currPathTags  = path.join(this.pathToUserData, `/media/tags`)
       const newPathTags  = path.join(this.pathToUserData, `/media/meta/${tagsId}`)
@@ -705,7 +708,10 @@ export default {
         } catch(err) {
           console.log(err)
         }
-      } else this.$store.commit('addLog', {type:'error',text:`Folder with tags images was not found`})
+      } else {
+        if (!fs.existsSync(newPathTags)) fs.mkdirSync(newPathTags)
+        this.$store.commit('addLog', {type:'error',text:`Folder with tags images was not found`})
+      }
       
       const currPathWebsites  = path.join(this.pathToUserData, `/media/websites`)
       const newPathWebsites  = path.join(this.pathToUserData, `/media/meta/${websitesId}`)
@@ -725,7 +731,10 @@ export default {
         } catch(err) {
           console.log(err)
         }
-      } else this.$store.commit('addLog', {type:'error',text:`Folder with websites images was not found`})
+      } else {
+        if (!fs.existsSync(newPathWebsites)) fs.mkdirSync(newPathWebsites)
+        this.$store.commit('addLog', {type:'error',text:`Folder with websites images was not found`})
+      }
     },
     fixMarkers(performersId, tagsId) {
       let performerCards = this.$store.getters.metaCards.filter({metaId:performersId})

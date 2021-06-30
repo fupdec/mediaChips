@@ -269,7 +269,6 @@
 <script>
 const { clipboard } = require('electron')
 const fs = require("fs")
-const path = require("path")
 
 import vueFilePond from 'vue-filepond'
 import 'filepond/dist/filepond.min.css'
