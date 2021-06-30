@@ -156,6 +156,7 @@ const Meta = {
       getters.settings.get('metaAssignedToVideos').remove({id}).write() // remove from assigned videos
       commit('updateSettingsState', 'metaAssignedToVideos')
       getters.settings.get('videoFilters').remove({by:id}).write() // remove from video filters
+      commit('updateSettingsState', 'videoFilters')
       getters.settings.get('videoVisibility').unset(id).write() // remove from videos visiblity 
     },
     removeMetaFromSavedFilters({getters, commit, dispatch}, id) {
@@ -263,7 +264,7 @@ const Meta = {
           continue
         }
 
-        if (type=='number'||type=='date'||type=='string') val = val.toLowerCase().trim()
+        if (type=='string') val = val.toLowerCase().trim()
         if ((val===null||val.length===0)&&(cond!='empty'&&cond!='not empty')) continue
         if (cond=='empty') {mc=mc.filter(c=>c.meta[by]===undefined||c.meta[by]===null||c.meta[by].length==0);continue} 
         if (cond=='not empty') {mc=mc.filter(c=>c.meta[by]!==undefined&&c.meta[by]!==null&&c.meta[by].length>0);continue}

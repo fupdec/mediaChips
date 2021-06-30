@@ -85,7 +85,7 @@ const Videos = {
           continue
         }
 
-        if (type=='number'||type=='date'||type=='string') val = val.toLowerCase().trim()
+        if (type=='string') val = val.toLowerCase().trim()
         if ((val===null||val.length===0)&&(cond!='empty'&&cond!='not empty')) continue
         if (cond=='empty') {videos=videos.filter(c=>c[by]===undefined||c[by]===null||c[by].length==0);continue} 
         if (cond=='not empty') {videos=videos.filter(c=>c[by]!==undefined&&c[by]!==null&&c[by].length>0);continue}

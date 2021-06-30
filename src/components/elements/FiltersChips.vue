@@ -71,8 +71,14 @@ export default {
       if (meta.type == 'specific') {
         if (metaId == 'country') return val.map(name=>_.find(Countries, {name}).name).join(', ')
       } 
-      else if (meta.type == 'simple') return val.map(id=>_.find(meta.settings.items, {id}).name).join(', ')
-      else if (meta.type == 'complex')  return val.map(id=>_.find(metaCards, {id}).meta.name).join(', ')
+      else if (meta.type == 'simple') return val.map(id=>{
+        let item = _.find(meta.settings.items, {id})
+        if (item) return item.name
+      }).join(', ')
+      else if (meta.type == 'complex')  return val.map(id=>{
+        let item = _.find(metaCards, {id})
+        if (item) return item.meta.name
+      }).join(', ')
     },
   },
 }

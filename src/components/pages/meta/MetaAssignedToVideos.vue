@@ -45,7 +45,7 @@
         </v-toolbar>
         <vuescroll>
           <v-card-text class="px-4">
-            <v-autocomplete v-model="selectedMetaForCard" label="Meta name" :items="metaForCard"
+            <v-autocomplete v-model="selectedMetaForCard" label="Meta name" :items="metaForCard" autofocus
               :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
