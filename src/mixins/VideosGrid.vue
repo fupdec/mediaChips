@@ -12,12 +12,19 @@ export default {
     VideoCard
   },
   beforeDestroy() {
-    this.isProcessBreak = true
+    this.isGenerationBreak = true
+  },
+  mounted() {
+    this.$nextTick(function () {
+      this.generateImages()
+    })
   },
   data: () => ({
     videosPerPagePreset: [20,40,60,80,100,150,200,300],
-    isProcessRun: false,
-    isProcessBreak: false,
+    isGenerationGridsRun: false,
+    isGenerationTimelinesRun: false,
+    isGenerationBreak: false,
+    timeout: null,
     numberOfCreatedGrid: 0,
   }),
   computed: {
@@ -50,13 +57,13 @@ export default {
       let bpId = shortid.generate()
       let bp = { id: bpId, text: 'Generating grids images', icon: 'apps', }
       this.$store.commit('addBackgroundProcess', bp)
-      this.isProcessRun = true
+      this.isGenerationGridsRun = true
       const gridsPath = path.join(this.pathToUserData, `/media/grids/`) 
       if (!fs.existsSync(gridsPath)) fs.mkdirSync(gridsPath)
       const vm = this
       for (let i = 0; i < videos.length; i++) {
         this.$store.commit('updateTextBackgroundProcess', {id:bpId, text:`Generating grids images ${i+1} of ${videos.length}`})
-        if (this.isProcessBreak) break
+        if (this.isGenerationBreak) break
         const video = videos[i]
         if (!fs.existsSync(video.path)) continue
         const gridPath = path.join(vm.pathToUserData, `/media/grids/${video.id}.jpg`)
@@ -65,9 +72,8 @@ export default {
 
       if (this.numberOfCreatedGrid) this.$store.commit('updateVideos') // re render cards if grid added
       this.numberOfCreatedGrid = 0
-      this.isProcessRun = false
+      this.isGenerationGridsRun = false
       this.$store.commit('removeBackgroundProcess', bpId)
-      // TODO stop process on page changed or items per page changed
     },
     async createVideoGrid(inputVideoPath, videoId, videoDuration) {
       let opts = {
@@ -87,21 +93,20 @@ export default {
       let bpId = shortid.generate()
       let bp = { id: bpId, text: 'Generating timelines images', icon: 'view-carousel', }
       this.$store.commit('addBackgroundProcess', bp)
-      this.isProcessRun = true
+      this.isGenerationTimelinesRun = true
       const timelinesPath = path.join(this.pathToUserData, `/media/timelines/`) 
       if (!fs.existsSync(timelinesPath)) fs.mkdirSync(timelinesPath)
       const vm = this
       for (let i = 0; i < videos.length; i++) {
         this.$store.commit('updateTextBackgroundProcess', {id:bpId, text:`Generating timelines images ${i+1} of ${videos.length}`})
-        if (this.isProcessBreak) break
+        if (this.isGenerationBreak) break
         const video = videos[i]
         if (!fs.existsSync(video.path)) continue
         const frame = path.join(vm.pathToUserData, `/media/timelines/${video.id}_5.jpg`)
         if (!fs.existsSync(frame)) await vm.createVideoTimeline(video)
       }
-      this.isProcessRun = false
+      this.isGenerationTimelinesRun = false
       this.$store.commit('removeBackgroundProcess', bpId)
-      // TODO stop process on page changed or items per page changed
     },
     async createVideoTimeline(video) {
       let opts = {
@@ -112,13 +117,37 @@ export default {
       let timeline = new VideoPreviewTimeline(opts)
       await timeline.generate()
     },
+    generateImages() {
+      clearInterval(this.timeout)
+      this.isGenerationBreak = true
+      this.timeout = setTimeout(() => {
+        this.isGenerationBreak = false
+        if (!this.isGenerationGridsRun) {
+          if (this.$store.state.Settings.videoPreviewStatic=='grid') this.createGrids(this.$store.getters.videosOnPage)
+        }
+        if (!this.isGenerationTimelinesRun) {
+          if (this.$store.state.Settings.videoPreviewHover=='timeline') this.createTimelines(this.$store.getters.videosOnPage)
+        }
+      }, 3000)
+    },
+    clearSelection() {
+      this.$store.state.Videos.selection.clearSelection()
+      let selected = this.$store.state.Videos.selection.select('.video-card')
+      for (let i of selected) i.classList.remove('selected')
+      this.$store.commit('updateSelectedVideos', [])
+    },
   },
   watch: {
     videosOnPage() {
-      this.$store.commit('updateSelectedVideos', [])
-      if (this.isProcessRun) return
-      if (this.$store.state.Settings.videoPreviewStatic=='grid') this.createGrids(this.$store.getters.videosOnPage)
-      if (this.$store.state.Settings.videoPreviewHover=='timeline') this.createTimelines(this.$store.getters.videosOnPage)
+      this.clearSelection()
+    },
+    videosPerPage() {
+      this.clearSelection()
+      this.generateImages()
+    },
+    videosCurrentPage() {
+      this.clearSelection()
+      this.generateImages()
     },
   },
 }
