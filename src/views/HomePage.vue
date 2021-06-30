@@ -3,6 +3,55 @@
     <div class="headline text-h3 d-flex align-center justify-center py-6">
       <v-icon x-large left>mdi-home-outline</v-icon> Home </div>
 
+    <v-dialog v-model="dialogMigration" scrollable fullscreen persistent no-click-animation>
+      <v-card>
+        <v-card-text class="pt-10">
+          <div class="mb-4">
+            <h1 class="mb-4">New meta system</h1>
+            Meta is data that you can add to videos and other meta cards.<br>
+            There are two types of meta: <b>complex</b> and <b>simple</b>.<br>
+            <b>Complex </b>meta have their own page. Which have meta cards. All this can be flexibly configured to suit your needs.<br>
+            <b>Simple </b>meta has neither page nor cards. But you can also customize them. For now, you can add: string, number, array, boolean, and date. <br>
+            <h3 class="mt-6">New features with meta:</h3><br>
+            <li>Editing multiple cards.</li>
+            <li>Customizing visiblity of all meta in card.</li>
+            <li>Any color for meta card.</li>
+            <li>Different types of visual for chips.</li>
+            <li>Markers in built-in player with any of complex meta.</li>
+            <li>Parsing data for videos by any of complex meta.</li>
+            <li>Custom name. icon, hint for textfield.</li>
+            <li>Transfering simple meta with type "array" to complex meta.</li>
+            <li>Show/hide in navigation menu.</li>
+            <li>Nested view (not completed yet).</li>
+
+            <h3 class="mt-6">A small part of features are not yet available. Will be available in the next release:</h3><br>
+            <li>The website page as it used to be. But you can also open the website page and see all the videos associated with it. Now it looks the same as the performer page did before.</li>
+            <li>Tag meter for performers. Needs rethinking.</li>
+            <li>Child websites. There will be a complete system of child and parent websites with an infinite number of levels.</li>
+            <li>Opening URL links of the website.</li>
+            <li>Copy name of card to clipboard from context menu.</li>
+            <li>Managing data for videos from context menu (copy/paste tags, performers, websites).</li>
+            <li>Sort list with items in editing dialog.</li>
+            <li>Disable chip colors for cards.</li>
+            <li>Compact view of cards.</li>
+            <li>Home page statistics.</li>
+            <li>Career status for performers.</li>
+            <li>Chips with fast filtration by tags and websites on performer page.</li>
+          </div>
+
+          <v-alert type="warning" text outlined>Starting from version 0.9.0 of the application, 
+            all information that the user fills in for the video will use the new meta system. <br>
+            To transfer your information and continue using the application,
+            migrate to the new meta system. <br>
+            If you want to use all the old features, please wait for the next release. 
+            Or install an older version of the application (0.8.2).</v-alert>
+            
+          <v-btn @click="migrateToMeta=true" class="mb-4" color="warning" block x-large rounded>
+            <v-icon left>mdi-firework</v-icon> Start migration to the New meta system</v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-container class="text-center">
       <v-row>
         <v-col v-if="$store.getters.videosTotal==0" cols="12">
@@ -23,21 +72,6 @@
       </v-row>
 
       <v-row v-if="$store.getters.videosTotal>0">
-        <v-col v-if="!isMigratedToMeta&&isContentExists" cols="12">
-          <v-card>
-            <v-alert type="warning" text>Starting from version 0.9.0 of the application, 
-              all information that the user fills in for the video will use the new meta system. <br>
-              To transfer your information and continue using the application,
-              migrate to the new meta system.</v-alert>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn @click="migrateToMeta=true" class="mb-4" color="warning">
-                <v-icon left>mdi-firework</v-icon> Start migration</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-
         <v-col cols="12">
           <v-card>
             <v-list-item>
@@ -244,6 +278,7 @@ export default {
   mixins: [LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
+      if (!this.isMigratedToMeta&&this.isContentExists) this.dialogMigration = true
     })
   },
   data: ()=>({
@@ -253,6 +288,7 @@ export default {
     migrateToMeta: false,
     createAllMeta: false,
     isAllMetaCreated: false,
+    dialogMigration: false,
   }),
   computed: {
     settings() { return this.$store.getters.settings.value() },
