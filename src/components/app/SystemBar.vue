@@ -20,8 +20,8 @@
             </v-list-item-title>
             <v-icon size="20" class="ml-6" :color="isPlayVideoInSystemPlayer?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
-          <v-divider class="ma-1"></v-divider>
-          <v-list-item link @click="lock" v-if="$store.state.Settings.passwordProtection">
+          <v-divider v-if="$store.state.Settings.passwordProtection" class="ma-1"></v-divider>
+          <v-list-item v-if="$store.state.Settings.passwordProtection" link @click="lock">
             <v-list-item-title>
               <v-icon left size="18">mdi-lock</v-icon> Lock
               <span></span>
@@ -32,11 +32,11 @@
               <v-icon left size="18">mdi-restart</v-icon> Restart
             </v-list-item-title>
           </v-list-item> -->
-          <v-list-item link @click="close">
+          <!-- <v-list-item link @click="close">
             <v-list-item-title>
               <v-icon left size="18">mdi-logout</v-icon> Exit
             </v-list-item-title>
-          </v-list-item>
+          </v-list-item> -->
         </v-list>
       </v-menu>
 
