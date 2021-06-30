@@ -11,8 +11,7 @@
       <v-card-text v-else class="text-center">
         <v-alert color="success" text class="mt-4">Migration finished!</v-alert>
         <v-alert type="info" text class="mt-4">Now you can customize meta in more detail in the settings</v-alert>
-        <v-alert type="info" text class="mt-4">You can see the details in the logs (located at the bottom of the application, in the status bar).
-          <br> Please clear them manually by clicking on the trash can icon.</v-alert>
+        <v-alert type="info" text class="mt-4">You can see the details in the logs (located at the bottom of the application, in the status bar).</v-alert>
       </v-card-text>
       <v-card-text>
         <div>Creating performers... {{status.performers}} of {{performers.length}}</div>
@@ -21,7 +20,7 @@
       </v-card-text>
       <v-card-actions v-if="!isMigrationRunning">
         <v-spacer></v-spacer>
-        <v-btn @click="closeDialog" color="success" class="ma-4"><v-icon left>mdi-check</v-icon>ok</v-btn>
+        <v-btn @click="restartApp" color="success" class="ma-4"><v-icon left>mdi-restart</v-icon>Restart app</v-btn>
         <v-spacer></v-spacer>
       </v-card-actions>
     </v-card>
@@ -309,6 +308,7 @@ export default {
             hint: 'People in the video',  
             icon: 'account-outline',
             hidden: false,
+            parser: true,
             images: true,
             imageAspectRatio: 0.625,
             imageTypes: [ 'main', 'alt', 'custom1', 'custom2', 'avatar', 'header' ],
@@ -448,6 +448,7 @@ export default {
             hint: 'For a quick search',
             icon: 'tag-outline',
             hidden: false,
+            parser: true,
             images: true,
             imageAspectRatio: 1,
             imageTypes: ['main'],
@@ -553,6 +554,7 @@ export default {
             hint: 'Studios',
             icon: 'web',
             hidden: false,
+            parser: true,
             images: true,
             imageAspectRatio: 1,
             imageTypes: ['main'],
@@ -844,7 +846,7 @@ export default {
       this.$store.dispatch('updateSettingsState', {key:'videoFilters', value:[]})
       this.$store.dispatch('updateSettingsState', {key:'playlistFilters', value:[]})
     },
-    closeDialog() { this.$emit('finish') },
+    restartApp() { ipcRenderer.send('reload') },
   },
 }
 </script>

@@ -211,6 +211,10 @@ export default {
     visibility() { return this.$store.state.Settings.videoVisibility },
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
     complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
+    metaForParsing() {  
+      let ids = this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).map('id').value() 
+      return this.$store.getters.meta.filter(i=>ids.includes(i.id)&&i.settings.parser).value()
+    },
   },
   methods: {
     stopSmoothScroll(event) {
@@ -409,7 +413,7 @@ export default {
         const string = filterString(filePath)
 
         let parsed = {}
-        for (let m of vm.complexMetaAssignedToVideo) {
+        for (let m of vm.metaForParsing) {
           parsed[m.id] = vm.$store.getters.metaCards.filter(mc => {
             if (mc.metaId!==m.id) return false
             let foundName = string.includes(filterString(mc.meta.name))

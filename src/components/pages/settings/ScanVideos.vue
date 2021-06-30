@@ -46,16 +46,16 @@
             <vuescroll>
               <v-card-text>
                 <div class="text-center">
-                  <v-alert type="info" text dense>
+                  <v-alert type="info" text outlined dense>
                     Metadata will be automatically added during the scan.
                     It is recommended to add meta in <v-icon small color="info">mdi-cog</v-icon> Settings and then add cards on this meta page before scanning.
                     <v-tooltip bottom>
                       <template v-slot:activator="{ on }">
-                        <v-icon v-on="on" color="info">mdi-help-circle-outline</v-icon> How does parser work?
+                        <v-icon v-on="on" color="info">mdi-help-circle-outline</v-icon> How does parser work
                       </template>
                       <span>The file path and all meta items are filtered first. <br>
                         The filter removes all characters except numbers and letters and converts them to lower case. <br>
-                        The filtered file path is searched for a match with any of the meta card names. <br> <br>
+                        The filtered file path is searched for a match with any of the meta card names. <br>
                         Parsing works inaccurately, since the search does not match the entire string, but a part. <br>
                       </span>
                     </v-tooltip>
@@ -64,7 +64,7 @@
               </v-card-text>
             </vuescroll>
             <div class="d-flex flex-wrap justify-center">
-              <div v-for="m of complexMetaAssignedToVideo" :key="m.id + parseKey" class="d-flex flex-column mx-4">
+              <div v-for="m of metaForParsing" :key="m.id + parseKey" class="d-flex flex-column mx-4">
                 <v-checkbox v-model="parseMeta[m.id].parse" @change="parseKey=Date.now()" :label="`Parse ${getMeta(m.id).settings.name}`" class="mt-0" hide-details :prepend-icon="`mdi-${getMeta(m.id).settings.icon}`" />
                 <v-checkbox v-model="parseMeta[m.id].synonyms" :disabled="!parseMeta[m.id].parse" class="ml-8 mt-2 mb-6" label="Include synonyms" hide-details />
               </div>
@@ -260,11 +260,14 @@ export default {
     parsedNewVideos() { return this.newVideos.join(', \n') },
     isProcessRun() { return this.$store.state.Settings.scanProcRun },
     pathToUserData() { return this.$store.getters.getPathToUserData },
-    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
+    metaForParsing() {  
+      let ids = this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).map('id').value() 
+      return this.$store.getters.meta.filter(i=>ids.includes(i.id)&&i.settings.parser).value()
+    },
   },
   methods: {
     initParseMeta() {
-      for (let i of this.complexMetaAssignedToVideo) {
+      for (let i of this.metaForParsing) {
         this.parseMeta[i.id] = { parse: true, synonyms: true }
       }
     },
@@ -508,7 +511,7 @@ export default {
       const string = filterString(filePath)
 
       let parsed = {}
-      for (let m of this.complexMetaAssignedToVideo) {
+      for (let m of this.metaForParsing) {
         if (this.parseMeta[m.id].parse && !this.parseMeta[m.id].synonyms) {
           parsed[m.id] = this.$store.getters.metaCards.filter(mc =>
             mc.metaId===m.id && string.includes(filterString(mc.meta.name))

@@ -51,6 +51,15 @@
                   </v-tooltip>
                   <v-switch v-model="settings.markers" :label="`Markers in player - ${settings.markers?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                 </v-col>
+                <v-col cols="6" class="pt-0 d-flex align-center">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on }">
+                      <v-icon v-on="on" left>mdi-file-search-outline</v-icon>
+                    </template>
+                    <span>Allow the application to parse the path to the video file and look for meta-card names in it.</span>
+                  </v-tooltip>
+                  <v-switch v-model="settings.parser" :label="`Parse video for data - ${settings.parser?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                </v-col>
                 <v-col cols="12" align="center">
                   <v-card outlined class="pa-4">
                     <span class="text-center">
@@ -288,6 +297,7 @@ export default {
       hint: '',
       icon: 'shape',
       hidden: false,
+      parser: true,
       images: false,
       imageAspectRatio: '',
       imageTypes: ['main'],
