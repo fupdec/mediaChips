@@ -84,11 +84,7 @@ const Meta = {
       commit('addLog', {type:'info', color:'green', text:`Added simple meta "${metaObject.settings.name}"`})
     },
     deleteComplexMeta({commit, dispatch, getters}, {id, name}) {
-      getters.meta.remove({id}).write() // delete from database
-      getters.meta.filter({type:'complex'}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
-      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
       getters.metaCards.remove({metaId:id}).write() // delete all cards from database
-      getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
       getters.markers.each(marker=>{ // rename/delete markers
         if (marker.type===id) {
           let mc = getters.metaCards.find({id:marker.name}).value()
@@ -98,6 +94,7 @@ const Meta = {
       }).write()
       rimraf(path.join(getters.getPathToUserData, 'media', 'meta', id), () => { /*console.log("done")*/ }) // remove folder with images
       commit('getMetaListFromDb')
+      dispatch('removeMetaFromOtherMeta', id) // META
       dispatch('removeMetaFromVideos', id) // VIDEOS
       dispatch('removeMetaFromSavedFilters', id) // SAVED FILTERS
       dispatch('removeMetaFromTabs', id) // TABS
@@ -107,10 +104,7 @@ const Meta = {
       ipcRenderer.send('updatePlayerDb', 'markers') // update markers in player window
     },
     deleteSimpleMeta({commit, dispatch, getters}, {id, name}) {
-      getters.meta.remove({id}).write() // delete from database
-      getters.meta.filter({type:'complex'}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
-      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
-      getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
+      dispatch('removeMetaFromOtherMeta', id) // META
       dispatch('removeMetaFromVideos', id) // VIDEOS
       dispatch('removeMetaFromSavedFilters', id) // SAVED FILTERS
       dispatch('removeMetaFromTabs', id) // TABS
@@ -150,6 +144,12 @@ const Meta = {
     },
     updateMetaState({getters}, {id, key, value}) {
       getters.meta.find({id}).get('state').set(key, value).write()
+    },
+    removeMetaFromOtherMeta({getters, commit}, id) {
+      getters.meta.remove({id}).write() // delete from database
+      getters.meta.filter({type:'complex'}).each(m=>{ _.remove(m.state.filters, f=>f.by===id) }).write() // delete from all meta filters
+      getters.meta.filter(i=>_.some(i.settings.metaInCard,{id})).each(i=>{ i.settings.metaInCard=i.settings.metaInCard.filter(x=>x.id!=id)}).write() // assigned to other meta
+      getters.metaCards.each(mc=>{delete mc.meta[id]}).write() // delete from meta cards
     },
     removeMetaFromVideos({getters, commit}, id) {
       getters.videos.each(video=>{delete video[id]}).write() // remove from all videos
