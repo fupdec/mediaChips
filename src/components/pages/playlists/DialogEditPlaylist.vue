@@ -214,7 +214,7 @@ export default {
       if (fs.existsSync(imgPath)) return imgPath
       else {
         this.errorThumb = true
-        return path.join(__static, '/img/forbidden.jpg')
+        return path.join(__static, '/img/default.jpg')
       }
     },
     getFileName(videoPath) {

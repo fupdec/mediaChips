@@ -119,7 +119,7 @@ export default {
     checkImageExist(imgPath, type) {
       if (fs.existsSync(imgPath)) return imgPath
       else if (type=='alt' || type=='custom1' || type=='custom2') return 'not_exist'
-      else return path.join(__static, '/img/forbidden.jpg')
+      else return path.join(__static, '/img/default.jpg')
     },
     toggleFavorite() {
       this.favorite = !this.favorite

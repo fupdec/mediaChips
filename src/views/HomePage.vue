@@ -381,7 +381,7 @@ export default {
     },
     checkVideoImageExist(imgPath) {
       if (fs.existsSync(imgPath)) return imgPath
-      else return path.join(__static, '/img/forbidden.jpg')
+      else return path.join(__static, '/img/default.jpg')
     },
     playVideo(video) {
       if (!fs.existsSync(video.path)) {
