@@ -139,7 +139,7 @@
             </v-menu>
             <span class="ml-2">meta per page</span>
             <v-spacer></v-spacer>
-            <v-switch v-model="detailed" label="Detailed" hide-details color="primary"/>
+            <v-switch v-model="detailed" label="Detailed" hide-details color="secondary"/>
             <v-spacer></v-spacer>
             <span> Page {{ page }} of {{ numberOfPages }} </span>
             <v-btn small outlined class="mx-2" @click="formerPage"> <v-icon>mdi-arrow-left</v-icon> </v-btn>

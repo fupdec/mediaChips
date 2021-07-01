@@ -134,7 +134,10 @@ export default {
       ++this.$store.state.Meta.updateKey
     },
     clearSavedFiltersDb() {
-      this.$store.getters.filtersDatabase.set('savedFilters', { videos: [], playlists: [], }).write()
+      let complexMeta = this.$store.getters.meta.filter({type:'complex'}).value()
+      let savedFilters = { videos: [], playlists: [] }
+      for (let m of complexMeta) savedFilters[m.id] = []
+      this.$store.getters.savedFiltersDatabase.set('savedFilters', savedFilters).write()
       this.$store.dispatch('updateSavedFilters')
     },
     clearMarkersDb() {
