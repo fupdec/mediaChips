@@ -1,5 +1,14 @@
 <template> 
   <v-container class="px-0 pt-0">
+    <v-dialog v-model="dialogPalette" width="300"> 
+      <v-card>
+        <v-toolbar color="primary">
+          <v-btn @click="applyColor" outlined block><v-icon left>mdi-check</v-icon> apply color</v-btn>
+        </v-toolbar>
+        <v-color-picker @update:color="changeColor($event)" :value="palette" hide-inputs/> 
+      </v-card>
+    </v-dialog>
+
     <v-row>
       <v-col cols="12">
         <div class="d-flex">
@@ -18,16 +27,10 @@
           <v-icon left>mdi-palette</v-icon> Change header color </v-btn> 
       </v-col>
 
-      <!-- TODO create one dialog for all palletes -->
-      
       <v-col cols="12" sm="6" v-else>
         <div class="mb-2">Color for header (light theme):</div>
-        <v-btn @click.stop="dialogAppColorLightHeader = true" light rounded depressed :color="appColorLightHeader"> 
-          <v-icon left>mdi-palette</v-icon> Change header color 
-        </v-btn>
-        <v-dialog v-model="dialogAppColorLightHeader" width="300">
-          <v-color-picker v-model="appColorLightHeader"/>
-        </v-dialog>
+        <v-btn @click="openDialogPalette('appColorLightHeader')" light rounded :color="appColorLightHeader">
+          <v-icon left>mdi-palette</v-icon> Change header color</v-btn>
       </v-col>
 
       <v-col cols="12" sm="6" v-if="headerGradient">
@@ -39,97 +42,29 @@
 
       <v-col cols="12" sm="6" v-else>
         <div class="mb-2">Color for header (dark theme):</div>
-        <v-btn @click.stop="dialogAppColorDarkHeader = true" dark rounded depressed :color="appColorDarkHeader"> 
-          <v-icon left>mdi-palette</v-icon> Change header color 
-        </v-btn>
-        <v-dialog v-model="dialogAppColorDarkHeader" width="300">
-          <v-color-picker v-model="appColorDarkHeader"/>
-        </v-dialog>
+        <v-btn @click="openDialogPalette('appColorDarkHeader')" dark rounded :color="appColorDarkHeader">
+          <v-icon left>mdi-palette</v-icon> Change header color</v-btn>
       </v-col>
     </v-row>
     <v-divider class="my-4"></v-divider>
     <v-row>
       <v-col cols="12" sm="6">
         <div class="subtitle">Light theme colors:</div>
-        <v-btn light rounded
-          class="ma-2" depressed :color="appColorLightPrimary"
-          @click.stop="dialogAppColorLightPrimary = true"
-        >Primary</v-btn>
-        <v-dialog
-          v-model="dialogAppColorLightPrimary"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorLightPrimary"
-          ></v-color-picker>
-        </v-dialog>
-
-        <v-btn light rounded
-          class="ma-2" depressed :color="appColorLightSecondary"
-          @click.stop="dialogAppColorLightSecondary = true"
-        >Secondary</v-btn>
-        <v-dialog
-          v-model="dialogAppColorLightSecondary"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorLightSecondary"
-          ></v-color-picker>
-        </v-dialog>
-
-        <v-btn light rounded
-          class="ma-2" depressed :color="appColorLightAccent"
-          @click.stop="dialogAppColorLightAccent = true"
-        >Accent</v-btn>
-        <v-dialog
-          v-model="dialogAppColorLightAccent"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorLightAccent"
-          ></v-color-picker>
-        </v-dialog>
+        <v-btn @click="openDialogPalette('appColorLightPrimary')" light rounded class="ma-2" depressed :color="appColorLightPrimary">
+          <v-icon left>mdi-palette</v-icon> Primary</v-btn>
+        <v-btn @click="openDialogPalette('appColorLightSecondary')" light rounded class="ma-2" depressed :color="appColorLightSecondary">
+          <v-icon left>mdi-palette</v-icon> Secondary</v-btn>
+        <v-btn @click="openDialogPalette('appColorLightAccent')" light rounded class="ma-2" depressed :color="appColorLightAccent">
+          <v-icon left>mdi-palette</v-icon> Accent</v-btn>
       </v-col>
       <v-col cols="12" sm="6">
         <div class="subtitle">Dark theme colors:</div>
-        <v-btn dark rounded
-          class="ma-2" depressed :color="appColorDarkPrimary"
-          @click.stop="dialogAppColorDarkPrimary = true"
-        >Primary</v-btn>
-        <v-dialog
-          v-model="dialogAppColorDarkPrimary"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorDarkPrimary"
-          ></v-color-picker>
-        </v-dialog>
-
-        <v-btn dark rounded
-          class="ma-2" depressed :color="appColorDarkSecondary"
-          @click.stop="dialogAppColorDarkSecondary = true"
-        >Secondary</v-btn>
-        <v-dialog
-          v-model="dialogAppColorDarkSecondary"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorDarkSecondary"
-          ></v-color-picker>
-        </v-dialog>
-
-        <v-btn dark rounded
-          class="ma-2" depressed :color="appColorDarkAccent"
-          @click.stop="dialogAppColorDarkAccent = true"
-        >Accent</v-btn>
-        <v-dialog
-          v-model="dialogAppColorDarkAccent"
-          width="300"
-        >
-          <v-color-picker 
-            v-model="appColorDarkAccent"
-          ></v-color-picker>
-        </v-dialog>
+        <v-btn @click="openDialogPalette('appColorDarkPrimary')" dark rounded class="ma-2" depressed :color="appColorDarkPrimary">
+          <v-icon left>mdi-palette</v-icon> Primary</v-btn>
+        <v-btn @click="openDialogPalette('appColorDarkSecondary')" dark rounded class="ma-2" depressed :color="appColorDarkSecondary">
+          <v-icon left>mdi-palette</v-icon> Secondary</v-btn>
+        <v-btn @click="openDialogPalette('appColorDarkAccent')" dark rounded class="ma-2" depressed :color="appColorDarkAccent">
+          <v-icon left>mdi-palette</v-icon> Accent</v-btn>
       </v-col>
     </v-row>
 
@@ -137,7 +72,7 @@
 
     <v-divider class="my-4"></v-divider>
     <div class="d-flex">
-      <span class="mr-6">Color scroll:</span>
+      <span class="mr-6">Color scroll bar:</span>
       <v-switch v-model="colorScroll" :label="colorScroll?'Yes':'No'" inset hide-details class="d-inline-flex mt-0 pt-0"/>
     </div>
   </v-container>
@@ -157,16 +92,11 @@ export default {
     })
   },
   data: () => ({
-    dialogAppColorLightPrimary: false,
-    dialogAppColorLightSecondary: false,
-    dialogAppColorLightAccent: false,
-    dialogAppColorLightHeader: false,
-    dialogAppColorDarkPrimary: false,
-    dialogAppColorDarkSecondary: false,
-    dialogAppColorDarkAccent: false,
-    dialogAppColorDarkHeader: false,
     dialogHeaderGradient: false,
+    dialogPalette: false,
     gradientThemeDark: null,
+    palette: '#777777',
+    colorType: null,
   }),
   computed: {
     headerGradient: {
@@ -174,128 +104,54 @@ export default {
       set(value) {this.$store.dispatch('updateSettingsState', {key:'headerGradient', value})},
     },
     appColorLightPrimary: {
-      get() {
-        return this.$store.state.Settings.appColorLightPrimary
-      },
+      get() { return this.$store.state.Settings.appColorLightPrimary },
       set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          const values = {
-            key: 'appColorLightPrimary',
-            color: color,
-            theme: 'light',
-            type: 'primary',
-          }
-          this.$store.dispatch('updateVuetifyColor', values)
-        }, 500)
+        const values = { key: 'appColorLightPrimary', color: color, theme: 'light', type: 'primary', }
+        this.$store.dispatch('updateVuetifyColor', values)
       },
     },
     appColorLightSecondary: {
-      get() {
-        return this.$store.state.Settings.appColorLightSecondary
-      },
+      get() { return this.$store.state.Settings.appColorLightSecondary },
       set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          const values = {
-            key: 'appColorLightSecondary',
-            color: color,
-            theme: 'light',
-            type: 'secondary',
-          }
-          this.$store.dispatch('updateVuetifyColor', values)
-        }, 500)
+        const values = { key: 'appColorLightSecondary', color: color, theme: 'light', type: 'secondary', }
+        this.$store.dispatch('updateVuetifyColor', values)
       },
     },
     appColorLightAccent: {
-      get() {
-        return this.$store.state.Settings.appColorLightAccent
-      },
+      get() { return this.$store.state.Settings.appColorLightAccent },
       set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          const values = {
-            key: 'appColorLightAccent',
-            color: color,
-            theme: 'light',
-            type: 'accent',
-          }
-          this.$store.dispatch('updateVuetifyColor', values)
-        }, 500)
+        const values = { key: 'appColorLightAccent', color: color, theme: 'light', type: 'accent', }
+        this.$store.dispatch('updateVuetifyColor', values)
       },
     },
     appColorLightHeader: {
-      get() {
-        return this.$store.state.Settings.appColorLightHeader
-      },
-      set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          this.$store.dispatch('updateSettingsState', {key:'appColorLightHeader', value:color})
-        }, 500)
-      },
+      get() { return this.$store.state.Settings.appColorLightHeader },
+      set(color) { this.$store.dispatch('updateSettingsState', {key:'appColorLightHeader', value:color}) },
     },
     appColorDarkPrimary: {
-      get() {
-        return this.$store.state.Settings.appColorDarkPrimary
-      },
+      get() { return this.$store.state.Settings.appColorDarkPrimary },
       set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          const values = {
-            key: 'appColorDarkPrimary',
-            color: color,
-            theme: 'dark',
-            type: 'primary',
-          }
-          this.$store.dispatch('updateVuetifyColor', values)
-        }, 500)
+        const values = { key: 'appColorDarkPrimary', color: color, theme: 'dark', type: 'primary', }
+        this.$store.dispatch('updateVuetifyColor', values)
       },
     },
     appColorDarkSecondary: {
-      get() {
-        return this.$store.state.Settings.appColorDarkSecondary
-      },
+      get() { return this.$store.state.Settings.appColorDarkSecondary },
       set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          const values = {
-            key: 'appColorDarkSecondary',
-            color: color,
-            theme: 'dark',
-            type: 'secondary',
-          }
-          this.$store.dispatch('updateVuetifyColor', values)
-        }, 500)
+        const values = { key: 'appColorDarkSecondary', color: color, theme: 'dark', type: 'secondary', }
+        this.$store.dispatch('updateVuetifyColor', values)
       },
     },
     appColorDarkAccent: {
-      get() {
-        return this.$store.state.Settings.appColorDarkAccent
-      },
+      get() { return this.$store.state.Settings.appColorDarkAccent },
       set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          const values = {
-            key: 'appColorDarkAccent',
-            color: color,
-            theme: 'dark',
-            type: 'accent',
-          }
-          this.$store.dispatch('updateVuetifyColor', values)
-        }, 500)
+        const values = { key: 'appColorDarkAccent', color: color, theme: 'dark', type: 'accent', }
+        this.$store.dispatch('updateVuetifyColor', values)
       },
     },
     appColorDarkHeader: {
-      get() {
-        return this.$store.state.Settings.appColorDarkHeader
-      },
-      set(color) {
-        if(typeof window.LIT !== 'undefined')clearTimeout(window.LIT)
-        window.LIT = setTimeout(() => {
-          this.$store.dispatch('updateSettingsState', {key:'appColorDarkHeader', value:color})
-        }, 500)
-      },
+      get() { return this.$store.state.Settings.appColorDarkHeader },
+      set(color) { this.$store.dispatch('updateSettingsState', {key:'appColorDarkHeader', value:color}) },
     },
     colorScroll: {
       get() { return this.$store.state.Settings.colorScroll },
@@ -303,6 +159,16 @@ export default {
     },
   },
   methods: {
+    openDialogPalette(colorType) {
+      this.dialogPalette = true 
+      this.colorType = colorType
+      this.palette = this[colorType]
+    },
+    changeColor(e) { this.palette = e.hex },
+    applyColor() {
+      this[this.colorType] = this.palette
+      this.dialogPalette = false
+    },
     openDialogHeaderGradientLight() {
       this.gradientThemeDark = false
       this.dialogHeaderGradient = true
