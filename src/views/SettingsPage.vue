@@ -333,7 +333,9 @@
             </div>
             <div class="mt-5 d-flex align-center">
               <span class="mr-6">Zoom: {{Math.floor(zoom*100)}}%</span>
-              <v-slider v-model="zoom" min="0.5" step="0.1" max="2" hide-details/>
+              <v-slider v-model="zoom" min="0.5" step="0.01" max="2" hide-details 
+                prepend-icon="mdi-magnify-minus-outline" append-icon="mdi-magnify-plus-outline"
+                @click:prepend="zoomOut" @click:append="zoomIn"/>
               <v-btn @click="zoom=1" color="secondary" rounded class="ml-10">
                 <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom </v-btn>
             </div>
@@ -941,6 +943,8 @@ export default {
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
       return lastVersion > currentVersion
     },
+    zoomOut() { this.zoom = (this.zoom - 0.01) || 0.5 },
+    zoomIn() { this.zoom = (this.zoom + 0.01) || 2 },
   },
 }
 </script>
