@@ -297,7 +297,7 @@ export default {
       hint: '',
       icon: 'shape',
       hidden: false,
-      parser: true,
+      parser: false,
       images: false,
       imageAspectRatio: '',
       imageTypes: ['main'],
