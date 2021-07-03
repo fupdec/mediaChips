@@ -265,7 +265,15 @@ export default {
       return Math.ceil(completedValue / completed.length * 100)
     },
     videosOnPage() { return this.$store.getters.videosOnPage },
-    numberVideosMetaCard() { return this.$store.getters.videos.filter(v=>v[this.metaId].includes(this.card.id)).value().length },
+    numberVideosMetaCard() { 
+      return this.$store.getters.videos.filter(v=>{
+        let m = v[this.metaId]
+        if (m) return m.includes(this.card.id)
+        else return false
+      }).value().length 
+    },
+    // TODO disable meta page for meta without assigned to video
+    // TODO after deleting meta not updated menu
     filteredVideosNumber() { return this.$store.state.Videos.filteredVideos.length },
     cardSize() { return `card-size-${this.$store.state.Settings.videoCardSize}` },
     pathToUserData() { return this.$store.getters.getPathToUserData },
