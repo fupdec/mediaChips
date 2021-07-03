@@ -85,7 +85,7 @@
                 <v-col cols="12" md="4" sm="6">
                   <div v-if="meta.settings.synonyms" class="param">
                     <b class="mr-2">Synonyms:</b> 
-                    <span v-if="card.meta.synonyms">{{card.meta.synonyms.join(', ')}}</span>
+                    <span v-if="card.meta.synonyms">{{card.meta.synonyms.join(', ') || '-'}}</span>
                   </div>
                 </v-col>
                 <!-- Parse meta from cards -->
@@ -105,7 +105,14 @@
                     <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
                     <span v-else-if="getMeta(m.id).dataType=='boolean'">{{JSON.stringify(card.meta[m.id])}}</span>
                     <span v-else>{{card.meta[m.id]}}</span>
-                    </div>
+                  </div>
+                </v-col>
+                <v-col cols="12">
+                  <div v-if="meta.settings.bookmark" class="param bookmark-text">
+                    <v-icon left>mdi-bookmark</v-icon>
+                    <b class="mr-2">Bookmark:</b> 
+                    <span>{{card.meta.bookmark || '-'}}</span>
+                  </div>
                 </v-col>
               </v-row>
             </v-container>
@@ -447,6 +454,9 @@ export default {
     right: 0;
     bottom: 0;
     border-radius: 4px;
+  }
+  .bookmark-text {
+    word-break: break-all;
   }
   .v-expansion-panel-header {
     overflow: hidden;
