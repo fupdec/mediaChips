@@ -3,6 +3,8 @@ const path = require("path")
 const axios = require("axios")
 const cheerio = require("cheerio")
 
+import Countries from '@/components/elements/Countries'
+
 export default {
   computed: {
   },
@@ -87,7 +89,7 @@ export default {
       $('.timeline-horizontal .m-0').each((i,elem)=>{yearsActive[i] = $(elem).text().trim()}) 
       if (yearsActive[0]) if (!yearsActive[0].match(/\D*/)[0]) found.career_start = +yearsActive[0] // if not contains words
       if (yearsActive[1]) if (!yearsActive[1].match(/\D*/)[0]) found.career_end = +yearsActive[1] // if not contains words like "Now"
-      let countries = this.countries.map(c=>c.name)
+      let countries = Countries.map(c=>c.name)
       if ( countries.includes($('[data-test="link-country"] span').text().trim()) )
         found.country = [$('[data-test="link-country"] span').text().trim()]
       found.birthday = $('[href*="dateOfBirth"]').attr('href')
@@ -169,7 +171,7 @@ export default {
         this.transfer.found.hip = sizes[2]
       }
       if (getBioString('birthplace', bio)) {
-        let countries = this.countries.map(c=>c.name)
+        let countries = Countries.map(c=>c.name)
         if (countries.includes(getBioString('birthplace', bio))) {
           this.transfer.found.country = [getBioString('birthplace', bio)]
         }

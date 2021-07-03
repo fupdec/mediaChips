@@ -4,7 +4,7 @@
       <v-card class="pb-4">
         <v-toolbar color="primary">
           <div class="headline">
-            Scrap data for
+            Scrape data for
             <v-tooltip v-model="tooltipCopyName" bottom>
               <template v-slot:activator="{ click }">
                 <b v-on="click" @click="copyNameToClipboard" style="cursor:pointer;" title="Copy name to clipboard">{{name}}</b>

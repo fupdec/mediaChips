@@ -18,7 +18,7 @@
         </v-toolbar>
         <div class="d-flex justify-space-between pa-4">
           <v-btn v-if="meta.settings.scraper" @click="dialogScraper=true" small rounded color="secondary"> 
-            <v-icon left>mdi-magnify</v-icon> Scrap data </v-btn>
+            <v-icon left>mdi-magnify</v-icon> Scrape data </v-btn>
           <v-spacer v-if="meta.settings.scraper"></v-spacer>
           <v-chip label outlined small> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
           <span class="caption mx-4">id: {{card.id}}</span>
