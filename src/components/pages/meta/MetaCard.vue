@@ -6,17 +6,17 @@
       <div v-if="meta.settings.images" class="img-container">
         <v-icon v-if="meta.settings.color && visibility.color" class="meta-color" :color="card.meta.color || '#777777'">mdi-circle</v-icon>
         <div v-if="meta.settings.country && visibility.country" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
-        <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="`Open ${meta.settings.nameSingular.toLowerCase()} page`" />
-        <v-img v-if="isAltImgExist" :src="imgAlt" :aspect-ratio="meta.settings.imageAspectRatio" position="top" class="secondary-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="`Open ${meta.settings.nameSingular.toLowerCase()} page`" /> 
-        <div v-if="isCustom1ImgExist" class="custom1-img-button">1</div> <v-img v-if="isCustom1ImgExist" :src="imgCustom1" class="custom1-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="`Open ${meta.settings.nameSingular.toLowerCase()} page`" />
-        <div v-if="isCustom2ImgExist" class="custom2-img-button">2</div> <v-img v-if="isCustom2ImgExist" :src="imgCustom2" class="custom2-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="`Open ${meta.settings.nameSingular.toLowerCase()} page`" />
+        <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
+        <v-img v-if="isAltImgExist" :src="imgAlt" :aspect-ratio="meta.settings.imageAspectRatio" position="top" class="secondary-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" /> 
+        <div v-if="isCustom1ImgExist" class="custom1-img-button">1</div> <v-img v-if="isCustom1ImgExist" :src="imgCustom1" class="custom1-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
+        <div v-if="isCustom2ImgExist" class="custom2-img-button">2</div> <v-img v-if="isCustom2ImgExist" :src="imgCustom2" class="custom2-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
         <v-btn v-if="meta.settings.favorite && visibility.favorite" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
         <div v-if="meta.settings.rating && visibility.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable color="yellow darken-2" background-color="grey" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
         <v-icon v-if="meta.settings.bookmark && visibility.bookmark && card.meta.bookmark" class="bookmark" color="red" :title="card.meta.bookmark">mdi-bookmark</v-icon>
       </div>
       <div v-else @click="openMetaCardPage" @click.middle="addNewTabMetaCard" class="d-flex flex-column align-center py-1 ma-0 link">
         <v-icon>mdi-{{meta.settings.icon}}</v-icon>
-        <span>Open {{meta.settings.nameSingular}} page</span>
+        <span v-if="isMetaAssignedToVideo">Open {{meta.settings.nameSingular}} page</span>
       </div>
       <v-divider/>
 
@@ -110,7 +110,7 @@ export default {
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
-    openMetaCardPage() { this.$router.push(`/metacard/?metaId=${this.meta.id}&cardId=${this.card.id}&tabId=default`) },
+    openMetaCardPage() { if (this.isMetaAssignedToVideo) this.$router.push(`/metacard/?metaId=${this.meta.id}&cardId=${this.card.id}&tabId=default`) },
     // image 
     getImgUrl(type) {
       let img = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${type}.jpg`)
@@ -175,6 +175,7 @@ export default {
       setTimeout(() => { this.$router.push(tab.link) }, 100)
     },
     addNewTabMetaCard() {
+      if (!this.isMetaAssignedToVideo) return
       let tabId = this.card.id
       let tabName = this.card.meta.name
       let meta = this.meta
