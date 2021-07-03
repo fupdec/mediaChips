@@ -68,7 +68,7 @@
                     <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
                   </v-chip>
                 </v-col>
-                <v-col cols="12" md="4" sm="6">
+                <v-col v-if="meta.settings.rating||meta.settings.favorite" cols="12" md="4" sm="6">
                   <div v-if="meta.settings.rating" class="param"><b class="mr-2">Rating</b>
                     <v-rating v-model="card.meta.rating" dense
                       color="yellow darken-3" background-color="grey darken-1"
@@ -82,10 +82,22 @@
                     </v-btn>
                   </div><br>
                 </v-col>
-                <v-col cols="12" md="4" sm="6">
-                  <div v-if="meta.settings.synonyms" class="param">
+                <v-col v-if="meta.settings.synonyms" cols="12" md="4" sm="6">
+                  <div class="param">
                     <b class="mr-2">Synonyms:</b> 
                     <span v-if="card.meta.synonyms">{{card.meta.synonyms.join(', ') || '-'}}</span>
+                  </div>
+                </v-col>
+                <v-col v-if="meta.settings.country" cols="12" md="4" sm="6">
+                  <div class="param d-flex">
+                    <b class="mr-2">Country:</b> 
+                    <div v-if="card.meta.country" class="d-flex flex-wrap">
+                      <div v-for="country in card.meta.country" :key="country" class="country mr-2">
+                        <country-flag :country='getCountryCode(country)'/>
+                        <span class="name ml-2">{{getCountry(country)}}</span>
+                      </div>
+                    </div>
+                    <div v-else>-</div>
                   </div>
                 </v-col>
                 <!-- Parse meta from cards -->
@@ -202,6 +214,7 @@ export default {
   mixins: [VideosGrid, ShowImageFunction, LabelFunctions, Keys, MetaGetters],
   components: {
     vuescroll,
+    CountryFlag,
     Loading: () => import('@/components/elements/Loading.vue'),
     FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
@@ -353,6 +366,14 @@ export default {
     checkImageSettings(imgType) {
       if (!this.meta.settings.images) return false 
       return this.meta.settings.imageTypes.includes(imgType)
+    },
+    getCountryCode(country) {
+      let index = Countries.findIndex(i => i.name === country)
+      return Countries[index].code
+    },
+    getCountry(country) {
+      let index = Countries.findIndex(i => i.name === country)
+      return Countries[index].name
     },
   },
   watch: {
@@ -555,10 +576,10 @@ export default {
     }
   }
 }
-.nationality {
+.country {
   display: flex;
   align-items: center;
-  .country {
+  .name {
     font-weight: 300;
     letter-spacing: 0.3px;
   }
