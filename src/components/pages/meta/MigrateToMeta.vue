@@ -83,7 +83,7 @@ export default {
       this.$store.commit('updateSettingsState', 'metaAssignedToVideos')
       
       this.moveImages(performersId, tagsId, websitesId)
-      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.0'})
+      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.1'})
             
       this.$store.dispatch('updateDataFromVideos') // update numnber of videos
       this.$store.dispatch('updateSettingsState', {key:'tabs', value:[]}) // close all tabs

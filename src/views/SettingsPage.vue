@@ -519,7 +519,7 @@
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div>
-                <div>Adult Video Database 0.9.0 (Dani)</div>
+                <div>Adult Video Database 0.9.1 (Eva)</div>
                 <div class="text--secondary">by fupdec</div>
               </div>
               <v-spacer></v-spacer>

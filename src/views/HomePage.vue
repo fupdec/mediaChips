@@ -356,11 +356,12 @@ export default {
     pathToUserData() { return this.$store.getters.getPathToUserData },
     logoPath() { return path.join('file://', __static, '/icons/icon.png') },
     isMigratedToMeta() { 
-      let lastVersion = '0.9.0'
+      let metaVersion = '0.9.0'
       let currentVersion = this.$store.state.Settings.databaseVersion || '0.8.2'
-      lastVersion = lastVersion.split('.').map( s => s.padStart(10) ).join('.')
+      if (currentVersion==='0.9.0') this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.1'})
+      metaVersion = metaVersion.split('.').map( s => s.padStart(10) ).join('.')
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
-      return currentVersion >= lastVersion
+      return currentVersion >= metaVersion
     },
     isContentExists() { return this.videosNumber>0 || this.performersNumber>0 || this.tagsNumber>0 || this.websitesNumber>0 },
     videosNumber() { return this.$store.getters.videos.value().length },

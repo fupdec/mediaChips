@@ -59,7 +59,7 @@ export default {
       this.$store.state.Settings.metaAssignedToVideos = this.$store.getters.settings.get('metaAssignedToVideos').value()
       
       this.createFolders(performersId, tagsId, websitesId)
-      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.0'})
+      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.1'})
             
       ipcRenderer.send('updatePlayerDb', 'settings') // update settings in player window
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
