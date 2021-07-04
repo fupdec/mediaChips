@@ -128,7 +128,7 @@
         </div>
       </div>
       
-      <v-icon v-if="video.bookmark" class="bookmark" color="red" :title="bookmark">mdi-bookmark</v-icon>
+      <v-icon v-if="video.bookmark" class="bookmark" color="red" :title="video.bookmark">mdi-bookmark</v-icon>
 
       <v-btn v-if="!isEditBtnHidden" @click="$store.state.Videos.dialogEditVideoInfo=true"
         color="secondary" fab x-small class="btn-edit"> <v-icon>mdi-pencil</v-icon> </v-btn>
@@ -202,7 +202,6 @@ export default {
       },
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
-    bookmark() { return this.$store.getters.bookmarks.get('videos').find({itemId:this.video.id}).value().text },
     videoPreviewStatic() { return this.$store.state.Settings.videoPreviewStatic },
     videoPreviewHover() { return this.$store.state.Settings.videoPreviewHover },
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
