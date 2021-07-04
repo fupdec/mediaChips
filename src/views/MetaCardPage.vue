@@ -126,6 +126,19 @@
                     <span>{{card.meta.bookmark || '-'}}</span>
                   </div>
                 </v-col>
+                <v-col v-for="(vf,i) in videoFilters" :key="vf.id+i" cols="12" class="text-center pb-0">
+                  <span>{{getMeta(vf.id).settings.name}} from videos</span>
+                  <v-chip-group :value="vf.value" @change="setCardFilter($event, vf.id)" active-class="active-chip" multiple column>
+                    <v-chip v-for="(c) in vf.chips" :key="c" 
+                      class="mr-2 mb-1 px-2" small filter
+                      :color="getColor(vf.id,c)" 
+                      :label="getMeta(vf.id).settings.chipLabel"
+                      :outlined="getMeta(vf.id).settings.chipOutlined"
+                      @mouseover.stop="showImage($event,c,'meta',vf.id)" 
+                      @mouseleave.stop="$store.state.hoveredImage=false">
+                      {{getCard(c).meta.name}}</v-chip>
+                  </v-chip-group>
+                </v-col>
               </v-row>
             </v-container>
           </v-expansion-panel-content>
@@ -221,8 +234,10 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
-      // console.log(this.$route)
     })
+  },
+  beforeDestroy() {
+    this.$store.state.Settings.videoFilters = []
   },
   data: () => ({
     profile: [],
@@ -244,8 +259,8 @@ export default {
     isScrollToTopVisible: false,
     header: '',
     isHeaderImageExists: true,
-    activeTags: [],
-    activeWebsites: [],
+    videos: [],
+    videoFilters: [],
   }),
   computed: {
     metaCardId() { return this.$route.query.cardId },
@@ -292,7 +307,6 @@ export default {
         else return false
       }).value().length 
     },
-    // TODO disable meta page for meta without assigned to video
     // TODO after deleting meta not updated menu
     filteredVideosNumber() { return this.$store.state.Videos.filteredVideos.length },
     cardSize() { return `card-size-${this.$store.state.Settings.videoCardSize}` },
@@ -305,9 +319,11 @@ export default {
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     filters() { return this.$store.state.Settings.videoFilters },
     isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id: this.meta.id}) !== undefined },
+    complexMetaAssignedToVideos() { return _.filter(this.$store.state.Settings.metaAssignedToVideos, {type:'complex'}) },
   },
   methods: {
     removeAllFilters() {
+      // TODO fix this
       this.$store.state.Meta.filters = []
       this.$store.dispatch('filterMetaCards') 
     },
@@ -333,6 +349,8 @@ export default {
         flag: null,
         lock: true,
       }]
+      let videoFilters = this.initVideoFilters()
+      defaultFilters = [...defaultFilters, ...videoFilters]
       if (this.tabId === 'default' || typeof this.tab === 'undefined') {
         this.$store.state.Settings.videoFilters = _.cloneDeep(defaultFilters)
         this.$store.state.Settings.videoSortBy = 'name'
@@ -344,7 +362,28 @@ export default {
         this.$store.state.Settings.videoSortDirection = this.tab.sortDirection || 'asc'
         this.$store.state.Settings.videoPage = this.tab.page || 1
       }
+      // TODO save tab filters 
       this.$store.dispatch('filterVideos', true)
+    },
+    initVideoFilters() { 
+      this.videos = this.$store.getters.videos.filter(i=>i[this.metaId].includes(this.metaCardId)).cloneDeep().value()
+      let videoFilters = []
+      for (let meta of this.complexMetaAssignedToVideos) {
+        this.videoFilters.push({
+          id: meta.id,
+          chips: this.getCardsInVideos(meta.id),
+          value: [],
+        })
+        videoFilters.push({
+          by: meta.id,
+          cond: 'includes one of',
+          val: [],
+          type: 'select',
+          flag: 'card',
+          lock: true,
+        })
+      }
+      return videoFilters
     },
     getImgUrl(imgType) {
       let imgPath = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${imgType}.jpg`)
@@ -374,6 +413,25 @@ export default {
     getCountry(country) {
       let index = Countries.findIndex(i => i.name === country)
       return Countries[index].name
+    },
+    getCardsInVideos(metaId) {
+      let metaIds = []
+      for (let video of this.videos) if (video[metaId]) {
+        metaIds = [...metaIds, ...video[metaId]]
+      }
+      metaIds = [...new Set(metaIds)]
+      metaIds = metaIds.sort((a,b)=>{
+        a = this.getCard(a).meta.name
+        b = this.getCard(b).meta.name
+        return a.localeCompare(b)
+      })
+      return metaIds
+    },
+    setCardFilter(e, metaId) {
+      let index = _.findIndex(this.$store.state.Settings.videoFilters, i=>i.by==metaId&&i.flag=='card')
+      let metaArr = _.find(this.videoFilters, {id:metaId}).chips
+      if (index > -1) this.$store.state.Settings.videoFilters[index].val = e.map(i=>metaArr[i])
+      this.$store.dispatch('filterVideos', true)
     },
   },
   watch: {
