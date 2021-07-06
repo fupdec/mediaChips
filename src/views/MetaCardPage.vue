@@ -126,14 +126,27 @@
                     <span>{{card.meta.bookmark || '-'}}</span>
                   </div>
                 </v-col>
-                <v-col v-for="(vf,i) in videoFilters" :key="vf.id+i" cols="12" class="text-center pb-0">
-                  <span>{{getMeta(vf.id).settings.name}} from videos</span>
+                <v-col v-if="videoFilters" class="text-center">
+                  <v-tooltip left>
+                      <template v-slot:activator="{ on, attrs }">
+                      <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+                    </template>
+                    <span>Click on chip for filter videos</span>
+                  </v-tooltip>
+                  <span>Quick filters for videos</span>
+                </v-col>
+                <v-col v-for="(vf,i) in videoFilters" :key="vf.id+i" cols="12" class="text-center py-0">
                   <v-chip-group :value="vf.value" @change="setCardFilter($event, vf.id)" active-class="active-chip" multiple column>
+                    <span class="mr-2">
+                      <v-icon left>mdi-{{getMeta(vf.id).settings.icon}}</v-icon>
+                      <b>{{getMeta(vf.id).settings.name}}:</b>
+                    </span>
                     <v-chip v-for="(c) in vf.chips" :key="c" 
                       class="mr-2 mb-1 px-2" small filter
                       :color="getColor(vf.id,c)" 
                       :label="getMeta(vf.id).settings.chipLabel"
                       :outlined="getMeta(vf.id).settings.chipOutlined"
+                      :disabled="card.id===c"
                       @mouseover.stop="showImage($event,c,'meta',vf.id)" 
                       @mouseleave.stop="$store.state.hoveredImage=false">
                       {{getCard(c).meta.name}}</v-chip>
