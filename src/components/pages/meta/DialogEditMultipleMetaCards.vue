@@ -323,10 +323,8 @@ export default {
         return foundAllChars
       }
 
-      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
-
-      if (filtersDefault) {
-        let index = card.name.toLowerCase().indexOf(query)
+      if (this.$store.state.Settings.typingFiltersDefault) {
+        let index = card.meta.name.toLowerCase().indexOf(query)
         if (index > -1) return true
         else {
           if (!card.meta.synonyms) return false

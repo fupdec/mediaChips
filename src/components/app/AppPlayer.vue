@@ -927,7 +927,7 @@ export default {
       }
 
       if (this.settingsDb.typingFiltersDefault) {
-        let index = card.name.toLowerCase().indexOf(query)
+        let index = card.meta.name.toLowerCase().indexOf(query)
         if (index > -1) return true
         else {
           if (!card.meta.synonyms) return false

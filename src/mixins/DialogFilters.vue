@@ -119,7 +119,7 @@ export default {
       let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
 
       if (filtersDefault) {
-        let index = card.name.toLowerCase().indexOf(query)
+        let index = card.meta.name.toLowerCase().indexOf(query)
         if (index > -1) return true
         else {
           if (!card.meta.synonyms) return false
