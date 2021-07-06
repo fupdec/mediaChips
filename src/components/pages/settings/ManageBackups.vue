@@ -412,8 +412,11 @@ export default {
           if (err) { this.$store.commit('addLog', { text: err, type: 'error' }) ; throw err } 
           else this.$store.commit('addLog', { text: `Backup "${date}" successfully exported`, type: 'success' })
         })
-      }).catch(err => { this.$store.commit('addLog', { text: err, type: 'error' }) })
-      this.selectedBackup = []
+        this.selectedBackup = []
+      }).catch(err => { 
+        this.$store.commit('addLog', { text: err, type: 'error' }) 
+        this.selectedBackup = []
+      })
     },
     openDialogDeleteBackup() {
       if (this.selectedBackup.length == 0) {
