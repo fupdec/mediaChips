@@ -366,7 +366,10 @@ export default {
       this.$store.dispatch('filterVideos', true)
     },
     initVideoFilters() { 
-      this.videos = this.$store.getters.videos.filter(i=>i[this.metaId].includes(this.metaCardId)).cloneDeep().value()
+      this.videos = this.$store.getters.videos.filter(i=>{
+        if (i[this.metaId]) return i[this.metaId].includes(this.metaCardId)
+        else return false
+      }).cloneDeep().value()
       let videoFilters = []
       for (let meta of this.complexMetaAssignedToVideos) {
         this.videoFilters.push({
