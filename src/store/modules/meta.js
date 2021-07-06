@@ -344,6 +344,7 @@ const Meta = {
         sortDirection: state.sortDirection,
         page:  state.page,
         firstChar:  state.firstChar,
+        cardsPerPage:  state.cardsPerPage,
       }
       if (tabId === 'default') getters.meta.find({id:metaId}).get('state').assign(data).write()
       else { 

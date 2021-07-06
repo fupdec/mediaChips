@@ -173,7 +173,10 @@ export default {
     pages() { return this.$store.getters.metaCardsPages },
     cardsPerPage: {
       get() { return this.$store.state.Meta.cardsPerPage },
-      set(number) { this.$store.state.Meta.cardsPerPage = number },
+      set(number) { 
+        this.$store.state.Meta.cardsPerPage = number
+        this.$store.dispatch('saveStateOfMeta')
+      },
     },
     pagesSum: {
       get() { return this.$store.state.Meta.pageTotal },
@@ -245,12 +248,14 @@ export default {
         this.$store.state.Meta.sortDirection = this.meta.state.sortDirection || 'asc'
         this.$store.state.Meta.page = this.meta.state.page || 1
         this.$store.state.Meta.firstChar = this.meta.state.firstChar || []
+        this.$store.state.Meta.cardsPerPage = this.meta.state.cardsPerPage || 20
       } else {
         newFilters = _.cloneDeep(this.tab.filters)
         this.$store.state.Meta.sortBy = this.tab.sortBy
         this.$store.state.Meta.sortDirection = this.tab.sortDirection
         this.$store.state.Meta.page = this.tab.page
         this.$store.state.Meta.firstChar = this.tab.firstChar || []
+        this.$store.state.Meta.cardsPerPage = this.tab.cardsPerPage || 20
       }
       this.$store.state.Meta.filters = newFilters
       this.$store.dispatch('filterMetaCards') 

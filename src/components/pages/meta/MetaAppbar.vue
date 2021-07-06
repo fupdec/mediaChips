@@ -406,6 +406,7 @@ export default {
         filters: this.filters,
         sortBy: this.sortBy,
         sortDirection: this.sortDirection,
+        cardsPerPage: this.$store.state.Meta.cardsPerPage,
         page: 1,
         icon: this.meta.settings.icon
       }
