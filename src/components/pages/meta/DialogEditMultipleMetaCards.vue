@@ -50,8 +50,9 @@
                     multiple hide-selected :disabled="edits[m.id]===0"
                     :label="getMeta(m.id).settings.name" item-value="id"
                     :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
-                    append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
-                    append-icon="mdi-chevron-down" @click:append="dialogListView=true"
+                    append-outer-icon="mdi-plus" append-icon="mdi-chevron-down" 
+                    @click:append-outer="openDialogAddNewCard(m.id)"
+                    @click:append="listViewMeta=getMeta(m.id),dialogListView=true"
                     :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
                     :filter="filterCards" :hint="getMeta(m.id).settings.hint" persistent-hint
                   >
@@ -181,19 +182,7 @@
       </v-card>
     </v-dialog>
     
-    <v-dialog v-model="dialogListView" width="500">
-      <v-card>
-        <v-toolbar color="primary">
-          <span class="headline">List view</span>
-          <v-spacer></v-spacer>
-          <v-btn @click="saveListView" outlined> <v-icon left>mdi-check</v-icon> ok </v-btn>
-        </v-toolbar>
-        <v-card-text class="pt-4">
-          Congratulations, you've found the missing feature! <br>
-          Customizing and sorting the list will be available in the next version of the application.
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <DialogListView v-if="dialogListView" :meta="listViewMeta" @close="dialogListView=false" />
   </div>
 </template>
 
@@ -209,6 +198,7 @@ export default {
   name: "DialogEditMultipleMetaCards",
   components: {
     vuescroll,
+    DialogListView: () => import('@/components/pages/meta/DialogListView.vue'),
 	},
   beforeMount () {
     this.parseMetaInCard()
@@ -226,6 +216,7 @@ export default {
     calendarId: null,
     key: Date.now(),
     panels: false,
+    listViewMeta: null,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,
@@ -273,7 +264,7 @@ export default {
         console.log(arr)
         this.$store.getters.metaCards.find({id:id}).assign({edit: Date.now()}).get('meta').assign(arr).write()
       })
-// TODO add sorting for arrays
+// TODO add sorting for arrays only when displaying 
       this.$store.commit('updateMetaCards', this.selectedMeta)
       this.$store.state.Meta.dialogEditMetaCard = false 
     },

@@ -67,7 +67,6 @@ export default {
     },
     getMetaItems(metaId, val) {
       let meta = this.getMeta(metaId)
-      let metaCards = this.getCards(metaId)
       if (meta.type == 'specific') {
         if (metaId == 'country') return val.map(name=>_.find(Countries, {name}).name).join(', ')
       } 
@@ -75,8 +74,8 @@ export default {
         let item = _.find(meta.settings.items, {id})
         if (item) return item.name
       }).join(', ')
-      else if (meta.type == 'complex')  return val.map(id=>{
-        let item = _.find(metaCards, {id})
+      else if (meta.type == 'complex') return val.map(id=>{
+        let item = _.find(this.getCards(metaId), {id})
         if (item) return item.meta.name
       }).join(', ')
     },

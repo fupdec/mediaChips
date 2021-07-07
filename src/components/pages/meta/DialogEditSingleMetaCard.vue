@@ -64,8 +64,9 @@
                       multiple hide-selected 
                       :label="getMeta(m.id).settings.name" item-value="id"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
-                      append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
-                      append-icon="mdi-chevron-down" @click:append="dialogListView=true"
+                      append-outer-icon="mdi-plus" append-icon="mdi-chevron-down" 
+                      @click:append-outer="openDialogAddNewCard(m.id)"
+                      @click:append="listViewMeta=getMeta(m.id),dialogListView=true"
                       :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
                       :filter="filterCards" :hint="getMeta(m.id).settings.hint" persistent-hint
                     >
@@ -203,20 +204,8 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-    
-    <v-dialog v-model="dialogListView" width="500">
-      <v-card>
-        <v-toolbar color="primary">
-          <span class="headline">List view</span>
-          <v-spacer></v-spacer>
-          <v-btn @click="saveListView" outlined> <v-icon left>mdi-check</v-icon> ok </v-btn>
-        </v-toolbar>
-        <v-card-text class="pt-4">
-          Congratulations, you've found the missing feature! <br>
-          Customizing and sorting the list will be available in the next version of the application.
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+
+    <DialogListView v-if="dialogListView" :meta="listViewMeta" @close="dialogListView=false" />
 
     <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="valuesForScraper"
       @closeScraper="dialogScraper=false" @getValues="getScraperValues($event)" @updateKey="key=Date.now()"/>
@@ -241,6 +230,7 @@ export default {
     vuescroll,
     Scraper,
     CountryFlag,
+    DialogListView: () => import('@/components/pages/meta/DialogListView.vue'),
 	},
   beforeMount () {
     this.name = this.card.meta.name || ''
@@ -273,6 +263,7 @@ export default {
     key: Date.now(),
     panels: false,
     countries: Countries,
+    listViewMeta: null,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,

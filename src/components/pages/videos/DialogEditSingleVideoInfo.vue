@@ -65,8 +65,9 @@
                   multiple hide-selected
                   :label="getMeta(m.id).settings.name" item-value="id"
                   :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
-                  append-outer-icon="mdi-plus" @click:append-outer="openDialogAddNewCard(m.id)"
-                  append-icon="mdi-chevron-down" @click:append="dialogListView=true"
+                  append-outer-icon="mdi-plus" append-icon="mdi-chevron-down" 
+                  @click:append-outer="openDialogAddNewCard(m.id)"
+                  @click:append="listViewMeta=getMeta(m.id),dialogListView=true"
                   :menu-props="{contentClass:'list-with-preview'}" class="hidden-close"
                   :filter="filterCards" :hint="getMeta(m.id).settings.hint" persistent-hint
                 > <template v-slot:selection="data">
@@ -178,6 +179,7 @@
       <v-icon large>mdi-content-save</v-icon>
     </v-btn>
     
+    <!-- TODO create components for dialogs new item and new card -->
     <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
       <v-card>
         <v-toolbar color="primary">
@@ -208,19 +210,7 @@
       </v-card>
     </v-dialog>
     
-    <v-dialog v-model="dialogListView" width="500">
-      <v-card>
-        <v-toolbar color="primary">
-          <span class="headline">List view</span>
-          <v-spacer></v-spacer>
-          <v-btn @click="saveListView" outlined> <v-icon left>mdi-check</v-icon> ok </v-btn>
-        </v-toolbar>
-        <v-card-text class="pt-4">
-          Congratulations, you've found the missing feature! <br>
-          Customizing and sorting the list will be available in the next version of the application.
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <DialogListView v-if="dialogListView" :meta="listViewMeta" @close="dialogListView=false" />
   </div>
 </template>
 
@@ -242,6 +232,7 @@ export default {
   name: "DialogEditSingleVideoInfo",
   components: {
     vuescroll,
+    DialogListView: () => import('@/components/pages/meta/DialogListView.vue'),
   },
   mixins: [ShowImageFunction, Functions, MetaGetters, NameRules],
   beforeMount() {
@@ -277,6 +268,7 @@ export default {
     calendar: false,
     calendarId: null,
     key: Date.now(),
+    listViewMeta: null,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,
@@ -366,19 +358,6 @@ export default {
       }
     },
     setVideoProgress(percent) { this.$refs.video.currentTime = Math.floor(this.video.duration*percent) },
-    sortItems(items, type) {
-      const sortBy = this[`sortButtons${type}`]
-      let itemsSorted = items.orderBy(i=>i.name.toLowerCase(),['asc'])
-      if (sortBy !== 'name') {
-        if (sortBy == 'color') {
-          let swatches = this.$store.state.swatches
-          itemsSorted = itemsSorted.orderBy(i=>swatches.indexOf(i.color.toLowerCase()),['asc']).value()
-        } else {
-          itemsSorted = itemsSorted.orderBy(i=>i[sortBy],['desc']).value()
-        }
-        return itemsSorted
-      } else return itemsSorted.value()
-    },
     filterCards(cardObject, queryText, itemText) {
       let card = _.cloneDeep(cardObject)
       let query = queryText.toLowerCase()
@@ -508,7 +487,6 @@ export default {
       this.dialogAddNewItem = false
       this.nameForNewItem = ''
     },
-    saveListView() { this.dialogListView = false },
   },
   watch: {},
 }
