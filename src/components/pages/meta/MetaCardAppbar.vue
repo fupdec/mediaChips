@@ -21,7 +21,7 @@
         </template>
         <span>Edit {{meta.settings.nameSingular}}</span>
       </v-tooltip>
-      <v-tooltip bottom>
+      <v-tooltip v-if="meta.settings.images" bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" icon tile v-on="on"> 
             <v-icon>mdi-image-edit-outline</v-icon></v-btn>

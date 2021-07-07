@@ -1,12 +1,12 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-responsive v-if="checkImageSettings('main')" :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
+    <v-responsive :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
       <img v-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
       <div v-else class="images">
         <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
         <v-responsive :aspect-ratio="5/9" />
         <v-responsive :aspect-ratio="5/9" />
-        <v-img :src="getImgUrl('alt')" :gradient="gradientImage" :aspect-ratio="9/5"/>
+        <v-img v-if="checkImageSettings('alt')" :src="getImgUrl('alt')" :gradient="gradientImage" :aspect-ratio="9/5"/>
       </div>
       <div class="header-gradient" :style="gradient"></div>
     </v-responsive>
@@ -41,7 +41,7 @@
           </template>
           <span>Edit {{meta.settings.nameSingular}}</span>
         </v-tooltip>
-        <v-tooltip top>
+        <v-tooltip v-if="meta.settings.images" top>
           <template v-slot:activator="{ on }">
             <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" icon v-on="on"> 
               <v-icon>mdi-image-edit-outline</v-icon></v-btn>
