@@ -16,7 +16,6 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.generateImages()
     })
   },
   data: () => ({
@@ -140,6 +139,7 @@ export default {
   watch: {
     videosOnPage() {
       this.clearSelection()
+      this.generateImages()
     },
     videosPerPage() {
       this.clearSelection()
