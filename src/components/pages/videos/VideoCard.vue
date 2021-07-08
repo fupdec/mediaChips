@@ -354,7 +354,10 @@ export default {
     },
     moveFile() {
       // TODO create progress line for this process. If file are moving to another disk this proc can be long
-      dialog.showOpenDialog(null, { properties: ['openDirectory'] }).then(result => {
+      dialog.showOpenDialog(null, { 
+        properties: ['openDirectory'],
+        defaultPath: path.dirname(this.video.path)
+      }).then(result => {
         if (result.filePaths.length === 0) return
         let filePath = result.filePaths[0]
         let ids = this.$store.getters.getSelectedVideos
