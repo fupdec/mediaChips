@@ -87,8 +87,16 @@ const Videos = {
 
         if (type=='string') val = val.toLowerCase().trim()
         if ((val===null||val.length===0)&&(cond!='empty'&&cond!='not empty')) continue
-        if (cond=='empty') {videos=videos.filter(c=>c[by]===undefined||c[by]===null||c[by].length==0);continue} 
-        if (cond=='not empty') {videos=videos.filter(c=>c[by]!==undefined&&c[by]!==null&&c[by].length>0);continue}
+        if (cond=='empty') {
+          if (type === 'number') videos=videos.filter(c=>c[by]===undefined||c[by]===0)
+          else videos=videos.filter(c=>c[by]===undefined||c[by]===null||c[by].length==0)
+          continue
+        } 
+        if (cond=='not empty') {
+          if (type === 'number') videos=videos.filter(c=>c[by]!==undefined&&c[by]!==0)
+          else videos=videos.filter(c=>c[by]!==undefined&&c[by]!==null&&c[by].length>0)
+          continue
+        }
 
         if (type === 'number' || type === 'date') {
           if (by === 'height') {
@@ -98,12 +106,12 @@ const Videos = {
             })
           } else if (by === 'width') {
             videos = videos.filter(c=>{
-              let width = (c.resolution.match(/\d*/)[0])
+              let width = Number(c.resolution.match(/\d*/)[0])
               return compare(cond, val, width)
             })
           } else {
             if (by==='date' || by==='edit') val = new Date(val).getTime()
-            videos = videos.filter(c => compare(cond, val, c[by]))
+            videos = videos.filter(c => compare(cond, val, Number(c[by])))
           } 
           continue
         }

@@ -266,12 +266,20 @@ const Meta = {
 
         if (type=='string') val = val.toLowerCase().trim()
         if ((val===null||val.length===0)&&(cond!='empty'&&cond!='not empty')) continue
-        if (cond=='empty') {mc=mc.filter(c=>c.meta[by]===undefined||c.meta[by]===null||c.meta[by].length==0);continue} 
-        if (cond=='not empty') {mc=mc.filter(c=>c.meta[by]!==undefined&&c.meta[by]!==null&&c.meta[by].length>0);continue}
+        if (cond=='empty') {
+          if (type === 'number') mc=mc.filter(c=>c.meta[by]===undefined||c.meta[by]===0)
+          else mc=mc.filter(c=>c.meta[by]===undefined||c.meta[by]===null||c.meta[by]==0||c.meta[by].length==0)
+          continue
+        } 
+        if (cond=='not empty') {
+          if (type === 'number') mc=mc.filter(c=>c.meta[by]!==undefined&&c.meta[by]!==0)
+          else mc=mc.filter(c=>c.meta[by]!==undefined&&c.meta[by]!==null&&c.meta[by].length>0)
+          continue
+        }
 
         if (type === 'number' || type === 'date') {
           if (by === 'date') val = new Date(val).getTime()
-          mc = mc.filter(c => compare(cond, val, c.meta[by]))
+          mc = mc.filter(c => compare(cond, val, Number(c.meta[by])))
           continue
         }
         

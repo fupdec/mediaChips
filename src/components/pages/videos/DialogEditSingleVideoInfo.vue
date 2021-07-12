@@ -131,6 +131,16 @@
                   clearable @click:clear="setVal('', m.id)" readonly persistent-hint
                   :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
 
+                <div v-if="m.type=='simple'&&getMeta(m.id).dataType==='rating'" class="d-flex flex-column">
+                  <div class="text--secondary caption">{{getMeta(m.id).settings.name}}</div>
+                  <div class="d-flex">
+                    <v-icon v-html="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" left/>
+                    <v-rating :value="values[m.id]" @input="setVal($event,m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                      :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
+                      :color="getMeta(m.id).settings.ratingColor" background-color="grey" clearable class="meta-rating"/>
+                  </div>
+                  <div class="text--secondary caption">{{getMeta(m.id).settings.hint}}</div>
+                </div>
               </v-col>
               <v-col cols="12" class="d-flex mt-4">
                 <div class="overline edit-path-title">
@@ -322,7 +332,7 @@ export default {
         let defaultValue = ''
         if (simpleMetaType=='array') defaultValue = []
         if (simpleMetaType=='boolean') defaultValue = false
-        if (simpleMetaType=='number') defaultValue = 0
+        if (simpleMetaType=='number'||simpleMetaType=='rating') defaultValue = 0
         this.values[id] = _.cloneDeep(this.video[id]) || defaultValue
       }
     },

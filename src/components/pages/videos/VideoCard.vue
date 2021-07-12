@@ -122,6 +122,11 @@
               <span>{{getMeta(m.id).settings.name}}</span>
             </v-tooltip>
             <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id, 'video')}}</span>
+            <span v-else-if="getMeta(m.id).dataType=='rating'">      
+              <v-rating :value="video[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
+                :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable/>
+            </span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{video[m.id]?'Yes':'No'}}</span>
             <span v-else>{{video[m.id]}}</span>
           </div>
@@ -137,7 +142,6 @@
 </template>
 
 <script>
-const { clipboard } = require('electron')
 const { dialog } = require('electron').remote
 const shell = require('electron').shell
 const fs = require('fs')
@@ -397,6 +401,9 @@ export default {
         this.$store.getters.videos.find({ id }).assign({ rating: stars, edit: Date.now() }).write()
       })
       this.$store.commit('updateVideos', this.$store.state.Videos.selectedVideos)
+    },
+    changeMetaRating(stars, metaId) {
+      this.$store.getters.videos.find({ id:this.video.id }).assign({edit:Date.now(), [metaId]:stars}).write()
     },
     changeFavorite(value) {
       this.$store.state.Videos.selectedVideos.map(id => {

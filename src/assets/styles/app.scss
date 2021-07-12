@@ -1690,6 +1690,13 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
     bottom: 5px;
   }
 }
+.meta-rating {
+  display: flex;
+  flex-wrap: wrap;
+  .v-icon {
+    padding: 0 !important;
+  }
+}
 .card-grid {
   display: grid;
   grid-gap: 10px;

@@ -130,7 +130,17 @@
                       :label="getMeta(m.id).settings.name" :hint="getMeta(m.id).settings.hint"
                       clearable @click:clear="setVal('', m.id)" readonly persistent-hint
                       :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"/>
-
+                      
+                    <div v-if="m.type=='simple'&&getMeta(m.id).dataType==='rating'" class="d-flex flex-column">
+                      <div class="text--secondary caption">{{getMeta(m.id).settings.name}}</div>
+                      <div class="d-flex">
+                        <v-icon v-html="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" left/>
+                        <v-rating :value="values[m.id]" @input="setVal($event,m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                          :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
+                          :color="getMeta(m.id).settings.ratingColor" background-color="grey" clearable/>
+                      </div>
+                      <div class="text--secondary caption">{{getMeta(m.id).settings.hint}}</div>
+                    </div>
                   </v-col>
                   <v-col v-if="meta.settings.color" cols="12" lg="6">
                     <v-btn @click="openDialogColor" :color="color" block rounded class="mt-3">
@@ -311,8 +321,8 @@ export default {
         const simpleMetaType = this.getMeta(id).dataType
         let defaultValue = ''
         if (simpleMetaType=='array') defaultValue = []
-        if (simpleMetaType=='boolean') defaultValue = false
-        if (simpleMetaType=='number') defaultValue = 0
+        else if (simpleMetaType=='boolean') defaultValue = false
+        else if (simpleMetaType=='number'||simpleMetaType=='rating') defaultValue = 0
         this.values[id] = _.cloneDeep(this.card.meta[id]) || defaultValue
       }
     },

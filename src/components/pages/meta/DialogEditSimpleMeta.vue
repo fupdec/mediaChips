@@ -38,6 +38,29 @@
                     </template>
                   </v-autocomplete>
                 </v-col>
+                <v-col v-if="meta.dataType=='rating'" cols="12" sm="6">
+                  <v-autocomplete v-model="settings.ratingIcon" :items="icons" :filter="filterIcons"
+                    item-text="name" item-value="name" label="Icon for rating"
+                    :rules="[value => !!value || 'Icon is required']">
+                    <template v-slot:selection="data">
+                      <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
+                    </template>
+                    <template v-slot:item="data">
+                      <v-icon left>mdi-{{data.item.name}}</v-icon>
+                      <span v-html="data.item.name"></span>
+                    </template>
+                  </v-autocomplete>
+                </v-col>
+                <v-col v-if="meta.dataType=='rating'" cols="12" sm="6">
+                  <v-btn @click="openDialogPalette" :color="settings.ratingColor" rounded block class="my-2">
+                    <v-icon left>mdi-palette</v-icon> change rating color </v-btn>
+                </v-col>
+                <v-col v-if="meta.dataType=='rating'" cols="12">
+                  <div>Rating preview</div>
+                  <v-rating :value="1" :length="settings.ratingMax" hover 
+                    :full-icon="`mdi-${settings.ratingIcon}`" :empty-icon="`mdi-${settings.ratingIcon}`" 
+                    :color="settings.ratingColor" background-color="grey" class="meta-rating"/>
+                </v-col>
                 <v-col v-if="meta.dataType=='array'" cols="12">
                   <v-card outlined class="px-4 pb-4">
                     <div class="overline text-center">Array Items</div>
@@ -64,6 +87,15 @@
             </v-form>
           </v-card-text>
         </vuescroll>
+      </v-card>
+    </v-dialog>
+    
+    <v-dialog v-model="dialogPalette" width="300"> 
+      <v-card>
+        <v-toolbar color="primary">
+          <v-btn @click="applyColor" outlined block><v-icon left>mdi-check</v-icon> apply color</v-btn>
+        </v-toolbar>
+        <v-color-picker @update:color="changeColor($event)" :value="palette" /> 
       </v-card>
     </v-dialog>
 
@@ -131,6 +163,9 @@ export default {
       disabled: false,
       ghostClass: "ghost"
     },
+    // palette
+    dialogPalette: false,
+    palette: '#ffab00',
   }),
   computed: {
     meta() { return this.metaObj },
@@ -191,6 +226,15 @@ export default {
       else if (string.length===0) return 'Name is required'
       else if (duplicate) return 'Item with that name already exists'
       else return true
+    },
+    openDialogPalette() {
+      this.dialogPalette = true 
+      this.palette = this.settings.ratingColor
+    },
+    changeColor(e) { this.palette = e.hex },
+    applyColor() {
+      this.settings.ratingColor = this.palette
+      this.dialogPalette = false
     },
   },
 }

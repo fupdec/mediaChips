@@ -1,65 +1,98 @@
 <template>
-  <v-dialog v-if="dialog" :value="dialog" @input="close" scrollable max-width="450">
-    <v-card>
-      <v-toolbar color="primary">
-        <div class="headline">New simple meta</div>
-        <v-spacer></v-spacer>
-        <v-btn @click="addMeta" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
-      </v-toolbar>
-      <v-divider></v-divider>
-      <vuescroll>
-        <v-card-text class="px-4">
-          <v-form v-model="validMeta" ref="form" class="flex-grow-1" @submit.prevent>
-            <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
-            <v-text-field v-model="metaHint" label="Hint for meta" hint="This text under the field is the hint"/>
-            <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
-              item-text="name" item-value="name" label="Icon"
-              :rules="[value => !!value || 'Icon is required']">
-              <template v-slot:selection="data">
-                <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
-              </template>
-              <template v-slot:item="data">
-                <v-icon left>mdi-{{data.item.name}}</v-icon>
-                <span v-html="data.item.name"></span>
-              </template>
-            </v-autocomplete>
-            <v-autocomplete v-model="dataType" label="Data type of meta"
-              :items="['string', 'number', 'boolean', 'array', 'date']"
-              :rules="[value => !!value || 'Type is required']" persistent-hint :hint="hint">
-              <template v-slot:selection="data">
-                <v-icon left small>{{getIconMeta(data.item)}}</v-icon> 
-                <span class="overline">{{data.item}}</span>
-              </template>
-              <template v-slot:item="data">
-                <v-icon left>{{getIconMeta(data.item)}}</v-icon> 
-                <span class="overline">{{data.item}}</span>
-              </template>
-            </v-autocomplete>
-          </v-form>
-          <v-card v-if="dataType=='array'" outlined class="px-4 pb-4 mt-4">
-            <div class="overline text-center">Array Items</div>
-            <div class="d-flex">
-              <v-btn @click="addNewItem" :disabled="!validItemName" 
-                height="40" class="mr-4" color="success" outlined rounded> 
-                <v-icon left>mdi-plus</v-icon> Add item 
-              </v-btn>
-              <v-form v-model="validItemName" ref="itemName" class="flex-grow-1" @submit.prevent>
-                <v-text-field v-model="itemName" :rules="[itemNameRules]" @keyup.enter="tryAddNewItem"
-                  dense outlined label="Name of item" />
-              </v-form>
-            </div>
-            <div v-if="items.length==0" class="text-center">Please add items to array</div>
-            <draggable v-model="items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
-              <transition-group type="transition" class="d-flex flex-wrap">
-                <v-chip v-for="(item,i) in items" :key="i" @click:close="removeItem(i)"
-                  close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
-              </transition-group>
-            </draggable>
-          </v-card>
-        </v-card-text>
-      </vuescroll>
-    </v-card>
-  </v-dialog>
+  <div>
+    <v-dialog v-if="dialog" :value="dialog" @input="close" scrollable max-width="450">
+      <v-card>
+        <v-toolbar color="primary">
+          <div class="headline">New simple meta</div>
+          <v-spacer></v-spacer>
+          <v-btn @click="addMeta" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
+        </v-toolbar>
+        <v-divider></v-divider>
+        <vuescroll>
+          <v-card-text class="px-4">
+            <v-form v-model="validMeta" ref="form" class="flex-grow-1" @submit.prevent>
+              <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
+              <v-text-field v-model="metaHint" label="Hint for meta" hint="This text under the field is the hint"/>
+              <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
+                item-text="name" item-value="name" label="Icon"
+                :rules="[value => !!value || 'Icon is required']">
+                <template v-slot:selection="data">
+                  <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
+                </template>
+                <template v-slot:item="data">
+                  <v-icon left>mdi-{{data.item.name}}</v-icon>
+                  <span v-html="data.item.name"></span>
+                </template>
+              </v-autocomplete>
+              <v-autocomplete v-model="dataType" label="Data type of meta"
+                :items="['string', 'number', 'boolean', 'array', 'date', 'rating']"
+                :rules="[value => !!value || 'Type is required']" persistent-hint :hint="hint">
+                <template v-slot:selection="data">
+                  <v-icon left>{{getIconMeta(data.item)}}</v-icon> 
+                  <span class="mr-2">{{data.item}}</span>
+                </template>
+                <template v-slot:item="data">
+                  <v-icon left>{{getIconMeta(data.item)}}</v-icon> 
+                  <span>{{data.item}}</span>
+                </template>
+              </v-autocomplete>
+              <div v-if="dataType=='rating'">
+                <v-autocomplete v-model="ratingIcon" :items="icons" :filter="filterIcons"
+                  item-text="name" item-value="name" label="Icon for rating"
+                  :rules="[value => !!value || 'Icon is required']">
+                  <template v-slot:selection="data">
+                    <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
+                  </template>
+                  <template v-slot:item="data">
+                    <v-icon left>mdi-{{data.item.name}}</v-icon>
+                    <span v-html="data.item.name"></span>
+                  </template>
+                </v-autocomplete>
+                <v-text-field v-model="ratingMax" type="number" 
+                  :rules="[v=>v>1&&v<11 || 'Incorrect value']" label="Max value for rating" 
+                  :hint="`The rating will be from 0 to ${ratingMax}`"/>
+                <v-btn @click="openDialogPalette" :color="ratingColor" rounded block class="my-2">
+                  <v-icon left>mdi-palette</v-icon> change rating color </v-btn>
+                <div class="mt-4">Rating preview</div>
+                <v-rating :value="1" :length="ratingMax>10?10:ratingMax<2?2:ratingMax" hover 
+                  :full-icon="`mdi-${ratingIcon}`" :empty-icon="`mdi-${ratingIcon}`" :color="ratingColor"
+                  background-color="grey" class="meta-rating"/>
+              </div>
+            </v-form>
+            <v-card v-if="dataType=='array'" outlined class="px-4 pb-4 mt-4">
+              <div class="overline text-center">Array Items</div>
+              <div class="d-flex">
+                <v-btn @click="addNewItem" :disabled="!validItemName" 
+                  height="40" class="mr-4" color="success" outlined rounded> 
+                  <v-icon left>mdi-plus</v-icon> Add item 
+                </v-btn>
+                <v-form v-model="validItemName" ref="itemName" class="flex-grow-1" @submit.prevent>
+                  <v-text-field v-model="itemName" :rules="[itemNameRules]" @keyup.enter="tryAddNewItem"
+                    dense outlined label="Name of item" />
+                </v-form>
+              </div>
+              <div v-if="items.length==0" class="text-center">Please add items to array</div>
+              <draggable v-model="items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
+                <transition-group type="transition" class="d-flex flex-wrap">
+                  <v-chip v-for="(item,i) in items" :key="i" @click:close="removeItem(i)"
+                    close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
+                </transition-group>
+              </draggable>
+            </v-card>
+          </v-card-text>
+        </vuescroll>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="dialogPalette" width="300"> 
+      <v-card>
+        <v-toolbar color="primary">
+          <v-btn @click="applyColor" outlined block><v-icon left>mdi-check</v-icon> apply color</v-btn>
+        </v-toolbar>
+        <v-color-picker @update:color="changeColor($event)" :value="palette" /> 
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 
@@ -103,6 +136,11 @@ export default {
     validItemName: false,
     items: [],
     itemName: '',
+    ratingIcon: 'shape',
+    ratingMax: 5,
+    ratingColor: '#ffab00',
+    dialogPalette: false,
+    palette: '#ffab00',
   }),
   computed: {
     simpleMetaList() { return this.$store.getters.simpleMeta.value() },
@@ -112,6 +150,7 @@ export default {
       if (this.dataType === 'number') return 'to count'
       if (this.dataType === 'array') return `for multiple values. for example colors: blue, red, green`
       if (this.dataType === 'boolean') return 'for one value. either yes or no'
+      if (this.dataType === 'rating') return 'for scoring'
       return 'choose one of the types'
     },
   },
@@ -122,6 +161,7 @@ export default {
       if (meta === 'number') return 'mdi-numeric'
       if (meta === 'array') return 'mdi-code-array'
       if (meta === 'boolean') return 'mdi-toggle-switch'
+      if (meta === 'rating') return 'mdi-star'
       return 'mdi-shape'
     },
     filterIcons(item, queryText, itemText) {
@@ -160,6 +200,11 @@ export default {
         hint: this.metaHint,
       }
       if (this.dataType=='array') settings.items = this.items
+      else if (this.dataType=='rating') {
+        settings.ratingIcon = this.ratingIcon
+        settings.ratingMax = this.ratingMax
+        settings.ratingColor = this.ratingColor
+      } 
 
       let meta = {
         id: shortid.generate(),
@@ -172,6 +217,15 @@ export default {
       this.close()
     },
     close() { this.$emit('close') },
+    openDialogPalette() {
+      this.dialogPalette = true 
+      this.palette = this.ratingColor
+    },
+    changeColor(e) { this.palette = e.hex },
+    applyColor() {
+      this.ratingColor = this.palette
+      this.dialogPalette = false
+    },
   },
 }
 </script>

@@ -187,7 +187,7 @@ export default {
         let meta = this.getMeta(id)
         this.metaList.push(meta.id)
         if (type == 'complex') { this.metaType.select.push(meta.id); continue }
-        if (meta.dataType=='number') this.metaType.number.push(meta.id)
+        if (meta.dataType=='number'||meta.dataType=='rating') this.metaType.number.push(meta.id)
         else if (meta.dataType=='string') this.metaType.string.push(meta.id)
         else if (meta.dataType=='array') this.metaType.array.push(meta.id)
         else if (meta.dataType=='boolean') this.metaType.boolean.push(meta.id)

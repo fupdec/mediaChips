@@ -49,6 +49,11 @@
               <span>{{getMeta(m.id).settings.name}}</span>
             </v-tooltip>
             <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+            <span v-else-if="getMeta(m.id).dataType=='rating'">      
+              <v-rating :value="card.meta[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
+                :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable/>
+            </span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
             <span v-else>{{card.meta[m.id]}}</span>
           </div>
@@ -129,6 +134,10 @@ export default {
     changeRating(stars) {
       this.$store.getters.metaCards.find({id:this.card.id})
         .assign({edit: Date.now()}).get('meta').assign({rating:stars}).write()
+    },
+    changeMetaRating(stars, metaId) {
+      this.$store.getters.metaCards.find({id:this.card.id})
+        .assign({edit: Date.now()}).get('meta').assign({[metaId]:stars}).write()
     },
     findCountryCode(country) {
       if (country == '') return ''

@@ -116,6 +116,11 @@
                   <div v-else-if="m.type=='simple'" class="simple-meta">
                     <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
                     <span v-else-if="getMeta(m.id).dataType=='boolean'">{{JSON.stringify(card.meta[m.id])}}</span>
+                    <span v-else-if="getMeta(m.id).dataType=='rating'">      
+                      <v-rating :value="card.meta[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                        :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
+                        :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable/>
+                    </span>
                     <span v-else>{{card.meta[m.id]}}</span>
                   </div>
                 </v-col>
@@ -448,6 +453,10 @@ export default {
       let metaArr = _.find(this.videoFilters, {id:metaId}).chips
       if (index > -1) this.$store.state.Settings.videoFilters[index].val = e.map(i=>metaArr[i])
       this.$store.dispatch('filterVideos', true)
+    },
+    changeMetaRating(stars, metaId) {
+      this.$store.getters.metaCards.find({id:this.card.id})
+        .assign({edit: Date.now()}).get('meta').assign({[metaId]:stars}).write()
     },
   },
   watch: {

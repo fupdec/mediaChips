@@ -120,6 +120,17 @@
                     clearable @click:clear="setVal('', m.id)" readonly persistent-hint
                     :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                     :disabled="edits[m.id]===0" :hint="getMeta(m.id).settings.hint"/>
+                    
+                  <div v-if="m.type=='simple'&&getMeta(m.id).dataType==='rating'" class="d-flex flex-column">
+                    <div class="text--secondary caption">{{getMeta(m.id).settings.name}}</div>
+                    <div class="d-flex">
+                      <v-icon v-html="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" left/>
+                      <v-rating :value="values[m.id]" @input="setVal($event,m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                        :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
+                        :color="getMeta(m.id).settings.ratingColor" background-color="grey" clearable :readonly="edits[m.id]===0"/>
+                    </div>
+                    <div class="text--secondary caption">{{getMeta(m.id).settings.hint}}</div>
+                  </div>
                 </v-col>
                 <v-col v-if="metaAssignedToVideos.length==0" cols="12" class="d-flex align-center justify-center flex-column">
                   <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
@@ -230,7 +241,7 @@ export default {
         const simpleMetaType = this.getMeta(id).dataType
         if (simpleMetaType=='array') this.values[id] = []
         else if (simpleMetaType=='boolean') this.values[id] = false
-        else if (simpleMetaType=='number') this.values[id] = 0
+        else if (simpleMetaType=='number'||simpleMetaType=='rating') this.values[id] = 0
         else this.values[id] = ''
       }
     },
