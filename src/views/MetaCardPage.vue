@@ -121,6 +121,7 @@
                         :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
                         :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable/>
                     </span>
+                    <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
                     <span v-else>{{card.meta[m.id]}}</span>
                   </div>
                 </v-col>
@@ -230,6 +231,7 @@
 const { clipboard } = require('electron')
 const fs = require("fs")
 const path = require("path")
+const shell = require('electron').shell
 
 import CountryFlag from 'vue-country-flag'
 import VideosGrid from '@/mixins/VideosGrid'
@@ -458,6 +460,7 @@ export default {
       this.$store.getters.metaCards.find({id:this.card.id})
         .assign({edit: Date.now()}).get('meta').assign({[metaId]:stars}).write()
     },
+    openLink(url) { shell.openExternal(url) }
   },
   watch: {
     profile() {

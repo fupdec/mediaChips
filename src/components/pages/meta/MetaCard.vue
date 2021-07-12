@@ -55,6 +55,7 @@
                 :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable/>
             </span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
+            <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
             <span v-else>{{card.meta[m.id]}}</span>
           </div>
         </div>
@@ -70,6 +71,7 @@
 <script>
 const fs = require("fs")
 const path = require("path")
+const shell = require('electron').shell
 
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
@@ -205,6 +207,7 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
+    openLink(url) { shell.openExternal(url) }
   },
   watch: {
     updateCardIds(newValue) {

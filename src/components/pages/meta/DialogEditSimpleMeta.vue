@@ -37,6 +37,7 @@
                       <span v-html="data.item.name"></span>
                     </template>
                   </v-autocomplete>
+                  <v-switch v-if="meta.dataType=='string'" v-model="settings.isLink" :label="`Open link in browser - ${settings.isLink?'Yes':'No'}`"/>
                 </v-col>
                 <v-col v-if="meta.dataType=='rating'" cols="12" sm="6">
                   <v-autocomplete v-model="settings.ratingIcon" :items="icons" :filter="filterIcons"

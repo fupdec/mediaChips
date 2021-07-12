@@ -36,6 +36,7 @@
                   <span>{{data.item}}</span>
                 </template>
               </v-autocomplete>
+              <v-switch v-if="dataType=='string'" v-model="isLink" :label="`Open link in browser - ${isLink?'Yes':'No'}`" hide-details/>
               <div v-if="dataType=='rating'">
                 <v-autocomplete v-model="ratingIcon" :items="icons" :filter="filterIcons"
                   item-text="name" item-value="name" label="Icon for rating"
@@ -133,6 +134,7 @@ export default {
     metaName: '',
     metaHint: '',
     dataType: '',
+    isLink: false,
     validItemName: false,
     items: [],
     itemName: '',
@@ -199,7 +201,8 @@ export default {
         icon: this.metaIcon,
         hint: this.metaHint,
       }
-      if (this.dataType=='array') settings.items = this.items
+      if (this.dataType=='string') settings.isLink = this.isLink
+      else if (this.dataType=='array') settings.items = this.items
       else if (this.dataType=='rating') {
         settings.ratingIcon = this.ratingIcon
         settings.ratingMax = this.ratingMax
