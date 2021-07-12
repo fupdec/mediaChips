@@ -5,7 +5,7 @@
         <v-toolbar color="primary">
           <v-btn @click="applyColor" outlined block><v-icon left>mdi-check</v-icon> apply color</v-btn>
         </v-toolbar>
-        <v-color-picker @update:color="changeColor($event)" :value="palette" hide-inputs/> 
+        <v-color-picker @update:color="changeColor($event)" :value="palette"/> 
       </v-card>
     </v-dialog>
 

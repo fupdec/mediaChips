@@ -171,7 +171,7 @@
         <v-toolbar color="primary">
           <v-btn @click="applyColor" outlined block><v-icon left>mdi-check</v-icon> apply color</v-btn>
         </v-toolbar>
-        <v-color-picker @update:color="changeColor($event)" :value="colorPicker" hide-inputs/> 
+        <v-color-picker @update:color="changeColor($event)" :value="colorPicker"/> 
       </v-card>
     </v-dialog>
     
