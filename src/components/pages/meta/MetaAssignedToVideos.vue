@@ -16,7 +16,7 @@
                   <span v-if="meta.scraperField" class="caption text--secondary">scraper: {{meta.scraperField}}</span>
                 </span>
                 <span>
-                  <v-btn @click="openDialogDeleteMetaFromCard(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
+                  <v-btn @click="openDialogDeleteMetaFromVideos(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
                 </span>
               </div>
             </v-list-item>
@@ -63,13 +63,13 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-if="dialogDeleteMetaFromCard" :value="dialogDeleteMetaFromCard" persistent max-width="450">
+    <v-dialog v-if="dialogDeleteMetaFromVideos" :value="dialogDeleteMetaFromVideos" persistent max-width="450">
       <v-card>
         <v-toolbar color="error">
           <v-card-title class="headline pl-0">Are you sure?</v-card-title>
           <v-spacer></v-spacer>
-          <v-btn @click="dialogDeleteMetaFromCard=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
-          <v-btn @click="deleteMetaFromCard" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
+          <v-btn @click="dialogDeleteMetaFromVideos=false" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> No </v-btn>
+          <v-btn @click="deleteMetaFromVideos" outlined> <v-icon left>mdi-check</v-icon> Yes </v-btn>
         </v-toolbar>
         <v-card-text class="text-center">
           <v-icon size="72" color="error" class="py-4">mdi-alert-outline</v-icon>
@@ -100,7 +100,7 @@ export default {
   },
   data: () => ({
     dialogAddMetaToCard: false,
-    dialogDeleteMetaFromCard: false,
+    dialogDeleteMetaFromVideos: false,
     selectedMetaForCard: null,
     drag: false,
     dragOptions: {
@@ -132,17 +132,16 @@ export default {
       this.metaAssignedToVideos.push(metaForAdding)
       this.dialogAddMetaToCard = false
     },
-    openDialogDeleteMetaFromCard(i) { 
+    openDialogDeleteMetaFromVideos(i) { 
       this.selectedMetaIndex = i
-      this.dialogDeleteMetaFromCard = true
+      this.dialogDeleteMetaFromVideos = true
     },
-    deleteMetaFromCard() {
+    deleteMetaFromVideos() {
       let id = this.metaAssignedToVideos[this.selectedMetaIndex].id
       this.$store.dispatch('removeMetaFromVideos', id) // VIDEOS
       this.$store.dispatch('removeMetaFromSavedFilters', id) // SAVED FILTERS
       this.$store.dispatch('removeMetaFromTabs', id) // TABS
-      this.metaAssignedToVideos.splice(this.selectedMetaIndex, 1)
-      this.dialogDeleteMetaFromCard = false
+      this.dialogDeleteMetaFromVideos = false
     },
     filterMeta(metaObj, queryText) { return metaObj.settings.name.toLowerCase().includes(queryText.toLowerCase()) },
   },
