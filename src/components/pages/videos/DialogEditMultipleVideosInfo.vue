@@ -284,12 +284,18 @@ export default {
         }
         this.$store.getters.videos.find({ id: videoId }).assign(arr).write()
       })
-// TODO add sorting for arrays
       this.$store.commit('updateVideos', videoIds)
       this.$store.state.Videos.dialogEditVideoInfo = false
     },
-    sort(items) { return items.sort((a, b) => a.localeCompare(b)) },
-    setVal(value, metaId) { this.values[metaId] = value },
+    setVal(value, metaId) { 
+      let meta = this.getMeta(metaId)
+      if (meta && meta.type === 'complex') value.sort((a,b)=>{
+        a = this.getCard(a).meta.name
+        b = this.getCard(b).meta.name
+        return a.localeCompare(b)
+      })
+      this.values[metaId] = value 
+    },
     removeItem(item, id) { 
       const index = this.values[id].indexOf(item)
       if (index > -1) this.values[id].splice(index, 1)

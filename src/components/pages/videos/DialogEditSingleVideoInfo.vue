@@ -436,7 +436,6 @@ export default {
       else return path.join(__static, '/img/default.jpg')
     },
     getTag(tagName) { return this.$store.getters.tags.find({name:tagName}).value() },
-    sort(items) { this[items] = this[items].sort((a, b) => a.localeCompare(b)) },
     playVideo() {
       const pathToVideo = this.video.path
       if (fs.existsSync(pathToVideo)) {
@@ -453,7 +452,15 @@ export default {
       this.muted = !this.muted
       this.$refs.video.muted = this.muted
     },
-    setVal(value, metaId) { this.values[metaId] = value },
+    setVal(value, metaId) { 
+      let meta = this.getMeta(metaId)
+      if (meta && meta.type === 'complex') value.sort((a,b)=>{
+        a = this.getCard(a).meta.name
+        b = this.getCard(b).meta.name
+        return a.localeCompare(b)
+      })
+      this.values[metaId] = value 
+    },
     removeItem(item, id) { 
       const index = this.values[id].indexOf(item)
       if (index > -1) this.values[id].splice(index, 1)

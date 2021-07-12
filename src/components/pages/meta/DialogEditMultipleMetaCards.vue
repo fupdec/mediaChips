@@ -252,7 +252,15 @@ export default {
       if (index > -1) this.values[id].splice(index, 1)
       this.$store.state.hoveredImage = false
     },
-    setVal(value, id) { this.values[id] = value },
+    setVal(value, metaId) { 
+      let meta = this.getMeta(metaId)
+      if (meta && meta.type === 'complex') value.sort((a,b)=>{
+        a = this.getCard(a).meta.name
+        b = this.getCard(b).meta.name
+        return a.localeCompare(b)
+      })
+      this.values[metaId] = value 
+    },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
     save() {
       this.selectedMeta.map(id => {
