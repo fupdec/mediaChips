@@ -62,7 +62,7 @@
       <!-- Video meta -->
       <v-card-actions v-if="!isFileInfoHidden" class="props pa-1">
         <div label outlined class="prop" :title="videoPath">
-          <v-icon>mdi-file-search</v-icon>
+          <v-icon>mdi-folder-outline</v-icon>
           <span class="value">Path</span>
         </div>
         <div label outlined class="prop">

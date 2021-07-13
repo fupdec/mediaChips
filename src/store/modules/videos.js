@@ -87,7 +87,7 @@ const Videos = {
           })
           continue
         }
-        
+
         if (type === 'boolean') {
           if (cond === 'yes') videos = videos.filter(c => c[by]===true)
           else videos = videos.filter(c => !c[by]===true)
@@ -163,32 +163,10 @@ const Videos = {
         }
       }
       // sort videos
-      if (rootState.Settings.videoSortBy === 'name') {
-        videos = videos.orderBy(video=>(path.basename(video.path)), [rootState.Settings.videoSortDirection])
-      } else {
-        videos = videos.orderBy(rootState.Settings.videoSortBy, [rootState.Settings.videoSortDirection])
-      }
-      // if (state.filters.durationActive) {
-      //   let dur = state.filters.duration
-      //   videos = videos.filter(video => {
-      //     let videoDur = Math.ceil(video.duration/60)
-      //     if (videoDur >= dur[0] && videoDur <= dur[1]) {
-      //       return true
-      //     } else {return false}
-      //   })
-      //   // console.log(`videos filtered by duration`)
-      // }
-      // if (state.filters.sizeActive) {
-      //   let size = state.filters.size
-      //   videos = videos.filter(video => {
-      //     let sizeMb = (video.size/1024/1024-0.01).toFixed(0)
-      //     if (sizeMb >= size[0]*1000 && sizeMb <= size[1]*1000) {
-      //       return true
-      //     } else {return false}
-      //   })
-      //   // console.log('videos filtered by size')
-      //   // console.log(size)
-      // }
+      let sortBy = rootState.Settings.videoSortBy || 'name'
+      let sortDirection = rootState.Settings.videoSortDirection || 'asc'
+      if (sortBy === 'name') videos = videos.orderBy(i=>path.basename(i.path), [sortDirection])
+      else videos = videos.orderBy(i=>i[sortBy]||false, [sortDirection])
       // if (state.filters.quality) {
       //   let quality = state.filters.quality
       //   if (quality.length) {

@@ -336,9 +336,9 @@ const Meta = {
       // sort meta
       let sortBy = state.sortBy || 'name'
       let sortDirection = state.sortDirection || 'asc'
-      if (sortBy == 'name') mc = mc.orderBy(i=>(i.meta.name.toLowerCase()), [sortDirection])
-      else if (['date','edit','videos','views'].includes(sortBy)) mc = mc.orderBy(sortBy, [sortDirection])
-      else mc = mc.orderBy(`meta.${sortBy}`, [sortDirection])
+      if (sortBy == 'name') mc = mc.orderBy(i=>i.meta.name.toLowerCase(), [sortDirection])
+      else if (['date','edit','videos','views'].includes(sortBy)) mc = mc.orderBy(i=>i[sortBy]||false, [sortDirection])
+      else mc = mc.orderBy(i=>i.meta[sortBy]||false, [sortDirection])
 
       state.filteredMeta = mc.value()
       dispatch('saveStateOfMeta')

@@ -71,104 +71,16 @@
         </v-tooltip>
       </template>
       <v-card>
-        <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
-          <v-tooltip bottom>
+        <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
+          <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
             <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
-                <v-icon>mdi-alphabetical-variant</v-icon>
-                <v-icon right size="14" v-if="sortButtons=='name' && sortDirection=='desc'">
-                  mdi-arrow-up-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons=='name' && sortDirection=='asc'">
-                  mdi-arrow-down-thick
-                </v-icon>
+              <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
+                <v-icon>mdi-{{s.icon}}</v-icon>
+                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='desc'">mdi-arrow-up-thick</v-icon>
+                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='asc'">mdi-arrow-down-thick</v-icon>
               </v-btn>
             </template>
-            <span>Sort by Name</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="duration" v-on="on">
-                <v-icon>mdi-timer-outline</v-icon>
-                <v-icon right size="14" v-if="sortButtons=='duration' && sortDirection=='desc'">
-                  mdi-arrow-up-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons=='duration' && sortDirection=='asc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by Duration</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-            <v-btn outlined @click="toggleSortDirection" value="size" v-on="on">
-              <v-icon>mdi-harddisk</v-icon>
-              <v-icon right size="14" v-if="sortButtons=='size' && sortDirection=='desc'">
-                mdi-arrow-up-thick
-              </v-icon>
-              <v-icon right size="14" v-if="sortButtons=='size' && sortDirection=='asc'">
-                mdi-arrow-down-thick
-              </v-icon>
-            </v-btn>
-            </template>
-            <span>Sort by Size</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="rating" v-on="on">
-                <v-icon>mdi-star-outline</v-icon>
-                <v-icon right size="14" v-if="sortButtons=='rating' && sortDirection=='desc'">
-                  mdi-arrow-up-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons=='rating' && sortDirection=='asc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by Rating</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
-                <v-icon>mdi-calendar-plus</v-icon>
-                <v-icon right size="14" v-if="sortButtons=='date' && sortDirection=='desc'">
-                  mdi-arrow-up-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons=='date' && sortDirection=='asc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by Date Added</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="edit" v-on="on">
-                <v-icon>mdi-calendar-edit</v-icon>
-                <v-icon right size="14" v-if="sortButtons=='edit' && sortDirection=='desc'">
-                  mdi-arrow-up-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons=='edit' && sortDirection=='asc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by Date of Editing</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined @click="toggleSortDirection" value="path" v-on="on">
-                <v-icon>mdi-folder-outline</v-icon>
-                <v-icon right size="14" v-if="sortButtons=='path' && sortDirection=='desc'">
-                  mdi-arrow-up-thick
-                </v-icon>
-                <v-icon right size="14" v-if="sortButtons=='path' && sortDirection=='asc'">
-                  mdi-arrow-down-thick
-                </v-icon>
-              </v-btn>
-            </template>
-            <span>Sort by Path</span>
+            <span>Sort by {{s.tip}}</span>
           </v-tooltip>
         </v-btn-toggle>
       </v-card>
@@ -200,6 +112,7 @@
 
 <script>
 import vuescroll from 'vuescroll'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'VideosAppbarActions',
@@ -208,12 +121,54 @@ export default {
     DialogFilterVideos: () => import('@/components/pages/videos/DialogFilterVideos.vue'),
     vuescroll,
   },
+  mixins: [MetaGetters],
+  beforeMount() {
+    this.initSort()
+  },
   mounted() {
     this.$nextTick(function () {
     })
   },
   data: () => ({
     searchString: '',
+    sort: [
+      {
+        name: 'name',
+        icon: 'alphabetical-variant',
+        tip: 'Name',
+      },
+      {
+        name: 'duration',
+        icon: 'timer-outline',
+        tip: 'Duration',
+      },
+      {
+        name: 'size',
+        icon: 'harddisk',
+        tip: 'Filesize',
+      },
+      {
+        name: 'rating',
+        icon: 'star-outline',
+        tip: 'Rating',
+      },
+      {
+        name: 'date',
+        icon: 'calendar-plus',
+        tip: 'Date Added',
+      },
+      {
+        name: 'edit',
+        icon: 'calendar-edit',
+        tip: 'Date of Editing',
+      },
+      {
+        name: 'path',
+        icon: 'folder-outline',
+        tip: 'Path',
+      },
+    ],
+    sortBy: 'name',
   }),
   computed: {
     filtersNumber() {
@@ -230,14 +185,9 @@ export default {
       return filters.length
     },
     sortIcon() {
-      if (this.sortButtons=='name') return 'mdi-alphabetical-variant'
-      if (this.sortButtons=='duration') return 'mdi-timer-outline'
-      if (this.sortButtons=='size') return 'mdi-harddisk'
-      if (this.sortButtons=='rating') return 'mdi-star-outline'
-      if (this.sortButtons=='date') return 'mdi-calendar-plus'
-      if (this.sortButtons=='edit') return 'mdi-calendar-edit'
-      if (this.sortButtons=='path') return 'mdi-folder-outline'
-      return 'mdi-help'
+      let sortObject = _.find(this.sort, {name: this.sortBy})
+      if (sortObject) return `mdi-${sortObject.icon}`
+      else return 'mdi-help'
     },
     sortButtons: {
       get() { return this.$store.state.Settings.videoSortBy },
@@ -259,6 +209,7 @@ export default {
       let index = _.findIndex(filters, favorite)
       return index > -1
     },
+    metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
   },
   methods: {
     search() {
@@ -288,9 +239,25 @@ export default {
       else this.$store.state.Settings.videoFilters.push(favorite)
       this.$store.dispatch('filterVideos')
     },
-    toggleSortDirection() {
-      this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
-      setTimeout(()=>{ this.$store.dispatch('filterVideos') },200)
+    initSort() {
+      for (const m of this.metaAssignedToVideos) {
+        if (m.type === 'simple') {
+          let sm = this.getMeta(m.id)
+          if (sm.dataType === 'rating') this.sort.push({ 
+            name: sm.id, 
+            icon: sm.settings.icon, 
+            tip: sm.settings.name 
+          })
+        }
+      }
+    },
+    changeSortBy(e) { this.sortBy = e },
+    sortMetaCards() {
+      setTimeout(()=>{ 
+        this.$store.state.Settings.videoSortBy = this.sortBy
+        this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc'?'desc':'asc'
+        this.$store.dispatch('filterVideos') 
+      }, 100)
     },
     selectAllVideos() {
       this.$store.state.Videos.selection.clearSelection()

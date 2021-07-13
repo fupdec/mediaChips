@@ -388,6 +388,16 @@ export default {
       let videos = { name: 'videos', icon: 'video-outline', tip: 'Number of Videos' }
       if (_.find(this.metaAssignedToVideos, {id:this.metaId})) this.sort.push(videos)
       this.sort.push({ name: 'views', icon: 'eye-outline', tip: 'Number of Views' })
+      for (const m of this.meta.settings.metaInCard) {
+        if (m.type === 'simple') {
+          let sm = this.getMeta(m.id)
+          if (sm.dataType === 'rating') this.sort.push({ 
+            name: sm.id, 
+            icon: sm.settings.icon, 
+            tip: sm.settings.name 
+          })
+        }
+      }
     },
     changeSortBy(e) { this.sortBy = e },
     sortMetaCards() {
