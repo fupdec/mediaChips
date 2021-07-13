@@ -111,10 +111,10 @@ export default {
         link: `/videos/:${tabId}?tabId=${tabId}`,
         id: tabId,
         filters: [{
-          param: 'path',
+          by: 'path',
           cond: 'one of',
           val: this.folder.lostFiles,
-          type: 'array',
+          type: 'boolean',
           flag: 'lostVideos',
           lock: true,
         }],

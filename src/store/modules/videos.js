@@ -79,6 +79,15 @@ const Videos = {
         let type = filters[filter].type
         let flag = filters[filter].flag
         
+        if (flag === 'lostVideos') {
+          videos = videos.filter(c=>{
+            let include = false
+            for (let i of val) if (c[by].includes(i)) {include=true;break}
+            return include
+          })
+          continue
+        }
+        
         if (type === 'boolean') {
           if (cond === 'yes') videos = videos.filter(c => c[by]===true)
           else videos = videos.filter(c => !c[by]===true)
