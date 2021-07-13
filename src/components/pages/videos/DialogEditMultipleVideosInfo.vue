@@ -12,7 +12,8 @@
               <span>The entered information will be processed in accordance <br>with the selected icon on the left of the field:<br>
                 <v-icon v-html="`mdi-cancel`" dark small left/> will remain the same <br>
                 <v-icon v-html="`mdi-reload-alert`" dark small left/> will be replaced (leave blank field to remove information) <br>
-                <v-icon v-html="`mdi-plus-circle-outline`" dark small left/>  will be added to the existing one (only for arrays) </span>
+                <v-icon v-html="`mdi-plus-circle-outline`" dark small left/> will be added to the existing one (only for arrays) <br>
+                <v-icon v-html="`mdi-close-circle-outline`" dark small left/> will be removed to the existing one (only for arrays) </span>
             </v-tooltip>
           </div>
           <v-spacer></v-spacer>
@@ -36,6 +37,12 @@
                         <v-icon v-on="on" v-html="`mdi-plus-circle-outline`" size="20" color="green"/>
                       </template>
                       <span>Add</span>
+                    </v-tooltip>
+                    <v-tooltip v-else-if="edits[m.id]===3" top>
+                      <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" v-html="`mdi-close-circle-outline`" size="20" color="red"/>
+                      </template>
+                      <span>Remove</span>
                     </v-tooltip>
                     <v-tooltip v-else top>
                       <template v-slot:activator="{ on }">
@@ -292,7 +299,16 @@ export default {
         arr = { ...arr, ...{edit: Date.now()} }
         let video = this.$store.getters.videos.find({ id: videoId }).value()
         for (let metaId in arr) {
-          if (this.edits[metaId]===2) arr[metaId] = _.union(video[metaId] || [], arr[metaId])
+          let oldArr = video[metaId] || []
+          if (this.edits[metaId]===2) arr[metaId] = _.union(oldArr, arr[metaId])
+          if (this.edits[metaId]===3) arr[metaId] = oldArr.filter(i=>arr[metaId].indexOf(i)===-1)
+          // sort
+          let meta = this.getMeta(metaId)
+          if (meta && meta.type === 'complex') arr[metaId].sort((a,b)=>{
+            a = this.getCard(a).meta.name
+            b = this.getCard(b).meta.name
+            return a.localeCompare(b)
+          })
         }
         this.$store.getters.videos.find({ id: videoId }).assign(arr).write()
       })
@@ -343,13 +359,13 @@ export default {
     },    
     saveListView() { this.dialogListView = false },
     toggleEditMode(meta) {
-      // 0 - disabled, 1 - replace, 2 - add (for arrays)
+      // 0 - disabled, 1 - replace, 2 - add (for arrays), 3 - remove (for arrays)
       let type
       if (meta.type === 'complex') type = 'array'
       else type = this.getMeta(meta.id).dataType
-      if (this.edits[meta.id]===1 && type!=='array') this.edits[meta.id] = 0
-      else if (this.edits[meta.id]===2 && type==='array') this.edits[meta.id] = 0
-      else this.edits[meta.id] = ++this.edits[meta.id]
+      ++this.edits[meta.id]
+      if (this.edits[meta.id]>1 && type!=='array') this.edits[meta.id] = 0
+      else if (this.edits[meta.id]>3 && type==='array') this.edits[meta.id] = 0
       this.key = Date.now()
     },
   },
