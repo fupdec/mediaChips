@@ -16,19 +16,20 @@
           <v-btn @click="close" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> Close</v-btn>
           <v-btn @click="save" outlined> <v-icon left>mdi-content-save</v-icon> Save</v-btn>
         </v-toolbar>
-        <div class="d-flex justify-space-between pa-4">
-          <v-btn v-if="meta.settings.scraper" @click="dialogScraper=true" small rounded color="secondary"> 
-            <v-icon left>mdi-magnify</v-icon> Scrape data </v-btn>
-          <v-spacer v-if="meta.settings.scraper"></v-spacer>
-          <v-chip label outlined small> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
-          <span class="caption mx-4">id: {{card.id}}</span>
-          <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>
-        </div>
+        <v-progress-linear :value="completed" height="5" color="secondary"/>
         <vuescroll>
           <v-card-text>
             <v-form v-model="valid" ref="form" @submit.prevent>
               <v-container fluid>
                 <v-row>
+                  <v-col cols="12" class="pt-0 d-flex justify-space-between">
+                    <v-btn v-if="meta.settings.scraper" @click="dialogScraper=true" small rounded color="secondary"> 
+                      <v-icon left>mdi-magnify</v-icon> Scrape data </v-btn>
+                    <v-spacer v-if="meta.settings.scraper"></v-spacer>
+                    <v-chip label outlined small> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
+                    <span class="caption mx-4">id: {{card.id}}</span>
+                    <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>
+                  </v-col>
                   <v-col cols="12" lg="6" class="pt-0 remove-details-margin">
                     <v-text-field v-model="name" :rules="[nameRules]" label="Name" 
                       :prepend-inner-icon="showIcons?`mdi-${getMeta('name').settings.icon}`:''"/>
@@ -254,6 +255,7 @@ export default {
   mixins: [ShowImageFunction, NameRules, MetaGetters ], 
   mounted () {
     this.$nextTick(function () {
+      this.updateCardInfoComplete()
       setTimeout(() => { this.panels = true }, 1000)
     })
   },
@@ -275,6 +277,7 @@ export default {
     panels: false,
     countries: Countries,
     listViewMeta: null,
+    completed: 1,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,
@@ -357,6 +360,20 @@ export default {
         return a.localeCompare(b)
       })
       this.values[metaId] = value 
+      this.updateCardInfoComplete()
+    },
+    updateCardInfoComplete() {
+      let completed = []
+      for (let m of _.cloneDeep(this.metaInCard)) {
+        const val = this.values[m.id]
+        if (val===undefined) completed.push(0)
+        else if (typeof val == 'boolean') completed.push(1)
+        else if (typeof val == 'number') val > 0 ? completed.push(1) : completed.push(0)
+        else val.length > 0 ? completed.push(1) : completed.push(0)
+      }
+      let completedValue = 0
+      for (let i of completed) completedValue = completedValue + i
+      this.completed = Math.ceil(completedValue / completed.length * 100)
     },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
     save() {
@@ -396,7 +413,7 @@ export default {
           this.values[meta.id] = arr
         }
       }
-      console.log(this.values)
+      // console.log(this.values)
     },
     copyNameToClipboard() {
       this.tooltipCopyName = true
