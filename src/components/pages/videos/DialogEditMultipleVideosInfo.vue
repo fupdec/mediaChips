@@ -126,8 +126,9 @@
                     <div class="d-flex">
                       <v-icon v-html="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''" left/>
                       <v-rating :value="values[m.id]" @input="setVal($event,m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
-                        :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
-                        :color="getMeta(m.id).settings.ratingColor" background-color="grey" clearable :readonly="edits[m.id]===0"/>
+                        :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIconEmpty||getMeta(m.id).settings.ratingIcon}`" 
+                        :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable :readonly="edits[m.id]===0"
+                        :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
                     </div>
                     <div class="text--secondary caption">{{getMeta(m.id).settings.hint}}</div>
                   </div>

@@ -118,8 +118,9 @@
                     <span v-else-if="getMeta(m.id).dataType=='boolean'">{{JSON.stringify(card.meta[m.id])}}</span>
                     <span v-else-if="getMeta(m.id).dataType=='rating'">      
                       <v-rating :value="card.meta[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
-                        :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
-                        :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable/>
+                        :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIconEmpty||getMeta(m.id).settings.ratingIcon}`" 
+                        :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable 
+                        :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
                     </span>
                     <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
                     <span v-else>{{card.meta[m.id]}}</span>

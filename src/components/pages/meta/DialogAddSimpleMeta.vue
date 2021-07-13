@@ -37,9 +37,21 @@
                 </template>
               </v-autocomplete>
               <v-switch v-if="dataType=='string'" v-model="isLink" :label="`Open link in browser - ${isLink?'Yes':'No'}`" hide-details/>
-              <div v-if="dataType=='rating'">
+              <v-card v-if="dataType=='rating'" outlined class="px-4 pb-4 mt-4">
+                <div class="overline text-center my-2">Settings for Rating</div>
                 <v-autocomplete v-model="ratingIcon" :items="icons" :filter="filterIcons"
                   item-text="name" item-value="name" label="Icon for rating"
+                  :rules="[value => !!value || 'Icon is required']">
+                  <template v-slot:selection="data">
+                    <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
+                  </template>
+                  <template v-slot:item="data">
+                    <v-icon left>mdi-{{data.item.name}}</v-icon>
+                    <span v-html="data.item.name"></span>
+                  </template>
+                </v-autocomplete>
+                <v-autocomplete v-model="ratingIconEmpty" :items="icons" :filter="filterIcons"
+                  item-text="name" item-value="name" label="Icon for empty rating"
                   :rules="[value => !!value || 'Icon is required']">
                   <template v-slot:selection="data">
                     <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
@@ -54,11 +66,24 @@
                   :hint="`The rating will be from 0 to ${ratingMax}`"/>
                 <v-btn @click="openDialogPalette" :color="ratingColor" rounded block class="my-2">
                   <v-icon left>mdi-palette</v-icon> change rating color </v-btn>
+                <v-switch v-model="ratingHalf" :label="`Half increment - ${ratingHalf?'Yes':'No'}`"/>
+                <v-autocomplete v-if="ratingHalf" v-model="ratingIconHalf" :items="icons" :filter="filterIcons"
+                  item-text="name" item-value="name" label="Icon for half rating"
+                  :rules="[value => !!value || 'Icon is required']">
+                  <template v-slot:selection="data">
+                    <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
+                  </template>
+                  <template v-slot:item="data">
+                    <v-icon left>mdi-{{data.item.name}}</v-icon>
+                    <span v-html="data.item.name"></span>
+                  </template>
+                </v-autocomplete>
                 <div class="mt-4">Rating preview</div>
-                <v-rating :value="1" :length="ratingMax>10?10:ratingMax<2?2:ratingMax" hover 
-                  :full-icon="`mdi-${ratingIcon}`" :empty-icon="`mdi-${ratingIcon}`" :color="ratingColor"
-                  background-color="grey" class="meta-rating"/>
-              </div>
+                <v-rating :value="1" :length="ratingMax>10?10:ratingMax<2?2:ratingMax" hover
+                  :full-icon="`mdi-${ratingIcon}`" :empty-icon="`mdi-${ratingIconEmpty||ratingIcon}`" 
+                  :color="ratingColor" background-color="grey" class="meta-rating" clearable
+                  :half-increments="ratingHalf" :half-icon="`mdi-${ratingIconHalf||ratingIcon}`"/>
+              </v-card>
             </v-form>
             <v-card v-if="dataType=='array'" outlined class="px-4 pb-4 mt-4">
               <div class="overline text-center">Array Items</div>
@@ -138,7 +163,11 @@ export default {
     validItemName: false,
     items: [],
     itemName: '',
-    ratingIcon: 'shape',
+    // rating
+    ratingIcon: 'star',
+    ratingIconEmpty: 'star-outline',
+    ratingIconHalf: 'star-half-full',
+    ratingHalf: false,
     ratingMax: 5,
     ratingColor: '#ffab00',
     dialogPalette: false,

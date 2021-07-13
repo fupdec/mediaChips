@@ -124,8 +124,9 @@
             <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id, 'video')}}</span>
             <span v-else-if="getMeta(m.id).dataType=='rating'">      
               <v-rating :value="video[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
-                :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" 
-                :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable/>
+                :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIconEmpty||getMeta(m.id).settings.ratingIcon}`" 
+                :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable
+                :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
             </span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{video[m.id]?'Yes':'No'}}</span>
             <span v-else>{{video[m.id]}}</span>
