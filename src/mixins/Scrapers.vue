@@ -1,9 +1,12 @@
 <script>
+const fs = require('fs')
 const path = require("path")
 const axios = require("axios")
 const cheerio = require("cheerio")
 
+import jimp from 'jimp'
 import Countries from '@/components/elements/Countries'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   computed: {
@@ -11,6 +14,9 @@ export default {
   data: () => ({
     months: ['january','february','march','april','may','june','july','august','september','october','november','december'],
   }),
+  computed: {
+    pathToUserData() { return this.$store.getters.getPathToUserData }
+  },
   methods: {
     findMeta(scraper) {
       this.searchInProgress = true
@@ -81,6 +87,19 @@ export default {
       })
     },
     freeonesMeta($, name) {
+      let imgSrc = $('.dashboard-image-large img')
+      if (imgSrc.length && this.meta.settings.images) {
+        const imgPath = path.join(this.pathToUserData,'/media/',`meta/${this.meta.id}`,`${this.$store.state.Meta.selectedMeta[0]}_main.jpg`)
+        let imgUrl = imgSrc[0].attribs.src
+        if (!fs.existsSync(imgPath)) {
+          axios.get(imgUrl, {responseType: 'arraybuffer'}).then(response => {
+            const buffer = Buffer.from(response.data, 'binary')
+            jimp.read(buffer)
+              .then(image => image.quality(85).write(imgPath))
+              .catch(err => { console.error(err) })
+          })
+        }
+      }
       let found = {}
       found.name = name
       found.synonyms = $('[data-test="link-country"]').text().trim()

@@ -54,7 +54,7 @@
                     <v-col cols="4" xs="4" sm="3" md="2" v-for="(f, i) in found" :key="i">
                       <v-hover>
                         <template v-slot:default="{ hover }">
-                          <v-card height="100%">
+                          <v-card height="100%" outlined>
                             <v-img :src="f.img" :aspect-ratio="1" position="center top" 
                               style="background-color:#777;"
                             > <country-flag :country='findCountryCode(f.country)' size='normal'/>
