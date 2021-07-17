@@ -137,6 +137,11 @@
                 <v-icon left>mdi-form-textbox</v-icon> Update path in videos </v-btn>
             </div>
             <div class="d-flex align-center mt-6">
+              <span class="mr-6">Add most popular tags, performers, websites:</span>
+              <v-btn @click="dialogAddMetaCardsTemplate=true" class="px-5" rounded color="secondary">
+                <v-icon left>mdi-plus</v-icon> Add </v-btn>
+            </div>
+            <div class="d-flex align-center mt-6">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -171,6 +176,7 @@
             </div>
           </v-card>
         </v-card>
+        <DialogAddMetaCardsTemplate v-if="dialogAddMetaCardsTemplate" :dialog="dialogAddMetaCardsTemplate" @finish="dialogAddMetaCardsTemplate=false"/>
 
         <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
           <v-card>
@@ -627,6 +633,7 @@ export default {
     EditTagItemsOfParameter,
     vuescroll,
     Registration,
+    DialogAddMetaCardsTemplate: () => import("@/components/pages/meta/DialogAddMetaCardsTemplate.vue"),
   },
   mounted () {
     this.$nextTick(function () {
@@ -671,6 +678,7 @@ export default {
     videosWithSamePath: [],
     isCheckingUpdate: false,
     updateApp: false,
+    dialogAddMetaCardsTemplate: false,
   }),
   computed: {
     updateIntervalDataFromVideos: {

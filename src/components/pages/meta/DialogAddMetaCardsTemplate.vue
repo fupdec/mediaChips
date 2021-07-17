@@ -1,0 +1,225 @@
+<template>
+<div>
+  <v-dialog v-model="dialog" persistent scrollable max-width="800">
+    <v-card>
+      <v-toolbar color="primary">
+        <div class="headline">Add performers, tags, websites</div>
+        <v-spacer></v-spacer>
+        <v-btn @click="finish" :disabled="isProcessRunning" class="mr-4" outlined><v-icon left>mdi-cancel</v-icon>Cancel</v-btn>
+        <v-btn @click="start" :disabled="isProcessRunning" outlined><v-icon left>mdi-plus</v-icon>Add</v-btn>
+      </v-toolbar>
+      <vuescroll>
+        <v-card-text>
+          <v-alert type="info" text outlined dense>
+            Add most popular performers from "freeones.com", tags, websites. <br>
+            To get performers you need an internet connection.
+          </v-alert>
+
+          <div class="d-flex align-center">
+            <v-switch v-model="settings.performers.value" label="Add performers" class="ma-0 pa-0 mr-4" hide-details/>
+            <v-autocomplete v-model="settings.performers.meta" :disabled="!settings.performers.value" :items="metaList"
+              label="Meta with performers" placeholder="Please select the meta for which performers will be added" 
+              :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
+              <template v-slot:selection="data">
+                <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
+                <span>{{data.item.settings.name}}</span>
+              </template>
+              <template v-slot:item="data">
+                <v-icon left>mdi-{{data.item.settings.icon}}</v-icon>
+                <span>{{data.item.settings.name}}</span>
+              </template>
+            </v-autocomplete>
+          </div>
+          <div class="d-flex align-center">
+            <div class="mr-4">The number of performers to be added: {{numberPerformers}}</div>
+            <v-slider v-model="numberPerformers" :disabled="!settings.performers.value" hide-details step="96" min="96" max="960" class="mx-4"/>
+          </div>
+          <div>
+            <div>Performers received: {{found.length}}</div>
+            <span v-for="(p,i) in found" :key="i" class="mr-1">{{p.name}},</span>
+          </div>
+
+          <div class="d-flex align-center">
+            <v-switch v-model="settings.tags.value" label="Add tags" class="ma-0 pa-0 mr-4" hide-details/>
+            <v-autocomplete v-model="settings.tags.meta" :disabled="!settings.tags.value" :items="metaList"
+              label="Meta with tags" placeholder="Please select the meta for which tags will be added" 
+              :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
+              <template v-slot:selection="data">
+                <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
+                <span>{{data.item.settings.name}}</span>
+              </template>
+              <template v-slot:item="data">
+                <v-icon left>mdi-{{data.item.settings.icon}}</v-icon>
+                <span>{{data.item.settings.name}}</span>
+              </template>
+            </v-autocomplete>
+          </div>
+
+          <div class="d-flex align-center">
+            <v-switch v-model="settings.websites.value" label="Add websites" class="ma-0 pa-0 mr-4" hide-details/>
+            <v-autocomplete v-model="settings.websites.meta" :disabled="!settings.websites.value" :items="metaList"
+              label="Meta with websites" placeholder="Please select the meta for which websites will be added" 
+              :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
+              <template v-slot:selection="data">
+                <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
+                <span>{{data.item.settings.name}}</span>
+              </template>
+              <template v-slot:item="data">
+                <v-icon left>mdi-{{data.item.settings.icon}}</v-icon>
+                <span>{{data.item.settings.name}}</span>
+              </template>
+            </v-autocomplete>
+          </div>
+        </v-card-text>
+      </vuescroll>
+    </v-card>
+  </v-dialog>
+  <v-dialog v-model="dialogGetInfo" persistent scrollable max-width="800">
+    <v-card>
+      <v-toolbar color="primary">
+        <div class="headline">Get info for performers</div>
+        <v-spacer></v-spacer>
+        <v-btn @click="finish" :disabled="isProcessRunning" class="mr-4" outlined><v-icon left>mdi-cancel</v-icon>Cancel</v-btn>
+      </v-toolbar>
+      <vuescroll>
+        <v-card-text>
+        </v-card-text>
+      </vuescroll>
+    </v-card>
+  </v-dialog>
+</div>
+</template>
+
+
+<script>
+const fs = require('fs')
+const path = require("path")
+const axios = require("axios")
+const cheerio = require("cheerio")
+const shortid = require('shortid')
+
+import vuescroll from 'vuescroll'
+import jimp from 'jimp'
+import Countries from '@/components/elements/Countries'
+import MetaGetters from '@/mixins/MetaGetters'
+
+export default {
+  name: 'DialogAddMetaCardsTemplate',
+  props: {
+    dialog: Boolean,
+  },
+  components: {
+    vuescroll,
+  },
+  mixins: [MetaGetters], 
+  mounted() {
+    this.$nextTick(function () {
+    })
+  },
+  data: () => ({
+    settings: {
+      performers: {
+        value: false,
+        meta: null,
+      },
+      tags: {
+        value: false,
+        meta: null,
+      },
+      websites: {
+        value: false,
+        meta: null,
+      },
+    },
+    numberPerformers: 288,
+    isProcessRunning: false,
+    dialogGetInfo: false,
+    months: ['january','february','march','april','may','june','july','august','september','october','november','december'],
+    found: [],
+  }),
+  computed: {
+    pathToUserData() { return this.$store.getters.getPathToUserData },
+    metaList() { return this.$store.getters.meta.filter({type:'complex'}).value() },
+  },
+  methods: {
+    async start() {
+      if (!this.settings.performers.value && !this.settings.tags.value && !this.settings.websites.value) return
+      if (this.settings.performers.value) if (this.settings.performers.meta == null || this.settings.performers.meta.length == 0) return // check if empty
+      if (this.settings.tags.value) if (this.settings.tags.meta == null || this.settings.tags.meta.length == 0) return // check if empty
+      if (this.settings.websites.value) if (this.settings.websites.meta == null || this.settings.websites.meta.length == 0) return // check if empty
+      this.isProcessRunning = true
+      this.dialogGetInfo = true
+      let pages = this.numberPerformers/96
+      for (let i=1; i<=pages; i++) {
+        let query = 'https://www.freeones.com/babes?s=rank.currentRank&o=asc&l=96&v=grid&f%5Bprofessions%5D=porn_stars&p='+i
+        await this.getPerformers(query)
+      }
+      await this.createPerformers()
+      this.isProcessRunning = false
+    },
+    finish() { this.$emit('finish')},
+    sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) },
+    async getPerformers(query) {
+      return new Promise(resolve => {
+        axios.get(query).then((response) => {
+          if (response.status !== 200) return
+          const html = response.data
+          const $ = cheerio.load(html)
+          $('.grid-item').each((i,e) => {
+            let p = {}
+            p.id = shortid.generate()
+            p.name = $(e).find('[data-test="subject-name"]').text().trim()
+            p.link = $(e).find('a').attr('href').replace('feed','bio')
+            let avatar = $(e).find('.image-content').attr('src')
+            if (avatar == undefined) avatar = $(e).find('.image-content').attr('data-src')
+            if (avatar !== undefined) p.img = avatar
+            this.found.push(p)
+          })
+          resolve()
+        }, (error) => { console.log(error) })
+      })
+    },
+    async createPerformers() {
+      return new Promise(async resolve => {
+        const metaId = this.settings.performers.meta
+        const meta = this.getMeta(metaId)
+        for (const p of this.found) {
+          let card = {
+            id: p.id,
+            metaId,
+            date: Date.now(),
+            edit: Date.now(),
+            views: 0,
+            meta: {
+              name: p.name,
+            },
+          }
+          
+          let isDublicate = this.$store.getters.metaCards.find(i=>i.meta.name.toLowerCase()===p.name.toLowerCase()).value()
+          if (!isDublicate) {
+            this.$store.dispatch('addMetaCard', card)
+            // if (p.img && meta.settings.images) await this.createImage(p.img, p.id, metaId)
+          }
+          
+          await this.sleep(1)
+        }
+        resolve()
+      })
+    },
+    createImage(imgUrl, metaCardId, metaId) {
+      return new Promise(async (resolve, reject) => {
+        const imgPath = path.join(this.pathToUserData,'/media/',`meta/${metaId}`,`${metaCardId}_main.jpg`)
+        axios.get(imgUrl, {responseType: 'arraybuffer'})
+          .then(response => {
+            const buffer = Buffer.from(response.data, 'binary')
+            jimp.read(buffer)
+              .then(image => { image.quality(85).write(imgPath); console.log(111); resolve() })
+              .catch(err => { console.error(err); reject() })
+          })
+          .catch(err => { console.error(err); reject() })
+      })
+    },
+    filterMeta(metaObj, queryText) { return metaObj.settings.name.toLowerCase().includes(queryText.toLowerCase()) },
+  },
+}
+</script>
