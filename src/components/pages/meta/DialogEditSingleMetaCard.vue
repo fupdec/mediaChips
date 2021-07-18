@@ -3,8 +3,12 @@
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="980" width="70vw">
       <v-card>
         <v-toolbar color="primary">
-          <!-- TODO add image with meta -->
-          <span class="headline">Editing of {{meta.settings.nameSingular.toLowerCase()}} 
+          <v-avatar v-if="meta.settings.images && getImgUrl()" class="card-img"
+            @mouseover.stop="showImage($event,card.id,'meta',meta.id)" 
+            @mouseleave.stop="$store.state.hoveredImage=false"> 
+            <img :src="getImgUrl()"></v-avatar>
+          <span class="headline">
+            <div class="caption">Editing of {{meta.settings.nameSingular.toLowerCase()}}</div>
             <v-tooltip v-model="tooltipCopyName" bottom>
               <template v-slot:activator="{ click }">
                 <b v-on="click" @click="copyNameToClipboard" style="cursor:pointer;" title="Copy name to clipboard">{{card.meta.name}}</b>
@@ -225,6 +229,8 @@
 </template>
 
 <script>
+const fs = require("fs")
+const path = require("path")
 const { clipboard } = require('electron')
 const shortid = require('shortid')
 
@@ -314,6 +320,7 @@ export default {
       return values
     },
     showIcons() { return this.$store.state.Settings.showIconsOfMetaInEditingDialog },
+    pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
     parseMetaInCard() {
@@ -518,6 +525,27 @@ export default {
       this.color = this.colorPicker
       this.dialogColor = false
     },
+    getImgUrl() {
+      let imgPath = path.join(this.pathToUserData, '/media/meta/', `${this.meta.id}/${this.card.id}_avatar.jpg`)
+      let imgMainPath = path.join(this.pathToUserData, '/media/meta/', `${this.meta.id}/${this.card.id}_main.jpg`)
+      if (!fs.existsSync(imgPath)) {
+        if (fs.existsSync(imgMainPath)) imgPath = imgMainPath
+        else return false
+      }
+      return 'file://' + imgPath
+    },
   },
 };
 </script>
+
+
+<style lang="scss">
+.card-img {
+  margin-right: 15px;
+  img {
+    position: absolute;
+    height: auto;
+    top: 0;
+  }
+}
+</style>
