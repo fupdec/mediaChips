@@ -62,7 +62,7 @@
                     <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
                   </v-chip>
                   <v-chip label outlined class="mx-4">
-                    <v-icon left size="20">mdi-eye</v-icon> Views: {{card.views}}
+                    <v-icon left size="20">mdi-eye</v-icon> Views: {{card.views || 0}}
                   </v-chip>
                   <v-chip label outlined>
                     <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
@@ -254,6 +254,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
+      this.updateViews()
       this.initFilters()
     })
   },
@@ -343,6 +344,11 @@ export default {
     complexMetaAssignedToVideos() { return _.filter(this.$store.state.Settings.metaAssignedToVideos, {type:'complex'}) },
   },
   methods: {
+    updateViews() {
+      let views = this.card.views || 0
+      ++views
+      this.$store.getters.metaCards.find({id:this.card.id}).assign({views}).write()
+    },
     removeAllFilters() {
       // TODO fix this
       this.$store.state.Meta.filters = []
