@@ -154,15 +154,13 @@ export default {
       setTimeout(() => {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
-        let contextMenu = [
-          { name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true}, },
-          { name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard },
-          { type: 'divider' },
-          { name: `Open ${this.meta.settings.nameSingular} in New Tab`, type: 'item', icon: 'tab-plus', function: ()=>{this.addNewTabMetaCard()}, disabled: !this.isSelectedSingleMetaCard },
-          { type: 'divider' },
-        ]
-        if (this.isMetaAssignedToVideo) contextMenu = [...contextMenu, ...[{ name: `Filter Videos by ${this.meta.settings.nameSingular}`, type: 'item', icon: 'filter', function: ()=>{this.filterVideosBy()}, },{ type: 'divider' },]]
-        contextMenu = [...contextMenu,...[{ name: `Delete ${this.meta.settings.nameSingular}`, type: 'item', icon: 'delete', color: 'red', function: ()=>{this.$store.state.Meta.dialogDeleteMetaCard=true} },]]
+        let contextMenu = [{ name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true} }]
+        if (this.meta.settings.images) contextMenu.push({ name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard })
+        if (this.meta.settings.scraper) contextMenu.push({ name: `Scrape info for ${this.meta.settings.name}`, type: 'item', icon: 'magnify', function: ()=>{this.$store.state.Meta.dialogScrapeInfoMetaCard=true}})
+        contextMenu.push({ type: 'divider' })
+        if (this.isMetaAssignedToVideo) contextMenu.push({ name: `Open ${this.meta.settings.nameSingular} in New Tab`, type: 'item', icon: 'tab-plus', function: ()=>{this.addNewTabMetaCard()}, disabled: !this.isSelectedSingleMetaCard },
+          { name: `Filter Videos by ${this.meta.settings.nameSingular}`, type: 'item', icon: 'filter', function: ()=>{this.filterVideosBy()} },{ type: 'divider' })
+        contextMenu.push({ name: `Delete ${this.meta.settings.nameSingular}`, type: 'item', icon: 'delete', color: 'red', function: ()=>{this.$store.state.Meta.dialogDeleteMetaCard=true} })
         this.$store.state.contextMenuContent = contextMenu
         this.$store.state.contextMenu = true
       }, 300)

@@ -35,8 +35,8 @@
             <v-slider v-model="numberPerformers" :disabled="!settings.performers.value" hide-details step="96" min="96" max="960" class="mx-4"/>
           </div>
           <div>
-            <div>Performers received: {{found.length}}</div>
-            <span v-for="(p,i) in found" :key="i" class="mr-1">{{p.name}},</span>
+            <div>Performers received: {{found.length}} / {{numberPerformers}}</div>
+            <v-progress-linear v-if="isProcessRunning" height="5" color="secondary" rounded indeterminate/>
           </div>
 
           <div class="d-flex align-center">
@@ -74,43 +74,26 @@
       </vuescroll>
     </v-card>
   </v-dialog>
-  <v-dialog v-model="dialogGetInfo" persistent scrollable max-width="800">
-    <v-card>
-      <v-toolbar color="primary">
-        <div class="headline">Get info for performers</div>
-        <v-spacer></v-spacer>
-        <v-btn @click="finish" :disabled="isProcessRunning" class="mr-4" outlined><v-icon left>mdi-cancel</v-icon>Cancel</v-btn>
-      </v-toolbar>
-      <vuescroll>
-        <v-card-text>
-        </v-card-text>
-      </vuescroll>
-    </v-card>
-  </v-dialog>
 </div>
 </template>
 
 
 <script>
-const fs = require('fs')
-const path = require("path")
 const axios = require("axios")
 const cheerio = require("cheerio")
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
-import jimp from 'jimp'
-import Countries from '@/components/elements/Countries'
 import MetaGetters from '@/mixins/MetaGetters'
+import Tags from '@/components/elements/TagsDefault'
+import Websites from '@/components/elements/WebsitesDefault'
 
 export default {
   name: 'DialogAddMetaCardsTemplate',
   props: {
     dialog: Boolean,
   },
-  components: {
-    vuescroll,
-  },
+  components: { vuescroll, },
   mixins: [MetaGetters], 
   mounted() {
     this.$nextTick(function () {
@@ -133,7 +116,6 @@ export default {
     },
     numberPerformers: 288,
     isProcessRunning: false,
-    dialogGetInfo: false,
     months: ['january','february','march','april','may','june','july','august','september','october','november','december'],
     found: [],
   }),
@@ -148,14 +130,18 @@ export default {
       if (this.settings.tags.value) if (this.settings.tags.meta == null || this.settings.tags.meta.length == 0) return // check if empty
       if (this.settings.websites.value) if (this.settings.websites.meta == null || this.settings.websites.meta.length == 0) return // check if empty
       this.isProcessRunning = true
-      this.dialogGetInfo = true
       let pages = this.numberPerformers/96
-      for (let i=1; i<=pages; i++) {
-        let query = 'https://www.freeones.com/babes?s=rank.currentRank&o=asc&l=96&v=grid&f%5Bprofessions%5D=porn_stars&p='+i
-        await this.getPerformers(query)
+      if (this.settings.performers.value) {
+        for (let i=1; i<=pages; i++) {
+          let query = 'https://www.freeones.com/babes?s=rank.currentRank&o=asc&l=96&v=grid&f%5Bprofessions%5D=porn_stars&p='+i
+          await this.getPerformers(query)
+        }
+        await this.createPerformers()
       }
-      await this.createPerformers()
+      if (this.settings.tags.value) await this.createTags()
+      if (this.settings.websites.value) await this.createWebsites()
       this.isProcessRunning = false
+      this.finish()
     },
     finish() { this.$emit('finish')},
     sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) },
@@ -182,41 +168,65 @@ export default {
     async createPerformers() {
       return new Promise(async resolve => {
         const metaId = this.settings.performers.meta
-        const meta = this.getMeta(metaId)
         for (const p of this.found) {
           let card = {
             id: p.id,
             metaId,
-            date: Date.now(),
-            edit: Date.now(),
             views: 0,
             meta: {
               name: p.name,
             },
           }
           
-          let isDublicate = this.$store.getters.metaCards.find(i=>i.meta.name.toLowerCase()===p.name.toLowerCase()).value()
-          if (!isDublicate) {
-            this.$store.dispatch('addMetaCard', card)
-            // if (p.img && meta.settings.images) await this.createImage(p.img, p.id, metaId)
-          }
-          
+          let isDublicate = this.$store.getters.metaCards.filter({metaId}).find(i=>i.meta.name.toLowerCase()===p.name.toLowerCase()).value()
+          if (!isDublicate) this.$store.dispatch('addMetaCard', card)
           await this.sleep(1)
         }
         resolve()
       })
     },
-    createImage(imgUrl, metaCardId, metaId) {
-      return new Promise(async (resolve, reject) => {
-        const imgPath = path.join(this.pathToUserData,'/media/',`meta/${metaId}`,`${metaCardId}_main.jpg`)
-        axios.get(imgUrl, {responseType: 'arraybuffer'})
-          .then(response => {
-            const buffer = Buffer.from(response.data, 'binary')
-            jimp.read(buffer)
-              .then(image => { image.quality(85).write(imgPath); console.log(111); resolve() })
-              .catch(err => { console.error(err); reject() })
-          })
-          .catch(err => { console.error(err); reject() })
+    async createTags() {
+      return new Promise(async resolve => {
+        const metaId = this.settings.tags.meta
+        const synonyms = this.getMeta(metaId).settings.synonyms
+        for (const t of Tags) {
+          let card = {
+            id: shortid.generate(),
+            metaId,
+            views: 0,
+            meta: {
+              name: t.name,
+            },
+          }
+          if (synonyms) card.meta.synonyms = t.synonyms || []
+          
+          let isDublicate = this.$store.getters.metaCards.filter({metaId}).find(i=>i.meta.name.toLowerCase()===t.name.toLowerCase()).value()
+          if (!isDublicate) this.$store.dispatch('addMetaCard', card)
+          await this.sleep(1)
+        }
+        resolve()
+      })
+    },
+    async createWebsites() {
+      return new Promise(async resolve => {
+        const metaId = this.settings.websites.meta
+        const synonyms = this.getMeta(metaId).settings.synonyms
+        for (const w of Websites) {
+          let card = {
+            id: shortid.generate(),
+            metaId,
+            views: 0,
+            meta: {
+              name: w.name,
+            },
+          }
+          if (synonyms) card.meta.synonyms = w.synonyms || []
+          
+          let isDublicate = this.$store.getters.metaCards.filter({metaId}).find(i=>i.meta.name.toLowerCase()===w.name.toLowerCase()).value()
+          if (!isDublicate) this.$store.dispatch('addMetaCard', card)
+          await this.sleep(1)
+        }
+        resolve()
       })
     },
     filterMeta(metaObj, queryText) { return metaObj.settings.name.toLowerCase().includes(queryText.toLowerCase()) },

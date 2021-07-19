@@ -91,7 +91,7 @@
           <v-spacer></v-spacer>
           <v-btn @click="dialogTransferInfo=false" outlined><v-icon left>mdi-close</v-icon>Cancel</v-btn>
           <v-btn @click="applyTransfered" class="mx-4" outlined><v-icon left>mdi-transfer</v-icon>Apply transfered</v-btn>
-          <v-btn @click="applyFounded" outlined><v-icon left>mdi-magnify</v-icon>Apply found</v-btn>
+          <v-btn @click="applyFound" outlined><v-icon left>mdi-magnify</v-icon>Apply found</v-btn>
         </v-toolbar>
         <v-card-actions>
           <v-btn @click="initCurrentValues" small rounded color="secondary" class="mt-4 pr-4">
@@ -326,7 +326,7 @@ export default {
       if (this.nonexistent.simple.length || this.nonexistent.complex.length) return
       this.$emit('getValues', this.transfer.current) 
     },
-    applyFounded() { 
+    applyFound() { 
       this.validateNonexistent('found') 
       if (this.nonexistent.simple.length || this.nonexistent.complex.length) return
       this.$emit('getValues', this.transfer.found) 

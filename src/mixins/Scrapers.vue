@@ -6,7 +6,6 @@ const cheerio = require("cheerio")
 
 import jimp from 'jimp'
 import Countries from '@/components/elements/Countries'
-import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   computed: {
@@ -77,7 +76,7 @@ export default {
         this.transfer.found = {}
         const html = response.data
         const $ = cheerio.load(html)
-        if (scraper == 'freeonce') this.freeonesMeta($, name)
+        if (scraper == 'freeonce') this.freeonesMeta($, this.$store.state.Meta.selectedMeta[0])
         if (scraper == 'iafd') this.iafdMeta($, name)
         this.initCurrentValues()
         this.dialogTransferInfo = true
@@ -86,10 +85,11 @@ export default {
         this.$store.dispatch('setNotification', {type:'error', text:`Can't find info for "${this.queryString}"`})
       })
     },
-    freeonesMeta($, name) {
+    freeonesMeta($, metaCardId) {
+      return new Promise(resolve => {
       let imgSrc = $('.dashboard-image-large img')
       if (imgSrc.length && this.meta.settings.images) {
-        const imgPath = path.join(this.pathToUserData,'/media/',`meta/${this.meta.id}`,`${this.$store.state.Meta.selectedMeta[0]}_main.jpg`)
+        const imgPath = path.join(this.pathToUserData,'/media/',`meta/${this.meta.id}/`,`${metaCardId}_main.jpg`)
         let imgUrl = imgSrc[0].attribs.src
         if (!fs.existsSync(imgPath)) {
           axios.get(imgUrl, {responseType: 'arraybuffer'}).then(response => {
@@ -101,7 +101,7 @@ export default {
         }
       }
       let found = {}
-      found.name = name
+      found.name = $('.dashboard-image-container img').attr('title') || this.getCard(metaCardId).meta.name
       found.synonyms = $('[data-test="link-country"]').text().trim()
       found.synonyms = $('[data-test="p_aliases"]').text().trim()
       let yearsActive = []
@@ -139,6 +139,7 @@ export default {
       found.boobs = $('[data-test="link_span_boobs"]').text().trim()
       if (found.boobs !== undefined) {
         if (found.boobs === "Natural") found.boobs = ["Real"]
+        else if (found.boobs === "Unknown") delete found.boobs
         else found.boobs = [found.boobs]
       }
       found.category = $('.sidebar-right .heading').next().find('.text-center')[0].children[0].data
@@ -147,7 +148,10 @@ export default {
         else if (found.category.includes('Porn')) found.category = ['Pornstar']
         else found.category = [found.category]
       }
+      for (const i in found) if (found[i] === undefined) delete found[i]
       this.transfer.found = _.cloneDeep(found)
+      resolve()
+      })
     },
     iafdMeta($) {
       function getBioString(string, bio) {
@@ -198,6 +202,7 @@ export default {
           this.transfer.found.country = ['United States']
         }
       }
+      for (const i in this.transfer.found) if (this.transfer.found[i] === undefined) delete this.transfer.found[i]
       this.transfer.found.category = ['Pornstar']
     },
   },
