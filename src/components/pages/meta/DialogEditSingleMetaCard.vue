@@ -27,9 +27,9 @@
               <v-container fluid>
                 <v-row>
                   <v-col cols="12" class="pt-0 d-flex justify-space-between">
-                    <v-btn v-if="meta.settings.scraper" @click="dialogScraper=true" small rounded color="secondary"> 
+                    <v-btn v-if="meta.settings.scraper && $store.state.Settings.showAdultContent" @click="dialogScraper=true" small rounded color="secondary"> 
                       <v-icon left>mdi-magnify</v-icon> Scrape data </v-btn>
-                    <v-spacer v-if="meta.settings.scraper"></v-spacer>
+                    <v-spacer v-if="meta.settings.scraper && $store.state.Settings.showAdultContent"/>
                     <v-chip label outlined small> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
                     <span class="caption mx-4">id: {{card.id}}</span>
                     <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>

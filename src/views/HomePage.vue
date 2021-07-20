@@ -251,7 +251,7 @@
     </v-container>
 
     <MigrateToMeta v-if="migrateToMeta" :dialog="migrateToMeta" @finish="migrateToMeta=false"/>
-    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="closeDialogCreateAllMeta"/>
+    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="closeDialogCreateAllMeta" @close="createAllMeta=false"/>
 
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
   </vuescroll>
@@ -358,7 +358,7 @@ export default {
     isMigratedToMeta() { 
       let metaVersion = '0.9.0'
       let currentVersion = this.$store.state.Settings.databaseVersion || '0.8.2'
-      if (currentVersion==='0.9.0') this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.2'})
+      if (currentVersion>='0.9.0') this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.3'})
       metaVersion = metaVersion.split('.').map( s => s.padStart(10) ).join('.')
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
       return currentVersion >= metaVersion

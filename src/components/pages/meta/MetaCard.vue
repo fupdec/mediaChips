@@ -156,7 +156,7 @@ export default {
         this.$store.state.y = e.clientY
         let contextMenu = [{ name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true} }]
         if (this.meta.settings.images) contextMenu.push({ name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard })
-        if (this.meta.settings.scraper) contextMenu.push({ name: `Scrape info for ${this.meta.settings.name}`, type: 'item', icon: 'magnify', function: ()=>{this.$store.state.Meta.dialogScrapeInfoMetaCard=true}})
+        if (this.meta.settings.scraper && this.$store.state.Settings.showAdultContent) contextMenu.push({ name: `Scrape info for ${this.meta.settings.name}`, type: 'item', icon: 'magnify', function: ()=>{this.$store.state.Meta.dialogScrapeInfoMetaCard=true}})
         contextMenu.push({ type: 'divider' })
         if (this.isMetaAssignedToVideo) contextMenu.push({ name: `Open ${this.meta.settings.nameSingular} in New Tab`, type: 'item', icon: 'tab-plus', function: ()=>{this.addNewTabMetaCard()}, disabled: !this.isSelectedSingleMetaCard },
           { name: `Filter Videos by ${this.meta.settings.nameSingular}`, type: 'item', icon: 'filter', function: ()=>{this.filterVideosBy()} },{ type: 'divider' })

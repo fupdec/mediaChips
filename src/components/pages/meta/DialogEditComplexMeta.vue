@@ -100,24 +100,26 @@
                     </div>
                     <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
                       <v-icon left>mdi-plus</v-icon>Add meta to cards</v-btn>
-                    <v-divider class="my-4"></v-divider>
-                    <v-row>
-                      <v-col cols="6">       
-                        <div class="d-flex align-center"> 
-                          <v-tooltip top>
-                            <template v-slot:activator="{ on }">
-                              <v-icon v-on="on" left>mdi-magnify</v-icon>
-                            </template>
-                            <span>Search information in the internet for cards</span>
-                          </v-tooltip>            
-                          <v-switch v-model="settings.scraper" :label="`Data scraper - ${settings.scraper?'On':'Off'}`" class="my-0 py-0" hide-details/>
-                        </div>
-                      </v-col>
-                      <v-col cols="6" align="right">
-                        <v-btn @click="dialogSetUpScraper=true" color="primary" small rounded :disabled="!settings.scraper">
-                          <v-icon left>mdi-cog</v-icon>Set up meta for scraper</v-btn>
-                      </v-col>
-                    </v-row>
+                    <div v-if="$store.state.Settings.showAdultContent">
+                      <v-divider class="my-4"></v-divider>
+                      <v-row>
+                        <v-col cols="6">       
+                          <div class="d-flex align-center"> 
+                            <v-tooltip top>
+                              <template v-slot:activator="{ on }">
+                                <v-icon v-on="on" left>mdi-magnify</v-icon>
+                              </template>
+                              <span>Search information in the internet for cards</span>
+                            </v-tooltip>            
+                            <v-switch v-model="settings.scraper" :label="`Data scraper - ${settings.scraper?'On':'Off'}`" class="my-0 py-0" hide-details/>
+                          </div>
+                        </v-col>
+                        <v-col cols="6" align="right">
+                          <v-btn @click="dialogSetUpScraper=true" color="primary" small rounded :disabled="!settings.scraper">
+                            <v-icon left>mdi-cog</v-icon>Set up meta for scraper</v-btn>
+                        </v-col>
+                      </v-row>
+                    </div>
                   </v-card>
                 </v-col>
                 <v-col cols="12" align="center">

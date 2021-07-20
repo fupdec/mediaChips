@@ -70,6 +70,7 @@ dbs.defaults({
   colorScroll: false,
   tabBorders: true,
   showIconsOfMetaInEditingDialog: true,
+  showAdultContent: true,
   databaseVersion: '0.8.2',
 }).write()
 
@@ -140,6 +141,7 @@ const Settings = {
     colorScroll: dbs.get('colorScroll').value(),
     tabBorders: dbs.get('tabBorders').value(),
     showIconsOfMetaInEditingDialog: dbs.get('showIconsOfMetaInEditingDialog').value(),
+    showAdultContent: dbs.get('showAdultContent').value(),
     databaseVersion: dbs.get('databaseVersion').value(),
   }),
   mutations: {
