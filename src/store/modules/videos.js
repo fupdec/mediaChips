@@ -120,7 +120,7 @@ const Videos = {
             })
           } else {
             if (by==='date' || by==='edit') val = new Date(val).getTime()
-            videos = videos.filter(c => compare(cond, val, Number(c[by])))
+            videos = videos.filter(c => compare(cond, val, c[by]))
           } 
           continue
         }

@@ -280,7 +280,7 @@ const Meta = {
 
         if (type === 'number' || type === 'date') {
           if (by === 'date') val = new Date(val).getTime()
-          mc = mc.filter(c => compare(cond, val, Number(c.meta[by])))
+          mc = mc.filter(c => compare(cond, val, c.meta[by]))
           continue
         }
         
