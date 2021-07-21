@@ -535,7 +535,7 @@
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div>
-                <div>Adult Video Database 0.9.2 (Febby)</div>
+                <div>Adult Video Database 0.9.3 (Gia)</div>
                 <div class="text--secondary">by fupdec</div>
               </div>
               <v-spacer></v-spacer>

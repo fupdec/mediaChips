@@ -148,7 +148,7 @@ export default {
     dialogRestoreBackup: false,
     dialogRestoreBackupError: false,
     dialogDeleteBackup: false,
-    compatibleVersions: ['0.9.0','0.9.1','0.9.2'],
+    compatibleVersions: ['0.9.0','0.9.1','0.9.2','0.9.3'],
   }),
   computed: {
     pathToUserData() { return this.$store.getters.getPathToUserData },

@@ -358,9 +358,9 @@ export default {
     isMigratedToMeta() { 
       let metaVersion = '0.9.0'
       let currentVersion = this.$store.state.Settings.databaseVersion || '0.8.2'
-      if (currentVersion>='0.9.0') this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.3'})
       metaVersion = metaVersion.split('.').map( s => s.padStart(10) ).join('.')
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
+      if (currentVersion>=metaVersion) this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.3'})
       return currentVersion >= metaVersion
     },
     isContentExists() { return this.videosNumber>0 || this.performersNumber>0 || this.tagsNumber>0 || this.websitesNumber>0 },
