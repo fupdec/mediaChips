@@ -55,8 +55,8 @@
     <v-container class="text-center">
       <v-row>
         <v-col v-if="$store.getters.videosTotal==0" cols="12">
-          <img alt="AMDB" width="200" height="200" :src="logoPath">
-          <h2 class="my-8">Welcome to Adult Video Database application!</h2>
+          <img alt="mediaChips" width="200" height="200" :src="logoPath">
+          <h2 class="my-8">Welcome to mediaChips application!</h2>
       
           <div v-if="metaNumber==0&&!isContentExists" cols="12">
             <div class="mb-4"> First, create a meta for your videos. 

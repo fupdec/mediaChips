@@ -40,14 +40,14 @@
         <v-card-title>
           <span>New version {{appVersion.replace(/ /gm,'')}} is available!</span>
           <v-spacer></v-spacer>
-          <img alt="AMDB" width="60" height="60" :src="logoPath">
+          <img alt="mediaChips" width="60" height="60" :src="logoPath">
         </v-card-title>
         <v-card-actions class="pa-0">
           <v-btn @click="updateApp=false" class="ma-4">
             <v-icon left>mdi-close</v-icon> Close
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="openLink('https://avdb.app/downloads/')" color="primary" class="mr-4">
+          <v-btn @click="openLink('https://mediachips.app/downloads/')" color="primary" class="mr-4">
             <v-icon left>mdi-download</v-icon> Download from official website </v-btn>
         </v-card-actions>
       </v-card>
@@ -373,7 +373,7 @@ export default {
       this.disableRunApp = this.phrase !== this.password 
     },
     checkForUpdates() {
-      axios.get(`https://github.com/fupdec/Adult-Video-Database/releases`).then((response) => {
+      axios.get(`https://github.com/fupdec/mediaChips/releases`).then((response) => {
         if (response.status === 200) {
           const html = response.data
           const $ = cheerio.load(html)

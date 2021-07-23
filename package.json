@@ -1,16 +1,16 @@
 {
-  "name": "avdb",
-  "productName": "AVDB",
-  "version": "0.9.3",
+  "name": "mediachips",
+  "productName": "mediaChips",
+  "version": "0.10.0",
   "author": {
     "name": "fupdec",
-    "email": "fupdec@gmail.com"
+    "email": "altbbk@gmail.com"
   },
-  "homepage": "https://github.com/fupdec/Adult-Video-Database",
-  "description": "Organize your video library with ease and convenience.",
+  "homepage": "https://github.com/fupdec/mediaChips",
+  "description": "Organize your media files with ease and convenience.",
   "private": false,
   "license": "GPL-3.0",
-  "repository": "github:fupdec/Adult-Video-Database",
+  "repository": "github:fupdec/mediaChips",
   "scripts": {
     "electron:build": "vue-cli-service electron:build",
     "electron:build_portable": "vue-cli-service electron:build --win portable",

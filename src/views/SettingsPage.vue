@@ -527,7 +527,7 @@
               </v-col>
               <v-col cols="12" v-if="updateApp" class="text-center">
                 <span class="pt-4 pr-4">New version available!</span>
-                <v-btn @click="openLink('https://avdb.app/downloads/')" color="primary" rounded>
+                <v-btn @click="openLink('https://mediaChips.app/downloads/')" color="primary" rounded>
                   <v-icon left>mdi-download</v-icon> Download from official website </v-btn>
               </v-col>
             </v-row>
@@ -535,26 +535,26 @@
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div>
-                <div>Adult Video Database 0.9.3 (Gia)</div>
+                <div>mediaChips v0.10.0-beta (Harley)</div>
                 <div class="text--secondary">by fupdec</div>
               </div>
               <v-spacer></v-spacer>
               <div class="text-center d-flex flex-column">
-                <img :src="logoPath" alt="avdb" width="82" height="82">
+                <img :src="logoPath" alt="mediaChips" width="82" height="82">
                 <span>2021</span>
               </div>
             </div>
             <div>Links</div>
             <div class="d-flex flex-wrap mt-2">
-              <v-btn @click="openLink('https://avdb.app/')" color="#1da6ff" rounded class="px-5 mb-2 mr-2">
+              <v-btn @click="openLink('https://mediaChips.app/')" color="#1da6ff" rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-web</v-icon> website </v-btn>
               <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database')" color="#eee" light rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-github</v-icon> Github </v-btn>
-              <v-btn @click="openLink('https://reddit.com/r/avdb/')" color="#ff4500" rounded class="px-5 mb-2 mr-2">
+              <v-btn @click="openLink('https://reddit.com/r/mediaChips/')" color="#ff4500" rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-reddit</v-icon> Reddit </v-btn>
               <v-btn @click="openLink('https://discord.gg/QSnXFvXZVh')" color="#7289DA" rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-discord</v-icon> Discord </v-btn>
-              <v-btn @click="openLink('https://patreon.com/avdb')" color="#ff424d" rounded class="px-5 mb-2 mr-2">
+              <v-btn @click="openLink('https://patreon.com/mediaChips')" color="#ff424d" rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-patreon</v-icon> patreon </v-btn>
             </div>
             <v-divider class="my-4"></v-divider>
@@ -931,7 +931,7 @@ export default {
     },
     checkForUpdates() {
       this.isCheckingUpdate = true
-      axios.get(`https://github.com/fupdec/Adult-Video-Database/releases`).then((response) => {
+      axios.get(`https://github.com/fupdec/mediaChips/releases`).then((response) => {
         if(response.status === 200) {
           this.isCheckingUpdate = false
           const html = response.data;

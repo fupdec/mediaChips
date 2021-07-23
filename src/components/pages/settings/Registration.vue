@@ -7,7 +7,7 @@
           <v-icon left>mdi-key-variant</v-icon> Register with a license key </v-btn>
       </v-col>
       <v-col cols="12" sm="6" align="center">
-        <v-btn @click="openLink('https://patreon.com/avdb')" rounded color="#ff424d">
+        <v-btn @click="openLink('https://patreon.com/mediachips')" rounded color="#ff424d">
           <v-icon left>mdi-patreon</v-icon> Buy license key on Patreon </v-btn>
       </v-col>
     </v-row>
