@@ -7,8 +7,10 @@
           <v-icon left>mdi-key-variant</v-icon> Register with a license key </v-btn>
       </v-col>
       <v-col cols="12" sm="6" align="center">
-        <v-btn @click="openLink('https://patreon.com/mediachips')" rounded color="#ff424d">
-          <v-icon left>mdi-patreon</v-icon> Buy license key on Patreon </v-btn>
+        <v-btn v-if="registration.license_type!=='Lifetime'" @click="openLink('https://mediachips.app/')" rounded color="primary">
+          <v-icon left>mdi-key</v-icon> Buy lifetime license key </v-btn>
+        <v-btn v-if="registration.license_type!=='Month'" @click="openLink('https://patreon.com/mediachips')" rounded color="#ff424d">
+          <v-icon left>mdi-patreon</v-icon> {{registration.license_type!=='Lifetime'?'Subscribe monthly':'Support development'}} </v-btn>
       </v-col>
     </v-row>
     <div v-if="registration" class="mt-4">

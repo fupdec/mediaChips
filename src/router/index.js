@@ -4,16 +4,6 @@ const Home = () => import('../views/HomePage.vue')
 const HomeAppbar = () => import('../components/pages/home/HomeAppbar.vue')
 const Videos = () => import('../views/VideosPage.vue')
 const VideosAppbar = () => import('../components/pages/videos/VideosAppbar.vue')
-const Performer = () => import('../views/PerformerPage.vue')
-const PerformerAppbar = () => import('../components/pages/performer/PerformerAppbar.vue')
-const Performers = () => import('../views/PerformersPage.vue')
-const PerformersAppbar = () => import('../components/pages/performers/PerformersAppbar.vue')
-const Tags = () => import('../views/TagsPage.vue')
-const TagsAppbar = () => import('../components/pages/tags/TagsAppbar.vue')
-const Website = () => import('../views/WebsitePage.vue')
-const WebsiteAppbar = () => import('../components/pages/website/WebsiteAppbar.vue')
-const Websites = () => import('../views/WebsitesPage.vue')
-const WebsitesAppbar = () => import('../components/pages/websites/WebsitesAppbar.vue')
 const Playlists = () => import('../views/PlaylistsPage.vue')
 const PlaylistsAppbar = () => import('../components/pages/playlists/PlaylistsAppbar.vue')
 const Settings = () => import('../views/SettingsPage.vue')
@@ -44,46 +34,6 @@ const routes = [
     components: {
       default: Videos,
       appbar: VideosAppbar,
-    }
-  },
-  {
-    path: '/performer/:id',
-    name: 'Performer',
-    components: {
-      default: Performer,
-      appbar: PerformerAppbar,
-    }
-  },
-  {
-    path: '/performers/:id?',
-    name: 'Performers',
-    components: {
-      default: Performers,
-      appbar: PerformersAppbar,
-    }
-  },
-  {
-    path: '/tags/:id?',
-    name: 'Tags',
-    components: {
-      default: Tags,
-      appbar: TagsAppbar,
-    }
-  },
-  {
-    path: '/website/:id',
-    name: 'Website',
-    components: {
-      default: Website,
-      appbar: WebsiteAppbar,
-    }
-  },
-  {
-    path: '/websites/:id?',
-    name: 'Websites',
-    components: {
-      default: Websites,
-      appbar: WebsitesAppbar,
     }
   },
   {

@@ -24,6 +24,7 @@
 
 
 <script>
+const {app} = require('electron').remote
 const shortid = require('shortid')
 const fs = require("fs-extra")
 const path = require("path")
@@ -86,7 +87,7 @@ export default {
       }
       this.$store.state.Settings.metaAssignedToVideos = this.$store.getters.settings.get('metaAssignedToVideos').value()
 
-      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:'0.9.3'})
+      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:app.getVersion()})
             
       ipcRenderer.send('updatePlayerDb', 'settings') // update settings in player window
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window

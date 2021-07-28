@@ -535,7 +535,7 @@
           <v-card outlined class="pa-4">
             <div class="d-flex">
               <div>
-                <div>mediaChips v0.10.0-beta (Harley)</div>
+                <div>mediaChips v0.10.0-beta (Harmony)</div>
                 <div class="text--secondary">by fupdec</div>
               </div>
               <v-spacer></v-spacer>
@@ -548,7 +548,7 @@
             <div class="d-flex flex-wrap mt-2">
               <v-btn @click="openLink('https://mediaChips.app/')" color="#1da6ff" rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-web</v-icon> website </v-btn>
-              <v-btn @click="openLink('https://github.com/fupdec/Adult-Video-Database')" color="#eee" light rounded class="px-5 mb-2 mr-2">
+              <v-btn @click="openLink('https://github.com/fupdec/mediachips')" color="#eee" light rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-github</v-icon> Github </v-btn>
               <v-btn @click="openLink('https://reddit.com/r/mediaChips/')" color="#ff4500" rounded class="px-5 mb-2 mr-2">
                 <v-icon left>mdi-reddit</v-icon> Reddit </v-btn>
@@ -622,9 +622,6 @@ import MetaAssignedToVideos from '@/components/pages/meta/MetaAssignedToVideos.v
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearData from '@/components/pages/settings/ClearData.vue'
-import ManagePerformerParameters from '@/components/pages/settings/ManagePerformerParameters.vue'
-import EditPerformerItemsOfParameter from '@/components/pages/settings/EditPerformerItemsOfParameter.vue'
-import EditTagItemsOfParameter from '@/components/pages/settings/EditTagItemsOfParameter.vue'
 import Registration from '@/components/pages/settings/Registration.vue'
 import vuescroll from 'vuescroll'
 
@@ -638,9 +635,6 @@ export default {
     ThemeColors,
     ManageBackups,
     ClearData,
-    ManagePerformerParameters,
-    EditPerformerItemsOfParameter,
-    EditTagItemsOfParameter,
     vuescroll,
     Registration,
     DialogAddMetaCardsTemplate: () => import("@/components/pages/meta/DialogAddMetaCardsTemplate.vue"),

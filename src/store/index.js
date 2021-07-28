@@ -3,10 +3,6 @@ const path = require("path")
 import Vue from 'vue'
 import Vuex from 'vuex'
 import Videos from './modules/videos.js'
-import Performers from './modules/performers.js'
-import Tags from './modules/tags.js'
-import Websites from './modules/websites.js'
-import Bookmarks from './modules/bookmarks.js'
 import SavedFilters from './modules/savedFilters.js'
 import Playlists from './modules/playlists.js'
 import Markers from './modules/markers.js'
@@ -102,10 +98,6 @@ export default new Vuex.Store({
   },
   modules: {
     Videos,
-    Performers,
-    Tags,
-    Websites,
-    Bookmarks,
     SavedFilters,
     Playlists,
     Markers,

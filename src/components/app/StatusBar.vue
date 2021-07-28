@@ -59,6 +59,15 @@
 
     <v-divider vertical></v-divider>
 
+    <v-tooltip v-if="!reg" top>
+      <template v-slot:activator="{ on }">
+        <v-btn v-on="on" @click="openLink('https://mediachips.app/')" height="20" small color="error"> Not registered </v-btn>
+      </template>
+      <span>Go to the official website of the application and buy a license key</span>
+    </v-tooltip>
+
+    <v-divider vertical></v-divider>
+
     <v-tooltip top>
       <template v-slot:activator="{ on }">
         <span v-on="on" class="px-4 d-flex"><v-icon size="18" class="mb-1">mdi-database-outline</v-icon></span>
@@ -139,15 +148,16 @@
 </template>
 
 <script>
+const shell = require('electron').shell
+
 import Functions from '@/mixins/Functions'
 import vuescroll from 'vuescroll'
+import Keys from '@/mixins/Keys'
 
 export default {
   name: 'StatusBar',
-  components: {
-    vuescroll
-  },
-  mixins: [Functions], 
+  components: { vuescroll },
+  mixins: [Functions, Keys], 
   mounted() {
     this.$nextTick(function () {
     })
@@ -210,14 +220,9 @@ export default {
       this.$store.dispatch('clearAllNotifications')
       this.notificationsMenu = false
     },
+    openLink(url) { shell.openExternal(url) }
   },
   watch: {
-    $route(newRoute) {
-      this.$store.commit('updateSelectedVideos', [])
-      this.$store.commit('updateSelectedPerformers', [])
-      this.$store.commit('updateSelectedTags', [])
-      this.$store.commit('updateSelectedWebsites', [])
-    },
     lastLog(log) {
       setTimeout(() => { this.penultLog = log }, 1000)
     },

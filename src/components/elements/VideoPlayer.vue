@@ -45,8 +45,6 @@ export default {
   async beforeCreate() {
     // get databases from main window
     await this.$store.dispatch('getDb', 'videos')
-    await this.$store.dispatch('getDb', 'tags')
-    await this.$store.dispatch('getDb', 'performers')
     await this.$store.dispatch('getDb', 'playlists')
     await this.$store.dispatch('getDb', 'markers')
     await this.$store.dispatch('getDb', 'meta')
