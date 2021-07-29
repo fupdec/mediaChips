@@ -71,7 +71,7 @@ const Meta = {
   },
   actions: {
     addComplexMeta({commit, getters, rootState}, metaObject) {
-      let meta = { ...defaultMeta, ...metaObject }
+      let meta = { ...defaultMeta, ...{date: Date.now(),edit: Date.now()}, ...metaObject }
       getters.meta.push(meta).write()
       getters.metaCards.set(meta.id, []).write()
       getters.savedFilters.set(meta.id, []).write()
@@ -80,7 +80,7 @@ const Meta = {
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
     },
     addSimpleMeta({commit, getters, rootState}, metaObject) {
-      let meta = { ...defaultMeta, ...metaObject }
+      let meta = { ...defaultMeta, ...{date: Date.now(),edit: Date.now()}, ...metaObject }
       getters.meta.push(meta).write()
       commit('addLog', {type:'info', color:'green', text:`Added simple meta "${metaObject.settings.name}"`})
     },
@@ -112,7 +112,7 @@ const Meta = {
       commit('addLog', {type:'info', color:'red', text:`Deleted simple meta "${name}"`})
     },
     addMetaCard({commit, getters}, newMetaCard) {
-      let metaCard = { ...defaultMetaCard, ...newMetaCard }
+      let metaCard = { ...defaultMetaCard, ...{date: Date.now(),edit: Date.now()},...newMetaCard }
       getters.metaCards.push(metaCard).write()
       const metaName = getters.meta.find({id:metaCard.metaId}).value().settings.nameSingular.toLowerCase()
       commit('addLog', {type:'info', color:'green', text:`Added ${metaName} "${metaCard.meta.name}"`})
