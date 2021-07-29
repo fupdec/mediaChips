@@ -142,12 +142,8 @@ export default {
         else if (found.boobs === "Unknown") delete found.boobs
         else found.boobs = [found.boobs]
       }
-      found.category = $('.sidebar-right .heading').next().find('.text-center')[0].children[0].data
-      if (found.category !== undefined) { 
-        if (found.category.includes('Adult')) found.category = ['Erotic model']
-        else if (found.category.includes('Porn')) found.category = ['Pornstar']
-        else found.category = [found.category]
-      }
+      let profession = $('.sidebar-right .heading').next().find('.text-center')[0].children[0].data
+      if (profession) found.category = profession.trim().split(',').map(i=>i.trim().replace(/[^A-Za-z\s!?]/gm,''))
       for (const i in found) if (found[i] === undefined) delete found[i]
       this.transfer.found = _.cloneDeep(found)
       resolve()
@@ -203,7 +199,7 @@ export default {
         }
       }
       for (const i in this.transfer.found) if (this.transfer.found[i] === undefined) delete this.transfer.found[i]
-      this.transfer.found.category = ['Pornstar']
+      this.transfer.found.category = ['Porn stars']
     },
   },
 }
