@@ -37,6 +37,9 @@
               :color="getColor(m.id,c)" 
               :label="getMeta(m.id).settings.chipLabel"
               :outlined="getMeta(m.id).settings.chipOutlined"
+              :title="`Filter ${meta.settings.name.toLowerCase()} by ${getMeta(m.id).settings.nameSingular.toLowerCase()}`"
+              @click="filterMetaCardsBy(m.id,c)"
+              @click.middle="filterMetaCardsByInNewTab(m.id,c)"
               @mouseover.stop="showImage($event,c,'meta',m.id)" 
               @mouseleave.stop="$store.state.hoveredImage=false"> 
                 {{ getCard(c).meta.name }} </v-chip>
@@ -206,7 +209,43 @@ export default {
       }
       this.$store.dispatch('addNewTab', tab)
     },
-    openLink(url) { shell.openExternal(url) }
+    filterMetaCardsBy(metaId, cardId) { 
+      this.$store.state.Meta.filters.push({
+        by: metaId, 
+        cond: 'includes one of', 
+        val: [cardId],
+        type: 'select',
+        flag: null,
+        lock: false
+      })
+      this.$store.dispatch('filterMetaCards')
+    },
+    filterMetaCardsByInNewTab(metaId, cardId) { 
+      let tabId = Date.now().toString()
+      let tab = { 
+        name: this.meta.settings.name, 
+        link: `/meta/?metaId=${this.meta.id}&tabId=${tabId}`,
+        id: tabId,
+        filters: [
+          {
+            by: metaId, 
+            cond: 'includes one of', 
+            val: [cardId],
+            type: 'select',
+            flag: null,
+            lock: false
+          }
+        ],
+        sortBy: 'name',
+        sortDirection: 'asc',
+        cardsPerPage: this.$store.state.Meta.cardsPerPage,
+        page: 1,
+        icon: this.meta.settings.icon
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
+    },
+    openLink(url) { shell.openExternal(url) },
   },
   watch: {
     updateCardIds(newValue) {

@@ -109,6 +109,8 @@
               :color="getColor(m.id,mc)" 
               :label="getMeta(m.id).settings.chipLabel"
               :outlined="getMeta(m.id).settings.chipOutlined"
+              :title="`Open page with ${getMeta(m.id).settings.nameSingular.toLowerCase()}`"
+              @click="openMetaCardPage(m.id,mc)"
               @click.middle="openMetaInNewTab(mc)"
               @mouseover.stop="showImage($event,mc,'meta',m.id)" 
               @mouseleave.stop="$store.state.hoveredImage=false"> 
@@ -224,6 +226,7 @@ export default {
     },
   },
   methods: {
+    openMetaCardPage(metaId, cardId) { this.$router.push(`/metacard/?metaId=${metaId}&cardId=${cardId}&tabId=default`) },
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
