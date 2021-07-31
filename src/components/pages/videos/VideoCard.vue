@@ -147,6 +147,9 @@ const { dialog } = require('electron').remote
 const shell = require('electron').shell
 const fs = require('fs')
 const path = require('path')
+const ffmpeg = require('fluent-ffmpeg')
+const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
+ffmpeg.setFfprobePath(pathToFfprobe)
 
 import Functions from '@/mixins/Functions'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
@@ -307,9 +310,6 @@ export default {
         this.$store.state.y = e.clientY
         let contextMenu = [
           { name: `Edit Info`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Videos.dialogEditVideoInfo=true}},
-          { type: 'divider' },
-          { name: `Filter Videos by`, type: 'menu', icon: 'filter', disabled: !this.isSelectedSingleVideo, menu: getFilterMeta()},
-          { name: `Parse Metadata`, type: 'item', icon: 'movie-search', function: ()=>{this.parseMetadata()}},
           { name: `Rating`, type: 'menu', icon: 'star', menu: [
             { name: `5`, type: 'item', icon: 'star', function: ()=>{this.changeRating(5)}},
             { name: `4.5`, type: 'item', icon: 'star-half-full', function: ()=>{this.changeRating(4.5)}},
@@ -327,6 +327,10 @@ export default {
             { name: `Add to Favorite `, type: 'item', icon: 'heart-plus', function: ()=>{this.changeFavorite(true)}},
             { name: `Remove from Favorite`, type: 'item', icon: 'heart-remove', function: ()=>{this.changeFavorite(false)}},
           ]},
+          { type: 'divider' },
+          { name: `Filter Videos by`, type: 'menu', icon: 'filter', disabled: !this.isSelectedSingleVideo, menu: getFilterMeta()},
+          { name: `Parse Metadata`, type: 'item', icon: 'text-box-search', function: ()=>{this.parseMetadata()}},
+          { name: `Update File Information`, type: 'item', icon: 'information-variant', function: ()=>{this.updateFileInfo()}},
           // TODO add copy/paste meta for fast changing and copy to clipboard function
           { type: 'divider' },
           { name: `Add to Playlist`, type: 'item', icon: 'playlist-plus', function: ()=>{this.$store.state.Videos.dialogAddToPlaylist=true}, },
@@ -445,6 +449,44 @@ export default {
         const meta = parseFilePath(video.path)
         for (let m in meta) video[m] = _.union(video[m], meta[m])
       }).write()
+    },
+    updateFileInfo() {
+      function getVideoMetadata (pathToFile) {
+        return new Promise((resolve, reject) => {
+          return ffmpeg.ffprobe(pathToFile, (error, info) => {
+            if (error) return reject(error)
+            else if (info.streams[0].duration < 1) return reject('duration less than 1 sec.')
+            else return resolve(info)
+          })
+        })
+      }
+      let successfullyUpdatedIds = []
+      this.$store.state.Videos.selectedVideos.map(async id => {
+        let video = this.$store.getters.videos.find({ id }).value()
+        if (!fs.existsSync(video.path)) {
+          this.$store.commit('addLog', { type: 'error', text: `No such file "${video.path}"` })
+          return
+        } 
+        try {
+          let metadata = await getVideoMetadata(video.path)
+          let duration = Math.floor(metadata.format.duration)
+          let resolution
+          for (let i = 0; i < metadata.streams.length; i++) {
+            if (metadata.streams[i].codec_type === 'video') {
+              resolution = metadata.streams[i].width + 'x' + metadata.streams[i].height
+            } 
+          }
+          let updatedMetadata = {
+            duration: duration,
+            size: metadata.format.size,
+            resolution: resolution,
+            edit: Date.now(),
+          }
+          this.$store.getters.videos.find({ id }).assign(updatedMetadata).write()
+          successfullyUpdatedIds.push(id)
+        } catch (error) { console.log(error) }
+      })
+      if (successfullyUpdatedIds.length) this.$store.commit('updateVideos', successfullyUpdatedIds)
     },
     openMetaInNewTab(cardId) {
       let card = this.getCard(cardId)
