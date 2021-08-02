@@ -71,6 +71,7 @@ dbs.defaults({
   tabBorders: true,
   showIconsOfMetaInEditingDialog: true,
   showAdultContent: true,
+  showEmptyMetaValueInCard: true,
   databaseVersion: '0.8.2',
 }).write()
 
@@ -142,6 +143,7 @@ const Settings = {
     tabBorders: dbs.get('tabBorders').value(),
     showIconsOfMetaInEditingDialog: dbs.get('showIconsOfMetaInEditingDialog').value(),
     showAdultContent: dbs.get('showAdultContent').value(),
+    showEmptyMetaValueInCard: dbs.get('showEmptyMetaValueInCard').value(),
     databaseVersion: dbs.get('databaseVersion').value(),
   }),
   mutations: {

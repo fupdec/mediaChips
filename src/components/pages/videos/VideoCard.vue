@@ -97,7 +97,7 @@
 
       <!-- Parse meta -->
       <div v-for="(m,i) in metaAssignedToVideos" :key="i">
-        <div v-if="visibility[m.id]" class="meta-in-card">
+        <div v-if="visibility[m.id]&&checkShowEmptyValue(m)" class="meta-in-card">
           <v-chip-group v-if="m.type=='complex'" column>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
@@ -224,6 +224,7 @@ export default {
       let ids = this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).map('id').value() 
       return this.$store.getters.meta.filter(i=>ids.includes(i.id)&&i.settings.parser).value()
     },
+    showEmptyMetaValueInCard() { return this.$store.state.Settings.showEmptyMetaValueInCard },
   },
   methods: {
     openMetaCardPage(metaId, cardId) { this.$router.push(`/metacard/?metaId=${metaId}&cardId=${cardId}&tabId=default`) },
@@ -231,6 +232,15 @@ export default {
       if(event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
+    },
+    checkShowEmptyValue(meta) {
+      if (this.showEmptyMetaValueInCard) return true
+      if (meta.type == 'complex') return this.video[meta.id]&&this.video[meta.id].length
+      let valueType = typeof this.video[meta.id]
+      let simpleMeta = this.getMeta(meta.id)
+      if (valueType == 'undefined' && simpleMeta.dataType!=='rating') return false
+      if (['object','string'].includes(valueType)) return this.video[meta.id].length
+      else return true
     },
     setVideoProgress(percent) { this.$refs.video.currentTime = Math.floor(this.video.duration*percent) },
     playPreview() {

@@ -126,15 +126,8 @@
 
           <v-card outlined class="mt-10 pa-4">
             <div class="d-flex align-center">
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                </template>
-                <span>If you have moved the video, you can change the path manually</span>
-              </v-tooltip>
-              <span class="mr-6">Update path manually in multiple videos:</span>
-              <v-btn @click="dialogUpdatePath=true" class="px-5" rounded color="secondary">
-                <v-icon left>mdi-form-textbox</v-icon> Update path in videos </v-btn>
+              <v-btn @click="dialogUpdatePath=true" block rounded color="secondary">
+                <v-icon left>mdi-pencil</v-icon> Update path manually in multiple videos </v-btn>
             </div>
             <div class="d-flex align-center mt-6">
               <v-tooltip top>
@@ -170,6 +163,10 @@
               </v-switch>
             </div>
             <div class="d-flex mt-6">
+              <span class="mr-6">Show empty meta value in card:</span>
+              <v-switch v-model="showEmptyMetaValueInCard" :label="showEmptyMetaValueInCard?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
+            </div>
+            <div class="d-flex mt-6">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -180,9 +177,8 @@
               <v-switch v-model="showAdultContent" :label="showAdultContent?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
             </div>
             <div v-if="showAdultContent" class="d-flex align-center mt-6">
-              <span class="mr-6">Add most popular tags, performers, websites:</span>
-              <v-btn @click="dialogAddMetaCardsTemplate=true" class="px-5" rounded color="secondary">
-                <v-icon left>mdi-plus</v-icon> Add </v-btn>
+              <v-btn @click="dialogAddMetaCardsTemplate=true" block rounded color="secondary">
+                <v-icon left>mdi-plus</v-icon> Add most popular tags, performers, websites </v-btn>
             </div>
           </v-card>
         </v-card>
@@ -210,6 +206,12 @@
         <v-dialog v-model="dialogUpdatePath" scrollable persistent>
           <v-card>
             <v-toolbar color="primary">
+              <v-tooltip right>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                </template>
+                <span>If you have moved the video, you can change the path manually</span>
+              </v-tooltip>
               <div class="headline"> Update path in videos </div>
               <v-spacer></v-spacer>
               <v-btn @click="dialogUpdatePath=false" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
@@ -219,18 +221,17 @@
                 <v-row>
                   <v-col cols="6">
                     <v-text-field 
-                      v-model="pathForSearch" dense outlined clearable
+                      v-model="pathForSearch" dense outlined clearable hide-details
                       placeholder="Write file path here" label="Search videos with path"
                       append-outer-icon="mdi-clipboard-arrow-right-outline" 
-                      @click:append-outer="copyPathToUpload"
-                    />
-                    <v-btn @click="searchInVideosPath" :disabled="pathForSearch==''" 
+                      @click:append-outer="copyPathToUpload" />
+                    <v-btn @click="searchInVideosPath" :disabled="pathForSearch==''" rounded class="mt-2" 
                       color="primary">Search</v-btn>
                   </v-col>
                   <v-col cols="6">
-                    <v-text-field v-model="pathForUpdate" dense outlined clearable
+                    <v-text-field v-model="pathForUpdate" dense outlined clearable hide-details
                       placeholder="Write file path here" label="Update videos with path"/>
-                    <v-btn @click="updatePath" depressed color="primary"
+                    <v-btn @click="updatePath" color="primary" rounded class="mt-2" 
                       :disabled="videosWithSamePath.length===0"> Update </v-btn>
                   </v-col>
                 </v-row>
@@ -794,6 +795,10 @@ export default {
     typingFiltersDefault: {
       get() {return this.$store.state.Settings.typingFiltersDefault},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'typingFiltersDefault', value})},
+    },
+    showEmptyMetaValueInCard: {
+      get() {return this.$store.state.Settings.showEmptyMetaValueInCard},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'showEmptyMetaValueInCard', value})},
     },
     showAdultContent: {
       get() {return this.$store.state.Settings.showAdultContent},

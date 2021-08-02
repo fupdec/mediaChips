@@ -25,7 +25,7 @@
       
       <!-- Parse meta from cards -->
       <div v-for="(m,i) in metaInCard" :key="i">
-        <div v-if="visibility[m.id]" class="meta-in-card">
+        <div v-if="visibility[m.id]&&checkShowEmptyValue(m)" class="meta-in-card">
           <v-chip-group v-if="m.type=='complex'" column>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
@@ -118,10 +118,20 @@ export default {
     isCustom2ImgExist() { return this.meta.settings.imageTypes.includes('custom2') && !this.imgCustom2.includes('not_exist') },
     isSelectedSingleMetaCard() { return this.$store.state.Meta.selectedMeta.length == 1 },
     isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id:this.meta.id}) !== undefined },
+    showEmptyMetaValueInCard() { return this.$store.state.Settings.showEmptyMetaValueInCard },
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
     openMetaCardPage() { if (this.isMetaAssignedToVideo) this.$router.push(`/metacard/?metaId=${this.meta.id}&cardId=${this.card.id}&tabId=default`) },
+    checkShowEmptyValue(meta) {
+      if (this.showEmptyMetaValueInCard) return true
+      if (meta.type == 'complex') return this.card.meta[meta.id]&&this.card.meta[meta.id].length
+      let valueType = typeof this.card.meta[meta.id]
+      let simpleMeta = this.getMeta(meta.id)
+      if (valueType == 'undefined' && simpleMeta.dataType!=='rating') return false
+      if (['object','string'].includes(valueType)) return this.card.meta[meta.id].length
+      else return true
+    },
     // image 
     getImgUrl(type) {
       let img = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${type}.jpg`)
