@@ -5,7 +5,7 @@
       v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
       <div v-if="meta.settings.images" class="img-container">
         <v-icon v-if="meta.settings.color && visibility.color" class="meta-color" :color="card.meta.color || '#777777'">mdi-circle</v-icon>
-        <div v-if="meta.settings.country && visibility.country" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
+        <div v-if="meta.settings.country && visibility.country" @click="filterByCountry" @click.middle="filterByCountryInNewTab" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
         <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
         <v-img v-if="isAltImgExist" :src="imgAlt" :aspect-ratio="meta.settings.imageAspectRatio" position="top" class="secondary-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" /> 
         <div v-if="isCustom1ImgExist" class="custom1-img-button">1</div> <v-img v-if="isCustom1ImgExist" :src="imgCustom1" class="custom1-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
@@ -241,6 +241,42 @@ export default {
             by: metaId, 
             cond: 'includes one of', 
             val: [cardId],
+            type: 'select',
+            flag: null,
+            lock: false
+          }
+        ],
+        sortBy: 'name',
+        sortDirection: 'asc',
+        cardsPerPage: this.$store.state.Meta.cardsPerPage,
+        page: 1,
+        icon: this.meta.settings.icon
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
+    },
+    filterByCountry() { 
+      this.$store.state.Meta.filters.push({
+        by: 'country', 
+        cond: 'includes one of', 
+        val: this.card.meta.country,
+        type: 'select',
+        flag: null,
+        lock: false
+      })
+      this.$store.dispatch('filterMetaCards')
+    },
+    filterByCountryInNewTab() { 
+      let tabId = Date.now().toString()
+      let tab = { 
+        name: this.meta.settings.name, 
+        link: `/meta/?metaId=${this.meta.id}&tabId=${tabId}`,
+        id: tabId,
+        filters: [
+          {
+            by: 'country', 
+            cond: 'includes one of', 
+            val: this.card.meta.country,
             type: 'select',
             flag: null,
             lock: false
