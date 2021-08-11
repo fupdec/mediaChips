@@ -4,7 +4,7 @@ import { machineIdSync } from 'node-machine-id'
 
 export default {
   data: () => ({
-    domain: 'https://avdb.app/wp-json/license/v1/',
+    domain: 'https://mediachips.app/wp-json/license/v1/',
     apiKey: 'r86ACHydAz4HuKMYR9S6xv5ymKHFaa5dK5FuExDZ9u',
     secret: 'This is the longest password ever!',
     secretOptions: {
