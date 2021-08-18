@@ -635,15 +635,15 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
   .duration {
     position: absolute;
-    right: 2px;
-    bottom: 2px;
-    padding: 1px;
+    right: 1px;
+    bottom: 1px;
+    padding: 2px;
     line-height: 1;
     font-weight: 300;
     font-size: 0.8em;
     border-radius: 3px;
     color: #fff;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.5);
     user-select: none;
   }
   .resolution {

@@ -1,7 +1,7 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-responsive :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
-      <img v-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" :style="header" class="header-image">
+    <v-responsive v-if="checkImageSettings('alt')||checkImageSettings('header')" :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
+      <img v-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" class="header-image">
       <div v-else class="images">
         <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
         <v-responsive :aspect-ratio="5/9" />
@@ -10,14 +10,14 @@
       </div>
       <div class="header-gradient" :style="gradient"></div>
     </v-responsive>
-
-    <div v-if="!isHeaderImageExists" class="profile-spacer"></div>
-    <v-container class="profile-container" :class="{images: isHeaderImageExists}">
-      <v-avatar v-if="checkImageSettings('avatar')" max-width="160" width="160" height="160" class="profile-avatar"> 
+    
+    <div class="py-16"></div>
+    <v-container class="profile-container" :class="{header: isHeaderImageExists&&checkImageSettings('header')}">
+      <v-avatar v-if="meta.settings.images" max-width="160" width="160" height="160" class="profile-avatar"> 
         <img :src="getImgUrl('avatar')">
       </v-avatar>
       
-      <v-tooltip v-if="checkImageSettings('avatar')" right>
+      <v-tooltip v-if="meta.settings.images" right>
         <template v-slot:activator="{ on, attrs }">
           <v-progress-circular v-bind="attrs" v-on="on" :value="cardInfoComplete" 
             size="168" rotate="270" width="2" class="profile-complete-progress" color="primary"/> 
@@ -52,7 +52,7 @@
       <v-expansion-panels v-model="profile" multiple focusable>
         <v-expansion-panel :style="profileBackground" :key="0">
           <v-expansion-panel-header class="pa-6" ripple hide-actions>
-            <div class="text-center meta-card-name" :class="[{'avatar':checkImageSettings('avatar')}]">{{card.meta.name}}</div>
+            <div class="text-center meta-card-name" :class="[{'avatar':meta.settings.images}]">{{card.meta.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
             <v-container class="px-0">
@@ -162,16 +162,13 @@
               </v-row>
             </v-container>
           </v-expansion-panel-content>
-          <div class="profile-hover-btn show">Show Profile</div>
-          <div class="profile-hover-btn hide">Hide Profile</div>
+          <div class="profile-hover-btn show"><v-icon>mdi-chevron-down</v-icon></div>
+          <div class="profile-hover-btn hide"><v-icon>mdi-chevron-up</v-icon></div>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-container>
     
-    
     <div v-if="isMetaAssignedToVideo">
-      <v-spacer class="py-4"></v-spacer>
-    
       <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
         <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
       </v-container>
@@ -279,7 +276,7 @@ export default {
       'December'
     ],
     isScrollToTopVisible: false,
-    header: '',
+    // header: '',
     isHeaderImageExists: true,
     videos: [],
     videoFilters: [],
@@ -365,7 +362,7 @@ export default {
     handleScroll(vertical) {
       if (vertical.scrollTop > 500) this.isScrollToTopVisible = true
       else this.isScrollToTopVisible = false
-      this.header = `top:${vertical.scrollTop * 0.7}px` // parallax effect
+      // this.header = `top:${vertical.scrollTop * 0.7}px` // parallax effect
     },
     initFilters() { 
       let defaultFilters = [{
@@ -513,7 +510,7 @@ export default {
 .profile-container {
   position: relative; 
   &.header {
-    margin-top: -150px;
+    margin-top: -250px;
   }
   .buttons-left,
   .buttons-right {
@@ -766,23 +763,5 @@ export default {
     font-style: normal;
     font-size: 12px;
   }
-}
-</style>
-
-<style lang="less" scoped>
-.performer-header {
-  text-transform: uppercase;
-  color: #fff;
-  font-size: 100px;
-  opacity: 0.6;
-  &-container {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-.profile-spacer {
-  height: 150px;
 }
 </style>
