@@ -360,9 +360,7 @@
         </v-card>
       </v-tab-item>
       <v-tab-item value="meta-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <MetaList/>
-        </v-card>
+        <MetaList/>
       </v-tab-item>
       <v-tab-item value="videos-settings">
         <v-card flat max-width="800" style="margin: auto;" class="py-10">

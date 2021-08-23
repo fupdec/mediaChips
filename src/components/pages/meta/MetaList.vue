@@ -1,17 +1,187 @@
 <template>
   <div>
-    <v-btn @click="dialogAddMeta=true" class="mb-6" color="primary" block x-large rounded> <v-icon large class="mr-4">mdi-plus</v-icon> Add new meta</v-btn>
+    <v-card flat max-width="800" style="margin: auto;" class="pt-10">
+      <v-btn @click="dialogAddMeta=true" class="mb-6" color="primary" block x-large rounded> <v-icon large class="mr-4">mdi-plus</v-icon> Add new meta</v-btn>
+    </v-card>
 
+    <v-container fluid>
+      <v-row>
+        <v-col cols="12" lg="6">
+          <v-card outlined>
+            <v-data-iterator :items="complexMetaList" :items-per-page.sync="itemsPerPageCM" :page.sync="pageCM" :search="searchSM" :sort-by="sortByCM" :sort-desc="sortDescCM"
+              hide-default-footer no-data-text="Please add complex meta first" no-results-text="No meta found">
+              <template v-slot:header>
+                <div class="headline text-center py-2">List of complex meta</div>
+                <v-toolbar class="mb-4" color="primary" elevation="0" dense>
+                  <v-text-field v-model="searchSM" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
+                  <v-spacer></v-spacer>
+                  <v-select v-model="sortByCM" dense flat solo outlined hide-details :items="['name','date','edit']" prepend-inner-icon="mdi-sort" label="Sort by"></v-select>
+                  <v-spacer></v-spacer>
+                  <v-btn-toggle v-model="sortDescCM" dense mandatory>
+                    <v-btn outlined :value="false"> <v-icon>mdi-arrow-up</v-icon> </v-btn>
+                    <v-btn outlined :value="true"> <v-icon>mdi-arrow-down</v-icon> </v-btn>
+                  </v-btn-toggle>
+                </v-toolbar>
+              </template>
+
+              <template v-slot:default="props">
+                <v-row class="px-4">
+                  <v-col v-for="item in props.items" :key="item.id" cols="12" sm="4" md="3" lg="4">
+                    <v-hover>
+                      <template v-slot:default="{ hover }">
+                        <v-card outlined height="100%" class="meta-list-card">
+                          <v-toolbar color="primary">
+                            <v-icon size="20" left>mdi-{{ item.settings.icon }}</v-icon>
+                            {{ item.settings.name }} 
+                          </v-toolbar>
+                          <v-chip-group column class="px-2">
+                            <span class="mr-2 caption">Assigned meta:</span>
+                            <v-chip v-for="(m, i) in item.settings.metaInCard" :key="m.id+i" x-small class="px-1">
+                              <v-icon x-small> mdi-{{getMeta(m.id).settings.icon}} </v-icon> {{getMeta(m.id).settings.name}}
+                            </v-chip>
+                          </v-chip-group>
+                          <v-chip-group column class="px-2">
+                            <span class="mr-2 caption">Settings:</span>
+                            <v-chip v-for="(attr, i) in item.attrs" :key="attr.name+i" x-small class="px-1">
+                              <v-icon x-small> mdi-{{attr.icon}} </v-icon> {{attr.name}}
+                            </v-chip>
+                          </v-chip-group>
+
+                          <v-fade-transition>
+                            <v-overlay v-if="hover" absolute color="secondary" z-index="1">
+                              <div class="d-flex flex-column">
+                                <v-btn @click="openEditMeta(item)" rounded x-small class="mb-2"> <v-icon small left>mdi-pencil</v-icon> Edit </v-btn>
+                                <v-btn v-if="item.dataType==='array'" @click="setSelectedMeta(item),dialogTransferMeta=true" rounded x-small class="mb-2" color="warning"> <v-icon small left>mdi-transfer</v-icon> transfer </v-btn>
+                                <v-btn @click="setSelectedMeta(item),dialogDeleteMeta=true" rounded x-small color="error"> <v-icon small left>mdi-delete</v-icon> Delete </v-btn>
+                              </div>
+                            </v-overlay>
+                          </v-fade-transition>
+                        </v-card>
+                      </template>
+                    </v-hover>
+                  </v-col>
+                </v-row>
+              </template>
+
+              <template v-slot:footer>
+                <v-toolbar class="mt-4" color="primary" dense elevation="0">
+                  <v-menu offset-y top open-on-hover>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn v-bind="attrs" v-on="on" outlined small>{{ itemsPerPageCM }}</v-btn>
+                    </template>
+                    <v-list dense>
+                      <v-list-item v-for="(number, index) in itemsPerPageArray" :key="index" @click="updateItemsPerPage(number, 'complex')">
+                        <v-list-item-title>{{ number }}</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                  <span class="ml-2">meta per page</span>
+                  <v-spacer></v-spacer>
+                  <span> Page {{ pageCM }} of {{ numberOfPagesCM }} </span>
+                  <v-btn small outlined class="mx-2" @click="formerPage('complex')"> <v-icon>mdi-arrow-left</v-icon> </v-btn>
+                  <v-btn small outlined @click="nextPage('complex')"><v-icon>mdi-arrow-right</v-icon></v-btn>
+                </v-toolbar>
+              </template>
+            </v-data-iterator>
+          </v-card>
+        </v-col>
+
+        <v-col cols="12" lg="6">
+          <v-card outlined>
+            <v-data-iterator :items="simpleMetaList" :items-per-page.sync="itemsPerPageSM" :page.sync="pageSM" :search="searchSM" :sort-by="sortBySM" :sort-desc="sortDescSM"
+              hide-default-footer no-data-text="Please add simple meta first" no-results-text="No meta found">
+              <template v-slot:header>
+                <div class="headline text-center py-2">List of simple meta</div>
+                <v-toolbar class="mb-4" color="secondary" dense elevation="0">
+                  <v-text-field v-model="searchSM" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
+                  <v-spacer></v-spacer>
+                  <v-select v-model="sortBySM" dense flat solo outlined hide-details :items="['name','dataType','date','edit']" prepend-inner-icon="mdi-sort" label="Sort by"></v-select>
+                  <v-spacer></v-spacer>
+                  <v-btn-toggle v-model="sortDescSM" dense mandatory>
+                    <v-btn outlined :value="false"> <v-icon>mdi-arrow-up</v-icon> </v-btn>
+                    <v-btn outlined :value="true"> <v-icon>mdi-arrow-down</v-icon> </v-btn>
+                  </v-btn-toggle>
+                </v-toolbar>
+              </template>
+
+              <template v-slot:default="props">
+                <v-row class="px-4">
+                  <v-col v-for="item in props.items" :key="item.id" cols="12" sm="4" md="3" lg="4">
+                    <v-hover>
+                      <template v-slot:default="{ hover }">
+                        <v-card outlined height="100%" class="meta-list-card">
+                          <v-toolbar color="secondary">
+                            <v-icon size="20" left>mdi-{{ item.settings.icon }}</v-icon>
+                            {{ item.settings.name }} 
+                          </v-toolbar>
+                          <v-chip-group column class="px-2">
+                            <span class="mr-2 caption">Data type:</span>
+                            <v-chip x-small class="px-2">
+                              <v-icon x-small class="mr-1">{{ getIconDataType(item.dataType) }}</v-icon>{{ item.dataType }}
+                            </v-chip>
+                          </v-chip-group>
+                          <v-chip-group column class="px-2">
+                            <span class="mr-2 caption">Assigned to:</span>
+                            <v-chip v-for="(m, i) in item.assigned" :key="m.id+i" x-small class="px-1">
+                              <v-icon x-small> mdi-{{m.settings.icon}} </v-icon> {{m.settings.name}}
+                            </v-chip>
+                          </v-chip-group>
+
+                          <v-fade-transition>
+                            <v-overlay v-if="hover" absolute color="secondary" z-index="1">
+                              <div class="d-flex flex-column">
+                                <v-btn @click="openEditMeta(item)" rounded x-small class="mb-2"> <v-icon small left>mdi-pencil</v-icon> Edit </v-btn>
+                                <v-btn v-if="item.dataType==='array'" @click="setSelectedMeta(item),dialogTransferMeta=true" rounded x-small class="mb-2" color="warning"> <v-icon small left>mdi-transfer</v-icon> transfer </v-btn>
+                                <v-btn @click="setSelectedMeta(item),dialogDeleteMeta=true" rounded x-small color="error"> <v-icon small left>mdi-delete</v-icon> Delete </v-btn>
+                              </div>
+                            </v-overlay>
+                          </v-fade-transition>
+                        </v-card>
+                      </template>
+                    </v-hover>
+                  </v-col>
+                </v-row>
+              </template>
+
+              <template v-slot:footer>
+                <v-toolbar class="mt-4" color="secondary" dense elevation="0">
+                  <v-menu offset-y top open-on-hover>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn v-bind="attrs" v-on="on" outlined small>{{ itemsPerPageSM }}</v-btn>
+                    </template>
+                    <v-list dense>
+                      <v-list-item v-for="(number, index) in itemsPerPageArray" :key="index" @click="updateItemsPerPage(number, 'simple')">
+                        <v-list-item-title>{{ number }}</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                  <span class="ml-2">meta per page</span>
+                  <v-spacer></v-spacer>
+                  <span> Page {{ pageSM }} of {{ numberOfPagesSM }} </span>
+                  <v-btn small outlined class="mx-2" @click="formerPage('simple')"> <v-icon>mdi-arrow-left</v-icon> </v-btn>
+                  <v-btn small outlined @click="nextPage('simple')"><v-icon>mdi-arrow-right</v-icon></v-btn>
+                </v-toolbar>
+              </template>
+            </v-data-iterator>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+    
     <v-dialog v-model="dialogAddMeta" scrollable max-width="800">
       <v-card>
         <v-toolbar color="primary">
-          <div class="headline">Choose type of meta</div>
+          <div class="headline">Adding a new meta</div>
           <v-spacer></v-spacer>
           <v-btn @click="dialogAddMeta=false" outlined><v-icon left>mdi-close</v-icon>Cancel</v-btn>
         </v-toolbar>
-        <div class="py-4 d-flex justify-space-around">
-          <v-card @click="dialogAddComplexMeta=true, dialogAddMeta=false" class="mx-4" hover height="100%">
-            <v-toolbar color="primary" class="headline">Complex</v-toolbar>
+        <v-alert type="info" text outlined class="ma-4">
+          Meta are pieces of information that you can add to video and meta cards. <br>
+          There are two types of meta: complex and simple.
+        </v-alert>
+        <div class="pb-6 px-4 d-flex justify-space-around">
+          <v-card @click="dialogAddComplexMeta=true, dialogAddMeta=false" hover height="100%">
+            <v-toolbar color="primary" class="headline">Add complex meta</v-toolbar>
             <v-card-text class="text-center">
               <span>Complex meta has a separate page with cards <br> 
                 that can be customized in detail:<br>
@@ -24,8 +194,8 @@
               </div>
             </v-card-text>
           </v-card>
-          <v-card @click="dialogAddSimpleMeta=true, dialogAddMeta=false" class="mx-4" hover height="100%">
-            <v-toolbar class="headline">Simple</v-toolbar>
+          <v-card @click="dialogAddSimpleMeta=true, dialogAddMeta=false" hover height="100%">
+            <v-toolbar color="secondary" class="headline">Add simple meta</v-toolbar>
             <v-card-text class="text-center">
               <span>Simple meta doesn't have a separate page or cards.<br> 
                 They are simply displayed as a line on cards<br>
@@ -43,111 +213,6 @@
         </div>
       </v-card>
     </v-dialog>
-
-    <v-card outlined >
-      <v-data-iterator :items="metaList" :items-per-page.sync="itemsPerPage" :page.sync="page" :search="search" :sort-by="sortBy" :sort-desc="sortDesc"
-        hide-default-footer no-data-text="Please add meta first" no-results-text="No meta found">
-        <template v-slot:header>
-          <div class="headline text-center py-2">List of meta</div>
-          <v-toolbar class="mb-4" color="primary" elevation="0">
-            <v-text-field v-model="search" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
-            <v-spacer></v-spacer>
-            <v-select v-model="sortBy" dense flat solo outlined hide-details :items="keys" prepend-inner-icon="mdi-sort" label="Sort by"></v-select>
-            <v-spacer></v-spacer>
-            <v-btn-toggle v-model="sortDesc" dense mandatory>
-              <v-btn outlined :value="false"> <v-icon>mdi-arrow-up</v-icon> </v-btn>
-              <v-btn outlined :value="true"> <v-icon>mdi-arrow-down</v-icon> </v-btn>
-            </v-btn-toggle>
-          </v-toolbar>
-        </template>
-
-        <template v-slot:default="props">
-          <v-row class="px-2">
-            <v-col v-for="item in props.items" :key="item.id" cols="12" sm="6" md="4" lg="3">
-              <v-hover>
-                <template v-slot:default="{ hover }">
-                  <v-card outlined height="100%" class="meta-list-card">
-                    <v-toolbar :color="item.type=='complex'?'primary':''">
-                      <v-icon size="20" left>mdi-{{ item.settings.icon }}</v-icon>
-                      {{ item.settings.name }} 
-                    </v-toolbar>
-                    <v-divider></v-divider>
-                    <v-list dense class="list-zebra caption">
-                      <v-list-item v-for="(key, index) in filteredKeys" :key="index" class="px-2 py-1">
-                        <v-list-item-content class="py-0" :class="{'primary--text':sortBy===key}">
-                          {{ key }}:
-                        </v-list-item-content>
-                        <v-list-item-content class="py-0 align-end" :class="{'primary--text':sortBy===key}" >
-                          <span v-if="key=='date'">{{ dateAdded(item[key]) }}</span>
-                          <span v-else-if="key=='edit'">{{ dateEdit(item[key]) }}</span>
-                          <span v-else-if="key=='dataType'"><v-icon small left>{{ getIconDataType(item[key]) }}</v-icon>{{ item[key] }}</span>
-                          <span v-else>{{ item[key] }}</span>
-                        </v-list-item-content>
-                      </v-list-item>
-                      <div v-if="item.type==='complex'">
-                        <div class="px-2 py-1 d-flex align-center justify-space-between">
-                          <span class="mr-2">Assigned meta:</span>
-                          <span v-if="item.metaInCard.length" class="d-flex align-center flex-wrap"> 
-                            <v-icon v-for="(m, i) in item.metaInCard" :key="i" small> 
-                              mdi-{{getMeta(m.id).settings.icon}} </v-icon> 
-                          </span>
-                          <span v-else>—</span>
-                        </div>
-                        <div class="px-2 py-1 d-flex align-center justify-space-between">
-                          <span class="mr-2">Settings:</span>
-                          <span class="d-flex align-center flex-wrap"> 
-                            <v-icon v-if="item.images" small>mdi-image</v-icon>
-                            <v-icon v-if="item.favorite" small>mdi-heart</v-icon>
-                            <v-icon v-if="item.rating" small>mdi-star</v-icon>
-                            <v-icon v-if="item.bookmark" small>mdi-bookmark</v-icon>
-                            <v-icon v-if="item.synonyms" small>mdi-alphabetical-variant</v-icon>
-                            <v-icon v-if="item.country" small>mdi-flag</v-icon>
-                            <v-icon v-if="item.scraper" small>mdi-magnify</v-icon>
-                            <v-icon v-if="item.nested" small>mdi-file-tree</v-icon>
-                          </span>
-                        </div>
-                      </div>
-                    </v-list>
-
-                    <v-fade-transition>
-                      <v-overlay v-if="hover" absolute color="secondary" z-index="1">
-                        <div class="d-flex flex-column">
-                          <v-btn @click="openEditMeta(item)" rounded x-small class="mb-2"> <v-icon small left>mdi-pencil</v-icon> Edit </v-btn>
-                          <v-btn v-if="item.dataType==='array'" @click="setSelectedMeta(item),dialogTransferMeta=true" rounded x-small class="mb-2" color="warning"> <v-icon small left>mdi-transfer</v-icon> transfer </v-btn>
-                          <v-btn @click="setSelectedMeta(item),dialogDeleteMeta=true" rounded x-small color="error"> <v-icon small left>mdi-delete</v-icon> Delete </v-btn>
-                        </div>
-                      </v-overlay>
-                    </v-fade-transition>
-                  </v-card>
-                </template>
-              </v-hover>
-            </v-col>
-          </v-row>
-        </template>
-
-        <template v-slot:footer>
-          <v-toolbar class="mt-4" color="primary" dense elevation="0">
-            <v-menu offset-y top open-on-hover>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn v-bind="attrs" v-on="on" outlined small>{{ itemsPerPage }}</v-btn>
-              </template>
-              <v-list dense>
-                <v-list-item v-for="(number, index) in itemsPerPageArray" :key="index" @click="updateItemsPerPage(number)">
-                  <v-list-item-title>{{ number }}</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-            <span class="ml-2">meta per page</span>
-            <v-spacer></v-spacer>
-            <v-switch v-model="detailed" label="Detailed" hide-details color="secondary"/>
-            <v-spacer></v-spacer>
-            <span> Page {{ page }} of {{ numberOfPages }} </span>
-            <v-btn small outlined class="mx-2" @click="formerPage"> <v-icon>mdi-arrow-left</v-icon> </v-btn>
-            <v-btn small outlined @click="nextPage"><v-icon>mdi-arrow-right</v-icon></v-btn>
-          </v-toolbar>
-        </template>
-      </v-data-iterator>
-    </v-card>
 
     <DialogAddComplexMeta v-if="dialogAddComplexMeta" :dialog="dialogAddComplexMeta" @close="dialogAddComplexMeta=false, ++$store.state.Meta.updateKey"/>
     <DialogEditComplexMeta v-if="dialogEditComplexMeta" :dialogEditMeta="dialogEditComplexMeta" :metaObj="selectedMeta"  @closeSettings="dialogEditComplexMeta=false, ++$store.state.Meta.updateKey"/>
@@ -218,26 +283,16 @@ export default {
   },
   data: () => ({
     itemsPerPageArray: [4, 8, 12, 20, 32],
-    search: '',
-    filter: {},
-    sortDesc: false,
-    page: 1,
-    itemsPerPage: 12,
-    sortBy: 'type',
-    keys: [
-      'name',
-      'type',
-      'dataType',
-      'date',
-      'edit',
-      'id',
-    ],
-    detailed: false,
-    detailedKeys: [
-      'date',
-      'edit',
-      'id',
-    ],
+    searchCM: '',
+    searchSM: '',
+    sortDescCM: false,
+    sortDescSM: false,
+    pageCM: 1,
+    pageSM: 1,
+    itemsPerPageCM: 12,
+    itemsPerPageSM: 12,
+    sortByCM: 'name',
+    sortBySM: 'name',
     // dialogs
     selectedMeta: null,
     dialogAddMeta: false,
@@ -249,25 +304,51 @@ export default {
     dialogTransferMeta: false,
   }),
   computed: {
-    numberOfPages() { return Math.ceil(this.metaList.length / this.itemsPerPage) },
-    filteredKeys() { return this.keys.filter(key => {
-      if (this.detailed) return key!=='name' 
-      else return !this.detailedKeys.includes(key)&&key!=='name'
-    } ) },
-    metaList() { 
-      let allMeta = this.$store.getters.meta.filter(i=>['simple','complex'].includes(i.type))
-      allMeta = allMeta.map(i=>{ 
-        if (i.type==='complex') return {...i, ...i.settings, ...{dataType:'cards'}}  
-        else return {...i, ...i.settings, ...this.$store.state.Meta.updateKey} 
-      })
-      return allMeta.value() 
+    numberOfPagesCM() { return Math.ceil(this.complexMetaList.length / this.itemsPerPageCM) },
+    numberOfPagesSM() { return Math.ceil(this.simpleMetaList.length / this.itemsPerPageSM) },
+    complexMetaList() { 
+      return this.$store.getters.meta.filter(i=>i.type=='complex').map(i=>{
+        let attrs = []
+        if (i.settings.images) attrs.push({name:'Images', icon:'image'})
+        if (i.settings.favorite) attrs.push({name:'Favorite', icon:'heart'})
+        if (i.settings.rating) attrs.push({name:'Rating', icon:'star'})
+        if (i.settings.bookmark) attrs.push({name:'Bookmark', icon:'bookmark'})
+        if (i.settings.synonyms) attrs.push({name:'Synonyms', icon:'alphabetical-variant'})
+        if (i.settings.country) attrs.push({name:'Country', icon:'flag'})
+        if (i.settings.scraper) attrs.push({name:'Scraper', icon:'magnify'})
+        if (i.settings.nested) attrs.push({name:'Nested', icon:'file-tree'})
+        return {...i,...{attrs},...{name:i.settings.name}}
+      }).value() 
+    },
+    simpleMetaList() { 
+      let complexMeta = this.$store.getters.meta.filter(i=>i.type=='complex')
+      return this.$store.getters.meta.filter(i=>i.type=='simple').map(i=>{
+        let assigned = complexMeta.filter(cm=>cm.settings.metaInCard.find(m=>m.id===i.id)).value()
+        let assignedToVideos = this.$store.state.Settings.metaAssignedToVideos.find(m=>m.id===i.id)
+        if (assignedToVideos) assigned.push({settings:{name:'Videos',icon:'video'}})
+        return {...i,...{assigned},...{name:i.settings.name}} 
+      }).value() 
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
-    nextPage() { if (this.page + 1 <= this.numberOfPages) this.page += 1 },
-    formerPage() { if (this.page - 1 >= 1) this.page -= 1 },
-    updateItemsPerPage(number) { this.itemsPerPage = number; if (this.numberOfPages>this.page) this.page = 1 },
+    nextPage(type) { 
+      if (type == 'complex') {if (this.pageCM + 1 <= this.numberOfPagesCM) this.pageCM += 1} 
+      else if (this.pageSM + 1 <= this.numberOfPagesSM) this.pageSM += 1 
+    },
+    formerPage(type) { 
+      if (type == 'complex') {if (this.pageCM - 1 >= 1) this.pageCM -= 1}
+      else if (this.pageSM - 1 >= 1) this.pageSM -= 1
+    },
+    updateItemsPerPage(number, type) { 
+      if (type == 'complex') {
+        this.itemsPerPageCM = number
+        if (this.numberOfPagesCM>this.pageCM) this.pageCM = 1 
+      } else {
+        this.itemsPerPageSM = number
+        if (this.numberOfPagesSM>this.pageSM) this.pageSM = 1 
+      }
+    },
     dateAdded(date) { date = new Date(date); return date.toLocaleDateString() },
     dateEdit(date) { date = new Date(date); return date.toLocaleDateString() },
     setSelectedMeta(item) { this.selectedMeta = this.$store.getters.meta.find({id:item.id}).cloneDeep().value() },
