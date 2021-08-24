@@ -444,11 +444,12 @@ export default {
           parsed[m.id] = vm.$store.getters.metaCards.filter(mc => {
             if (mc.metaId!==m.id) return false
             let foundName = string.includes(filterString(mc.meta.name))
-            let foundSynonyms
+            let foundSynonyms = false
             if (mc.meta.synonyms && mc.meta.synonyms.length) {
-              const synonyms = filterString(mc.meta.synonyms.join())
-              foundSynonyms = string.includes(synonyms)
-            } else foundSynonyms = false 
+              for (let synonym of mc.meta.synonyms) {
+                if (string.includes(filterString(synonym))) foundSynonyms = true
+              }
+            }
             return foundName || foundSynonyms
           }).value().map(mc => mc.id)
           parsed[m.id] = [...new Set(parsed[m.id])] // remove duplicates
