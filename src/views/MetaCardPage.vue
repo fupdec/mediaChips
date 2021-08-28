@@ -70,7 +70,7 @@
                 </v-col>
                 <v-col v-if="meta.settings.rating||meta.settings.favorite" cols="12" md="4" sm="6">
                   <div v-if="meta.settings.rating" class="param"><b class="mr-2">Rating</b>
-                    <v-rating v-model="card.meta.rating" dense
+                    <v-rating v-model="card.meta.rating" dense hover clearable
                       color="yellow darken-3" background-color="grey darken-1"
                       empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
                       half-increments size="20" style="display: inline;"/>
