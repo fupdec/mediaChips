@@ -125,11 +125,15 @@
           </v-card>
 
           <v-card outlined class="mt-10 pa-4">
+            <div class="headline text-center"> Serving video files </div>
+            <v-btn @click="dialogUpdatePath=true" block rounded color="secondary" class="mt-4">
+              <v-icon left>mdi-pencil</v-icon> Update path manually in multiple videos </v-btn>
+            <v-btn @click="findVideoDuplicates" block rounded color="secondary" class="mt-4">
+              <v-icon left>mdi-content-copy</v-icon> Open duplicate videos in a new tab </v-btn>
+          </v-card>
+
+          <v-card outlined class="mt-10 pa-4">
             <div class="d-flex align-center">
-              <v-btn @click="dialogUpdatePath=true" block rounded color="secondary">
-                <v-icon left>mdi-pencil</v-icon> Update path manually in multiple videos </v-btn>
-            </div>
-            <div class="d-flex align-center mt-6">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -964,6 +968,35 @@ export default {
     },
     zoomOut() { this.zoom = (this.zoom - 0.01) || 0.5 },
     zoomIn() { this.zoom = (this.zoom + 0.01) || 2 },
+    findVideoDuplicates() { 
+      let videos = this.$store.getters.videos.value()
+      const result = _.flow([
+        arr => _.groupBy(arr, 'size'), // group elements by id
+        g => _.filter(g, o => o.length > 1), // remove groups that have less than two members
+        _.flatten // flatten the results to a single array
+      ])(videos)
+      
+      let tabId = Date.now()
+      let tab = { 
+        name: 'Duplicate videos', 
+        link: `/videos/:${tabId}?tabId=${tabId}`,
+        id: tabId,
+        filters: [{
+          by: 'path',
+          cond: 'one of',
+          val: result.map(i=>i.path),
+          type: 'boolean',
+          flag: 'duplicateVideos',
+          lock: true,
+        }],
+        sortBy: 'size',
+        sortDirection: 'asc',
+        page: 1,
+        icon: 'content-copy'
+      }
+      this.$store.dispatch('addNewTab', tab)
+      this.$router.push(tab.link)
+    },
   },
 }
 </script>
