@@ -6,6 +6,7 @@ import { createProtocol, /* installVueDevtools */} from 'vue-cli-plugin-electron
 const fs = require("fs-extra")
 const path = require("path")
 const isDevelopment = process.env.NODE_ENV !== 'production'
+const shell = require('electron').shell
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -176,7 +177,203 @@ ipcMain.on('reload', function () {
   else { app.relaunch(); app.exit() } // TODO fix relaunch
 })
 
-Menu.setApplicationMenu(null)
+let systemMenu = Menu.buildFromTemplate([
+  {
+    label: 'App',
+    submenu: [
+      {
+        label: 'Add New Videos...',
+        click() { addNewVideos() } 
+      },
+      {
+        label: 'Check for Updates...',
+        click() { checkForUpdates() } 
+      },
+      { type:'separator' },
+      { 
+        label:'Play Video in System Player', 
+        id: 'systemPlayer',
+        type: 'checkbox',
+        checked: true, 
+        click() { toggleSystemPlayer() } 
+      },
+      { type:'separator' },
+      { 
+        label:'Lock',
+        id: 'lock',
+        enabled: false, 
+        click() { lockApp() } 
+      },
+      { type:'separator' },
+      { 
+        label:'Exit', 
+        click() { app.quit() } 
+      } 
+    ]
+  },
+  {
+    label: 'Edit',
+    submenu: [
+      {
+        label: 'Undo',
+        accelerator: 'CommandOrControl+Z',
+        role: 'undo',
+      },
+      {
+        label: 'Redo',
+        accelerator: 'CommandOrControl+Y',
+        role: 'redo',
+      },
+      { type:'separator' },
+      {
+        label: 'Cut',
+        accelerator: 'CommandOrControl+X',
+        role: 'cut',
+      },
+      {
+        label: 'Copy',
+        accelerator: 'CommandOrControl+C',
+        role: 'copy',
+      },
+      {
+        label: 'Paste',
+        accelerator: 'CommandOrControl+V',
+        role: 'paste',
+      },
+      { type:'separator' },
+      {
+        label: 'Select all',
+        accelerator: 'CommandOrControl+A',
+        role: 'selectAll',
+      },
+    ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      {
+        label: 'Toggle Dark Mode',
+        click() { toggleDarkMode() } 
+      },
+      { type:'separator' },
+      {
+        label: 'Navigation bar',
+        submenu: [
+          {
+            label: 'Side',
+            click() { updateSettingsState('navigationSide', '1') } 
+          },
+          {
+            label: 'Bottom',
+            click() { updateSettingsState('navigationSide', '2') } 
+          },
+          {
+            label: 'Hidden',
+            click() { updateSettingsState('navigationSide', '0') } 
+          },
+        ]
+      },
+      {
+        label: 'Gap in Card Grid',
+        submenu: [
+          {
+            label: 'Extra Small',
+            click() { updateSettingsState('gapSize', 'xs') } 
+          },
+          {
+            label: 'Small',
+            click() { updateSettingsState('gapSize', 's') } 
+          },
+          {
+            label: 'Medium',
+            click() { updateSettingsState('gapSize', 'm') } 
+          },
+          {
+            label: 'Large',
+            click() { updateSettingsState('gapSize', 'l') } 
+          },
+          {
+            label: 'Extra Large',
+            click() { updateSettingsState('gapSize', 'xl') } 
+          },
+        ]
+      },
+      { type:'separator' },
+      {
+        label: 'Zoom in',
+        accelerator: 'CommandOrControl+Shift+=',
+        role: 'zoomIn',
+      },
+      {
+        label: 'Zoom out',
+        accelerator: 'CommandOrControl+-',
+        role: 'zoomOut',
+      },
+      {
+        label: 'Reset zoom',
+        accelerator: 'CommandOrControl+0',
+        role: 'resetZoom',
+      },
+    ]
+  },
+  {
+    label: 'Navigation',
+    submenu: [
+      {
+        label: 'Back',
+        accelerator: 'CommandOrControl+Shift+Left',
+        click() { navigationBack() } 
+      },
+      {
+        label: 'Forward',
+        accelerator: 'CommandOrControl+Shift+Right',
+        click() { navigationForward() } 
+      },
+    ]
+  },
+  {
+    label: 'Help',
+    submenu: [
+      {
+        label: 'Documentation',
+        click() { 
+          shell.openExternal('https://mediachips.app/docs')
+        } 
+      },
+      { type:'separator' },
+      {
+        label: 'Toggle Developer Tools',
+        accelerator: 'CommandOrControl+Shift+I',
+        role: 'toggleDevTools',
+      },
+      { type:'separator' },
+      {
+        label: 'About',
+        click() { aboutApp() } 
+      },
+    ]
+  },
+])
+
+Menu.setApplicationMenu(systemMenu)
+
+// system menu events for main window
+function addNewVideos() { win.webContents.send( 'addNewVideos' ) }
+function checkForUpdates() { win.webContents.send( 'checkForUpdates' ) }
+function toggleSystemPlayer() { win.webContents.send( 'toggleSystemPlayer' ) }
+function toggleDarkMode() { win.webContents.send( 'toggleDarkMode' ) }
+function lockApp() { win.webContents.send( 'lockApp' ) }
+function aboutApp() { win.webContents.send( 'aboutApp' ) }
+function navigationBack() { win.webContents.send( 'navigationBack' ) }
+function navigationForward() { win.webContents.send( 'navigationForward' ) }
+ipcMain.on('toggleDevTools', () => { win.webContents.toggleDevTools() })
+function updateSettingsState(stateName, value) { 
+  win.webContents.send( 'updateSettingsState', stateName, value ) 
+}
+ipcMain.on('changeMenuItem', (event, menuId, value) => {
+  if (menuId == 'lock') systemMenu.getMenuItemById(menuId).enabled = value
+  else systemMenu.getMenuItemById(menuId).checked = value
+})
 
 // events from render process
 ipcMain.on('openPlayer', (event, data) => {

@@ -5,38 +5,40 @@
       <v-menu bottom offset-y min-width="160">
         <template v-slot:activator="{ on, attrs }">
           <v-btn v-bind="attrs" v-on="on" :ripple="false" small tile text height="28">
-            Application
+            App
           </v-btn>
         </template>
         <v-list dense class="context-menu">
-          <v-list-item link @click="$store.state.Settings.dialogScanVideos=true">
+          <v-list-item link @click="checkForUpdates">
             <v-list-item-title>
-              <v-icon left size="18">mdi-video-plus</v-icon> Add New Videos
+              <v-icon left size="18">mdi-update</v-icon> Check for Updates...
             </v-list-item-title>
           </v-list-item>
+          <v-list-item link @click="$store.state.Settings.dialogScanVideos=true">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-video-plus</v-icon> Add New Videos...
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider class="ma-1"></v-divider>
           <v-list-item link @click="isPlayVideoInSystemPlayer=!isPlayVideoInSystemPlayer">
             <v-list-item-title>
               <v-icon left size="18">mdi-television-play</v-icon> Play Video in System Player
             </v-list-item-title>
             <v-icon size="20" class="ml-6" :color="isPlayVideoInSystemPlayer?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
-          <v-divider v-if="$store.state.Settings.passwordProtection" class="ma-1"></v-divider>
-          <v-list-item v-if="$store.state.Settings.passwordProtection" link @click="lock">
+          <v-divider class="ma-1"></v-divider>
+          <v-list-item link @click="lock" :disabled="!$store.state.Settings.passwordProtection">
             <v-list-item-title>
               <v-icon left size="18">mdi-lock</v-icon> Lock
               <span></span>
             </v-list-item-title>
           </v-list-item>
-          <!-- <v-list-item link @click="restart">
-            <v-list-item-title>
-              <v-icon left size="18">mdi-restart</v-icon> Restart
-            </v-list-item-title>
-          </v-list-item> -->
-          <!-- <v-list-item link @click="close">
+          <v-divider class="ma-1"></v-divider>
+          <v-list-item link @click="close">
             <v-list-item-title>
               <v-icon left size="18">mdi-logout</v-icon> Exit
             </v-list-item-title>
-          </v-list-item> -->
+          </v-list-item>
         </v-list>
       </v-menu>
 
@@ -47,7 +49,14 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
-          <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
+          <v-list-item class="pr-2" link @click="toggleDarkMode">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-theme-light-dark</v-icon>
+              <div class="shortcut"><span>Toggle Dark Mode</span></div>
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider class="ma-1"></v-divider>
+          <v-menu open-on-hover offset-x nudge-top="3" min-width="150">
             <template v-slot:activator="{ on, attrs }">
               <v-list-item class="pr-1" link v-bind="attrs" v-on="on">
                 <v-list-item-title> 
@@ -72,7 +81,7 @@
               </v-list-item>
               <v-list-item @click="navigationSide = '0'" class="pr-1" link>
                 <v-list-item-title>
-                  <v-icon left size="18">mdi-border-none-variant</v-icon> None
+                  <v-icon left size="18">mdi-border-none-variant</v-icon> Hidden
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='0'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
@@ -149,20 +158,41 @@
             </v-list-item-title>
             <v-icon size="20" class="ml-6" :color="ratingAndFavoriteInCard?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
-          <v-divider class="ma-1"></v-divider>
-          <v-list-item class="pr-2" link @click="toggleDarkMode">
+        </v-list>
+      </v-menu>
+
+      <v-menu bottom offset-y min-width="160">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn v-bind="attrs" v-on="on" :ripple="false" small tile text height="28">
+            Help
+          </v-btn>
+        </template>
+        <v-list dense class="context-menu">
+          <v-list-item link @click="openLink('https://mediachips.app/docs')">
             <v-list-item-title>
-              <v-icon left size="18">mdi-theme-light-dark</v-icon>
-              <div class="shortcut"><span>Toggle Dark Mode</span></div>
+              <v-icon left size="18">mdi-book-open-page-variant-outline</v-icon> Documentation
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider class="ma-1"></v-divider>
+          <v-list-item link @click="toggleDevTools">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-tools</v-icon> Toggle Developer Tools
+              <span class="pl-8">Ctrl+Shift+I</span>
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider class="ma-1"></v-divider>
+          <v-list-item link @click="about">
+            <v-list-item-title>
+              <v-icon left size="18">mdi-information-variant</v-icon> About
             </v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
 
-      <v-btn v-if="!disableRunApp" @click="back" text tile small width="46" height="28" class="ml-6">
+      <v-btn v-if="!disableRunApp" @click="back" text tile small width="46" height="28" class="ml-6" title="Back (Ctrl+Shift+←)">
         <v-icon size="18" class="ma-0">mdi-arrow-left</v-icon>
       </v-btn>
-      <v-btn v-if="!disableRunApp" @click="forward" text tile small width="46" height="28">
+      <v-btn v-if="!disableRunApp" @click="forward" text tile small width="46" height="28" title="Forward (Ctrl+Shift+→)">
         <v-icon size="18" class="ma-0">mdi-arrow-right</v-icon>
       </v-btn>
     </div>
@@ -194,14 +224,14 @@ const win = remote.getCurrentWindow()
 const { ipcRenderer } = require('electron')
 const { webFrame } = require('electron')
 const path = require('path')
+const shell = require('electron').shell
 
 export default {
   name: 'SystemBar',
   props: {
     disableRunApp: Boolean,
   },
-  components: {
-  },
+  components: {},
   beforeCreate(){
     win.on('maximize', ()=>{
       this.maximized = true
@@ -212,6 +242,18 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
+      // requests from main process for system menu
+      ipcRenderer.on('addNewVideos', () => { this.$store.state.Settings.dialogScanVideos=true })
+      ipcRenderer.on('checkForUpdates', () => { this.checkForUpdates() })
+      ipcRenderer.on('lockApp', () => { this.lock() })
+      ipcRenderer.on('toggleSystemPlayer', () => { this.isPlayVideoInSystemPlayer=!this.isPlayVideoInSystemPlayer })
+      ipcRenderer.on('toggleDarkMode', () => { this.toggleDarkMode() })
+      ipcRenderer.on('aboutApp', () => { this.about() })
+      ipcRenderer.on('navigationBack', () => { this.back() })
+      ipcRenderer.on('navigationForward', () => { this.forward() })
+      ipcRenderer.on('updateSettingsState', (e, stateName, value) => { this[stateName] = value })
+      ipcRenderer.send('changeMenuItem', 'systemPlayer', this.isPlayVideoInSystemPlayer )
+      ipcRenderer.send('changeMenuItem', 'lock', this.$store.state.Settings.passwordProtection )
     })
   },
   destroyed () {
@@ -259,8 +301,10 @@ export default {
     logoPath() {return path.join('file://', __static, '/icons/icon.png')},
   },
   methods: {
+    checkForUpdates() {this.$emit('checkForUpdates')},
     lock() {this.$emit('lock')},
-    restart() {ipcRenderer.send('reload')},
+    about() {this.$emit('about')},
+    toggleDevTools() { ipcRenderer.send('toggleDevTools')},
     minimize() {win.minimize()},
     maximize() {
       this.maximized = !this.maximized
@@ -280,6 +324,7 @@ export default {
     },
     back() {this.$router.go(-1)},
     forward() {this.$router.go(1)},
+    openLink(link) { shell.openExternal(link) },
   },
 }
 </script>

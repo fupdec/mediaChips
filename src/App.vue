@@ -1,6 +1,6 @@
 <template>
   <v-app :class="[textFont, headerFont, {'color-scroll': colorScroll}]">
-    <SystemBar v-if="showSystemBar" :disableRunApp="disableRunApp" @lock="lock"/>
+    <SystemBar v-show="showSystemBar" :disableRunApp="disableRunApp" @lock="lock" @about="about=true" @checkForUpdates="checkForUpdates"/>
 
     <AppBar />
 
@@ -33,6 +33,19 @@
           </v-card-text>
         </v-card>
       </v-form>
+    </v-dialog>
+
+    <v-dialog v-model="about" width="500">
+      <v-card>
+        <v-toolbar color="primary">
+          <div class="headline">About application</div>
+          <v-spacer></v-spacer>
+          <v-icon>mdi-information-variant</v-icon>
+        </v-toolbar>
+        <v-card-text class="pa-4">
+          <About/>
+        </v-card-text>
+      </v-card>
     </v-dialog>
 
     <v-bottom-sheet v-if="updateApp" v-model="updateApp" hide-overlay no-click-animation persistent width="600">
@@ -141,6 +154,7 @@ const cheerio = require("cheerio")
 const shell = require('electron').shell
 const chokidar = require('chokidar')
 const shortid = require('shortid')
+const Mousetrap = require('mousetrap')
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -158,6 +172,7 @@ export default {
     ContextMenu: () => import('@/components/app/ContextMenu.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
+    About: () => import('@/components/app/About.vue'),
     vuescroll,
   },
   mixins: [HoveredImageFunctions, PlayerEvents],
@@ -202,6 +217,7 @@ export default {
     extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
     newFiles: [],
     stage: 0,
+    about: false,
   }),
   computed: {
     showSystemBar() {return process.platform === 'win32'},
@@ -419,12 +435,8 @@ export default {
       this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/')
       this.performerPage = this.$router.currentRoute
     },
-    updateIntervalDataFromVideos(n) {
-      this.runAutoUpdateDataFromVideos()
-    },
-    autoUpdateDataFromVideos(n) {
-      this.runAutoUpdateDataFromVideos()
-    },
+    updateIntervalDataFromVideos(n) { this.runAutoUpdateDataFromVideos() },
+    autoUpdateDataFromVideos(n) { this.runAutoUpdateDataFromVideos() },
     folders(folders) {
       if (!this.watchFolders) return
       this.foldersUpdated = false 
@@ -443,9 +455,7 @@ export default {
       if (newValue) setTimeout(() => {
         this.$refs.logs.scrollTo({ y: '100%' }, 0)
       }, 100)
-      this.$nextTick(() => {
-        this.$refs.sheet.showScroll()
-      })
+      this.$nextTick(() => { this.$refs.sheet.showScroll() })
     },
   },
 }
