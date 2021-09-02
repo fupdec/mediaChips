@@ -10,7 +10,7 @@
       <FiltersChips :filters="filters" type="Video" />
     </v-container>
 
-    <v-container fluid v-if="numberFilteredVideos" class="pagination-container my-4">
+    <v-container fluid v-if="numberFilteredVideos" class="pagination-container">
       <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
         :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
         class="items-per-page-dropdown"
@@ -60,7 +60,7 @@
     </v-container>
 
     <v-pagination
-      v-if="numberFilteredVideos" class="my-10"
+      v-if="numberFilteredVideos" class="mt-4 mb-8"
       v-model="videosCurrentPage"
       :length="videosPagesSum"
       :total-visible="getNumberOfPagesLimit"
