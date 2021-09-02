@@ -72,6 +72,7 @@ dbs.defaults({
   showIconsOfMetaInEditingDialog: true,
   showAdultContent: true,
   showEmptyMetaValueInCard: true,
+  showIconsInsteadTextOnFiltersChips: false,
   databaseVersion: '0.8.2',
 }).write()
 
@@ -144,6 +145,7 @@ const Settings = {
     showIconsOfMetaInEditingDialog: dbs.get('showIconsOfMetaInEditingDialog').value(),
     showAdultContent: dbs.get('showAdultContent').value(),
     showEmptyMetaValueInCard: dbs.get('showEmptyMetaValueInCard').value(),
+    showIconsInsteadTextOnFiltersChips: dbs.get('showIconsInsteadTextOnFiltersChips').value(),
     databaseVersion: dbs.get('databaseVersion').value(),
   }),
   mutations: {

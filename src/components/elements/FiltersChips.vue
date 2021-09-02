@@ -2,18 +2,24 @@
   <div class="d-flex flex-wrap justify-center">
     <v-tooltip v-if="!isTooltip" top>
       <template v-slot:activator="{ on }">
-        <v-btn @click="removeAllFilters" v-on="on" fab x-small dark color="red" class="mr-4">
+        <v-btn @click="removeAllFilters" v-on="on" fab x-small depressed dark color="red" class="mr-4">
           <v-icon>mdi-filter-off</v-icon>
         </v-btn>
       </template>
       <span>Remove All Filters</span>
     </v-tooltip>
     <v-chip v-for="(filter, i) in filters" :key="i" 
-      @click:close="removeFilter(i)" :disabled="filter.lock" class="ma-1 px-2" small
+      @click="removeFilter(i)" :disabled="filter.lock" class="ma-1 px-2" small
       :color="isTooltip?'#fff':'primary'" :outlined="isTooltip"
-      :close="!isTooltip" dark>
-      <span class="mr-1">"{{getMeta(filter.by).settings.name}}"</span>
-      <span>{{filter.cond}}</span> 
+      :title="isTooltip?'':'Remove filter'" dark>
+      <span v-if="showIconsInsteadTextOnFiltersChips">
+        <v-icon small class="mr-1">mdi-{{getMeta(filter.by).settings.icon}}</v-icon>
+        <v-icon small>{{getIconCond(filter.cond)}}</v-icon>
+      </span>
+      <span v-else>
+        <span class="mr-1">"{{getMeta(filter.by).settings.name}}"</span>
+        <span>{{filter.cond}}</span> 
+      </span>
       <span v-if="filter.type=='array'||filter.type=='select'" class="ml-1">"{{getMetaItems(filter.by, filter.val)}}"</span>
       <span v-else-if="filter.type=='boolean'"></span>
       <span v-else class="ml-1">"{{filter.val}}"</span>
@@ -24,6 +30,7 @@
 
 
 <script>
+import DialogFilters from '@/mixins/DialogFilters'
 import MetaGetters from '@/mixins/MetaGetters'
 import Countries from '@/components/elements/Countries'
 
@@ -34,15 +41,14 @@ export default {
     type: String, // Video or Meta
     isTooltip: Boolean, 
   },
-  mixins: [MetaGetters],
+  mixins: [DialogFilters, MetaGetters],
   mounted() {
     this.$nextTick(function () {
     })
   },
   computed: {
-    filtersState() {
-      return this.type.toLowerCase() + 'Filters'
-    },
+    filtersState() { return this.type.toLowerCase() + 'Filters' },
+    showIconsInsteadTextOnFiltersChips() { return this.$store.state.Settings.showIconsInsteadTextOnFiltersChips },
   },
   data: () => ({
   }),

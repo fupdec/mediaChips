@@ -167,10 +167,6 @@
               </v-switch>
             </div>
             <div class="d-flex mt-6">
-              <span class="mr-6">Show empty meta value in card:</span>
-              <v-switch v-model="showEmptyMetaValueInCard" :label="showEmptyMetaValueInCard?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
-            </div>
-            <div class="d-flex mt-6">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -322,14 +318,22 @@
                 :label="ratingAndFavoriteInCard?'Card description':'Card image'"/>
             </div>
             <div class="pt-7 d-flex">
-              <span class="mr-6">Icons of meta in editing dialog:</span>
+              <span class="mr-6">Show icons of meta in editing dialog:</span>
               <v-switch v-model="showIconsOfMetaInEditingDialog" inset hide-details 
-                class="mt-0 pt-0 d-inline-flex" :label="showIconsOfMetaInEditingDialog?'Show':'Hide'"/>
+                class="mt-0 pt-0 d-inline-flex" :label="showIconsOfMetaInEditingDialog?'Yes':'No'"/>
             </div>
             <div class="pt-7 d-flex">
-              <span class="mr-6">Tab borders:</span>
+              <span class="mr-6">Show icons instead of text on filter chips:</span>
+              <v-switch v-model="showIconsInsteadTextOnFiltersChips" :label="showIconsInsteadTextOnFiltersChips?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
+            </div>
+            <div class="pt-7 d-flex">
+              <span class="mr-6">Show empty meta value in card:</span>
+              <v-switch v-model="showEmptyMetaValueInCard" :label="showEmptyMetaValueInCard?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
+            </div>
+            <div class="pt-7 d-flex">
+              <span class="mr-6">Show borders on tab:</span>
               <v-switch v-model="tabBorders" inset hide-details 
-                class="mt-0 pt-0 d-inline-flex" :label="tabBorders?'Show':'Hide'"/>
+                class="mt-0 pt-0 d-inline-flex" :label="tabBorders?'Yes':'No'"/>
             </div>
             <div class="pt-6">
               <span class="mr-6">Limit of pages in pagination:</span>
@@ -743,6 +747,10 @@ export default {
     showEmptyMetaValueInCard: {
       get() {return this.$store.state.Settings.showEmptyMetaValueInCard},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'showEmptyMetaValueInCard', value})},
+    },
+    showIconsInsteadTextOnFiltersChips: {
+      get() {return this.$store.state.Settings.showIconsInsteadTextOnFiltersChips},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'showIconsInsteadTextOnFiltersChips', value})},
     },
     showAdultContent: {
       get() {return this.$store.state.Settings.showAdultContent},
