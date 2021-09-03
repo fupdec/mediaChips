@@ -100,6 +100,14 @@ export default {
       this.rating = this.card.meta.rating || 0
     })
   },
+  updated() {
+    this.imgMain = this.getImgUrl('main')
+    this.imgAlt = this.getImgUrl('alt')
+    this.imgCustom1 = this.getImgUrl('custom1')
+    this.imgCustom2 = this.getImgUrl('custom2')
+    this.favorite = this.card.meta.favorite || false
+    this.rating = this.card.meta.rating || 0
+  },
   data: () => ({
     cardKey: '',
     imgMain: '',
@@ -296,15 +304,7 @@ export default {
   watch: {
     updateCardIds(newValue) {
       if (newValue.length === 0) this.cardKey = this.card.id + Date.now()
-      if (newValue.includes(this.card.id)) {
-        this.cardKey = this.card.id + Date.now() 
-        setTimeout(() => {
-          this.imgMain = this.getImgUrl('main')
-          this.imgAlt = this.getImgUrl('alt')
-          this.imgCustom1 = this.getImgUrl('custom1')
-          this.imgCustom2 = this.getImgUrl('custom2')
-        }, 100)
-      } 
+      else if (newValue.includes(this.card.id)) this.cardKey = this.card.id + Date.now() 
     },
   },
 }
