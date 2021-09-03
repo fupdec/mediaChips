@@ -8,12 +8,12 @@
       <v-row>
         <v-col cols="12" lg="6">
           <v-card outlined>
-            <v-data-iterator :items="complexMetaList" :items-per-page.sync="itemsPerPageCM" :page.sync="pageCM" :search="searchSM" :sort-by="sortByCM" :sort-desc="sortDescCM"
+            <v-data-iterator :items="complexMetaList" :items-per-page.sync="itemsPerPageCM" :page.sync="pageCM" :search="searchCM" :sort-by="sortByCM" :sort-desc="sortDescCM"
               hide-default-footer no-data-text="Please add complex meta first" no-results-text="No meta found">
               <template v-slot:header>
                 <div class="headline text-center py-2">List of complex meta</div>
                 <v-toolbar class="mb-4" color="primary" elevation="0" dense>
-                  <v-text-field v-model="searchSM" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
+                  <v-text-field v-model="searchCM" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
                   <v-spacer></v-spacer>
                   <v-select v-model="sortByCM" dense flat solo outlined hide-details :items="['name','date','edit']" prepend-inner-icon="mdi-sort" label="Sort by"></v-select>
                   <v-spacer></v-spacer>
