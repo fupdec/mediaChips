@@ -42,6 +42,22 @@
                     <v-text-field v-model="synonyms" label="Synonyms"
                       :prepend-inner-icon="showIcons?`mdi-${getMeta('synonyms').settings.icon}`:''"/>
                   </v-col>
+                  <v-col v-if="meta.settings.rating||meta.settings.favorite" cols="12" lg="6" class="pt-0">
+                    <div class="d-flex justify-space-between">
+                      <div v-if="meta.settings.rating" class="text--secondary caption">Rating</div>
+                      <div v-if="meta.settings.favorite" class="text--secondary caption">Favorite</div>
+                    </div>
+                    <div class="d-flex justify-space-between">
+                      <v-rating v-if="meta.settings.rating" 
+                        v-model="rating" dense hover clearable half-increments
+                        color="yellow darken-3" background-color="grey darken-1"
+                        empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/>
+                      <v-btn v-if="meta.settings.favorite" @click="favorite=!favorite" icon>
+                        <v-icon v-if="favorite" size="20" color="pink">mdi-heart</v-icon>
+                        <v-icon v-else size="20" color="grey">mdi-heart-outline </v-icon>
+                      </v-btn>
+                    </div>
+                  </v-col>
                   <v-col v-if="meta.settings.country" cols="12" lg="6" class="pt-0">
                     <v-autocomplete v-model="country" :items="countries" multiple 
                       item-text="name" item-value="name" label="Country" 
@@ -254,6 +270,8 @@ export default {
     this.name = this.card.meta.name || ''
     this.color = this.card.meta.color || '#777777'
     this.synonyms = this.card.meta.synonyms===undefined? '' : this.card.meta.synonyms.join(', ')
+    this.rating = this.card.meta.rating || 0
+    this.favorite = this.card.meta.favorite || false
     this.country = this.card.meta.country || []
     this.bookmark = this.card.meta.bookmark || ''
     this.parseMetaInCard()
@@ -272,6 +290,8 @@ export default {
     calendarId: null,
     name: '',
     synonyms: '',
+    rating: 0,
+    favorite: false,
     country: [],
     dialogColor: false,
     color: '#777777',
@@ -389,6 +409,8 @@ export default {
 
       let presetValues = { name: this.name }
       if (this.meta.settings.synonyms) presetValues.synonyms = this.parseStringToArray(this.synonyms)
+      if (this.meta.settings.rating) presetValues.rating = this.rating
+      if (this.meta.settings.favorite) presetValues.favorite = this.favorite
       if (this.meta.settings.color) presetValues.color = this.color
       if (this.meta.settings.country) presetValues.country = this.country
       if (this.meta.settings.bookmark) presetValues.bookmark = this.bookmark
