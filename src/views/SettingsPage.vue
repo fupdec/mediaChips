@@ -121,6 +121,18 @@
                   </v-switch>
                 </div>
               </v-col>
+              <v-col cols="12" class="text-center">
+                <div class="d-flex">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                    </template>
+                    <span>Disable this option if stuttering occurs at the end of the process of adding new videos</span>
+                  </v-tooltip>
+                  <span class="mr-6">Update data after adding new videos:</span>
+                  <v-switch v-model="updateDataAfterAddingNewVideos" :label="updateDataAfterAddingNewVideos?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
+                </div>
+              </v-col>
             </v-row>
           </v-card>
 
@@ -304,11 +316,11 @@
 
           <v-card outlined class="mt-10 pa-4">
             <div class="d-flex">
-              <span class="mr-6">Navigation menu position:</span>
+              <span class="mr-6">Navigation bar:</span>
               <v-radio-group v-model="navigationSide" mandatory row hide-details class="mt-0 pt-0">
                 <v-radio label="Side" value="1"></v-radio>
                 <v-radio label="Bottom" value="2"></v-radio>
-                <v-radio label="None" value="0"></v-radio>
+                <v-radio label="Hidden" value="0"></v-radio>
               </v-radio-group>
             </div>
             <div class="pt-7 d-flex">
@@ -645,6 +657,10 @@ export default {
     autoUpdateDataFromVideos: {
       get() {return this.$store.state.Settings.autoUpdateDataFromVideos},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'autoUpdateDataFromVideos', value})},
+    },
+    updateDataAfterAddingNewVideos: {
+      get() {return this.$store.state.Settings.updateDataAfterAddingNewVideos},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'updateDataAfterAddingNewVideos', value})},
     },
     updateDataFromVideosOnStart: {
       get() {return this.$store.state.Settings.updateDataFromVideosOnStart},

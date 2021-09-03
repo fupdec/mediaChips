@@ -369,7 +369,7 @@ export default {
             color:'green',
             text:`${vm.newVideos.length} new videos have been added 😀`
           })
-          vm.$store.dispatch('updateDataFromVideos')
+          if (vm.$store.state.Settings.updateDataAfterAddingNewVideos) vm.$store.dispatch('updateDataFromVideos')
         }
         vm.$store.state.Settings.scanProcRun = false
         vm.$store.dispatch('filterVideos')
