@@ -70,14 +70,14 @@
                 </v-col>
                 <v-col v-if="meta.settings.rating||meta.settings.favorite" cols="12" md="4" sm="6">
                   <div v-if="meta.settings.rating" class="param"><b class="mr-2">Rating</b>
-                    <v-rating v-model="card.meta.rating" dense hover clearable
+                    <v-rating :value="rating" @input="changeRating" dense hover clearable
                       color="yellow darken-3" background-color="grey darken-1"
                       empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
                       half-increments size="20" style="display: inline;"/>
                   </div>
                   <div v-if="meta.settings.favorite" class="param ml-6"><b class="mr-2">Favorite</b>
-                    <v-btn @click="card.meta.favorite=!card.meta.favorite" icon>
-                      <v-icon v-if="card.meta.favorite" size="20" color="pink">mdi-heart</v-icon>
+                    <v-btn @click="toggleFavorite" icon>
+                      <v-icon v-if="favorite" size="20" color="pink">mdi-heart</v-icon>
                       <v-icon v-else size="20" color="grey">mdi-heart-outline </v-icon>
                     </v-btn>
                   </div><br>
@@ -253,6 +253,8 @@ export default {
     this.$nextTick(function () {
       this.updateViews()
       this.initFilters()
+      this.rating = this.card.meta.rating || 0
+      this.favorite = this.card.meta.favorite || false
     })
   },
   beforeDestroy() {
@@ -260,6 +262,8 @@ export default {
   },
   data: () => ({
     profile: [],
+    rating: 0,
+    favorite: false,
     currentYear: new Date().getFullYear(),
     months: [
       'January',
@@ -460,9 +464,18 @@ export default {
       if (index > -1) this.$store.state.Settings.videoFilters[index].val = e.map(i=>metaArr[i])
       this.$store.dispatch('filterVideos', true)
     },
+    changeRating(stars) {
+      this.$store.getters.metaCards.find({id:this.card.id})
+        .assign({edit: Date.now()}).get('meta').assign({rating:stars}).write()
+    },
     changeMetaRating(stars, metaId) {
       this.$store.getters.metaCards.find({id:this.card.id})
         .assign({edit: Date.now()}).get('meta').assign({[metaId]:stars}).write()
+    },
+    toggleFavorite() {
+      this.favorite = !this.favorite
+      this.$store.getters.metaCards.find({id:this.card.id})
+        .assign({edit: Date.now()}).get('meta').assign({favorite:this.favorite}).write()
     },
     openLink(url) { shell.openExternal(url) }
   },
