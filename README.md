@@ -29,8 +29,8 @@ This is an open source desktop application for Windows, Mac and Linux. <br>
 **Q: Are you planning to support images?** <br>
 *A: Yes. I'll get to that soon.*
 
-### 🎞️ Video demonstration on YouTube
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/voXkWelDpc8/mqdefault.jpg)](https://www.youtube.com/watch?v=voXkWelDpc8)
+### 🎞️ YouTube video demonstrating the application
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/vNInN4H5u8Q/mqdefault.jpg)](https://youtu.be/vNInN4H5u8Q)
 
 ## 🖐️ Main Features
 *For a complete list of functions and how to use them, see the <a href="https://mediachips.app/docs?v=f9308c5d0596">📖 Documentation</a>*
