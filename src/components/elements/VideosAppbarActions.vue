@@ -44,7 +44,7 @@
       <span>Toggle Favorites</span>
     </v-tooltip>
 
-    <v-tooltip bottom>
+    <v-tooltip v-if="$store.state.Settings.showExperimentalFeatures" bottom>
       <template v-slot:activator="{ on }">
         <v-btn @click="$store.state.Videos.dialogFolderTree = true" icon tile v-on="on"> 
           <v-badge :value="!isTreeEmpty" :content="treeBadgeContent" overlap bottom style="z-index: 5;">

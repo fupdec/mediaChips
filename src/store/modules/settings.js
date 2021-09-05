@@ -74,6 +74,7 @@ dbs.defaults({
   showAdultContent: true,
   showEmptyMetaValueInCard: true,
   showIconsInsteadTextOnFiltersChips: false,
+  showExperimentalFeatures: false,
   databaseVersion: '0.8.2',
 }).write()
 
@@ -148,6 +149,7 @@ const Settings = {
     showAdultContent: dbs.get('showAdultContent').value(),
     showEmptyMetaValueInCard: dbs.get('showEmptyMetaValueInCard').value(),
     showIconsInsteadTextOnFiltersChips: dbs.get('showIconsInsteadTextOnFiltersChips').value(),
+    showExperimentalFeatures: dbs.get('showExperimentalFeatures').value(),
     databaseVersion: dbs.get('databaseVersion').value(),
   }),
   mutations: {

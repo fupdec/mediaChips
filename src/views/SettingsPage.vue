@@ -183,6 +183,16 @@
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
                 </template>
+                <div>Features that do not work or are in the early stages of development. <br> For example: video folder tree, nested meta cards.</div>
+              </v-tooltip>
+              <span class="mr-6">Show experimental features:</span>
+              <v-switch v-model="showExperimentalFeatures" :label="showExperimentalFeatures?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
+            </div>
+            <div class="d-flex mt-6">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                </template>
                 <div>Data scrapers for performers, specific meta</div>
               </v-tooltip>
               <span class="mr-6">Show adult content:</span>
@@ -767,6 +777,10 @@ export default {
     showIconsInsteadTextOnFiltersChips: {
       get() {return this.$store.state.Settings.showIconsInsteadTextOnFiltersChips},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'showIconsInsteadTextOnFiltersChips', value})},
+    },
+    showExperimentalFeatures: {
+      get() {return this.$store.state.Settings.showExperimentalFeatures},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'showExperimentalFeatures', value})},
     },
     showAdultContent: {
       get() {return this.$store.state.Settings.showAdultContent},

@@ -117,7 +117,7 @@
         <span>Add New Tab</span>
       </v-tooltip>
 
-      <v-tooltip v-if="meta.settings.nested" bottom>
+      <v-tooltip v-if="meta.settings.nested && $store.state.Settings.showExperimentalFeatures" bottom>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" @click="dialogNested=true" icon tile>
             <v-icon>mdi-file-tree</v-icon>
