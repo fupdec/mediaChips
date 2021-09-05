@@ -368,7 +368,7 @@ export default {
       if (!this.valid) return
       this.$store.getters.meta.find({id: this.meta.id}).set('edit', Date.now()).set('settings', this.settings).write()
       this.parseDeletedMetaFromCards()
-      this.$store.commit('getMetaListFromDb')
+      this.$store.commit('updateComplexMetaListFromDb')
       this.closeSettings()
     },
     closeSettings() { this.$emit('closeSettings') },

@@ -130,7 +130,8 @@ export default {
       this.$store.dispatch('updateSavedFilters')
       ipcRenderer.send('updatePlayerDb', 'meta') // update db in player window
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update db in player window
-      this.$store.commit('getMetaListFromDb')
+      this.$store.commit('updateComplexMetaListFromDb')
+      this.$store.commit('updateSimpleMetaListFromDb')
       ++this.$store.state.Meta.updateKey
     },
     clearSavedFiltersDb() {

@@ -214,10 +214,10 @@
       </v-card>
     </v-dialog>
 
-    <DialogAddComplexMeta v-if="dialogAddComplexMeta" :dialog="dialogAddComplexMeta" @close="dialogAddComplexMeta=false, ++$store.state.Meta.updateKey"/>
-    <DialogEditComplexMeta v-if="dialogEditComplexMeta" :dialogEditMeta="dialogEditComplexMeta" :metaObj="selectedMeta"  @closeSettings="dialogEditComplexMeta=false, ++$store.state.Meta.updateKey"/>
-    <DialogAddSimpleMeta v-if="dialogAddSimpleMeta" :dialog="dialogAddSimpleMeta" @close="dialogAddSimpleMeta=false, ++$store.state.Meta.updateKey"/>
-    <DialogEditSimpleMeta v-if="dialogEditSimpleMeta" :dialogEditMeta="dialogEditSimpleMeta" :metaObj="selectedMeta" @closeSettings="dialogEditSimpleMeta=false, ++$store.state.Meta.updateKey"/>
+    <DialogAddComplexMeta v-if="dialogAddComplexMeta" :dialog="dialogAddComplexMeta" @close="dialogAddComplexMeta=false"/>
+    <DialogEditComplexMeta v-if="dialogEditComplexMeta" :dialogEditMeta="dialogEditComplexMeta" :metaObj="selectedMeta"  @closeSettings="dialogEditComplexMeta=false"/>
+    <DialogAddSimpleMeta v-if="dialogAddSimpleMeta" :dialog="dialogAddSimpleMeta" @close="dialogAddSimpleMeta=false"/>
+    <DialogEditSimpleMeta v-if="dialogEditSimpleMeta" :dialogEditMeta="dialogEditSimpleMeta" :metaObj="selectedMeta" @closeSettings="dialogEditSimpleMeta=false"/>
     <v-dialog v-if="dialogDeleteMeta" v-model="dialogDeleteMeta" persistent max-width="450">
       <v-card>
         <v-toolbar color="error">
@@ -307,7 +307,8 @@ export default {
     numberOfPagesCM() { return Math.ceil(this.complexMetaList.length / this.itemsPerPageCM) },
     numberOfPagesSM() { return Math.ceil(this.simpleMetaList.length / this.itemsPerPageSM) },
     complexMetaList() { 
-      return this.$store.getters.meta.filter(i=>i.type=='complex').map(i=>{
+      let complexMeta = this.$store.state.Meta.complexMetaList
+      return complexMeta.map(i=>{
         let attrs = []
         if (i.settings.images) attrs.push({name:'Images', icon:'image'})
         if (i.settings.favorite) attrs.push({name:'Favorite', icon:'heart'})
@@ -318,16 +319,16 @@ export default {
         if (i.settings.scraper) attrs.push({name:'Scraper', icon:'magnify'})
         if (i.settings.nested) attrs.push({name:'Nested', icon:'file-tree'})
         return {...i,...{attrs},...{name:i.settings.name}}
-      }).value() 
+      }) 
     },
     simpleMetaList() { 
-      let complexMeta = this.$store.getters.meta.filter(i=>i.type=='complex')
-      return this.$store.getters.meta.filter(i=>i.type=='simple').map(i=>{
-        let assigned = complexMeta.filter(cm=>cm.settings.metaInCard.find(m=>m.id===i.id)).value()
+      let complexMeta = this.$store.state.Meta.complexMetaList
+      return this.$store.state.Meta.simpleMetaList.map(i=>{
+        let assigned = complexMeta.filter(cm=>cm.settings.metaInCard.find(m=>m.id===i.id))
         let assignedToVideos = this.$store.state.Settings.metaAssignedToVideos.find(m=>m.id===i.id)
         if (assignedToVideos) assigned.push({settings:{name:'Videos',icon:'video'}})
         return {...i,...{assigned},...{name:i.settings.name}} 
-      }).value() 
+      }) 
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
@@ -423,15 +424,17 @@ export default {
         if (tab.filters) for (let f of tab.filters) if (f.by === meta.id) type = 'select'
       }).write()
       this.$store.commit('updateSettingsState', 'tabs') // update tabs
+      this.$store.commit('updateComplexMetaListFromDb')
+      this.$store.commit('updateSimpleMetaListFromDb')
       this.dialogTransferMeta = false
-      ++this.$store.state.Meta.updateKey
     },
     deleteMeta() {
       let meta = this.selectedMeta
       if (meta.type == 'complex') this.$store.dispatch('deleteComplexMeta', {id:meta.id, name:meta.settings.name})
       else if (meta.type == 'simple') this.$store.dispatch('deleteSimpleMeta', {id:meta.id, name:meta.settings.name})
+      this.$store.commit('updateComplexMetaListFromDb')
+      this.$store.commit('updateSimpleMetaListFromDb')
       this.dialogDeleteMeta = false
-      ++this.$store.state.Meta.updateKey
     },
     getIconDataType(type) {
       if (type === 'string') return 'mdi-alphabetical'

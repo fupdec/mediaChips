@@ -150,8 +150,8 @@ export default {
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
-    metaList() { return _.filter(this.$store.state.Meta.metaList, i=>i.settings.hidden!==true) },
-    hiddenMetaList() { return this.$store.getters.meta.filter(i=>i.settings.hidden===true).value() },
+    metaList() { return _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden!==true) },
+    hiddenMetaList() { return _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden===true) },
   },
   methods: {
     addNewTabVideos() {

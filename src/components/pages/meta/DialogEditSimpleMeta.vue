@@ -217,6 +217,7 @@ export default {
       if (!this.valid) return
       this.$store.getters.simpleMeta.find({id: this.meta.id}).set('edit', Date.now()).set('settings', this.settings).write()
       this.parseDeletedItems()
+      commit('updateSimpleMetaListFromDb')
       this.$emit('closeSettings')
     },
     closeSettings() { this.$emit('closeSettings') },

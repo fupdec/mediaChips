@@ -53,7 +53,8 @@ const Meta = {
     selection: null,
     selectedMeta: [],
     updateKey: 1,
-    metaList: dbMeta.get('meta').filter({type:'complex'}).value(),
+    complexMetaList: dbMeta.get('meta').filter({type:'complex'}).value(),
+    simpleMetaList: dbMeta.get('meta').filter({type:'simple'}).value(),
     dialogEditMetaCard: false,
     dialogEditMetaCardImages: false,
     dialogFilterMetaCards: false,
@@ -65,8 +66,11 @@ const Meta = {
       if (ids === undefined) state.updateCardIds = []
       else state.updateCardIds = ids // TODO make update function
     },
-    getMetaListFromDb(state) {
-      state.metaList = _.cloneDeep(dbMeta.get('meta').filter({type:'complex'}).value())
+    updateComplexMetaListFromDb(state) {
+      state.complexMetaList = _.cloneDeep(dbMeta.get('meta').filter({type:'complex'}).value())
+    },
+    updateSimpleMetaListFromDb(state) {
+      state.simpleMetaList = _.cloneDeep(dbMeta.get('meta').filter({type:'simple'}).value())
     },
   },
   actions: {
@@ -75,13 +79,14 @@ const Meta = {
       getters.meta.push(meta).write()
       getters.metaCards.set(meta.id, []).write()
       getters.savedFilters.set(meta.id, []).write()
-      commit('getMetaListFromDb')
+      commit('updateComplexMetaListFromDb')
       commit('addLog', {type:'info', color:'green', text:`Added complex meta "${meta.settings.name}"`})
       ipcRenderer.send('updatePlayerDb', 'meta') // update meta in player window
     },
     addSimpleMeta({commit, getters, rootState}, metaObject) {
       let meta = { ...defaultMeta, ...{date: Date.now(),edit: Date.now()}, ...metaObject }
       getters.meta.push(meta).write()
+      commit('updateSimpleMetaListFromDb')
       commit('addLog', {type:'info', color:'green', text:`Added simple meta "${metaObject.settings.name}"`})
     },
     deleteComplexMeta({commit, dispatch, getters}, {id, name}) {
@@ -94,7 +99,6 @@ const Meta = {
         }
       }).write()
       rimraf(path.join(getters.getPathToUserData, 'media', 'meta', id), () => { /*console.log("done")*/ }) // remove folder with images
-      commit('getMetaListFromDb')
       dispatch('removeMetaFromOtherMeta', id) // META
       dispatch('removeMetaFromVideos', id) // VIDEOS
       dispatch('removeMetaFromSavedFilters', id) // SAVED FILTERS
