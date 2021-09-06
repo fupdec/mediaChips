@@ -26,14 +26,18 @@
         </v-list-item>
 
         <v-divider v-if="metaList.length>0" class="my-1"/>
-        
-        <v-list-item v-for="meta in metaList" :key="meta.id" @click.middle="addNewTabMetaCards(meta)"
-          link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-{{meta.settings.icon}}</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>{{meta.settings.name}}</v-list-item-title>
-        </v-list-item>
+
+        <draggable v-model="metaList" v-bind="dragOptions">
+          <transition-group type="transition">
+            <v-list-item v-for="meta in metaList" :key="meta.id" @click.middle="addNewTabMetaCards(meta)"
+              link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
+              <v-list-item-icon>
+                <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>{{meta.settings.name}}</v-list-item-title>
+            </v-list-item>
+          </transition-group>
+        </draggable>
 
         <v-list-item v-if="hiddenMetaList.length" @click="showHidden=!showHidden" color="secondary" draggable="false">
           <v-list-item-icon>
@@ -82,20 +86,13 @@
 
 
 <script>
+import draggable from "vuedraggable"
 import vuescroll from 'vuescroll'
 
 export default {
   name: 'SideBar',
-  props: {
-    foldersUpdated: Boolean,
-  },
-  components: {
-    vuescroll,
-  },
-  mounted() {
-    this.$nextTick(function () {
-    })
-  },
+  props: { foldersUpdated: Boolean, },
+  components: { vuescroll, draggable },
   data: () => ({
     showHidden: false,
     ops: {
@@ -103,13 +100,26 @@ export default {
       rail: { size: '4px', }
     },
     folderHovered: false,
+    dragOptions: { animation: 200, },
   }),
   computed: {
     tabId() { return this.$route.query.tabId },
     folders() { return this.$store.state.Settings.folders },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
-    metaList() { return _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden!==true) },
+    metaList: {
+      get() { 
+        let list = _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden!==true)
+        return list.sort((a, b) => a.state.order - b.state.order)
+      },
+      set(value) { 
+        for (let i = 0; i < value.length; i++) {
+          const id = value[i].id
+          this.$store.getters.meta.find({id}).set('state.order', i).write()
+        }
+        this.$store.commit('updateComplexMetaListFromDb')
+      },
+    },
     hiddenMetaList() { return _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden===true) },
   },
   methods: {

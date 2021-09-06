@@ -39,7 +39,12 @@
                   </v-autocomplete>
                 </v-col>
                 <v-col cols="6" class="pt-0 d-flex align-center">
-                  <v-icon left>mdi-menu</v-icon>
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on }">
+                      <v-icon v-on="on" left>mdi-menu</v-icon>
+                    </template>
+                    <span>Drag to change order (only available for side navbar)</span>
+                  </v-tooltip>
                   <v-switch v-model="settings.hidden" :label="`Hide in navbar - ${settings.hidden?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                 </v-col>
                 <v-col cols="6" class="pt-0 d-flex align-center">
@@ -56,7 +61,7 @@
                     <template v-slot:activator="{ on }">
                       <v-icon v-on="on" left>mdi-file-search-outline</v-icon>
                     </template>
-                    <span>Allow the application to parse the path to the video file and look for meta-card names in it.</span>
+                    <span>Allow the application to parse the path to the video file and look for meta-card names in it</span>
                   </v-tooltip>
                   <v-switch v-model="settings.parser" :label="`Parse video for data - ${settings.parser?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                 </v-col>
