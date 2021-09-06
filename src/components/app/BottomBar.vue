@@ -3,50 +3,52 @@
     <!-- TODO custom background color depends on current route -->
     <vuescroll :ops="ops">
       <div class="bottom-menu">
-        <v-btn to="/home" text color="secondary">
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" to="/home" text color="secondary" title="Home">
+              <span>Home</span>
+              <v-icon>mdi-home-outline</v-icon>
+            </v-btn>
+          </template>
           <span>Home</span>
-          <v-icon>mdi-home-outline</v-icon>
-        </v-btn>
+        </v-tooltip>
 
-        <v-btn to="/videos/:default?tabId=default" @click.middle="addNewTabVideos" text color="secondary">
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" to="/videos/:default?tabId=default" @click.middle="addNewTabVideos" text color="secondary" title="Videos">
+              <span>Videos</span>
+              <v-icon>mdi-video-outline</v-icon>
+            </v-btn>
+          </template>
           <span>Videos</span>
-          <v-icon>mdi-video-outline</v-icon>
-        </v-btn>
+        </v-tooltip>
 
-        <!-- <v-btn to="/performers/:default?tabId=default" @click.middle="addNewTabPerformers" text color="secondary">
-          <span>Performers</span>
-          <v-icon>mdi-account-outline</v-icon>
-        </v-btn>
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" to="/playlists/:default?tabId=default" @click.middle="addNewTabPlaylists" text color="secondary" title="Playlists">
+              <span>Playlists</span>
+              <v-icon>mdi-format-list-bulleted</v-icon>
+            </v-btn>
+          </template>
+          <span>Playlists</span>
+        </v-tooltip>
+        
+        <v-divider v-if="metaList.length>0" vertical/>
 
-        <v-btn v-if="isShowPerformerBtn" :to="$router.currentRoute" text color="secondary">
-          <span>Performer</span>
-          <v-icon>mdi-account-details</v-icon>
-        </v-btn>
-
-        <v-btn to="/tags/:default?tabId=default" @click.middle="addNewTabTags" text color="secondary">
-          <span>Tags</span>
-          <v-icon>mdi-tag-outline</v-icon>
-        </v-btn>
-
-        <v-btn to="/websites/:default?tabId=default" @click.middle="addNewTabWebsites" text color="secondary">
-          <span>Websites</span>
-          <v-icon>mdi-web</v-icon>
-        </v-btn>
-
-        <v-btn v-if="isShowWebsiteBtn" :to="$router.currentRoute" text color="secondary">
-          <span>Website</span>
-          <v-icon>mdi-web-box</v-icon>
-        </v-btn> -->
-
-        <v-btn v-for="meta in metaList" :key="meta.id" exact @click.middle="addNewTabMetaCards(meta)"
-          :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary">
+        <v-tooltip v-for="meta in metaList" :key="meta.id" top>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" exact @click.middle="addNewTabMetaCards(meta)"
+              :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary" :title="meta.settings.name">
+              <span>{{meta.settings.name}}</span>
+              <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+            </v-btn>
+          </template>
           <span>{{meta.settings.name}}</span>
-          <v-icon>mdi-{{meta.settings.icon}}</v-icon>
-        </v-btn>
+        </v-tooltip>
 
         <v-menu v-if="hiddenMetaList.length" offset-y top open-on-hover>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder">
+            <v-btn v-bind="attrs" v-on="on" text color="secondary" class="folder btn-hidden">
               <span>Hidden</span>
               <v-icon>mdi-chevron-up</v-icon>
             </v-btn>
@@ -62,17 +64,20 @@
           </v-list>
         </v-menu>
 
-        <v-btn to="/playlists/:default?tabId=default" @click.middle="addNewTabPlaylists" text color="secondary">
-          <span>Playlists</span>
-          <v-icon>mdi-format-list-bulleted</v-icon>
-        </v-btn>
-
-        <v-btn to="/settings" text color="secondary">
+        <v-divider vertical/>
+        
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" to="/settings" text color="secondary" title="Settings">
+              <span>Settings</span>
+              <v-icon>mdi-cog-outline</v-icon>
+            </v-btn>
+          </template>
           <span>Settings</span>
-          <v-icon>mdi-cog-outline</v-icon>
-        </v-btn>
+        </v-tooltip>
 
-        <div v-if="folders.length && watchFolders" @mouseover="folderHovered=true" @mouseleave="folderHovered=false" class="ml-6 folders">
+        <div v-if="folders.length && watchFolders" @mouseover="folderHovered=true" @mouseleave="folderHovered=false" class="folders">
+          <v-divider vertical/>
           <v-tooltip v-for="(folder, i) in folders" :key="i" top>
             <template v-slot:activator="{ on, attrs }">
               <div class="folder-wrapper">
@@ -107,8 +112,6 @@ export default {
     vuescroll,
   },
   data: () => ({
-    // isShowPerformerBtn: false,
-    // isShowWebsiteBtn: false,
     folderHovered: false,
     ops: {
       scrollPanel: {
@@ -158,56 +161,6 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
     },
-    // addNewTabPerformers() {
-    //   let tabId = Date.now()
-    //   let tab = { 
-    //     name: this.$store.getters.performerFiltersForTabName, 
-    //     link: `/performers/:${tabId}?tabId=${tabId}`,
-    //     id: tabId,
-    //     filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
-    //     sortBy: this.$store.state.Settings.performerSortBy,
-    //     sortDirection: this.$store.state.Settings.performerSortDirection,
-    //     page: 1,
-    //     firstChar: this.$store.state.Settings.performerFirstChar,
-    //     icon: 'account-outline'
-    //   }
-    //   this.$store.dispatch('addNewTab', tab)
-    //   this.$router.push(tab.link)
-    // },
-    // addNewTabTags() {
-    //   let tabId = Date.now()
-    //   let tab = {
-    //     name: this.$store.getters.tagFiltersForTabName, 
-    //     link: `/tags/:${tabId}?tabId=${tabId}`,
-    //     id: tabId,
-    //     filters: _.cloneDeep(this.$store.state.Settings.tagFilters),
-    //     sortBy: this.$store.state.Settings.tagSortBy,
-    //     sortDirection: this.$store.state.Settings.tagSortDirection,
-    //     page: 1,
-    //     firstChar: this.$store.state.Settings.tagFirstChar,
-    //     color: this.$store.state.Settings.tagColor,
-    //     icon: 'tag-outline'
-    //   }
-    //   this.$store.dispatch('addNewTab', tab)
-    //   this.$router.push(tab.link)
-    // },
-    // addNewTabWebsites() {
-    //   let tabId = Date.now()
-    //   let tab = {
-    //     name: this.$store.getters.websiteFiltersForTabName, 
-    //     link: `/websites/:${tabId}?tabId=${tabId}`,
-    //     id: tabId,
-    //     filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
-    //     sortBy: this.$store.state.Settings.websiteSortBy,
-    //     sortDirection: this.$store.state.Settings.websiteSortDirection,
-    //     page: 1,
-    //     firstChar: this.$store.state.Settings.websiteFirstChar,
-    //     color: this.$store.state.Settings.websiteColor,
-    //     icon: 'web'
-    //   }
-    //   this.$store.dispatch('addNewTab', tab)
-    //   this.$router.push(tab.link)
-    // },
     addNewTabPlaylists() {
       let tabId = Date.now()
       let tab = {
@@ -240,10 +193,6 @@ export default {
     },
   },
   watch: {
-    // $route(newValue, oldValue) {
-    //   this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
-    //   this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
-    // },
   },
 }
 </script>
@@ -274,5 +223,11 @@ export default {
   justify-content: center;
   align-items: center;
   height: 56px;
+  .v-btn {
+    letter-spacing: 0;
+  }
+  .btn-hidden {
+    min-width: 50px;
+  }
 }
 </style>

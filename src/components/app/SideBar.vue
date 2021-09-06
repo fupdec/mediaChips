@@ -16,44 +16,16 @@
           </v-list-item-icon>
           <v-list-item-title>Videos</v-list-item-title>
         </v-list-item>
+        
+        <v-list-item link to="/playlists/:default?tabId=default"
+          @click.middle="addNewTabPlaylists" color="secondary" draggable="false">
+          <v-list-item-icon>
+            <v-icon>mdi-format-list-bulleted</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Playlists</v-list-item-title>
+        </v-list-item>
 
-        <!-- <v-list-item link to="/performers/:default?tabId=default"
-          @click.middle="addNewTabPerformers" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-account-outline</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Performers</v-list-item-title>
-        </v-list-item>
-        
-        <v-list-item v-if="isShowPerformerBtn" link :to="$router.currentRoute" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-account-details</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Performer</v-list-item-title>
-        </v-list-item>
-        
-        <v-list-item link to="/tags/:default?tabId=default"
-          @click.middle="addNewTabTags" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-tag-outline</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Tags</v-list-item-title>
-        </v-list-item>
-        
-        <v-list-item link to="/websites/:default?tabId=default" 
-          @click.middle="addNewTabWebsites" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-web</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Websites</v-list-item-title>
-        </v-list-item>
-        
-        <v-list-item v-if="isShowWebsiteBtn" link :to="$router.currentRoute" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-web-box</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Website</v-list-item-title>
-        </v-list-item> -->
+        <v-divider v-if="metaList.length>0" class="my-1"/>
         
         <v-list-item v-for="meta in metaList" :key="meta.id" @click.middle="addNewTabMetaCards(meta)"
           link exact :to="`/meta/?metaId=${meta.id}&tabId=default`" color="secondary" draggable="false">
@@ -80,13 +52,7 @@
           </v-list-item>
         </div>
         
-        <v-list-item link to="/playlists/:default?tabId=default"
-          @click.middle="addNewTabPlaylists" color="secondary" draggable="false">
-          <v-list-item-icon>
-            <v-icon>mdi-format-list-bulleted</v-icon>
-          </v-list-item-icon>
-          <v-list-item-title>Playlists</v-list-item-title>
-        </v-list-item>
+        <v-divider class="my-1"/>
         
         <v-list-item link to="/settings" color="secondary" draggable="false">
           <v-list-item-icon> 
@@ -94,10 +60,9 @@
           </v-list-item-icon>
           <v-list-item-title>Settings</v-list-item-title>
         </v-list-item>
-      </v-list>
 
-      <div v-if="folders.length && watchFolders" @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
-        <v-list nav dense>
+        <div v-if="folders.length && watchFolders" @mouseover="folderHovered=true" @mouseleave="folderHovered=false">
+          <v-divider class="my-1"/>
           <v-list-item v-for="(folder, i) in folders" :key="i" @click="openDialogFolder(folder.path)">
             <v-list-item-icon> 
               <v-icon v-if="foldersUpdated">mdi-folder-outline</v-icon>
@@ -109,8 +74,8 @@
             </v-list-item-icon>
             <v-list-item-title>{{folder.name}}</v-list-item-title>
           </v-list-item>
-        </v-list>
-      </div>
+        </div>
+      </v-list>
     </vuescroll>
   </v-navigation-drawer>
 </template>
@@ -132,16 +97,10 @@ export default {
     })
   },
   data: () => ({
-    // isShowPerformerBtn: false,
-    // isShowWebsiteBtn: false,
     showHidden: false,
     ops: {
-      scrollPanel: {
-        scrollingX: false
-      },
-      rail: {
-        size: '4px',
-      }
+      scrollPanel: { scrollingX: false },
+      rail: { size: '4px', }
     },
     folderHovered: false,
   }),
@@ -184,56 +143,6 @@ export default {
       this.$store.dispatch('addNewTab', tab)
       this.$router.push(tab.link)
     },
-    // addNewTabPerformers() {
-    //   let tabId = Date.now()
-    //   let tab = { 
-    //     name: this.$store.getters.performerFiltersForTabName, 
-    //     link: `/performers/:${tabId}?tabId=${tabId}`,
-    //     id: tabId,
-    //     filters: _.cloneDeep(this.$store.state.Settings.performerFilters),
-    //     sortBy: this.$store.state.Settings.performerSortBy,
-    //     sortDirection: this.$store.state.Settings.performerSortDirection,
-    //     page: 1,
-    //     firstChar: this.$store.state.Settings.performerFirstChar,
-    //     icon: 'account-outline'
-    //   }
-    //   this.$store.dispatch('addNewTab', tab)
-    //   this.$router.push(tab.link)
-    // },
-    // addNewTabTags() {
-    //   let tabId = Date.now()
-    //   let tab = {
-    //     name: this.$store.getters.tagFiltersForTabName, 
-    //     link: `/tags/:${tabId}?tabId=${tabId}`,
-    //     id: tabId,
-    //     filters: _.cloneDeep(this.$store.state.Settings.tagFilters),
-    //     sortBy: this.$store.state.Settings.tagSortBy,
-    //     sortDirection: this.$store.state.Settings.tagSortDirection,
-    //     page: 1,
-    //     firstChar: this.$store.state.Settings.tagFirstChar,
-    //     color: this.$store.state.Settings.tagColor,
-    //     icon: 'tag-outline'
-    //   }
-    //   this.$store.dispatch('addNewTab', tab)
-    //   this.$router.push(tab.link)
-    // },
-    // addNewTabWebsites() {
-    //   let tabId = Date.now()
-    //   let tab = {
-    //     name: this.$store.getters.websiteFiltersForTabName, 
-    //     link: `/websites/:${tabId}?tabId=${tabId}`,
-    //     id: tabId,
-    //     filters: _.cloneDeep(this.$store.state.Settings.websiteFilters),
-    //     sortBy: this.$store.state.Settings.websiteSortBy,
-    //     sortDirection: this.$store.state.Settings.websiteSortDirection,
-    //     page: 1,
-    //     firstChar: this.$store.state.Settings.websiteFirstChar,
-    //     color: this.$store.state.Settings.websiteColor,
-    //     icon: 'web'
-    //   }
-    //   this.$store.dispatch('addNewTab', tab)
-    //   this.$router.push(tab.link)
-    // },
     addNewTabPlaylists() {
       let tabId = Date.now()
       let tab = {
@@ -266,10 +175,6 @@ export default {
     },
   },
   watch: {
-    // $route() {
-    //   this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/') && this.tabId=='default'
-    //   this.isShowWebsiteBtn = this.$router.currentRoute.path.includes('/website/') && this.tabId=='default'
-    // },
   },
 }
 </script>
