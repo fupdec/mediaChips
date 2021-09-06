@@ -3,7 +3,7 @@
     <v-dialog v-model="$store.state.Meta.dialogEditMetaCard" scrollable persistent max-width="980" width="70vw">
       <v-card>
         <v-toolbar color="primary">
-          <v-avatar v-if="meta.settings.images && getImgUrl()" class="card-img"
+          <v-avatar v-if="getImgUrl()" class="card-img"
             @mouseover.stop="showImage($event,card.id,'meta',meta.id)" 
             @mouseleave.stop="$store.state.hoveredImage=false"> 
             <img :src="getImgUrl()"></v-avatar>

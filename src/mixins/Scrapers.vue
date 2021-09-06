@@ -88,7 +88,7 @@ export default {
     freeonesMeta($, metaCardId) {
       return new Promise(resolve => {
       let imgSrc = $('.dashboard-image-large img')
-      if (imgSrc.length && this.meta.settings.images) {
+      if (imgSrc.length) {
         const imgPath = path.join(this.pathToUserData,'/media/',`meta/${this.meta.id}/`,`${metaCardId}_main.jpg`)
         let imgUrl = imgSrc[0].attribs.src
         if (!fs.existsSync(imgPath)) {

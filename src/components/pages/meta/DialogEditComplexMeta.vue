@@ -40,7 +40,7 @@
                 </v-col>
                 <v-col cols="6" class="pt-0 d-flex align-center">
                   <v-icon left>mdi-menu</v-icon>
-                  <v-switch v-model="settings.hidden" :label="`Hide in the menu - ${settings.hidden?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                  <v-switch v-model="settings.hidden" :label="`Hide in navbar - ${settings.hidden?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                 </v-col>
                 <v-col cols="6" class="pt-0 d-flex align-center">
                   <v-tooltip top>
@@ -60,9 +60,18 @@
                   </v-tooltip>
                   <v-switch v-model="settings.parser" :label="`Parse video for data - ${settings.parser?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                 </v-col>
+                <v-col v-if="$store.state.Settings.showExperimentalFeatures" cols="6" class="pt-0 d-flex align-center">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on }">
+                      <v-icon v-on="on" left>mdi-file-tree</v-icon>
+                    </template>
+                    <span>Drawing up a tree structure from cards (experimental)</span>
+                  </v-tooltip>
+                  <v-switch v-model="settings.nested" :label="`Nested view - ${settings.nested?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                </v-col>
                 <v-col cols="12" align="center">
                   <v-card outlined class="pa-4">
-                    <span class="text-center">
+                    <div class="text-center mb-4">
                       <v-tooltip top>
                         <template v-slot:activator="{ on }">
                           <v-icon v-on="on" left>mdi-help-circle-outline</v-icon>
@@ -70,7 +79,7 @@
                         <span>Drag to change order</span>
                       </v-tooltip>
                       <span class="overline">Meta in Cards</span> 
-                    </span>
+                    </div>
                     <v-card v-if="settings.metaInCard.length" outlined class="mb-4 mt-2">
                       <v-list dense class="list-zebra pa-0">
                         <draggable v-model="settings.metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
@@ -124,7 +133,7 @@
                 </v-col>
                 <v-col cols="12" align="center">
                   <v-card outlined class="pa-4">
-                    <span class="overline text-center">Specific meta</span>
+                    <div class="overline text-center mb-4">Specific meta</div>
                     <v-row>
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left color="pink">mdi-heart</v-icon>
@@ -181,26 +190,21 @@
                         <span class="overline text-center">Card Appearance</span>
                       </v-col>
                       <v-col cols="12" sm="6">
-                        <v-switch v-model="settings.images" :label="`Images - ${settings.images?'Yes':'No'}`" class="ma-0" hide-details/>
-                        <v-radio-group v-if="settings.images" v-model="settings.imageAspectRatio" column mandatory hide-details>
-                          <span class="mb-2">Aspect ratio of images:</span>
+                        <div class="body-1">Aspect ratio of images:</div>
+                        <v-radio-group v-model="settings.imageAspectRatio" column mandatory hide-details class="mt-2">
                           <v-radio :value="1"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
                           <v-radio :value="5/8"><template v-slot:label><v-icon left>mdi-image-album</v-icon> 5:8 </template></v-radio>
                           <v-radio :value="16/9"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
                         </v-radio-group>
                       </v-col>
-                      <v-col cols="12" sm="6" v-if="settings.images">
-                        <div class="mb-2 body-1">Type of Images:</div>
+                      <v-col cols="12" sm="6">
+                        <div class="mb-2 body-1">Type of images:</div>
                         <v-checkbox v-model="settings.imageTypes" label="Main" value="main" class="ma-0 pa-0" hide-details disabled/>
                         <v-checkbox v-model="settings.imageTypes" label="Alternate" value="alt" class="ma-0 pa-0" hide-details/>
                         <v-checkbox v-model="settings.imageTypes" label="Custom 1" value="custom1" class="ma-0 pa-0" hide-details/>
                         <v-checkbox v-model="settings.imageTypes" label="Custom 2" value="custom2" class="ma-0 pa-0" hide-details/>
                         <v-checkbox v-model="settings.imageTypes" label="Avatar" value="avatar" class="ma-0 pa-0" hide-details/>
                         <v-checkbox v-model="settings.imageTypes" label="Header" value="header" class="ma-0 pa-0" hide-details/>
-                      </v-col>
-                      <v-col cols="12" class="d-flex align-center">
-                        <v-icon left>mdi-file-tree</v-icon>
-                        <v-switch v-model="settings.nested" :label="`Nested view - ${settings.nested?'On':'Off'}`" class="ma-0" hide-details/>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -300,7 +304,6 @@ export default {
       icon: 'shape',
       hidden: false,
       parser: false,
-      images: false,
       imageAspectRatio: '',
       imageTypes: ['main'],
       chipLabel: false,

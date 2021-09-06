@@ -310,7 +310,6 @@ export default {
       let complexMeta = this.$store.state.Meta.complexMetaList
       return complexMeta.map(i=>{
         let attrs = []
-        if (i.settings.images) attrs.push({name:'Images', icon:'image'})
         if (i.settings.favorite) attrs.push({name:'Favorite', icon:'heart'})
         if (i.settings.rating) attrs.push({name:'Rating', icon:'star'})
         if (i.settings.bookmark) attrs.push({name:'Bookmark', icon:'bookmark'})
@@ -373,7 +372,6 @@ export default {
           icon: meta.settings.icon || 'shape',
           hidden: true,
           parser: false,
-          images: true,
           imageAspectRatio: 1,
           imageTypes: ['main'],
           metaInCard: [],

@@ -3,7 +3,7 @@
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
       v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
-      <div v-if="meta.settings.images" class="img-container">
+      <div class="img-container">
         <v-icon v-if="meta.settings.color && visibility.color" class="meta-color" :color="card.meta.color || '#777777'">mdi-circle</v-icon>
         <div v-if="meta.settings.country && visibility.country" @click="filterByCountry" @click.middle="filterByCountryInNewTab" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
         <v-img :src="imgMain" :aspect-ratio="meta.settings.imageAspectRatio" :class="{show:!isAltImgExist}" position="top" class="main-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
@@ -13,10 +13,6 @@
         <v-btn v-if="meta.settings.favorite && visibility.favorite" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
         <div v-if="meta.settings.rating && visibility.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable color="yellow darken-2" background-color="grey" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
         <v-icon v-if="meta.settings.bookmark && visibility.bookmark && card.meta.bookmark" class="bookmark" color="red" :title="card.meta.bookmark">mdi-bookmark</v-icon>
-      </div>
-      <div v-else @click="openMetaCardPage" @click.middle="addNewTabMetaCard" class="d-flex flex-column align-center py-1 ma-0 link">
-        <v-icon>mdi-{{meta.settings.icon}}</v-icon>
-        <span v-if="isMetaAssignedToVideo">Open {{meta.settings.nameSingular}} page</span>
       </div>
       <v-divider/>
 
@@ -66,7 +62,7 @@
       </div>
 
       <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" color="secondary" fab x-small class="btn-edit"> <v-icon>mdi-pencil</v-icon> </v-btn>
-      <v-btn v-if="meta.settings.images" @click="$store.state.Meta.dialogEditMetaCardImages=true" color="secondary" fab x-small class="btn-edit-images"> <v-icon>mdi-image-edit-outline</v-icon> </v-btn>
+      <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" color="secondary" fab x-small class="btn-edit-images"> <v-icon>mdi-image-edit-outline</v-icon> </v-btn>
     </v-card>
   </v-lazy>
 </template>
@@ -176,7 +172,7 @@ export default {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
         let contextMenu = [{ name: `Edit ${this.meta.settings.nameSingular}`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Meta.dialogEditMetaCard=true} }]
-        if (this.meta.settings.images) contextMenu.push({ name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard })
+        contextMenu.push({ name: `Edit Images of ${this.meta.settings.nameSingular}`, type: 'item', icon: 'image-edit', function: ()=>{this.$store.state.Meta.dialogEditMetaCardImages=true}, disabled: !this.isSelectedSingleMetaCard })
         if (this.meta.settings.scraper && this.$store.state.Settings.showAdultContent) contextMenu.push({ name: `Scrape info for ${this.meta.settings.name}`, type: 'item', icon: 'magnify', function: ()=>{this.$store.state.Meta.dialogScrapeInfoMetaCard=true}})
         contextMenu.push({ type: 'divider' })
         if (this.isMetaAssignedToVideo) contextMenu.push({ name: `Open ${this.meta.settings.nameSingular} in New Tab`, type: 'item', icon: 'tab-plus', function: ()=>{this.addNewTabMetaCard()}, disabled: !this.isSelectedSingleMetaCard },

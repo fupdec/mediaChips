@@ -2,7 +2,7 @@
   <v-dialog v-model="dialog" scrollable fullscreen persistent>
     <v-card class="py-10">
       <v-toolbar color="primary">
-        <span class="headline">Tree of {{meta.settings.name}}</span>
+        <span class="headline">Tree of {{meta.settings.name}} (experimental)</span>
         <v-spacer></v-spacer>
         <v-btn @click="close" outlined class="mx-4"> <v-icon left>mdi-close</v-icon> Close </v-btn>
         <v-btn @click="save" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>

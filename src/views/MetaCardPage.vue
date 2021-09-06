@@ -13,11 +13,11 @@
     
     <div class="py-16"></div>
     <v-container class="profile-container" :class="{header: isHeaderImageExists&&checkImageSettings('header')}">
-      <v-avatar v-if="meta.settings.images" max-width="160" width="160" height="160" class="profile-avatar"> 
+      <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
         <img :src="getImgUrl('avatar')">
       </v-avatar>
       
-      <v-tooltip v-if="meta.settings.images" right>
+      <v-tooltip right>
         <template v-slot:activator="{ on, attrs }">
           <v-progress-circular v-bind="attrs" v-on="on" :value="cardInfoComplete" 
             size="168" rotate="270" width="2" class="profile-complete-progress" color="primary"/> 
@@ -41,7 +41,7 @@
           </template>
           <span>Edit {{meta.settings.nameSingular}}</span>
         </v-tooltip>
-        <v-tooltip v-if="meta.settings.images" top>
+        <v-tooltip top>
           <template v-slot:activator="{ on }">
             <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" icon v-on="on"> 
               <v-icon>mdi-image-edit-outline</v-icon></v-btn>
@@ -52,7 +52,7 @@
       <v-expansion-panels v-model="profile" multiple focusable>
         <v-expansion-panel :style="profileBackground" :key="0">
           <v-expansion-panel-header class="pa-6" ripple hide-actions>
-            <div class="text-center meta-card-name" :class="[{'avatar':meta.settings.images}]">{{card.meta.name}}</div>
+            <div class="text-center meta-card-name avatar">{{card.meta.name}}</div>
           </v-expansion-panel-header>
           <v-expansion-panel-content eager>
             <v-container class="px-0">
@@ -433,10 +433,7 @@ export default {
         else return path.join(__static, '/img/default.jpg')
       } else return path.join(__static, '/img/default.jpg')
     },
-    checkImageSettings(imgType) {
-      if (!this.meta.settings.images) return false 
-      return this.meta.settings.imageTypes.includes(imgType)
-    },
+    checkImageSettings(imgType) { return this.meta.settings.imageTypes.includes(imgType) },
     getCountryCode(country) {
       let index = Countries.findIndex(i => i.name === country)
       return Countries[index].code
