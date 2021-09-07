@@ -3,7 +3,7 @@
     <v-dialog v-model="dialogHeaderGradient" width="680" scrollable persistent>
       <v-card>
         <v-toolbar :style="{background: gradient}" :dark="themeDark" :light="!themeDark">
-          <div class="headline">Gradient for dark theme</div>
+          <div class="headline">Gradient for {{themeDark?'dark':'light'}} theme</div>
           <v-spacer></v-spacer>
           <v-btn @click="close" class="mx-4" outlined> <v-icon left>mdi-close</v-icon> close </v-btn>
           <v-btn @click="saveHeaderGradient" outlined> <v-icon left>mdi-content-save</v-icon> Save </v-btn>
