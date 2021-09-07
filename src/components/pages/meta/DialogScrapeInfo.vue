@@ -104,7 +104,7 @@ export default {
         })
         this.transfer = { current: {}, found: {}, }
       }
-      this.$store.commit('updateMetaCards', ids)
+      setTimeout(() => { this.$store.commit('updateMetaCards', ids) }, 1000)
       this.isProcessRunning = false
     },
     async scrapeInfo(response, id) {
