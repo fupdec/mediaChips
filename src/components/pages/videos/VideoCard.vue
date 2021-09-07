@@ -2,7 +2,7 @@
   <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
       @mousedown.right="$store.state.contextMenu=false" @contextmenu="showContextMenu"
-      :class="{favorite: isFavorite}" class="video-card meta-card"
+      :class="{favorite: isFavorite, 'icons-in-card':ratingAndFavoriteInCard}" class="video-card meta-card"
       :data-id="video.id" outlined hover 
       :key="cardKey" :disabled="!reg && i>4"
     >

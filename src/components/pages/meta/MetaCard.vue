@@ -2,7 +2,7 @@
   <v-lazy>
     <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
       :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
-      v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false}">
+      v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false, 'icons-in-card':ratingAndFavoriteInCard}">
       <div class="img-container">
         <v-icon v-if="meta.settings.color && visibility.color" class="meta-color" :color="card.meta.color || '#777777'">mdi-circle</v-icon>
         <div v-if="meta.settings.country && visibility.country" @click="filterByCountry" @click.middle="filterByCountryInNewTab" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
