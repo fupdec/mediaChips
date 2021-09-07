@@ -104,7 +104,7 @@ export default {
   }),
   computed: {
     tabId() { return this.$route.query.tabId },
-    folders() { return this.$store.state.Settings.folders },
+    folders() { return this.$store.state.Settings.folders.filter(i=>i.watch) },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
     metaList: {

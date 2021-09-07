@@ -112,7 +112,6 @@
 </template>
 
 <script>
-import { async } from 'node-stream-zip'
 const fs = require('fs-extra')
 const path = require("path")
 const { dialog } = require('electron').remote

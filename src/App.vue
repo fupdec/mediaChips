@@ -252,7 +252,7 @@ export default {
     logoPath() {return path.join('file://', __static, '/icons/icon.png')},
     updateIntervalDataFromVideos() {return this.$store.state.Settings.updateIntervalDataFromVideos},
     autoUpdateDataFromVideos() {return this.$store.state.Settings.autoUpdateDataFromVideos},
-    folders() {return _.cloneDeep(this.$store.state.Settings.folders)},
+    folders() {return _.cloneDeep(this.$store.state.Settings.folders.filter(i=>i.watch))},
     foldersData() {return this.$store.state.foldersData},
     watchFolders() {return this.$store.state.Settings.watchFolders},
     updateFoldersData() {return this.$store.state.updateFoldersData},

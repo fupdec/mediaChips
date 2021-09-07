@@ -20,68 +20,7 @@
           <v-btn @click="$store.state.Settings.dialogScanVideos=true" class="mb-10" block color="primary" x-large rounded>
             <v-icon large class="mr-4">mdi-video-plus</v-icon> Add new videos </v-btn>
 
-          <v-card outlined class="mt-10 px-4">
-            <div class="headline text-center my-4"> Folders
-              <v-tooltip right>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon v-bind="attrs" v-on="on" right>mdi-help-circle-outline</v-icon>
-                </template>
-                <span>Add folders with your videos so that app can watch
-                  <br> new videos and check deleted ones</span>
-              </v-tooltip>
-            </div>
-            <v-list dense v-if="folders.length" shaped class="pb-0 pl-2">
-              <v-list-item v-for="(folder, i) in folders" :key="i" class="folder-list-item">
-                <div class="folder-name">
-                  <div v-if="folderNameEdit==i">
-                    <v-btn @click="folderNameEdit=-1" class="mr-2" color="red" icon fab x-small title="Cancel">
-                      <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                    <v-text-field v-model="folderName" class="d-inline-flex" hide-details outlined dense />
-                    <v-btn @click="saveFolderName(i)" :disabled="folderName==''" class="ml-2" color="green" icon fab x-small title="Save folder name">
-                      <v-icon>mdi-check</v-icon>
-                    </v-btn>
-                  </div>
-                  <div v-else>
-                    <v-btn @click="folderNameEdit=i, folderName=folder.name" class="mr-2" icon fab x-small title="Edit folder name">
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-chip label outlined>
-                      <span>{{folder.name}}</span>
-                    </v-chip>
-                  </div>
-                  <v-chip label outlined>
-                    <v-icon left>mdi-folder</v-icon>
-                    <span>{{folder.path}}</span>
-                  </v-chip>
-                </div>
-                <v-btn @click="removeFolder(i)" class="ml-2" color="red" icon fab x-small title="Remove folder">
-                  <v-icon>mdi-close</v-icon>
-                </v-btn>
-              </v-list-item>
-            </v-list>
-            <div v-else class="text-center overline pt-2">
-              <v-icon size="40">mdi-folder-outline</v-icon>
-              <div>There are no watched folders yet</div>
-            </div>
-            <v-card-actions>
-              <v-btn @click="addFolder" rounded dark color="green" class="pr-4">
-                <v-icon left>mdi-plus</v-icon> Add watched folder
-              </v-btn>
-              <v-spacer></v-spacer>
-              <div class="d-flex align-center">
-                <div class="mr-6">
-                  Watch folders:
-                </div>
-                <v-switch v-model="watchFolders" inset class="d-inline" :disabled="folders.length==0">
-                  <template v-slot:label>
-                    <span v-if="watchFolders">Yes</span>
-                    <span v-else>No</span>
-                  </template>
-                </v-switch>
-              </div>
-            </v-card-actions>
-          </v-card>
+          <WatchedFolders/>
           
           <v-card outlined class="mt-10 pb-4 px-4">
             <div class="headline text-center my-4"> Updating data from videos
@@ -576,7 +515,6 @@ const path = require("path")
 const { spawn } = require( 'child_process' )
 const shell = require('electron').shell
 const { ipcRenderer } = require('electron')
-const { dialog } = require('electron').remote
 const {app} = require('electron').remote
 const axios = require("axios")
 const cheerio = require("cheerio")
@@ -585,7 +523,6 @@ const { webFrame } = require('electron')
 import MetaList from '@/components/pages/meta/MetaList.vue'
 import MetaAssignedToVideos from '@/components/pages/meta/MetaAssignedToVideos.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
-import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 import ClearData from '@/components/pages/settings/ClearData.vue'
 import Registration from '@/components/pages/settings/Registration.vue'
 import vuescroll from 'vuescroll'
@@ -598,7 +535,8 @@ export default {
     MetaList,
     MetaAssignedToVideos,
     ThemeColors,
-    ManageBackups,
+    WatchedFolders: () => import('@/components/pages/settings/WatchedFolders.vue'),
+    ManageBackups: () => import('@/components/pages/settings/ManageBackups.vue'),
     ClearData,
     vuescroll,
     Registration,
@@ -613,8 +551,6 @@ export default {
   },
   data: ()=>({
     tab: 'videos',
-    folderName: '',
-    folderNameEdit: -1,
     password: '',
     showPassword: false,
     validPass: false,
@@ -659,10 +595,6 @@ export default {
           this.$store.dispatch('updateSettingsState', {key:'updateIntervalDataFromVideos', value})
         }, 1000)
       },
-    },
-    watchFolders: {
-      get() { return this.$store.state.Settings.watchFolders},
-      set(value) {this.$store.dispatch('updateSettingsState', {key:'watchFolders', value})},
     },
     autoUpdateDataFromVideos: {
       get() {return this.$store.state.Settings.autoUpdateDataFromVideos},
@@ -762,10 +694,6 @@ export default {
       },
     },
     getMeterImg() {return path.join(this.$store.getters.getPathToUserData, `/img/templates/meter.png`)},
-    folders: {
-      get() {return this.$store.state.Settings.folders},
-      set(value) {this.$store.dispatch('updateSettingsState', {key:'folders', value})},
-    },
     typingFiltersDefault: {
       get() {return this.$store.state.Settings.typingFiltersDefault},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'typingFiltersDefault', value})},
@@ -872,42 +800,6 @@ export default {
         return true
       }
     },
-    addFolder() {
-      dialog.showOpenDialog(null, {
-        properties: ['openDirectory','multiSelections']
-      }).then(result => {
-        if (result.filePaths.length !== 0) {
-          for (let i=0; i<result.filePaths.length; i++) {
-            let folderPath = result.filePaths[i]
-            let folder = {
-              name: folderPath,
-              path: folderPath,
-            }
-            if (_.filter(this.folders, {name: folderPath}).length) {
-              this.$store.dispatch('setNotification', {
-                type: 'error',
-                text: `Folder with path "${folderPath}" already added.`
-              })
-            } else {
-              this.folders.push(folder)
-              this.folders = this.folders
-            }
-          }
-        }
-      }).catch(err => {
-        console.log(err)
-      })
-    },
-    saveFolderName(i) {
-      this.folders[i].name = this.folderName
-      this.folders = this.folders
-      this.folderNameEdit = -1
-    },
-    removeFolder(i) {
-      this.folders.splice(i, 1)
-      if (this.folders.length==0) this.watchFolders = false
-      this.folders = this.folders
-    },
     checkForUpdates() {
       this.isCheckingUpdate = true
       axios.get(`https://github.com/fupdec/mediaChips/releases`).then((response) => {
@@ -997,24 +889,6 @@ export default {
           color: green;
         }
       }
-    }
-  }
-}
-.folder-list-item {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  background-color: rgba(150, 150, 150, 0.1);
-  padding-left: 5px;
-  padding-right: 3px;
-  margin-bottom: 3px;
-  .folder-name {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    .v-input__slot {
-      min-height: 32px !important;
     }
   }
 }
