@@ -135,6 +135,7 @@
     </v-bottom-sheet>
 
     <DialogFolder v-if="$store.state.dialogFolder" @addNewVideos="addNewVideos" :folder="folder"/>
+    <Migration v-if="migration" :version="version"/>
 
     <v-footer app height="20" class="pa-0 footer-app">
       <StatusBar />
@@ -173,14 +174,17 @@ export default {
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),
     ScanVideos: () => import('@/components/pages/settings/ScanVideos.vue'),
     About: () => import('@/components/app/About.vue'),
+    Migration: () => import('@/components/app/Migration.vue'),
     vuescroll,
   },
   mixins: [HoveredImageFunctions, PlayerEvents],
   mounted() {
     this.$nextTick(function () {
       this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
-      if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
+      this.version = app.getVersion()
       this.$store.state.pathToUserData = app.getPath('userData')
+      if (this.databaseVersion !== this.version) { this.migration = true; return }
+      if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.initTheme()
       this.runAutoUpdateDataFromVideos()
@@ -218,6 +222,8 @@ export default {
     newFiles: [],
     stage: 0,
     about: false,
+    migration: false,
+    version: '',
   }),
   computed: {
     showSystemBar() {return process.platform === 'win32'},
@@ -251,6 +257,7 @@ export default {
     watchFolders() {return this.$store.state.Settings.watchFolders},
     updateFoldersData() {return this.$store.state.updateFoldersData},
     isLogVisible() {return this.$store.state.isLogVisible},
+    databaseVersion() {return this.$store.state.Settings.databaseVersion},
   },
   methods: {
     scrollToTop() {this.$refs.logs.scrollTo({ y: '0%' }, 300)},
@@ -395,8 +402,7 @@ export default {
           const $ = cheerio.load(html)
           let lastVersion = $('.release-header .f1 a').eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
-          let currentVersion = app.getVersion()
-          if (this.compareVersion(currentVersion, lastVersion)) {
+          if (this.compareVersion(this.version, lastVersion)) {
             this.$store.commit('addLog',{text:`💿 Available new version: ${lastVersion}`, color:'green'})
             this.updateApp = true
           } else this.$store.commit('addLog', { text: 'Checking for updates is complete. You are using the latest version of the application.', type: 'info' })

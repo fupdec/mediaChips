@@ -92,7 +92,6 @@
 </template>
 
 <script>
-const {app} = require('electron').remote
 const path = require('path')
 const fs = require('fs')
 const shell = require('electron').shell
@@ -110,7 +109,6 @@ export default {
   mixins: [LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
-      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:app.getVersion()})
     })
   },
   data: ()=>({
