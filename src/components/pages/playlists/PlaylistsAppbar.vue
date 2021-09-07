@@ -277,7 +277,7 @@ export default {
       playlistsArray = playlistsArray.split(/\r?\n/)
       playlistsArray = playlistsArray.filter((el)=>(el != ""))
       playlistsArray = playlistsArray.map(s => s.trim())
-      console.log(`start:::${playlistsArray.join(', ')}:::end`)
+
       const playlistsDb = this.$store.getters.playlists
       let dups = []
       let newPlaylists = []
@@ -308,7 +308,7 @@ export default {
         if(this.newPlaylists) {
           this.alertAddNewPlaylists = true
         } else { this.alertAddNewPlaylists = false }
-        this.playlistName = '',
+        this.playlistName = ''
         this.$store.commit('updatePlaylists')
         this.$store.dispatch('filterPlaylists', true)
       })

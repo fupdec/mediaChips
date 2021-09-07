@@ -170,7 +170,7 @@ export default {
     },
     addToPlaylist() {
       let id = this.playlists[this.selectedPlaylist].id
-      let playlist = this.$store.getters.playlists.find({id: id}).value()
+      let playlist = this.$store.getters.playlists.find({id}).cloneDeep().value()
       let videosFromPlaylist = playlist.videos
 
       this.$store.getters.getSelectedVideos.map(videoId => {
@@ -178,7 +178,7 @@ export default {
           videosFromPlaylist.push(videoId)
         }
       })
-      this.$store.getters.playlists.find({id: id}).assign({
+      this.$store.getters.playlists.find({id}).assign({
         videos: videosFromPlaylist,
         edit: Date.now(),
       }).write()

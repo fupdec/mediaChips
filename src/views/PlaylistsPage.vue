@@ -1,6 +1,6 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <div class="headline text-h3 d-flex align-center justify-center my-6">
+    <div class="headline text-h3 d-flex align-center justify-center py-4">
       <v-icon x-large left>mdi-format-list-bulleted</v-icon> Playlists
       <span class="text-h5 ml-2">({{numberFilteredPlaylists}})</span>
     </div>
@@ -9,7 +9,7 @@
       <FiltersChips :filters="filters" type="Playlist" />
     </v-container>
       
-    <v-container v-if="numberFilteredPlaylists" fluid class="pagination-container my-6">
+    <v-container v-if="numberFilteredPlaylists" fluid class="pagination-container">
       <v-overflow-btn v-model="playlistsPerPage" hint="items per page" persistent-hint
         :items="playlistsPerPagePreset" dense height="36" solo disable-lookup hide-no-data
         class="items-per-page-dropdown" />
@@ -42,10 +42,8 @@
       <PlaylistCard v-for="(playlist) in playlistsOnPage" :key="playlist.id" :playlist="playlist"/>
     </v-container>
 
-    <v-pagination v-if="numberFilteredPlaylists"
-      v-model="playlistsCurrentPage" :length="playlistsPagesSum"
-      :total-visible="getNumberOfPagesLimit" class="mt-6 mb-10"
-    ></v-pagination>
+    <v-pagination v-if="numberFilteredPlaylists" class="mt-4 mb-8"
+      v-model="playlistsCurrentPage" :length="playlistsPagesSum" :total-visible="getNumberOfPagesLimit" />
     
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 

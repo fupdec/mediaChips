@@ -1,7 +1,7 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
 
-    <div class="headline text-h3 d-flex align-center justify-center my-4">
+    <div class="headline text-h3 d-flex align-center justify-center py-4">
       <v-icon x-large left>mdi-video-outline</v-icon> Videos
       <span class="text-h5 ml-2">({{numberFilteredVideos}})</span>
     </div>
@@ -59,12 +59,8 @@
       <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
     </v-container>
 
-    <v-pagination
-      v-if="numberFilteredVideos" class="mt-4 mb-8"
-      v-model="videosCurrentPage"
-      :length="videosPagesSum"
-      :total-visible="getNumberOfPagesLimit"
-    ></v-pagination>
+    <v-pagination v-if="numberFilteredVideos" class="mt-4 mb-8"
+      v-model="videosCurrentPage" :length="videosPagesSum" :total-visible="getNumberOfPagesLimit"/>
     
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 
