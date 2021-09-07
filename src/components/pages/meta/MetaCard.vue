@@ -10,15 +10,28 @@
         <v-img v-if="isAltImgExist" :src="imgAlt" :aspect-ratio="meta.settings.imageAspectRatio" position="top" class="secondary-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" /> 
         <div v-if="isCustom1ImgExist" class="custom1-img-button">1</div> <v-img v-if="isCustom1ImgExist" :src="imgCustom1" class="custom1-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
         <div v-if="isCustom2ImgExist" class="custom2-img-button">2</div> <v-img v-if="isCustom2ImgExist" :src="imgCustom2" class="custom2-img" @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''" />
-        <v-btn v-if="meta.settings.favorite && visibility.favorite" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
-        <div v-if="meta.settings.rating && visibility.rating" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable color="yellow darken-2" background-color="grey" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
+        <v-btn v-if="meta.settings.favorite && visibility.favorite && !ratingAndFavoriteInCard" @click="toggleFavorite" icon absolute :color="favorite?'pink':'white'" class="fav-btn"> <v-icon :color="favorite?'pink':'grey'">mdi-heart-outline</v-icon> </v-btn>
+        <div v-if="meta.settings.rating && visibility.rating && !ratingAndFavoriteInCard" class="rating-wrapper"> <v-rating :value="rating" @input="changeRating($event)" dense half-increments hover clearable color="yellow darken-2" background-color="grey" empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"/> </div>
         <v-icon v-if="meta.settings.bookmark && visibility.bookmark && card.meta.bookmark" class="bookmark" color="red" :title="card.meta.bookmark">mdi-bookmark</v-icon>
       </div>
       <v-divider/>
 
       <div v-if="visibility.name" class="px-1 name">{{card.meta.name}} <span v-if="isMetaAssignedToVideo">({{card.videos||0}})</span></div>
-      <div v-if="meta.settings.synonyms && visibility.synonyms" class="px-1 synonyms"> <span class="pl-2"/> {{card.meta.synonyms===undefined? '' : card.meta.synonyms.join(', ')}} </div>
+      <div v-if="meta.settings.synonyms && visibility.synonyms && card.meta.synonyms && card.meta.synonyms.length" class="px-1 synonyms"> <span class="pl-2"/> {{card.meta.synonyms.join(', ')}} </div>
       
+      <v-card-actions v-if="ratingAndFavoriteInCard" class="px-1 py-0 d-flex justify-space-between">
+        <v-rating v-if="meta.settings.rating && visibility.rating" 
+          :value="rating" @input="changeRating($event)"
+          color="yellow darken-2" background-color="grey"
+          empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+          dense half-increments hover clearable />
+        <v-btn v-if="meta.settings.favorite && visibility.favorite"
+          @click="toggleFavorite" icon color="pink" x-small class="fav-in-card"> 
+          <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
+          <v-icon v-else color="grey">mdi-heart-outline</v-icon>
+        </v-btn>
+      </v-card-actions>
+
       <!-- Parse meta from cards -->
       <div v-for="(m,i) in metaInCard" :key="i">
         <div v-if="visibility[m.id]&&checkShowEmptyValue(m)" class="meta-in-card">
@@ -123,6 +136,7 @@ export default {
     isSelectedSingleMetaCard() { return this.$store.state.Meta.selectedMeta.length == 1 },
     isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id:this.meta.id}) !== undefined },
     showEmptyMetaValueInCard() { return this.$store.state.Settings.showEmptyMetaValueInCard },
+    ratingAndFavoriteInCard() { return this.$store.state.Settings.ratingAndFavoriteInCard },
   },
   methods: {
     stopSmoothScroll(event) { if (event.button != 1) return; event.preventDefault(); event.stopPropagation() },
