@@ -36,12 +36,7 @@
       <div v-for="(m,i) in metaInCard" :key="i">
         <div v-if="visibility[m.id]&&checkShowEmptyValue(m)" class="meta-in-card">
           <v-chip-group v-if="m.type=='complex'" column>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-              </template>
-              <span>{{getMeta(m.id).settings.name}}</span>
-            </v-tooltip>
+            <v-icon :title="getMeta(m.id).settings.name">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
             <v-chip v-for="c in card.meta[m.id]" :key="c" 
               :color="getColor(m.id,c)" 
               :label="getMeta(m.id).settings.chipLabel"
@@ -54,12 +49,7 @@
                 {{ getCard(c).meta.name }} </v-chip>
           </v-chip-group>
           <div v-else-if="m.type=='simple'" class="simple-meta">
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-              </template>
-              <span>{{getMeta(m.id).settings.name}}</span>
-            </v-tooltip>
+            <v-icon :title="getMeta(m.id).settings.name">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
             <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
             <span v-else-if="getMeta(m.id).dataType=='rating'">      
               <v-rating :value="card.meta[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
