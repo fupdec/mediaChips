@@ -239,7 +239,7 @@
 
     <DialogListView v-if="dialogListView" :meta="listViewMeta" @close="dialogListView=false" />
 
-    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="valuesForScraper"
+    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="getValuesForScraper()"
       @closeScraper="dialogScraper=false" @getValues="getScraperValues($event)" @updateKey="key=Date.now()"/>
   </div>
 </template>
@@ -333,12 +333,6 @@ export default {
       let date = new Date(this.card.edit)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
     },
-    valuesForScraper() {
-      let values = _.cloneDeep(this.values)
-      values.name = this.name
-      if (this.meta.settings.synonyms) values.synonyms = this.synonyms
-      return values
-    },
     showIcons() { return this.$store.state.Settings.showIconsOfMetaInEditingDialog },
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
@@ -419,6 +413,12 @@ export default {
       this.$store.getters.metaCards.find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
       this.$store.state.Meta.dialogEditMetaCard = false 
       this.$store.commit('updateMetaCards', [this.card.id])
+    },
+    getValuesForScraper() {
+      let values = _.cloneDeep(this.values)
+      values.name = this.name
+      if (this.meta.settings.synonyms) values.synonyms = this.synonyms
+      return values
     },
     getScraperValues(values) { 
       this.dialogScraper = false

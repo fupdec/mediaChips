@@ -164,7 +164,7 @@ export default {
       })
       if (getBioString('performer', bio)) this.transfer.found.synonyms = getBioString('performer', bio)
       if (getBioString('ethnicity', bio)) this.transfer.found.ethnicity = getBioString('ethnicity', bio).split(',')
-      if (getBioString('hair', bio)) this.transfer.found.hair = getBioString('hair', bio).split(',')
+      if (getBioString('hair', bio)) this.transfer.found.hair = getBioString('hair', bio).split(/[.,\/]/)
       let years
       if (getBioString('years', bio)) {
         years = getBioString('years', bio)
@@ -199,7 +199,7 @@ export default {
         }
       }
       for (const i in this.transfer.found) if (this.transfer.found[i] === undefined) delete this.transfer.found[i]
-      this.transfer.found.category = ['Porn stars']
+      this.transfer.found.category = ['Porn Stars']
     },
   },
 }
