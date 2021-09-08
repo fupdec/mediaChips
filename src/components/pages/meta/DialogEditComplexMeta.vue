@@ -26,17 +26,11 @@
                 </v-col>
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="settings.hint" label="Hint of meta" hint="This text under the field is the hint"/>
-                  <v-autocomplete v-model="settings.icon" :items="icons" :filter="filterIcons"
-                    item-text="name" item-value="name" label="Icon"
-                    :rules="[value => !!value || 'Icon is required']">
-                    <template v-slot:selection="data">
-                      <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
-                    </template>
-                    <template v-slot:item="data">
-                      <v-icon left>mdi-{{data.item.name}}</v-icon>
-                      <span v-html="data.item.name"></span>
-                    </template>
-                  </v-autocomplete>
+                  <div class="text--secondary caption">Icon of meta</div>
+                  <div class="d-flex">
+                    <v-icon>mdi-{{settings.icon}}</v-icon>
+                    <v-btn @click="dialogIcons=true" color="primary" small rounded class="ml-4">Select icon</v-btn>
+                  </div>
                 </v-col>
                 <v-col cols="6" class="pt-0 d-flex align-center">
                   <v-tooltip top>
@@ -270,6 +264,7 @@
       </v-card>
     </v-dialog>
     
+    <Icons v-if="dialogIcons" @close="dialogIcons=false" @apply="changeIcon($event)"/>
     <DialogEditScraperFields v-if="dialogSetUpScraper" :dialog="dialogSetUpScraper" :metaInCards="settings.metaInCard" @closeDialog="getScraperFields($event)"/>
   </div>
 </template>
@@ -277,7 +272,6 @@
 <script>
 import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
-import icons from '@/assets/material-icons.json'
 import NameRules from '@/mixins/NameRules'
 import MetaGetters from '@/mixins/MetaGetters'
 import DialogEditScraperFields from '@/components/pages/meta/DialogEditScraperFields.vue'
@@ -288,7 +282,10 @@ export default {
     metaObj: Object,
   },
   name: "DialogEditMeta",
-  components: { vuescroll, draggable, DialogEditScraperFields },
+  components: { 
+    vuescroll, draggable, DialogEditScraperFields,
+    Icons: () => import('@/components/elements/Icons.vue'),
+  },
   mixins: [NameRules, MetaGetters], 
   mounted () {
     this.$nextTick(function () {
@@ -296,10 +293,10 @@ export default {
     })
   },
   data: () => ({
+    dialogIcons: false,
     dialogAddMetaToCard: false,
     dialogSetUpScraper: false,
     dialogDeleteMetaFromCards: false,
-    icons: icons,
     selectedMetaForCard: null,
     valid: false,
     settings: {
@@ -352,15 +349,9 @@ export default {
     },
   },
   methods: {
-    filterIcons(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
+    changeIcon(icon) {
+      this.dialogIcons = false
+      this.settings.icon = icon
     },
     addMetaToCard() {
       if (this.selectedMetaForCard == null || this.selectedMetaForCard.length == 0) return // check if empty

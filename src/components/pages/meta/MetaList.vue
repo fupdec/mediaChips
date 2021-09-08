@@ -4,19 +4,19 @@
       <v-btn @click="dialogAddMeta=true" class="mb-6" color="primary" block x-large rounded> <v-icon large class="mr-4">mdi-plus</v-icon> Add new meta</v-btn>
     </v-card>
 
-    <v-container fluid>
+    <v-container fluid class="mb-6">
       <v-row>
         <v-col cols="12" lg="6">
           <v-card outlined>
-            <v-data-iterator :items="complexMetaList" :items-per-page.sync="itemsPerPageCM" :page.sync="pageCM" :search="searchCM" :sort-by="sortByCM" :sort-desc="sortDescCM"
-              hide-default-footer no-data-text="Please add complex meta first" no-results-text="No meta found">
+            <v-data-iterator :items="complexMetaList" :search="searchCM" :sort-by="sortByCM" :sort-desc="sortDescCM" :items-per-page="12"
+              :footer-props="{'items-per-page-options':[12,24,36,48,60]}" no-data-text="Please add complex meta first" no-results-text="No meta found">
               <template v-slot:header>
                 <div class="headline text-center py-2">List of complex meta</div>
                 <v-toolbar class="mb-4" color="primary" elevation="0" dense>
                   <v-text-field v-model="searchCM" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
-                  <v-spacer></v-spacer>
+                  <v-spacer class="mx-2"/>
                   <v-select v-model="sortByCM" dense flat solo outlined hide-details :items="['name','date','edit']" prepend-inner-icon="mdi-sort" label="Sort by"></v-select>
-                  <v-spacer></v-spacer>
+                  <v-spacer class="mx-2"/>
                   <v-btn-toggle v-model="sortDescCM" dense mandatory>
                     <v-btn outlined :value="false"> <v-icon>mdi-arrow-up</v-icon> </v-btn>
                     <v-btn outlined :value="true"> <v-icon>mdi-arrow-down</v-icon> </v-btn>
@@ -48,7 +48,7 @@
                           </v-chip-group>
 
                           <v-fade-transition>
-                            <v-overlay v-if="hover" absolute color="secondary" z-index="1">
+                            <v-overlay v-if="hover" absolute color="primary" z-index="1">
                               <div class="d-flex flex-column">
                                 <v-btn @click="openEditMeta(item)" rounded x-small class="mb-2"> <v-icon small left>mdi-pencil</v-icon> Edit </v-btn>
                                 <v-btn v-if="item.dataType==='array'" @click="setSelectedMeta(item),dialogTransferMeta=true" rounded x-small class="mb-2" color="warning"> <v-icon small left>mdi-transfer</v-icon> transfer </v-btn>
@@ -61,26 +61,7 @@
                     </v-hover>
                   </v-col>
                 </v-row>
-              </template>
-
-              <template v-slot:footer>
-                <v-toolbar class="mt-4" color="primary" dense elevation="0">
-                  <v-menu offset-y top open-on-hover>
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-btn v-bind="attrs" v-on="on" outlined small>{{ itemsPerPageCM }}</v-btn>
-                    </template>
-                    <v-list dense>
-                      <v-list-item v-for="(number, index) in itemsPerPageArray" :key="index" @click="updateItemsPerPage(number, 'complex')">
-                        <v-list-item-title>{{ number }}</v-list-item-title>
-                      </v-list-item>
-                    </v-list>
-                  </v-menu>
-                  <span class="ml-2">meta per page</span>
-                  <v-spacer></v-spacer>
-                  <span> Page {{ pageCM }} of {{ numberOfPagesCM }} </span>
-                  <v-btn small outlined class="mx-2" @click="formerPage('complex')"> <v-icon>mdi-arrow-left</v-icon> </v-btn>
-                  <v-btn small outlined @click="nextPage('complex')"><v-icon>mdi-arrow-right</v-icon></v-btn>
-                </v-toolbar>
+                <v-divider class="mt-4"></v-divider>
               </template>
             </v-data-iterator>
           </v-card>
@@ -88,15 +69,15 @@
 
         <v-col cols="12" lg="6">
           <v-card outlined>
-            <v-data-iterator :items="simpleMetaList" :items-per-page.sync="itemsPerPageSM" :page.sync="pageSM" :search="searchSM" :sort-by="sortBySM" :sort-desc="sortDescSM"
-              hide-default-footer no-data-text="Please add simple meta first" no-results-text="No meta found">
+            <v-data-iterator :items="simpleMetaList" :search="searchSM" :sort-by="sortBySM" :sort-desc="sortDescSM" :items-per-page="12"
+              :footer-props="{'items-per-page-options':[12,24,36,48,60]}" no-data-text="Please add simple meta first" no-results-text="No meta found">
               <template v-slot:header>
                 <div class="headline text-center py-2">List of simple meta</div>
                 <v-toolbar class="mb-4" color="secondary" dense elevation="0">
                   <v-text-field v-model="searchSM" dense clearable flat solo outlined hide-details prepend-inner-icon="mdi-magnify" label="Search"></v-text-field>
-                  <v-spacer></v-spacer>
+                  <v-spacer class="mx-2"/>
                   <v-select v-model="sortBySM" dense flat solo outlined hide-details :items="['name','dataType','date','edit']" prepend-inner-icon="mdi-sort" label="Sort by"></v-select>
-                  <v-spacer></v-spacer>
+                  <v-spacer class="mx-2"/>
                   <v-btn-toggle v-model="sortDescSM" dense mandatory>
                     <v-btn outlined :value="false"> <v-icon>mdi-arrow-up</v-icon> </v-btn>
                     <v-btn outlined :value="true"> <v-icon>mdi-arrow-down</v-icon> </v-btn>
@@ -141,26 +122,7 @@
                     </v-hover>
                   </v-col>
                 </v-row>
-              </template>
-
-              <template v-slot:footer>
-                <v-toolbar class="mt-4" color="secondary" dense elevation="0">
-                  <v-menu offset-y top open-on-hover>
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-btn v-bind="attrs" v-on="on" outlined small>{{ itemsPerPageSM }}</v-btn>
-                    </template>
-                    <v-list dense>
-                      <v-list-item v-for="(number, index) in itemsPerPageArray" :key="index" @click="updateItemsPerPage(number, 'simple')">
-                        <v-list-item-title>{{ number }}</v-list-item-title>
-                      </v-list-item>
-                    </v-list>
-                  </v-menu>
-                  <span class="ml-2">meta per page</span>
-                  <v-spacer></v-spacer>
-                  <span> Page {{ pageSM }} of {{ numberOfPagesSM }} </span>
-                  <v-btn small outlined class="mx-2" @click="formerPage('simple')"> <v-icon>mdi-arrow-left</v-icon> </v-btn>
-                  <v-btn small outlined @click="nextPage('simple')"><v-icon>mdi-arrow-right</v-icon></v-btn>
-                </v-toolbar>
+                <v-divider class="mt-4"></v-divider>
               </template>
             </v-data-iterator>
           </v-card>
@@ -282,15 +244,10 @@ export default {
     })
   },
   data: () => ({
-    itemsPerPageArray: [4, 8, 12, 20, 32],
     searchCM: '',
     searchSM: '',
     sortDescCM: false,
     sortDescSM: false,
-    pageCM: 1,
-    pageSM: 1,
-    itemsPerPageCM: 12,
-    itemsPerPageSM: 12,
     sortByCM: 'name',
     sortBySM: 'name',
     // dialogs
@@ -304,8 +261,6 @@ export default {
     dialogTransferMeta: false,
   }),
   computed: {
-    numberOfPagesCM() { return Math.ceil(this.complexMetaList.length / this.itemsPerPageCM) },
-    numberOfPagesSM() { return Math.ceil(this.simpleMetaList.length / this.itemsPerPageSM) },
     complexMetaList() { 
       let complexMeta = this.$store.state.Meta.complexMetaList
       return complexMeta.map(i=>{
@@ -332,23 +287,6 @@ export default {
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
-    nextPage(type) { 
-      if (type == 'complex') {if (this.pageCM + 1 <= this.numberOfPagesCM) this.pageCM += 1} 
-      else if (this.pageSM + 1 <= this.numberOfPagesSM) this.pageSM += 1 
-    },
-    formerPage(type) { 
-      if (type == 'complex') {if (this.pageCM - 1 >= 1) this.pageCM -= 1}
-      else if (this.pageSM - 1 >= 1) this.pageSM -= 1
-    },
-    updateItemsPerPage(number, type) { 
-      if (type == 'complex') {
-        this.itemsPerPageCM = number
-        if (this.numberOfPagesCM>this.pageCM) this.pageCM = 1 
-      } else {
-        this.itemsPerPageSM = number
-        if (this.numberOfPagesSM>this.pageSM) this.pageSM = 1 
-      }
-    },
     dateAdded(date) { date = new Date(date); return date.toLocaleDateString() },
     dateEdit(date) { date = new Date(date); return date.toLocaleDateString() },
     setSelectedMeta(item) { this.selectedMeta = this.$store.getters.meta.find({id:item.id}).cloneDeep().value() },

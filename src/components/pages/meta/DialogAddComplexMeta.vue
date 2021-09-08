@@ -1,4 +1,5 @@
 <template>
+<div>
   <v-dialog v-if="dialog" :value="dialog" @input="close" scrollable max-width="450">
     <v-card>
       <v-toolbar color="primary">
@@ -13,22 +14,18 @@
             <v-text-field v-model="metaName" :rules="[nameRules]" label="Name of meta"/>
             <v-text-field v-model="nameSingular" :rules="[nameRules]" label="Name singular"/>
             <v-text-field v-model="metaHint" label="Hint for meta" hint="This text under the field is the hint"/>
-            <v-autocomplete v-model="metaIcon" :items="icons" :filter="filterIcons"
-              item-text="name" item-value="name" label="Icon"
-              :rules="[value => !!value || 'Icon is required']">
-              <template v-slot:selection="data">
-                <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
-              </template>
-              <template v-slot:item="data">
-                <v-icon left>mdi-{{data.item.name}}</v-icon>
-                <span v-html="data.item.name"></span>
-              </template>
-            </v-autocomplete>
+            <div class="text--secondary caption">Icon of meta</div>
+            <div class="d-flex">
+              <v-icon>mdi-{{metaIcon}}</v-icon>
+              <v-btn @click="dialogIcons=true" color="primary" small rounded class="ml-4">Select icon</v-btn>
+            </div>
           </v-form>
         </v-card-text>
       </vuescroll>
     </v-card>
   </v-dialog>
+  <Icons v-if="dialogIcons" @close="dialogIcons=false" @apply="changeIcon($event)"/>
+</div>
 </template>
 
 
@@ -38,7 +35,6 @@ const fs = require("fs-extra")
 const path = require("path")
 
 import vuescroll from 'vuescroll'
-import icons from '@/assets/material-icons.json'
 import NameRules from '@/mixins/NameRules'
 
 export default {
@@ -48,6 +44,7 @@ export default {
   name: 'DialogAddComplexMeta',
   components: {
     vuescroll,
+    Icons: () => import('@/components/elements/Icons.vue'),
   },
   mixins: [NameRules], 
   mounted() {
@@ -55,8 +52,7 @@ export default {
     })
   },
   data: () => ({
-    metaIcon: 'shape',
-    icons: icons,
+    dialogIcons: false,
     // complex meta (with cards)
     valid: false,
     metaName: '',
@@ -68,13 +64,9 @@ export default {
     pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
-    getIconMeta(meta) {
-      if (meta === 'string') return 'mdi-alphabetical'
-      if (meta === 'date') return 'mdi-calendar'
-      if (meta === 'number') return 'mdi-numeric'
-      if (meta === 'array') return 'mdi-code-array'
-      if (meta === 'boolean') return 'mdi-toggle-switch'
-      return 'mdi-shape'
+    changeIcon(icon) {
+      this.dialogIcons = false
+      this.metaIcon = icon
     },
     filterIcons(item, queryText, itemText) {
       const searchText = queryText.toLowerCase()

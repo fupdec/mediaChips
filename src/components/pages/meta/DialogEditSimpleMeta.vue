@@ -26,58 +26,34 @@
                   <v-text-field v-model="settings.hint" label="Hint of meta" hint="This text under the field is the hint"/>
                 </v-col>
                 <v-col cols="12" sm="6">
-                  <v-autocomplete v-model="settings.icon" :items="icons" :filter="filterIcons"
-                    item-text="name" item-value="name" label="Icon"
-                    :rules="[value => !!value || 'Icon is required']">
-                    <template v-slot:selection="data">
-                      <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
-                    </template>
-                    <template v-slot:item="data">
-                      <v-icon left>mdi-{{data.item.name}}</v-icon>
-                      <span v-html="data.item.name"></span>
-                    </template>
-                  </v-autocomplete>
+                  <div class="text--secondary caption">Icon of meta</div>
+                  <div class="d-flex">
+                    <v-icon>mdi-{{settings.icon}}</v-icon>
+                    <v-btn @click="selectIcon('icon')" color="primary" small rounded class="ml-4">Select icon</v-btn>
+                  </div>
                   <v-switch v-if="meta.dataType=='string'" v-model="settings.isLink" :label="`Open link in browser - ${settings.isLink?'Yes':'No'}`"/>
                 </v-col>
                 <v-col v-if="meta.dataType=='rating'" cols="12" sm="6">
-                  <v-autocomplete v-model="settings.ratingIcon" :items="icons" :filter="filterIcons"
-                    item-text="name" item-value="name" label="Icon for rating"
-                    :rules="[value => !!value || 'Icon is required']">
-                    <template v-slot:selection="data">
-                      <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
-                    </template>
-                    <template v-slot:item="data">
-                      <v-icon left>mdi-{{data.item.name}}</v-icon>
-                      <span v-html="data.item.name"></span>
-                    </template>
-                  </v-autocomplete>
-                  <v-autocomplete v-model="settings.ratingIconEmpty" :items="icons" :filter="filterIcons"
-                    item-text="name" item-value="name" label="Icon for empty rating"
-                    :rules="[value => !!value || 'Icon is required']">
-                    <template v-slot:selection="data">
-                      <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
-                    </template>
-                    <template v-slot:item="data">
-                      <v-icon left>mdi-{{data.item.name}}</v-icon>
-                      <span v-html="data.item.name"></span>
-                    </template>
-                  </v-autocomplete>
+                  <div class="text--secondary caption">Icon for rating</div>
+                  <div class="d-flex">
+                    <v-icon>mdi-{{settings.ratingIcon}}</v-icon>
+                    <v-btn @click="selectIcon('ratingIcon')" color="primary" small rounded class="ml-4">Select icon</v-btn>
+                  </div>
+                  <div class="text--secondary caption">Icon for empty rating</div>
+                  <div class="d-flex">
+                    <v-icon>mdi-{{settings.ratingIconEmpty}}</v-icon>
+                    <v-btn @click="selectIcon('ratingIconEmpty')" color="primary" small rounded class="ml-4">Select icon</v-btn>
+                  </div>
                   <v-btn @click="openDialogPalette" :color="settings.ratingColor" rounded block class="my-2">
                     <v-icon left>mdi-palette</v-icon> change rating color </v-btn>
                 </v-col>
                 <v-col v-if="meta.dataType=='rating'" cols="12" sm="6">
-                  <v-switch v-model="settings.ratingHalf" :label="`Half increment - ${settings.ratingHalf?'Yes':'No'}`"/>
-                  <v-autocomplete v-if="settings.ratingHalf" v-model="settings.ratingIconHalf" :items="icons" :filter="filterIcons"
-                    item-text="name" item-value="name" label="Icon for half rating"
-                    :rules="[value => !!value || 'Icon is required']">
-                    <template v-slot:selection="data">
-                      <v-icon>mdi-{{data.item.name}}</v-icon> <span class="mx-2">{{data.item.name}}</span>
-                    </template>
-                    <template v-slot:item="data">
-                      <v-icon left>mdi-{{data.item.name}}</v-icon>
-                      <span v-html="data.item.name"></span>
-                    </template>
-                  </v-autocomplete>
+                  <v-switch v-model="settings.ratingHalf" :label="`Half increment - ${settings.ratingHalf?'Yes':'No'}`" hide-details/>
+                  <div v-if="settings.ratingHalf" class="text--secondary caption">Icon for half rating</div>
+                  <div v-if="settings.ratingHalf" class="d-flex">
+                    <v-icon>mdi-{{settings.ratingIconHalf}}</v-icon>
+                    <v-btn @click="selectIcon('ratingIconHalf')" color="primary" small rounded class="ml-4">Select icon</v-btn>
+                  </div>
                   <div>Rating preview</div>
                   <v-rating :value="1" :length="settings.ratingMax" hover 
                     :full-icon="`mdi-${settings.ratingIcon}`" :empty-icon="`mdi-${settings.ratingIconEmpty||settings.ratingIcon}`" 
@@ -141,6 +117,8 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <Icons v-if="dialogIcons" @close="dialogIcons=false" @apply="changeIcon($event)"/>
   </div>
 </template>
 
@@ -149,7 +127,6 @@ const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
-import icons from '@/assets/material-icons.json'
 import NameRules from '@/mixins/NameRules'
 
 export default {
@@ -158,7 +135,10 @@ export default {
     metaObj: Object,
   },
   name: "DialogEditMeta",
-  components: { vuescroll, draggable, },
+  components: { 
+    vuescroll, draggable, 
+    Icons: () => import('@/components/elements/Icons.vue'),
+  },
   mixins: [NameRules], 
   mounted () {
     this.$nextTick(function () {
@@ -166,7 +146,8 @@ export default {
     })
   },
   data: () => ({
-    icons: icons,
+    dialogIcons: false,
+    iconType: '',
     valid: false,
     settings: {
       name: '',
@@ -202,15 +183,13 @@ export default {
     },
   },
   methods: {
-    filterIcons(item, queryText, itemText) {
-      const searchText = queryText.toLowerCase()
-      const aliases = item.aliases
-      let found = false
-      for (let i=0;i<aliases.length;i++) {
-        if (aliases[i].toLowerCase().indexOf(searchText) > -1) found = true
-      }
-      if (item.name.toLowerCase().indexOf(searchText) > -1) found = true
-      return found
+    selectIcon(type) {
+      this.iconType = type
+      this.dialogIcons = true
+    },
+    changeIcon(icon) {
+      this.dialogIcons = false
+      this.settings[this.iconType] = icon
     },
     saveSettings() {
       this.$refs.form.validate()
