@@ -37,8 +37,7 @@ export default new Vuex.Store({
     dialogFolder: false,
     updateFoldersData: 0,
     backgroundProcesses: [],
-    swatches: ["#cc0e00","#ff5722","#ff9800","#8bc34a","#2ac530","#009688",
-      "#00bcd4","#2196f3","#2041f7","#ae0eff","#e8004f","#795548","#9b9b9b",],
+    swatches: ["#ff0000","#ffc800","#00ff0d","#00fbff","#1e00ff","#ff00cc"],
   }),
   getters: {
     getNotifications(state) {

@@ -12,6 +12,7 @@ const dbMeta = low(adapterMeta)
 import router from '@/router'
 import SpecificMeta from '@/components/elements/SpecificMeta'
 import Countries from '@/components/elements/Countries'
+import chroma from 'chroma-js'
 
 let defaultMeta = {
   id: "defaultMeta",
@@ -46,6 +47,7 @@ const Meta = {
     sortBy: 'name',
     sortDirection: 'asc',
     visibility: {},
+    colors: [],
     firstChar: [],
     filters: [],
     filteredMeta: [],
@@ -245,6 +247,17 @@ const Meta = {
         }
       }
 
+      function getColor(color, swatches) {
+        color = chroma(color||'#777777').hsl()[0]
+        return swatches.reduce((prev, curr) => Math.abs(curr - color) < Math.abs(prev - color) ? curr : prev);
+      }
+      
+      if (state.colors.length) { // filter by color
+        let swatches = rootState.swatches.map(i=>chroma(i).hsl()[0])
+        let selected = state.colors.map(i=>chroma(i).hsl()[0])
+        mc = mc.filter( c => selected.includes( getColor(c.meta.color, swatches) ) )
+      }
+
       function compare(sign, a, b) {
         if (b===undefined||b===null||b.length==0) return false
         if (sign === 'equal') return a == b
@@ -357,6 +370,7 @@ const Meta = {
         sortDirection: state.sortDirection,
         page:  state.page,
         firstChar:  state.firstChar,
+        colors:  state.colors,
         cardsPerPage:  state.cardsPerPage,
       }
       if (tabId === 'default') getters.meta.find({id:metaId}).get('state').assign(data).write()

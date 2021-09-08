@@ -2,6 +2,19 @@
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
     <v-toolbar dense>
       <v-spacer></v-spacer>
+      <v-tooltip v-if="colors.length" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="clearColors" icon small tile class="mr-2" v-on="on">
+            <v-icon size="16">mdi-cancel</v-icon>
+          </v-btn>
+        </template>
+        <span>Clear all colors</span>
+      </v-tooltip>
+      <v-btn-toggle v-if="meta.settings.color" v-model="colors" group multiple color="primary" class="mr-4">
+        <v-btn v-for="(color,i) in swatches" :key="i" icon small class="ma-0" :value="color">
+          <v-icon size="10" :color="color">mdi-circle</v-icon>
+        </v-btn>
+      </v-btn-toggle>
       <v-btn-toggle v-model="chars" group multiple color="primary">
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
@@ -171,6 +184,7 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
+    swatches() { return this.$store.state.swatches },
     getNumberOfPagesLimit() { return this.$store.state.Settings.numberOfPagesLimit },
     pages() { return this.$store.getters.metaCardsPages },
     cardsPerPage: {
@@ -189,6 +203,13 @@ export default {
       set(number) { 
         this.$store.state.Meta.page = number 
         this.$store.dispatch('saveStateOfMeta') 
+      },
+    },
+    colors: {
+      get () { return this.$store.state.Meta.colors },
+      set (value) {
+        this.$store.state.Meta.colors = value
+        this.$store.dispatch('filterMetaCards')
       },
     },
     chars: {
@@ -249,6 +270,7 @@ export default {
         this.$store.state.Meta.sortBy = this.meta.state.sortBy || 'name'
         this.$store.state.Meta.sortDirection = this.meta.state.sortDirection || 'asc'
         this.$store.state.Meta.page = this.meta.state.page || 1
+        this.$store.state.Meta.colors = this.meta.state.colors || []
         this.$store.state.Meta.firstChar = this.meta.state.firstChar || []
         this.$store.state.Meta.cardsPerPage = this.meta.state.cardsPerPage || 20
       } else {
@@ -256,6 +278,7 @@ export default {
         this.$store.state.Meta.sortBy = this.tab.sortBy
         this.$store.state.Meta.sortDirection = this.tab.sortDirection
         this.$store.state.Meta.page = this.tab.page
+        this.$store.state.Meta.colors = this.tab.colors || []
         this.$store.state.Meta.firstChar = this.tab.firstChar || []
         this.$store.state.Meta.cardsPerPage = this.tab.cardsPerPage || 20
       }
@@ -264,6 +287,10 @@ export default {
     },
     removeAllFilters() {
       this.$store.state.Meta.filters = []
+      this.$store.dispatch('filterMetaCards')
+    },
+    clearColors() {
+      this.$store.state.Meta.colors = []
       this.$store.dispatch('filterMetaCards')
     },
     clearChars() {

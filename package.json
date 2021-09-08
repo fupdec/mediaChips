@@ -24,6 +24,7 @@
     "axios": "^0.21.1",
     "cheerio": "^1.0.0-rc.10",
     "chokidar": "^3.5.1",
+    "chroma-js": "^2.1.2",
     "core-js": "^3.6.4",
     "ffmpeg-static": "^4.3.0",
     "ffprobe-static": "^3.0.0",
