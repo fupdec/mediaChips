@@ -18,15 +18,9 @@
       <v-btn-toggle v-model="chars" group multiple color="primary">
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn icon small class="ma-0" :value="27" v-on="on">#</v-btn>
+            <v-btn icon small class="ma-0" :value="0" v-on="on">#</v-btn>
           </template>
-          <span>Symbol</span>
-        </v-tooltip>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn icon small class="ma-0" :value="0" v-on="on">0-9</v-btn>
-          </template>
-          <span>Number</span>
+          <span>Not a letter</span>
         </v-tooltip>
         <v-btn v-for="(char,i) in alphabet" :key="i" icon small class="ma-0" :value="i+1">
           {{char}}
