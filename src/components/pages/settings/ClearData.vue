@@ -132,7 +132,6 @@ export default {
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update db in player window
       this.$store.commit('updateComplexMetaListFromDb')
       this.$store.commit('updateSimpleMetaListFromDb')
-      ++this.$store.state.Meta.updateKey
     },
     clearSavedFiltersDb() {
       let complexMeta = this.$store.getters.meta.filter({type:'complex'}).value()

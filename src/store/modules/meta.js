@@ -22,7 +22,6 @@ let defaultMeta = {
   settings: {
     name: "Tags",
     icon: 'tag-outline',
-    cardSize: 1,
     metaInCard: [],
   },
 }
@@ -47,6 +46,7 @@ const Meta = {
     sortBy: 'name',
     sortDirection: 'asc',
     visibility: {},
+    cardSize: 3,
     colors: [],
     firstChar: [],
     filters: [],
@@ -54,7 +54,6 @@ const Meta = {
     updateCardIds: [],
     selection: null,
     selectedMeta: [],
-    updateKey: 1,
     complexMetaList: dbMeta.get('meta').filter({type:'complex'}).value(),
     simpleMetaList: dbMeta.get('meta').filter({type:'simple'}).value(),
     dialogEditMetaCard: false,

@@ -152,8 +152,7 @@
             <v-spacer></v-spacer>
             <v-icon>mdi-card-bulleted-settings</v-icon>
           </v-toolbar>
-          <v-slider :value="cardSize" min="1" max="5" step="1" class="pa-6"
-            @input="updateMetaState('cardSize', $event)" :tick-labels="cardSizes"/>
+          <v-slider @input="updateCardSize($event)" :value="cardSize" min="1" max="5" step="1" class="pa-6" :tick-labels="cardSizes"/>
         </v-card>
       </v-menu>
 
@@ -215,6 +214,7 @@ export default {
     this.initSort()
     this.initSpecificMeta()
     this.initVisibility()
+    this.initCardSize()
   },
   mounted() {
     this.$nextTick(function () {
@@ -298,10 +298,7 @@ export default {
     metaInCard() { return this.meta.settings.metaInCard || [] },
     visibility() { return this.$store.state.Meta.visibility },
     metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
-    cardSize() { 
-      let updateKey = this.$store.state.Meta.updateKey
-      return this.meta.state.cardSize || 3 
-    },
+    cardSize() { return this.$store.state.Meta.cardSize || 3 },
   },
   methods: {
     initSpecificMeta() {
@@ -312,6 +309,7 @@ export default {
       if (this.meta.settings.country) this.specificMeta.push('country')
       if (this.meta.settings.color) this.specificMeta.push('color')
     },
+    initCardSize() { this.$store.state.Meta.cardSize = this.meta.state.cardSize || 3 },
     initVisibility() {
       let visibility = {}
       for (let i = 0; i < this.specificMeta.length; i++) visibility[this.specificMeta[i]] = true
@@ -375,10 +373,7 @@ export default {
       else this.$store.state.Meta.filters.push(favorite)
       this.$store.dispatch('filterMetaCards')
     },
-    updateMetaState(key, value) { 
-      this.$store.dispatch('updateMetaState', {id: this.metaId, key, value}) 
-      ++this.$store.state.Meta.updateKey
-    },
+    updateMetaState(key, value) { this.$store.dispatch('updateMetaState', {id: this.metaId, key, value}) },
     initSort() {
       this.sortBy = this.meta.state.sortBy || 'name'
       let color = { name: 'color', icon: 'palette', tip: 'Color' }
@@ -427,6 +422,10 @@ export default {
       let value = !this.visibility[item]
       this.$store.state.Meta.visibility[item] = value
       this.$store.getters.meta.find({id:this.meta.id}).get('state.visibility').set(item,value).write()
+    },
+    updateCardSize(value) {
+      this.$store.state.Meta.cardSize = value
+      this.$store.getters.meta.find({id:this.meta.id}).get('state').set('cardSize',value).write()
     },
   },
   watch: {},

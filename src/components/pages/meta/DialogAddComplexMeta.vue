@@ -91,6 +91,7 @@ export default {
           nameSingular: this.nameSingular,
           hint: this.metaHint,
           icon: this.metaIcon,
+          imageTypes: ['main'],
           metaInCard: [],
         },
         state: {

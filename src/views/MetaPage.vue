@@ -65,7 +65,7 @@
 
       <Loading />
 
-      <v-container fluid class="card-grid" :class="[cardSize, gapSize, {'wide-image':isWideImage}]">
+      <v-container fluid class="card-grid" :class="[`card-size-${cardSize}`, gapSize, {'wide-image':isWideImage}]">
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
       
@@ -215,10 +215,7 @@ export default {
     },
     metaCardsNumber() { return this.$store.getters.metaCards.filter({metaId:this.meta.id}).value().length },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
-    cardSize() { 
-      let updateKey = this.$store.state.Meta.updateKey
-      return `card-size-${this.meta.state.cardSize || 3}` 
-    },
+    cardSize() { return this.$store.state.Meta.cardSize || 3 },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     isWideImage() { return this.meta.settings.imageAspectRatio > 1 },
     filteredMeta() { return this.$store.state.Meta.filteredMeta },
