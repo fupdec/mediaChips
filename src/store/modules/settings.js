@@ -75,7 +75,7 @@ dbs.defaults({
   showEmptyMetaValueInCard: true,
   showIconsInsteadTextOnFiltersChips: false,
   showExperimentalFeatures: false,
-  databaseVersion: '0.8.2',
+  databaseVersion: app.getVersion(),
 }).write()
 
 const Settings = {
