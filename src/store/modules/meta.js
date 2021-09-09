@@ -323,8 +323,8 @@ const Meta = {
             mc = mc.filter(c=>(mergedIds.includes(c.id)))
             continue
           }
-          if (cond=='includes') mc=mc.filter(c=>c.meta[by].toLowerCase().includes(val))
-          else mc=mc.filter(c=>!c.meta[by].toLowerCase().includes(val))
+          if (cond=='includes') mc=mc.filter(c=>c.meta[by]?c.meta[by].toLowerCase().includes(val):false)
+          else mc=mc.filter(c=>c.meta[by]?!c.meta[by].toLowerCase().includes(val):true)
           continue
         }
 
