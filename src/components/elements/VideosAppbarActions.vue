@@ -240,6 +240,7 @@ export default {
       this.$store.dispatch('filterVideos')
     },
     initSort() {
+      this.sortBy = this.$store.state.Settings.videoSortBy || 'name'
       for (const m of this.metaAssignedToVideos) {
         if (m.type === 'simple') {
           let sm = this.getMeta(m.id)
