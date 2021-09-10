@@ -1,6 +1,6 @@
 <template>   
   <v-menu v-model="$store.state.contextMenu" :position-x="$store.state.x" :position-y="$store.state.y"
-    leave-absolute absolute offset-y z-index="1000" min-width="150">
+    leave-absolute absolute offset-y z-index="1000" min-width="150" :close-on-content-click="false">
     <v-list dense class="context-menu">
       <div v-for="(item, i) in content" :key="i">
         <v-list-item v-if="item.type=='item'" @mouseup="close(item.function)" :disabled="item.disabled" class="pr-1" link>

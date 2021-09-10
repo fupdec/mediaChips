@@ -1,5 +1,5 @@
 <template>
-  <v-menu :open-on-hover="false" offset-x nudge-top="3" min-width="150">
+  <v-menu :open-on-hover="false" offset-x nudge-top="3" min-width="150" :close-on-content-click="false">
     <template v-slot:activator="{ on, attrs }">
       <v-list-item class="pr-1" link v-bind="attrs" v-on="on" :disabled="item.disabled">
         <v-list-item-title> 

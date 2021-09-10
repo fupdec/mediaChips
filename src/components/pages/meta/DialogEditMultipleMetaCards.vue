@@ -180,7 +180,7 @@
         </v-toolbar>
         <v-card-text class="pt-4">
           <v-form v-model="validNewCard" ref="formNewCard" class="flex-grow-1" @submit.prevent>
-            <v-text-field v-model="nameForNewCard" :rules="[nameRules]" label="Name"/>
+            <v-text-field v-model="nameForNewCard" :rules="[nameRules]" label="Name" autofocus/>
           </v-form>
         </v-card-text>
       </v-card>
