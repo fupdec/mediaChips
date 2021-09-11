@@ -69,7 +69,7 @@ import vuescroll from 'vuescroll'
 import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
-  name: 'PerformerAppbar',
+  name: 'MetaCardAppbar',
   components: {
     VideosAppbarActions: () => import('@/components/elements/VideosAppbarActions.vue'),
     VideosAppbarCardView: () => import('@/components/elements/VideosAppbarCardView.vue'),
@@ -78,10 +78,7 @@ export default {
     vuescroll,
   },
   mixins: [MetaGetters],
-  mounted() {
-    this.$nextTick(function () {
-    })
-  },
+  mounted() { this.$nextTick(function () {}) },
   data: () => ({
     dialogDeleteMetaCard: false,
     deleteVideos: false,
@@ -101,15 +98,6 @@ export default {
       this.$store.state.Settings.videoFilters = []
     }
   },
-  watch: {
-  },
+  watch: {},
 }
 </script>
-
-
-<style lang="less" scoped>
-.colored {
-  border-radius: 3px;
-  background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red)
-}
-</style>
