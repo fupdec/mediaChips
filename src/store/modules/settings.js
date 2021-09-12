@@ -14,7 +14,7 @@ dbs.defaults({
   phrase: '',
   passwordHint: '',
   videoPreviewStatic: 'thumb',
-  videoPreviewHover: 'timeline',
+  videoPreviewHover: 'video',
   delayVideoPreview: 0,
   appColorLightPrimary: '#0BD58E',
   appColorLightSecondary: '#CD1ED1',
