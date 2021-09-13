@@ -35,16 +35,22 @@
         
         <v-divider v-if="metaList.length>0" vertical/>
 
-        <v-tooltip v-for="meta in metaList" :key="meta.id" top>
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" exact @click.middle="addNewTabMetaCards(meta)"
-              :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary" :title="meta.settings.name">
-              <span>{{meta.settings.name}}</span>
-              <v-icon>mdi-{{meta.settings.icon}}</v-icon>
-            </v-btn>
-          </template>
-          <span>{{meta.settings.name}}</span>
-        </v-tooltip>
+        <draggable v-model="metaList" v-bind="dragOptions" class="draggable">
+          <transition-group type="transition">
+            <div v-for="meta in metaList" :key="meta.id" class="btn-meta">
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-btn v-on="on" exact @click.middle="addNewTabMetaCards(meta)"
+                    :to="`/meta/?metaId=${meta.id}&tabId=default`" text color="secondary" :title="meta.settings.name">
+                    <span>{{meta.settings.name}}</span>
+                    <v-icon>mdi-{{meta.settings.icon}}</v-icon>
+                  </v-btn>
+                </template>
+                <span>{{meta.settings.name}}</span>
+              </v-tooltip>
+            </div>
+          </transition-group>
+        </draggable>
 
         <v-menu v-if="hiddenMetaList.length" offset-y top open-on-hover>
           <template v-slot:activator="{ on, attrs }">
@@ -101,6 +107,7 @@
 
 
 <script>
+import draggable from "vuedraggable"
 import vuescroll from 'vuescroll'
 
 export default {
@@ -108,9 +115,7 @@ export default {
   props: {
     foldersUpdated: Boolean,
   },
-  components: {
-    vuescroll,
-  },
+  components: { vuescroll, draggable },
   data: () => ({
     folderHovered: false,
     ops: {
@@ -121,13 +126,26 @@ export default {
         size: '4px',
       }
     },
+    dragOptions: { animation: 200, },
   }),
   computed: {
     tabId() { return this.$route.query.tabId },
     folders() { return this.$store.state.Settings.folders.filter(i=>i.watch) },
     foldersData() { return this.$store.state.foldersData },
     watchFolders() { return this.$store.state.Settings.watchFolders },
-    metaList() { return _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden!==true) },
+    metaList: {
+      get() { 
+        let list = _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden!==true)
+        return list.sort((a, b) => a.state.order - b.state.order)
+      },
+      set(value) { 
+        for (let i = 0; i < value.length; i++) {
+          const id = value[i].id
+          this.$store.getters.meta.find({id}).set('state.order', i).write()
+        }
+        this.$store.commit('updateComplexMetaListFromDb')
+      },
+    },
     hiddenMetaList() { return _.filter(this.$store.state.Meta.complexMetaList, i=>i.settings.hidden===true) },
   },
   methods: {
@@ -228,6 +246,18 @@ export default {
   }
   .btn-hidden {
     min-width: 50px;
+  }
+  .draggable {
+    display: flex;
+      height: 100%;
+    & > span {
+      display: flex;
+      height: 100%;
+    }
+  }
+  .btn-meta {
+    display: flex;
+    height: 100%;
   }
 }
 </style>
