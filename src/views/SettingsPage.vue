@@ -76,11 +76,13 @@
           </v-card>
 
           <v-card outlined class="mt-10 pa-4">
-            <div class="headline text-center"> Serving video files </div>
+            <div class="headline text-center"> Serving video files and database </div>
             <v-btn @click="dialogUpdatePath=true" block rounded color="secondary" class="mt-4">
               <v-icon left>mdi-pencil</v-icon> Update path manually in multiple videos </v-btn>
             <v-btn @click="findVideoDuplicates" block rounded color="secondary" class="mt-4">
               <v-icon left>mdi-content-copy</v-icon> Open duplicate videos in a new tab </v-btn>
+            <v-btn @click="openUserFolder" block rounded color="secondary" class="mt-4">
+              <v-icon left>mdi-folder-account</v-icon> Open folder with user files in explorer </v-btn>
           </v-card>
 
           <v-card outlined class="mt-10 pa-4">
@@ -787,9 +789,7 @@ export default {
     copyPathToUpload () {
       this.pathForUpdate = this.pathForSearch
     },
-    testPathToSystemPlayer () {
-      spawn(`${this.pathToSystemPlayer}`)
-    },
+    openUserFolder () { shell.openExternal(this.$store.getters.getPathToUserData) },
     savePass() {
       this.$store.dispatch('updateSettingsState', {key:'phrase', value:this.password})
     },
