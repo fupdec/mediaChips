@@ -1,5 +1,14 @@
 <template>
 	<div>
+    <!-- <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn @click="$store.state.navDrawer=!$store.state.navDrawer" v-on="on" icon tile>
+          <v-icon>mdi-file-tree</v-icon>
+        </v-btn>
+      </template>
+      <span>Toggle Folder Tree</span>
+    </v-tooltip> -->
+
     <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
       <template #activator="{ on: onMenu }">
         <v-tooltip bottom>
@@ -125,6 +134,9 @@ export default {
   mixins: [MetaGetters],
   beforeMount() {
     this.initVisibility()
+  },
+  beforeDestroy() {
+    this.$store.state.navDrawer = false
   },
   mounted() {
     this.$nextTick(function () {

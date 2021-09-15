@@ -5,6 +5,8 @@
     <AppBar />
 
     <SideBar v-if="navigationSide=='1'" @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
+    
+    <NavDrawer v-if="$store.state.navDrawer"/>
 
     <v-main app v-if="!disableRunApp">
       <router-view :key="$route.fullPath" />
@@ -169,6 +171,7 @@ export default {
     SideBar: () => import('@/components/app/SideBar.vue'),
     StatusBar: () => import('@/components/app/StatusBar.vue'),
     BottomBar: () => import('@/components/app/BottomBar.vue'),
+    NavDrawer: () => import('@/components/app/NavDrawer.vue'),
     DialogFolder: () => import('@/components/app/DialogFolder.vue'),
     ContextMenu: () => import('@/components/app/ContextMenu.vue'),
     VideosGridElements: () => import('@/components/elements/VideosGridElements.vue'),

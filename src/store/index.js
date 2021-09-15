@@ -35,6 +35,7 @@ export default new Vuex.Store({
     videoPlayerPlaylist: null,
     foldersData: [],
     dialogFolder: false,
+    navDrawer: false,
     updateFoldersData: 0,
     backgroundProcesses: [],
     swatches: ["#ff0000","#ffc800","#00ff0d","#00fbff","#1e00ff","#ff00cc"],
