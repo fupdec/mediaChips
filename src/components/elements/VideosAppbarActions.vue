@@ -122,11 +122,9 @@ export default {
     vuescroll,
   },
   mixins: [MetaGetters],
-  beforeMount() {
-    this.initSort()
-  },
   mounted() {
     this.$nextTick(function () {
+      this.initSort()
     })
   },
   data: () => ({
