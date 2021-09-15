@@ -1173,7 +1173,7 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   padding-top: 4px !important;
   padding-bottom: 4px !important;
   .wrapper {
-    max-height: 50vh;
+    max-height: calc(100vh - 100px);
   }
   .v-list-item {
     min-height: 30px !important;
