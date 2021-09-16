@@ -24,18 +24,30 @@
 
       <v-row v-if="videosNumber>0">
         <v-col cols="12">
-          <v-card>
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title class="headline mb-1">
-                  Total videos: {{videosNumber}}
-                </v-list-item-title>
-                <v-list-item-subtitle class="caption">
-                  {{$store.state.quantityRecentVideos}} recently added videos
-                </v-list-item-subtitle>
-              </v-list-item-content>
-            </v-list-item>
-            <div class="recent-videos-grid" @mousedown="stopSmoothScroll($event)"> 
+          <div class="d-flex flex-wrap justify-space-around">
+            <v-card outlined class="pa-2">
+              <v-icon>mdi-database</v-icon> Total Number of Videos:
+              <b v-text="$store.getters.videosTotal"/>
+            </v-card>
+            <v-card outlined class="pa-2">
+              <v-icon>mdi-harddisk</v-icon> Total File Size:
+              <b v-text="$store.getters.videosTotalSize"/>
+            </v-card>
+            <v-card outlined class="pa-2">
+              <v-icon>mdi-clock</v-icon> Total Duration:
+              <b v-text="$store.getters.videosTotalDuration"/>
+            </v-card>
+          </div>
+        </v-col>
+
+        <v-col cols="12">
+          <v-card outlined>
+            <v-toolbar color="secondary" height="40">
+              <v-spacer></v-spacer>
+              <div class="headline">{{$store.state.quantityRecentVideos}} recently added videos</div>
+              <v-spacer></v-spacer>
+            </v-toolbar>
+            <div class="previews-grid" @mousedown="stopSmoothScroll($event)"> 
               <v-hover v-for="video in recentVideos" :key="video.id">
                 <template v-slot:default="{ hover }">
                   <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video)" aspect-ratio="1">
@@ -52,30 +64,47 @@
             </div>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn class="ma-2 pr-4" color="secondary" to="/videos/:default?tabId=default" draggable="false" outlined rounded>
-                <v-icon left>mdi-video</v-icon> Open Videos</v-btn>
+              <v-btn class="pr-4" color="secondary" to="/videos/:default?tabId=default" draggable="false" rounded>
+                <v-icon left>mdi-video</v-icon> Show All Videos</v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+
+        <v-col cols="12" v-for="m in complexMetaAssignedToVideo" :key="m.id">
+          <v-card outlined>
+            <v-toolbar color="secondary" height="40">
+              <v-spacer></v-spacer>
+              <div class="headline">
+                Top 10 Most Viewed {{getMeta(m.id).settings.name}}
+              </div>
+              <v-spacer></v-spacer>
+            </v-toolbar>
+            <div class="previews-grid">
+              <v-card v-for="mc in getTopMetaCards(m.id)" :key="mc.id" outlined hover
+                @mousedown="stopSmoothScroll($event)"
+                @click="openMetaCardPage(m.id,mc.id)" 
+                @click.middle="addNewTabMetaCard(m.id,mc.id,mc.meta.name)">
+                <div class="pa-1">
+                  <v-avatar width="100" height="100" class="profile-avatar">
+                    <img :src="getImgMetaCard(m.id,mc.id)">
+                  </v-avatar>
+                </div>
+                <div class="caption px-1">{{mc.meta.name}} <b>{{mc.views||0}}</b></div>
+              </v-card>
+            </div>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn class="pr-4" color="secondary" to="/videos/:default?tabId=default" draggable="false" rounded>
+                <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon> Show All {{getMeta(m.id).settings.name}}</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
         </v-col>
 
         <v-col cols="12">
-          <v-card hover to="/settings" draggable="false">
-            <v-list-item>
-              <v-list-item-content>
-                <v-list-item-title class="">
-                  Add new videos, change theme colors and more
-                </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn class="ma-2 pr-4" color="secondary" to="/settings" draggable="false" outlined rounded> 
-                <v-icon left>mdi-cog</v-icon> Open settings</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
+          <v-btn class="mb-4" x-large block rounded color="secondary" to="/settings" draggable="false"> 
+            <v-icon left>mdi-cog</v-icon> Open settings</v-btn>
         </v-col>
       </v-row>
 
@@ -99,6 +128,7 @@ const shell = require('electron').shell
 import vuescroll from 'vuescroll'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'HomePage',
@@ -106,14 +136,12 @@ export default {
     vuescroll,
     CreateAllMeta: () => import("@/components/pages/meta/CreateAllMeta.vue"),
   },
-  mixins: [LabelFunctions], 
+  mixins: [LabelFunctions, MetaGetters], 
   mounted() {
     this.$nextTick(function () {
     })
   },
   data: ()=>({
-    seriesTags: [],
-    seriesWebsites: [],
     isScrollToTopVisible: false,
     createAllMeta: false,
     isAllMetaCreated: false,
@@ -126,12 +154,16 @@ export default {
     logoPath() { return path.join('file://', __static, '/icons/icon.png') },
     videosNumber() { return this.$store.getters.videos.value().length },
     metaNumber() { return this.$store.getters.meta.filter(i=>i.type!=='specific').value().length },
+    complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
   },
   methods: {
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
+    },
+    getTopMetaCards(metaId) {
+      return this.$store.getters.metaCards.filter({metaId}).orderBy(i=>i.views||0, ['desc']).value().slice(0,10)
     },
     getVideoThumbUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
@@ -157,6 +189,35 @@ export default {
       this.createAllMeta = false
       this.isAllMetaCreated = true
     },
+    getImgMetaCard(metaId, cardId) {
+      let imgPath = path.join(this.pathToUserData, '/media/meta/', `${metaId}/${cardId}_avatar.jpg`)
+      if (fs.existsSync(imgPath)) return 'file://' + imgPath
+      imgPath = path.join(this.pathToUserData, '/media/meta/', `${metaId}/${cardId}_main.jpg`)
+      if (fs.existsSync(imgPath)) return 'file://' + imgPath
+      else return 'file://' + path.join(__static, '/img/default.jpg')
+    },
+    openMetaCardPage(metaId, metaCardId) { this.$router.push(`/metacard/?metaId=${metaId}&cardId=${metaCardId}&tabId=default`) },
+    addNewTabMetaCard(metaId, metaCardId, metaCardName) {
+      let tabId = metaCardId
+      let tabName = metaCardName
+      let meta = this.getMeta(metaId)
+
+      if (this.$store.getters.tabsDb.find({id: tabId}).value()) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `Tab with ${meta.settings.nameSingular.toLowerCase()} "${tabName}" already exists`
+        })
+        return
+      }
+
+      let tab = {
+        name: tabName,
+        link: `/metacard/?metaId=${meta.id}&cardId=${tabId}&tabId=${tabId}`,
+        id: tabId,
+        icon: meta.settings.icon
+      }
+      this.$store.dispatch('addNewTab', tab)
+    },
     openLink(link) { shell.openExternal(link) },
   },
 }
@@ -167,11 +228,20 @@ export default {
   font-size: 10px;
   user-select: text;
 }
-.recent-videos-grid {
+.previews-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10%, 10%));
   .v-image {
     cursor: pointer;
+  }
+  .profile-avatar {
+    img {
+      height: auto;
+      border-radius: 0;
+      position: absolute;
+      top: 0;
+    }
+    position: relative;
   }
 }
 </style>

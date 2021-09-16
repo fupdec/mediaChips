@@ -81,7 +81,6 @@
         <div class="d-flex align-center">
           <v-icon size="20" left dark>mdi-harddisk</v-icon> Size:
           <span class="ml-1" v-text="$store.getters.videosTotalSize"/>
-          <!-- TODO fix wrong file size -->
         </div>
       </span>
     </v-tooltip>

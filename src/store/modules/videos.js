@@ -351,6 +351,17 @@ const Videos = {
       else total += ' B'
       return total
     },
+    videosTotalDuration: (state, store) => {
+      let durations = store.videos.map('duration').value()
+      let secs = 0
+      for (let i of durations) secs += i
+      let d = secs / 8.64e4 | 0
+      let h = (secs % 8.64e4) / 3.6e3 | 0
+      let m = (secs % 3.6e3)  / 60 | 0
+      let s = secs % 60
+      let z = n=> (n < 10? '0' : '') + n
+      return `${d}.${z(h)}:${z(m)}:${z(s)}`
+    },
     videosOnPage(state, store, rootState) {
       const videos = state.filteredVideos, 
             videosCount = rootState.Settings.videosPerPage
