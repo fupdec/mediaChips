@@ -90,6 +90,9 @@ export default {
       this.initFilters()
     })
   },
+  beforeDestroy() {
+    this.$store.state.clipboardMeta = {}
+  },
   data: () => ({
     isScrollToTopVisible: false,
   }),

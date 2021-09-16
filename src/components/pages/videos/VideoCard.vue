@@ -146,6 +146,7 @@
 
 <script>
 const { dialog } = require('electron').remote
+const { clipboard } = require('electron')
 const shell = require('electron').shell
 const fs = require('fs')
 const path = require('path')
@@ -304,10 +305,7 @@ export default {
         for (let m of vm.complexMetaAssignedToVideo) {
           const meta = vm.getMeta(m.id)
           let menuMetaCards = []
-          let videoId = vm.$store.getters.getSelectedVideos[0]
-          let video = vm.$store.getters.videos.find({id:videoId}).value()
-          let metaCardIds
-          if (video) metaCardIds = video[m.id]
+          let metaCardIds = vm.video[m.id]
           if (metaCardIds) for (let metaCardId of metaCardIds) {
             const card = vm.getCard(metaCardId)
             menuMetaCards.push({name: card.meta.name, type: 'item', icon: 'circle', color: card.meta.color, function: ()=>{vm.filterVideosBy(m.id,metaCardId)}})
@@ -317,6 +315,51 @@ export default {
         }
         if (menuMetaAssignedToVideo.length==0) menuMetaAssignedToVideo.push({name:'No assigned meta', type: 'item', function: ()=>{}, disabled: true})
         return menuMetaAssignedToVideo
+      }
+      function metaClipboard(metaId, type) {
+        if (type === 'copy') {
+          let metaCardIds = []
+          vm.$store.getters.getSelectedVideos.map(videoId => {
+            let video = vm.$store.getters.videos.find({id:videoId}).value()
+            if (video[metaId]) metaCardIds = [...metaCardIds, ...video[metaId] || []] 
+          })
+          metaCardIds = metaCardIds.filter((value, index, self) => (self.indexOf(value) === index))
+          vm.$store.state.clipboardMeta[metaId] = metaCardIds
+          let names = []
+          for (let i of vm.$store.state.clipboardMeta[metaId]) {
+            names.push(vm.getCard(i).meta.name)
+          }
+          clipboard.writeText(names.join(', '))
+        } else {
+          let clipboard = vm.$store.state.clipboardMeta[metaId]
+          let videoIds = vm.$store.getters.getSelectedVideos
+          if (clipboard === undefined || clipboard.length==0 || videoIds.length==0) return
+          videoIds.map(videoId => {
+            let newValues = []
+            let video = vm.$store.getters.videos.find({ id: videoId })
+            // replace video values with clipboard values
+            if (type === 'add') newValues = [...video.value()[metaId] || [], ...clipboard]
+            else if (type === 'replace') newValues = clipboard
+            // sort by name
+            let meta = vm.getMeta(metaId)
+            if (meta && meta.type === 'complex') newValues.sort((a,b)=>{
+              a = vm.getCard(a).meta.name
+              b = vm.getCard(b).meta.name
+              return a.localeCompare(b)
+            })
+            video.assign({[metaId]:newValues,edit:Date.now()}).write()
+          })
+          vm.$store.commit('updateVideos', videoIds)
+        }
+      }
+      function getMetaClipboard(type) {
+        let items = []
+        for (let m of vm.complexMetaAssignedToVideo) {
+          const meta = vm.getMeta(m.id)
+          items.push({name: meta.settings.name, type: 'item', icon: meta.settings.icon, function: ()=>{metaClipboard(m.id, type)}})
+        }
+        if (vm.complexMetaAssignedToVideo.length==0) items.push({name:'No added meta', type: 'item', function: ()=>{}, disabled: true})
+        return items
       }
       setTimeout(() => {
         this.$store.state.x = e.clientX
@@ -341,12 +384,16 @@ export default {
             { name: `Remove from Favorite`, type: 'item', icon: 'heart-remove', function: ()=>{this.changeFavorite(false)}},
           ]},
           { type: 'divider' },
+          { name: `Copy Meta to Clipboard`, type: 'menu', icon: 'content-copy', menu: getMetaClipboard('copy')},
+          { name: `Add Meta from Clipboard`, type: 'menu', icon: 'plus-circle-outline', menu: getMetaClipboard('add')},
+          { name: `Replace Meta from Clipboard`, type: 'menu', icon: 'reload-alert', menu: getMetaClipboard('replace')},
+          { name: `Clear Meta`, type: 'menu', icon: 'close-circle-outline', color: 'error', menu: getMetaClipboard('clear')},
+          { type: 'divider' },
           { name: `Filter Videos by`, type: 'menu', icon: 'filter', disabled: !this.isSelectedSingleVideo, menu: getFilterMeta()},
           { name: `Parse Metadata`, type: 'item', icon: 'text-box-search', function: ()=>{this.parseMetadata()}},
           { name: `Update File Information`, type: 'item', icon: 'information-variant', function: ()=>{this.updateFileInfo()}},
-          // TODO add copy/paste meta for fast changing and copy to clipboard function
           { type: 'divider' },
-          { name: `Add to Playlist`, type: 'item', icon: 'playlist-plus', function: ()=>{this.$store.state.Videos.dialogAddToPlaylist=true}, },
+          { name: `Add to Playlist...`, type: 'item', icon: 'playlist-plus', function: ()=>{this.$store.state.Videos.dialogAddToPlaylist=true}, },
           { name: `Add to "Watch later"`, type: 'item', icon: 'bookmark-plus', function: ()=>{this.watchLater()}, },
           { type: 'divider' },
           { name: `Reveal in File Explorer`, type: 'item', icon: 'folder-open', function: ()=>{this.revealInFileExplorer()}, disabled: !this.isSelectedSingleVideo},

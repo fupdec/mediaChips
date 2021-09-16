@@ -259,6 +259,7 @@ export default {
   },
   beforeDestroy() {
     this.$store.state.Settings.videoFilters = []
+    this.$store.state.clipboardMeta = {}
   },
   data: () => ({
     profile: [],
