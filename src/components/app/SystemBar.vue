@@ -9,32 +9,32 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
-          <v-list-item link @click="checkForUpdates">
+          <v-list-item link @mouseup="checkForUpdates">
             <v-list-item-title>
               <v-icon left size="18">mdi-update</v-icon> Check for Updates...
             </v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="$store.state.Settings.dialogScanVideos=true">
+          <v-list-item link @mouseup="$store.state.Settings.dialogScanVideos=true">
             <v-list-item-title>
               <v-icon left size="18">mdi-video-plus</v-icon> Add New Videos...
             </v-list-item-title>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
-          <v-list-item link @click="isPlayVideoInSystemPlayer=!isPlayVideoInSystemPlayer">
+          <v-list-item link @mouseup="isPlayVideoInSystemPlayer=!isPlayVideoInSystemPlayer">
             <v-list-item-title>
               <v-icon left size="18">mdi-television-play</v-icon> Play Video in System Player
             </v-list-item-title>
             <v-icon size="20" class="ml-6" :color="isPlayVideoInSystemPlayer?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
-          <v-list-item link @click="lock" :disabled="!$store.state.Settings.passwordProtection">
+          <v-list-item link @mouseup="lock" :disabled="!$store.state.Settings.passwordProtection">
             <v-list-item-title>
               <v-icon left size="18">mdi-lock</v-icon> Lock
               <span></span>
             </v-list-item-title>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
-          <v-list-item link @click="close">
+          <v-list-item link @mouseup="close">
             <v-list-item-title>
               <v-icon left size="18">mdi-logout</v-icon> Exit
             </v-list-item-title>
@@ -49,7 +49,7 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
-          <v-list-item class="pr-2" link @click="toggleDarkMode">
+          <v-list-item class="pr-2" link @mouseup="toggleDarkMode">
             <v-list-item-title>
               <v-icon left size="18">mdi-theme-light-dark</v-icon>
               <div class="shortcut"><span>Toggle Dark Mode</span></div>
@@ -67,19 +67,19 @@
             </template>
             
             <v-list dense class="context-menu">
-              <v-list-item @click="navigationSide = '1'" class="pr-1" link>
+              <v-list-item @mouseup="navigationSide = '1'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-left-variant</v-icon> Side
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='1'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="navigationSide = '2'" class="pr-1" link>
+              <v-list-item @mouseup="navigationSide = '2'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-bottom-variant</v-icon> Bottom
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='2'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="navigationSide = '0'" class="pr-1" link>
+              <v-list-item @mouseup="navigationSide = '0'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-border-none-variant</v-icon> Hidden
                 </v-list-item-title>
@@ -101,7 +101,7 @@
               <v-list-item class="pr-1" link>
                 <v-slider v-model="zoom" min="0.5" step="0.1" max="2" hide-details />
               </v-list-item>
-              <v-list-item @click="zoom=1" class="pr-5" link>
+              <v-list-item @mouseup="zoom=1" class="pr-5" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom
                 </v-list-item-title>
@@ -120,31 +120,31 @@
             </template>
             
             <v-list dense class="context-menu">
-              <v-list-item @click="gapSize = 'xs'" class="pr-1" link>
+              <v-list-item @mouseup="gapSize = 'xs'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-xs</v-icon> Extra Small
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='xs'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="gapSize = 's'" class="pr-1" link>
+              <v-list-item @mouseup="gapSize = 's'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-s</v-icon> Small
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='s'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="gapSize = 'm'" class="pr-1" link>
+              <v-list-item @mouseup="gapSize = 'm'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-m</v-icon> Medium
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='m'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="gapSize = 'l'" class="pr-1" link>
+              <v-list-item @mouseup="gapSize = 'l'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-l</v-icon> Large
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="gapSize=='l'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @click="gapSize = 'xl'" class="pr-1" link>
+              <v-list-item @mouseup="gapSize = 'xl'" class="pr-1" link>
                 <v-list-item-title>
                   <v-icon left size="18">mdi-size-xl</v-icon> Extra Large
                 </v-list-item-title>
@@ -152,7 +152,7 @@
               </v-list-item>
             </v-list>
           </v-menu>
-          <v-list-item class="pr-1" link @click="ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
+          <v-list-item class="pr-1" link @mouseup="ratingAndFavoriteInCard=!ratingAndFavoriteInCard">
             <v-list-item-title>
               <v-icon left size="18">mdi-star</v-icon> Rating and Favorite in Description
             </v-list-item-title>
@@ -168,20 +168,20 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
-          <v-list-item link @click="openLink('https://mediachips.app/docs')">
+          <v-list-item link @mouseup="openLink('https://mediachips.app/docs')">
             <v-list-item-title>
               <v-icon left size="18">mdi-book-open-page-variant-outline</v-icon> Documentation
             </v-list-item-title>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
-          <v-list-item link @click="toggleDevTools">
+          <v-list-item link @mouseup="toggleDevTools">
             <v-list-item-title>
               <v-icon left size="18">mdi-tools</v-icon> Toggle Developer Tools
               <span class="pl-8">Ctrl+Shift+I</span>
             </v-list-item-title>
           </v-list-item>
           <v-divider class="ma-1"></v-divider>
-          <v-list-item link @click="about">
+          <v-list-item link @mouseup="about">
             <v-list-item-title>
               <v-icon left size="18">mdi-information-variant</v-icon> About
             </v-list-item-title>
@@ -189,10 +189,10 @@
         </v-list>
       </v-menu>
 
-      <v-btn v-if="!disableRunApp" @click="back" text tile small width="46" height="28" class="ml-6" title="Back (Ctrl+Shift+←)">
+      <v-btn v-if="!disableRunApp" @mouseup="back" text tile small width="46" height="28" class="ml-6" title="Back (Ctrl+Shift+←)">
         <v-icon size="18" class="ma-0">mdi-arrow-left</v-icon>
       </v-btn>
-      <v-btn v-if="!disableRunApp" @click="forward" text tile small width="46" height="28" title="Forward (Ctrl+Shift+→)">
+      <v-btn v-if="!disableRunApp" @mouseup="forward" text tile small width="46" height="28" title="Forward (Ctrl+Shift+→)">
         <v-icon size="18" class="ma-0">mdi-arrow-right</v-icon>
       </v-btn>
     </div>
