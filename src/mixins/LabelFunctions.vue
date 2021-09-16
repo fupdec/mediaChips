@@ -1,5 +1,6 @@
 <script>
 export default {
+  // TODO check functions and remove this file
   methods: {
     videoLink(videoPath) {
       return `/video/:${this.getVideoId(videoPath)}?tabId=default`

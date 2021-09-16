@@ -333,7 +333,7 @@ export default {
         } else {
           let clipboard = vm.$store.state.clipboardMeta[metaId]
           let videoIds = vm.$store.getters.getSelectedVideos
-          if (clipboard === undefined || clipboard.length==0 || videoIds.length==0) return
+          if ((clipboard===undefined || clipboard.length==0) && type!=='clear' || videoIds.length==0) return
           videoIds.map(videoId => {
             let newValues = []
             let video = vm.$store.getters.videos.find({ id: videoId })
