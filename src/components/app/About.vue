@@ -2,7 +2,7 @@
   <v-card outlined class="pa-4">
     <div class="d-flex">
       <div>
-        <div>mediaChips v0.10.2-beta (Jade)</div>
+        <div>mediaChips v0.10.3-beta</div>
         <div class="text--secondary">by fupdec</div>
       </div>
       <v-spacer></v-spacer>
@@ -33,7 +33,7 @@
         <span @click="openLink('https://github.com/vuetifyjs/vuetify')" class="link">vuetify</span>
         <span @click="openLink('https://github.com/vuejs/vuex')" class="link">vuex</span>
         <span @click="openLink('https://www.ffmpeg.org/')" class="link">FFmpeg</span>
-        <span @click="openLink('https://github.com/whyboris/Video-Hub-App')" class="link">Video Hub App</span>
+        <span @click="openLink('https://github.com/whyboris/Video-Hub-App')" class="link">VideoHubApp</span>
         <span @click="openLink('https://github.com/apexcharts')" class="link">apexcharts</span>
         <span @click="openLink('https://github.com/archiverjs/node-archiver')" class="link">archiver</span>
         <span @click="openLink('https://github.com/axios/axios')" class="link">axios</span>
@@ -81,3 +81,10 @@ export default {
   },
 }
 </script>
+
+
+<style lang="scss">
+.link {
+  margin-right: 5px;
+}
+</style>
