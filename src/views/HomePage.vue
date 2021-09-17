@@ -4,8 +4,8 @@
       <v-icon x-large left>mdi-home-outline</v-icon> Home </div>
 
     <v-container class="text-center">
-      <v-row>
-        <v-col v-if="videosNumber==0" cols="12">
+      <v-row v-if="videosNumber==0">
+        <v-col cols="12">
           <img alt="mediaChips" width="200" height="200" :src="logoPath">
           <h2 class="my-8">Welcome to mediaChips application!</h2>
       
@@ -15,11 +15,18 @@
             <v-btn @click="createAllMeta=true" :disabled="isAllMetaCreated" class="mb-4" color="primary" x-large rounded block>
               <v-icon left>mdi-auto-fix</v-icon> Create all meta </v-btn>
           </div>
+      
+          <div v-if="isAllMetaCreated&&showAdultContent" cols="12">
+            <div class="mb-4"> If you plan on using the app for adult content, then this feature will come in handy. </div>
+            <v-btn @click="dialogAddMetaCardsTemplate=true" class="mb-4" color="primary" x-large rounded block>
+              <v-icon left>mdi-plus</v-icon> Add most popular tags, performers, websites </v-btn>
+          </div>
 
           <div class="mb-4 mt-10">Then add videos from your computer by selecting folders.</div>
-          <v-btn @click="$store.state.Settings.dialogScanVideos=true" color="primary" x-large rounded block>
+          <v-btn @click="$store.state.Settings.dialogScanVideos=true" color="primary" class="mb-6" x-large rounded block>
             <v-icon left>mdi-plus</v-icon> Add videos </v-btn>
         </v-col>
+        <DialogAddMetaCardsTemplate v-if="dialogAddMetaCardsTemplate" :dialog="dialogAddMetaCardsTemplate" @finish="dialogAddMetaCardsTemplate=false"/>
       </v-row>
 
       <v-row v-if="videosNumber>0">
@@ -166,7 +173,7 @@
       </div>
     </v-container>
 
-    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="closeDialogCreateAllMeta" @close="createAllMeta=false"/>
+    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="finishCreationAllMeta" @close="createAllMeta=false"/>
 
     <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
   </vuescroll>
@@ -189,6 +196,7 @@ export default {
     vuescroll,
     apexchart: VueApexCharts,
     CreateAllMeta: () => import("@/components/pages/meta/CreateAllMeta.vue"),
+    DialogAddMetaCardsTemplate: () => import("@/components/pages/meta/DialogAddMetaCardsTemplate.vue"),
   },
   mixins: [LabelFunctions, MetaGetters], 
   beforeMount() {
@@ -208,6 +216,7 @@ export default {
     customization: false,
     series: [],
     chartOptions: {},
+    dialogAddMetaCardsTemplate: false,
   }),
   computed: {
     settings() { return this.$store.getters.settings.value() },
@@ -232,6 +241,7 @@ export default {
       for (let widget in this.widgets) if (this.widgets[widget]===true) allHidden = false
       return allHidden 
     },
+    showAdultContent() { return this.$store.state.Settings.showAdultContent },
   },
   methods: {
     initVideosStat(days) {
@@ -296,7 +306,7 @@ export default {
         ipcRenderer.send('openPlayer', data)
       }
     },
-    closeDialogCreateAllMeta() {
+    finishCreationAllMeta() {
       this.createAllMeta = false
       this.isAllMetaCreated = true
     },
