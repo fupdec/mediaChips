@@ -19,7 +19,7 @@
   "main": "background.js",
   "dependencies": {
     "@simonwep/selection-js": "^2.0.1",
-    "apexcharts": "^3.25.0",
+    "apexcharts": "^3.28.3",
     "archiver": "^5.3.0",
     "axios": "^0.21.1",
     "cheerio": "^1.0.0-rc.10",
@@ -44,7 +44,7 @@
     "string-crypto": "^2.0.1",
     "vue": "^2.6.12",
     "vue-advanced-cropper": "^1.4.0",
-    "vue-apexcharts": "^1.6.0",
+    "vue-apexcharts": "^1.6.2",
     "vue-country-flag": "^2.0.3",
     "vue-drag-drop": "^1.1.4",
     "vue-filepond": "^6.0.3",

@@ -76,6 +76,7 @@ dbs.defaults({
   showIconsInsteadTextOnFiltersChips: false,
   showExperimentalFeatures: false,
   databaseVersion: app.getVersion(),
+  widgets: {}
 }).write()
 
 const Settings = {
@@ -151,6 +152,7 @@ const Settings = {
     showIconsInsteadTextOnFiltersChips: dbs.get('showIconsInsteadTextOnFiltersChips').value(),
     showExperimentalFeatures: dbs.get('showExperimentalFeatures').value(),
     databaseVersion: dbs.get('databaseVersion').value(),
+    widgets: dbs.get('widgets').value(),
   }),
   mutations: {
     closeTab(state, tabId) { state.tabs = _.filter(state.tabs, tab => tab.id !== tabId) },

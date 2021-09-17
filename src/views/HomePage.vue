@@ -24,6 +24,19 @@
 
       <v-row v-if="videosNumber>0">
         <v-col cols="12">
+          <v-card>
+            <v-toolbar color="secondary">
+              <div class="headline">Number of videos added and edited per days</div>
+              <v-spacer></v-spacer>
+              <v-btn @click="initVideosStat(daysBefore)" outlined>All time</v-btn>
+              <v-btn @click="initVideosStat(30)" outlined class="ml-4">Last Month</v-btn>
+              <v-btn @click="initVideosStat(7)" outlined class="ml-4">Last Week</v-btn>
+            </v-toolbar>
+            <apexchart type="area" height="250" class="pt-2" :options="chartOptions" :series="series"/>
+          </v-card>   
+        </v-col>
+      
+        <v-col cols="12">
           <div class="d-flex flex-wrap justify-space-around">
             <v-card outlined class="pa-2">
               <v-icon>mdi-database</v-icon> Total Number of Videos:
@@ -129,14 +142,19 @@ import vuescroll from 'vuescroll'
 import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
 import MetaGetters from '@/mixins/MetaGetters'
+import VueApexCharts from 'vue-apexcharts'
 
 export default {
   name: 'HomePage',
   components: {
     vuescroll,
+    apexchart: VueApexCharts,
     CreateAllMeta: () => import("@/components/pages/meta/CreateAllMeta.vue"),
   },
   mixins: [LabelFunctions, MetaGetters], 
+  beforeMount() {
+    this.initVideosStat(7)
+  },
   mounted() {
     this.$nextTick(function () {
     })
@@ -145,6 +163,9 @@ export default {
     isScrollToTopVisible: false,
     createAllMeta: false,
     isAllMetaCreated: false,
+    // stats
+    series: [],
+    chartOptions: {},
   }),
   computed: {
     settings() { return this.$store.getters.settings.value() },
@@ -155,16 +176,46 @@ export default {
     videosNumber() { return this.$store.getters.videos.value().length },
     metaNumber() { return this.$store.getters.meta.filter(i=>i.type!=='specific').value().length },
     complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
+    daysBefore() { 
+      let v = this.$store.getters.videos.orderBy(i=>i.date, ['asc']).value().splice(0,1)
+      if (v.length) return Math.floor((Date.now() - v[0].date)/(60*60*1000*24))
+      else return 7
+    },
+    darkMode() { return this.$store.state.Settings.darkMode },
   },
   methods: {
+    initVideosStat(days) {
+      let start = new Date()
+      start.setHours(0,0,0,0)
+      let end = new Date()
+      end.setHours(23,59,59,999)
+      let numAdded = []
+      let numEdited = []
+      let dates = []
+      for (let i = 0; i < days; i++) {
+        let priorStart = new Date().setDate(start.getDate()-i+1)
+        let priorEnd = new Date().setDate(end.getDate()-i)
+        let added = this.$store.getters.videos.filter(v=>priorStart>=v.date&&priorEnd<=v.date).value()
+        let edited = this.$store.getters.videos.filter(v=>priorStart>=v.edit&&priorEnd<=v.edit).value()
+        numAdded.push(added.length)
+        numEdited.push(edited.length)
+        dates.push(priorEnd)
+      }
+      
+      this.series = [{name:'Added',data:numAdded},{name:'Edited',data:numEdited}]
+      this.chartOptions = {
+        theme: { mode: this.darkMode ? "dark" : "light"},
+        colors:['#00d838', '#1e79e9'],
+        dataLabels: { enabled: false },
+        xaxis: { type: 'datetime', categories: dates },
+      }
+    },
     stopSmoothScroll(event) {
       if(event.button != 1) return
       event.preventDefault()
       event.stopPropagation()
     },
-    getTopMetaCards(metaId) {
-      return this.$store.getters.metaCards.filter({metaId}).orderBy(i=>i.views||0, ['desc']).value().slice(0,10)
-    },
+    getTopMetaCards(metaId) { return this.$store.getters.metaCards.filter({metaId}).orderBy(i=>i.views||0, ['desc']).value().slice(0,10) },
     getVideoThumbUrl(videoId) {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${videoId}.jpg`)
       return 'file://' + this.checkVideoImageExist(imgPath)
@@ -220,6 +271,9 @@ export default {
     },
     openLink(link) { shell.openExternal(link) },
   },
+  watch: {
+    darkMode() { setTimeout(() => { this.initVideosStat(7) }, 1000) },
+  }
 }
 </script>
 
