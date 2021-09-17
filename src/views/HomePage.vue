@@ -28,6 +28,12 @@
             <v-icon left>mdi-cog</v-icon> {{customization?'Finish Customization':'Customize widgets'}} </v-btn>
         </v-col>
 
+        <v-col v-if="isAllWidgetsHidden" cols="12">
+          <v-alert type="info" outlined text class="ma-0">
+            All widgets are hidden. Set up at least one of the widgets to show for a more attractive look
+          </v-alert>
+        </v-col>
+
         <v-col v-if="customization" cols="12">
           <v-card outlined>
             <v-card-actions>
@@ -38,8 +44,8 @@
             </v-card-actions>
           </v-card>
         </v-col>
-        <v-col cols="12">
-          <v-card v-if="customization||widgets.graphVideos">
+        <v-col v-if="customization||widgets.graphVideos" cols="12">
+          <v-card outlined>
             <v-toolbar color="secondary">
               <div class="headline">Number of videos added and edited per days</div>
               <v-spacer></v-spacer>
@@ -61,8 +67,8 @@
             </v-card-actions>
           </v-card>
         </v-col>
-        <v-col cols="12">
-          <div v-if="customization||widgets.numberVideos" class="d-flex flex-wrap justify-space-around">
+        <v-col v-if="customization||widgets.numberVideos" cols="12">
+          <div class="d-flex flex-wrap justify-space-around">
             <v-card outlined class="pa-2">
               <v-icon>mdi-database</v-icon> Total Number of Videos:
               <b v-text="$store.getters.videosTotal"/>
@@ -88,8 +94,8 @@
             </v-card-actions>
           </v-card>
         </v-col>
-        <v-col cols="12">
-          <v-card v-if="customization||widgets.recentVideos" outlined>
+        <v-col v-if="customization||widgets.recentVideos" cols="12">
+          <v-card outlined>
             <v-toolbar color="secondary">
               <div class="headline">{{numberRecentVideos}} recently added videos</div>
               <v-spacer></v-spacer>
@@ -220,6 +226,11 @@ export default {
     widgets: {
       get() { return this.$store.state.Settings.widgets },
       set(value) { this.$store.dispatch('updateSettingsState', {key:'widgets', value}) },
+    },
+    isAllWidgetsHidden() {
+      let allHidden = true
+      for (let widget in this.widgets) if (this.widgets[widget]===true) allHidden = false
+      return allHidden 
     },
   },
   methods: {
