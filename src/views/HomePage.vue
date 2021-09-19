@@ -245,21 +245,23 @@ export default {
   },
   methods: {
     initVideosStat(days) {
-      let start = new Date()
-      start.setHours(0,0,0,0)
-      let end = new Date()
-      end.setHours(23,59,59,999)
+      let today = new Date()
       let numAdded = []
       let numEdited = []
       let dates = []
       for (let i = 0; i < days; i++) {
-        let priorStart = new Date().setDate(start.getDate()-i+1)
-        let priorEnd = new Date().setDate(end.getDate()-i)
-        let added = this.$store.getters.videos.filter(v=>priorStart>=v.date&&priorEnd<=v.date).value()
-        let edited = this.$store.getters.videos.filter(v=>priorStart>=v.edit&&priorEnd<=v.edit).value()
+        let ms = new Date().setDate(today.getDate()-i)
+        let start = new Date(ms)
+        let end = new Date(ms)
+        start.setHours(0,0,0,0)
+        dates.push(start.getTime() - start.getTimezoneOffset() * 60 * 1000)
+        start = start.getTime()
+        end.setHours(23,59,59,999)
+        end = end.getTime()
+        let added = this.$store.getters.videos.filter(v=>v.date>=start&&v.date<=end).value()
+        let edited = this.$store.getters.videos.filter(v=>v.edit>=start&&v.edit<=end).value()
         numAdded.push(added.length)
         numEdited.push(edited.length)
-        dates.push(priorEnd)
       }
       
       this.series = [{name:'Added',data:numAdded},{name:'Edited',data:numEdited}]
