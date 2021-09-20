@@ -338,8 +338,10 @@ export default {
             let newValues = []
             let video = vm.$store.getters.videos.find({ id: videoId })
             // replace video values with clipboard values
-            if (type === 'add') newValues = [...video.value()[metaId] || [], ...clipboard]
-            else if (type === 'replace') newValues = clipboard
+            if (type === 'add') {
+              newValues = [...video.value()[metaId] || [], ...clipboard]
+              newValues = [...new Set(newValues)]
+            } else if (type === 'replace') newValues = clipboard
             // sort by name
             let meta = vm.getMeta(metaId)
             if (meta && meta.type === 'complex') newValues.sort((a,b)=>{
