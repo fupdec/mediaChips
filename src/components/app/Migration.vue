@@ -14,7 +14,7 @@
           <v-alert type="info" text outlined class="mb-10">Make sure you have a backup before migrating
           </v-alert>
           <ManageBackups />
-          <v-btn @click="migrate" color="success" block x-large rounded class="mt-6"> <v-icon class="mr-4" large>mdi-database-sync</v-icon> Start the migration process</v-btn>
+          <v-btn @click="start" color="success" block x-large rounded class="mt-6"> <v-icon class="mr-4" large>mdi-database-sync</v-icon> Start the migration process</v-btn>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -38,6 +38,7 @@
 <script>
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
+const {app} = require('electron').remote
 
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 
@@ -55,15 +56,44 @@ export default {
   data: () => ({
     dialog: false,
     dialogFinish: false,
+    versions: ['0.10.4'],
   }),
   computed: {
+    databaseVersion() { return this.$store.state.Settings.databaseVersion },
+    actualVersion() { return app.getVersion() },
   },
   methods: {
-    migrate() {
-      // this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:app.getVersion()})
+    start() {
+      let versionsForMigration = this.getVersionsForMigration()
+      if (versionsForMigration.includes('0.10.4')) {
+        let metaCareer = this.$store.getters.meta.find({id:'career'}).value()
+        if (!metaCareer) this.$store.getters.meta.push({
+          "id": "career",
+          "type": "specific",
+          "settings": {
+            "name": "Career status",
+            "icon": "list-status"
+          }
+        }).write()
+      }
+      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:this.actualVersion})
       this.dialogFinish = true
     },
-    close() {win.close()},
+    getVersionsForMigration() {
+      function compareVersion(first, second) {
+        second = second.split('.').map( s => s.padStart(10) ).join('.')
+        first = first.split('.').map( s => s.padStart(10) ).join('.')
+        return second > first
+      }
+      let versionsForMigration = []
+      for (let i = 0; i < this.versions.length; i++) {
+        let version = this.versions[i]
+        let isVersionOld = compareVersion(this.databaseVersion, version) 
+        if (isVersionOld) versionsForMigration = this.versions.slice(i)
+      }
+      return versionsForMigration
+    },
+    close() { win.close() },
   },
 }
 </script>

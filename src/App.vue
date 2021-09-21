@@ -184,13 +184,12 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
+      this.initTheme()
       this.version = app.getVersion()
       this.$store.state.pathToUserData = app.getPath('userData')
-      // if (this.databaseVersion !== this.version) { this.migration = true; return }
-      if (this.databaseVersion !== this.version) this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:this.version})
+      if (this.databaseVersion !== this.version) { this.migration = true; return }
       if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
       this.$router.push({ path: '/home', query: { name: 'Home' } })
-      this.initTheme()
       this.runAutoUpdateDataFromVideos()
       if (this.$store.state.Settings.updateDataFromVideosOnStart) this.updateDataFromVideos()
       // password

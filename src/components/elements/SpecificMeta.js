@@ -111,6 +111,14 @@ const SpecificMeta = [
       "icon": "calendar-edit"
     }
   },
+  {
+    "id": "career",
+    "type": "specific",
+    "settings": {
+      "name": "Career status",
+      "icon": "list-status"
+    }
+  },
 ]
 
 module.exports = SpecificMeta
