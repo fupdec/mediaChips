@@ -353,7 +353,15 @@ const Meta = {
       let sortDirection = state.sortDirection || 'asc'
       if (sortBy == 'name') mc = mc.orderBy(i=>i.meta.name.toLowerCase(), [sortDirection])
       else if (['date','edit','videos','views'].includes(sortBy)) mc = mc.orderBy(i=>i[sortBy]||false, [sortDirection])
-      else mc = mc.orderBy(i=>i.meta[sortBy]||false, [sortDirection])
+      else {
+        let meta = getters.meta.find({id:sortBy}).value()
+        let defaultValue = false
+        if (meta) {
+          if (meta.dataType == 'date') defaultValue = '' 
+          else if (meta.dataType=='number' || meta.dataType=='rating') defaultValue = 0 
+        }
+        mc = mc.orderBy(i=>i.meta[sortBy]||defaultValue, [sortDirection])
+      } 
 
       state.filteredMeta = mc.value()
       dispatch('saveStateOfMeta')

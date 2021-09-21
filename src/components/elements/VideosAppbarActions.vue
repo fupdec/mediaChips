@@ -70,19 +70,30 @@
           <span>Sort Videos</span>
         </v-tooltip>
       </template>
-      <v-card>
-        <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
-          <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
+        <v-card class="d-flex">
+          <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
-                <v-icon>mdi-{{s.icon}}</v-icon>
-                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='desc'">mdi-arrow-up-thick</v-icon>
-                <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='asc'">mdi-arrow-down-thick</v-icon>
+              <v-btn v-on="on" @click="toggleSortDirection" outlined height="48" width="48" min-width="48" class="mr-4">
+                <v-icon>mdi-arrow-{{sortDirection=='desc'?'up':'down'}}-thick</v-icon>
               </v-btn>
             </template>
-            <span>Sort by {{s.tip}}</span>
+            <span>Toggle Sort Direction</span>
           </v-tooltip>
-        </v-btn-toggle>
+
+          <vuescroll>
+            <v-card-text class="pa-0">
+              <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
+                <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
+                      <v-icon>mdi-{{s.icon}}</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Sort by {{s.tip}}</span>
+                </v-tooltip>
+              </v-btn-toggle>
+            </v-card-text>
+          </vuescroll>
       </v-card>
     </v-menu>
 
@@ -187,10 +198,6 @@ export default {
       if (sortObject) return `mdi-${sortObject.icon}`
       else return 'mdi-help'
     },
-    sortButtons: {
-      get() { return this.$store.state.Settings.videoSortBy },
-      set(value) { this.$store.state.Settings.videoSortBy = value },
-    },
     sortDirection() { return this.$store.state.Settings.videoSortDirection },
     isTreeEmpty() { return !this.$store.state.Videos.tree.length },
     treeBadgeContent() { return this.$store.state.Videos.tree.length },
@@ -242,7 +249,7 @@ export default {
       for (const m of this.metaAssignedToVideos) {
         if (m.type === 'simple') {
           let sm = this.getMeta(m.id)
-          if (sm.dataType === 'rating') this.sort.push({ 
+          if (['rating','date','number'].includes(sm.dataType)) this.sort.push({ 
             name: sm.id, 
             icon: sm.settings.icon, 
             tip: sm.settings.name 
@@ -254,6 +261,11 @@ export default {
     sortMetaCards() {
       setTimeout(()=>{ 
         this.$store.state.Settings.videoSortBy = this.sortBy
+        this.$store.dispatch('filterVideos') 
+      }, 100)
+    },
+    toggleSortDirection() {
+      setTimeout(()=>{         
         this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc'?'desc':'asc'
         this.$store.dispatch('filterVideos') 
       }, 100)

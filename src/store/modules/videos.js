@@ -166,7 +166,15 @@ const Videos = {
       let sortBy = rootState.Settings.videoSortBy || 'name'
       let sortDirection = rootState.Settings.videoSortDirection || 'asc'
       if (sortBy === 'name') videos = videos.orderBy(i=>path.basename(i.path), [sortDirection])
-      else videos = videos.orderBy(i=>i[sortBy]||false, [sortDirection])
+      else {
+        let meta = getters.meta.find({id:sortBy}).value()
+        let defaultValue = false
+        if (meta) {
+          if (meta.dataType == 'date') defaultValue = '' 
+          else if (meta.dataType=='number' || meta.dataType=='rating') defaultValue = 0 
+        }
+        videos = videos.orderBy(i=>i[sortBy]||defaultValue, [sortDirection])
+      } 
       // if (state.filters.quality) {
       //   let quality = state.filters.quality
       //   if (quality.length) {

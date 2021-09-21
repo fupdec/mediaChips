@@ -93,65 +93,54 @@
             <span>Sort Playlists</span>
           </v-tooltip>
         </template>
-        <v-card>
-          <v-btn-toggle v-model="sortButtons" mandatory class="group-buttons-sort" color="primary">
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn outlined @click="toggleSortDirection" value="name" v-on="on">
-                  <v-icon>mdi-alphabetical-variant</v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='name' && sortDirection=='desc'">
-                    mdi-arrow-up-thick
-                  </v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='name' && sortDirection=='asc'">
-                    mdi-arrow-down-thick
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Sort by Name</span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn outlined @click="toggleSortDirection" value="date" v-on="on">
-                  <v-icon>mdi-calendar-plus</v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='date' && sortDirection=='desc'">
-                    mdi-arrow-up-thick
-                  </v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='date' && sortDirection=='asc'">
-                    mdi-arrow-down-thick
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Sort by Date Added</span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn outlined @click="toggleSortDirection" value="edit" v-on="on">
-                  <v-icon>mdi-calendar-edit</v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='edit' && sortDirection=='desc'">
-                    mdi-arrow-up-thick
-                  </v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='edit' && sortDirection=='asc'">
-                    mdi-arrow-down-thick
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Sort by Date of Editing</span>
-            </v-tooltip>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn outlined @click="toggleSortDirection" value="videos" v-on="on">
-                  <v-icon>mdi-video-outline</v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='videos' && sortDirection=='desc'">
-                    mdi-arrow-up-thick
-                  </v-icon>
-                  <v-icon right size="14" v-if="sortButtons=='videos' && sortDirection=='asc'">
-                    mdi-arrow-down-thick
-                  </v-icon>
-                </v-btn>
-              </template>
-              <span>Sort by Number of Videos</span>
-            </v-tooltip>
-          </v-btn-toggle>
+        <v-card class="d-flex">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" @click="toggleSortDirection" outlined height="48" width="48" min-width="48" class="mr-4">
+                <v-icon>mdi-arrow-{{sortDirection=='desc'?'up':'down'}}-thick</v-icon>
+              </v-btn>
+            </template>
+            <span>Toggle Sort Direction</span>
+          </v-tooltip>
+          
+          <vuescroll>
+            <v-card-text class="pa-0">
+              <v-btn-toggle v-model="sortBy" mandatory class="group-buttons-sort" color="primary">
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn outlined value="name" v-on="on">
+                      <v-icon>mdi-alphabetical-variant</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Sort by Name</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn outlined value="date" v-on="on">
+                      <v-icon>mdi-calendar-plus</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Sort by Date Added</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn outlined value="edit" v-on="on">
+                      <v-icon>mdi-calendar-edit</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Sort by Date of Editing</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn outlined value="videos" v-on="on">
+                      <v-icon>mdi-video-outline</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Sort by Number of Videos</span>
+                </v-tooltip>
+              </v-btn-toggle>
+            </v-card-text>
+          </vuescroll>
         </v-card>
       </v-menu>
 
@@ -181,9 +170,12 @@
 <script>
 const shortid = require('shortid')
 
+import vuescroll from 'vuescroll'
+
 export default {
   name: 'PlaylistsAppbar',
   components: {
+    vuescroll,
     DialogFilterPlaylists: () => import('@/components/pages/playlists/DialogFilterPlaylists.vue'),
   },
   mounted() {
@@ -219,15 +211,18 @@ export default {
       return filters.length
     },
     sortIcon() {
-      if (this.sortButtons=='name') return 'mdi-alphabetical-variant'
-      if (this.sortButtons=='date') return 'mdi-calendar-plus'
-      if (this.sortButtons=='edit') return 'mdi-calendar-edit'
-      if (this.sortButtons=='videos') return 'mdi-video-outline'
+      if (this.sortBy=='name') return 'mdi-alphabetical-variant'
+      if (this.sortBy=='date') return 'mdi-calendar-plus'
+      if (this.sortBy=='edit') return 'mdi-calendar-edit'
+      if (this.sortBy=='videos') return 'mdi-video-outline'
       return 'mdi-help'
     },
-    sortButtons: {
+    sortBy: {
       get() { return this.$store.state.Settings.playlistSortBy },
-      set(value) { this.$store.state.Settings.playlistSortBy = value },
+      set(value) { 
+        this.$store.state.Settings.playlistSortBy = value
+        setTimeout(()=>{ this.$store.dispatch('filterPlaylists') }, 200)
+      },
     },
     sortDirection() { return this.$store.state.Settings.playlistSortDirection },
     searchStringComputed() {
@@ -315,9 +310,7 @@ export default {
     },
     toggleSortDirection() {
       this.$store.state.Settings.playlistSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
-      setTimeout(()=>{
-        this.$store.dispatch('filterPlaylists')
-      },200)
+      setTimeout(()=>{ this.$store.dispatch('filterPlaylists') }, 200)
     },
     selectAllPlaylists() {
       this.$store.state.Playlists.selection.clearSelection()
