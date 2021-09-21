@@ -100,8 +100,27 @@
                     <div v-else>-</div>
                   </div>
                 </v-col>
+                <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
+                  <b class="mr-4"> Career status </b>
+                  <v-chip :color="getCareer('color')" class="overline" label light>{{getCareer('status')}}</v-chip> 
+                </v-col>
+                <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
+                  <div class="career">
+                    <div class="text">
+                      <div class="bold-text"> 
+                        <span v-if="getCareer('total')>0">{{getCareer('total')}}</span>
+                        <span v-else>???</span>
+                        year<span v-if="getCareer('total')>1">s</span>
+                      </div> 
+                      <br><div class="light-text">in the business</div>
+                    </div>
+                    <div class="start value">{{getCareer('start')}}</div>
+                    <div class="end value">{{getCareer('end')}}</div>
+                    <div class="line"></div>
+                  </div>
+                </v-col>
                 <!-- Parse meta from cards -->
-                <v-col v-for="(m,i) in metaInCard" :key="i" cols="12" md="4" sm="6" class="d-flex align-start">
+                <v-col v-for="(m,i) in metaForProfile" :key="i" cols="12" md="4" sm="6" class="d-flex align-start">
                   <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
                   <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
                   <v-chip-group v-if="m.type=='complex'" column class="chips-remove-padding">
@@ -123,6 +142,7 @@
                         :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
                     </span>
                     <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
+                    <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}} {{getAge(card.meta[m.id])}}</span>
                     <span v-else>{{card.meta[m.id]}}</span>
                   </div>
                 </v-col>
@@ -344,12 +364,58 @@ export default {
     filters() { return this.$store.state.Settings.videoFilters },
     isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id: this.meta.id}) !== undefined },
     complexMetaAssignedToVideos() { return _.filter(this.$store.state.Settings.metaAssignedToVideos, {type:'complex'}) },
+    metaForProfile() { 
+      let careerOption = this.meta.settings.career || false
+      function checkMetaForCareer(meta) {
+        if (!careerOption) return true
+        if (meta.scraperField=='career_end' || meta.scraperField=='career_start') return false
+        else return true
+      }
+      return this.metaInCard.filter(i=>checkMetaForCareer(i))
+    },
   },
   methods: {
     updateViews() {
       let views = this.card.views || 0
       ++views
       this.$store.getters.metaCards.find({id:this.card.id}).assign({views}).write()
+    },
+    getCareer(dataType) {
+      let data = 'grey'
+      let startMeta = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='career_start')
+      let endMeta = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='career_end')
+      if (!startMeta || !endMeta) return 'red'
+      let start = this.card.meta[startMeta.id]
+      let end = this.card.meta[endMeta.id]
+      start = Number(start || 0)
+      end = Number(end || 0)
+      if (dataType == 'color') {
+        if (start != 0 && end == 0) data = 'green'
+        else if (start != 0 && end != 0) data = 'orange'
+        else if (start == 0 && end == 0) data = 'grey'
+      } else if (dataType == 'start') data = start == 0 ? '???' : start
+      else if (dataType == 'end') data = end == 0 ? start == 0 ? '???' : 'Now' : end
+      else if (dataType == 'total') {
+        if (start!=0 && end!=0) data = end - start
+        else if (start == this.currentYear) data = 1
+        else if (start!=0 && end==0) data = this.currentYear - start
+        else data = 0
+      } else if (dataType == 'status') {
+        if (start != 0 && end == 0) data = 'Active'
+        else if (start != 0 && end != 0) data = 'Retired'
+        else if (start == 0 && end == 0) data = 'Unknown'
+      }
+      return data
+    },
+    getAge(date) {
+      let birthday = date || ''
+      let age = 0
+      if (birthday.length) {
+        age = birthday.match(/\d{4}/)[0]
+        age = this.currentYear - Number(age)
+        age = `(${age} y.o.)`
+      } else { age = '??' }
+      return age
     },
     removeAllFilters() {
       // TODO fix this
@@ -566,17 +632,6 @@ export default {
     z-index: 3;
     position: absolute;
   }
-  .profile-complete-label {
-    position: absolute;
-    right: 0;
-  }
-  .performer-meter {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 4px;
-  }
   .bookmark-text {
     word-break: break-all;
   }
@@ -648,35 +703,6 @@ export default {
     padding: 0;
   }
 }
-.age-container {
-  font-weight: 300;
-  letter-spacing: 0.5px;
-  .age {
-    i {
-      font-style: normal;
-      font-size: 14px;
-    }
-    span {
-      font-size: 17px;
-      font-weight: bold;
-    }
-  }
-  .last {
-    i {
-      font-size: 13px;
-    }
-  }
-  .birth {
-    margin-top: 5px;
-    i {
-      font-size: 14px;
-      font-style: normal;
-    }
-    span {
-      font-weight: bold;
-    }
-  }
-}
 .country {
   display: flex;
   align-items: center;
@@ -685,26 +711,6 @@ export default {
     letter-spacing: 0.3px;
   }
 }
-.career-status {
-  text-transform: uppercase;
-  font-size: 13px;
-  font-weight: bold;
-  letter-spacing: 1px;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 5px;
-  display: inline-flex;
-  margin-bottom: 10px;
-  &.active {
-    background-color: rgb(8, 179, 51);
-  }
-  &.retired {
-    background-color: rgb(255, 153, 0);
-  }
-  &.unknown {
-    background-color: rgb(112, 112, 112);
-  }
-} 
 .career {
   position: relative;
   width: 100%;

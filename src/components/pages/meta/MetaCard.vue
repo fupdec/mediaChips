@@ -32,6 +32,11 @@
         </v-btn>
       </v-card-actions>
 
+      <div v-if="meta.settings.career && visibility.career" class="meta-in-card">
+        <v-icon title="Career status">mdi-list-status</v-icon>
+        <v-chip :color="getCareer('color')" label light>{{getCareer()}}</v-chip>
+      </div>
+
       <!-- Parse meta from cards -->
       <div v-for="(m,i) in metaInCard" :key="i">
         <div v-if="visibility[m.id]&&checkShowEmptyValue(m)" class="meta-in-card">
@@ -59,6 +64,7 @@
             </span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
             <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
+            <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}} {{getAge(card.meta[m.id])}}</span>
             <span v-else>{{card.meta[m.id]}}</span>
           </div>
         </div>
@@ -149,6 +155,36 @@ export default {
       if (fs.existsSync(imgPath)) return imgPath
       else if (type=='alt' || type=='custom1' || type=='custom2') return 'not_exist'
       else return path.join(__static, '/img/default.jpg')
+    },
+    getCareer(dataType) {
+      let status = 'grey'
+      let startMeta = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='career_start')
+      let endMeta = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='career_end')
+      if (!startMeta || !endMeta) return 'red'
+      let start = this.card.meta[startMeta.id]
+      let end = this.card.meta[endMeta.id]
+      start = Number(start || 0)
+      end = Number(end || 0)
+      if (dataType == 'color') {
+        if (start != 0 && end == 0) status = 'green'
+        else if (start != 0 && end != 0) status = 'orange'
+        else if (start == 0 && end == 0) status = 'grey'
+      } else {
+        if (start != 0 && end == 0) status = 'Active'
+        else if (start != 0 && end != 0) status = 'Retired'
+        else if (start == 0 && end == 0) status = 'Unknown'
+      }
+      return status
+    },
+    getAge(date) {
+      let birthday = date || ''
+      let age = 0
+      if (birthday.length) {
+        age = birthday.match(/\d{4}/)[0]
+        age = new Date().getFullYear() - Number(age)
+        age = `(${age} y.o.)`
+      } else { age = '' }
+      return age
     },
     toggleFavorite() {
       this.favorite = !this.favorite

@@ -308,6 +308,7 @@ export default {
       if (this.meta.settings.bookmark) this.specificMeta.push('bookmark')
       if (this.meta.settings.country) this.specificMeta.push('country')
       if (this.meta.settings.color) this.specificMeta.push('color')
+      if (this.meta.settings.career) this.specificMeta.push('career')
     },
     initCardSize() { this.$store.state.Meta.cardSize = this.meta.state.cardSize || 3 },
     initVisibility() {

@@ -164,6 +164,18 @@
                         <v-icon left>mdi-flag</v-icon>
                         <v-switch v-model="settings.country" :label="`Countries - ${settings.country?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
+                      <v-col cols="6" class="d-flex align-center">
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on }">
+                            <v-icon v-on="on" left>mdi-list-status</v-icon>
+                          </template>
+                          <span>In order for the career status to be displayed correctly, <br>
+                            you also need to activate the "Data Scraper" option, <br>
+                            then click the "set up meta for scraper" button <br>
+                            and add the meta to the "career start" and "career end" fields.</span>
+                        </v-tooltip>
+                        <v-switch v-model="settings.career" :label="`Career status - ${settings.career?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
+                      </v-col>
                     </v-row>
                   </v-card>
                 </v-col>
@@ -306,7 +318,7 @@ export default {
       icon: 'shape',
       hidden: false,
       parser: false,
-      imageAspectRatio: '',
+      imageAspectRatio: 1,
       imageTypes: ['main'],
       chipLabel: false,
       chipOutlined: false,
@@ -316,6 +328,7 @@ export default {
       synonyms: false,
       bookmark: false,
       country: false,
+      career: false,
       scraper: false,
       nested: false,
       markers: false,
