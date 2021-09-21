@@ -280,7 +280,6 @@ export default {
       this.initFilters()
       this.rating = this.card.meta.rating || 0
       this.favorite = this.card.meta.favorite || false
-      console.log(this.checkImageSettings('alt'))
     })
   },
   beforeDestroy() {
@@ -338,7 +337,6 @@ export default {
     cardInfoComplete() {
       let completed = []
       for (let m of _.cloneDeep(this.metaInCard)) {
-        console.log()
         const val = this.card.meta[m.id]
         if (val===undefined) completed.push(0)
         else if (typeof val == 'boolean') completed.push(1)
@@ -596,6 +594,7 @@ export default {
 .header-image {
   position: absolute;
   width: 100%;
+  opacity: 0.7;
   &-wrapper {
     .v-image__image {
       z-index: 1;
