@@ -1,7 +1,11 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-responsive v-if="checkImageSettings('alt')||checkImageSettings('header')" :aspect-ratio="2.3" class="header-images" :class="{header: !isHeaderImageExists}">
-      <img v-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" class="header-image">
+    <v-responsive :aspect-ratio="2.3" class="header-images">
+      <div v-if="!checkImageSettings('alt')" class="thumbs">
+        <v-img v-for="(imgUrl, i) in videoThumbImgUrls" :key="i" 
+          :src="imgUrl" :aspect-ratio="16/9" width="20%" />
+      </div>
+      <img v-else-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" class="header-image">
       <div v-else class="images">
         <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
         <v-responsive :aspect-ratio="5/9" />
@@ -12,7 +16,7 @@
     </v-responsive>
     
     <div class="py-16"></div>
-    <v-container class="profile-container" :class="{header: isHeaderImageExists&&checkImageSettings('header')}">
+    <v-container class="profile-container">
       <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
         <img :src="getImgUrl('avatar')">
       </v-avatar>
@@ -20,7 +24,8 @@
       <v-tooltip right>
         <template v-slot:activator="{ on, attrs }">
           <v-progress-circular v-bind="attrs" v-on="on" :value="cardInfoComplete" 
-            size="168" rotate="270" width="2" class="profile-complete-progress" color="primary"/> 
+            size="168" rotate="270" width="2" class="profile-complete-progress" 
+            :color="meta.settings.color?card.meta.color?card.meta.color:'primary':'primary'"/> 
         </template>
         <span>Information about the {{meta.settings.nameSingular.toLowerCase()}} is {{cardInfoComplete}}% complete</span>
       </v-tooltip>
@@ -275,6 +280,7 @@ export default {
       this.initFilters()
       this.rating = this.card.meta.rating || 0
       this.favorite = this.card.meta.favorite || false
+      console.log(this.checkImageSettings('alt'))
     })
   },
   beforeDestroy() {
@@ -372,6 +378,15 @@ export default {
         else return true
       }
       return this.metaInCard.filter(i=>checkMetaForCareer(i))
+    },
+    videoThumbImgUrls() {
+      let videos = this.$store.getters.videos.filter(video=>video[this.meta.id].includes(this.card.id))
+      let imgUrls = videos.orderBy('rating',['desc']).take(40).value().map(v=>{
+        let imgPath = path.join(this.pathToUserData, `/media/thumbs/${v.id}.jpg`)
+        if (fs.existsSync(imgPath)) return 'file://' + imgPath
+        else return ''
+      })
+      return imgUrls
     },
   },
   methods: {
@@ -558,16 +573,24 @@ export default {
 
 <style lang="less">
 .header-images {
-  &.header {
-    position: absolute;
-    width: 100%;
-  }
+  position: absolute;
+  width: 100%;
   .images {
     display: flex;
     justify-content: space-between;
     position: absolute;
     width: 100%;
     overflow: hidden;
+  }
+  .thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    position: absolute;
+    opacity: 0.2;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
   }
 }
 .header-image {
@@ -585,10 +608,7 @@ export default {
   height: 100%;
 }
 .profile-container {
-  position: relative; 
-  &.header {
-    margin-top: -250px;
-  }
+  position: relative;
   .buttons-left,
   .buttons-right {
     position: absolute;
