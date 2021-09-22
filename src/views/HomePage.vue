@@ -30,8 +30,11 @@
       </v-row>
 
       <v-row v-if="videosNumber>0">
-        <v-col cols="12" class="py-0 text-right">
-          <v-btn @click="customization=!customization" class="mb-2" rounded color="primary"> 
+        <v-col cols="12" class="pt-0 d-flex justify-space-between">
+          <v-btn @click="$store.state.Settings.dialogScanVideos=true" rounded color="primary">
+            <v-icon left>mdi-plus</v-icon> Add new videos
+          </v-btn>
+          <v-btn @click="customization=!customization" rounded color="primary"> 
             <v-icon left>mdi-cog</v-icon> {{customization?'Finish Customization':'Customize widgets'}} </v-btn>
         </v-col>
 
