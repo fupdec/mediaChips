@@ -107,7 +107,8 @@
                 </v-col>
                 <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
                   <b class="mr-4"> Career status </b>
-                  <v-chip :color="getCareer('color')" class="overline" label light>{{getCareer('status')}}</v-chip> 
+                  <v-chip :color="getCareer('color')" class="overline" label light>{{getCareer('status')}}</v-chip>
+                  <span class="ml-4">{{getCareer('ended')}}</span>
                 </v-col>
                 <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
                   <div class="career">
@@ -147,7 +148,7 @@
                         :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
                     </span>
                     <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
-                    <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}} {{getAge(card.meta[m.id])}}</span>
+                    <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}}{{getAge(card.meta[m.id])}}</span>
                     <span v-else>{{card.meta[m.id]}}</span>
                   </div>
                 </v-col>
@@ -402,33 +403,44 @@ export default {
       let end = this.card.meta[endMeta.id]
       start = Number(start || 0)
       end = Number(end || 0)
-      if (dataType == 'color') {
-        if (start != 0 && end == 0) data = 'green'
-        else if (start != 0 && end != 0) data = 'orange'
-        else if (start == 0 && end == 0) data = 'grey'
-      } else if (dataType == 'start') data = start == 0 ? '???' : start
-      else if (dataType == 'end') data = end == 0 ? start == 0 ? '???' : 'Now' : end
-      else if (dataType == 'total') {
-        if (start!=0 && end!=0) data = end - start
-        else if (start == this.currentYear) data = 1
-        else if (start!=0 && end==0) data = this.currentYear - start
-        else data = 0
-      } else if (dataType == 'status') {
-        if (start != 0 && end == 0) data = 'Active'
-        else if (start != 0 && end != 0) data = 'Retired'
-        else if (start == 0 && end == 0) data = 'Unknown'
+      switch (dataType) {
+        case 'color':
+          if (start != 0 && end == 0) data = 'green'
+          else if (start != 0 && end != 0) data = 'orange'
+          else if (start == 0 && end == 0) data = 'grey'
+          break
+        case 'start': data = start == 0 ? '???' : start; break
+        case 'end': data = end == 0 ? start == 0 ? '???' : 'Now' : end; break
+        case 'total':
+          if (start!=0 && end!=0) data = end - start
+          else if (start == this.currentYear) data = 1
+          else if (start!=0 && end==0) data = this.currentYear - start
+          else data = 0
+          break 
+        case 'status':
+          if (start != 0 && end == 0) data = 'Active'
+          else if (start != 0 && end != 0) data = 'Retired'
+          else if (start == 0 && end == 0) data = 'Unknown'
+          break
+        case 'ended':
+          let birthday = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='birthday')
+          if (end!=0 && birthday && this.card.meta[birthday.id].length) {
+            birthday = this.card.meta[birthday.id].match(/\d{4}/)[0]
+            data = `at ${Number(end) - Number(birthday)} y.o.`
+          } else data = ''
       }
       return data
     },
     getAge(date) {
       let birthday = date || ''
-      let age = 0
+      let ageString = ''
+      let ageNow = 0
       if (birthday.length) {
-        age = birthday.match(/\d{4}/)[0]
-        age = this.currentYear - Number(age)
-        age = `(${age} y.o.)`
-      } else { age = '??' }
-      return age
+        ageNow = birthday.match(/\d{4}/)[0]
+        ageNow = this.currentYear - Number(ageNow)
+        ageString = `, ${ageNow} y.o.`
+      }
+      return ageString
     },
     removeAllFilters() {
       // TODO fix this

@@ -34,7 +34,8 @@
 
       <div v-if="meta.settings.career && visibility.career" class="meta-in-card">
         <v-icon title="Career status">mdi-list-status</v-icon>
-        <v-chip :color="getCareer('color')" label light>{{getCareer()}}</v-chip>
+        <v-chip :color="getCareer('color')" label light>{{getCareer('status')}}</v-chip>
+        <span class="ml-1">{{getCareer('ended')}}</span>
       </div>
 
       <!-- Parse meta from cards -->
@@ -64,7 +65,7 @@
             </span>
             <span v-else-if="getMeta(m.id).dataType=='boolean'">{{card.meta[m.id]?'Yes':'No'}}</span>
             <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
-            <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}} {{getAge(card.meta[m.id])}}</span>
+            <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}}{{getAge(card.meta[m.id])}}</span>
             <span v-else>{{card.meta[m.id]}}</span>
           </div>
         </div>
@@ -157,7 +158,7 @@ export default {
       else return path.join(__static, '/img/default.jpg')
     },
     getCareer(dataType) {
-      let status = 'grey'
+      let data = 'grey'
       let startMeta = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='career_start')
       let endMeta = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='career_end')
       if (!startMeta || !endMeta) return 'red'
@@ -165,16 +166,25 @@ export default {
       let end = this.card.meta[endMeta.id]
       start = Number(start || 0)
       end = Number(end || 0)
-      if (dataType == 'color') {
-        if (start != 0 && end == 0) status = 'green'
-        else if (start != 0 && end != 0) status = 'orange'
-        else if (start == 0 && end == 0) status = 'grey'
-      } else {
-        if (start != 0 && end == 0) status = 'Active'
-        else if (start != 0 && end != 0) status = 'Retired'
-        else if (start == 0 && end == 0) status = 'Unknown'
+      switch (dataType) {
+        case 'color':
+          if (start != 0 && end == 0) data = 'green'
+          else if (start != 0 && end != 0) data = 'orange'
+          else if (start == 0 && end == 0) data = 'grey'
+          break
+        case 'status':
+          if (start != 0 && end == 0) data = 'Active'
+          else if (start != 0 && end != 0) data = 'Retired'
+          else if (start == 0 && end == 0) data = 'Unknown'
+          break
+        case 'ended':
+          let birthday = _.find(this.meta.settings.metaInCard, i=>i.scraperField==='birthday')
+          if (end!=0 && birthday && this.card.meta[birthday.id].length) {
+            birthday = this.card.meta[birthday.id].match(/\d{4}/)[0]
+            data = `at ${Number(end) - Number(birthday)} y.o.`
+          } else data = ''
       }
-      return status
+      return data
     },
     getAge(date) {
       let birthday = date || ''
@@ -182,7 +192,7 @@ export default {
       if (birthday.length) {
         age = birthday.match(/\d{4}/)[0]
         age = new Date().getFullYear() - Number(age)
-        age = `(${age} y.o.)`
+        age = `, ${age} y.o.`
       } else { age = '' }
       return age
     },
