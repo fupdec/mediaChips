@@ -1,6 +1,6 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-responsive :aspect-ratio="2.3" class="header-images">
+    <v-responsive :aspect-ratio="2.3" :key="metaCardKey" class="header-images">
       <div v-if="!checkImageSettings('alt')" class="thumbs">
         <v-img v-for="(imgUrl, i) in videoThumbImgUrls" :key="i" 
           :src="imgUrl" :aspect-ratio="16/9" width="20%" />
@@ -159,7 +159,7 @@
                     <span>{{card.meta.bookmark || '-'}}</span>
                   </div>
                 </v-col>
-                <v-col v-if="videoFilters" class="text-center">
+                <v-col v-if="quickFilters" class="text-center">
                   <v-tooltip left>
                       <template v-slot:activator="{ on, attrs }">
                       <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
@@ -168,19 +168,19 @@
                   </v-tooltip>
                   <span>Quick filters for videos</span>
                 </v-col>
-                <v-col v-for="(vf,i) in videoFilters" :key="vf.id+i" cols="12" class="text-center py-0">
-                  <v-chip-group :value="vf.value" @change="setCardFilter($event, vf.id)" active-class="active-chip" multiple column>
+                <v-col v-for="(qf,i) in quickFilters" :key="qf.id+i" cols="12" class="text-center py-0">
+                  <v-chip-group :value="qf.value" @change="setCardFilter($event, qf.id)" active-class="active-chip" multiple column>
                     <span class="mr-2">
-                      <v-icon left>mdi-{{getMeta(vf.id).settings.icon}}</v-icon>
-                      <b>{{getMeta(vf.id).settings.name}}:</b>
+                      <v-icon left>mdi-{{getMeta(qf.id).settings.icon}}</v-icon>
+                      <b>{{getMeta(qf.id).settings.name}}:</b>
                     </span>
-                    <v-chip v-for="(c) in vf.chips" :key="c" 
+                    <v-chip v-for="(c) in qf.chips" :key="c" 
                       class="mr-2 mb-1 px-2" small filter
-                      :color="getColor(vf.id,c)" 
-                      :label="getMeta(vf.id).settings.chipLabel"
-                      :outlined="getMeta(vf.id).settings.chipOutlined"
+                      :color="getColor(qf.id,c)" 
+                      :label="getMeta(qf.id).settings.chipLabel"
+                      :outlined="getMeta(qf.id).settings.chipOutlined"
                       :disabled="card.id===c"
-                      @mouseover.stop="showImage($event,c,'meta',vf.id)" 
+                      @mouseover.stop="showImage($event,c,'meta',qf.id)" 
                       @mouseleave.stop="$store.state.hoveredImage=false">
                       {{getCard(c).meta.name}}</v-chip>
                   </v-chip-group>
@@ -288,6 +288,7 @@ export default {
     this.$store.state.clipboardMeta = {}
   },
   data: () => ({
+    metaCardKey: 1,
     profile: [],
     rating: 0,
     favorite: false,
@@ -310,9 +311,10 @@ export default {
     // header: '',
     isHeaderImageExists: true,
     videos: [],
-    videoFilters: [],
+    quickFilters: [],
   }),
   computed: {
+    updateMetaCardIds() { return this.$store.state.Meta.updateCardIds },
     metaCardId() { return this.$route.query.cardId },
     card() { return this.$store.getters.metaCards.find({id: this.metaCardId}).value() },
     dateAdded() {
@@ -492,7 +494,7 @@ export default {
       }).cloneDeep().value()
       let videoFilters = []
       for (let meta of this.complexMetaAssignedToVideos) {
-        this.videoFilters.push({
+        this.quickFilters.push({
           id: meta.id,
           chips: this.getCardsInVideos(meta.id),
           value: [],
@@ -549,7 +551,7 @@ export default {
     },
     setCardFilter(e, metaId) {
       let index = _.findIndex(this.$store.state.Settings.videoFilters, i=>i.by==metaId&&i.flag=='card')
-      let metaArr = _.find(this.videoFilters, {id:metaId}).chips
+      let metaArr = _.find(this.quickFilters, {id:metaId}).chips
       if (index > -1) this.$store.state.Settings.videoFilters[index].val = e.map(i=>metaArr[i])
       this.$store.dispatch('filterVideos', true)
     },
@@ -572,7 +574,14 @@ export default {
     profile() {
       this.toggleProfile()
     },
-    $route(newRoute) {
+    updateMetaCardIds(newValue) {
+      if (newValue.includes(this.card.id)) {
+        this.metaCardKey = this.card.id + Date.now() 
+        this.rating = this.card.meta.rating || 0
+        this.favorite = this.card.meta.favorite || false
+      } 
+    },
+    $route() {
       if (!this.$route.path.includes('/metacard')) return
       this.initFilters()
     },
