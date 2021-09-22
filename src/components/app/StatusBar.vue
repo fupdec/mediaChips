@@ -61,9 +61,9 @@
 
     <v-tooltip v-if="!reg" top>
       <template v-slot:activator="{ on }">
-        <v-btn v-on="on" @click="openLink('https://mediachips.app/')" height="20" small color="error"> Not registered </v-btn>
+        <v-btn v-on="on" @click="openRegistration" height="20" small color="error"> Not registered </v-btn>
       </template>
-      <span>Go to the official website of the application and buy a license key</span>
+      <span>Register the application and get all the features</span>
     </v-tooltip>
 
     <v-divider vertical></v-divider>
@@ -219,7 +219,7 @@ export default {
       this.$store.dispatch('clearAllNotifications')
       this.notificationsMenu = false
     },
-    openLink(url) { shell.openExternal(url) }
+    openRegistration() { this.$router.push('/settings/?tab=about') }
   },
   watch: {
     lastLog(log) {

@@ -530,7 +530,6 @@
 
 <script>
 const path = require("path")
-const { spawn } = require( 'child_process' )
 const shell = require('electron').shell
 const { ipcRenderer } = require('electron')
 const {app} = require('electron').remote
@@ -563,12 +562,13 @@ export default {
   },
   mounted () {
     this.$nextTick(function () {
+      if (this.$route.query.tab == 'about') this.tab = 'about-settings'
       this.password = this.$store.state.Settings.phrase
       this.hint = this.$store.state.Settings.passwordHint
     })
   },
   data: ()=>({
-    tab: 'videos',
+    tab: 'app-settings',
     password: '',
     showPassword: false,
     validPass: false,
