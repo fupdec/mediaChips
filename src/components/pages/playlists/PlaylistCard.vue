@@ -35,6 +35,7 @@
 <script>
 const fs = require("fs")
 const path = require("path")
+const shell = require('electron').shell
 
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
@@ -87,11 +88,20 @@ export default {
         })
         return
       }
-      let data = {
-        videos: this.videos,
-        id: this.videos[0].id,  
+      if (this.$store.state.Settings.isPlayVideoInSystemPlayer) {
+        let paths = this.playlist.videos.map(i=>this.$store.getters.videos.find({id:i}).value().path)
+        let plPath = path.join(this.pathToUserData, `playlist.m3u`)
+        let text = ''
+        for (let i = 0; i < paths.length; i++) text += paths[i] + '\n'
+        fs.writeFileSync(plPath, text) 
+        shell.openPath(plPath) 
+      } else {
+        let data = {
+          videos: this.videos,
+          id: this.videos[0].id,  
+        }
+        ipcRenderer.send('openPlayer', data)
       }
-      ipcRenderer.send('openPlayer', data)
     },
     stopSmoothScroll(event) {
       if(event.button != 1) return
