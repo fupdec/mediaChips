@@ -301,18 +301,15 @@ let systemMenu = Menu.buildFromTemplate([
       { type:'separator' },
       {
         label: 'Zoom in',
-        accelerator: 'CommandOrControl+Shift+=',
-        role: 'zoomIn',
+        click() { updateSettingsState('zoom', '+') } 
       },
       {
         label: 'Zoom out',
-        accelerator: 'CommandOrControl+-',
-        role: 'zoomOut',
+        click() { updateSettingsState('zoom', '-') } 
       },
       {
         label: 'Reset zoom',
-        accelerator: 'CommandOrControl+0',
-        role: 'resetZoom',
+        click() { updateSettingsState('zoom') } 
       },
     ]
   },
@@ -391,7 +388,8 @@ function getDb() { return new Promise((resolve) => {
 }) } 
 ipcMain.on('watchLater', (e, videoId) => { win.webContents.send( 'watchLater', videoId ) })
 ipcMain.on('addMarker', (e, marker, markerTag, video) => { win.webContents.send( 'addMarker', marker, markerTag, video ) }) 
-ipcMain.on('removeMarker', (event, markerForRemove, video) => { win.webContents.send( 'removeMarker', markerForRemove, video ) }) 
+ipcMain.on('removeMarker', (e, markerForRemove, video) => { win.webContents.send( 'removeMarker', markerForRemove, video ) }) 
 ipcMain.on('toggleDarkMode', (e, value) => { player.webContents.send( 'toggleDarkMode', value ) })
 ipcMain.on('updatePlayerDb', (e, value) => { player.webContents.send( 'updateDb', value ) })
 ipcMain.on('addNewMetaCard', (e, metaCardName, metaId) => { win.webContents.send( 'addNewMetaCard', metaCardName, metaId ) }) 
+ipcMain.on('videoWatched', (e, videoId) => { win.webContents.send( 'videoWatched', videoId ) }) 

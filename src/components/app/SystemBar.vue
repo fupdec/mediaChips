@@ -251,7 +251,13 @@ export default {
       ipcRenderer.on('aboutApp', () => { this.about() })
       ipcRenderer.on('navigationBack', () => { this.back() })
       ipcRenderer.on('navigationForward', () => { this.forward() })
-      ipcRenderer.on('updateSettingsState', (e, stateName, value) => { this[stateName] = value })
+      ipcRenderer.on('updateSettingsState', (e, stateName, value) => { 
+        if (stateName == 'zoom') {
+          if (value == '+') this.zoom += 0.1
+          else if (value == '-') this.zoom -= 0.1
+          else this.zoom = 1
+        } else this[stateName] = value 
+      })
       ipcRenderer.send('changeMenuItem', 'systemPlayer', this.isPlayVideoInSystemPlayer )
       ipcRenderer.send('changeMenuItem', 'lock', this.$store.state.Settings.passwordProtection )
     })
