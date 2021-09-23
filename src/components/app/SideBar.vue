@@ -8,6 +8,13 @@
           </v-list-item-icon>
           <v-list-item-title>Home</v-list-item-title>
         </v-list-item>
+
+        <v-list-item v-if="$store.state.Settings.showExperimentalFeatures" link to="/files" color="secondary" draggable="false"> 
+          <v-list-item-icon>
+            <v-icon>mdi-file-find-outline</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Files</v-list-item-title>
+        </v-list-item>
         
         <v-list-item link to="/videos/:default?tabId=default"
           @click.middle="addNewTabVideos" color="secondary" draggable="false">

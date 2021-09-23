@@ -2,6 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 const Home = () => import('../views/HomePage.vue')
 const HomeAppbar = () => import('../components/pages/home/HomeAppbar.vue')
+const Files = () => import('../views/FilesPage.vue')
+const FilesAppbar = () => import('../components/pages/files/FilesAppbar.vue')
 const Videos = () => import('../views/VideosPage.vue')
 const VideosAppbar = () => import('../components/pages/videos/VideosAppbar.vue')
 const Playlists = () => import('../views/PlaylistsPage.vue')
@@ -26,6 +28,14 @@ const routes = [
     components: {
       default: Home,
       appbar: HomeAppbar,
+    }
+  },
+  {
+    path: '/files',
+    name: 'Files',
+    components: {
+      default: Files,
+      appbar: FilesAppbar,
     }
   },
   {

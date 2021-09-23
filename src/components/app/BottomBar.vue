@@ -13,6 +13,16 @@
           <span>Home</span>
         </v-tooltip>
 
+        <v-tooltip v-if="$store.state.Settings.showExperimentalFeatures" top>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" to="/files" text color="secondary" title="Files">
+              <span>Files</span>
+              <v-icon>mdi-file-find-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>Files</span>
+        </v-tooltip>
+
         <v-tooltip top>
           <template v-slot:activator="{ on }">
             <v-btn v-on="on" to="/videos/:default?tabId=default" @click.middle="addNewTabVideos" text color="secondary" title="Videos">
