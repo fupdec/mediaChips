@@ -115,7 +115,7 @@
             <div class="previews-grid" @mousedown="stopSmoothScroll($event)"> 
               <v-hover v-for="video in recentVideos" :key="video.id">
                 <template v-slot:default="{ hover }">
-                  <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video)" aspect-ratio="1">
+                  <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video, 'recentVideos')" aspect-ratio="1">
                     <v-fade-transition>
                       <v-overlay v-if="hover" absolute color="secondary">
                         <v-btn icon x-large outlined>
@@ -123,6 +123,43 @@
                         </v-btn>
                       </v-overlay>
                     </v-fade-transition>
+                  </v-img>
+                </template>
+              </v-hover>
+            </div>
+          </v-card>
+        </v-col>
+
+        <v-col v-if="customization" cols="12">
+          <v-card outlined>
+            <v-card-actions>
+              <div>Most viewed videos</div>
+              <v-spacer></v-spacer>
+              <v-switch v-model="widgets.topViewedVideos" @change="updateWidget($event, 'graphVideos')" inset hide-details class="ma-2 pt-0"
+                :append-icon="`mdi-${widgets.topViewedVideos?'eye':'eye-off'}`"/>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+        <v-col v-if="customization||widgets.topViewedVideos" cols="12">
+          <v-card outlined>
+            <v-toolbar color="secondary">
+              <div class="headline">Top 10 most viewed videos ({{videosViewedLastWeek}} viewed in the past week)</div>
+              <v-spacer></v-spacer>
+              <v-btn to="/videos/:default?tabId=default" draggable="false" outlined>
+                <v-icon left>mdi-video</v-icon> Show All Videos</v-btn>
+            </v-toolbar>
+            <div class="previews-grid" @mousedown="stopSmoothScroll($event)"> 
+              <v-hover v-for="video in topViewedVideos" :key="video.id+1">
+                <template v-slot:default="{ hover }">
+                  <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video, 'topViewedVideos')" aspect-ratio="1" dark>
+                    <v-fade-transition>
+                      <v-overlay v-if="hover" absolute color="secondary">
+                        <v-btn icon x-large outlined>
+                          <v-icon>mdi-play</v-icon>
+                        </v-btn>
+                      </v-overlay>
+                    </v-fade-transition>
+                    <span class="views"><v-icon>mdi-eye-outline</v-icon> {{video.views||0}}</span>
                   </v-img>
                 </template>
               </v-hover>
@@ -143,23 +180,35 @@
         <v-col v-if="customization||widgets.topViewedMetaCards" cols="12">
           <v-card v-for="m in complexMetaAssignedToVideo" :key="m.id" outlined class="mb-6">
             <v-toolbar color="secondary">
-              <div class="headline"> Top 10 Most Viewed {{getMeta(m.id).settings.name}} </div>
+              <div class="headline"> Top 10 most viewed {{getMeta(m.id).settings.name.toLowerCase()}} </div>
               <v-spacer></v-spacer>
               <v-btn :to="`/meta/?metaId=${m.id}&tabId=default`" draggable="false" outlined>
                 <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon> Show All {{getMeta(m.id).settings.name}}</v-btn>
             </v-toolbar>
             <div class="previews-grid">
-              <v-card v-for="mc in getTopMetaCards(m.id)" :key="mc.id" outlined hover
-                @mousedown="stopSmoothScroll($event)"
-                @click="openMetaCardPage(m.id,mc.id)" 
-                @click.middle="addNewTabMetaCard(m.id,mc.id,mc.meta.name)">
-                <div class="pa-1">
-                  <v-avatar width="100" height="100" class="profile-avatar">
-                    <img :src="getImgMetaCard(m.id,mc.id)">
-                  </v-avatar>
-                </div>
-                <div class="caption px-1">{{mc.meta.name}} <b>{{mc.views||0}}</b></div>
-              </v-card>
+              <v-hover v-for="mc in getTopMetaCards(m.id)" :key="mc.id">
+                <template v-slot:default="{ hover }">
+                  <v-card outlined hover
+                    @mousedown="stopSmoothScroll($event)"
+                    @click="openMetaCardPage(m.id,mc.id)" 
+                    @click.middle="addNewTabMetaCard(m.id,mc.id,mc.meta.name)">
+                    <div class="pa-1 profile-avatar">
+                      <v-avatar width="100" height="100">
+                        <img :src="getImgMetaCard(m.id,mc.id)">
+                      </v-avatar>
+                      <span class="views"><v-icon dark>mdi-eye-outline</v-icon> {{mc.views||0}}</span>
+                    </div>
+                    <div class="caption px-1">{{mc.meta.name}}</div>
+                    
+                    <v-expand-transition>
+                      <v-overlay v-if="hover" absolute color="secondary" z-index="1">
+                        <v-icon>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                        <div>Open page</div>
+                      </v-overlay>
+                    </v-expand-transition>
+                  </v-card>
+                </template>
+              </v-hover>
             </div>
           </v-card>
         </v-col>
@@ -219,6 +268,11 @@ export default {
   computed: {
     settings() { return this.$store.getters.settings.value() },
     recentVideos() { return this.$store.getters.videos.orderBy('date', ['desc']).take(this.numberRecentVideos).value() },
+    topViewedVideos() { return this.$store.getters.videos.orderBy('views', ['desc']).take(10).value() },
+    videosViewedLastWeek() {
+      let lastWeek = new Date().setDate(new Date().getDate()-7)
+      return this.$store.getters.videos.filter(v=>v.viewed||0>=lastWeek).value().length
+    },
     pathToUserData() { return this.$store.getters.getPathToUserData },
     logoPath() { return path.join('file://', __static, '/icons/icon.png') },
     videosNumber() { return this.$store.getters.videos.value().length },
@@ -275,6 +329,7 @@ export default {
         graphVideos: true,
         numberVideos: true,
         recentVideos: true,
+        topViewedVideos: true,
         topViewedMetaCards: true,
       }
       this.widgets = {...defaultWidgets, ...this.widgets}
@@ -294,7 +349,7 @@ export default {
       if (fs.existsSync(imgPath)) return imgPath
       else return path.join(__static, '/img/default.jpg')
     },
-    playVideo(video) {
+    playVideo(video, typeVideos) {
       if (!fs.existsSync(video.path)) {
         this.$store.state.Videos.dialogErrorPlayVideo = true
         this.$store.state.Videos.errorPlayVideoPath = video.path
@@ -302,9 +357,13 @@ export default {
       }
       if (this.$store.state.Settings.isPlayVideoInSystemPlayer) shell.openPath(video.path) 
       else {
-        let data = { videos: this.recentVideos, id: video.id }
+        let data = { videos: this[typeVideos], id: video.id }
         ipcRenderer.send('openPlayer', data)
       }
+      this.$store.getters.videos.find({id: video.id}).assign({
+        views: (video.views||0)+1,
+        viewed: Date.now(),
+      }).write()
     },
     finishCreationAllMeta() {
       this.createAllMeta = false
@@ -359,13 +418,29 @@ export default {
     cursor: pointer;
   }
   .profile-avatar {
+    position: relative;
     img {
       height: auto;
       border-radius: 0;
       position: absolute;
       top: 0;
     }
-    position: relative;
+  }
+  .views {
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 0 3px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+    .v-icon {
+      font-size: 10px !important;
+      margin-right: 3px;
+    }
   }
 }
 </style>
