@@ -163,11 +163,6 @@
             </div>
           </v-card>
         </v-col>
-
-        <v-col cols="12">
-          <v-btn @click="customization=!customization" class="mb-4" x-large block rounded color="primary"> 
-            <v-icon left>mdi-cog</v-icon> {{customization?'Finish Customization':'Customize widgets'}} </v-btn>
-        </v-col>
       </v-row>
 
       <div v-if="$store.state.Settings.videosTotal==0">
