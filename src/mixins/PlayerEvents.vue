@@ -24,6 +24,9 @@ export default {
       ipcRenderer.on('addNewMetaCard', (event, metaCardName, metaId) => {
         this.addNewMetaCard(metaCardName, metaId)
       })
+      ipcRenderer.on('videoWatched', (event, videoId) => {
+        this.videoWatched(videoId)
+      })
     })
   },
   computed: {
@@ -69,6 +72,14 @@ export default {
         meta: { name: metaCardName },
       })
       ipcRenderer.send('updatePlayerDb', 'metaCards') // update meta in player window
+    },
+    videoWatched(videoId) {
+      let video = this.$store.getters.videos.find({id: videoId})
+      if (!video.value()) return 
+      video.assign({
+        views: (video.value().views||0)+1,
+        viewed: Date.now(),
+      }).write()
     },
   },
 }

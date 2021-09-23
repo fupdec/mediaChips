@@ -615,6 +615,11 @@ export default {
       this.currentTimeTracker = setInterval(() => {this.currentTime = this.player.currentTime}, timeout)
     },
     playVideoInSystemPlayer() { shell.openPath(this.videos[this.playIndex].path) },
+    playVideo(video) {
+      this.player.src = video.path
+      this.player.play()
+      ipcRenderer.send('videoWatched', video.id)
+    },
     // CONTROLS
     play() {
       this.player.play()
@@ -645,9 +650,7 @@ export default {
         this.playIndex = this.playIndex - 1
         if (isLoopMode && this.playIndex < 0) this.playIndex = this.videos.length-1 // if loop
       }
-      this.player.src = path.join('file://', this.videos[this.playIndex].path)
-      this.player.play()
-      
+      this.playVideo(this.videos[this.playIndex])
       if (!this.isPlaylistVisible) return // scroll to now playing in playlist
       const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
       this.$refs.playlist.scrollTo({ y: height }, 50)
@@ -665,8 +668,7 @@ export default {
         this.playIndex = this.playIndex + 1
         if (isLoopMode && this.playIndex > this.videos.length-1) this.playIndex = 0 // if loop mode
       }
-      this.player.src = path.join('file://', this.videos[this.playIndex].path)
-      this.player.play()
+      this.playVideo(this.videos[this.playIndex])
 
       if (!this.isPlaylistVisible) return  // scroll to now playing in playlist
       const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
@@ -876,8 +878,7 @@ export default {
           const height = `${this.playIndex * document.documentElement.clientWidth / 10}`
           this.$refs.playlist.scrollTo({ y: height }, 50)
         }
-      } else this.player.src = this.videos[index].path
-      this.player.play()
+      } else this.playVideo(this.videos[this.playIndex])
     },
     togglePlaylist() {
       this.isPlaylistVisible=!this.isPlaylistVisible

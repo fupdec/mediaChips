@@ -295,6 +295,10 @@ export default {
         let data = { videos: this.$store.getters.videosOnPage, id: this.video.id }
         ipcRenderer.send('openPlayer', data)
       } 
+      this.$store.getters.videos.find({id: this.video.id}).assign({
+        views: (this.video.views||0)+1,
+        viewed: Date.now(),
+      }).write()
     },
     changeRating(stars, videoID) { this.$store.getters.videos.find({id:videoID}).assign({rating:stars,edit:Date.now()}).write() },
     showContextMenu(e) {

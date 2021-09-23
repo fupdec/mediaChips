@@ -162,6 +162,11 @@ export default {
         tip: 'Rating',
       },
       {
+        name: 'views',
+        icon: 'eye-outline',
+        tip: 'Number of Views',
+      },
+      {
         name: 'date',
         icon: 'calendar-plus',
         tip: 'Date Added',
@@ -170,6 +175,11 @@ export default {
         name: 'edit',
         icon: 'calendar-edit',
         tip: 'Date of Editing',
+      },
+      {
+        name: 'viewed',
+        icon: 'calendar-clock',
+        tip: 'Viewed Date',
       },
       {
         name: 'path',

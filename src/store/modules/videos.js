@@ -168,7 +168,7 @@ const Videos = {
       if (sortBy === 'name') videos = videos.orderBy(i=>path.basename(i.path), [sortDirection])
       else {
         let meta = getters.meta.find({id:sortBy}).value()
-        let defaultValue = false
+        let defaultValue = 0
         if (meta) {
           if (meta.dataType == 'date') defaultValue = '' 
           else if (meta.dataType=='number' || meta.dataType=='rating') defaultValue = 0 

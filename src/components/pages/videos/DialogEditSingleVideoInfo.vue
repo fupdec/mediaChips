@@ -46,12 +46,20 @@
                 File size: {{calcSize(video.size)}}
               </div>
               <div>
+                <v-icon left size="18">mdi-eye-outline</v-icon>
+                Views: {{video.views||0}}
+              </div>
+              <div>
                 <v-icon left size="18">mdi-calendar-plus</v-icon>
                 Added: {{added}}
               </div>
               <div>
                 <v-icon left size="18">mdi-calendar-edit</v-icon>
                 Last edit: {{edit}}
+              </div>
+              <div>
+                <v-icon left size="18">mdi-calendar-clock</v-icon>
+                Last viewed: {{viewed}}
               </div>
             </v-card>
           </v-responsive>
@@ -269,6 +277,7 @@ export default {
     pathToFile: '',
     edit: '',
     added: '',
+    viewed: '',
     bookmark: '',
     // header
     timeouts: {},
@@ -322,6 +331,10 @@ export default {
       this.added = dateAdded.toLocaleDateString() + ' ' + dateAdded.toLocaleTimeString()
       let dateEdit = new Date(video.edit)
       this.edit = dateEdit.toLocaleDateString() + ' ' + dateEdit.toLocaleTimeString()
+      if (video.viewed) {
+        let dateViewed = new Date(video.viewed)
+        this.viewed = dateViewed.toLocaleDateString() + ' ' + dateViewed.toLocaleTimeString()
+      } else this.viewed = 'Never'
       setTimeout(() => { this.playPreview() }, 300)
 
       // parse meta 
