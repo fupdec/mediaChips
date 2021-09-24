@@ -1,8 +1,8 @@
 <template>
   <v-navigation-drawer absolute right class="folder-tree">
     <vuescroll>
-      <v-card class="pt-16 pb-6" rounded="0" outlined>
-        <v-card-actions class="pt-6">
+      <v-card rounded="0" elevation="0">
+        <v-card-actions>
           <v-select v-model="selectedDisk" :items="disks" label="Choose disk" solo dense
             prepend-icon="mdi-harddisk" hide-details class="disks" @change="selectDisk"
             :menu-props="{contentClass:'disks'}" item-text="_mounted" item-value="_mounted">
@@ -27,13 +27,14 @@
           <v-icon x-large class="loading-animation">mdi-loading</v-icon>
         </v-card-text>
         <v-card-text v-else class="pa-0">
-          <v-treeview :items="folders" item-key="path" :load-children="loadChildren"
-            open-on-click dense expand-icon="mdi-chevron-down">
-            <template v-slot:prepend="{item}">
-              <v-icon @click="selectFolder($event, item)" 
-                :color="selectedFolders.includes(item.path) ? 'primary' : ' '">
-                {{ selectedFolders.includes(item.path) ? 'mdi-folder' : 'mdi-folder-outline' }}
-              </v-icon>
+          <v-treeview :items="folders" :load-children="loadChildren" open-on-click
+            item-key="path" item-text="name" dense hoverable expand-icon="mdi-chevron-down">
+            <template v-slot:prepend="{ item, open }">
+              <v-icon @click="selectFolder(item)" size="18" :color="item.path==selectedFolder?'primary':''">
+                {{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
+            </template>
+            <template slot="label" slot-scope="{ item }">
+              <span @click="selectFolder(item)" class="item-name">{{ item.name }}</span>
             </template>
           </v-treeview>
         </v-card-text>
@@ -66,6 +67,7 @@ export default {
   },
   data: () => ({
     updatingFolderTree: false,
+    selectedFolder: '',
     folders: [],
     disks: [],
     prevSelectedFolders: [],
@@ -192,6 +194,10 @@ export default {
         }
       }).filter(function(x) { return x !== undefined })
     },
+    selectFolder(item) { 
+      this.selectedFolder = item.path
+      this.$emit('selectFolder', item.path)
+    },
   },
   watch: {
   },
@@ -228,5 +234,16 @@ export default {
 }
 .v-treeview-node__root {
   padding-left: 2px;
+  padding-right: 0;
+}
+.v-treeview-node__prepend {
+  margin-right: 0 !important;
+}
+.v-treeview-node__label {
+  display: flex;
+  .item-name {
+    height: 100%;
+    width: 100%;
+  }
 }
 </style>
