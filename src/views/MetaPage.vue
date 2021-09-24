@@ -37,12 +37,13 @@
       <v-spacer></v-spacer>
     </v-toolbar>
 
-    <div class="headline text-h3 d-flex align-center justify-center py-4">
-      <v-icon x-large left>mdi-{{meta.settings.icon}}</v-icon> {{meta.settings.name}}
-      <span class="text-h5 ml-2">({{filteredMeta.length}})</span>
+    <div class="headline text-h4 d-flex align-center justify-center pt-4">
+      <v-icon left>mdi-{{meta.settings.icon}}</v-icon> {{meta.settings.name}}
+      <span v-if="metaCardsNumber!=filteredMeta.length" class="text-h6 ml-2">({{filteredMeta.length}} of {{metaCardsNumber}})</span>
+      <span v-else class="text-h6 ml-2">({{filteredMeta.length}})</span>
     </div>
     
-    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start pb-0">
       <FiltersChips :filters="filters" type="Meta" @removeAllFilters="removeAllFilters"/>
     </v-container>
 

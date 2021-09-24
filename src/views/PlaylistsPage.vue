@@ -1,11 +1,12 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <div class="headline text-h3 d-flex align-center justify-center py-4">
-      <v-icon x-large left>mdi-format-list-bulleted</v-icon> Playlists
-      <span class="text-h5 ml-2">({{numberFilteredPlaylists}})</span>
+    <div class="headline text-h4 d-flex align-center justify-center pt-4">
+      <v-icon left>mdi-format-list-bulleted</v-icon> Playlists
+      <span v-if="totalPlaylists!=numberFilteredPlaylists" class="text-h6 ml-2">({{numberFilteredPlaylists}} of {{totalPlaylists}})</span>
+      <span v-else class="text-h6 ml-2">({{numberFilteredPlaylists}})</span>
     </div>
     
-    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start pb-0">
       <FiltersChips :filters="filters" type="Playlist" />
     </v-container>
       
@@ -152,6 +153,7 @@ export default {
     },
     filters() { return this.$store.state.Settings.playlistFilters },
     numberFilteredPlaylists() { return this.$store.state.Playlists.filteredPlaylists.length },
+    totalPlaylists() { return this.$store.getters.playlists.value().length },
   },
   methods: {
     selectedPlaylists(list) {

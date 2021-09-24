@@ -1,12 +1,13 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
 
-    <div class="headline text-h3 d-flex align-center justify-center py-4">
-      <v-icon x-large left>mdi-video-outline</v-icon> Videos
-      <span class="text-h5 ml-2">({{numberFilteredVideos}})</span>
+    <div class="headline text-h4 d-flex align-center justify-center pt-4">
+      <v-icon left>mdi-video-outline</v-icon> Videos
+      <span v-if="totalVideos!=numberFilteredVideos" class="text-h6 ml-2">({{numberFilteredVideos}} of {{totalVideos}})</span>
+      <span v-else class="text-h6 ml-2">({{numberFilteredVideos}})</span>
     </div>
     
-    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start py-0">
+    <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start pb-0">
       <FiltersChips :filters="filters" type="Video" />
     </v-container>
 

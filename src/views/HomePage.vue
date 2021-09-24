@@ -1,8 +1,6 @@
 <template>
   <vuescroll>
-    <div class="headline text-h3 d-flex align-center justify-center py-6">
-      <v-icon x-large left>mdi-home-outline</v-icon> Home </div>
-
+    <div class="py-4"/>
     <v-container class="text-center">
       <v-row v-if="videosNumber==0">
         <v-col cols="12">

@@ -1,7 +1,7 @@
 <template>
   <vuescroll>
-    <div class="headline text-h3 d-flex align-center justify-center py-6">
-      <v-icon x-large left>mdi-cog-outline</v-icon> Settings
+    <div class="headline text-h4 d-flex align-center justify-center pt-4 pb-2">
+      <v-icon left>mdi-cog-outline</v-icon> Settings
     </div>
 
     <v-tabs v-model="tab" centered icons-and-text class="settings-tabs">
