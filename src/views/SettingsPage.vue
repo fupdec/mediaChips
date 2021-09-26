@@ -468,15 +468,25 @@
       <v-tab-item value="database-settings"> 
         <v-card flat max-width="800" style="margin: auto;" class="py-10">
           <ManageBackups />
-          
           <v-card outlined class="mt-10 pb-4 px-4">
             <div class="headline text-center py-4">Clear generated images</div>
             <v-alert type="info" class="caption" dense text outlined>
               You can delete generated images to save disk space. They will be automatically recreated when needed.
             </v-alert>
-            <ClearData dataName="timelines" dataType="images" btnText='timelines'/>
-            <ClearData dataName="grids" dataType="images" btnText='grids'/>
-            <ClearData dataName="markers" dataType="images" btnText='markers'/>
+            <v-card-actions class="pa-0">
+              <div>
+                <ClearData dataName="timelines" dataType="images" btnText='timelines'/>
+                <div class="caption text-center">total size: <b>{{folderSize.timelines==null?'calculated ...':folderSize.timelines}}</b></div>
+              </div>
+              <div>
+                <ClearData dataName="markers" dataType="images" btnText='markers'/>
+                <div class="caption text-center">total size: <b>{{folderSize.markers==null?'calculated ...':folderSize.markers}}</b></div>
+              </div>
+              <div>
+                <ClearData dataName="grids" dataType="images" btnText='grids'/>
+                <div class="caption text-center">total size: <b>{{folderSize.grids==null?'calculated ...':folderSize.grids}}</b></div>
+              </div>
+            </v-card-actions>
           </v-card>
           
           <v-card outlined class="mt-10 pb-4 px-4">
@@ -529,7 +539,8 @@
 
 
 <script>
-const path = require("path")
+const fs = require('fs')
+const path = require('path')
 const shell = require('electron').shell
 const { ipcRenderer } = require('electron')
 const {app} = require('electron').remote
@@ -603,6 +614,11 @@ export default {
     isCheckingUpdate: false,
     updateApp: false,
     dialogAddMetaCardsTemplate: false,
+    folderSize: {
+      timelines: null,
+      markers: null,
+      grids: null,
+    }
   }),
   computed: {
     updateIntervalDataFromVideos: {
@@ -852,6 +868,56 @@ export default {
       currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
       return lastVersion > currentVersion
     },
+    async getFolderSize(folderName) {
+      function getSize(dirPath){      
+        return getStat(dirPath).then(function(stat){  
+          if(stat.isFile()){  // if file return size directly
+            return stat.size;
+          }else{
+            return getFiles(dirPath).then(function(files){    // getting list of inner files
+              var promises = files.map(function(file){
+                return path.join(dirPath, file);  
+              }).map(getSize);    // recursively getting size of each file
+              return Promise.all(promises);   
+            }).then(function(childElementSizes){  // success callback once all the promise are fullfiled i. e size is collected 
+                var dirSize = 0;
+                childElementSizes.forEach(function(size){ // iterate through array and sum things
+                    dirSize+=size;
+                });
+                return dirSize;
+            });
+          }    
+        });
+      }
+
+      // promisified get stats method
+      function getStat(filePath){
+        return new Promise(function(resolve, reject){
+          fs.lstat(filePath, function(err, stat){
+            if(err) return reject(err);
+            resolve(stat);
+          });
+        });
+      }
+
+      // promisified get files method
+      function getFiles(dir){
+        return new Promise(function(resolve, reject){
+          fs.readdir(dir, function(err, stat){
+            if(err) return reject(err);
+            resolve(stat);
+          });
+        });  
+      }
+
+      const vm = this
+      const dirPath = path.join(this.$store.getters.getPathToUserData, 'media', folderName)
+      if (fs.existsSync(dirPath)) {
+        await getSize(dirPath).then(function(size){
+          vm.folderSize[folderName] = (size / 1024 / 1024).toFixed(2) + ' MB'
+        }).catch(console.error.bind(console))
+      } else vm.folderSize[folderName] = (0 / 1024 / 1024).toFixed(2) + ' MB'
+    },
     zoomOut() { this.zoom = (this.zoom - 0.01) || 0.5 },
     zoomIn() { this.zoom = (this.zoom + 0.01) || 2 },
     findVideoDuplicates() { 
@@ -884,6 +950,15 @@ export default {
       this.$router.push(tab.link)
     },
   },
+  watch: {
+    tab(activeTabName) {
+      if (activeTabName=='database-settings') {
+        this.getFolderSize('timelines')
+        this.getFolderSize('markers')
+        this.getFolderSize('grids')
+      }
+    }
+  }
 }
 </script>
 
