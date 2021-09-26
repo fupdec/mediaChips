@@ -1,20 +1,20 @@
 <template>
   <v-card class="folder-tree" outlined rounded="0" :class="[{tabs:tabs.length>0,'bottom-bar':navigationSide=='2'}]">
     <v-card-actions>
-      <v-select v-model="selectedDisk" :items="disks" label="Choose disk" solo dense
-        prepend-icon="mdi-harddisk" hide-details class="disks" @change="selectDisk"
+      <v-select v-model="selectedDisk" :items="disks" label="Choose disk" solo flat outlined dense
+        prepend-icon="mdi-harddisk" hide-details class="disks" @change="selectDisk" 
         :menu-props="{contentClass:'disks'}" item-text="_mounted" item-value="_mounted">
         <template v-slot:selection="data">
           <div class="mounted">{{data.item._mounted}}</div>
           <div class="space">{{calcSize(data.item._blocks)}}</div>
-          <v-progress-linear :value="data.item._capacity" height="20" color="secondary">
+          <v-progress-linear :value="data.item._capacity" height="20" color="primary">
             {{data.item._capacity}}
           </v-progress-linear>
         </template>
         <template v-slot:item="data">
           <div class="mounted">{{data.item._mounted}}</div>
           <div class="space">{{calcSize(data.item._blocks)}}</div>
-          <v-progress-linear :value="data.item._capacity" height="20" color="secondary">
+          <v-progress-linear :value="data.item._capacity" height="20" color="primary">
             {{data.item._capacity}}
           </v-progress-linear>
         </template>

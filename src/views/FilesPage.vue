@@ -1,43 +1,47 @@
 <template>
-  <div>
-    <div class="files-panel">
-      <vuescroll>
-        <div class="py-1 px-2 folder-path">
-          <span v-for="(f,i) in selectedFolder" :key="i">
+  <vuescroll>
+    <v-sheet class="folder-path-panel" :class="[{'tabs':tabs.length>0,'side-bar':navigationSide=='1'}]" @mousedown="stopSmoothScroll($event)">
+      <vuescroll :ops="ops">
+        <div class="folder-path">
+          <span v-for="(f,i) in selectedFolder" :key="i" class="item">
             <span v-if="i+1!=selectedFolder.length">
               <v-chip @click="selectFolder(i)" label outlined>{{f}}</v-chip>
               <v-icon small>mdi-chevron-right</v-icon>
             </span>
             <v-chip v-else label>{{f}}</v-chip>
           </span>
+          <span v-if="selectedFolder.length==0" class="text--secondary">Please select folder</span>
         </div>
-        <hr>
-
-        <v-container v-if="files.length" fluid class="files-grid">
-          <v-card v-for="(f,i) in files" :key="i" class="file-card" :class="[{folder:f.isDir,file:!f.isDir}]" outlined>
+      </vuescroll>
+    </v-sheet>
+    <div class="files-panel">
+      <div fluid class="files-grid">
+        <v-lazy v-for="(f,i) in files" :key="i+f.name">
+          <v-card class="file-card" :class="[{folder:f.isDir,file:!f.isDir}]" outlined>
             <div v-if="f.isDir" @click="openFolder(i)" class="icon-wrapper">
               <v-icon size="80" class="icon-closed">mdi-folder</v-icon>
               <v-icon size="80" class="icon-open">mdi-folder-open</v-icon>
             </div>
             <div v-else>
               <div class="icon-wrapper">
-                <img v-if="isImage(f.ext)" @click="openViewer(i)" :src="getImagePath(i)" height="80" class="image">
-                <v-icon v-else size="80">mdi-file-outline</v-icon>
+                <img v-if="isImage(f.ext)" @click="openViewer(i)" :src="getFilePath(i)" height="80" class="image">
+                <video v-else-if="f.ext=='.mp4'" :src="getFilePath(i)" width="120" height="80" class="video"/>
+                <v-icon v-else size="80">mdi-{{getFileIcon(f.ext)}}</v-icon>
                 <v-chip class="ext px-1" small label>{{ f.ext || '???' }}</v-chip>
               </div>
             </div>
             <span class="caption name">{{f.name}}</span>
           </v-card>
-          <div v-show="navigationSide=='2'" class="py-6"></div>
-        </v-container>
-        <div v-else class="empty-folder"> <v-icon size="120">mdi-folder-open-outline</v-icon> Folder is empty </div>
-      </vuescroll>
+        </v-lazy>
+      </div>
     </div>
+    
+    <div v-show="navigationSide=='2'" class="py-6"></div>
 
     <NavDrawer v-if="$store.state.navDrawer" :openFolderPath="openFolderPath" @selectFolder="pathSplit($event)"/>
 
     <ImageViewer :viewer="viewer" :files="files" :indexImage="index" :folder="selectedFolder" @close="viewer=false"/>
-  </div>
+  </vuescroll>
 </template>
 
 
@@ -70,9 +74,14 @@ export default {
     viewer: false,
     imageExt: ['.jpg','.jpeg','.jfif','.pjpeg','.pjp','.gif','.png','.webp'],
     openFolderPath: '',
+    ops: {
+      scrollPanel: { scrollingY: false },
+      rail: { size: '4px', }
+    },
   }),
   computed: {
-    navigationSide() {return this.$store.state.Settings.navigationSide},
+    navigationSide() { return this.$store.state.Settings.navigationSide },
+    tabs() { return this.$store.getters.tabs },
   },
   methods: {
     pathSplit(pathString) { this.selectedFolder = pathString.split(path.sep) },
@@ -89,10 +98,22 @@ export default {
       this.index = index
       this.viewer = true
     },
-    getImagePath(index) { 
+    getFilePath(index) { 
       let file = this.files[index]
       let folder = this.selectedFolder.join(path.sep)
-      return path.join('file://', folder, file.name+file.ext) 
+      return path.join(folder, file.name+file.ext) 
+    },
+    getFileIcon(ext) {
+      ext = ext.replace('.', '').toLowerCase()
+      let music = ['mp3','aac','m4a','wav','flac','wma','ogg','midi']
+      let video = ['wmv','avi','mkv']
+      let text = ['txt','ini','doc','docx']
+      let archive = ['zip','rar','tar']
+      if (music.indexOf(ext)>-1) return 'file-music-outline' 
+      else if (video.indexOf(ext)>-1) return 'file-video-outline' 
+      else if (text.indexOf(ext)>-1) return 'file-document-outline' 
+      else if (archive.indexOf(ext)>-1) return 'zip-box-outline'
+      else return 'file-outline' 
     },
     readDir() {
       const dirPath = this.selectedFolder.join(path.sep)
@@ -103,14 +124,22 @@ export default {
         try { stats = fs.lstatSync(filePath) } 
         catch (err) { return /* console.error(err) */ }
         if (stats) {
-          stats.name = path.parse(file).name
           stats.isDir = stats.isDirectory()
-          if (!stats.isDir) stats.ext = path.parse(file).ext
+          if (stats.isDir) stats.name = file
+          else {
+            stats.name = path.parse(file).name
+            stats.ext = path.parse(file).ext
+          }  
           this.files.push(stats)
         }
       })
       this.files = _.orderBy(this.files, 'isDir', ['desc'])
-    }
+    },
+    stopSmoothScroll(event) {
+      if(event.button != 1) return
+      event.preventDefault()
+      event.stopPropagation()
+    },
   },
   watch: {
     selectedFolder() { this.readDir() }
@@ -120,15 +149,48 @@ export default {
 
 
 <style lang="scss" scoped>
+// TODO Add paddings if running OS is not Windows 
+.files-panel {
+  padding-top: 40px;
+  padding-left: 300px;
+}
 .files-grid {
+  padding: 10px;
   display: grid;
   grid-gap: 10px;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
 }
-.files-panel {
-  padding-left: 300px;
+.folder-path-panel {
+  height: 40px;
+  overflow: hidden;
+  z-index: 1;
+  border-bottom: 1px solid rgba(122, 122, 122, 0.5);
+  position: fixed;
+  right: 0;
+  left: 300px;
+  top: calc(48px + 28px);
+  &.tabs {
+    top: calc(48px + 28px + 28px);  // system bar: 28px, app bar: 48px, tabs: 28px
+  }
+  &.side-bar {
+    margin-left: 56px;
+  }
 }
 .folder-path {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  height: 40px;
+  padding: 0 8px;
+  .item {
+    display: flex;
+    align-items: center;
+    > span {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+  }
   .v-chip {
     padding: 0 5px;
     height: auto;
@@ -190,13 +252,5 @@ export default {
     word-break: break-all;
     text-align: center;
   }
-}
-.empty-folder {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.5em;
-  margin: 20% 30%;
 }
 </style>
