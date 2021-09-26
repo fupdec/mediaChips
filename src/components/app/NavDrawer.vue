@@ -1,46 +1,58 @@
 <template>
-  <v-navigation-drawer absolute right class="folder-tree">
+  <v-card class="folder-tree" outlined rounded="0" :class="[{tabs:tabs.length>0,'bottom-bar':navigationSide=='2'}]">
+    <v-card-actions>
+      <v-select v-model="selectedDisk" :items="disks" label="Choose disk" solo dense
+        prepend-icon="mdi-harddisk" hide-details class="disks" @change="selectDisk"
+        :menu-props="{contentClass:'disks'}" item-text="_mounted" item-value="_mounted">
+        <template v-slot:selection="data">
+          <div class="mounted">{{data.item._mounted}}</div>
+          <div class="space">{{calcSize(data.item._blocks)}}</div>
+          <v-progress-linear :value="data.item._capacity" height="20" color="secondary">
+            {{data.item._capacity}}
+          </v-progress-linear>
+        </template>
+        <template v-slot:item="data">
+          <div class="mounted">{{data.item._mounted}}</div>
+          <div class="space">{{calcSize(data.item._blocks)}}</div>
+          <v-progress-linear :value="data.item._capacity" height="20" color="secondary">
+            {{data.item._capacity}}
+          </v-progress-linear>
+        </template>
+      </v-select>
+    </v-card-actions>
+    
     <vuescroll>
-      <v-card rounded="0" elevation="0">
-        <v-card-actions>
-          <v-select v-model="selectedDisk" :items="disks" label="Choose disk" solo dense
-            prepend-icon="mdi-harddisk" hide-details class="disks" @change="selectDisk"
-            :menu-props="{contentClass:'disks'}" item-text="_mounted" item-value="_mounted">
-            <template v-slot:selection="data">
-              <div class="mounted">{{data.item._mounted}}</div>
-              <div class="space">{{calcSize(data.item._blocks)}}</div>
-              <v-progress-linear :value="data.item._capacity" height="20" color="secondary">
-                {{data.item._capacity}}
-              </v-progress-linear>
-            </template>
-            <template v-slot:item="data">
-              <div class="mounted">{{data.item._mounted}}</div>
-              <div class="space">{{calcSize(data.item._blocks)}}</div>
-              <v-progress-linear :value="data.item._capacity" height="20" color="secondary">
-                {{data.item._capacity}}
-              </v-progress-linear>
-            </template>
-          </v-select>
-        </v-card-actions>
-        <v-card-text v-if="updatingFolderTree" class="text-center">
-          <h3 class="mb-2">Creating a folder tree...</h3>
-          <v-icon x-large class="loading-animation">mdi-loading</v-icon>
-        </v-card-text>
-        <v-card-text v-else class="pa-0">
-          <v-treeview :items="folders" :load-children="loadChildren" open-on-click
-            item-key="path" item-text="name" dense hoverable expand-icon="mdi-chevron-down">
-            <template v-slot:prepend="{ item, open }">
-              <v-icon @click="selectFolder(item)" size="18" :color="item.path==selectedFolder?'primary':''">
-                {{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
-            </template>
-            <template slot="label" slot-scope="{ item }">
-              <span @click="selectFolder(item)" class="item-name">{{ item.name }}</span>
-            </template>
-          </v-treeview>
-        </v-card-text>
-      </v-card>
+      <v-card-text v-if="updatingFolderTree" class="text-center">
+        <h3 class="mb-2">Creating a folder tree...</h3>
+        <v-icon x-large class="loading-animation">mdi-loading</v-icon>
+      </v-card-text>
+      <v-card-text v-else class="pa-0">
+        <v-treeview 
+          :items="folders" 
+          :load-children="loadChildren" 
+          :open.sync="openIds" 
+          item-key="path" 
+          item-text="name" 
+          dense hoverable 
+          expand-icon="mdi-chevron-down"
+        >
+          <template v-slot:prepend="{ item, open }">
+            <div @mouseup="selectFolder(item)" class="folder-icon">
+              <v-icon size="18" :color="item.path==selectedFolder?'primary':''">
+              {{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
+            </div>
+          </template>
+          <template slot="label" slot-scope="{ item }">
+            <span @mouseup="selectFolder(item)" 
+              class="item-name" 
+              :class="[{'selected':item.path==selectedFolder}]">
+              {{ item.name }}
+            </span>
+          </template>
+        </v-treeview>
+      </v-card-text>
     </vuescroll>
-  </v-navigation-drawer>
+  </v-card>
 </template>
 
 
@@ -55,6 +67,7 @@ import Functions from '@/mixins/Functions'
 export default {
   name: 'NavDrawer',
   props: {
+    openFolderPath: String,
   },
   components: {
     vuescroll,
@@ -72,6 +85,7 @@ export default {
     disks: [],
     prevSelectedFolders: [],
     depth: 2,
+    openIds: [],
     excludes: ['.git','node_modules','System Volume Information','$Recycle.Bin'],
   }),
   computed: {
@@ -83,6 +97,8 @@ export default {
       get() { return this.$store.state.Settings.selectedDisk },
       set(value) { this.$store.dispatch('updateSettingsState', {key:'selectedDisk', value}) },
     },
+    navigationSide() { return this.$store.state.Settings.navigationSide },
+    tabs() { return this.$store.getters.tabs },
   },
   methods: {
     initFolderTree() {
@@ -200,6 +216,10 @@ export default {
     },
   },
   watch: {
+    openFolderPath(newPath) { 
+      // if (this.openIds.indexOf(newPath)<0) this.openIds.push(newPath)
+      this.selectedFolder = newPath
+    },
   },
 }
 </script>
@@ -207,7 +227,16 @@ export default {
 
 <style lang="less">
 .folder-tree {
-  z-index: 3;
+  position: fixed;
+  top: calc(48px + 28px);
+  bottom: calc(20px);
+  width: 300px;
+  &.tabs {
+    top: calc(48px + 28px + 28px);  // system bar: 28px, app bar: 48px, tabs: 28px
+  }
+  &.bottom-bar {
+    bottom: calc(20px + 56px); // status bar: 20px, bottom bar: 56px
+  }
 }
 .disks {
   .mounted {
@@ -244,6 +273,20 @@ export default {
   .item-name {
     height: 100%;
     width: 100%;
+    &.selected {
+      color: var(--v-primary-base);
+      &:before {
+        content: '';
+        position: absolute;
+        width: 200%;
+        left: -100%;
+        height: 100%;
+        opacity: 0.12;
+        z-index: -1;
+        pointer-events: none;
+        background-color: var(--v-primary-base);
+      }
+    }
   }
 }
 </style>
