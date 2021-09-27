@@ -42,6 +42,7 @@
     "rimraf": "^3.0.2",
     "shortid": "^2.2.16",
     "string-crypto": "^2.0.1",
+    "v-viewer": "^1.6.4",
     "vue": "^2.6.12",
     "vue-advanced-cropper": "^1.4.0",
     "vue-apexcharts": "^1.6.2",

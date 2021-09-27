@@ -40,7 +40,8 @@
 
     <NavDrawer v-if="$store.state.navDrawer" :openFolderPath="openFolderPath" @selectFolder="pathSplit($event)"/>
 
-    <ImageViewer :viewer="viewer" :files="files" :indexImage="index" :folder="selectedFolder" @close="viewer=false"/>
+    <viewer :images="images" ref="viewer"/>
+    <!-- <ImageViewer :viewer="viewer" :files="files" :indexImage="index" :folder="selectedFolder" @close="viewer=false"/> -->
   </vuescroll>
 </template>
 
@@ -51,13 +52,17 @@ const path = require('path')
 const shell = require('electron').shell
 
 import vuescroll from 'vuescroll'
+import VueViewer from 'v-viewer'
+import 'viewerjs/dist/viewer.css'
+import Vue from 'vue'
+Vue.use(VueViewer)
 
 export default {
   name: 'FilesPage',
   components: {
     vuescroll,
     NavDrawer: () => import('@/components/app/NavDrawer.vue'),
-    ImageViewer: () => import('@/components/app/ImageViewer.vue'),
+    // ImageViewer: () => import('@/components/app/ImageViewer.vue'),
   },
   mounted () {
     this.$nextTick(function () {
@@ -70,7 +75,7 @@ export default {
   data: ()=>({
     selectedFolder: [],
     files: [],
-    index: 0,
+    // index: 0,
     viewer: false,
     imageExt: ['.jpg','.jpeg','.jfif','.pjpeg','.pjp','.gif','.png','.webp'],
     openFolderPath: '',
@@ -82,6 +87,11 @@ export default {
   computed: {
     navigationSide() { return this.$store.state.Settings.navigationSide },
     tabs() { return this.$store.getters.tabs },
+    images() {  
+      let images = _.filter(this.files, i=>i.isDir?false:this.isImage(i.ext))
+      let folder = this.selectedFolder.join(path.sep)
+      return images.map(i=>path.join(folder, i.name+i.ext)) 
+    },
   },
   methods: {
     pathSplit(pathString) { this.selectedFolder = pathString.split(path.sep) },
@@ -95,8 +105,11 @@ export default {
     },
     isImage(ext) { return this.imageExt.includes(ext.toLowerCase()) },
     openViewer(index) { 
-      this.index = index
-      this.viewer = true
+      let folder = this.selectedFolder.join(path.sep)
+      let file = this.files[index]
+      let name = path.join(folder, file.name+file.ext)
+      let i = _.findIndex(this.images, i=>i==name)
+      this.$viewerApi({ images: this.images, options: {initialViewIndex:i} })
     },
     getFilePath(index) { 
       let file = this.files[index]

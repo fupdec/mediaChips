@@ -26,31 +26,29 @@
         <h3 class="mb-2">Creating a folder tree...</h3>
         <v-icon x-large class="loading-animation">mdi-loading</v-icon>
       </v-card-text>
-      <v-card-text v-else class="pa-0">
-        <v-treeview 
-          :items="folders" 
-          :load-children="loadChildren" 
-          :open.sync="openIds" 
-          item-key="path" 
-          item-text="name" 
-          dense hoverable 
-          expand-icon="mdi-chevron-down"
-        >
-          <template v-slot:prepend="{ item, open }">
-            <div @mouseup="selectFolder(item)" class="folder-icon">
-              <v-icon size="18" :color="item.path==selectedFolder?'primary':''">
-              {{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
-            </div>
-          </template>
-          <template slot="label" slot-scope="{ item }">
-            <span @mouseup="selectFolder(item)" 
-              class="item-name" 
-              :class="[{'selected':item.path==selectedFolder}]">
-              {{ item.name }}
-            </span>
-          </template>
-        </v-treeview>
-      </v-card-text>
+      <v-treeview class="tree-view"
+        :items="folders" 
+        :load-children="loadChildren" 
+        :open.sync="openIds" 
+        item-key="path" 
+        item-text="name" 
+        dense hoverable 
+        expand-icon="mdi-chevron-down"
+      >
+        <template v-slot:prepend="{ item, open }">
+          <div @click="selectFolder(item)" class="folder-icon">
+            <v-icon size="18" :color="item.path==selectedFolder?'primary':''">
+            {{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
+          </div>
+        </template>
+        <template slot="label" slot-scope="{ item }">
+          <span @click="selectFolder(item)" 
+            class="item-name" 
+            :class="[{'selected':item.path==selectedFolder}]">
+            {{ item.name }}
+          </span>
+        </template>
+      </v-treeview>
     </vuescroll>
   </v-card>
 </template>
@@ -237,6 +235,50 @@ export default {
   &.bottom-bar {
     bottom: calc(20px + 56px); // status bar: 20px, bottom bar: 56px
   }
+  .v-treeview--dense .v-treeview-node__root {
+    min-height: 24px;
+  }
+  .v-treeview-node__content {
+    cursor: pointer;
+    margin-left: 2px;
+  }
+  .v-icon.v-icon.v-icon--link {
+    cursor: default;
+  }
+  .v-treeview-node__root {
+    padding-left: 2px;
+    padding-right: 0;
+  }
+  .v-treeview-node__prepend {
+    margin-right: 0 !important;
+  }
+  .v-treeview-node__label {
+    cursor: pointer;
+    display: flex;
+    .item-name {
+      height: 100%;
+      width: 100%;
+      font-size: 14px;
+      &.selected {
+        color: var(--v-primary-base);
+        &:before {
+          content: '';
+          position: absolute;
+          width: 200%;
+          left: -100%;
+          top: 0;
+          height: 100%;
+          opacity: 0.12;
+          z-index: -1;
+          pointer-events: none;
+          background-color: var(--v-primary-base);
+        }
+      }
+    }
+  }
+}
+.tree-view {
+  padding-bottom: 56px;
 }
 .disks {
   .mounted {
@@ -253,40 +295,6 @@ export default {
   }
   .v-progress-linear__content {
     font-size: 12px;
-  }
-}
-.v-treeview--dense .v-treeview-node__root {
-  min-height: 24px;
-}
-.v-application--is-ltr .v-treeview-node__content {
-  margin-left: 2px;
-}
-.v-treeview-node__root {
-  padding-left: 2px;
-  padding-right: 0;
-}
-.v-treeview-node__prepend {
-  margin-right: 0 !important;
-}
-.v-treeview-node__label {
-  display: flex;
-  .item-name {
-    height: 100%;
-    width: 100%;
-    &.selected {
-      color: var(--v-primary-base);
-      &:before {
-        content: '';
-        position: absolute;
-        width: 200%;
-        left: -100%;
-        height: 100%;
-        opacity: 0.12;
-        z-index: -1;
-        pointer-events: none;
-        background-color: var(--v-primary-base);
-      }
-    }
   }
 }
 </style>
