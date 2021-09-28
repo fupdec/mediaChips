@@ -25,6 +25,7 @@ export default {
     isGenerationBreak: false,
     timeout: null,
     numberOfCreatedGrid: 0,
+    dropzone: false,
   }),
   computed: {
     getNumberOfPagesLimit() {return this.$store.state.Settings.numberOfPagesLimit},
@@ -135,6 +136,33 @@ export default {
       for (let i of selected) i.classList.remove('selected')
       this.$store.commit('updateSelectedVideos', [])
     },
+    showDrop() { if (this.dropzone==false) this.dropzone = true },
+    catchDrop(e) {
+      this.dropzone = false
+
+      let files = e.dataTransfer.files
+      let folders = []
+      let videos = []
+      for (let f of files) {
+        if (!f.type && f.size%4096 == 0) { // is a folder?
+          folders.push(f.path)
+        } else {
+          if ( f.type.match(/.+?(?=\/)/)[0] == 'video' ) videos.push(f.path)
+        }
+      }
+
+      if (folders.length == 0 && videos.length == 0) {
+        this.$store.dispatch('setNotification', {
+          type: 'error',
+          text: `No videos found in the dropped files`
+        })
+      } else {
+        this.$store.state.scan.folders = folders
+        this.$store.state.scan.files = videos
+        this.$store.state.scan.stage = 2
+        this.$store.state.Settings.dialogScanVideos = true
+      }
+    },
   },
   watch: {
     videosOnPage() {
@@ -152,3 +180,29 @@ export default {
   },
 }
 </script>
+
+
+<style lang="scss" scoped>
+.dropzone {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  padding: 100px;
+  opacity: 0.9;
+  .text {
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    border: 8px dashed;
+    font-size: 2em;
+  }
+}
+</style>

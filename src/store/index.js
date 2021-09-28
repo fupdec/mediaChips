@@ -13,6 +13,11 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: () => ({
+    scan: {
+      folders: [],
+      files: [],
+      stage: 0,
+    },
     itemsLoading: true,
     log: [],
     isLogVisible: false,

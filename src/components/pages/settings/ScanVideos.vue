@@ -29,7 +29,7 @@
               </v-card-text>
             </vuescroll>
             <v-card-actions>
-              <v-btn @click="$store.state.Settings.dialogScanVideos=false" class="ma-2">
+              <v-btn @click="close" class="ma-2">
                 <v-icon left>mdi-cancel</v-icon> Cancel
               </v-btn>
               <v-spacer></v-spacer>
@@ -70,11 +70,11 @@
               </div>
             </div>
             <v-card-actions>
-              <v-btn @click="$store.state.Settings.dialogScanVideos = false" class="ma-2">
+              <v-btn @click="close" class="ma-2">
                 <v-icon left>mdi-cancel</v-icon> Cancel
               </v-btn>
               <v-spacer></v-spacer>
-              <v-btn @click="scanVideosForm = 1" class="my-2 mr-6">
+              <v-btn v-if="scanStage==0" @click="scanVideosForm=1" class="my-2 mr-6">
                 <v-icon large left>mdi-chevron-left</v-icon> Back
               </v-btn>
               <v-btn @click="startScanProcess" color="primary" class="my-2 mr-2">
@@ -206,25 +206,18 @@ import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'ScanVideos',
-  props: {
-    newFiles: Array,
-    stage: Number,
-	},
   components: {
     vuescroll
 	},
   mixins: [MetaGetters],
   mounted() {
     this.$nextTick(function () {
-      if (this.stage>0) this.scanVideosForm = this.stage
+      if (this.scanStage>0) this.scanVideosForm = this.scanStage
       this.folderPaths = this.$store.state.Settings.folders.map(f=>f.path).join('\n')
     })
   },
   beforeMount() {
     this.initParseMeta()
-  },
-  beforeDestroy() {
-    this.$emit('close')
   },
   data: () => ({
     scanVideosForm: 1,
@@ -263,6 +256,18 @@ export default {
     metaForParsing() {  
       let ids = this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).map('id').value() 
       return this.$store.getters.meta.filter(i=>ids.includes(i.id)&&i.settings.parser).value()
+    },
+    scanFolders: {
+      get() { return this.$store.state.scan.folders },
+      set(value) { this.$store.state.scan.folders = value },
+    },
+    scanFiles: {
+      get() { return this.$store.state.scan.files },
+      set(value) { this.$store.state.scan.files = value },
+    },
+    scanStage: {
+      get() { return this.$store.state.scan.stage },
+      set(value) { this.$store.state.scan.stage = value },
     },
   },
   methods: {
@@ -311,14 +316,20 @@ export default {
       this.noNewVideosAdded = false
       this.stop = false
       
-      let formats = /\.3gp$|\.avi$|\.dat$|\.f4v$|\.flv$|\.m4v$|\.mkv$|\.mod$|\.mov$|\.mp4$|\.mpeg$|\.mpg$|\.mts$|\.rm$|\.rmvb$|\.swf$|\.ts$|\.vob$|\.webm$|\.wmv$|\.yuv$/
+      let formats = /\.3gp$|\.avi$|\.f4v$|\.flv$|\.m4v$|\.mkv$|\.mod$|\.mov$|\.mp4$|\.mpeg$|\.mpg$|\.mts$|\.rm$|\.rmvb$|\.swf$|\.ts$|\.vob$|\.webm$|\.wmv$|\.yuv$/
 
       const vm = this
 
-      let folders = this.folderPaths.split('\n')
       let filesArray = []
-      if (this.newFiles.length) filesArray = this.newFiles
-      else for (const folder of folders) filesArray = filesArray.concat(vm.findInDir(folder, formats))
+      if (this.scanFiles.length || this.scanFolders.length) {
+        if (this.scanFiles.length) filesArray = this.scanFiles
+        if (this.scanFolders.length) {
+          for (const folder of this.scanFolders) filesArray = filesArray.concat(vm.findInDir(folder, formats))
+        } 
+      } else {
+        let folders = this.folderPaths.split('\n')
+        for (const folder of folders) filesArray = filesArray.concat(vm.findInDir(folder, formats))
+      } 
       function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 
       async function processArray(files) {
@@ -543,9 +554,15 @@ export default {
       setTimeout(()=>{ this.scanDir() },500)
     },
     endScanProcess() {
-      this.$store.state.Settings.dialogScanVideos = false
-      this.scanVideosForm = 1
+      this.close()
       this.$store.state.updateFoldersData = Date.now()
+    },
+    close() {
+      this.$store.state.Settings.dialogScanVideos = false
+      this.scanFolders = []
+      this.scanFiles = []
+      this.scanStage = 0
+      this.scanVideosForm = 1
     },
   },
   watch: {

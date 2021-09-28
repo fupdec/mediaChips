@@ -73,7 +73,7 @@
 
     <VideosGridElements />
 
-    <ScanVideos v-if="$store.state.Settings.dialogScanVideos" @close="closeScanVideos" :newFiles="newFiles" :stage="stage"/>
+    <ScanVideos v-if="$store.state.Settings.dialogScanVideos"/>
 
     <img v-show="$store.state.hoveredImage" class="list-img-preview"
       :src="getHoveredImage" height="160" max-width="160"
@@ -220,8 +220,6 @@ export default {
     watcher: null,
     foldersUpdated: false,
     extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
-    newFiles: [],
-    stage: 0,
     about: false,
     migration: false,
     version: '',
@@ -425,13 +423,9 @@ export default {
       this.$store.state.dialogFolder = true
     },
     addNewVideos() {
-      this.newFiles = this.folder.newFiles
-      this.stage = 2
+      this.$store.state.scan.files = this.folder.newFiles
+      this.$store.state.scan.stage = 2
       this.$store.state.Settings.dialogScanVideos = true
-    },
-    closeScanVideos() {
-      this.stage = 0
-      this.newFiles = []
     },
   },
   watch: {

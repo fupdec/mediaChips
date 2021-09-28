@@ -1,252 +1,258 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <v-responsive :aspect-ratio="2.3" :key="metaCardKey" class="header-images">
-      <div v-if="!checkImageSettings('alt')" class="thumbs">
-        <v-img v-for="(imgUrl, i) in videoThumbImgUrls" :key="i" 
-          :src="imgUrl" :aspect-ratio="16/9" width="20%" />
-      </div>
-      <img v-else-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" class="header-image">
-      <div v-else class="images">
-        <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
-        <v-responsive :aspect-ratio="5/9" />
-        <v-responsive :aspect-ratio="5/9" />
-        <v-img v-if="checkImageSettings('alt')" :src="getImgUrl('alt')" :gradient="gradientImage" :aspect-ratio="9/5"/>
-      </div>
-      <div class="header-gradient" :style="gradient"></div>
-    </v-responsive>
-    
-    <div class="py-16"></div>
-    <v-container class="profile-container">
-      <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
-        <img :src="getImgUrl('avatar')">
-      </v-avatar>
+    <div @dragover="showDrop">
+      <v-responsive :aspect-ratio="2.3" :key="metaCardKey" class="header-images">
+        <div v-if="!checkImageSettings('alt')" class="thumbs">
+          <v-img v-for="(imgUrl, i) in videoThumbImgUrls" :key="i" 
+            :src="imgUrl" :aspect-ratio="16/9" width="20%" />
+        </div>
+        <img v-else-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" class="header-image">
+        <div v-else class="images">
+          <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
+          <v-responsive :aspect-ratio="5/9" />
+          <v-responsive :aspect-ratio="5/9" />
+          <v-img v-if="checkImageSettings('alt')" :src="getImgUrl('alt')" :gradient="gradientImage" :aspect-ratio="9/5"/>
+        </div>
+        <div class="header-gradient" :style="gradient"></div>
+      </v-responsive>
       
-      <v-tooltip right>
-        <template v-slot:activator="{ on, attrs }">
-          <v-progress-circular v-bind="attrs" v-on="on" :value="cardInfoComplete" 
-            size="168" rotate="270" width="2" class="profile-complete-progress" 
-            :color="meta.settings.color?card.meta.color?card.meta.color:'primary':'primary'"/> 
-        </template>
-        <span>Information about the {{meta.settings.nameSingular.toLowerCase()}} is {{cardInfoComplete}}% complete</span>
-      </v-tooltip>
-      <div class="buttons-left">
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-btn @click="copyCardNameToClipboard" icon v-on="on"> 
-              <v-icon>mdi-content-copy</v-icon></v-btn>
+      <div class="py-16"></div>
+      <v-container class="profile-container">
+        <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
+          <img :src="getImgUrl('avatar')">
+        </v-avatar>
+        
+        <v-tooltip right>
+          <template v-slot:activator="{ on, attrs }">
+            <v-progress-circular v-bind="attrs" v-on="on" :value="cardInfoComplete" 
+              size="168" rotate="270" width="2" class="profile-complete-progress" 
+              :color="meta.settings.color?card.meta.color?card.meta.color:'primary':'primary'"/> 
           </template>
-          <span>Copy {{meta.settings.nameSingular}} name to clipboard</span>
+          <span>Information about the {{meta.settings.nameSingular.toLowerCase()}} is {{cardInfoComplete}}% complete</span>
         </v-tooltip>
-      </div>
-      <div class="buttons-right">
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" icon v-on="on"> 
-              <v-icon>mdi-pencil</v-icon></v-btn>
-          </template>
-          <span>Edit {{meta.settings.nameSingular}}</span>
-        </v-tooltip>
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" icon v-on="on"> 
-              <v-icon>mdi-image-edit-outline</v-icon></v-btn>
-          </template>
-          <span>Edit Images</span>
-        </v-tooltip>
-      </div>
-      <v-expansion-panels v-model="profile" multiple focusable>
-        <v-expansion-panel :style="profileBackground" :key="0">
-          <v-expansion-panel-header class="pa-6" ripple hide-actions>
-            <div class="text-center meta-card-name avatar">{{card.meta.name}}</div>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content eager>
-            <v-container class="px-0">
-              <v-row>
-                <v-col cols="12" class="d-flex justify-space-between pb-0">
-                  <v-chip label outlined>
-                    <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
-                  </v-chip>
-                  <v-chip label outlined class="mx-4">
-                    <v-icon left size="20">mdi-eye</v-icon> Views: {{card.views || 0}}
-                  </v-chip>
-                  <v-chip label outlined>
-                    <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
-                  </v-chip>
-                </v-col>
-                <v-col v-if="meta.settings.rating||meta.settings.favorite" cols="12" md="4" sm="6">
-                  <div v-if="meta.settings.rating" class="param"><b class="mr-2">Rating</b>
-                    <v-rating :value="rating" @input="changeRating" dense hover clearable
-                      color="yellow darken-3" background-color="grey darken-1"
-                      empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
-                      half-increments size="20" style="display: inline;"/>
-                  </div>
-                  <div v-if="meta.settings.favorite" class="param ml-6"><b class="mr-2">Favorite</b>
-                    <v-btn @click="toggleFavorite" icon>
-                      <v-icon v-if="favorite" size="20" color="pink">mdi-heart</v-icon>
-                      <v-icon v-else size="20" color="grey">mdi-heart-outline </v-icon>
-                    </v-btn>
-                  </div><br>
-                </v-col>
-                <v-col v-if="meta.settings.synonyms" cols="12" md="4" sm="6">
-                  <div class="param">
-                    <b class="mr-2">Synonyms:</b> 
-                    <span v-if="card.meta.synonyms">{{card.meta.synonyms.join(', ') || '-'}}</span>
-                  </div>
-                </v-col>
-                <v-col v-if="meta.settings.country" cols="12" md="4" sm="6">
-                  <div class="param d-flex">
-                    <b class="mr-2">Country:</b> 
-                    <div v-if="card.meta.country" class="d-flex flex-wrap">
-                      <div v-for="country in card.meta.country" :key="country" class="country mr-2">
-                        <country-flag :country='getCountryCode(country)'/>
-                        <span class="name ml-2">{{getCountry(country)}}</span>
+        <div class="buttons-left">
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-btn @click="copyCardNameToClipboard" icon v-on="on"> 
+                <v-icon>mdi-content-copy</v-icon></v-btn>
+            </template>
+            <span>Copy {{meta.settings.nameSingular}} name to clipboard</span>
+          </v-tooltip>
+        </div>
+        <div class="buttons-right">
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" icon v-on="on"> 
+                <v-icon>mdi-pencil</v-icon></v-btn>
+            </template>
+            <span>Edit {{meta.settings.nameSingular}}</span>
+          </v-tooltip>
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" icon v-on="on"> 
+                <v-icon>mdi-image-edit-outline</v-icon></v-btn>
+            </template>
+            <span>Edit Images</span>
+          </v-tooltip>
+        </div>
+        <v-expansion-panels v-model="profile" multiple focusable>
+          <v-expansion-panel :style="profileBackground" :key="0">
+            <v-expansion-panel-header class="pa-6" ripple hide-actions>
+              <div class="text-center meta-card-name avatar">{{card.meta.name}}</div>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content eager>
+              <v-container class="px-0">
+                <v-row>
+                  <v-col cols="12" class="d-flex justify-space-between pb-0">
+                    <v-chip label outlined>
+                      <v-icon left size="20">mdi-calendar-plus</v-icon> Added: {{dateAdded}}
+                    </v-chip>
+                    <v-chip label outlined class="mx-4">
+                      <v-icon left size="20">mdi-eye</v-icon> Views: {{card.views || 0}}
+                    </v-chip>
+                    <v-chip label outlined>
+                      <v-icon left size="20">mdi-calendar-edit</v-icon> Last edit: {{dateEdit}}
+                    </v-chip>
+                  </v-col>
+                  <v-col v-if="meta.settings.rating||meta.settings.favorite" cols="12" md="4" sm="6">
+                    <div v-if="meta.settings.rating" class="param"><b class="mr-2">Rating</b>
+                      <v-rating :value="rating" @input="changeRating" dense hover clearable
+                        color="yellow darken-3" background-color="grey darken-1"
+                        empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+                        half-increments size="20" style="display: inline;"/>
+                    </div>
+                    <div v-if="meta.settings.favorite" class="param ml-6"><b class="mr-2">Favorite</b>
+                      <v-btn @click="toggleFavorite" icon>
+                        <v-icon v-if="favorite" size="20" color="pink">mdi-heart</v-icon>
+                        <v-icon v-else size="20" color="grey">mdi-heart-outline </v-icon>
+                      </v-btn>
+                    </div><br>
+                  </v-col>
+                  <v-col v-if="meta.settings.synonyms" cols="12" md="4" sm="6">
+                    <div class="param">
+                      <b class="mr-2">Synonyms:</b> 
+                      <span v-if="card.meta.synonyms">{{card.meta.synonyms.join(', ') || '-'}}</span>
+                    </div>
+                  </v-col>
+                  <v-col v-if="meta.settings.country" cols="12" md="4" sm="6">
+                    <div class="param d-flex">
+                      <b class="mr-2">Country:</b> 
+                      <div v-if="card.meta.country" class="d-flex flex-wrap">
+                        <div v-for="country in card.meta.country" :key="country" class="country mr-2">
+                          <country-flag :country='getCountryCode(country)'/>
+                          <span class="name ml-2">{{getCountry(country)}}</span>
+                        </div>
                       </div>
+                      <div v-else>-</div>
                     </div>
-                    <div v-else>-</div>
-                  </div>
-                </v-col>
-                <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
-                  <b class="mr-4"> Career status </b>
-                  <v-chip :color="getCareer('color')" class="overline" label light>{{getCareer('status')}}</v-chip>
-                  <span class="ml-4">{{getCareer('ended')}}</span>
-                </v-col>
-                <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
-                  <div class="career">
-                    <div class="text">
-                      <div class="bold-text"> 
-                        <span v-if="getCareer('total')>0">{{getCareer('total')}}</span>
-                        <span v-else>???</span>
-                        year<span v-if="getCareer('total')>1">s</span>
-                      </div> 
-                      <br><div class="light-text">in the business</div>
+                  </v-col>
+                  <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
+                    <b class="mr-4"> Career status </b>
+                    <v-chip :color="getCareer('color')" class="overline" label light>{{getCareer('status')}}</v-chip>
+                    <span class="ml-4">{{getCareer('ended')}}</span>
+                  </v-col>
+                  <v-col v-if="meta.settings.career" cols="12" md="4" sm="6">
+                    <div class="career">
+                      <div class="text">
+                        <div class="bold-text"> 
+                          <span v-if="getCareer('total')>0">{{getCareer('total')}}</span>
+                          <span v-else>???</span>
+                          year<span v-if="getCareer('total')>1">s</span>
+                        </div> 
+                        <br><div class="light-text">in the business</div>
+                      </div>
+                      <div class="start value">{{getCareer('start')}}</div>
+                      <div class="end value">{{getCareer('end')}}</div>
+                      <div class="line"></div>
                     </div>
-                    <div class="start value">{{getCareer('start')}}</div>
-                    <div class="end value">{{getCareer('end')}}</div>
-                    <div class="line"></div>
-                  </div>
-                </v-col>
-                <!-- Parse meta from cards -->
-                <v-col v-for="(m,i) in metaForProfile" :key="i" cols="12" md="4" sm="6" class="d-flex align-start">
-                  <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-                  <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
-                  <v-chip-group v-if="m.type=='complex'" column class="chips-remove-padding">
-                    <v-chip v-for="c in card.meta[m.id]" :key="c" 
-                      :color="getColor(m.id,c)" small class="px-2"
-                      :label="getMeta(m.id).settings.chipLabel"
-                      :outlined="getMeta(m.id).settings.chipOutlined"
-                      @mouseover.stop="showImage($event,c,'meta',m.id)" 
-                      @mouseleave.stop="$store.state.hoveredImage=false"> 
-                        {{ getCard(c).meta.name }} </v-chip>
-                  </v-chip-group>
-                  <div v-else-if="m.type=='simple'" class="simple-meta">
-                    <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
-                    <span v-else-if="getMeta(m.id).dataType=='boolean'">{{JSON.stringify(card.meta[m.id])}}</span>
-                    <span v-else-if="getMeta(m.id).dataType=='rating'">      
-                      <v-rating :value="card.meta[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
-                        :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIconEmpty||getMeta(m.id).settings.ratingIcon}`" 
-                        :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable 
-                        :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
-                    </span>
-                    <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
-                    <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}}{{getAge(card.meta[m.id])}}</span>
-                    <span v-else>{{card.meta[m.id]}}</span>
-                  </div>
-                </v-col>
-                <v-col cols="12">
-                  <div v-if="meta.settings.bookmark" class="param bookmark-text">
-                    <v-icon left>mdi-bookmark</v-icon>
-                    <b class="mr-2">Bookmark:</b> 
-                    <span>{{card.meta.bookmark || '-'}}</span>
-                  </div>
-                </v-col>
-                <v-col v-if="quickFilters" class="text-center">
-                  <v-tooltip left>
-                      <template v-slot:activator="{ on, attrs }">
-                      <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
-                    </template>
-                    <span>Click on chip for filter videos</span>
-                  </v-tooltip>
-                  <span>Quick filters for videos</span>
-                </v-col>
-                <v-col v-for="(qf,i) in quickFilters" :key="qf.id+i" cols="12" class="text-center py-0">
-                  <v-chip-group :value="qf.value" @change="setCardFilter($event, qf.id)" active-class="active-chip" multiple column>
-                    <span class="mr-2">
-                      <v-icon left>mdi-{{getMeta(qf.id).settings.icon}}</v-icon>
-                      <b>{{getMeta(qf.id).settings.name}}:</b>
-                    </span>
-                    <v-chip v-for="(c) in qf.chips" :key="c" 
-                      class="mr-2 mb-1 px-2" small filter
-                      :color="getColor(qf.id,c)" 
-                      :label="getMeta(qf.id).settings.chipLabel"
-                      :outlined="getMeta(qf.id).settings.chipOutlined"
-                      :disabled="card.id===c"
-                      @mouseover.stop="showImage($event,c,'meta',qf.id)" 
-                      @mouseleave.stop="$store.state.hoveredImage=false">
-                      {{getCard(c).meta.name}}</v-chip>
-                  </v-chip-group>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-expansion-panel-content>
-          <div class="profile-hover-btn show"><v-icon>mdi-chevron-down</v-icon></div>
-          <div class="profile-hover-btn hide"><v-icon>mdi-chevron-up</v-icon></div>
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </v-container>
-    
-    <div v-if="isMetaAssignedToVideo">
-      <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
-        <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
+                  </v-col>
+                  <!-- Parse meta from cards -->
+                  <v-col v-for="(m,i) in metaForProfile" :key="i" cols="12" md="4" sm="6" class="d-flex align-start">
+                    <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                    <b class="mr-2">{{getMeta(m.id).settings.name}}:</b>
+                    <v-chip-group v-if="m.type=='complex'" column class="chips-remove-padding">
+                      <v-chip v-for="c in card.meta[m.id]" :key="c" 
+                        :color="getColor(m.id,c)" small class="px-2"
+                        :label="getMeta(m.id).settings.chipLabel"
+                        :outlined="getMeta(m.id).settings.chipOutlined"
+                        @mouseover.stop="showImage($event,c,'meta',m.id)" 
+                        @mouseleave.stop="$store.state.hoveredImage=false"> 
+                          {{ getCard(c).meta.name }} </v-chip>
+                    </v-chip-group>
+                    <div v-else-if="m.type=='simple'" class="simple-meta">
+                      <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id)}}</span>
+                      <span v-else-if="getMeta(m.id).dataType=='boolean'">{{JSON.stringify(card.meta[m.id])}}</span>
+                      <span v-else-if="getMeta(m.id).dataType=='rating'">      
+                        <v-rating :value="card.meta[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                          :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIconEmpty||getMeta(m.id).settings.ratingIcon}`" 
+                          :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable 
+                          :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
+                      </span>
+                      <span v-else-if="getMeta(m.id).dataType=='string'&&getMeta(m.id).settings.isLink" @click="openLink(card.meta[m.id])" class="link" title="Open link in browser">{{card.meta[m.id]}}</span>
+                      <span v-else-if="m.scraperField=='birthday'">{{card.meta[m.id]}}{{getAge(card.meta[m.id])}}</span>
+                      <span v-else>{{card.meta[m.id]}}</span>
+                    </div>
+                  </v-col>
+                  <v-col cols="12">
+                    <div v-if="meta.settings.bookmark" class="param bookmark-text">
+                      <v-icon left>mdi-bookmark</v-icon>
+                      <b class="mr-2">Bookmark:</b> 
+                      <span>{{card.meta.bookmark || '-'}}</span>
+                    </div>
+                  </v-col>
+                  <v-col v-if="quickFilters" class="text-center">
+                    <v-tooltip left>
+                        <template v-slot:activator="{ on, attrs }">
+                        <v-icon v-bind="attrs" v-on="on" left small>mdi-help-circle-outline</v-icon>
+                      </template>
+                      <span>Click on chip for filter videos</span>
+                    </v-tooltip>
+                    <span>Quick filters for videos</span>
+                  </v-col>
+                  <v-col v-for="(qf,i) in quickFilters" :key="qf.id+i" cols="12" class="text-center py-0">
+                    <v-chip-group :value="qf.value" @change="setCardFilter($event, qf.id)" active-class="active-chip" multiple column>
+                      <span class="mr-2">
+                        <v-icon left>mdi-{{getMeta(qf.id).settings.icon}}</v-icon>
+                        <b>{{getMeta(qf.id).settings.name}}:</b>
+                      </span>
+                      <v-chip v-for="(c) in qf.chips" :key="c" 
+                        class="mr-2 mb-1 px-2" small filter
+                        :color="getColor(qf.id,c)" 
+                        :label="getMeta(qf.id).settings.chipLabel"
+                        :outlined="getMeta(qf.id).settings.chipOutlined"
+                        :disabled="card.id===c"
+                        @mouseover.stop="showImage($event,c,'meta',qf.id)" 
+                        @mouseleave.stop="$store.state.hoveredImage=false">
+                        {{getCard(c).meta.name}}</v-chip>
+                    </v-chip-group>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-expansion-panel-content>
+            <div class="profile-hover-btn show"><v-icon>mdi-chevron-down</v-icon></div>
+            <div class="profile-hover-btn hide"><v-icon>mdi-chevron-up</v-icon></div>
+          </v-expansion-panel>
+        </v-expansion-panels>
       </v-container>
+      
+      <div v-if="isMetaAssignedToVideo">
+        <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start mt-10">
+          <FiltersChips :filters="filters" type="Video" @removeAllFilters="removeAllFilters"/>
+        </v-container>
 
-      <v-container v-if="filteredVideosNumber" fluid class="pagination-container">
-        <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
-          :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
-          class="items-per-page-dropdown"
-        ></v-overflow-btn>
-        <v-spacer></v-spacer>
-        <v-pagination v-model="videosCurrentPage" :length="videosPagesSum"
-          :total-visible="getNumberOfPagesLimit" style="z-index:1"/>
-        <v-spacer></v-spacer>
-        <v-overflow-btn v-if="videosPagesSum > 5"
-          v-model="videosCurrentPage" :items="pages" dense height="36" solo
-          class="items-per-page-dropdown jump-to-page-menu" 
-          disable-lookup hint="jump to page" persistent-hint hide-no-data
-          :menu-props="{ 
-            auto:true, 
-            contentClass:'jump-to-page-menu',
-            nudgeBottom: -110,
-            origin:'center center', 
-            transition:'scale-transition'
-          }"
-        ></v-overflow-btn>
-        <div v-else style="min-width:80px;"></div>
-      </v-container>
-    
-      <div v-if="numberVideosMetaCard==0" class="text-center">
-        <div><v-icon size="100" class="ma-10">mdi-video</v-icon></div>
-        It's so empty... add this {{meta.settings.nameSingular.toLowerCase()}} to your videos so they appear here
+        <v-container v-if="filteredVideosNumber" fluid class="pagination-container">
+          <v-overflow-btn v-model="videosPerPage" hint="items per page" persistent-hint
+            :items="videosPerPagePreset" dense height="36" solo disable-lookup hide-no-data
+            class="items-per-page-dropdown"
+          ></v-overflow-btn>
+          <v-spacer></v-spacer>
+          <v-pagination v-model="videosCurrentPage" :length="videosPagesSum"
+            :total-visible="getNumberOfPagesLimit" style="z-index:1"/>
+          <v-spacer></v-spacer>
+          <v-overflow-btn v-if="videosPagesSum > 5"
+            v-model="videosCurrentPage" :items="pages" dense height="36" solo
+            class="items-per-page-dropdown jump-to-page-menu" 
+            disable-lookup hint="jump to page" persistent-hint hide-no-data
+            :menu-props="{ 
+              auto:true, 
+              contentClass:'jump-to-page-menu',
+              nudgeBottom: -110,
+              origin:'center center', 
+              transition:'scale-transition'
+            }"
+          ></v-overflow-btn>
+          <div v-else style="min-width:80px;"></div>
+        </v-container>
+      
+        <div v-if="numberVideosMetaCard==0" class="text-center">
+          <div><v-icon size="100" class="ma-10">mdi-video</v-icon></div>
+          It's so empty... add this {{meta.settings.nameSingular.toLowerCase()}} to your videos so they appear here
+        </div>
+
+        <div v-if="filteredVideosNumber==0&&numberVideosMetaCard>0" class="text-center pt-10">
+          <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
+          There are no matching videos for the selected filters
+        </div>
+
+        <Loading />
+        <v-container fluid class="card-grid wide-image" :class="[cardSize, gapSize]">
+          <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
+        </v-container>
+
+        <v-pagination v-if="filteredVideosNumber" v-model="videosCurrentPage" :length="videosPagesSum" :total-visible="getNumberOfPagesLimit" class="pt-4 pb-10"/>
       </div>
+      
+      <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 
-      <div v-if="filteredVideosNumber==0&&numberVideosMetaCard>0" class="text-center pt-10">
-        <div><v-icon size="100" class="ma-10">mdi-close</v-icon></div>
-        There are no matching videos for the selected filters
-      </div>
-
-      <Loading />
-      <v-container fluid class="card-grid wide-image" :class="[cardSize, gapSize]">
-        <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
-      </v-container>
-
-      <v-pagination v-if="filteredVideosNumber" v-model="videosCurrentPage" :length="videosPagesSum" :total-visible="getNumberOfPagesLimit" class="pt-4 pb-10"/>
+      <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
+        class="scroll-to-top" fixed fab color="primary">
+        <v-icon>mdi-chevron-up</v-icon>
+      </v-btn>
     </div>
-    
-    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
 
-    <v-btn @click="scrollToTop" v-show="isScrollToTopVisible" 
-      class="scroll-to-top" fixed fab color="primary">
-      <v-icon>mdi-chevron-up</v-icon>
-    </v-btn>
+    <v-card v-show="dropzone" @dragleave="dropzone=false" class="dropzone" @drop="catchDrop($event)" @dragenter.prevent @dragover.prevent>
+      <div class="text">Drop video or folder to add them</div>
+    </v-card>
   </vuescroll>
 </template>
 
