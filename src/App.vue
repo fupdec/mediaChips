@@ -147,6 +147,7 @@
 
 <script>
 console.clear()
+const fs = require('fs-extra')
 const path = require('path')
 const {app} = require('electron').remote
 const remote = require('electron').remote
@@ -198,10 +199,12 @@ export default {
       if (this.watchFolders) this.watchDir(this.folders.map(f=>f.path))
       // keyboard shortcuts
       // TODO: disable shift+enter and shift+click because that add new window
+      setInterval(() => { this.createBackup() }, 1000 * 60 * 30) // every 30 minutes
     })
   },
   beforeDestroy() {
     clearInterval(this.intervalUpdateDataFromVideos)
+    this.createBackup()
   },
   data: () => ({
     password: '',
@@ -257,6 +260,7 @@ export default {
     updateFoldersData() {return this.$store.state.updateFoldersData},
     isLogVisible() {return this.$store.state.isLogVisible},
     databaseVersion() {return this.$store.state.Settings.databaseVersion},
+    pathToUserData() { return this.$store.getters.getPathToUserData },
   },
   methods: {
     scrollToTop() {this.$refs.logs.scrollTo({ y: '0%' }, 300)},
@@ -426,6 +430,16 @@ export default {
       this.$store.state.scan.files = this.folder.newFiles
       this.$store.state.scan.stage = 2
       this.$store.state.Settings.dialogScanVideos = true
+    },
+    createBackup() {
+      let temp = path.join(this.pathToUserData, 'backups', 'temp')
+      if (!fs.existsSync(temp)) fs.mkdirSync(temp)
+      let settings = path.join(this.pathToUserData, 'dbs.json')
+      try { fs.copySync(settings, path.join(temp, 'dbs.json')) } 
+      catch (err) { console.error(err) }
+      let databases = path.join(this.pathToUserData, 'databases')
+      try { fs.copySync(databases, temp) } 
+      catch (err) { console.error(err) }
     },
   },
   watch: {
