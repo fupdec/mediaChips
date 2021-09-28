@@ -1,12 +1,12 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
     <div @dragover="showDrop">
-      <v-responsive :aspect-ratio="2.3" :key="metaCardKey" class="header-images">
-        <div v-if="!checkImageSettings('alt')" class="thumbs">
+      <v-responsive :aspect-ratio="2.3" :key="metaCardKey" class="header-images" :class="[{'above':checkImageSettings('header')&&checkImageExists('header')&&showHeaderImageAboveProfile}]">
+        <div v-if="!checkImageExists('alt')" class="thumbs">
           <v-img v-for="(imgUrl, i) in videoThumbImgUrls" :key="i" 
             :src="imgUrl" :aspect-ratio="16/9" width="20%" />
         </div>
-        <img v-else-if="checkImageSettings('header')&&isHeaderImageExists" :src="getImgUrl('header')" class="header-image">
+        <img v-else-if="checkImageSettings('header')&&checkImageExists('header')" :src="getImgUrl('header')" class="header-image">
         <div v-else class="images">
           <v-img :src="getImgUrl('main')" :gradient="gradientImage" :aspect-ratio="5/9"/>
           <v-responsive :aspect-ratio="5/9" />
@@ -16,7 +16,7 @@
         <div class="header-gradient" :style="gradient"></div>
       </v-responsive>
       
-      <div class="py-16"></div>
+      <div class="py-16 profile-prepend" :class="[{'above':checkImageSettings('header')&&checkImageExists('header')&&showHeaderImageAboveProfile}]"/>
       <v-container class="profile-container">
         <v-avatar max-width="160" width="160" height="160" class="profile-avatar"> 
           <img :src="getImgUrl('avatar')">
@@ -315,7 +315,6 @@ export default {
     ],
     isScrollToTopVisible: false,
     // header: '',
-    isHeaderImageExists: true,
     videos: [],
     quickFilters: [],
   }),
@@ -395,6 +394,7 @@ export default {
       })
       return imgUrls
     },
+    showHeaderImageAboveProfile() {return this.$store.state.Settings.showHeaderImageAboveProfile},
   },
   methods: {
     updateViews() {
@@ -517,22 +517,15 @@ export default {
       return videoFilters
     },
     getImgUrl(imgType) {
-      let imgPath = path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${imgType}.jpg`)
-      if (fs.existsSync(imgPath)) return 'file://' + imgPath
-      else return 'file://' + this.checkImageExist(imgType)
+      let imgUrl = path.join(__static, '/img/default.jpg')
+      if (this.checkImageExists(imgType)) imgUrl = this.getImagePath(imgType) 
+      else if (imgType == 'avatar') if (this.checkImageExists('main')) imgUrl = this.getImagePath('main') 
+      return 'file://' + imgUrl
     },
-    checkImageExist(imgType) {
-      if (imgType === "avatar") {
-        let imgMainPath = path.join(this.pathToUserData, `/media/meta/${this.metaId}/${this.card.id}_main.jpg`)
-        if (fs.existsSync(imgMainPath)) return imgMainPath
-        else return path.join(__static, '/img/default.jpg')
-      } else if (imgType === "header") {
-        this.isHeaderImageExists = false
-        let imgMainPath = path.join(this.pathToUserData, `/media/meta/${this.metaId}/${this.card.id}_main.jpg`)
-        if (fs.existsSync(imgMainPath)) return imgMainPath
-        else return path.join(__static, '/img/default.jpg')
-      } else return path.join(__static, '/img/default.jpg')
+    getImagePath(imgType) { 
+      return path.join(this.pathToUserData, '/media/meta/', `${this.metaId}/${this.card.id}_${imgType}.jpg`)
     },
+    checkImageExists(imgType) { return fs.existsSync( this.getImagePath(imgType) ) },
     checkImageSettings(imgType) { return this.meta.settings.imageTypes.includes(imgType) },
     getCountryCode(country) {
       let index = Countries.findIndex(i => i.name === country)
@@ -600,6 +593,9 @@ export default {
 .header-images {
   position: absolute;
   width: 100%;
+  &.above {
+    position: relative;
+  }
   .images {
     display: flex;
     justify-content: space-between;
@@ -632,6 +628,11 @@ export default {
   position: absolute;
   width: 100%;
   height: 100%;
+}
+.profile-prepend {
+  &.above {
+    display: none;
+  }
 }
 .profile-container {
   position: relative;

@@ -267,10 +267,6 @@ let systemMenu = Menu.buildFromTemplate([
             label: 'Bottom',
             click() { updateSettingsState('navigationSide', '2') } 
           },
-          {
-            label: 'Hidden',
-            click() { updateSettingsState('navigationSide', '0') } 
-          },
         ]
       },
       {

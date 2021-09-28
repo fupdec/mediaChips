@@ -266,39 +266,49 @@
           </v-card>
 
           <v-card outlined class="mt-10 pa-4">
+            <div class="headline text-center pb-4">App</div>
             <div class="d-flex">
+              <span class="mr-6">Show borders on tab:</span>
+              <v-switch v-model="tabBorders" inset hide-details 
+                class="mt-0 pt-0 d-inline-flex" :label="tabBorders?'Yes':'No'"/>
+            </div>
+            <div class="pt-7 d-flex">
               <span class="mr-6">Navigation bar:</span>
               <v-radio-group v-model="navigationSide" mandatory row hide-details class="mt-0 pt-0">
                 <v-radio label="Side" value="1"></v-radio>
                 <v-radio label="Bottom" value="2"></v-radio>
-                <v-radio label="Hidden" value="0"></v-radio>
               </v-radio-group>
             </div>
-            <div class="pt-7 d-flex">
-              <span class="mr-6">Position of icons <v-icon color="yellow darken-2">mdi-star</v-icon> 
-                rating and <v-icon color="pink">mdi-heart</v-icon> favorite:</span>
-              <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex"
-                :label="ratingAndFavoriteInCard?'Card description':'Card image'"/>
+            <div class="pt-7 d-flex align-center">
+              <span class="mr-6">Zoom: {{Math.floor(zoom*100)}}%</span>
+              <v-slider v-model="zoom" min="0.5" step="0.01" max="2" hide-details 
+                prepend-icon="mdi-magnify-minus-outline" append-icon="mdi-magnify-plus-outline"
+                @click:prepend="zoomOut" @click:append="zoomIn"/>
+              <v-btn @click="zoom=1" color="secondary" rounded class="ml-10">
+                <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom </v-btn>
+            </div>
+            <div class="headline text-center py-4">Page</div>
+            <div class="d-flex">
+              <span class="mr-6">Position of header image on meta card page:</span>
+              <v-switch v-model="showHeaderImageAboveProfile" inset hide-details 
+                class="mt-0 pt-0 d-inline-flex" :label="showHeaderImageAboveProfile?'Above':'Behind'"/>
             </div>
             <div class="pt-7 d-flex">
               <span class="mr-6">Show icons of meta in editing dialog:</span>
               <v-switch v-model="showIconsOfMetaInEditingDialog" inset hide-details 
                 class="mt-0 pt-0 d-inline-flex" :label="showIconsOfMetaInEditingDialog?'Yes':'No'"/>
+              <v-spacer></v-spacer>
+              <v-text-field value="Sample" dense class="pa-0 ma-0" readonly hide-details :prepend-inner-icon="showIconsOfMetaInEditingDialog?`mdi-account`:''"/>
             </div>
             <div class="pt-7 d-flex">
               <span class="mr-6">Show icons instead of text on filter chips:</span>
               <v-switch v-model="showIconsInsteadTextOnFiltersChips" :label="showIconsInsteadTextOnFiltersChips?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
+              <v-spacer></v-spacer>
+              <v-icon left>mdi-filter</v-icon>
+              <v-chip v-if="!showIconsInsteadTextOnFiltersChips" small color="primary"> "Name" not equal "Sample" </v-chip>
+              <v-chip v-else small color="primary"> <v-icon>mdi-alphabetical-variant</v-icon> <v-icon>mdi-not-equal-variant</v-icon> "Sample" </v-chip>
             </div>
-            <div class="pt-7 d-flex">
-              <span class="mr-6">Show empty meta value in card:</span>
-              <v-switch v-model="showEmptyMetaValueInCard" :label="showEmptyMetaValueInCard?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
-            </div>
-            <div class="pt-7 d-flex">
-              <span class="mr-6">Show borders on tab:</span>
-              <v-switch v-model="tabBorders" inset hide-details 
-                class="mt-0 pt-0 d-inline-flex" :label="tabBorders?'Yes':'No'"/>
-            </div>
-            <div class="pt-6">
+            <div class="pt-7">
               <span class="mr-6">Limit of pages in pagination:</span>
               <v-btn-toggle v-model="numberOfPagesLimit" dense mandatory color="secondary">
                 <v-btn outlined :value="5">5</v-btn>
@@ -319,13 +329,16 @@
                 <v-btn outlined value="xl">xl</v-btn>
               </v-btn-toggle>
             </div>
-            <div class="mt-5 d-flex align-center">
-              <span class="mr-6">Zoom: {{Math.floor(zoom*100)}}%</span>
-              <v-slider v-model="zoom" min="0.5" step="0.01" max="2" hide-details 
-                prepend-icon="mdi-magnify-minus-outline" append-icon="mdi-magnify-plus-outline"
-                @click:prepend="zoomOut" @click:append="zoomIn"/>
-              <v-btn @click="zoom=1" color="secondary" rounded class="ml-10">
-                <v-icon left size="18">mdi-restore</v-icon> Reset to Default Zoom </v-btn>
+            <div class="headline text-center py-4">Cards</div>
+            <div class="d-flex">
+              <span class="mr-6">Position of icons <v-icon color="yellow darken-2">mdi-star</v-icon> 
+                rating and <v-icon color="pink">mdi-heart</v-icon> favorite:</span>
+              <v-switch v-model="ratingAndFavoriteInCard" inset hide-details class="mt-0 pt-0 d-inline-flex"
+                :label="ratingAndFavoriteInCard?'Card description':'Card image'"/>
+            </div>
+            <div class="pt-7 d-flex">
+              <span class="mr-6">Show empty meta value in card:</span>
+              <v-switch v-model="showEmptyMetaValueInCard" :label="showEmptyMetaValueInCard?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
             </div>
           </v-card>
         </v-card>
@@ -677,6 +690,10 @@ export default {
     tabBorders: {
       get() {return this.$store.state.Settings.tabBorders},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'tabBorders', value})},
+    },
+    showHeaderImageAboveProfile: {
+      get() {return this.$store.state.Settings.showHeaderImageAboveProfile},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'showHeaderImageAboveProfile', value})},
     },
     showIconsOfMetaInEditingDialog: {
       get() {return this.$store.state.Settings.showIconsOfMetaInEditingDialog},

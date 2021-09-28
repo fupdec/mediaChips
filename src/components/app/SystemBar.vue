@@ -79,12 +79,6 @@
                 </v-list-item-title>
                 <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='2'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
               </v-list-item>
-              <v-list-item @mouseup="navigationSide = '0'" class="pr-1" link>
-                <v-list-item-title>
-                  <v-icon left size="18">mdi-border-none-variant</v-icon> Hidden
-                </v-list-item-title>
-                <v-icon size="20" class="ml-6 mr-2" :color="navigationSide=='0'?'':'rgba(0,0,0,0)'">mdi-check</v-icon>
-              </v-list-item>
             </v-list>
           </v-menu>
           <v-menu open-on-hover offset-x nudge-top="3" min-width="150" >
