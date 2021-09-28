@@ -1,5 +1,5 @@
 <template>
-  <div ref="player" class="vlc-player" :class="{fullscreen}"
+  <div ref="player" class="player" :class="{fullscreen}"
     @mousedown="stopSmoothScroll($event)" @mousemove="moveOverPlayer">
     <div class="player-wrapper" :class="{markers:isMarkersVisible, playlist:isPlaylistVisible}">
       <div class="canvas-wrapper" :class="{'system-title-bar':!showSystemBar}"
@@ -28,7 +28,7 @@
         </div>
         <div class="status-text">{{statusText}}</div>
       </div>
-      <v-card class="vlc-controls" tile 
+      <v-card class="controls" tile 
         @mouseenter="mouseOverControls = true" @mouseleave="mouseOverControls = false"
         :style="{opacity:fullscreen&&hideControls&&!mouseOverControls&&!paused?0:fullscreen?0.7:1}">
         <v-card-actions class="timeline py-1 px-0 mx-3">
@@ -53,73 +53,68 @@
         </v-card-actions>
         <v-card-actions class="pa-1">
           <v-btn-toggle class="remove-active">
-            <v-btn @click="paused ? play() : pause()" small class="ml-1">
+            <v-btn @click="paused?play():pause()" small class="ml-1" :title="paused?'Play':'Pause'">
               <v-icon v-if="paused">mdi-play</v-icon>
               <v-icon v-else>mdi-pause</v-icon>
             </v-btn>
           </v-btn-toggle>
           <v-btn-toggle class="mx-2 remove-active">
-            <v-btn @click="prev" small :disabled="isPrevDisabled">
+            <v-btn @click="prev" small :disabled="isPrevDisabled" title="Previous Video">
               <v-icon>mdi-skip-previous</v-icon>
             </v-btn>
-            <v-btn @click="stop" small>
+            <v-btn @click="stop" small title="Stop Playing">
               <v-icon>mdi-stop</v-icon>
             </v-btn>
-            <v-btn @click="next" small :disabled="isNextDisabled">
+            <v-btn @click="next" small :disabled="isNextDisabled" title="Next Video">
               <v-icon>mdi-skip-next</v-icon>
             </v-btn>
           </v-btn-toggle>
           <v-btn-toggle class="remove-active">
-            <v-btn v-if="!controlsList.includes('nofullscreen')" @click="toggleFullscreen" small>
+            <v-btn @click="toggleFullscreen" small :title="fullscreen?'Exit Fullscreen':'Fullscreen'">
               <v-icon v-if="fullscreen">mdi-fullscreen-exit</v-icon>
               <v-icon v-else>mdi-fullscreen</v-icon>
             </v-btn>
           </v-btn-toggle>
           <v-btn-toggle class="mx-2 remove-active marker-buttons">
-            <v-btn @click="toggleMarkers" :color="isMarkersVisible? 'primary':''" small>
+            <v-btn @click="toggleMarkers" :color="isMarkersVisible? 'primary':''" small title="Markers List">
               <v-icon>mdi-map-marker</v-icon>
             </v-btn>
-            <v-btn @click="jumpToPrevMarker" small class="marker-prev">
+            <v-btn @click="jumpToPrevMarker" small class="marker-prev" title="Previous Marker">
               <v-icon>mdi-map-marker-left</v-icon>
             </v-btn>
-            <v-btn @click="jumpToNextMarker" small class="marker-next">
+            <v-btn @click="jumpToNextMarker" small class="marker-next" title="Next Marker">
               <v-icon>mdi-map-marker-right</v-icon>
             </v-btn>
-            <v-menu offset-y nudge-top="40" nudge-right="282" attach=".vlc-controls">
+            <v-menu offset-y nudge-top="40" nudge-right="282" attach=".controls">
               <template v-slot:activator="{ on, attrs }">
-                <v-btn v-bind="attrs" v-on="on" small>
+                <v-btn v-bind="attrs" v-on="on" small title="Add Marker">
                   <v-icon>mdi-map-marker-plus</v-icon>
                 </v-btn>
               </template>
               
               <v-btn-toggle class="remove-active">
-                <v-btn @click="addMarker('favorite')">
+                <v-btn @click="addMarker('favorite')" title="Favorite">
                   <v-icon size="20">mdi-heart</v-icon> 
                 </v-btn>
-                <v-btn @click="openDialogMarkerBookmark">
+                <v-btn @click="openDialogMarkerBookmark" title="Bookmark">
                   <v-icon size="20">mdi-bookmark</v-icon> 
                 </v-btn>
-                <v-btn v-for="m in metaMarkers" :key="m.id" :value="m.id" @click="openDialogMarkerMeta(m.id)">
+                <v-btn v-for="m in metaMarkers" :key="m.id" :value="m.id" @click="openDialogMarkerMeta(m.id)" :title="m.settings.name">
                   <v-icon size="20">mdi-{{m.settings.icon}}</v-icon>
                 </v-btn>
               </v-btn-toggle>
             </v-menu>
           </v-btn-toggle>
           <v-btn-toggle class="remove-active">
-            <v-btn @click="togglePlaylist" :color="isPlaylistVisible? 'primary':''" small>
+            <v-btn @click="togglePlaylist" :color="isPlaylistVisible? 'primary':''" small title="Playlist">
               <v-icon>mdi-format-list-bulleted</v-icon>
             </v-btn>
           </v-btn-toggle>
-          <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-btn-toggle class="mx-2 remove-active">
-              <v-btn @click="setAsThumb" v-on="on" small>
-                <v-icon>mdi-image</v-icon>
-              </v-btn>
-            </v-btn-toggle>
-          </template>
-          <span>Set Frame as Thumb</span>
-        </v-tooltip>
+          <v-btn-toggle class="mx-2 remove-active">
+            <v-btn @click="setAsThumb" small title="Set Frame as Thumb">
+              <v-icon>mdi-image</v-icon>
+            </v-btn>
+          </v-btn-toggle>
           <v-spacer></v-spacer>
           <div class="duration mx-2">
             <div class="time-start">{{ msToTime(currentTime * 1000) }}</div>
@@ -463,7 +458,6 @@ export default {
     paused: false,
     currentTime: 0,
     currentTimeTracker: null,
-    controlsList: [],
     isVideoFormatNotSupported: null,
     isVideoNotExist: null,
     seekTime: 0,
@@ -977,14 +971,14 @@ export default {
 
 
 <style lang="less">
-.vlc-player {
+.player {
   display: flex;
   position: relative;
   width: 100%;
   height: 100%;
   background: #000;
   &.fullscreen {
-    .vlc-controls {
+    .controls {
       position: absolute;
       bottom: 0;
       left: 0;
@@ -1078,7 +1072,7 @@ export default {
   width: 300px;
   text-align: center;
 }
-.vlc-controls {
+.controls {
   position: relative;
   .timeline {
     position: relative;
@@ -1285,7 +1279,7 @@ export default {
   }
 }
 .theme--light {
-  .vlc-controls {
+  .controls {
     .timeline {
       .tooltip {
         background-color: rgba(255, 255, 255, 0.75);
