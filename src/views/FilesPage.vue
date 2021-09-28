@@ -94,7 +94,10 @@ export default {
     },
   },
   methods: {
-    pathSplit(pathString) { this.selectedFolder = pathString.split(path.sep) },
+    pathSplit(pathString) { 
+      if (pathString) this.selectedFolder = pathString.split(path.sep) 
+      else this.selectedFolder = []
+    },
     selectFolder(index) { 
       this.selectedFolder = this.selectedFolder.slice(0,index+1) 
       this.openFolderPath = this.selectedFolder.join(path.sep)
@@ -155,7 +158,10 @@ export default {
     },
   },
   watch: {
-    selectedFolder() { this.readDir() }
+    selectedFolder(newVal) { 
+      if (newVal.length) this.readDir() 
+      else this.files = [] 
+    }
   },
 }
 </script>

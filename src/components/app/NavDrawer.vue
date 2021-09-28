@@ -26,7 +26,7 @@
         <h3 class="mb-2">Creating a folder tree...</h3>
         <v-icon x-large class="loading-animation">mdi-loading</v-icon>
       </v-card-text>
-      <v-treeview class="tree-view"
+      <v-treeview v-else class="tree-view"
         :items="folders" 
         :load-children="loadChildren" 
         :open.sync="openIds" 
@@ -141,6 +141,7 @@ export default {
     },
     selectDisk() {
       this.updatingFolderTree = true
+      this.$emit('selectFolder', null)
       setTimeout(()=>{this.readDiskFolders()}, 500)
     },
     selectFolder(event, item) {
