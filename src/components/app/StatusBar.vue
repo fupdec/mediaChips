@@ -72,7 +72,14 @@
       <template v-slot:activator="{ on }">
         <span v-on="on" class="px-4 d-flex"><v-icon size="18" class="mb-1">mdi-database-outline</v-icon></span>
       </template>
-      <span>
+      <div>
+        <div class="overline text-center">Database</div>
+        <div class="d-flex align-center">
+          <v-icon size="20" left dark>mdi-cogs</v-icon> Version: 
+          <span class="ml-1" v-text="$store.state.Settings.databaseVersion"/>
+        </div>
+      </div>
+      <div class="mt-2">
         <div class="overline text-center">Total videos</div>
         <div class="d-flex align-center">
           <v-icon size="20" left dark>mdi-video</v-icon> Number: 
@@ -82,7 +89,7 @@
           <v-icon size="20" left dark>mdi-harddisk</v-icon> Size:
           <span class="ml-1" v-text="$store.getters.videosTotalSize"/>
         </div>
-      </span>
+      </div>
     </v-tooltip>
     
     <v-divider vertical></v-divider>
