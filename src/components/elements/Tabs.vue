@@ -1,5 +1,5 @@
 <template>
-	<v-tabs v-model="active" optional centered :class="{borders:tabBorders}">
+	<v-tabs v-model="active" optional centered :class="{borders:tabBorders}" :key="tabs.length">
     <draggable  
       v-model="tabs" class="tabs-group" v-bind="dragOptions"
       @start="drag = true" @end="drag = false"
