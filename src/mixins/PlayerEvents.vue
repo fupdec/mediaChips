@@ -1,10 +1,11 @@
 <script>
 const { ipcRenderer } = require('electron')
-const fs = require("fs")
-const path = require('path')
 const shortid = require('shortid')
 
+import MetaGetters from '@/mixins/MetaGetters'
+
 export default {
+  mixins: [MetaGetters],
   mounted () {
     this.$nextTick(function () {
       // requests from other windows
@@ -55,6 +56,11 @@ export default {
         if (video[marker.type]!==undefined && video[marker.type].includes(marker.name)) return
         if (video[marker.type]===undefined) video[marker.type] = []
         video[marker.type].push(marker.name)
+        video[marker.type] = video[marker.type].sort((a,b)=>{
+          a = this.getCard(a).meta.name
+          b = this.getCard(b).meta.name
+          return a.localeCompare(b)
+        })
         this.$store.getters.videos.find({ id: video.id }).assign({ 
           [marker.type]: video[marker.type],
           edit: Date.now(),
