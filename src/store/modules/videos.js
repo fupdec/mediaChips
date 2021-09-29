@@ -44,7 +44,7 @@ const Videos = {
       commit('resetLoading')
       dispatch('updateSettingsState', {key:'videosPerPage', value:number})
     },
-    async filterVideos({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
+    getFilteredVideos({ state, commit, dispatch, getters, rootState}, filters) {
       let videos = getters.videos
       videos = videos.orderBy(video=>(path.basename(video.path)), ['asc'])
 
@@ -71,7 +71,6 @@ const Videos = {
         if (sign === 'less than or equal') return a >= b
       }
 
-      let filters = rootState.Settings.videoFilters
       for (let filter in filters) {
         let by = filters[filter].by
         let cond = filters[filter].cond
@@ -200,6 +199,12 @@ const Videos = {
       //     // console.log('videos filtered by quality')
       //   }
       // }
+      return videos
+    },
+    async filterVideos({ state, commit, dispatch, getters, rootState}, stayOnCurrentPage) {
+      let filters = rootState.Settings.videoFilters
+      let videos
+      await dispatch('getFilteredVideos', filters).then(result => videos = result)
       commit('resetLoading')
       state.filteredVideos = videos.value()
       if (!stayOnCurrentPage) rootState.Settings.videoPage = 1

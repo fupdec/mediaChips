@@ -10,7 +10,7 @@
     </v-tooltip>
     <v-chip v-for="(filter, i) in filters" :key="i" 
       @click="removeFilter(i)" :disabled="filter.lock" class="ma-1 px-2" small
-      :color="isTooltip?'#fff':'primary'" :outlined="isTooltip"
+      :color="isTooltip?'#fff':'primary'" :outlined="isTooltip" :class="[{'readonly':isTooltip}]"
       :title="isTooltip?'':'Remove filter'" dark>
       <span v-if="showIconsInsteadTextOnFiltersChips">
         <v-icon small class="mr-1">mdi-{{getMeta(filter.by).settings.icon}}</v-icon>
@@ -88,3 +88,10 @@ export default {
   },
 }
 </script>
+
+
+<style lang="less">
+.readonly {
+  pointer-events: none;
+}
+</style>

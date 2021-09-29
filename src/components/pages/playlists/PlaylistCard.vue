@@ -37,8 +37,6 @@ const fs = require("fs")
 const path = require("path")
 const shell = require('electron').shell
 
-import ShowImageFunction from '@/mixins/ShowImageFunction'
-import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer  } from 'electron'
 
 export default {
@@ -46,7 +44,6 @@ export default {
   props: {
     playlist: Object,
   },
-  mixins: [ShowImageFunction, LabelFunctions], 
   mounted() {
     this.$nextTick(function () {
       this.playlistName = this.playlist.name
@@ -166,20 +163,14 @@ export default {
     }
   }
   &:hover {
-    .bookmark {
-      opacity: 0.7;
-      &:hover {
-        opacity: 1;
-      }
-    }
     .btn-edit {
-      opacity: 0.5;
+      opacity: 0.65;
       &:hover {
         opacity: 1;
       }
     }
     .btn-playlist-play {
-      opacity: 0.5;
+      opacity: 0.65;
       &:hover {
         opacity: 1;
       }
@@ -201,27 +192,6 @@ export default {
       opacity: 1;
     }
   }
-  .bookmark {
-    position: absolute;
-    top: -6px;
-    right: 25%;
-    margin: auto;
-    opacity: 0.4;
-  }
-  .playlist-color {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 50px 50px 0 0;
-  }
-  .v-chip {
-    margin: 0 2px 2px !important;
-    padding: 0 4px;
-    height: auto !important;
-  }
   .btn-edit {
     position: absolute;
     right: 5px;
@@ -238,5 +208,6 @@ export default {
   top: 0;
   bottom: 0;
   margin: auto;
+  background-color: rgba(0, 0, 0, 0.603);
 }
 </style>

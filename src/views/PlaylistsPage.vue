@@ -1,6 +1,20 @@
 <template>
   <vuescroll ref="mainContainer" @handle-scroll="handleScroll">
-    <div class="headline text-h4 d-flex align-center justify-center pt-4">
+    <v-container fluid class="pb-0">
+      <v-btn @click="showDynamicPlaylists=!showDynamicPlaylists" outlined small block class="mb-2"> Dynamic playlists </v-btn>
+      <div v-show="showDynamicPlaylists" v-if="dynamicPlaylists.length" class="dynamic-playlists-wrapper" :class="[{'bottombar':$store.state.Settings.navigationSide=='2'}]">
+        <vuescroll>
+          <div class="dynamic-playlists">
+            <DynamicPlaylistCard v-for="dp in dynamicPlaylists" :key="dp.id" :playlist="dp"/>
+          </div>
+        </vuescroll>
+      </div>
+      <v-alert v-else type="info" text outlined dense class="text-center">
+        Please go to the videos page and add your saved filters for dynamic playlists to appear here
+      </v-alert>
+    </v-container>
+
+    <div class="headline text-h4 d-flex align-center justify-center">
       <v-icon left>mdi-format-list-bulleted</v-icon> Playlists
       <span v-if="totalPlaylists!=numberFilteredPlaylists" class="text-h6 ml-2">({{numberFilteredPlaylists}} of {{totalPlaylists}})</span>
       <span v-else class="text-h6 ml-2">({{numberFilteredPlaylists}})</span>
@@ -9,7 +23,7 @@
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start pb-0">
       <FiltersChips :filters="filters" type="Playlist" />
     </v-container>
-      
+
     <v-container v-if="numberFilteredPlaylists" fluid class="pagination-container">
       <v-overflow-btn v-model="playlistsPerPage" hint="items per page" persistent-hint
         :items="playlistsPerPagePreset" dense height="36" solo disable-lookup hide-no-data
@@ -84,11 +98,13 @@ export default {
   name: "PlaylistsPage",
   components: {
     PlaylistCard, 
+    DynamicPlaylistCard: () => import("@/components/pages/playlists/DynamicPlaylistCard.vue"),
     DialogEditPlaylist: () => import("@/components/pages/playlists/DialogEditPlaylist.vue"),
     vuescroll,
     Loading: () => import('@/components/elements/Loading.vue'),
     FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
+  beforeMount() { this.initDynamicPlaylists() },
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
@@ -121,6 +137,8 @@ export default {
     this.$store.state.Playlists.selection.destroy()
   },
   data: () => ({
+    showDynamicPlaylists: true,
+    dynamicPlaylists: [],
     playlistsPerPagePreset: [20,40,60,80,100,150,200],
     selection: null,
     isScrollToTopVisible: false,
@@ -198,6 +216,19 @@ export default {
       this.$store.state.Settings.playlistFilters = newFilters
       this.$store.dispatch('filterPlaylists', true)
     },
+    async initDynamicPlaylists() {
+      let savedFilters = this.$store.state.SavedFilters.savedFilters.videos
+      for (let f of savedFilters) {
+        let videos = await this.$store.dispatch('getFilteredVideos', f.filters)
+        let playlist = {
+          id: f.id,
+          name: f.name,
+          filters: f.filters,
+          videos: videos.value(),
+        }
+        this.dynamicPlaylists.push(playlist)
+      }
+    },
   },
   watch: {
     $route(newRoute) {
@@ -210,6 +241,18 @@ export default {
 
 
 <style lang="less">
+.dynamic-playlists-wrapper {
+  max-width: calc(100vw - 80px);
+  overflow: hidden;
+  padding-bottom: 10px;
+  &.bottombar {
+    max-width: calc(100vw - 25px);
+  }
+}
+.dynamic-playlists {
+  display: flex;
+  padding-bottom: 10px;
+}
 .playlists-grid {
   padding: 10px;
   display: grid;
