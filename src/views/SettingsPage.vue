@@ -294,6 +294,11 @@
                 class="mt-0 pt-0 d-inline-flex" :label="showHeaderImageAboveProfile?'Above':'Behind'"/>
             </div>
             <div class="pt-7 d-flex">
+              <span class="mr-6">Show saved filters under header:</span>
+              <v-switch v-model="showSavedFilters" inset hide-details 
+                class="mt-0 pt-0 d-inline-flex" :label="showSavedFilters?'Yes':'No'"/>
+            </div>
+            <div class="pt-7 d-flex">
               <span class="mr-6">Show icons of meta in editing dialog:</span>
               <v-switch v-model="showIconsOfMetaInEditingDialog" inset hide-details 
                 class="mt-0 pt-0 d-inline-flex" :label="showIconsOfMetaInEditingDialog?'Yes':'No'"/>
@@ -698,6 +703,10 @@ export default {
     showIconsOfMetaInEditingDialog: {
       get() {return this.$store.state.Settings.showIconsOfMetaInEditingDialog},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'showIconsOfMetaInEditingDialog', value})},
+    },
+    showSavedFilters: {
+      get() {return this.$store.state.Settings.showSavedFilters},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'showSavedFilters', value})},
     },
     darkMode: {
       get() {return this.$store.state.Settings.darkMode},

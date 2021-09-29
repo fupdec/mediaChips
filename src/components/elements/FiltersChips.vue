@@ -9,7 +9,7 @@
       <span>Remove All Filters</span>
     </v-tooltip>
     <v-chip v-for="(filter, i) in filters" :key="i" 
-      @click="removeFilter(i)" :disabled="filter.lock" class="ma-1 px-2" small
+      @click="removeFilter(i)" :disabled="filter.lock&&!isTooltip" class="ma-1 px-2" small
       :color="isTooltip?'#fff':'primary'" :outlined="isTooltip" :class="[{'readonly':isTooltip}]"
       :title="isTooltip?'':'Remove filter'" dark>
       <span v-if="showIconsInsteadTextOnFiltersChips">

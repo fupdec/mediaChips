@@ -42,6 +42,13 @@
       <span v-if="metaCardsNumber!=filteredMeta.length" class="text-h6 ml-2">({{filteredMeta.length}} of {{metaCardsNumber}})</span>
       <span v-else class="text-h6 ml-2">({{filteredMeta.length}})</span>
     </div>
+
+    <v-container v-if="filters.length==0&&showSavedFilters&&savedFilters.length" fluid class="d-flex justify-center align-start pb-0">
+      <v-chip-group show-arrows>
+        <v-chip v-for="(sf,i) in savedFilters" :key="sf.id"
+          @click="applyFilter(i)" title="Apply saved filter">{{sf.name}}</v-chip>
+      </v-chip-group>
+    </v-container>
     
     <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start pb-0">
       <FiltersChips :filters="filters" type="Meta" @removeAllFilters="removeAllFilters"/>
@@ -179,6 +186,8 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
+    savedFilters() { return this.$store.state.SavedFilters.savedFilters[this.metaId] || [] },
+    showSavedFilters() {return this.$store.state.Settings.showSavedFilters},
     swatches() { return this.$store.state.swatches },
     getNumberOfPagesLimit() { return this.$store.state.Settings.numberOfPagesLimit },
     pages() { return this.$store.getters.metaCardsPages },
@@ -290,6 +299,10 @@ export default {
       this.$store.dispatch('filterMetaCards')
     },
     deleteMetaCard() { this.$store.dispatch('deleteMetaCard') },
+    applyFilter(i) { 
+      this.$store.state.Meta.filters = _.cloneDeep(this.savedFilters[i].filters)
+      this.$store.dispatch('filterMetaCards') 
+    },
   },
   watch: {
   }

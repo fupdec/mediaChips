@@ -76,6 +76,7 @@ dbs.defaults({
   showIconsInsteadTextOnFiltersChips: false,
   showHeaderImageAboveProfile: true,
   showExperimentalFeatures: false,
+  showSavedFilters: true,
   databaseVersion: app.getVersion(),
   widgets: {}
 }).write()
@@ -153,6 +154,7 @@ const Settings = {
     showIconsInsteadTextOnFiltersChips: dbs.get('showIconsInsteadTextOnFiltersChips').value(),
     showHeaderImageAboveProfile: dbs.get('showHeaderImageAboveProfile').value(),
     showExperimentalFeatures: dbs.get('showExperimentalFeatures').value(),
+    showSavedFilters: dbs.get('showSavedFilters').value(),
     databaseVersion: dbs.get('databaseVersion').value(),
     widgets: dbs.get('widgets').value(),
   }),

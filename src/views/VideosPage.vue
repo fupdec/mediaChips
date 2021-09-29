@@ -6,6 +6,13 @@
         <span v-if="totalVideos!=numberFilteredVideos" class="text-h6 ml-2">({{numberFilteredVideos}} of {{totalVideos}})</span>
         <span v-else class="text-h6 ml-2">({{numberFilteredVideos}})</span>
       </div>
+
+      <v-container v-if="filters.length==0&&showSavedFilters&&savedFilters.length" fluid class="d-flex justify-center align-start pb-0">
+        <v-chip-group show-arrows>
+          <v-chip v-for="(sf,i) in savedFilters" :key="sf.id" 
+            @click="applyFilter(i)" title="Apply saved filter">{{sf.name}}</v-chip>
+        </v-chip-group>
+      </v-container>
       
       <v-container v-if="filters.length>0" fluid class="d-flex justify-center align-start pb-0">
         <FiltersChips :filters="filters" type="Video" />
@@ -103,6 +110,8 @@ export default {
     isScrollToTopVisible: false,
   }),
   computed: {
+    savedFilters() { return this.$store.state.SavedFilters.savedFilters.videos || [] },
+    showSavedFilters() {return this.$store.state.Settings.showSavedFilters},
     cardSize() { return `card-size-${this.$store.state.Settings.videoCardSize}` },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     tabId() { return this.$route.query.tabId },
@@ -134,6 +143,10 @@ export default {
         this.$store.state.Settings.videoPage = this.tab.page
       }
       this.$store.state.Settings.videoFilters = newFilters
+      this.$store.dispatch('filterVideos', true)
+    },
+    applyFilter(i) { 
+      this.$store.state.Settings.videoFilters = _.cloneDeep(this.savedFilters[i].filters)
       this.$store.dispatch('filterVideos', true)
     },
   },
