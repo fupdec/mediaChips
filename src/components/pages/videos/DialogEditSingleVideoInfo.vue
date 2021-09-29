@@ -70,7 +70,7 @@
               <v-col v-for="(m,i) in metaAssignedToVideos" :key="i+key" cols="12" lg="6" class="pt-0">
                 <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
                   @input="setVal($event,m.id)" :value="values[m.id]"
-                  multiple hide-selected
+                  multiple hide-selected :ref="m.id"
                   :label="getMeta(m.id).settings.name" item-value="id"
                   :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
                   append-outer-icon="mdi-plus" append-icon="mdi-chevron-down" 
@@ -478,11 +478,14 @@ export default {
     },
     setVal(value, metaId) { 
       let meta = this.getMeta(metaId)
-      if (meta && meta.type === 'complex') value.sort((a,b)=>{
-        a = this.getCard(a).meta.name
-        b = this.getCard(b).meta.name
-        return a.localeCompare(b)
-      })
+      if (meta && meta.type === 'complex') {
+        value.sort((a,b)=>{
+          a = this.getCard(a).meta.name
+          b = this.getCard(b).meta.name
+          return a.localeCompare(b)
+        })
+        this.$refs[metaId][0].lazySearch = null
+      }
       this.values[metaId] = value 
     },
     removeItem(item, id) { 

@@ -53,7 +53,7 @@
                   </v-btn>
 
                   <v-autocomplete v-if="m.type=='complex'" :items="getCards(m.id)" 
-                    @input="setVal($event,m.id)" :value="values[m.id]"
+                    @input="setVal($event,m.id)" :value="values[m.id]" :ref="m.id"
                     multiple hide-selected :disabled="edits[m.id]===0"
                     :label="getMeta(m.id).settings.name" item-value="id"
                     :prepend-inner-icon="showIcons?`mdi-${getMeta(m.id).settings.icon}`:''"
@@ -273,11 +273,14 @@ export default {
     },
     setVal(value, metaId) { 
       let meta = this.getMeta(metaId)
-      if (meta && meta.type === 'complex') value.sort((a,b)=>{
-        a = this.getCard(a).meta.name
-        b = this.getCard(b).meta.name
-        return a.localeCompare(b)
-      })
+      if (meta && meta.type === 'complex') {
+        value.sort((a,b)=>{
+          a = this.getCard(a).meta.name
+          b = this.getCard(b).meta.name
+          return a.localeCompare(b)
+        })
+        this.$refs[metaId][0].lazySearch = null
+      }
       this.values[metaId] = value 
     },
     close() { this.$store.state.Meta.dialogEditMetaCard = false },
