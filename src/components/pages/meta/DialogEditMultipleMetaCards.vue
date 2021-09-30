@@ -24,7 +24,7 @@
           <v-card-text class="pl-2">
             <v-container fluid>
               <v-row>
-                <v-col v-for="(m,i) in metaInCard" :key="i+key" cols="12" class="d-flex align-center pt-0">
+                <v-col v-for="(m,i) in modifiedMetaInCards" :key="i+key" cols="12" class="d-flex align-center pt-0">
                   <v-btn @click="toggleEditMode(m)" small icon class="mr-2"> 
                     <v-tooltip v-if="edits[m.id]===1" top>
                       <template v-slot:activator="{ on }">
@@ -139,6 +139,29 @@
                     </div>
                     <div class="text--secondary caption">{{getMeta(m.id).settings.hint}}</div>
                   </div>
+                  
+                  <v-btn v-if="m.id==='color'" @click="dialogColor=true" :disabled="edits[m.id]===0" :color="colorPicker" rounded>
+                    <v-icon left>mdi-palette</v-icon> color for all cards</v-btn>
+
+                  <v-autocomplete v-if="m.id==='country'" :items="countries" multiple 
+                    @input="setVal($event,m.id)" :value="values[m.id]" ref="country"
+                    item-text="name" item-value="name" label="Country" 
+                    class="hidden-close" hide-selected :disabled="edits[m.id]===0"
+                    :menu-props="{contentClass:'list-with-preview'}" :filter="filterCountry"
+                    :prepend-inner-icon="showIcons?`mdi-${getMeta('country').settings.icon}`:''">
+                    <template v-slot:selection="data">
+                      <v-chip @click="data.select" @click:close="removeCountry(data.item)"
+                        v-bind="data.attrs" class="my-1 px-2" outlined close small label
+                        :input-value="data.selected" close-icon="mdi-close"> 
+                        <country-flag :country='data.item.code' size='normal'/> 
+                        <span class="pl-2">{{ data.item.name }}</span>
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <country-flag :country='data.item.code' size='normal'/>
+                      <span class="pl-2">{{data.item.name}}</span>
+                    </template>
+                  </v-autocomplete>
                 </v-col>
                 <v-col v-if="metaInCard.length==0" cols="12" class="d-flex align-center justify-center flex-column">
                   <v-icon size="40" class="my-2">mdi-shape-outline</v-icon>
@@ -169,7 +192,11 @@
         :value="values[calendarId]" no-title color="primary" full-width/>
     </v-dialog>
     
-    <!-- TODO add color editing like for single meta and country -->
+    <v-dialog v-model="dialogColor" width="300"> 
+      <v-card>
+        <v-color-picker @update:color="changeColor($event)" :value="colorPicker"/> 
+      </v-card>
+    </v-dialog>
 
     <v-dialog v-if="dialogAddNewCard" v-model="dialogAddNewCard" width="500">
       <v-card>
@@ -212,11 +239,14 @@ import vuescroll from 'vuescroll'
 import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
+import CountryFlag from 'vue-country-flag'
+import Countries from '@/components/elements/Countries'
 
 export default {
   name: "DialogEditMultipleMetaCards",
   components: {
     vuescroll,
+    CountryFlag,
     DialogListView: () => import('@/components/pages/meta/DialogListView.vue'),
 	},
   beforeMount () {
@@ -229,6 +259,7 @@ export default {
     })
   },
   data: () => ({
+    modifiedMetaInCards: [],
     values: {},
     edits: {},
     calendar: false,
@@ -236,6 +267,9 @@ export default {
     key: Date.now(),
     panels: false,
     listViewMeta: null,
+    dialogColor: false,
+    colorPicker: '#777777',
+    countries: Countries,
     // add new items 
     dialogAddNewCard: false,
     metaIdForNewCard: null,
@@ -253,12 +287,19 @@ export default {
   },
   methods: {
     parseMetaInCard() {
-      let metaInCard = this.meta.settings.metaInCard
-      for (let i = 0; i < metaInCard.length; i++) {
-        const id = metaInCard[i].id
-        const type = metaInCard[i].type
+      this.modifiedMetaInCards = _.cloneDeep(this.meta.settings.metaInCard)
+      if (this.meta.settings.color) this.modifiedMetaInCards.push({id:'color', type:'specific'})
+      if (this.meta.settings.country) this.modifiedMetaInCards.push({id:'country', type:'specific'})
+      for (let i = 0; i < this.modifiedMetaInCards.length; i++) {
+        const id = this.modifiedMetaInCards[i].id
+        const type = this.modifiedMetaInCards[i].type
         this.edits[id] = 0
         if (type=='complex') { this.values[id] = []; continue }
+        if (type=='specific') { 
+          if (id=='color') this.values[id] = '#777777' 
+          else if (id=='country') this.values[id] = [] 
+          continue 
+        }
         const simpleMetaType = this.getMeta(id).dataType
         if (simpleMetaType=='array') this.values[id] = []
         else if (simpleMetaType=='boolean') this.values[id] = false
@@ -273,13 +314,17 @@ export default {
     },
     setVal(value, metaId) { 
       let meta = this.getMeta(metaId)
-      if (meta && meta.type === 'complex') {
-        value.sort((a,b)=>{
-          a = this.getCard(a).meta.name
-          b = this.getCard(b).meta.name
-          return a.localeCompare(b)
-        })
-        this.$refs[metaId][0].lazySearch = null
+      if (meta) {
+        if (meta.type === 'complex') {
+          value.sort((a,b)=>{
+            a = this.getCard(a).meta.name
+            b = this.getCard(b).meta.name
+            return a.localeCompare(b)
+          })
+        }
+        if (meta.type==='complex'||metaId==='country') {
+          this.$refs[metaId][0].lazySearch = null
+        }
       }
       this.values[metaId] = value 
     },
@@ -294,11 +339,17 @@ export default {
           if (this.edits[metaId]===3) arr[metaId] = oldArr.filter(i=>arr[metaId].indexOf(i)===-1)
           // sort
           let meta = this.getMeta(metaId)
-          if (meta && meta.type === 'complex') arr[metaId].sort((a,b)=>{
+          if (meta&&meta.type==='simple'&&meta.dataType==='array') arr[metaId].sort((a,b)=>{
+            a = _.find(meta.settings.items, i=>i.id===a).name
+            b = _.find(meta.settings.items, i=>i.id===b).name
+            return a.localeCompare(b)
+          }) 
+          else if (meta&&meta.type==='complex') arr[metaId].sort((a,b)=>{
             a = this.getCard(a).meta.name
             b = this.getCard(b).meta.name
             return a.localeCompare(b)
           })
+          else if (metaId==='country') arr[metaId].sort((a,b)=>a.localeCompare(b))
         }
         this.$store.getters.metaCards.find({id:id}).assign({edit: Date.now()}).get('meta').assign(arr).write()
       })
@@ -379,9 +430,38 @@ export default {
       if (meta.type === 'complex') type = 'array'
       else type = this.getMeta(meta.id).dataType
       ++this.edits[meta.id]
-      if (this.edits[meta.id]>1 && type!=='array') this.edits[meta.id] = 0
-      else if (this.edits[meta.id]>3 && type==='array') this.edits[meta.id] = 0
+      if (this.edits[meta.id]>1 && (type!=='array'&&meta.id!=='country')) this.edits[meta.id] = 0
+      else if (this.edits[meta.id]>3 && (type==='array'||meta.id=='country')) this.edits[meta.id] = 0
       this.key = Date.now()
+    },
+    changeColor(e) { 
+      this.colorPicker = e.hex
+      this.values['color'] = e.hex
+    },
+    filterCountry(cardObject, queryText, itemText) {
+      function foundByChars(text, query) {
+        text = text.toLowerCase()
+        let foundCharIndex = 0
+        let foundAllChars = false
+        for (let i = 0; i < query.length; i++) {
+          const char = query.charAt(i)
+          const index = text.indexOf(char, foundCharIndex)
+          if (index > -1) foundAllChars = true, foundCharIndex = index + 1
+          else return false
+        }
+        return foundAllChars
+      }
+
+      let filtersDefault = this.$store.state.Settings.typingFiltersDefault 
+      let text = itemText.toLowerCase()
+      let query = queryText.toLowerCase()
+
+      if (filtersDefault) return text.indexOf(query) > -1
+      else return foundByChars(text, query)
+    },
+    removeCountry(item) { 
+      const index = this.values.country.indexOf(item.name)
+      if (index > -1) this.values.country.splice(index, 1)
     },
   },
 };
