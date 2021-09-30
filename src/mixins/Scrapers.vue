@@ -124,9 +124,17 @@ export default {
       let hair = $('[data-test="link_span_hair_color"]').text().trim()
       if (hair) found.hair = hair.split(',')
       found.height = $('[data-test="link_span_height"]').text().trim()
-      if (found.height) found.height = found.height.match(/\d{3}/)[0]
-      found.weight = $('[data-test="link_span_weight"]').text().trim()
-      if (found.weight) found.weight = found.weight.match(/\d{2}/)[0]
+      if (found.height) {
+        found.height = found.height.match(/\d{3}/)
+        if (found.height) found.height = found.height[0]
+        else found.height = undefined
+      }
+      found.weight = $('[data-test="link_span_weight"]').text().trim() 
+      if (found.weight) {
+        found.weight = found.weight.match(/\d{2}/)
+        if (found.weight) found.weight = found.weight[0]
+        else found.weight = undefined
+      }
       let sizes = []
       $('[data-test="p-measurements"] span').each((i,elem)=>{sizes[i] = $(elem).text().trim()}) 
       if (sizes.length > 0) {
