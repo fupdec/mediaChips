@@ -85,7 +85,7 @@
               <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
                 <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
                   <template v-slot:activator="{ on }">
-                    <v-btn v-on="on" @click="sortMetaCards" :value="s.name" outlined>
+                    <v-btn v-on="on" @click="sortCards" :value="s.name" outlined>
                       <v-icon>mdi-{{s.icon}}</v-icon>
                     </v-btn>
                   </template>
@@ -268,8 +268,11 @@ export default {
       }
     },
     changeSortBy(e) { this.sortBy = e },
-    sortMetaCards() {
+    sortCards() {
       setTimeout(()=>{ 
+        if (this.$store.state.Settings.videoSortBy == this.sortBy) {
+          this.$store.state.Settings.videoSortDirection = this.sortDirection=='asc'?'desc':'asc'
+        }
         this.$store.state.Settings.videoSortBy = this.sortBy
         this.$store.dispatch('filterVideos') 
       }, 100)

@@ -408,7 +408,10 @@ export default {
     },
     changeSortBy(e) { this.sortBy = e },
     sortMetaCards() {
-      setTimeout(()=>{ 
+      setTimeout(()=>{
+        if (this.$store.state.Meta.sortBy == this.sortBy) {
+          this.$store.state.Meta.sortDirection = this.sortDirection=='asc'?'desc':'asc'
+        }
         this.$store.state.Meta.sortBy = this.sortBy
         this.$store.dispatch('filterMetaCards') 
       }, 100)

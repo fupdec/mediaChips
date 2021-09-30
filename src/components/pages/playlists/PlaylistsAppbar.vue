@@ -105,38 +105,14 @@
           
           <vuescroll>
             <v-card-text class="pa-0">
-              <v-btn-toggle v-model="sortBy" mandatory class="group-buttons-sort" color="primary">
-                <v-tooltip bottom>
+              <v-btn-toggle :value="sortBy" @change="changeSortBy($event)" mandatory class="group-buttons-sort" color="primary">
+                <v-tooltip v-for="(s,i) in sort" :key="i" bottom>
                   <template v-slot:activator="{ on }">
-                    <v-btn outlined value="name" v-on="on">
-                      <v-icon>mdi-alphabetical-variant</v-icon>
+                    <v-btn v-on="on" @click="sortCards" :value="s.name" outlined>
+                      <v-icon>mdi-{{s.icon}}</v-icon>
                     </v-btn>
                   </template>
-                  <span>Sort by Name</span>
-                </v-tooltip>
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-btn outlined value="date" v-on="on">
-                      <v-icon>mdi-calendar-plus</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Sort by Date Added</span>
-                </v-tooltip>
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-btn outlined value="edit" v-on="on">
-                      <v-icon>mdi-calendar-edit</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Sort by Date of Editing</span>
-                </v-tooltip>
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-btn outlined value="videos" v-on="on">
-                      <v-icon>mdi-video-outline</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Sort by Number of Videos</span>
+                  <span>Sort by {{s.tip}}</span>
                 </v-tooltip>
               </v-btn-toggle>
             </v-card-text>
@@ -195,6 +171,29 @@ export default {
     newPlaylists: '',
     playlistName: '',
     searchString: '',
+    sort: [
+      {
+        name: 'name',
+        icon: 'alphabetical-variant',
+        tip: 'Name',
+      },
+      {
+        name: 'date',
+        icon: 'calendar-plus',
+        tip: 'Date Added',
+      },
+      {
+        name: 'edit',
+        icon: 'calendar-edit',
+        tip: 'Date of Editing',
+      },
+      {
+        name: 'videos',
+        icon: 'video-outline',
+        tip: 'Number of Videos',
+      },
+    ],
+    sortBy: 'name',
   }),
   computed: {
     filtersNumber() {
@@ -211,18 +210,9 @@ export default {
       return filters.length
     },
     sortIcon() {
-      if (this.sortBy=='name') return 'mdi-alphabetical-variant'
-      if (this.sortBy=='date') return 'mdi-calendar-plus'
-      if (this.sortBy=='edit') return 'mdi-calendar-edit'
-      if (this.sortBy=='videos') return 'mdi-video-outline'
+      let sortObject = _.find(this.sort, {name: this.sortBy})
+      if (sortObject) return `mdi-${sortObject.icon}`
       return 'mdi-help'
-    },
-    sortBy: {
-      get() { return this.$store.state.Settings.playlistSortBy },
-      set(value) { 
-        this.$store.state.Settings.playlistSortBy = value
-        setTimeout(()=>{ this.$store.dispatch('filterPlaylists') }, 200)
-      },
     },
     sortDirection() { return this.$store.state.Settings.playlistSortDirection },
     searchStringComputed() {
@@ -307,6 +297,16 @@ export default {
         this.$store.commit('updatePlaylists')
         this.$store.dispatch('filterPlaylists', true)
       })
+    },
+    changeSortBy(e) { this.sortBy = e },
+    sortCards() {
+      setTimeout(()=>{ 
+        if (this.$store.state.Settings.playlistSortBy == this.sortBy) {
+          this.$store.state.Settings.playlistSortDirection = this.sortDirection=='asc'?'desc':'asc'
+        }
+        this.$store.state.Settings.playlistSortBy = this.sortBy
+        this.$store.dispatch('filterPlaylists') 
+      }, 100)
     },
     toggleSortDirection() {
       this.$store.state.Settings.playlistSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
