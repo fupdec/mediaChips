@@ -50,13 +50,14 @@ export default {
   components: {ManageBackups},
   mounted () {
     this.$nextTick(function () {
-      this.dialog = true
+      this.getVersionsForMigration()
     })
   },
   data: () => ({
     dialog: false,
     dialogFinish: false,
     versions: ['0.10.4'],
+    versionsForMigration: [],
   }),
   computed: {
     databaseVersion() { return this.$store.state.Settings.databaseVersion },
@@ -64,8 +65,7 @@ export default {
   },
   methods: {
     start() {
-      let versionsForMigration = this.getVersionsForMigration()
-      if (versionsForMigration.includes('0.10.4')) {
+      if (this.versionsForMigration.includes('0.10.4')) {
         let metaCareer = this.$store.getters.meta.find({id:'career'}).value()
         if (!metaCareer) this.$store.getters.meta.push({
           "id": "career",
@@ -80,18 +80,15 @@ export default {
       this.dialogFinish = true
     },
     getVersionsForMigration() {
-      function compareVersion(first, second) {
-        second = second.split('.').map( s => s.padStart(10) ).join('.')
-        first = first.split('.').map( s => s.padStart(10) ).join('.')
-        return second > first
-      }
-      let versionsForMigration = []
+      function getVer(version) { return version.split('.').map( s => s.padStart(10) ).join('.') }
+      
       for (let i = 0; i < this.versions.length; i++) {
-        let version = this.versions[i]
-        let isVersionOld = compareVersion(this.databaseVersion, version) 
-        if (isVersionOld) versionsForMigration = this.versions.slice(i)
+        if (getVer(this.databaseVersion) < getVer(this.versions[i])) {
+          this.versionsForMigration = this.versions.slice(i)
+          break
+        }
       }
-      return versionsForMigration
+      if (this.versionsForMigration.length) this.dialog = true 
     },
     close() { win.close() },
   },
