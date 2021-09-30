@@ -10,7 +10,7 @@
         </vuescroll>
       </div>
       <v-alert v-else type="info" text outlined dense class="text-center">
-        Please go to the videos page and add your saved filters for dynamic playlists to appear here
+        Please go to the video page, select filters and save them so that dynamic playlists appear
       </v-alert>
     </v-container>
 

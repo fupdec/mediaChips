@@ -52,7 +52,8 @@
           <template v-slot:activator="{ on }">
             <v-icon v-on="on">mdi-help-circle-outline</v-icon>
           </template>
-          <span>Click on the icon <v-icon dark>mdi-video-plus</v-icon> in the upper left corner, on appbar</span>
+          <span>Click on the icon <v-icon dark>mdi-video-plus</v-icon> in the upper left corner, on appbar <br>
+            or drag a folder or video files here</span>
         </v-tooltip>
       </div>
       

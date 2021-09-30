@@ -226,7 +226,8 @@
       
         <div v-if="numberVideosMetaCard==0" class="text-center">
           <div><v-icon size="100" class="ma-10">mdi-video</v-icon></div>
-          It's so empty... add this {{meta.settings.nameSingular.toLowerCase()}} to your videos so they appear here
+          It's so empty... add this {{meta.settings.nameSingular.toLowerCase()}} to your videos so they appear here,
+          also you can drag a folder or video files here to add them to the database
         </div>
 
         <div v-if="filteredVideosNumber==0&&numberVideosMetaCard>0" class="text-center pt-10">
