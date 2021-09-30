@@ -87,7 +87,14 @@ export default {
       this.filters[i].cond = this.getConditions(this.filters[i].type)[0]
     },
     setCond(e, i) { this.filters[i].cond = e },
-    setVal(e, i) { this.filters[i].val = e },
+    setVal(e, i) { 
+      this.filters[i].val = e 
+      let metaId = this.filters[i].by
+      let meta = this.getMeta(metaId)
+      if (meta && meta.type === 'complex') {
+        this.$refs[metaId][0].lazySearch = null
+      }
+    },
     setFlag(e, i) { this.filters[i].flag = e },
     removeChip(item, i) { 
       const index = this.filters[i].val.indexOf(item.name)

@@ -72,7 +72,7 @@
               
               <v-autocomplete v-if="filters[i].type==='select'&&filters[i].by!=='country'" :items="getCards(filters[i].by)" 
                 @input="setVal($event,i)" :value="filters[i].val"
-                outlined multiple hide-selected dense
+                outlined multiple hide-selected dense :ref="filters[i].by"
                 label="Values" item-value="id" class="val" close-icon="mdi-close"
                 :menu-props="{contentClass:'list-with-preview'}"
                 :disabled="filters[i].lock||filters[i].cond=='empty'||filters[i].cond=='not empty'"
