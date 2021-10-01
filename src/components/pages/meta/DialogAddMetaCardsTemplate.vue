@@ -1,12 +1,12 @@
 <template>
 <div>
-  <v-dialog v-model="dialog" persistent scrollable max-width="800">
+  <v-dialog v-model="dialog" persistent scrollable max-width="600">
     <v-card>
       <v-toolbar color="primary">
-        <div class="headline">Add performers, tags, websites</div>
+        <div class="headline">Adding meta cards </div>
         <v-spacer></v-spacer>
-        <v-btn @click="finish" :disabled="isProcessRunning" class="mr-4" outlined><v-icon left>mdi-cancel</v-icon>Cancel</v-btn>
-        <v-btn @click="start" :disabled="isProcessRunning" outlined><v-icon left>mdi-plus</v-icon>Add</v-btn>
+        <v-btn @click="close" :disabled="isProcessRunning" class="mr-4" outlined><v-icon left>mdi-cancel</v-icon>Cancel</v-btn>
+        <v-btn @click="start" :disabled="isProcessRunning||!valid||(!settings.performers.value&&!settings.tags.value&&!settings.websites.value)" outlined><v-icon left>mdi-plus</v-icon>Add</v-btn>
       </v-toolbar>
       <vuescroll>
         <v-card-text>
@@ -15,11 +15,12 @@
             To get performers you need an internet connection.
           </v-alert>
 
+          <v-form ref="form" v-model="valid" :disabled="isProcessRunning">
           <div class="d-flex align-center">
-            <v-switch v-model="settings.performers.value" label="Add performers" class="ma-0 pa-0 mr-4" hide-details/>
+            <v-switch v-model="settings.performers.value" label="Add performers to:" class="mr-4"/>
             <v-autocomplete v-model="settings.performers.meta" :disabled="!settings.performers.value" :items="metaList"
               label="Meta with performers" placeholder="Please select the meta for which performers will be added" 
-              :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
+              :rules="settings.performers.value?[v=>!!v||'Meta is required']:[]" item-value="id" :filter="filterMeta">
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
                 <span>{{data.item.settings.name}}</span>
@@ -34,16 +35,16 @@
             <div class="mr-4">The number of performers to be added: {{numberPerformers}}</div>
             <v-slider v-model="numberPerformers" :disabled="!settings.performers.value" hide-details step="96" min="96" max="960" class="mx-4"/>
           </div>
-          <div>
+          <div class="mb-4">
             <div>Performers received: {{found.length}} / {{numberPerformers}}</div>
             <v-progress-linear v-if="isProcessRunning" height="5" color="secondary" rounded indeterminate/>
           </div>
 
           <div class="d-flex align-center">
-            <v-switch v-model="settings.tags.value" label="Add tags" class="ma-0 pa-0 mr-4" hide-details/>
+            <v-switch v-model="settings.tags.value" label="Add tags to:" class="mr-4"/>
             <v-autocomplete v-model="settings.tags.meta" :disabled="!settings.tags.value" :items="metaList"
               label="Meta with tags" placeholder="Please select the meta for which tags will be added" 
-              :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
+              :rules="settings.tags.value?[v=>!!v||'Meta is required']:[]" item-value="id" :filter="filterMeta">
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
                 <span>{{data.item.settings.name}}</span>
@@ -56,10 +57,10 @@
           </div>
 
           <div class="d-flex align-center">
-            <v-switch v-model="settings.websites.value" label="Add websites" class="ma-0 pa-0 mr-4" hide-details/>
+            <v-switch v-model="settings.websites.value" label="Add websites to:" class="mr-4"/>
             <v-autocomplete v-model="settings.websites.meta" :disabled="!settings.websites.value" :items="metaList"
               label="Meta with websites" placeholder="Please select the meta for which websites will be added" 
-              :rules="[value => !!value || 'Meta is required']" item-value="id" :filter="filterMeta">
+              :rules="settings.websites.value?[v=>!!v||'Meta is required']:[]" item-value="id" :filter="filterMeta">
               <template v-slot:selection="data">
                 <v-icon left small>mdi-{{data.item.settings.icon}}</v-icon>
                 <span>{{data.item.settings.name}}</span>
@@ -70,6 +71,7 @@
               </template>
             </v-autocomplete>
           </div>
+          </v-form>
         </v-card-text>
       </vuescroll>
     </v-card>
@@ -97,20 +99,26 @@ export default {
   mixins: [MetaGetters], 
   mounted() {
     this.$nextTick(function () {
+      let performers = this.$store.getters.meta.find(i=>i.settings.name==='Performers').cloneDeep().value()
+      if (performers) this.settings.performers.meta = performers.id 
+      let tags = this.$store.getters.meta.find(i=>i.settings.name==='Tags').cloneDeep().value()
+      if (tags) this.settings.tags.meta = tags.id 
+      let websites = this.$store.getters.meta.find(i=>i.settings.name==='Websites').cloneDeep().value()
+      if (websites) this.settings.websites.meta = websites.id 
     })
   },
   data: () => ({
     settings: {
       performers: {
-        value: false,
+        value: true,
         meta: null,
       },
       tags: {
-        value: false,
+        value: true,
         meta: null,
       },
       websites: {
-        value: false,
+        value: true,
         meta: null,
       },
     },
@@ -118,6 +126,7 @@ export default {
     isProcessRunning: false,
     months: ['january','february','march','april','may','june','july','august','september','october','november','december'],
     found: [],
+    valid: false,
   }),
   computed: {
     pathToUserData() { return this.$store.getters.getPathToUserData },
@@ -125,10 +134,8 @@ export default {
   },
   methods: {
     async start() {
-      if (!this.settings.performers.value && !this.settings.tags.value && !this.settings.websites.value) return
-      if (this.settings.performers.value) if (this.settings.performers.meta == null || this.settings.performers.meta.length == 0) return // check if empty
-      if (this.settings.tags.value) if (this.settings.tags.meta == null || this.settings.tags.meta.length == 0) return // check if empty
-      if (this.settings.websites.value) if (this.settings.websites.meta == null || this.settings.websites.meta.length == 0) return // check if empty
+      this.$refs.form.validate()
+      if (!this.valid) return
       this.isProcessRunning = true
       let pages = this.numberPerformers/96
       if (this.settings.performers.value) {
@@ -141,9 +148,9 @@ export default {
       if (this.settings.tags.value) await this.createTags()
       if (this.settings.websites.value) await this.createWebsites()
       this.isProcessRunning = false
-      this.finish()
+      this.$emit('finish') 
     },
-    finish() { this.$emit('finish')},
+    close() { this.$emit('close') },
     sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) },
     async getPerformers(query) {
       return new Promise(resolve => {

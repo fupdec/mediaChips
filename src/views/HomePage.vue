@@ -1,226 +1,238 @@
 <template>
   <vuescroll>
-    <div class="py-4"/>
-    <v-container class="text-center">
-      <v-row v-if="videosNumber==0">
-        <v-col cols="12">
-          <img alt="mediaChips" width="200" height="200" :src="logoPath">
-          <h2 class="my-8">Welcome to mediaChips application!</h2>
-      
-          <div v-if="metaNumber==0" cols="12">
-            <div class="mb-4"> First, create a meta for your videos. 
-              You can view and customize the meta in the settings. </div>
-            <v-btn @click="createAllMeta=true" :disabled="isAllMetaCreated" class="mb-4" color="primary" x-large rounded block>
-              <v-icon left>mdi-auto-fix</v-icon> Create all meta </v-btn>
-          </div>
-      
-          <div v-if="isAllMetaCreated&&showAdultContent" cols="12">
-            <div class="mb-4"> If you plan on using the app for adult content, then this feature will come in handy. </div>
-            <v-btn @click="dialogAddMetaCardsTemplate=true" class="mb-4" color="primary" x-large rounded block>
-              <v-icon left>mdi-plus</v-icon> Add most popular tags, performers, websites </v-btn>
-          </div>
-
-          <div class="mb-4 mt-10">Then add videos from your computer by selecting folders.</div>
-          <v-btn @click="$store.state.Settings.dialogScanVideos=true" color="primary" class="mb-6" x-large rounded block>
-            <v-icon left>mdi-plus</v-icon> Add videos </v-btn>
-        </v-col>
-        <DialogAddMetaCardsTemplate v-if="dialogAddMetaCardsTemplate" :dialog="dialogAddMetaCardsTemplate" @finish="dialogAddMetaCardsTemplate=false"/>
-      </v-row>
-
-      <v-row v-if="videosNumber>0">
-        <v-col cols="12" class="pt-0 d-flex justify-space-between">
-          <v-btn @click="$store.state.Settings.dialogScanVideos=true" rounded color="primary">
-            <v-icon left>mdi-plus</v-icon> Add new videos
-          </v-btn>
-          <v-btn @click="customization=!customization" rounded color="primary"> 
-            <v-icon left>mdi-cog</v-icon> {{customization?'Finish Customization':'Customize widgets'}} </v-btn>
-        </v-col>
-
-        <v-col v-if="isAllWidgetsHidden" cols="12">
-          <v-alert type="info" outlined text class="ma-0">
-            All widgets are hidden. Set up at least one of the widgets to show for a more attractive look
-          </v-alert>
-        </v-col>
-
-        <v-col v-if="customization" cols="12">
-          <v-card outlined>
-            <v-card-actions>
-              <div>Graph with number of videos added and edited per days</div>
-              <v-spacer></v-spacer>
-              <v-switch v-model="widgets.graphVideos" @change="updateWidget($event, 'graphVideos')" inset hide-details class="ma-2 pt-0"
-                :append-icon="`mdi-${widgets.graphVideos?'eye':'eye-off'}`"/>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col v-if="customization||widgets.graphVideos" cols="12">
-          <v-card outlined>
-            <v-toolbar color="secondary">
-              <div class="headline">Number of videos added and edited per days</div>
-              <v-spacer></v-spacer>
-              <v-btn @click="initVideosStat(daysBefore)" outlined>All time</v-btn>
-              <v-btn @click="initVideosStat(30)" outlined class="ml-4">Last Month</v-btn>
-              <v-btn @click="initVideosStat(7)" outlined class="ml-4">Last Week</v-btn>
-            </v-toolbar>
-            <apexchart type="area" height="250" class="pt-2" :options="chartOptions" :series="series"/>
-          </v-card>   
-        </v-col>
-      
-        <v-col v-if="customization" cols="12">
-          <v-card outlined>
-            <v-card-actions>
-              <div>Total values of all videos</div>
-              <v-spacer></v-spacer>
-              <v-switch v-model="widgets.numberVideos" @change="updateWidget($event, 'graphVideos')" inset hide-details class="ma-2 pt-0"
-                :append-icon="`mdi-${widgets.numberVideos?'eye':'eye-off'}`"/>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col v-if="customization||widgets.numberVideos" cols="12">
-          <div class="d-flex flex-wrap justify-space-around">
-            <v-card outlined class="pa-2">
-              <v-icon>mdi-database</v-icon> Total Number of Videos:
-              <b v-text="$store.getters.videosTotal"/>
-            </v-card>
-            <v-card outlined class="pa-2">
-              <v-icon>mdi-harddisk</v-icon> Total File Size:
-              <b v-text="$store.getters.videosTotalSize"/>
-            </v-card>
-            <v-card outlined class="pa-2">
-              <v-icon>mdi-clock</v-icon> Total Duration:
-              <b v-text="$store.getters.videosTotalDuration"/>
-            </v-card>
-          </div>
-        </v-col>
-
-        <v-col v-if="customization" cols="12">
-          <v-card outlined>
-            <v-card-actions>
-              <div>Recently added videos</div>
-              <v-spacer></v-spacer>
-              <v-switch v-model="widgets.recentVideos" @change="updateWidget($event, 'graphVideos')" inset hide-details class="ma-2 pt-0"
-                :append-icon="`mdi-${widgets.recentVideos?'eye':'eye-off'}`"/>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col v-if="customization||widgets.recentVideos" cols="12">
-          <v-card outlined>
-            <v-toolbar color="secondary">
-              <div class="headline">{{numberRecentVideos}} recently added videos</div>
-              <v-spacer></v-spacer>
-              <v-btn to="/videos/:default?tabId=default" draggable="false" outlined>
-                <v-icon left>mdi-video</v-icon> Show All Videos</v-btn>
-            </v-toolbar>
-            <div class="previews-grid" @mousedown="stopSmoothScroll($event)"> 
-              <v-hover v-for="video in recentVideos" :key="video.id">
-                <template v-slot:default="{ hover }">
-                  <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video, 'recentVideos')" aspect-ratio="1">
-                    <v-fade-transition>
-                      <v-overlay v-if="hover" absolute color="secondary">
-                        <v-btn icon x-large outlined>
-                          <v-icon>mdi-play</v-icon>
-                        </v-btn>
-                      </v-overlay>
-                    </v-fade-transition>
-                  </v-img>
-                </template>
-              </v-hover>
+    <div @dragover="showDrop">
+      <div class="py-4"/>
+      <v-container class="text-center">
+        <v-row v-if="videosNumber==0">
+          <v-col cols="12">
+            <img alt="mediaChips" width="200" height="200" :src="logoPath">
+            <h2 class="my-8">Welcome to mediaChips application!</h2>
+        
+            <div v-if="metaNumber==0" cols="12">
+              <div class="mb-4"> First, create a meta for your videos. 
+                You can view and customize the meta in the settings </div>
+              <v-btn @click="createAllMeta=true" :disabled="isAllMetaCreated" class="mb-4" color="primary" x-large rounded block>
+                <v-icon left>mdi-auto-fix</v-icon> Create all meta </v-btn>
             </div>
-          </v-card>
-        </v-col>
 
-        <v-col v-if="customization" cols="12">
-          <v-card outlined>
-            <v-card-actions>
-              <div>Most viewed videos</div>
-              <v-spacer></v-spacer>
-              <v-switch v-model="widgets.topViewedVideos" @change="updateWidget($event, 'graphVideos')" inset hide-details class="ma-2 pt-0"
-                :append-icon="`mdi-${widgets.topViewedVideos?'eye':'eye-off'}`"/>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col v-if="customization||widgets.topViewedVideos" cols="12">
-          <v-card outlined>
-            <v-toolbar color="secondary">
-              <div class="headline">Top 10 most viewed videos ({{videosViewedLastWeek}} viewed in the past week)</div>
-              <v-spacer></v-spacer>
-              <v-btn to="/videos/:default?tabId=default" draggable="false" outlined>
-                <v-icon left>mdi-video</v-icon> Show All Videos</v-btn>
-            </v-toolbar>
-            <div class="previews-grid" @mousedown="stopSmoothScroll($event)"> 
-              <v-hover v-for="video in topViewedVideos" :key="video.id+1">
-                <template v-slot:default="{ hover }">
-                  <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video, 'topViewedVideos')" aspect-ratio="1" dark>
-                    <v-fade-transition>
-                      <v-overlay v-if="hover" absolute color="secondary">
-                        <v-btn icon x-large outlined>
-                          <v-icon>mdi-play</v-icon>
-                        </v-btn>
-                      </v-overlay>
-                    </v-fade-transition>
-                    <span class="views"><v-icon>mdi-eye-outline</v-icon> {{video.views||0}}</span>
-                  </v-img>
-                </template>
-              </v-hover>
+            <div class="mb-4 mt-10">Then add videos from your computer by selecting folders. You can also drag and drop videos</div>
+            <v-btn @click="$store.state.Settings.dialogScanVideos=true" color="primary" class="mb-6" x-large rounded block>
+              <v-icon left>mdi-plus</v-icon> Add videos </v-btn>
+          </v-col>
+        </v-row>
+
+        <v-row v-else>
+          <v-col cols="12" class="pt-0 d-flex justify-space-between">
+            <v-btn @click="$store.state.Settings.dialogScanVideos=true" rounded color="primary">
+              <v-icon left>mdi-plus</v-icon> Add new videos
+            </v-btn>
+            <v-btn @click="customization=!customization" rounded color="primary"> 
+              <v-icon left>mdi-cog</v-icon> {{customization?'Finish Customization':'Customize widgets'}} </v-btn>
+          </v-col>
+
+          <v-col v-if="isAllWidgetsHidden" cols="12">
+            <v-alert type="info" outlined text class="ma-0">
+              All widgets are hidden. Set up at least one of the widgets to show for a more attractive look
+            </v-alert>
+          </v-col>
+
+          <v-col v-if="customization" cols="12">
+            <v-card outlined>
+              <v-card-actions>
+                <div>Graph with number of videos added and edited per days</div>
+                <v-spacer></v-spacer>
+                <v-switch v-model="widgets.graphVideos" @change="updateWidget($event, 'graphVideos')" inset hide-details class="ma-2 pt-0"
+                  :append-icon="`mdi-${widgets.graphVideos?'eye':'eye-off'}`"/>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col v-if="customization||widgets.graphVideos" cols="12">
+            <v-card outlined>
+              <v-toolbar color="secondary">
+                <div class="headline">Number of videos added and edited per days</div>
+                <v-spacer></v-spacer>
+                <v-btn @click="initVideosStat(daysBefore)" outlined>All time</v-btn>
+                <v-btn @click="initVideosStat(30)" outlined class="ml-4">Last Month</v-btn>
+                <v-btn @click="initVideosStat(7)" outlined class="ml-4">Last Week</v-btn>
+              </v-toolbar>
+              <apexchart type="area" height="250" class="pt-2" :options="chartOptions" :series="series"/>
+            </v-card>   
+          </v-col>
+        
+          <v-col v-if="customization" cols="12">
+            <v-card outlined>
+              <v-card-actions>
+                <div>Total values of all videos</div>
+                <v-spacer></v-spacer>
+                <v-switch v-model="widgets.numberVideos" @change="updateWidget($event, 'numberVideos')" inset hide-details class="ma-2 pt-0"
+                  :append-icon="`mdi-${widgets.numberVideos?'eye':'eye-off'}`"/>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col v-if="customization||widgets.numberVideos" cols="12">
+            <div class="d-flex flex-wrap justify-space-around">
+              <v-card outlined class="pa-2">
+                <v-icon>mdi-database</v-icon> Total Number of Videos:
+                <b v-text="$store.getters.videosTotal"/>
+              </v-card>
+              <v-card outlined class="pa-2">
+                <v-icon>mdi-harddisk</v-icon> Total File Size:
+                <b v-text="$store.getters.videosTotalSize"/>
+              </v-card>
+              <v-card outlined class="pa-2">
+                <v-icon>mdi-clock</v-icon> Total Duration:
+                <b v-text="$store.getters.videosTotalDuration"/>
+              </v-card>
             </div>
-          </v-card>
-        </v-col>
+          </v-col>
 
-        <v-col v-if="customization" cols="12">
-          <v-card outlined>
-            <v-card-actions>
-              <div>Top 10 most viewed meta cards</div>
-              <v-spacer></v-spacer>
-              <v-switch v-model="widgets.topViewedMetaCards" @change="updateWidget($event, 'graphVideos')" inset hide-details class="ma-2 pt-0"
-                :append-icon="`mdi-${widgets.topViewedMetaCards?'eye':'eye-off'}`"/>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col v-if="customization||widgets.topViewedMetaCards" cols="12">
-          <v-card v-for="m in complexMetaAssignedToVideo" :key="m.id" outlined class="mb-6">
-            <v-toolbar color="secondary">
-              <div class="headline"> Top 10 most viewed {{getMeta(m.id).settings.name.toLowerCase()}} </div>
-              <v-spacer></v-spacer>
-              <v-btn :to="`/meta/?metaId=${m.id}&tabId=default`" draggable="false" outlined>
-                <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon> Show All {{getMeta(m.id).settings.name}}</v-btn>
-            </v-toolbar>
-            <div class="previews-grid">
-              <v-hover v-for="mc in getTopMetaCards(m.id)" :key="mc.id">
-                <template v-slot:default="{ hover }">
-                  <v-card outlined hover
-                    @mousedown="stopSmoothScroll($event)"
-                    @click="openMetaCardPage(m.id,mc.id)" 
-                    @click.middle="addNewTabMetaCard(m.id,mc.id,mc.meta.name)">
-                    <div class="pa-1 profile-avatar">
-                      <v-avatar width="100" height="100">
-                        <img :src="getImgMetaCard(m.id,mc.id)">
-                      </v-avatar>
-                      <span class="views"><v-icon dark>mdi-eye-outline</v-icon> {{mc.views||0}}</span>
-                    </div>
-                    <div class="caption px-1">{{mc.meta.name}}</div>
-                    
-                    <v-expand-transition>
-                      <v-overlay v-if="hover" absolute color="secondary" z-index="1">
-                        <v-icon>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-                        <div>Open page</div>
-                      </v-overlay>
-                    </v-expand-transition>
-                  </v-card>
-                </template>
-              </v-hover>
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
+          <v-col v-if="customization" cols="12">
+            <v-card outlined>
+              <v-card-actions>
+                <div>Recently added videos</div>
+                <v-spacer></v-spacer>
+                <v-switch v-model="widgets.recentVideos" @change="updateWidget($event, 'recentVideos')" inset hide-details class="ma-2 pt-0"
+                  :append-icon="`mdi-${widgets.recentVideos?'eye':'eye-off'}`"/>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col v-if="customization||widgets.recentVideos" cols="12">
+            <v-card outlined>
+              <v-toolbar color="secondary">
+                <div class="headline">{{numberRecentVideos}} recently added videos</div>
+                <v-spacer></v-spacer>
+                <v-btn to="/videos/:default?tabId=default" draggable="false" outlined>
+                  <v-icon left>mdi-video</v-icon> Show All Videos</v-btn>
+              </v-toolbar>
+              <div class="previews-grid" @mousedown="stopSmoothScroll($event)"> 
+                <v-hover v-for="video in recentVideos" :key="video.id">
+                  <template v-slot:default="{ hover }">
+                    <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video, 'recentVideos')" aspect-ratio="1">
+                      <v-fade-transition>
+                        <v-overlay v-if="hover" absolute color="secondary">
+                          <v-btn icon x-large outlined>
+                            <v-icon>mdi-play</v-icon>
+                          </v-btn>
+                        </v-overlay>
+                      </v-fade-transition>
+                    </v-img>
+                  </template>
+                </v-hover>
+              </div>
+            </v-card>
+          </v-col>
 
-      <div v-if="$store.state.Settings.videosTotal==0">
-        <h2>First of all add videos in settings</h2>
-        <v-btn class="ma-2" color="secondary" to="/settings" draggable="false">Open settings</v-btn>
-      </div>
-    </v-container>
+          <v-col v-if="customization" cols="12">
+            <v-card outlined>
+              <v-card-actions>
+                <div>Most viewed videos</div>
+                <v-spacer></v-spacer>
+                <v-switch v-model="widgets.topViewedVideos" @change="updateWidget($event, 'topViewedVideos')" inset hide-details class="ma-2 pt-0"
+                  :append-icon="`mdi-${widgets.topViewedVideos?'eye':'eye-off'}`"/>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col v-if="customization||widgets.topViewedVideos" cols="12">
+            <v-card outlined>
+              <v-toolbar color="secondary">
+                <div class="headline">Top 10 most viewed videos ({{videosViewedLastWeek}} viewed in the past week)</div>
+                <v-spacer></v-spacer>
+                <v-btn to="/videos/:default?tabId=default" draggable="false" outlined>
+                  <v-icon left>mdi-video</v-icon> Show All Videos</v-btn>
+              </v-toolbar>
+              <div class="previews-grid" @mousedown="stopSmoothScroll($event)"> 
+                <v-hover v-for="video in topViewedVideos" :key="video.id+1">
+                  <template v-slot:default="{ hover }">
+                    <v-img :src="getVideoThumbUrl(video.id)" @click="playVideo(video, 'topViewedVideos')" aspect-ratio="1" dark>
+                      <v-fade-transition>
+                        <v-overlay v-if="hover" absolute color="secondary">
+                          <v-btn icon x-large outlined>
+                            <v-icon>mdi-play</v-icon>
+                          </v-btn>
+                        </v-overlay>
+                      </v-fade-transition>
+                      <span class="views"><v-icon>mdi-eye-outline</v-icon> {{video.views||0}}</span>
+                    </v-img>
+                  </template>
+                </v-hover>
+              </div>
+            </v-card>
+          </v-col>
 
-    <CreateAllMeta v-if="createAllMeta" :dialog="createAllMeta" @finish="finishCreationAllMeta" @close="createAllMeta=false"/>
+          <v-col v-if="customization" cols="12">
+            <v-card outlined>
+              <v-card-actions>
+                <div>Top 10 most viewed meta cards</div>
+                <v-spacer></v-spacer>
+                <v-switch v-model="widgets.topViewedMetaCards" @change="updateWidget($event, 'topViewedMetaCards')" inset hide-details class="ma-2 pt-0"
+                  :append-icon="`mdi-${widgets.topViewedMetaCards?'eye':'eye-off'}`"/>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col v-if="customization||widgets.topViewedMetaCards" cols="12">
+            <v-card v-for="m in complexMetaAssignedToVideo" :key="m.id" outlined class="mb-6">
+              <v-toolbar color="secondary">
+                <div class="headline"> Top 10 most viewed {{getMeta(m.id).settings.name.toLowerCase()}} </div>
+                <v-spacer></v-spacer>
+                <v-btn :to="`/meta/?metaId=${m.id}&tabId=default`" draggable="false" outlined>
+                  <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon> Show All {{getMeta(m.id).settings.name}}</v-btn>
+              </v-toolbar>
+              <div class="previews-grid">
+                <v-hover v-for="mc in getTopMetaCards(m.id)" :key="mc.id">
+                  <template v-slot:default="{ hover }">
+                    <v-card outlined hover
+                      @mousedown="stopSmoothScroll($event)"
+                      @click="openMetaCardPage(m.id,mc.id)" 
+                      @click.middle="addNewTabMetaCard(m.id,mc.id,mc.meta.name)">
+                      <div class="pa-1 profile-avatar">
+                        <v-avatar width="100" height="100">
+                          <img :src="getImgMetaCard(m.id,mc.id)">
+                        </v-avatar>
+                        <span class="views"><v-icon dark>mdi-eye-outline</v-icon> {{mc.views||0}}</span>
+                      </div>
+                      <div class="caption px-1">{{mc.meta.name}}</div>
+                      
+                      <v-expand-transition>
+                        <v-overlay v-if="hover" absolute color="secondary" z-index="1">
+                          <v-icon>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                          <div>Open page</div>
+                        </v-overlay>
+                      </v-expand-transition>
+                    </v-card>
+                  </template>
+                </v-hover>
+              </div>
+            </v-card>
+          </v-col>
+        </v-row>
 
-    <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
+        <div v-if="$store.state.Settings.videosTotal==0">
+          <h2>First of all add videos in settings</h2>
+          <v-btn class="ma-2" color="secondary" to="/settings" draggable="false">Open settings</v-btn>
+        </div>
+      </v-container>
+
+      <CreateAllMeta v-if="createAllMeta" 
+        :dialog="createAllMeta" 
+        @finish="finishCreationAllMeta" 
+        @close="createAllMeta=false"/>
+      
+      <DialogAddMetaCardsTemplate v-if="dialogAddMetaCardsTemplate" 
+        :dialog="dialogAddMetaCardsTemplate" 
+        @finish="finishAddMetaCardsTemplate" 
+        @close="dialogAddMetaCardsTemplate=false"/>
+
+      <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
+      
+      <v-card v-show="dropzone" 
+        @dragleave="dropzone=false" 
+        @drop="catchDrop($event)" 
+        @dragenter.prevent 
+        @dragover.prevent 
+        class="dropzone">
+        <div class="text">Drop video or folder to add them</div>
+      </v-card>
+    </div>
   </vuescroll>
 </template>
 
@@ -234,6 +246,7 @@ import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
 import MetaGetters from '@/mixins/MetaGetters'
 import VueApexCharts from 'vue-apexcharts'
+import VideosGrid from '@/mixins/VideosGrid'
 
 export default {
   name: 'HomePage',
@@ -243,7 +256,7 @@ export default {
     CreateAllMeta: () => import("@/components/pages/meta/CreateAllMeta.vue"),
     DialogAddMetaCardsTemplate: () => import("@/components/pages/meta/DialogAddMetaCardsTemplate.vue"),
   },
-  mixins: [LabelFunctions, MetaGetters], 
+  mixins: [LabelFunctions, MetaGetters, VideosGrid], 
   beforeMount() {
     this.initWidgets()
     this.initVideosStat(7)
@@ -366,6 +379,14 @@ export default {
     finishCreationAllMeta() {
       this.createAllMeta = false
       this.isAllMetaCreated = true
+      this.dialogAddMetaCardsTemplate = true
+    },
+    finishAddMetaCardsTemplate() {
+      this.dialogAddMetaCardsTemplate = false
+      this.$store.dispatch('setNotification', {
+        type: 'info',
+        text: 'To automatically fill in information about performers, go to the performers page, then right-click on the card and select "Scrape info for performers"'
+      })
     },
     getImgMetaCard(metaId, cardId) {
       let imgPath = path.join(this.pathToUserData, '/media/meta/', `${metaId}/${cardId}_avatar.jpg`)

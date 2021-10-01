@@ -125,7 +125,7 @@
           <v-card-text class="pa-0 notifications-list">
             <v-alert 
               v-for="alert in notifications" :key="alert.id"
-              dense text :type="alert.type" class="mb-1"
+              dense text outlined :type="alert.type" class="mb-1"
             >
               <v-row align="center">
                 <v-col class="grow pa-0">
