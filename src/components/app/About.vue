@@ -2,7 +2,7 @@
   <v-card outlined class="pa-4">
     <div class="d-flex">
       <div>
-        <div>mediaChips v0.10.4-beta</div>
+        <div>mediaChips v0.10.5-beta</div>
         <div class="text--secondary">by fupdec</div>
       </div>
       <v-spacer></v-spacer>
