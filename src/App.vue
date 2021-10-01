@@ -204,7 +204,6 @@ export default {
   },
   beforeDestroy() {
     clearInterval(this.intervalUpdateDataFromVideos)
-    this.createBackup()
   },
   data: () => ({
     password: '',
