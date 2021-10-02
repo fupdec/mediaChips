@@ -1,6 +1,6 @@
 ![GitHub issues](https://img.shields.io/github/issues/fupdec/mediaChips?color=%233aca0a)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed/fupdec/mediaChips?color=%23f44)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/mediaChips/v0.10.5-beta?color=green)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/fupdec/mediaChips/v0.10.6-beta?color=green)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/fupdec/mediaChips?color=blue)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/downloads-pre/fupdec/mediachips/latest/total)
 
