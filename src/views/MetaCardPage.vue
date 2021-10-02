@@ -387,7 +387,7 @@ export default {
       return this.metaInCard.filter(i=>checkMetaForCareer(i))
     },
     videoThumbImgUrls() {
-      let videos = this.$store.getters.videos.filter(video=>video[this.meta.id].includes(this.card.id))
+      let videos = this.$store.getters.videos.filter(video=>video[this.meta.id]===undefined?false:video[this.meta.id].includes(this.card.id))
       let imgUrls = videos.orderBy('rating',['desc']).take(40).value().map(v=>{
         let imgPath = path.join(this.pathToUserData, `/media/thumbs/${v.id}.jpg`)
         if (fs.existsSync(imgPath)) return 'file://' + imgPath
