@@ -5,7 +5,6 @@
     <AppBar />
 
     <SideBar v-if="navigationSide=='1'" @openDialogFolder="openDialogFolder" :foldersUpdated="foldersUpdated"/>
-    
 
     <v-main app v-if="!disableRunApp">
       <router-view :key="$route.fullPath" />
@@ -49,15 +48,15 @@
       </v-card>
     </v-dialog>
 
-    <v-bottom-sheet v-if="updateApp" v-model="updateApp" hide-overlay no-click-animation persistent width="600">
+    <v-bottom-sheet v-if="isNewVersionAvailable" v-model="isNewVersionAvailable" hide-overlay no-click-animation persistent width="600">
       <v-card class="pb-6">
         <v-card-title>
-          <span>New version {{appVersion.replace(/ /gm,'')}} is available!</span>
+          <span>New version {{versions.new.replace(/ /gm,'')}} is available!</span>
           <v-spacer></v-spacer>
           <img alt="mediaChips" width="60" height="60" :src="logoPath">
         </v-card-title>
         <v-card-actions class="pa-0">
-          <v-btn @click="updateApp=false" class="ma-4">
+          <v-btn @click="isNewVersionAvailable=false" class="ma-4">
             <v-icon left>mdi-close</v-icon> Close
           </v-btn>
           <v-spacer></v-spacer>
@@ -136,7 +135,7 @@
     </v-bottom-sheet>
 
     <DialogFolder v-if="$store.state.dialogFolder" @addNewVideos="addNewVideos" :folder="folder"/>
-    <Migration v-if="migration" :version="version"/>
+    <Migration v-if="isMigrationNeeded" :versions="versions"/>
 
     <v-footer app height="20" class="pa-0 footer-app">
       <StatusBar />
@@ -184,23 +183,16 @@ export default {
     this.$nextTick(function () {
       this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
       this.initTheme()
-      this.version = app.getVersion()
-      this.$store.state.pathToUserData = app.getPath('userData')
-      if (this.databaseVersion !== this.version) { this.migration = true; return }
+      this.initSystemInfo()
+      if (this.checkForMigration()) return
       if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.runAutoUpdateDataFromVideos()
       if (this.$store.state.Settings.updateDataFromVideosOnStart) this.updateDataFromVideos()
-      // password
-      if(this.passwordProtection && this.phrase!=='') {
-        this.disableRunApp = this.phrase !== this.password 
-      }
-      // watch folders for new videos, deleted videos
-      if (this.watchFolders) this.watchDir(this.folders.map(f=>f.path))
-      // keyboard shortcuts
-      // TODO: disable shift+enter and shift+click because that add new window
+      if (this.passwordProtection && this.phrase!=='') this.disableRunApp = this.phrase !== this.password 
+      if (this.watchFolders) this.watchDir(this.folders.map(f=>f.path)) // watch folders for new videos, deleted videos
       setInterval(() => { this.createBackup() }, 1000 * 60 * 30) // every 30 minutes
-    })
+    }) // TODO: disable shift+enter and shift+click because that add new window
   },
   beforeDestroy() {
     clearInterval(this.intervalUpdateDataFromVideos)
@@ -212,19 +204,20 @@ export default {
     isShowVideoBtn: false,
     validPass: false,
     errorPass: false,
-    isShowPerformerBtn: false,
-    videoPage: '/',
-    performerPage: '/',
-    updateApp: false,
-    appVersion: '',
     intervalUpdateDataFromVideos: null,
     folder: null,
     watcher: null,
     foldersUpdated: false,
     extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
     about: false,
-    migration: false,
-    version: '',
+    isNewVersionAvailable: false,
+    isMigrationNeeded: false,
+    versions: {
+      db: '',
+      app: '',
+      new: '',
+      migration: [],
+    },
   }),
   computed: {
     showSystemBar() {return process.platform === 'win32'},
@@ -383,14 +376,36 @@ export default {
       this.$vuetify.theme.themes.dark.secondary = this.$store.state.Settings.appColorDarkSecondary
       this.$vuetify.theme.themes.dark.accent = this.$store.state.Settings.appColorDarkAccent
     },
-    getPasswordRules(pass) {
-      if (pass.length > 100) {
-        return 'Password must be less than 100 characters'
-      } else if (pass.length===0) {
-        return 'Password is required'
-      } else {
-        return true
+    initSystemInfo() {
+      this.versions.app = app.getVersion()
+      this.versions.db = this.databaseVersion
+      this.$store.state.pathToUserData = app.getPath('userData')
+    },
+    checkForMigration() {
+      if (this.versions.db === this.versions.app) return false
+      
+      let verReqMigration = ['0.10.4']
+      
+      for (let i = 0; i < verReqMigration.length; i++) {
+        if (this.getVer(this.versions.db) < this.getVer(verReqMigration[i])) {
+          this.versions.migration = verReqMigration.slice(i)
+          break
+        }
       }
+
+      if (this.versions.migration.length) {
+        this.isMigrationNeeded = true
+        return true
+      } else {
+        this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:this.versions.app})
+        return false
+      }
+    },
+    getVer(version) { return version.split('.').map( s => s.padStart(10) ).join('.') },
+    getPasswordRules(pass) {
+      if (pass.length > 100) return 'Password must be less than 100 characters'
+      else if (pass.length===0) return 'Password is required' 
+      else return true
     },
     logIn() {
       this.$refs.pass.validate()
@@ -402,20 +417,14 @@ export default {
         if (response.status === 200) {
           const html = response.data
           const $ = cheerio.load(html)
-          let lastVersion = $('.release-header .f1 a').eq(0).text().trim()
-          lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
-          if (this.compareVersion(this.version, lastVersion)) {
-            this.$store.commit('addLog',{text:`💿 Available new version: ${lastVersion}`, color:'green'})
-            this.updateApp = true
+          this.versions.new = $('.release-header .f1 a').eq(0).text().trim() // from github
+          this.versions.new = this.versions.new.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
+          if (this.getVer(this.versions.app) < this.getVer(this.versions.new)) {
+            this.$store.commit('addLog',{text:`💿 Available new version: ${this.versions.new}`, color:'green'})
+            this.isNewVersionAvailable = true
           } else this.$store.commit('addLog', { text: 'Checking for updates is complete. You are using the latest version of the application.', type: 'info' })
         } else this.$store.commit('addLog', { text: 'An internet connection error occurred while checking for updates', type: 'error' })
       })
-    },
-    compareVersion(currentVersion, lastVersion) {
-      lastVersion = lastVersion.split('.').map( s => s.padStart(10) ).join('.')
-      currentVersion = currentVersion.split('.').map( s => s.padStart(10) ).join('.')
-      this.appVersion = lastVersion
-      return lastVersion > currentVersion
     },
     openLink(link) {
       shell.openExternal(link)
@@ -442,13 +451,6 @@ export default {
     },
   },
   watch: {
-    $route() {
-      this.$store.state.isRouteChanged = true
-      this.isShowVideoBtn = this.$router.currentRoute.path.includes('/video/')
-      this.videoPage = this.$router.currentRoute
-      this.isShowPerformerBtn = this.$router.currentRoute.path.includes('/performer/')
-      this.performerPage = this.$router.currentRoute
-    },
     updateIntervalDataFromVideos(n) { this.runAutoUpdateDataFromVideos() },
     autoUpdateDataFromVideos(n) { this.runAutoUpdateDataFromVideos() },
     folders(folders) {

@@ -22,7 +22,6 @@ export default new Vuex.Store({
     log: [],
     isLogVisible: false,
     notifications: [],
-    isRouteChanged: false,
     hoveredImage: false,
     hoveredImageId: '',
     hoveredImageMetaId: '',

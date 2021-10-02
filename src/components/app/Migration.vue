@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" persistent scrollable fullscreen no-click-animation>
+    <v-dialog v-model="dialogMigration" persistent scrollable fullscreen no-click-animation>
       <v-card class="pb-4">
         <v-toolbar color="warning" max-height="64">
           <div class="headline">Updating the database to the latest version</div>
@@ -45,27 +45,24 @@ import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 export default {
   name: 'Migration',
   props: {
-    version: String,
+    versions: Object,
   },
   components: {ManageBackups},
   mounted () {
     this.$nextTick(function () {
-      this.getVersionsForMigration()
+      this.dialogMigration = true
     })
   },
   data: () => ({
-    dialog: false,
+    dialogMigration: false,
     dialogFinish: false,
-    versions: ['0.10.4'],
-    versionsForMigration: [],
   }),
   computed: {
-    databaseVersion() { return this.$store.state.Settings.databaseVersion },
     actualVersion() { return app.getVersion() },
   },
   methods: {
     start() {
-      if (this.versionsForMigration.includes('0.10.4')) {
+      if (this.versions.migration.includes('0.10.4')) {
         let metaCareer = this.$store.getters.meta.find({id:'career'}).value()
         if (!metaCareer) this.$store.getters.meta.push({
           "id": "career",
@@ -78,17 +75,6 @@ export default {
       }
       this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:this.actualVersion})
       this.dialogFinish = true
-    },
-    getVersionsForMigration() {
-      function getVer(version) { return version.split('.').map( s => s.padStart(10) ).join('.') }
-      
-      for (let i = 0; i < this.versions.length; i++) {
-        if (getVer(this.databaseVersion) < getVer(this.versions[i])) {
-          this.versionsForMigration = this.versions.slice(i)
-          break
-        }
-      }
-      if (this.versionsForMigration.length) this.dialog = true 
     },
     close() { win.close() },
   },
