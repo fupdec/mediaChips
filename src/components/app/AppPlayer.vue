@@ -1141,6 +1141,10 @@ export default {
   //     display: none;
   //   }
   // }
+  .v-slider__thumb:before,
+  .v-slider__thumb:after {
+    display: none;
+  }
 }
 .playlist-wrapper {
   min-width: 18vw;
