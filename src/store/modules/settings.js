@@ -66,7 +66,7 @@ dbs.defaults({
   watchFolders: false,
   folders: [],
   zoom: 1,
-  checkForUpdatesAtStartup: false,
+  checkForUpdatesAtStartup: true,
   registration: '',
   colorScroll: false,
   tabBorders: true,
