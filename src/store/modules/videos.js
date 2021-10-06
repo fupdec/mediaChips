@@ -165,6 +165,7 @@ const Videos = {
       let sortBy = rootState.Settings.videoSortBy || 'name'
       let sortDirection = rootState.Settings.videoSortDirection || 'asc'
       if (sortBy === 'name') videos = videos.orderBy(i=>path.basename(i.path), [sortDirection])
+      else if (sortBy === 'resolution') videos = videos.orderBy(i=>Number(i.resolution.match(/\x(.*)/)[1]), [sortDirection])
       else {
         let meta = getters.meta.find({id:sortBy}).value()
         let defaultValue = 0

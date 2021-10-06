@@ -87,6 +87,8 @@
                   <template v-slot:activator="{ on }">
                     <v-btn v-on="on" @click="sortCards" :value="s.name" outlined>
                       <v-icon>mdi-{{s.icon}}</v-icon>
+                      <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='desc'">mdi-arrow-up-thick</v-icon>
+                      <v-icon right size="14" v-if="sortBy==s.name && sortDirection=='asc'">mdi-arrow-down-thick</v-icon>
                     </v-btn>
                   </template>
                   <span>Sort by {{s.tip}}</span>
@@ -155,6 +157,11 @@ export default {
         name: 'size',
         icon: 'harddisk',
         tip: 'Filesize',
+      },
+      {
+        name: 'resolution',
+        icon: 'monitor-screenshot',
+        tip: 'Resolution',
       },
       {
         name: 'rating',
