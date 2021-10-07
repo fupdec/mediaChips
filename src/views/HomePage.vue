@@ -379,7 +379,7 @@ export default {
     finishCreationAllMeta() {
       this.createAllMeta = false
       this.isAllMetaCreated = true
-      this.dialogAddMetaCardsTemplate = true
+      if (this.showAdultContent) this.dialogAddMetaCardsTemplate = true
     },
     finishAddMetaCardsTemplate() {
       this.dialogAddMetaCardsTemplate = false
