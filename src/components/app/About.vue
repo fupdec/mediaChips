@@ -19,7 +19,7 @@
         <v-icon left>mdi-github</v-icon> Github </v-btn>
       <v-btn @click="openLink('https://reddit.com/r/mediaChips/')" color="#ff4500" rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-reddit</v-icon> Reddit </v-btn>
-      <v-btn @click="openLink('https://discord.gg/QSnXFvXZVh')" color="#7289DA" rounded class="px-5 mb-2 mr-2">
+      <v-btn @click="openLink('https://discord.gg/dEQPper2yu')" color="#7289DA" rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-discord</v-icon> Discord </v-btn>
       <v-btn @click="openLink('https://patreon.com/mediaChips')" color="#ff424d" rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-patreon</v-icon> patreon </v-btn>
