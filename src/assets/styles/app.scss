@@ -1432,6 +1432,27 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   }
 }
 // meta
+.meta-item {
+  position: relative;
+  &.selected {
+    &:after {
+      content: '';
+      position: absolute;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+      left: -4px;
+      top: -4px;
+      border-radius: 7px;
+      pointer-events: none;
+      border: 2px solid var(--v-secondary-base);
+    }
+  }
+  &.rounded {
+    &:after {
+      border-radius: 50px;
+    }
+  }
+}
 .meta-card {
   box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.12);
   cursor: default !important;
@@ -1459,19 +1480,6 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       &:hover {
         opacity: 1;
       }
-    }
-  }
-  &.selected {
-    &:after {
-      content: '';
-      position: absolute;
-      width: calc(100% + 8px);
-      height: calc(100% + 8px);
-      left: -4px;
-      top: -4px;
-      border-radius: 7px;
-      pointer-events: none;
-      border: 2px solid var(--v-secondary-base);
     }
   }
   &.favorite {
@@ -1824,6 +1832,66 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       }
       .fav-in-card {
         margin-right: 10px;
+      }
+    }
+  }
+}
+.meta-chip {
+  line-height: 1 !important;
+  height: auto !important;
+}
+.chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  &.gap-size {
+    &-xs {
+      grid-gap: 10px;
+    }
+    &-s {
+      grid-gap: 15px;
+    }
+    &-m {
+      grid-gap: 20px;
+    }
+    &-l {
+      grid-gap: 25px;
+    }
+    &-xl {
+      grid-gap: 30px;
+    }
+  }
+  &.card-size {
+    &-1 {
+      .meta-chip {
+        padding: 0 3px;
+        font-size: 0.6em !important;
+      }
+    }
+    &-2 {
+      .meta-chip {
+        padding: 0 5px;
+        font-size: 0.8em !important;
+      }
+    }
+    &-3 {
+      .meta-chip {
+        padding: 2px 8px;
+        font-size: 0.8em !important;
+      }
+    }
+    &-4 {
+      .meta-chip {
+        padding: 5px 8px;
+        font-size: 1.2em !important;
+      }
+    }
+    &-5 {
+      .v-avatar {
+        transform: scale(1.3);
+      }
+      .meta-chip {
+        padding: 10px 14px;
+        font-size: 1.4em !important;
       }
     }
   }

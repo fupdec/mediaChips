@@ -1,8 +1,8 @@
 <template>
-  <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu"
-      :data-id="card.id" class="meta-card" outlined hover :key="cardKey"
-      v-ripple="{class:'accent--text'}" :class="{favorite: meta.settings.favorite?favorite:false, 'icons-in-card':ratingAndFavoriteInCard}">
+  <v-lazy :key="cardKey" :data-id="card.id" class="meta-item" :class="{'rounded':!meta.settings.chipLabel&&view==1}">
+    <v-card v-if="view==0" outlined hover :data-id="card.id" class="meta-card" 
+      @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" v-ripple="{class:'accent--text'}" 
+      :class="{favorite: meta.settings.favorite?favorite:false, 'icons-in-card':ratingAndFavoriteInCard}">
       <div class="img-container">
         <v-icon v-if="meta.settings.color && visibility.color" class="meta-color" :color="card.meta.color || '#777777'">mdi-circle</v-icon>
         <div v-if="meta.settings.country && visibility.country" @click="filterByCountry" @click.middle="filterByCountryInNewTab" class="country"> <div v-for="c in card.meta.country" :key="c" class="flag-icon"> <country-flag :country='findCountryCode(c)' size='normal' :title="c"/> </div> </div>
@@ -74,6 +74,22 @@
       <v-btn @click="$store.state.Meta.dialogEditMetaCard=true" color="secondary" fab x-small class="btn-edit"> <v-icon>mdi-pencil</v-icon> </v-btn>
       <v-btn @click="$store.state.Meta.dialogEditMetaCardImages=true" color="secondary" fab x-small class="btn-edit-images"> <v-icon>mdi-image-edit-outline</v-icon> </v-btn>
     </v-card>
+    
+    <v-chip v-else-if="view==1" 
+      @mousedown="stopSmoothScroll($event)" 
+      @contextmenu="showContextMenu" 
+      class="meta-chip" 
+      :color="card.meta.color || '#777777'"
+      :label="meta.settings.chipLabel"
+      :outlined="meta.settings.chipOutlined"
+      @mouseover.stop="showImage($event, card.id, 'meta', meta.id)" 
+      @mouseleave.stop="$store.state.hoveredImage=false"
+    >
+      <v-avatar @click="openMetaCardPage" @click.middle="addNewTabMetaCard" :title="isMetaAssignedToVideo?`Open ${meta.settings.nameSingular.toLowerCase()} page`:''"> 
+        <v-img :src="imgMain" position="top"/> 
+      </v-avatar>
+      <div class="ml-2">{{card.meta.name}}</div>
+    </v-chip>
   </v-lazy>
 </template>
 
@@ -124,6 +140,7 @@ export default {
     rating: 0,
   }),
   computed: {
+    view() { return this.$store.state.Meta.view || 0 },
     visibility() { return this.$store.state.Meta.visibility },
     updateCardIds() { return this.$store.state.Meta.updateCardIds },
     pathToUserData() { return this.$store.getters.getPathToUserData },

@@ -46,6 +46,7 @@ const Meta = {
     sortBy: 'name',
     sortDirection: 'asc',
     visibility: {},
+    view: 0,
     cardSize: 3,
     colors: [],
     firstChar: [],
