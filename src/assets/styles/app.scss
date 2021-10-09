@@ -766,6 +766,22 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
       }
     }
   }
+  .storyboard {
+    display: flex;
+    height: 180px;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    .wrapper {
+      display: flex;
+      flex-wrap: nowrap;
+      position: absolute;
+      top: 0;
+      left: 0;
+      min-width: 100%;
+      height: 100%;
+    }
+  }
 }
 .error-load-thumb {
   display: flex;
