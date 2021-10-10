@@ -75,20 +75,34 @@
               <v-icon v-else>mdi-fullscreen</v-icon>
             </v-btn>
           </v-btn-toggle>
-          <v-btn-toggle class="mx-2 remove-active marker-buttons">
+          <v-btn-toggle class="ml-4 remove-active compact">
+            <v-btn @click="jumpToSeconds(-5)" small title="- 5 seconds">
+              <v-icon>mdi-step-backward-2</v-icon>
+            </v-btn>
+            <v-btn @click="jumpToSeconds(-2)" small title="- 2 seconds">
+              <v-icon>mdi-step-backward</v-icon>
+            </v-btn>
+            <v-btn @click="jumpToSeconds(2)" small title="+ 2 seconds">
+              <v-icon>mdi-step-forward</v-icon>
+            </v-btn>
+            <v-btn @click="jumpToSeconds(5)" small title="+ 5 seconds">
+              <v-icon>mdi-step-forward-2</v-icon>
+            </v-btn>
+          </v-btn-toggle>
+          <v-btn-toggle class="mx-4 remove-active marker-buttons compact">
             <v-btn @click="toggleMarkers" :color="isMarkersVisible? 'primary':''" small title="Markers List">
               <v-icon>mdi-map-marker</v-icon>
             </v-btn>
             <v-btn @click="jumpToPrevMarker" small class="marker-prev" title="Previous Marker">
-              <v-icon>mdi-map-marker-left</v-icon>
+              <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
             <v-btn @click="jumpToNextMarker" small class="marker-next" title="Next Marker">
-              <v-icon>mdi-map-marker-right</v-icon>
+              <v-icon>mdi-chevron-right</v-icon>
             </v-btn>
-            <v-menu offset-y nudge-top="40" nudge-right="282" attach=".controls">
+            <v-menu offset-y nudge-top="40" nudge-right="400" attach=".controls">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn v-bind="attrs" v-on="on" small title="Add Marker">
-                  <v-icon>mdi-map-marker-plus</v-icon>
+                  <v-icon>mdi-plus</v-icon>
                 </v-btn>
               </template>
               
@@ -723,6 +737,9 @@ export default {
       this.player.volume = (this.player.volume - e.deltaY / 1000 / 2).toFixed(2)
       this.volume = this.player.volume
     },
+    jumpToSeconds(e) {
+      this.player.currentTime = this.player.currentTime + e
+    },
     handleKey(e) {
       switch (true) {
         case e.key === ' ': this.player.togglePause(); break
@@ -740,6 +757,7 @@ export default {
         case e.key === 'x': this.stop(); break
         case e.key === '1': this.addMarker('favorite'); break
         case e.key === '2': this.openDialogMarkerBookmark(); break
+        case e.key === 'Escape': this.fullscreen ? this.toggleFullscreen() : ''; break
       }
     },
     handleMouseCanvas(e) {
@@ -1019,6 +1037,12 @@ export default {
     }
     .v-btn--active:before {
       opacity: 0 !important;
+    }
+    &.compact {
+      .v-btn {
+        padding: 0;
+        min-width: 28px;
+      }
     }
   }
   .canvas-wrapper {
