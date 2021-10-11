@@ -1,5 +1,15 @@
 <template>
 	<div>
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn @click="view=view==0?1:0" icon tile v-on="on">
+          <v-icon v-if="view==0">mdi-view-module</v-icon>
+          <v-icon v-else>mdi-view-sequential</v-icon>
+        </v-btn>
+      </template>
+      <span>Toggle View</span>
+    </v-tooltip>
+
     <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
       <template #activator="{ on: onMenu }">
         <v-tooltip bottom>
@@ -182,6 +192,10 @@ export default {
     visibility: {
       get() { return this.$store.state.Settings.videoVisibility },
       set(value) { this.$store.dispatch('updateSettingsState', {key:'videoVisibility', value}) },
+    },
+    view: {
+      get() { return this.$store.state.Settings.videoView },
+      set(value) { this.$store.dispatch('updateSettingsState', {key:'videoView', value}) },
     },
   },
   methods: {

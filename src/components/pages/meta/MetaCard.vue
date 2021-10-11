@@ -1,5 +1,5 @@
 <template>
-  <v-lazy :key="cardKey" :data-id="card.id" class="meta-item" :class="{'rounded':!meta.settings.chipLabel&&view==1}">
+  <v-lazy :key="cardKey" :data-id="card.id" class="select-item" :class="{'rounded':!meta.settings.chipLabel&&view==1}">
     <v-card v-if="view==0" outlined hover :data-id="card.id" class="meta-card" 
       @mousedown="stopSmoothScroll($event)" @contextmenu="showContextMenu" v-ripple="{class:'accent--text'}" 
       :class="{favorite: meta.settings.favorite?favorite:false, 'icons-in-card':ratingAndFavoriteInCard}">

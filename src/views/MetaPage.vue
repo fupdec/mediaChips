@@ -237,14 +237,14 @@ export default {
     initSelection() {
       this.$store.state.Meta.selection = new Selection({
         boundaries: ['.items-selection'],
-        selectables: ['.meta-item'],
+        selectables: ['.select-item'],
         allowTouch: false,
       }).on('beforestart', ({store, event}) => {
-        const targetEl = event.target.closest('.meta-item')
+        const targetEl = event.target.closest('.select-item')
         if (event.button == 2 && store.stored.includes(targetEl)) return false
         return (event.button !== 1)
       }).on('start', ({store, event}) => {
-        const targetEl = event.target.closest('.meta-item')
+        const targetEl = event.target.closest('.select-item')
         if (event.button == 2 && store.stored.includes(targetEl)) return false
         if (!event.ctrlKey && !event.metaKey) {
           for (const el of store.stored) el.classList.remove('selected')
@@ -254,7 +254,7 @@ export default {
         for (const el of added) el.classList.add('selected')
         for (const el of removed) el.classList.remove('selected')
       }).on('stop', ({store, event}) => {
-        const targetEl = event.target.closest('.meta-item')
+        const targetEl = event.target.closest('.select-item')
         if (event.button==0 && targetEl) this.$store.state.Meta.selection.select(targetEl)
         this.$store.state.Meta.selection.keepSelection()
         this.$store.state.Meta.selectedMeta = store.stored.map(item => (item.dataset.id))

@@ -63,8 +63,8 @@
         There are no matching videos for the selected filters
       </div>
 
-      <v-container fluid class="wide-image" :class="[cardSize, gapSize, {'card-grid':view==0}, {'line-grid':view==1}]">
-        <!-- Video Blocks parsing -->
+      <v-container fluid class="wide-image items-selection" :class="[cardSize, gapSize, {'card-grid':view==0}, {'line-grid':view==1}]">
+        <!-- Video Blocks parsing TODO remove class wide-image--> 
         <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
       </v-container>
 

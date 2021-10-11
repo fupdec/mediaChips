@@ -149,8 +149,8 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn @click="toggleView" icon tile v-on="on">
-            <v-icon v-if="view==0">mdi-view-column</v-icon>
-            <v-icon v-else>mdi-view-comfy</v-icon>
+            <v-icon v-if="view==0">mdi-view-module</v-icon>
+            <v-icon v-else>mdi-format-line-style</v-icon>
           </v-btn>
         </template>
         <span>Toggle View</span>

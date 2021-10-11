@@ -105,14 +105,14 @@ export default {
   methods: {
 		initSelection() {
 			this.$store.state.Videos.selection = new Selection({
-        boundaries: ['.card-grid'],
-        selectables: ['.video-card'],
+        boundaries: ['.items-selection'],
+        selectables: ['.select-item'],
       }).on('beforestart', ({store, event}) => {
-        const targetEl = event.target.closest('.video-card')
+        const targetEl = event.target.closest('.select-item')
         if (event.button == 2 && store.stored.includes(targetEl)) return false
         return (event.button !== 1)
       }).on('start', ({store, event}) => {
-        const targetEl = event.target.closest('.video-card')
+        const targetEl = event.target.closest('.select-item')
         if (event.button == 2 && store.stored.includes(targetEl)) return false
         // Remove class if the user isn't pressing the shift or control or ⌘ keys
         if (!event.ctrlKey && !event.metaKey) {
@@ -126,7 +126,7 @@ export default {
         // since the last selection
         for (const el of removed) el.classList.remove('selected')
       }).on('stop', ({store, event}) => {
-        const targetEl = event.target.closest('.video-card')
+        const targetEl = event.target.closest('.select-item')
         if (event.button==0 && targetEl) this.$store.state.Videos.selection.select(targetEl)
         this.$store.state.Videos.selection.keepSelection()
         this.getSelectedVideos(store.stored)

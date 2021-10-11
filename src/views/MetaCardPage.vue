@@ -236,7 +236,7 @@
         </div>
 
         <Loading />
-        <v-container fluid class="card-grid wide-image" :class="[cardSize, gapSize]">
+        <v-container fluid class="wide-image items-selection" :class="[cardSize, gapSize, {'card-grid':view==0}, {'line-grid':view==1}]">
           <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
         </v-container>
 
@@ -373,6 +373,7 @@ export default {
       if (this.tabId === 'default') return undefined
       else return this.$store.getters.tabsDb.find({id:this.tabId}).value()   
     },
+    view() { return this.$store.state.Settings.videoView || 0 },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     filters() { return this.$store.state.Settings.videoFilters },
     isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id: this.meta.id}) !== undefined },
