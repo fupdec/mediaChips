@@ -19,14 +19,14 @@
       <div v-if="visibility.name" class="px-1 name">{{card.meta.name}} <span v-if="isMetaAssignedToVideo">({{card.videos||0}})</span></div>
       <div v-if="meta.settings.synonyms && visibility.synonyms && card.meta.synonyms && card.meta.synonyms.length" class="px-1 synonyms"> <span class="pl-2"/> {{card.meta.synonyms.join(', ')}} </div>
       
-      <v-card-actions v-if="ratingAndFavoriteInCard" class="px-1 py-0 d-flex justify-space-between">
+      <v-card-actions v-if="ratingAndFavoriteInCard" class="px-1 py-0">
         <v-rating v-if="meta.settings.rating && visibility.rating" 
           :value="rating" @input="changeRating($event)"
           color="yellow darken-2" background-color="grey"
           empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
           dense half-increments hover clearable />
         <v-btn v-if="meta.settings.favorite && visibility.favorite"
-          @click="toggleFavorite" icon color="pink" x-small class="fav-in-card"> 
+          @click="toggleFavorite" icon color="pink" x-small class="fav-in-card ml-4"> 
           <v-icon v-if="favorite" color="pink">mdi-heart</v-icon>
           <v-icon v-else color="grey">mdi-heart-outline</v-icon>
         </v-btn>
