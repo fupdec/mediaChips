@@ -236,7 +236,7 @@
         </div>
 
         <Loading />
-        <v-container fluid class="wide-image items-selection" :class="[cardSize, gapSize, {'card-grid':view==0}, {'line-grid':view==1}]">
+        <v-container fluid class="wide-image videos-selection" :class="[cardSize, gapSize, {'card-grid':view==0}, {'line-grid':view==1}]">
           <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
         </v-container>
 

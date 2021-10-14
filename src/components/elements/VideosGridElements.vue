@@ -105,7 +105,7 @@ export default {
   methods: {
 		initSelection() {
 			this.$store.state.Videos.selection = new Selection({
-        boundaries: ['.items-selection'],
+        boundaries: ['.videos-selection'],
         selectables: ['.select-item'],
       }).on('beforestart', ({store, event}) => {
         const targetEl = event.target.closest('.select-item')
