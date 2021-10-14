@@ -118,7 +118,7 @@ const Videos = {
               return compare(cond, val, width)
             })
           } else {
-            if (by==='date' || by==='edit') val = new Date(val).getTime()
+            if (by=='date'||by=='edit'||by=='viewed') val = new Date(val).getTime()
             videos = videos.filter(c => compare(cond, val, c[by]))
           } 
           continue

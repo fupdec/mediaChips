@@ -295,7 +295,8 @@ const Meta = {
 
         if (type === 'number' || type === 'date') {
           if (by === 'date') val = new Date(val).getTime()
-          mc = mc.filter(c => compare(cond, val, c.meta[by]))
+          if (by=='videos'||by=='views') mc = mc.filter(c => compare(cond, val, c[by]))
+          else mc = mc.filter(c => compare(cond, val, c.meta[by]))
           continue
         }
         

@@ -73,6 +73,41 @@ export default {
           }
         }).write()
       }
+      if (this.versions.migration.includes('0.10.7')) {
+        let metaVideos = this.$store.getters.meta.find({id:'videos'}).value()
+        if (!metaVideos) this.$store.getters.meta.push( 
+          {
+            "id": "videos",
+            "type": "specific",
+            "settings": {
+              "name": "Number of videos",
+              "icon": "video"
+            }
+          }
+        ).write()
+        let metaViews = this.$store.getters.meta.find({id:'views'}).value()
+        if (!metaViews) this.$store.getters.meta.push(
+          {
+            "id": "views",
+            "type": "specific",
+            "settings": {
+              "name": "Number of views",
+              "icon": "eye"
+            }
+          }
+        ).write()
+        let metaViewed = this.$store.getters.meta.find({id:'viewed'}).value()
+        if (!metaViewed) this.$store.getters.meta.push(
+          {
+            "id": "viewed",
+            "type": "specific",
+            "settings": {
+              "name": "Viewed date",
+              "icon": "calendar-clock"
+            }
+          }
+        ).write()
+      }
       this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:this.actualVersion})
       this.dialogFinish = true
     },

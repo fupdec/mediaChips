@@ -183,9 +183,9 @@ export default {
   },
   data: () => ({
     filters: [],
-    metaList: ['name','date','edit'],
+    metaList: ['name','date','edit','views'],
     metaType: {
-      number: [],
+      number: ['views'],
       string: ['name'],
       array: [],
       date: ['date','edit'],
@@ -203,6 +203,7 @@ export default {
         return { by, disabled: filtersBoolean.includes(by) }
       })
     },
+    isMetaAssignedToVideo() { return _.find(this.$store.state.Settings.metaAssignedToVideos, {id:this.meta.id}) !== undefined },
   },
   methods: {
     initMetaList() {
@@ -213,6 +214,10 @@ export default {
       if (this.meta.settings.rating) {
         this.metaList.push('rating')
         this.metaType.number.push('rating')
+      } 
+      if (this.isMetaAssignedToVideo) {
+        this.metaList.push('videos')
+        this.metaType.number.push('videos')
       } 
       if (this.meta.settings.bookmark) {
         this.metaList.push('bookmark')
