@@ -158,8 +158,8 @@ const chokidar = require('chokidar')
 const shortid = require('shortid')
 const Mousetrap = require('mousetrap')
 
-import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
-import PlayerEvents from '@/mixins/PlayerEvents'
+import HoveredImageFunctions from '@/mixins/HoveredImageFunctions.vue'
+import PlayerEvents from '@/mixins/PlayerEvents.vue'
 import vuescroll from 'vuescroll'
 
 export default {

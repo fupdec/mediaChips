@@ -116,7 +116,7 @@
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 export default {
   name: 'SavedFilters',

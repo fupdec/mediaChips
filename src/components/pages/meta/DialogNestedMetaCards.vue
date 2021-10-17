@@ -21,7 +21,7 @@
 
 <script>
 import vuescroll from 'vuescroll'
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 import NestedMetaCard from '@/components/pages/meta/NestedMetaCard.vue'
 
 export default {

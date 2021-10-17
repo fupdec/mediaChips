@@ -242,11 +242,11 @@ const fs = require('fs')
 const shell = require('electron').shell
 
 import vuescroll from 'vuescroll'
-import LabelFunctions from '@/mixins/LabelFunctions'
+import LabelFunctions from '@/mixins/LabelFunctions.vue'
 import { ipcRenderer } from 'electron'
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 import VueApexCharts from 'vue-apexcharts'
-import VideosGrid from '@/mixins/VideosGrid'
+import VideosGrid from '@/mixins/VideosGrid.vue'
 
 export default {
   name: 'HomePage',

@@ -41,8 +41,8 @@ const cheerio = require("cheerio")
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
-import MetaGetters from '@/mixins/MetaGetters'
-import Scrapers from '@/mixins/Scrapers'
+import MetaGetters from '@/mixins/MetaGetters.vue'
+import Scrapers from '@/mixins/Scrapers.vue'
 
 export default {
   name: 'DialogScrapeInfo',

@@ -421,9 +421,9 @@ ffmpeg.setFfprobePath(pathToFfprobe)
 
 // import { chimera } from './webchimera/wrapper'
 import vuescroll from 'vuescroll'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
-import LabelFunctions from '@/mixins/LabelFunctions'
-import Keys from '@/mixins/Keys'
+import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
+import LabelFunctions from '@/mixins/LabelFunctions.vue'
+import Keys from '@/mixins/Keys.vue'
 
 export default {
   name: "AppPlayer",

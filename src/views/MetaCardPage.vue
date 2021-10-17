@@ -265,13 +265,13 @@ const path = require("path")
 const shell = require('electron').shell
 
 import CountryFlag from 'vue-country-flag'
-import VideosGrid from '@/mixins/VideosGrid'
-import Countries from '@/components/elements/Countries'
+import VideosGrid from '@/mixins/VideosGrid.vue'
+import Countries from '@/components/elements/Countries.js'
 import vuescroll from 'vuescroll'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
-import LabelFunctions from '@/mixins/LabelFunctions'
-import Keys from '@/mixins/Keys'
-import MetaGetters from '@/mixins/MetaGetters'
+import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
+import LabelFunctions from '@/mixins/LabelFunctions.vue'
+import Keys from '@/mixins/Keys.vue'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 export default {
   name: 'MetaCardPage',

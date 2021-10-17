@@ -222,7 +222,7 @@
 const shortid = require('shortid')
 const { ipcRenderer } = require('electron')
 
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 import vuescroll from 'vuescroll'
 
 export default {

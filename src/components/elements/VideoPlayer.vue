@@ -35,7 +35,7 @@ const { ipcRenderer } = require('electron')
 const remote = require('electron').remote
 const win = remote.getCurrentWindow()
 
-import AppPlayer from '@/components/app/AppPlayer'
+import AppPlayer from '@/components/app/AppPlayer.vue'
 
 export default {
   name: 'VideoPlayer',

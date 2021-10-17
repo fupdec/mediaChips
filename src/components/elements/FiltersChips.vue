@@ -30,9 +30,9 @@
 
 
 <script>
-import DialogFilters from '@/mixins/DialogFilters'
-import MetaGetters from '@/mixins/MetaGetters'
-import Countries from '@/components/elements/Countries'
+import DialogFilters from '@/mixins/DialogFilters.vue'
+import MetaGetters from '@/mixins/MetaGetters.vue'
+import Countries from '@/components/elements/Countries.js'
 
 export default {
   name: 'FiltersChips',

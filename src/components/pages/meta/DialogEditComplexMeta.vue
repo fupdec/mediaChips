@@ -307,8 +307,8 @@
 <script>
 import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
-import NameRules from '@/mixins/NameRules'
-import MetaGetters from '@/mixins/MetaGetters'
+import NameRules from '@/mixins/NameRules.vue'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 import DialogEditScraperFields from '@/components/pages/meta/DialogEditScraperFields.vue'
 
 export default {

@@ -35,7 +35,7 @@ const fs = require("fs-extra")
 const path = require("path")
 
 import vuescroll from 'vuescroll'
-import NameRules from '@/mixins/NameRules'
+import NameRules from '@/mixins/NameRules.vue'
 
 export default {
   props: {

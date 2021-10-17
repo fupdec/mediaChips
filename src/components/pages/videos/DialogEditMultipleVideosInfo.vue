@@ -196,9 +196,9 @@
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
-import MetaGetters from '@/mixins/MetaGetters'
-import NameRules from '@/mixins/NameRules'
+import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
+import MetaGetters from '@/mixins/MetaGetters.vue'
+import NameRules from '@/mixins/NameRules.vue'
 
 export default {
   name: "DialogEditMultipleVideosInfo",

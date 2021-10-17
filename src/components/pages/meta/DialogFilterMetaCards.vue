@@ -160,12 +160,12 @@
 
 
 <script>
-import DialogFilters from '@/mixins/DialogFilters'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
+import DialogFilters from '@/mixins/DialogFilters.vue'
+import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
 import vuescroll from 'vuescroll'
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 import CountryFlag from 'vue-country-flag'
-import Countries from '@/components/elements/Countries'
+import Countries from '@/components/elements/Countries.js'
 
 export default {
   name: 'DialogFilterMetaCards',

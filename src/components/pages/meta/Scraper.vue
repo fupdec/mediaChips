@@ -180,9 +180,9 @@ const { clipboard } = require('electron')
 
 import vuescroll from 'vuescroll'
 import CountryFlag from 'vue-country-flag'
-import Scrapers from '@/mixins/Scrapers'
-import Countries from '@/components/elements/Countries'
-import MetaGetters from '@/mixins/MetaGetters'
+import Scrapers from '@/mixins/Scrapers.vue'
+import Countries from '@/components/elements/Countries.js'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 export default {
   props: {

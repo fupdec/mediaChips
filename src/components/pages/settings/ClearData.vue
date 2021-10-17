@@ -52,8 +52,8 @@ const path = require("path")
 const rimraf = require("rimraf")
 const { ipcRenderer } = require('electron')
 
-import SpecificMeta from '@/components/elements/SpecificMeta'
-import MetaGetters from '@/mixins/MetaGetters'
+import SpecificMeta from '@/components/elements/SpecificMeta.vue'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 export default {
   name: 'ClearData',

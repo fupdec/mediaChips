@@ -5,7 +5,7 @@ const axios = require("axios")
 const cheerio = require("cheerio")
 
 import jimp from 'jimp'
-import Countries from '@/components/elements/Countries'
+import Countries from '@/components/elements/Countries.js'
 
 export default {
   computed: {

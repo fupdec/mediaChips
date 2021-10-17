@@ -88,7 +88,7 @@
 <script>
 import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 export default {
   name: 'MetaAssignedToVideos',

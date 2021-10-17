@@ -202,7 +202,7 @@ ffmpeg.setFfmpegPath(pathToFfmpeg)
 ffmpeg.setFfprobePath(pathToFfprobe)
 
 import vuescroll from 'vuescroll'
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 export default {
   name: 'ScanVideos',

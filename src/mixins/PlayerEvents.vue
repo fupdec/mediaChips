@@ -2,7 +2,7 @@
 const { ipcRenderer } = require('electron')
 const shortid = require('shortid')
 
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 export default {
   mixins: [MetaGetters],

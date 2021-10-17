@@ -241,11 +241,11 @@ const shortid = require('shortid')
 const shell = require('electron').shell
 
 import vuescroll from 'vuescroll'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
+import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
 import { ipcRenderer } from 'electron'
-import Functions from '@/mixins/Functions'
-import MetaGetters from '@/mixins/MetaGetters'
-import NameRules from '@/mixins/NameRules'
+import Functions from '@/mixins/Functions.vue'
+import MetaGetters from '@/mixins/MetaGetters.vue'
+import NameRules from '@/mixins/NameRules.vue'
 
 export default {
   name: "DialogEditSingleVideoInfo",

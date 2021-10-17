@@ -236,11 +236,11 @@
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
-import NameRules from '@/mixins/NameRules'
-import ShowImageFunction from '@/mixins/ShowImageFunction'
-import MetaGetters from '@/mixins/MetaGetters'
+import NameRules from '@/mixins/NameRules.vue'
+import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 import CountryFlag from 'vue-country-flag'
-import Countries from '@/components/elements/Countries'
+import Countries from '@/components/elements/Countries.js'
 
 export default {
   name: "DialogEditMultipleMetaCards",

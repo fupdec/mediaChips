@@ -1,7 +1,7 @@
 <script>
 import VideoCard from '@/components/pages/videos/VideoCard.vue'
-import VideoPreviewGrid from '@/components/elements/VideoPreviewGrid'
-import VideoPreviewTimeline from '@/components/elements/VideoPreviewTimeline'
+import VideoPreviewGrid from '@/components/elements/VideoPreviewGrid.vue'
+import VideoPreviewTimeline from '@/components/elements/VideoPreviewTimeline.vue'
 
 const fs = require("fs")
 const path = require("path")

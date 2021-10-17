@@ -225,7 +225,7 @@
 </template>
 
 <script>
-import MetaGetters from '@/mixins/MetaGetters'
+import MetaGetters from '@/mixins/MetaGetters.vue'
 
 const fs = require("fs-extra")
 const path = require("path")
