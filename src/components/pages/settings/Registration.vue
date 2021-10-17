@@ -111,7 +111,7 @@
 
 <script>
 import { machineIdSync } from 'node-machine-id'
-import Keys from '@/mixins/Keys.vue'
+import Keys from '@/mixins/Keys'
 
 const axios = require("axios")
 const shell = require('electron').shell

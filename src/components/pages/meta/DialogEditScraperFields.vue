@@ -57,7 +57,7 @@
 <script>
 import vuescroll from 'vuescroll'
 import { Drag, Drop } from 'vue-drag-drop'
-import MetaGetters from '@/mixins/MetaGetters.vue'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   props: {

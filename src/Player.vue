@@ -19,7 +19,7 @@ console.clear()
 const {app} = require('electron').remote
 const { ipcRenderer } = require('electron')
 
-import HoveredImageFunctions from '@/mixins/HoveredImageFunctions.vue'
+import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 
 export default {
   name: 'Player',

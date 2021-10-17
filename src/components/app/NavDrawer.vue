@@ -60,7 +60,7 @@ const path = require("path")
 const nodeDiskInfo = require('node-disk-info')
 
 import vuescroll from 'vuescroll'
-import Functions from '@/mixins/Functions.vue'
+import Functions from '@/mixins/Functions'
 
 export default {
   name: 'NavDrawer',

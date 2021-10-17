@@ -126,7 +126,7 @@
 
 
 <script>
-import MetaGetters from '@/mixins/MetaGetters.vue'
+import MetaGetters from '@/mixins/MetaGetters'
 import vuescroll from 'vuescroll'
 
 export default {

@@ -251,12 +251,12 @@ const { clipboard } = require('electron')
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
-import NameRules from '@/mixins/NameRules.vue'
-import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
-import MetaGetters from '@/mixins/MetaGetters.vue'
+import NameRules from '@/mixins/NameRules'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
+import MetaGetters from '@/mixins/MetaGetters'
 import Scraper from '@/components/pages/meta/Scraper.vue'
 import CountryFlag from 'vue-country-flag'
-import Countries from '@/components/elements/Countries.js'
+import Countries from '@/components/elements/Countries'
 
 export default {
   name: "DialogEditSingleMetaCard",

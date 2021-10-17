@@ -156,9 +156,9 @@
 <script>
 const shell = require('electron').shell
 
-import Functions from '@/mixins/Functions.vue'
+import Functions from '@/mixins/Functions'
 import vuescroll from 'vuescroll'
-import Keys from '@/mixins/Keys.vue'
+import Keys from '@/mixins/Keys'
 
 export default {
   name: 'StatusBar',

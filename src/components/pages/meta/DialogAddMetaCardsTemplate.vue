@@ -86,9 +86,9 @@ const cheerio = require("cheerio")
 const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
-import MetaGetters from '@/mixins/MetaGetters.vue'
-import Tags from '@/components/elements/TagsDefault.vue'
-import Websites from '@/components/elements/WebsitesDefault.vue'
+import MetaGetters from '@/mixins/MetaGetters'
+import Tags from '@/components/elements/TagsDefault'
+import Websites from '@/components/elements/WebsitesDefault'
 
 export default {
   name: 'DialogAddMetaCardsTemplate',

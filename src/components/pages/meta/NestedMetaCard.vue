@@ -15,8 +15,8 @@
 
 <script>
 import draggable from 'vuedraggable'
-import MetaGetters from '@/mixins/MetaGetters.vue'
-import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
+import MetaGetters from '@/mixins/MetaGetters'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
 
 export default {
   props: {

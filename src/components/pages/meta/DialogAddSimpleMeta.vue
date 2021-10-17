@@ -105,7 +105,7 @@ const shortid = require('shortid')
 
 import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
-import NameRules from '@/mixins/NameRules.vue'
+import NameRules from '@/mixins/NameRules'
 
 export default {
   props: {

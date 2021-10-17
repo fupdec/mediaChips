@@ -223,11 +223,11 @@ const ffmpeg = require('fluent-ffmpeg')
 const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
 ffmpeg.setFfprobePath(pathToFfprobe)
 
-import Functions from '@/mixins/Functions.vue'
-import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
-import LabelFunctions from '@/mixins/LabelFunctions.vue'
+import Functions from '@/mixins/Functions'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
+import LabelFunctions from '@/mixins/LabelFunctions'
 import { ipcRenderer } from 'electron'
-import MetaGetters from '@/mixins/MetaGetters.vue'
+import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
   name: 'VideoCard',

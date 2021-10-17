@@ -1,5 +1,5 @@
 <script>
-import Functions from '@/mixins/Functions.vue'
+import Functions from '@/mixins/Functions'
 
 export default {
   mixins: [Functions],

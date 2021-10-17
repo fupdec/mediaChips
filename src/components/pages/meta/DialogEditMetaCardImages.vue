@@ -276,8 +276,8 @@ import FilePondPluginFileEncode from 'filepond-plugin-file-encode'
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type'
 const FilePond = vueFilePond(FilePondPluginFileEncode, FilePondPluginFileValidateType)
 
-import CropImage from '@/mixins/CropImage.vue'
-import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
+import CropImage from '@/mixins/CropImage'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
 import vuescroll from 'vuescroll'
 
 export default {

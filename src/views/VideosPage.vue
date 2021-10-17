@@ -87,9 +87,9 @@
 
 
 <script>
-import VideosGrid from '@/mixins/VideosGrid.vue'
+import VideosGrid from '@/mixins/VideosGrid'
 import vuescroll from 'vuescroll'
-import Keys from '@/mixins/Keys.vue'
+import Keys from '@/mixins/Keys'
 
 export default {
   name: 'Videos',

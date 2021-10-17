@@ -97,9 +97,9 @@
 
 
 <script>
-import DialogFilters from '@/mixins/DialogFilters.vue'
-import MetaGetters from '@/mixins/MetaGetters.vue'
-import ShowImageFunction from '@/mixins/ShowImageFunction.vue'
+import DialogFilters from '@/mixins/DialogFilters'
+import MetaGetters from '@/mixins/MetaGetters'
+import ShowImageFunction from '@/mixins/ShowImageFunction'
 import vuescroll from 'vuescroll'
 
 export default {
