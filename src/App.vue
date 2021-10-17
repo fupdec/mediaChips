@@ -384,7 +384,7 @@ export default {
     checkForMigration() {
       if (this.versions.db === this.versions.app) return false
       
-      let verReqMigration = ['0.10.4']
+      let verReqMigration = ['0.10.4','0.11.0']
       
       for (let i = 0; i < verReqMigration.length; i++) {
         if (this.getVer(this.versions.db) < this.getVer(verReqMigration[i])) {

@@ -23,12 +23,12 @@
                 <v-col cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Main</p>
-                    <v-alert v-if="size.main.width && size.main.width<(meta.settings.imageAspectRatio<=1?500:800)" type="info" text dense class="caption pa-1">
-                      Recomended size {{recomendedSizeText}}px
+                    <v-alert v-if="size.main.width && size.main.width<499" type="info" text dense class="caption pa-1">
+                      Recomended size 499x{{recHeight}}px
                     </v-alert>
                     <div class="cropper-block">
                       <Cropper :src="images.main.file" ref="main" class="cropper"
-                        :stencil-props="{aspectRatio: meta.settings.imageAspectRatio}" :min-height="20" 
+                        :stencil-props="{aspectRatio: ar}" :min-height="20" 
                         :defaultSize="defaultSize" @change="updateSize($event, 'main')"/>
                       <div v-if="size.main.width && size.main.height" class="cropper-size">
                         width: {{ size.main.width }}px <br> height: {{ size.main.height }}px</div>
@@ -57,12 +57,12 @@
                 <v-col v-if="meta.settings.imageTypes.includes('alt')" cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Alternate</p>
-                    <v-alert v-if="size.alt.width && size.alt.width<(meta.settings.imageAspectRatio<=1?500:800)" type="info" text dense class="caption pa-1">
-                      Recomended size {{recomendedSizeText}}px
+                    <v-alert v-if="size.alt.width && size.alt.width<499" type="info" text dense class="caption pa-1">
+                      Recomended size 499x{{recHeight}}px
                     </v-alert>
                     <div class="cropper-block">
                       <Cropper :src="images.alt.file" ref="alt" class="cropper"
-                        :stencil-props="{aspectRatio: meta.settings.imageAspectRatio}" :min-height="20"
+                        :stencil-props="{aspectRatio: ar}" :min-height="20"
                         :defaultSize="defaultSize" @change="updateSize($event, 'alt')"/>
                       <div v-if="size.alt.width && size.alt.height" class="cropper-size">
                         width: {{ size.alt.width }}px <br> height: {{ size.alt.height }}px</div>
@@ -91,12 +91,12 @@
                 <v-col v-if="meta.settings.imageTypes.includes('custom1')" cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">First additional</p>
-                    <v-alert v-if="size.custom1.width && size.custom1.width<(meta.settings.imageAspectRatio<=1?500:800)" type="info" text dense class="caption pa-1">
-                      Recomended size {{recomendedSizeText}}px
+                    <v-alert v-if="size.custom1.width && size.custom1.width<499" type="info" text dense class="caption pa-1">
+                      Recomended size 499x{{recHeight}}px
                     </v-alert>
                     <div class="cropper-block">
                       <Cropper :src="images.custom1.file" ref="custom1" class="cropper"
-                        :stencil-props="{aspectRatio: meta.settings.imageAspectRatio}" :min-height="20" 
+                        :stencil-props="{aspectRatio: ar}" :min-height="20" 
                         :defaultSize="defaultSize" @change="updateSize($event, 'custom1')"/>
                       <div v-if="size.custom1.width && size.custom1.height" class="cropper-size">
                         width: {{ size.custom1.width }}px <br> height: {{ size.custom1.height }}px</div>
@@ -125,12 +125,12 @@
                 <v-col v-if="meta.settings.imageTypes.includes('custom2')" cols="12" lg="3" md="6" class="mb-1" align="center">
                   <div class="cropper-wrapper">
                     <p class="overline mb-0">Second additional</p>
-                    <v-alert v-if="size.custom2.width && size.custom2.width<(meta.settings.imageAspectRatio<=1?500:800)" type="info" text dense class="caption pa-1">
-                      Recomended size {{recomendedSizeText}}px
+                    <v-alert v-if="size.custom2.width && size.custom2.width<499" type="info" text dense class="caption pa-1">
+                      Recomended size 499x{{recHeight}}px
                     </v-alert>
                     <div class="cropper-block">
                       <Cropper :src="images.custom2.file" ref="custom2" class="cropper"
-                        :stencil-props="{aspectRatio: meta.settings.imageAspectRatio}" :min-height="20"
+                        :stencil-props="{aspectRatio: ar}" :min-height="20"
                         :defaultSize="defaultSize" @change="updateSize($event, 'custom2')"/>
                       <div v-if="size.custom2.width && size.custom2.height" class="cropper-size">
                         width: {{ size.custom2.width }}px <br> height: {{ size.custom2.height }}px</div>
@@ -359,11 +359,8 @@ export default {
       else return metaCards.find({id:ids[0]}).value()
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
-    recomendedSizeText() {
-      if (this.meta.settings.imageAspectRatio==1) return '500x500'
-      if (this.meta.settings.imageAspectRatio<1) return '500x800'
-      if (this.meta.settings.imageAspectRatio>1) return '800x500'
-		},
+    recHeight() { return Math.floor(499/this.ar) },
+    ar () { return this.meta.settings.imageAspectRatio || 1 },
   },
   methods: {
     addImage(imgType) {

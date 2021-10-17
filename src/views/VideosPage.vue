@@ -63,8 +63,8 @@
         There are no matching videos for the selected filters
       </div>
 
-      <v-container fluid class="card-grid wide-image" :class="[cardSize, gapSize]">
-        <!-- Video Blocks parsing -->
+      <v-container fluid class="wide-image videos-selection" :class="[cardSize, gapSize, {'card-grid':view==0}, {'line-grid':view==1}]">
+        <!-- Video Blocks parsing TODO remove class wide-image--> 
         <VideoCard v-for="(video, i) in videosOnPage" :key="video.id" :video="video" :i="i" :reg="reg"/>
       </v-container>
 
@@ -113,6 +113,7 @@ export default {
   computed: {
     savedFilters() { return this.$store.state.SavedFilters.savedFilters.videos || [] },
     showSavedFilters() {return this.$store.state.Settings.showSavedFilters},
+    view() { return this.$store.state.Settings.videoView || 0 },
     cardSize() { return `card-size-${this.$store.state.Settings.videoCardSize}` },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     tabId() { return this.$route.query.tabId },

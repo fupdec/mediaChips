@@ -46,6 +46,7 @@ const Meta = {
     sortBy: 'name',
     sortDirection: 'asc',
     visibility: {},
+    view: 0,
     cardSize: 3,
     colors: [],
     firstChar: [],
@@ -294,7 +295,8 @@ const Meta = {
 
         if (type === 'number' || type === 'date') {
           if (by === 'date') val = new Date(val).getTime()
-          mc = mc.filter(c => compare(cond, val, c.meta[by]))
+          if (by=='videos'||by=='views') mc = mc.filter(c => compare(cond, val, c[by]))
+          else mc = mc.filter(c => compare(cond, val, c.meta[by]))
           continue
         }
         

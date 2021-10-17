@@ -51,6 +51,7 @@ export default {
       set(val) { this.$store.state.backgroundProcesses = val },
     },
     pathToUserData() { return this.$store.getters.getPathToUserData },
+    view() { return this.$store.state.Settings.videoView || 0 },
   },
   methods: {
     async createGrids(videos) {
@@ -104,6 +105,7 @@ export default {
         if (!fs.existsSync(video.path)) continue
         const frame = path.join(vm.pathToUserData, `/media/timelines/${video.id}_5.jpg`)
         if (!fs.existsSync(frame)) await vm.createVideoTimeline(video)
+        if (this.view==1) this.$store.commit('updateVideos', [video.id])
       }
       this.isGenerationTimelinesRun = false
       this.$store.commit('removeBackgroundProcess', bpId)

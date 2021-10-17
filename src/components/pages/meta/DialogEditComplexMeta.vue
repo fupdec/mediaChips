@@ -82,23 +82,21 @@
                     <v-card v-if="settings.metaInCard.length" outlined class="mb-4 mt-2">
                       <v-list dense class="list-zebra pa-0">
                         <draggable v-model="settings.metaInCard" v-bind="dragOptions" @start="drag=true" @end="drag=false">
-                          <transition-group type="transition">
-                            <v-list-item v-for="(m, i) in settings.metaInCard" :key="i" class="pr-1 pl-2">
-                              <div class="d-flex justify-space-between align-center" style="width:100%">
-                                <span>
-                                  <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
-                                  <span>{{getMeta(m.id).settings.name}}</span>
-                                  <span class="text--secondary px-2">({{m.type}})</span>
-                                  <span class="caption text--secondary px-2">id: {{m.id}}</span>
-                                  <span v-if="m.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(m.id).dataType}}</span>
-                                  <span v-if="m.scraperField" class="caption text--secondary">scraper: {{m.scraperField}}</span>
-                                </span>
-                                <span>
-                                  <v-btn @click="openDialogDeleteMetaFromCards(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
-                                </span>
-                              </div>
-                            </v-list-item>
-                          </transition-group>
+                          <v-list-item v-for="(m, i) in settings.metaInCard" :key="i" class="pr-1 pl-2">
+                            <div class="d-flex justify-space-between align-center" style="width:100%">
+                              <span>
+                                <v-icon left>mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+                                <span>{{getMeta(m.id).settings.name}}</span>
+                                <span class="text--secondary px-2">({{m.type}})</span>
+                                <span class="caption text--secondary px-2">id: {{m.id}}</span>
+                                <span v-if="m.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(m.id).dataType}}</span>
+                                <span v-if="m.scraperField" class="caption text--secondary">scraper: {{m.scraperField}}</span>
+                              </span>
+                              <span>
+                                <v-btn @click="openDialogDeleteMetaFromCards(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
+                              </span>
+                            </div>
+                          </v-list-item>
                         </draggable>
                       </v-list>
                     </v-card>
@@ -203,9 +201,34 @@
                       <v-col cols="12" sm="6">
                         <div class="body-1">Aspect ratio of images:</div>
                         <v-radio-group v-model="settings.imageAspectRatio" column mandatory hide-details class="mt-2">
-                          <v-radio :value="1"><template v-slot:label><v-icon left>mdi-image</v-icon> 1:1 </template></v-radio>
-                          <v-radio :value="5/8"><template v-slot:label><v-icon left>mdi-image-album</v-icon> 5:8 </template></v-radio>
-                          <v-radio :value="16/9"><template v-slot:label><v-icon left>mdi-image-area</v-icon> 16:9 </template></v-radio>
+                          <v-radio :value="1">
+                            <template v-slot:label> 
+                              <span class="aspect-ratio-sample" :style="`width:${25}px;height:${25}px;`">
+                                <v-icon small>mdi-image-filter-hdr</v-icon>
+                              </span> 1:1 
+                            </template>
+                          </v-radio>
+                          <v-radio :value="5/8">
+                            <template v-slot:label> 
+                              <span class="aspect-ratio-sample" :style="`width:${30*5/8}px;height:${30}px;`">
+                                <v-icon small>mdi-account</v-icon>
+                              </span> 5:8
+                            </template>
+                          </v-radio>
+                          <v-radio :value="43/61">
+                            <template v-slot:label> 
+                              <span class="aspect-ratio-sample" :style="`width:${30*43/61}px;height:${30}px;`">
+                                <v-icon small>mdi-account</v-icon>
+                              </span> 2:3
+                            </template>
+                          </v-radio>
+                          <v-radio :value="16/9">
+                            <template v-slot:label> 
+                              <span class="aspect-ratio-sample" :style="`width:${40}px;height:${40/16*9}px;`">
+                                <v-icon small>mdi-image-filter-hdr</v-icon>
+                              </span> 16:9
+                            </template>
+                          </v-radio>
                         </v-radio-group>
                       </v-col>
                       <v-col cols="12" sm="6">
@@ -421,3 +444,16 @@ export default {
   },
 }
 </script>
+
+
+<style lang="scss" scoped>
+.aspect-ratio-sample {
+  border: 1px solid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  margin-right: 10px;
+  background-color: rgba(121, 121, 121, 0.164);
+}
+</style>

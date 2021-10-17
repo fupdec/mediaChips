@@ -1,10 +1,9 @@
 <template>
-  <v-lazy>
-    <v-card @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
+  <v-lazy :key="cardKey" :data-id="video.id" class="select-item">
+    <v-card v-if="view==0" @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
       @mousedown.right="$store.state.contextMenu=false" @contextmenu="showContextMenu"
       :class="{favorite: isFavorite, 'icons-in-card':ratingAndFavoriteInCard}" class="video-card meta-card"
-      :data-id="video.id" outlined hover 
-      :key="cardKey" :disabled="!reg && i>4"
+      outlined hover :disabled="!reg && i>4"
     >
       <v-responsive 
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
@@ -57,10 +56,8 @@
 
       <div v-if="!isFileNameHidden" class="video-card-title" :title="fileName" v-html="fileName"/>
 
-      <v-divider></v-divider>
-
       <!-- Video meta -->
-      <v-card-actions v-if="!isFileInfoHidden" class="props pa-1">
+      <v-chip v-if="!isFileInfoHidden" label class="props px-2 py-1 mt-0 mx-1">
         <div label outlined class="prop" :title="videoPath">
           <v-icon>mdi-folder-outline</v-icon>
           <span class="value">Path</span>
@@ -77,10 +74,7 @@
           <v-icon>mdi-harddisk</v-icon>
           {{calcSize(video.size)}}
         </div>
-      </v-card-actions>
-      
-      <v-divider v-if="!isFileInfoHidden"></v-divider>
-      <!-- END Video meta -->
+      </v-chip>
 
       <v-card-actions v-if="ratingAndFavoriteInCard" class="px-1 py-0">
         <v-rating :value="video.rating" @input="changeRating($event, video.id)"
@@ -127,6 +121,91 @@
       </div>
       
       <v-icon v-if="video.bookmark" class="bookmark" color="red" :title="video.bookmark">mdi-bookmark</v-icon>
+
+      <v-btn v-if="!isEditBtnHidden" @click="$store.state.Videos.dialogEditVideoInfo=true"
+        color="secondary" fab x-small class="btn-edit"> <v-icon>mdi-pencil</v-icon> </v-btn>
+    </v-card>
+    <v-card v-else-if="view==1" @contextmenu="showContextMenu"
+      @mousedown="stopSmoothScroll($event)" @mousedown.right="$store.state.contextMenu=false"
+      class="video-card meta-card" outlined hover :disabled="!reg && i>4">
+      <div @click="playVideo" @mousemove.capture="scrollStory($event)" @mouseleave="stopScrollStory" ref="story" class="story">
+        <v-sheet v-if="!isFileNameHidden" class="video-card-title" v-html="fileName"/>
+        <div v-if="!reg && i>4" class="reg-block">App not registered</div>
+        <div v-if="!isVideoExist" class="path-error"> <div class="error">No video found. Please update the path.</div> </div>
+        <div v-if="!isQualityLabelHidden" label outlined class="resolution">
+          <div class="text text-no-wrap" :class="calcHeightTitle(video.resolution).toLowerCase()">
+            {{calcHeightTitle(video.resolution)}}
+          </div>
+          <div class="value" v-html="calcHeightValue(video.resolution)"/>
+        </div>
+        <div class="wrapper" ref="storyWrapper" :class="{'hovered':isVideoHovered}">
+          <div v-for="(p, i) in timeline" :key="i" class="frame">
+            <img :src="getTimelineImgUrl(p)"/>
+            <div v-if="!isDurationHidden" class="duration">{{calcDur(p/100*video.duration)}}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <v-btn v-if="!isFavoriteHidden" @click="isFavorite = !isFavorite" icon color="pink" class="mx-1"> 
+          <v-icon v-if="isFavorite" color="pink">mdi-heart</v-icon>
+          <v-icon v-else color="grey">mdi-heart-outline</v-icon>
+        </v-btn>
+        <v-rating v-if="!isRatingHidden" :value="video.rating" @input="changeRating($event, video.id)"
+          color="yellow darken-2" background-color="grey"
+          empty-icon="mdi-star-outline" half-icon="mdi-star-half-full"
+          dense half-increments hover clearable class="mx-1" />
+
+        <v-chip v-if="!isFileInfoHidden" label class="px-2 py-1 mx-2">
+          <div label outlined class="prop mr-2" :title="videoPath">
+            <v-icon>mdi-folder-outline</v-icon>
+            <span class="value">Path</span>
+          </div>
+          <div label outlined class="prop mr-2">
+            <v-icon>mdi-monitor-screenshot</v-icon>
+            {{video.resolution}}
+          </div>
+          <div label outlined class="prop mr-2">
+            <v-icon>mdi-file-video</v-icon>
+            {{fileExtension}}
+          </div>
+          <div label outlined class="prop">
+            <v-icon>mdi-harddisk</v-icon>
+            {{calcSize(video.size)}}
+          </div>
+        </v-chip>
+
+        <!-- Parse meta -->
+        <div v-for="(m,i) in metaAssignedToVideos" :key="i" class="d-flex">
+          <div v-if="visibility[m.id]&&checkShowEmptyValue(m)" class="meta-in-card">
+            <v-chip-group v-if="m.type=='complex'" column>
+              <v-icon :title="getMeta(m.id).settings.name">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+              <v-chip v-for="mc in video[m.id]" :key="mc" 
+                :color="getColor(m.id,mc)" 
+                :label="getMeta(m.id).settings.chipLabel"
+                :outlined="getMeta(m.id).settings.chipOutlined"
+                :title="`Open page with ${getMeta(m.id).settings.nameSingular.toLowerCase()}`"
+                @click="openMetaCardPage(m.id,mc)"
+                @click.middle="openMetaInNewTab(mc)"
+                @mouseover.stop="showImage($event,mc,'meta',m.id)" 
+                @mouseleave.stop="$store.state.hoveredImage=false"> 
+                  {{ getCard(mc).meta.name }} </v-chip>
+            </v-chip-group>
+            <div v-else-if="m.type=='simple'" class="simple-meta">
+              <v-icon :title="getMeta(m.id).settings.name">mdi-{{getMeta(m.id).settings.icon}}</v-icon>
+              <span v-if="getMeta(m.id).dataType=='array'">{{getArrayValuesForCard(m.id, 'video')}}</span>
+              <span v-else-if="getMeta(m.id).dataType=='rating'">      
+                <v-rating :value="video[m.id]" @input="changeMetaRating($event, m.id)" :length="getMeta(m.id).settings.ratingMax" hover 
+                  :full-icon="`mdi-${getMeta(m.id).settings.ratingIcon}`" :empty-icon="`mdi-${getMeta(m.id).settings.ratingIconEmpty||getMeta(m.id).settings.ratingIcon}`" 
+                  :color="getMeta(m.id).settings.ratingColor" background-color="grey" class="meta-rating" clearable
+                  :half-increments="getMeta(m.id).settings.ratingHalf" :half-icon="`mdi-${getMeta(m.id).settings.ratingIconHalf||getMeta(m.id).settings.ratingIcon}`"/>
+              </span>
+              <span v-else-if="getMeta(m.id).dataType=='boolean'">{{video[m.id]?'Yes':'No'}}</span>
+              <span v-else>{{video[m.id]}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <v-btn v-if="!isEditBtnHidden" @click="$store.state.Videos.dialogEditVideoInfo=true"
         color="secondary" fab x-small class="btn-edit"> <v-icon>mdi-pencil</v-icon> </v-btn>
@@ -208,6 +287,7 @@ export default {
     delayVideoPreview() { return this.$store.state.Settings.delayVideoPreview },
     ratingAndFavoriteInCard() { return this.$store.state.Settings.ratingAndFavoriteInCard },
     metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
+    view() { return this.$store.state.Settings.videoView || 0 },
     visibility() { return this.$store.state.Settings.videoVisibility },
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
     complexMetaAssignedToVideo() { return this.$store.getters.settings.get('metaAssignedToVideos').filter({type:'complex'}).value() },
@@ -255,6 +335,16 @@ export default {
       for (const timeout in this.timeouts) clearTimeout(this.timeouts[timeout])
       this.$refs.video.src = ''
     },
+    scrollStory(e) {
+      let storyWidth = this.$refs.story.clientWidth
+      let wrapperWidth = this.$refs.storyWrapper.clientWidth
+      if (wrapperWidth <= storyWidth) return
+      let x = e.layerX
+      let ratio = storyWidth / (wrapperWidth - storyWidth)
+      let offset = Math.ceil(x / ratio)
+      this.$refs.storyWrapper.style.left = '-' + offset +'px'
+    },
+    stopScrollStory() { this.$refs.storyWrapper.style.left = 0 },
     getImgUrl() {
       let imgPath = path.join(this.pathToUserData, `/media/thumbs/${this.video.id}.jpg`)
       let gridPath = path.join(this.pathToUserData, `/media/grids/${this.video.id}.jpg`)

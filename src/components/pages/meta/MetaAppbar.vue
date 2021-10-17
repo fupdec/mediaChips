@@ -146,6 +146,16 @@
     <v-spacer></v-spacer>
 
     <div>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="toggleView" icon tile v-on="on">
+            <v-icon v-if="view==0">mdi-view-module</v-icon>
+            <v-icon v-else>mdi-format-line-style</v-icon>
+          </v-btn>
+        </template>
+        <span>Toggle View</span>
+      </v-tooltip>
+
       <v-menu offset-y nudge-bottom="10" :close-on-content-click="false">
         <template #activator="{ on: onMenu }">
           <v-tooltip bottom>
@@ -156,12 +166,12 @@
                 </v-btn>
               </v-badge>
             </template>
-            <span>Card Size</span>
+            <span>Item Size</span>
           </v-tooltip>
         </template>
         <v-card width="300">
           <v-toolbar color="primary" height="50">
-            <span class="headline">Card Size</span>
+            <span class="headline">Item Size</span>
             <v-spacer></v-spacer>
             <v-icon>mdi-card-bulleted-settings</v-icon>
           </v-toolbar>
@@ -225,6 +235,7 @@ export default {
   mixins: [MetaGetters],
   beforeMount() {
     this.initSort()
+    this.initView()
     this.initSpecificMeta()
     this.initVisibility()
     this.initCardSize()
@@ -312,6 +323,7 @@ export default {
     visibility() { return this.$store.state.Meta.visibility },
     metaAssignedToVideos() { return this.$store.state.Settings.metaAssignedToVideos },
     cardSize() { return this.$store.state.Meta.cardSize || 3 },
+    view() { return this.$store.state.Meta.view || 0 },
   },
   methods: {
     initSpecificMeta() {
@@ -324,6 +336,7 @@ export default {
       if (this.meta.settings.career) this.specificMeta.push('career')
     },
     initCardSize() { this.$store.state.Meta.cardSize = this.meta.state.cardSize || 3 },
+    initView() { this.$store.state.Meta.view = this.meta.state.view || 0 },
     initVisibility() {
       let visibility = {}
       for (let i = 0; i < this.specificMeta.length; i++) visibility[this.specificMeta[i]] = true
@@ -444,6 +457,12 @@ export default {
       let value = !this.visibility[item]
       this.$store.state.Meta.visibility[item] = value
       this.$store.getters.meta.find({id:this.meta.id}).get('state.visibility').set(item,value).write()
+    },
+    toggleView() {
+      let view = this.$store.state.Meta.view
+      view = view==0?1:0
+      this.$store.state.Meta.view = view
+      this.$store.getters.meta.find({id:this.meta.id}).get('state').set('view',view).write()
     },
     updateCardSize(value) {
       this.$store.state.Meta.cardSize = value

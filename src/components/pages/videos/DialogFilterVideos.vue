@@ -157,12 +157,12 @@ export default {
   },
   data: () => ({
     filters: [],
-    metaList: ['path','favorite','rating','bookmark','duration','size','height','width','date','edit'],
+    metaList: ['path','favorite','rating','bookmark','duration','size','height','width','views','date','edit','viewed'],
     metaType: {
-      number: ['duration','size','rating','height','width'],
+      number: ['duration','size','rating','height','width','views'],
       string: ['path','bookmark'],
       array: [],
-      date: ['date','edit'],
+      date: ['date','edit','viewed'],
       boolean: ['favorite'],
       select: [],
     },

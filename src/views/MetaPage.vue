@@ -73,7 +73,7 @@
 
       <Loading />
 
-      <v-container fluid class="card-grid" :class="[`card-size-${cardSize}`, gapSize, {'wide-image':isWideImage}]">
+      <v-container fluid class="items-selection" :class="[{'card-grid':view==0}, {'chips-grid':view==1}, `card-size-${cardSize}`, gapSize, {'wide-image':isWideImage}]">
         <MetaCard v-for="card in metaCardsOnPage" :key="card.id" :card="card"/>
       </v-container>
       
@@ -225,6 +225,7 @@ export default {
     },
     metaCardsNumber() { return this.$store.getters.metaCards.filter({metaId:this.meta.id}).value().length },
     metaCardsOnPage() { return this.$store.getters.metaCardsOnPage },
+    view() { return this.$store.state.Meta.view || 0 },
     cardSize() { return this.$store.state.Meta.cardSize || 3 },
     gapSize() { return `gap-size-${this.$store.state.Settings.gapSize}` },
     isWideImage() { return this.meta.settings.imageAspectRatio > 1 },
@@ -235,15 +236,15 @@ export default {
   methods: {
     initSelection() {
       this.$store.state.Meta.selection = new Selection({
-        boundaries: ['.card-grid'],
-        selectables: ['.meta-card'],
+        boundaries: ['.items-selection'],
+        selectables: ['.select-item'],
         allowTouch: false,
       }).on('beforestart', ({store, event}) => {
-        const targetEl = event.target.closest('.meta-card')
+        const targetEl = event.target.closest('.select-item')
         if (event.button == 2 && store.stored.includes(targetEl)) return false
         return (event.button !== 1)
       }).on('start', ({store, event}) => {
-        const targetEl = event.target.closest('.meta-card')
+        const targetEl = event.target.closest('.select-item')
         if (event.button == 2 && store.stored.includes(targetEl)) return false
         if (!event.ctrlKey && !event.metaKey) {
           for (const el of store.stored) el.classList.remove('selected')
@@ -253,7 +254,7 @@ export default {
         for (const el of added) el.classList.add('selected')
         for (const el of removed) el.classList.remove('selected')
       }).on('stop', ({store, event}) => {
-        const targetEl = event.target.closest('.meta-card')
+        const targetEl = event.target.closest('.select-item')
         if (event.button==0 && targetEl) this.$store.state.Meta.selection.select(targetEl)
         this.$store.state.Meta.selection.keepSelection()
         this.$store.state.Meta.selectedMeta = store.stored.map(item => (item.dataset.id))
