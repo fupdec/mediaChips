@@ -74,11 +74,9 @@
                       </v-form>
                     </div>
                     <div v-if="meta.settings.items.length==0" class="text-center">Please add items to array</div>
-                    <draggable v-model="meta.settings.items" v-bind="dragOptions" @start="drag=true" @end="drag=false">
-                      <transition-group type="transition" class="d-flex flex-wrap">
-                        <v-chip v-for="(item,i) in meta.settings.items" :key="i" @click:close="removeItem(i)"
-                          close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
-                      </transition-group>
+                    <draggable v-model="meta.settings.items" v-bind="dragOptions" @start="drag=true" @end="drag=false" class="d-flex flex-wrap">
+                      <v-chip v-for="(item,i) in meta.settings.items" :key="i" @click:close="removeItem(i)"
+                        close close-icon="mdi-close" class="mr-2 mb-2">{{item.name}}</v-chip>
                     </draggable>
                   </v-card>
                 </v-col>

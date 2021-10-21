@@ -4,23 +4,21 @@
       <div class="headline text-center py-2">Meta Assigned to Videos</div>
       <v-list v-if="metaAssignedToVideos.length" dense class="list-zebra">
         <draggable v-model="metaAssignedToVideos" v-bind="dragOptions" @start="drag=true" @end="drag=false">
-          <transition-group type="transition">
-            <v-list-item v-for="(meta, i) in metaAssignedToVideos" :key="i" class="pr-1 pl-2">
-              <div class="d-flex justify-space-between align-center" style="width:100%">
-                <span>
-                  <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
-                  <span>{{getMeta(meta.id).settings.name}}</span>
-                  <span class="text--secondary px-2">({{meta.type}})</span>
-                  <span class="caption text--secondary px-2">id: {{meta.id}}</span>
-                  <span v-if="meta.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(meta.id).dataType}}</span>
-                  <span v-if="meta.scraperField" class="caption text--secondary">scraper: {{meta.scraperField}}</span>
-                </span>
-                <span>
-                  <v-btn @click="openDialogDeleteMetaFromVideos(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
-                </span>
-              </div>
-            </v-list-item>
-          </transition-group>
+          <v-list-item v-for="(meta, i) in metaAssignedToVideos" :key="i" class="pr-1 pl-2">
+            <div class="d-flex justify-space-between align-center" style="width:100%">
+              <span>
+                <v-icon left>mdi-{{getMeta(meta.id).settings.icon}}</v-icon>
+                <span>{{getMeta(meta.id).settings.name}}</span>
+                <span class="text--secondary px-2">({{meta.type}})</span>
+                <span class="caption text--secondary px-2">id: {{meta.id}}</span>
+                <span v-if="meta.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(meta.id).dataType}}</span>
+                <span v-if="meta.scraperField" class="caption text--secondary">scraper: {{meta.scraperField}}</span>
+              </span>
+              <span>
+                <v-btn @click="openDialogDeleteMetaFromVideos(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
+              </span>
+            </div>
+          </v-list-item>
         </draggable>
       </v-list>
       <div v-else class="d-flex justify-space-between align-center flex-column">
