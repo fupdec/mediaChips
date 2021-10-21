@@ -482,7 +482,6 @@ export default {
     playlistShuffle: [],
     playIndex: null,
     playlistMode: ['autoplay'],
-    dialogAddToPlaylist: false,
     // Markers
     isMarkersVisible: false,
     markers: [],

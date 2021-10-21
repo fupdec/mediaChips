@@ -296,6 +296,7 @@ export default {
       return this.$store.getters.meta.filter(i=>ids.includes(i.id)&&i.settings.parser).value()
     },
     showEmptyMetaValueInCard() { return this.$store.state.Settings.showEmptyMetaValueInCard },
+    playlists() { return this.$store.getters.playlists.value() },
   },
   methods: {
     openMetaCardPage(metaId, cardId) { this.$router.push(`/metacard/?metaId=${metaId}&cardId=${cardId}&tabId=default`) },
@@ -380,6 +381,19 @@ export default {
         viewed: Date.now(),
       }).write()
     },
+    playVideoInSystemPlayer() {
+      const pathToVideo = this.video.path
+      if (!this.isVideoExist) {
+        this.$store.state.Videos.dialogErrorPlayVideo = true
+        this.$store.state.Videos.errorPlayVideoPath = pathToVideo
+        return
+      }
+      shell.openPath(pathToVideo) 
+      this.$store.getters.videos.find({id: this.video.id}).assign({
+        views: (this.video.views||0)+1,
+        viewed: Date.now(),
+      }).write()
+    },
     changeRating(stars, videoID) { this.$store.getters.videos.find({id:videoID}).assign({rating:stars,edit:Date.now()}).write() },
     showContextMenu(e) {
       e.preventDefault()
@@ -447,10 +461,21 @@ export default {
         if (vm.complexMetaAssignedToVideo.length==0) items.push({name:'No added meta', type: 'item', function: ()=>{}, disabled: true})
         return items
       }
+      function getPlaylists() {
+        let items = []
+        for (let p of vm.playlists) {
+          items.push({name: `${p.name} (${p.videos.length})`, type: 'item', icon: '', function: ()=>{vm.addToPlaylist(p)}})
+        }
+        if (vm.playlists.length==0) items.push({name:'No playlists', type: 'item', function: ()=>{}, disabled: true})
+        return items
+      }
       setTimeout(() => {
         this.$store.state.x = e.clientX
         this.$store.state.y = e.clientY
         let contextMenu = [
+          { name: `Open in System Player`, type: 'item', icon: 'play', function: ()=>{this.playVideoInSystemPlayer()}},
+          { name: `Add to Playlist`, type: 'menu', icon: 'playlist-plus', menu: getPlaylists()},
+          { type: 'divider' },
           { name: `Edit Info`, type: 'item', icon: 'pencil', function: ()=>{this.$store.state.Videos.dialogEditVideoInfo=true}},
           { name: `Rating`, type: 'menu', icon: 'star', menu: [
             { name: `5`, type: 'item', icon: 'star', function: ()=>{this.changeRating(5)}},
@@ -479,9 +504,6 @@ export default {
           { name: `Parse Metadata`, type: 'item', icon: 'text-box-search', function: ()=>{this.parseMetadata()}},
           { name: `Update File Information`, type: 'item', icon: 'information-variant', function: ()=>{this.updateFileInfo()}},
           { type: 'divider' },
-          { name: `Add to Playlist...`, type: 'item', icon: 'playlist-plus', function: ()=>{this.$store.state.Videos.dialogAddToPlaylist=true}, },
-          { name: `Add to "Watch later"`, type: 'item', icon: 'bookmark-plus', function: ()=>{this.watchLater()}, },
-          { type: 'divider' },
           { name: `Reveal in File Explorer`, type: 'item', icon: 'folder-open', function: ()=>{this.revealInFileExplorer()}, disabled: !this.isSelectedSingleVideo},
           { name: `Move File to...`, type: 'item', icon: 'file-move', function: ()=>{this.moveFile()},},
           { type: 'divider' },
@@ -489,16 +511,16 @@ export default {
         ]
         this.$store.state.contextMenuContent = contextMenu
         this.$store.state.contextMenu = true
-      }, 300)  // TODO create menu with playlists and place into it button "Watch later"
+      }, 300) 
     },
-    watchLater() {
-      let playlist = this.$store.getters.playlists.find({name:'Watch later'}).value()
-      let videosFromPlaylist = playlist.videos
+    addToPlaylist(playlist) {
+      let id = playlist.id
+      let videos = _.cloneDeep(playlist.videos)
       this.$store.getters.getSelectedVideos.map(videoId => {
-        if (!videosFromPlaylist.includes(videoId)) videosFromPlaylist.push(videoId)
+        if (!videos.includes(videoId)) videos.push(videoId)
       })
-      this.$store.getters.playlists.find({name:'Watch later'}).assign({
-        videos: videosFromPlaylist,
+      this.$store.getters.playlists.find({id}).assign({
+        videos: videos,
         edit: Date.now(),
       }).write()
     },

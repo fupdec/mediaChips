@@ -38,29 +38,6 @@
       <DialogEditSingleVideoInfo v-if="isSelectedSingleVideo"/>
       <DialogEditMultipleVideosInfo v-if="selectedVideosLength>1"/>
     </div>
-
-    <v-dialog v-model="$store.state.Videos.dialogAddToPlaylist" max-width="420">
-      <v-card class="add-playlist">
-        <v-toolbar color="primary">
-          <div class="headline">Add to Playlist</div>
-          <v-spacer></v-spacer>
-          <v-btn @click="addToPlaylist" :disabled="typeof this.selectedPlaylist!=='number'" outlined> <v-icon left>mdi-plus</v-icon> Add </v-btn>
-        </v-toolbar>
-        <vuescroll>
-          <v-card-text v-if="playlists.length">
-            <v-list dense>
-              <v-list-item-group color="primary" v-model="selectedPlaylist">
-                <v-list-item v-for="(item, i) in playlists" :key="i">
-                  <span>{{item.name}}</span>
-                  <span>{{item.videos.length}}</span>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-          </v-card-text>
-          <v-card-text v-else class="text-center">No playlist</v-card-text>
-        </vuescroll>
-      </v-card>
-    </v-dialog>
 	</div>
 </template>
 
@@ -87,7 +64,6 @@ export default {
     this.$store.state.Videos.selection.destroy()
   },
   data: () => ({
-    selectedPlaylist: null,
   }),
   computed: {
     selectedVideosLength() { return this.$store.getters.getSelectedVideos.length },
@@ -100,7 +76,6 @@ export default {
       } else return ''
     },
     isSelectedSingleVideo() { return this.$store.getters.getSelectedVideos.length == 1 },
-    playlists() { return this.$store.getters.playlists.filter(list=>(list.name!='Watch later')).value() },
   },
   methods: {
 		initSelection() {
@@ -168,22 +143,6 @@ export default {
       this.$store.dispatch('deleteVideos')
       this.$store.state.Videos.dialogDeleteVideo = false
     },
-    addToPlaylist() {
-      let id = this.playlists[this.selectedPlaylist].id
-      let playlist = this.$store.getters.playlists.find({id}).cloneDeep().value()
-      let videosFromPlaylist = playlist.videos
-
-      this.$store.getters.getSelectedVideos.map(videoId => {
-        if (!videosFromPlaylist.includes(videoId)) { // if the video is not in the playlist 
-          videosFromPlaylist.push(videoId)
-        }
-      })
-      this.$store.getters.playlists.find({id}).assign({
-        videos: videosFromPlaylist,
-        edit: Date.now(),
-      }).write()
-      this.$store.state.Videos.dialogAddToPlaylist = false
-    },
   },
   watch: {
   },
@@ -195,14 +154,5 @@ export default {
 .warning-note {
   font-size:0.55rem;
   line-height: 1;
-}
-.add-playlist {
-  .v-list-item {
-    display: flex;
-    justify-content: space-between;
-    &:after {
-      display: none;
-    }
-  }
 }
 </style>

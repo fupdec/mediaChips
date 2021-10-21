@@ -23,7 +23,6 @@ const Videos = {
     dialogErrorPlayVideo: false,
     dialogFolderTree: false,
     dialogFilterVideos: false,
-    dialogAddToPlaylist: false,
     errorPlayVideoPath: '',
     deleteFile: false,
     rating: 0,
