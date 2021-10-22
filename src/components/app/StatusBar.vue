@@ -59,15 +59,6 @@
 
     <v-divider vertical></v-divider>
 
-    <v-tooltip v-if="!reg" top>
-      <template v-slot:activator="{ on }">
-        <v-btn v-on="on" @click="openRegistration" height="20" small color="error"> Not registered </v-btn>
-      </template>
-      <span>Register the application and get all the features</span>
-    </v-tooltip>
-
-    <v-divider vertical></v-divider>
-
     <v-tooltip top>
       <template v-slot:activator="{ on }">
         <span v-on="on" class="px-4 d-flex"><v-icon size="18" class="mb-1">mdi-database-outline</v-icon></span>

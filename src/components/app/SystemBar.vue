@@ -9,11 +9,11 @@
           </v-btn>
         </template>
         <v-list dense class="context-menu">
-          <v-list-item link @mouseup="checkForUpdates">
+          <!-- <v-list-item link @mouseup="checkForUpdates">
             <v-list-item-title>
               <v-icon left size="18">mdi-update</v-icon> Check for Updates...
             </v-list-item-title>
-          </v-list-item>
+          </v-list-item> -->
           <v-list-item link @mouseup="$store.state.Settings.dialogScanVideos=true">
             <v-list-item-title>
               <v-icon left size="18">mdi-video-plus</v-icon> Add New Videos...

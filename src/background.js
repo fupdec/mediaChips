@@ -185,10 +185,10 @@ let systemMenu = Menu.buildFromTemplate([
         label: 'Add New Videos...',
         click() { addNewVideos() } 
       },
-      {
-        label: 'Check for Updates...',
-        click() { checkForUpdates() } 
-      },
+      // {
+      //   label: 'Check for Updates...',
+      //   click() { checkForUpdates() } 
+      // },
       { type:'separator' },
       { 
         label:'Play Video in System Player', 

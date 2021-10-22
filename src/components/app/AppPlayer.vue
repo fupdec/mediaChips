@@ -17,10 +17,6 @@
             <span>Play in the system player</span>
           </v-btn>
         </div>
-        <div v-if="!reg && playIndex>4" class="reg-block">
-          <div class="mb-2">Application not registered</div>
-          <div class="caption">In the unregistered version, you can only play the first 5 videos of the playlist.</div>
-        </div>
         <div v-if="isVideoNotExist" class="video-error">
           <v-icon size="60" color="red">mdi-alert</v-icon>
           <div>{{getFileFromPath(videos[playIndex].path)}}</div>
@@ -241,7 +237,6 @@
                   <b>{{i+1}}.</b>
                   <span class="path">{{getFileNameFromPath(video.path)}}</span>
                 </span>
-                <div v-if="!reg && i>4" class="reg-playlist">App not registered</div>
                 <span v-if="playIndex===i" class="play-state overline text--primary">
                   <v-icon class="pl-2 pr-1">mdi-play</v-icon>
                   <span class="pr-4 text">Now playing</span>

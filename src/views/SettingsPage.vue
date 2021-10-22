@@ -11,7 +11,6 @@
       <v-tab href="#videos-settings" draggable="false">Videos<v-icon>mdi-video</v-icon></v-tab>
       <v-tab href="#privacy-settings" draggable="false">Privacy<v-icon>mdi-key</v-icon></v-tab>
       <v-tab href="#database-settings" draggable="false">Database<v-icon>mdi-database</v-icon></v-tab>
-      <v-tab href="#about-settings" draggable="false">About<v-icon>mdi-information-variant</v-icon></v-tab>
     </v-tabs>
     <v-divider></v-divider>
     <v-tabs-items v-model="tab" class="settings-tabs">
@@ -505,35 +504,6 @@
           </v-card>
         </v-card>
       </v-tab-item>
-      <v-tab-item value="about-settings">
-        <v-card flat max-width="800" style="margin: auto;" class="py-10">
-          <v-card outlined class="pa-4 mb-10">
-            <Registration />
-          </v-card>
-          <v-card outlined class="pa-4 mb-10">
-            <div class="headline text-center pb-4">Updates</div>
-            <v-row>
-              <v-col cols="12" sm="6">
-                <div class="d-flex align-center justify-center mt-2">
-                  <div class="mr-6">Check for updates at startup:</div>
-                  <v-switch v-model="checkForUpdatesAtStartup" class="mt-0 pt-0 d-inline-flex"  
-                    :label="checkForUpdatesAtStartup?'Yes':'No'" inset hide-details/>
-                </div>
-              </v-col>
-              <v-col cols="12" sm="6" align="center">
-                <v-btn v-if="!updateApp" @click="checkForUpdates" :loading="isCheckingUpdate" color="primary" rounded>
-                  <v-icon left>mdi-update</v-icon> Check for updates manually</v-btn>
-              </v-col>
-              <v-col cols="12" v-if="updateApp" class="text-center">
-                <span class="pt-4 pr-4">New version available!</span>
-                <v-btn @click="openLink('https://mediaChips.app/downloads/')" color="primary" rounded>
-                  <v-icon left>mdi-download</v-icon> Download from official website </v-btn>
-              </v-col>
-            </v-row>
-          </v-card>
-          <About/>
-        </v-card>
-      </v-tab-item>
     </v-tabs-items>
 
     <div v-show="navigationSide=='2'" class="py-6"></div>
@@ -555,7 +525,6 @@ import MetaList from '@/components/pages/meta/MetaList.vue'
 import MetaAssignedToVideos from '@/components/pages/meta/MetaAssignedToVideos.vue'
 import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ClearData from '@/components/pages/settings/ClearData.vue'
-import Registration from '@/components/pages/settings/Registration.vue'
 import vuescroll from 'vuescroll'
 
 // TODO separate each tab to components
@@ -570,12 +539,10 @@ export default {
     ManageBackups: () => import('@/components/pages/settings/ManageBackups.vue'),
     ClearData,
     vuescroll,
-    Registration,
     About: () => import('@/components/app/About.vue'),
   },
   mounted () {
     this.$nextTick(function () {
-      if (this.$route.query.tab == 'about') this.tab = 'about-settings'
       this.password = this.$store.state.Settings.phrase
       this.hint = this.$store.state.Settings.passwordHint
     })

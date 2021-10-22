@@ -3,13 +3,12 @@
     <v-card v-if="view==0" @mousedown="stopSmoothScroll($event)" v-ripple="{ class: 'accent--text' }"
       @mousedown.right="$store.state.contextMenu=false" @contextmenu="showContextMenu"
       :class="{favorite: isFavorite, 'icons-in-card':ratingAndFavoriteInCard}" class="video-card meta-card"
-      outlined hover :disabled="!reg && i>4"
+      outlined hover
     >
       <v-responsive 
         @mouseover.capture="playPreview()" @mouseleave="stopPlayingPreview()"
         :aspect-ratio="16/9" class="video-preview-container"
       >
-        <div v-if="!reg && i>4" class="reg-block"> <div>App not registered</div> </div>
         <v-img :src="getImgUrl()" :aspect-ratio="16/9" class="thumb" contain/>
         <v-btn @click="playVideo" icon outlined class="btn-play" :color="isVideoExist?'white':'red'">
           <v-icon>mdi-play</v-icon> </v-btn>
@@ -127,10 +126,9 @@
     </v-card>
     <v-card v-else-if="view==1" @contextmenu="showContextMenu"
       @mousedown="stopSmoothScroll($event)" @mousedown.right="$store.state.contextMenu=false"
-      class="video-card meta-card" outlined hover :disabled="!reg && i>4">
+      class="video-card meta-card" outlined hover>
       <div @click="playVideo" @mousemove.capture="scrollStory($event)" @mouseleave="stopScrollStory" ref="story" class="story">
         <v-sheet v-if="!isFileNameHidden" class="video-card-title" v-html="fileName"/>
-        <div v-if="!reg && i>4" class="reg-block">App not registered</div>
         <div v-if="!isVideoExist" class="path-error"> <div class="error">No video found. Please update the path.</div> </div>
         <div v-if="!isQualityLabelHidden" label outlined class="resolution">
           <div class="text text-no-wrap" :class="calcHeightTitle(video.resolution).toLowerCase()">

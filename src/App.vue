@@ -184,14 +184,16 @@ export default {
       this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
       this.initTheme()
       this.initSystemInfo()
-      if (this.checkForMigration()) return
-      if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
+      if (this.checkIsMigrationNeeded()) return
+      // this.initPlugins()
+      // if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.runAutoUpdateDataFromVideos()
       if (this.$store.state.Settings.updateDataFromVideosOnStart) this.updateDataFromVideos()
       if (this.passwordProtection && this.phrase!=='') this.disableRunApp = this.phrase !== this.password 
       if (this.watchFolders) this.watchDir(this.folders.map(f=>f.path)) // watch folders for new videos, deleted videos
       setInterval(() => { this.createBackup() }, 1000 * 60 * 30) // every 30 minutes
+      // ipcRenderer.on('getPlugin', (event, data) => { console.log(data) })
     }) // TODO: disable shift+enter and shift+click because that add new window
   },
   beforeDestroy() {
@@ -381,7 +383,7 @@ export default {
       this.versions.db = this.databaseVersion
       this.$store.state.pathToUserData = app.getPath('userData')
     },
-    checkForMigration() {
+    checkIsMigrationNeeded() {
       if (this.versions.db === this.versions.app) return false
       
       let verReqMigration = ['0.10.4','0.11.0']
