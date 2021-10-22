@@ -7,6 +7,7 @@ const fs = require("fs-extra")
 const path = require("path")
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const shell = require('electron').shell
+// const pluginLoader = require('./plugin-loader')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -389,3 +390,11 @@ ipcMain.on('toggleDarkMode', (e, value) => { player.webContents.send( 'toggleDar
 ipcMain.on('updatePlayerDb', (e, value) => { player.webContents.send( 'updateDb', value ) })
 ipcMain.on('addNewMetaCard', (e, metaCardName, metaId) => { win.webContents.send( 'addNewMetaCard', metaCardName, metaId ) }) 
 ipcMain.on('videoWatched', (e, videoId) => { win.webContents.send( 'videoWatched', videoId ) }) 
+
+// plugins 
+// ipcMain.on('installPlugin', (event, pluginsDir) => {
+//   pluginLoader(pluginsDir).then((result) => {
+//     console.log( result ) 
+//     win.webContents.send( 'getPlugin', result ) 
+//   })
+// })

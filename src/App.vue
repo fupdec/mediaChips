@@ -157,6 +157,7 @@ const shell = require('electron').shell
 const chokidar = require('chokidar')
 const shortid = require('shortid')
 const Mousetrap = require('mousetrap')
+// const { ipcRenderer } = require('electron')
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -184,7 +185,8 @@ export default {
       this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
       this.initTheme()
       this.initSystemInfo()
-      if (this.checkForMigration()) return
+      if (this.checkIsMigrationNeeded()) return
+      // this.initPlugins()
       if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
       this.$router.push({ path: '/home', query: { name: 'Home' } })
       this.runAutoUpdateDataFromVideos()
@@ -192,6 +194,7 @@ export default {
       if (this.passwordProtection && this.phrase!=='') this.disableRunApp = this.phrase !== this.password 
       if (this.watchFolders) this.watchDir(this.folders.map(f=>f.path)) // watch folders for new videos, deleted videos
       setInterval(() => { this.createBackup() }, 1000 * 60 * 30) // every 30 minutes
+      // ipcRenderer.on('getPlugin', (event, data) => { console.log(data) })
     }) // TODO: disable shift+enter and shift+click because that add new window
   },
   beforeDestroy() {
@@ -381,7 +384,7 @@ export default {
       this.versions.db = this.databaseVersion
       this.$store.state.pathToUserData = app.getPath('userData')
     },
-    checkForMigration() {
+    checkIsMigrationNeeded() {
       if (this.versions.db === this.versions.app) return false
       
       let verReqMigration = ['0.10.4','0.11.0']
@@ -449,6 +452,10 @@ export default {
       try { fs.copySync(databases, temp) } 
       catch (err) { console.error(err) }
     },
+    // initPlugins() {
+    //   const pluginsDir = path.resolve(this.pathToUserData, 'plugins')
+    //   ipcRenderer.send('installPlugin', pluginsDir)
+    // },
   },
   watch: {
     updateIntervalDataFromVideos(n) { this.runAutoUpdateDataFromVideos() },
