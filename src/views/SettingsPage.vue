@@ -129,23 +129,8 @@
               <span class="mr-6">Show experimental features:</span>
               <v-switch v-model="showExperimentalFeatures" :label="showExperimentalFeatures?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
             </div>
-            <div class="d-flex mt-6">
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
-                </template>
-                <div>Data scrapers for performers, specific meta</div>
-              </v-tooltip>
-              <span class="mr-6">Show adult content:</span>
-              <v-switch v-model="showAdultContent" :label="showAdultContent?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
-            </div>
-            <div v-if="showAdultContent" class="d-flex align-center mt-6">
-              <v-btn @click="dialogAddMetaCardsTemplate=true" block rounded color="secondary">
-                <v-icon left>mdi-plus</v-icon> Add most popular tags, performers, websites </v-btn>
-            </div>
           </v-card>
         </v-card>
-        <DialogAddMetaCardsTemplate v-if="dialogAddMetaCardsTemplate" :dialog="dialogAddMetaCardsTemplate" @finish="dialogAddMetaCardsTemplate=false"/>
 
         <v-dialog v-model="dialogUpdateNumberOfVideos" width="600" scrollable persistent>
           <v-card>
@@ -587,7 +572,6 @@ export default {
     vuescroll,
     Registration,
     About: () => import('@/components/app/About.vue'),
-    DialogAddMetaCardsTemplate: () => import("@/components/pages/meta/DialogAddMetaCardsTemplate.vue"),
   },
   mounted () {
     this.$nextTick(function () {
@@ -631,7 +615,6 @@ export default {
     videosWithSamePath: [],
     isCheckingUpdate: false,
     updateApp: false,
-    dialogAddMetaCardsTemplate: false,
     folderSize: {
       timelines: null,
       markers: null,
@@ -769,10 +752,6 @@ export default {
     showExperimentalFeatures: {
       get() {return this.$store.state.Settings.showExperimentalFeatures},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'showExperimentalFeatures', value})},
-    },
-    showAdultContent: {
-      get() {return this.$store.state.Settings.showAdultContent},
-      set(value) {this.$store.dispatch('updateSettingsState', {key:'showAdultContent', value})},
     },
     checkForUpdatesAtStartup: {
       get() {return this.$store.state.Settings.checkForUpdatesAtStartup},

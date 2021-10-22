@@ -90,7 +90,6 @@
                                 <span class="text--secondary px-2">({{m.type}})</span>
                                 <span class="caption text--secondary px-2">id: {{m.id}}</span>
                                 <span v-if="m.type=='simple'" class="caption text--secondary px-2">type: {{getMeta(m.id).dataType}}</span>
-                                <span v-if="m.scraperField" class="caption text--secondary">scraper: {{m.scraperField}}</span>
                               </span>
                               <span>
                                 <v-btn @click="openDialogDeleteMetaFromCards(i)" color="red" icon><v-icon>mdi-close</v-icon></v-btn>
@@ -106,26 +105,6 @@
                     </div>
                     <v-btn @click="dialogAddMetaToCard=true" color="success" small rounded>
                       <v-icon left>mdi-plus</v-icon>Add meta to cards</v-btn>
-                    <div v-if="$store.state.Settings.showAdultContent">
-                      <v-divider class="my-4"></v-divider>
-                      <v-row>
-                        <v-col cols="6">       
-                          <div class="d-flex align-center"> 
-                            <v-tooltip top>
-                              <template v-slot:activator="{ on }">
-                                <v-icon v-on="on" left>mdi-magnify</v-icon>
-                              </template>
-                              <span>Search information in the internet for cards</span>
-                            </v-tooltip>            
-                            <v-switch v-model="settings.scraper" :label="`Data scraper - ${settings.scraper?'On':'Off'}`" class="my-0 py-0" hide-details/>
-                          </div>
-                        </v-col>
-                        <v-col cols="6" align="right">
-                          <v-btn @click="dialogSetUpScraper=true" color="primary" small rounded :disabled="!settings.scraper">
-                            <v-icon left>mdi-cog</v-icon>Set up meta for scraper</v-btn>
-                        </v-col>
-                      </v-row>
-                    </div>
                   </v-card>
                 </v-col>
                 <v-col cols="12" align="center">
@@ -161,18 +140,6 @@
                       <v-col cols="6" class="d-flex align-center">
                         <v-icon left>mdi-flag</v-icon>
                         <v-switch v-model="settings.country" :label="`Countries - ${settings.country?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
-                      </v-col>
-                      <v-col cols="6" class="d-flex align-center">
-                        <v-tooltip top>
-                          <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" left>mdi-list-status</v-icon>
-                          </template>
-                          <span>In order for the career status to be displayed correctly, <br>
-                            you also need to activate the "Data Scraper" option, <br>
-                            then click the "set up meta for scraper" button <br>
-                            and add the meta to the "career start" and "career end" fields.</span>
-                        </v-tooltip>
-                        <v-switch v-model="settings.career" :label="`Career status - ${settings.career?'On':'Off'}`" class="ma-0 pa-0" hide-details/>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -300,7 +267,6 @@
     </v-dialog>
     
     <Icons v-if="dialogIcons" @close="dialogIcons=false" @apply="changeIcon($event)"/>
-    <DialogEditScraperFields v-if="dialogSetUpScraper" :dialog="dialogSetUpScraper" :metaInCards="settings.metaInCard" @closeDialog="getScraperFields($event)"/>
   </div>
 </template>
 
@@ -309,7 +275,6 @@ import vuescroll from 'vuescroll'
 import draggable from 'vuedraggable'
 import NameRules from '@/mixins/NameRules'
 import MetaGetters from '@/mixins/MetaGetters'
-import DialogEditScraperFields from '@/components/pages/meta/DialogEditScraperFields.vue'
 
 export default {
   props: {
@@ -318,7 +283,7 @@ export default {
   },
   name: "DialogEditMeta",
   components: { 
-    vuescroll, draggable, DialogEditScraperFields,
+    vuescroll, draggable,
     Icons: () => import('@/components/elements/Icons.vue'),
   },
   mixins: [NameRules, MetaGetters], 
@@ -330,7 +295,6 @@ export default {
   data: () => ({
     dialogIcons: false,
     dialogAddMetaToCard: false,
-    dialogSetUpScraper: false,
     dialogDeleteMetaFromCards: false,
     selectedMetaForCard: null,
     valid: false,
@@ -352,7 +316,6 @@ export default {
       bookmark: false,
       country: false,
       career: false,
-      scraper: false,
       nested: false,
       markers: false,
       metaInCard: [],
@@ -407,17 +370,6 @@ export default {
       this.closeSettings()
     },
     closeSettings() { this.$emit('closeSettings') },
-    getScraperFields(fields) { 
-      this.dialogSetUpScraper=false
-      if (fields===undefined) return
-      let metaInCard = this.settings.metaInCard
-      let assignedFields = _.filter(fields, i=>i.assigned)
-      for (let i = 0; i < metaInCard.length; i++) {
-        const index = _.findIndex(assignedFields, j=>j.assigned===metaInCard[i].id)
-        if (index > -1) this.settings.metaInCard[i].scraperField = assignedFields[index].name
-        else this.settings.metaInCard[i].scraperField = undefined
-      }
-    },
     getRandomColor() { return '#'+Math.floor(Math.random()*16777215).toString(16) },
     openDialogDeleteMetaFromCards(i) { 
       this.dialogDeleteMetaFromCards = true

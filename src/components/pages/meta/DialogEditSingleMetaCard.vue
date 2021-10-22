@@ -27,9 +27,6 @@
               <v-container fluid>
                 <v-row>
                   <v-col cols="12" class="pt-0 d-flex justify-space-between">
-                    <v-btn v-if="meta.settings.scraper && $store.state.Settings.showAdultContent" @click="dialogScraper=true" small rounded color="secondary"> 
-                      <v-icon left>mdi-magnify</v-icon> Scrape data </v-btn>
-                    <v-spacer v-if="meta.settings.scraper && $store.state.Settings.showAdultContent"/>
                     <v-chip label outlined small> <v-icon left small>mdi-calendar-plus</v-icon> Added: {{dateAdded}} </v-chip>
                     <span class="caption mx-4">id: {{card.id}}</span>
                     <v-chip label outlined small> <v-icon left small>mdi-calendar-edit</v-icon> Last edit: {{dateEdit}} </v-chip>
@@ -239,8 +236,6 @@
 
     <DialogListView v-if="dialogListView" :meta="listViewMeta" @close="dialogListView=false" />
 
-    <Scraper v-if="dialogScraper" :dialog="dialogScraper" :name="card.meta.name" :values="getValuesForScraper()"
-      @closeScraper="dialogScraper=false" @getValues="getScraperValues($event)" @updateKey="key=Date.now()"/>
   </div>
 </template>
 
@@ -254,7 +249,6 @@ import vuescroll from 'vuescroll'
 import NameRules from '@/mixins/NameRules'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import MetaGetters from '@/mixins/MetaGetters'
-import Scraper from '@/components/pages/meta/Scraper.vue'
 import CountryFlag from 'vue-country-flag'
 import Countries from '@/components/elements/Countries'
 
@@ -262,7 +256,6 @@ export default {
   name: "DialogEditSingleMetaCard",
   components: {
     vuescroll,
-    Scraper,
     CountryFlag,
     DialogListView: () => import('@/components/pages/meta/DialogListView.vue'),
 	},
@@ -297,7 +290,6 @@ export default {
     color: '#777777',
     colorPicker: '#777777',
     bookmark: '',
-    dialogScraper: false,
     tooltipCopyName: false,
     key: Date.now(),
     panels: false,
@@ -416,36 +408,6 @@ export default {
       this.$store.getters.metaCards.find({id:this.card.id}).assign({edit: Date.now()}).get('meta').assign(newValues).write()
       this.$store.state.Meta.dialogEditMetaCard = false 
       this.$store.commit('updateMetaCards', [this.card.id])
-    },
-    getValuesForScraper() {
-      let values = _.cloneDeep(this.values)
-      values.name = this.name
-      if (this.meta.settings.synonyms) values.synonyms = this.synonyms
-      return values
-    },
-    getScraperValues(values) { 
-      this.dialogScraper = false
-      let specificMeta = ['name']
-      if (this.meta.settings.synonyms) specificMeta.push('synonyms')
-      if (this.meta.settings.country) specificMeta.push('country')
-      for (const key in values) {
-        if (specificMeta.includes(key)) { this[key] = values[key]; continue }
-        let metaItem = _.find(this.meta.settings.metaInCard, i=>i.scraperField===key)
-        if (!metaItem) continue // if not assigned
-        let meta = this.getMeta(metaItem.id)
-        if (meta.type === 'simple') {
-          if (meta.dataType === 'array') {
-            let arr = values[key].map(name => _.find(meta.settings.items, {name}).id)
-            this.values[meta.id] = arr
-          } else if (meta.dataType === 'number') this.values[meta.id] = Number(values[key])
-          else this.values[meta.id] = values[key]
-        } else if (meta.type === 'complex') {
-          let metaCards = this.$store.getters.metaCards.filter({metaId:meta.id})
-          let arr = values[key].map(name => metaCards.find(card=>card.meta.name===name).value().id)
-          this.values[meta.id] = arr
-        }
-      }
-      // console.log(this.values)
     },
     copyNameToClipboard() {
       this.tooltipCopyName = true

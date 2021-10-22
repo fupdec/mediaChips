@@ -61,7 +61,6 @@ const Meta = {
     dialogEditMetaCardImages: false,
     dialogFilterMetaCards: false,
     dialogDeleteMetaCard: false,
-    dialogScrapeInfoMetaCard: false,
   }),
   mutations: {
     updateMetaCards(state, ids) {

@@ -216,11 +216,6 @@
         :dialog="createAllMeta" 
         @finish="finishCreationAllMeta" 
         @close="createAllMeta=false"/>
-      
-      <DialogAddMetaCardsTemplate v-if="dialogAddMetaCardsTemplate" 
-        :dialog="dialogAddMetaCardsTemplate" 
-        @finish="finishAddMetaCardsTemplate" 
-        @close="dialogAddMetaCardsTemplate=false"/>
 
       <div v-show="$store.state.Settings.navigationSide=='2'" class="py-6"></div>
       
@@ -254,7 +249,6 @@ export default {
     vuescroll,
     apexchart: VueApexCharts,
     CreateAllMeta: () => import("@/components/pages/meta/CreateAllMeta.vue"),
-    DialogAddMetaCardsTemplate: () => import("@/components/pages/meta/DialogAddMetaCardsTemplate.vue"),
   },
   mixins: [LabelFunctions, MetaGetters, VideosGrid], 
   beforeMount() {
@@ -274,7 +268,6 @@ export default {
     customization: false,
     series: [],
     chartOptions: {},
-    dialogAddMetaCardsTemplate: false,
   }),
   computed: {
     settings() { return this.$store.getters.settings.value() },
@@ -304,7 +297,6 @@ export default {
       for (let widget in this.widgets) if (this.widgets[widget]===true) allHidden = false
       return allHidden 
     },
-    showAdultContent() { return this.$store.state.Settings.showAdultContent },
   },
   methods: {
     initVideosStat(days) {
@@ -379,14 +371,6 @@ export default {
     finishCreationAllMeta() {
       this.createAllMeta = false
       this.isAllMetaCreated = true
-      if (this.showAdultContent) this.dialogAddMetaCardsTemplate = true
-    },
-    finishAddMetaCardsTemplate() {
-      this.dialogAddMetaCardsTemplate = false
-      this.$store.dispatch('setNotification', {
-        type: 'info',
-        text: 'To automatically fill in information about performers, go to the performers page, then right-click on the card and select "Scrape info for performers"'
-      })
     },
     getImgMetaCard(metaId, cardId) {
       let imgPath = path.join(this.pathToUserData, '/media/meta/', `${metaId}/${cardId}_avatar.jpg`)

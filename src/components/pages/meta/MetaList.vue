@@ -270,7 +270,6 @@ export default {
         if (i.settings.bookmark) attrs.push({name:'Bookmark', icon:'bookmark'})
         if (i.settings.synonyms) attrs.push({name:'Synonyms', icon:'alphabetical-variant'})
         if (i.settings.country) attrs.push({name:'Country', icon:'flag'})
-        if (i.settings.scraper) attrs.push({name:'Scraper', icon:'magnify'})
         if (i.settings.nested) attrs.push({name:'Nested', icon:'file-tree'})
         return {...i,...{attrs},...{name:i.settings.name}}
       }) 

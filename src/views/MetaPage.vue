@@ -110,7 +110,6 @@
       <DialogEditMultipleMetaCards v-if="selectedMeta.length>1"/>
     </div>
     <DialogEditMetaCardImages v-if="$store.state.Meta.dialogEditMetaCardImages"/>
-    <DialogScrapeInfo v-if="$store.state.Meta.dialogScrapeInfoMetaCard"/>
     
     <v-dialog v-if="$store.state.Meta.dialogDeleteMetaCard" v-model="$store.state.Meta.dialogDeleteMetaCard" persistent scrollable max-width="600">
       <v-card>
@@ -161,7 +160,6 @@ export default {
     DialogEditSingleMetaCard: () => import('@/components/pages/meta/DialogEditSingleMetaCard.vue'),
     DialogEditMultipleMetaCards: () => import('@/components/pages/meta/DialogEditMultipleMetaCards.vue'),
     DialogEditMetaCardImages: () => import('@/components/pages/meta/DialogEditMetaCardImages.vue'),
-    DialogScrapeInfo: () => import('@/components/pages/meta/DialogScrapeInfo.vue'),
     FiltersChips: () => import('@/components/elements/FiltersChips.vue'),
   },
   mixins: [MetaGetters],

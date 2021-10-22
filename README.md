@@ -50,7 +50,6 @@ This is an open source desktop application for Windows, Mac and Linux. <br>
 - Backup management
 - Hover card label preview
 - Playlists
-- Optimized for adult videos
 
 ## 🖼️ View of app
 
