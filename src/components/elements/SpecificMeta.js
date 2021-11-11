@@ -119,6 +119,30 @@ const SpecificMeta = [
       "icon": "list-status"
     }
   },
+  {
+    "id": "videos",
+    "type": "specific",
+    "settings": {
+      "name": "Number of videos",
+      "icon": "video"
+    }
+  },
+  {
+    "id": "views",
+    "type": "specific",
+    "settings": {
+      "name": "Number of views",
+      "icon": "eye"
+    }
+  },
+  {
+    "id": "viewed",
+    "type": "specific",
+    "settings": {
+      "name": "Viewed date",
+      "icon": "calendar-clock"
+    }
+  }
 ]
 
 module.exports = SpecificMeta

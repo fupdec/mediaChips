@@ -73,7 +73,7 @@ export default {
           }
         }).write()
       }
-      if (this.versions.migration.includes('0.11.0')) {
+      if (this.versions.migration.includes('0.11.1')) {
         let metaVideos = this.$store.getters.meta.find({id:'videos'}).value()
         if (!metaVideos) this.$store.getters.meta.push( 
           {
