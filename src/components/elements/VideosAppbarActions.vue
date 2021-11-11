@@ -99,14 +99,14 @@
       </v-card>
     </v-menu>
 
-		<v-tooltip bottom>
+		<!-- <v-tooltip bottom>
 			<template v-slot:activator="{ on }">
 				<v-btn @click="selectAllVideos" icon tile v-on="on">
 					<v-icon>mdi-select-all</v-icon>
 				</v-btn>
 			</template>
 			<span>Select All Videos</span>
-		</v-tooltip>
+		</v-tooltip> -->
 
 		<v-tooltip bottom>
 			<template v-slot:activator="{ on }">
@@ -290,19 +290,16 @@ export default {
         this.$store.dispatch('filterVideos') 
       }, 100)
     },
-    selectAllVideos() {
-      this.$store.state.Videos.selection.clearSelection()
-      let selected = this.$store.state.Videos.selection.select('.video-card')
-      this.$store.state.Videos.selection.keepSelection()
-      this.getSelectedVideos(selected)
-      for (let i=0;i<selected.length;++i) {
-        selected[i].classList.add("selected")
-      }
-    },
-    getSelectedVideos(selectedVideos){
-      let ids = selectedVideos.map(item => (item.dataset.id))
-      this.$store.commit('updateSelectedVideos', ids)
-    },
+    // selectAllVideos() {
+    //   this.$store.state.Videos.selection.clearSelection()
+    //   let selected = this.$store.state.Videos.selection.select('.video-card')
+    //   this.$store.state.Videos.selection.keepSelection()
+    //   let ids = selected.map(item => (item.dataset.id))
+    //   this.$store.commit('updateSelectedVideos', ids)
+    //   for (let i=0;i<selected.length;++i) {
+    //     selected[i].classList.add("selected")
+    //   }
+    // },
     addNewTab() {
       let tabId = Date.now()
       let filters = _.cloneDeep(this.$store.state.Settings.videoFilters)

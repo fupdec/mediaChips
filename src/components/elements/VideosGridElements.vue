@@ -104,7 +104,8 @@ export default {
         const targetEl = event.target.closest('.select-item')
         if (event.button==0 && targetEl) this.$store.state.Videos.selection.select(targetEl)
         this.$store.state.Videos.selection.keepSelection()
-        this.getSelectedVideos(store.stored)
+        let ids = store.stored.map(item => (item.dataset.id))
+        this.$store.commit('updateSelectedVideos', ids)
       })
     },
 		selectedVideos(list) {
@@ -121,10 +122,6 @@ export default {
           return paths.join(', ')
         }
       } else return ''
-    },
-    getSelectedVideos(selectedVideos){
-      let ids = selectedVideos.map(item => (item.dataset.id))
-      this.$store.commit('updateSelectedVideos', ids)
     },
 		getTextFromSelectedVideos(textType) {
       let ids = this.$store.getters.getSelectedVideos

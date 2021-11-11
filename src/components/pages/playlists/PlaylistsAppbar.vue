@@ -122,14 +122,14 @@
         </v-card>
       </v-menu>
 
-      <v-tooltip bottom>
+      <!-- <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn icon tile @click="selectAllPlaylists" v-on="on">
             <v-icon>mdi-select-all</v-icon>
           </v-btn>
         </template>
         <span>Select All Playlists</span>
-      </v-tooltip>
+      </v-tooltip> -->
 
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
@@ -314,19 +314,19 @@ export default {
       this.$store.state.Settings.playlistSortDirection = this.sortDirection=='asc' ? 'desc':'asc'
       setTimeout(()=>{ this.$store.dispatch('filterPlaylists') }, 200)
     },
-    selectAllPlaylists() {
-      this.$store.state.Playlists.selection.clearSelection()
-      let selected = this.$store.state.Playlists.selection.select('.playlist-card')
-      this.$store.state.Playlists.selection.keepSelection()
-      this.getSelectedPlaylists(selected)
-      for (let i=0;i<selected.length;++i) {
-        selected[i].classList.add("selected")
-      }
-    },
-    getSelectedPlaylists(selectedPlaylists){
-      let ids = selectedPlaylists.map(item => (item.dataset.id))
-      this.$store.commit('updateSelectedPlaylists', ids)
-    },
+    // selectAllPlaylists() {
+    //   this.$store.state.Playlists.selection.clearSelection()
+    //   let selected = this.$store.state.Playlists.selection.select('.playlist-card')
+    //   this.$store.state.Playlists.selection.keepSelection()
+    //   this.getSelectedPlaylists(selected)
+    //   for (let i=0;i<selected.length;++i) {
+    //     selected[i].classList.add("selected")
+    //   }
+    // },
+    // getSelectedPlaylists(selectedPlaylists){
+    //   let ids = selectedPlaylists.map(item => (item.dataset.id))
+    //   this.$store.commit('updateSelectedPlaylists', ids)
+    // },
     addNewTab() {
       let tabId = Date.now()
       let tab = {
