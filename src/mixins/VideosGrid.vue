@@ -128,7 +128,8 @@ export default {
           if (this.$store.state.Settings.videoPreviewStatic=='grid') this.createGrids(this.$store.getters.videosOnPage)
         }
         if (!this.isGenerationTimelinesRun) {
-          if (this.$store.state.Settings.videoPreviewHover=='timeline') this.createTimelines(this.$store.getters.videosOnPage)
+          if (this.$store.state.Settings.videoPreviewHover=='timeline' || this.$store.state.Settings.videoView==0) 
+          this.createTimelines(this.$store.getters.videosOnPage)
         }
       }, 3000)
     },
