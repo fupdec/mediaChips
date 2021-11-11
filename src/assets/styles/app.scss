@@ -1473,6 +1473,11 @@ $headings: '.display-4,.display-3,.display-2,.display-1,.headline,.title,.subtit
   border-radius: 100%;
   border: 1px solid #5c5c5c;
 }
+.quick-filters {
+  .v-slide-group__content {
+    padding: 0 !important;
+  }
+}
 .filter-row {
   display: flex;
   .by {

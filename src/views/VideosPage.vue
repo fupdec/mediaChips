@@ -8,7 +8,7 @@
       </div>
 
       <v-container v-if="filters.length==0&&showSavedFilters&&savedFilters.length" fluid class="d-flex justify-center align-start pb-0">
-        <v-chip-group show-arrows>
+        <v-chip-group show-arrows class="quick-filters">
           <v-chip v-for="(sf,i) in savedFilters" :key="sf.id" 
             @click="applyFilter(i)" title="Apply saved filter">{{sf.name}}</v-chip>
         </v-chip-group>
