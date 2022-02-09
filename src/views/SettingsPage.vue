@@ -879,7 +879,7 @@ export default {
           this.isCheckingUpdate = false
           const html = response.data;
           const $ = cheerio.load(html)
-          let lastVersion = $('.release-header .f1 a').eq(0).text().trim()
+          let lastVersion = $('a:contains("mediaChips v")').eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
           let currentVersion = app.getVersion()
           if (this.compareVersion(currentVersion, lastVersion)) {
