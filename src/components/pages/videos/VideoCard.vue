@@ -376,10 +376,7 @@ export default {
         let data = { videos: this.$store.getters.videosOnPage, id: this.video.id }
         ipcRenderer.send('openPlayer', data)
       } 
-      this.$store.getters.videos.find({id: this.video.id}).assign({
-        views: (this.video.views||0)+1,
-        viewed: Date.now(),
-      }).write()
+      this.countViewData()
     },
     playVideoInSystemPlayer() {
       const pathToVideo = this.video.path
@@ -389,8 +386,13 @@ export default {
         return
       }
       shell.openPath(pathToVideo) 
+      this.countViewData()
+    },
+    countViewData() {
+      let views = this.video.views || 0
+      if (this.$store.state.Settings.countNumberOfViews) ++views 
       this.$store.getters.videos.find({id: this.video.id}).assign({
-        views: (this.video.views||0)+1,
+        views: views,
         viewed: Date.now(),
       }).write()
     },

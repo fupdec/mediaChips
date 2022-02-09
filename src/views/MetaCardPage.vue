@@ -284,7 +284,7 @@ export default {
   },
   mounted() {
     this.$nextTick(function () {
-      this.updateViews()
+      if (this.$store.state.Settings.countNumberOfViews) this.updateViews()
       this.initFilters()
       this.rating = this.card.meta.rating || 0
       this.favorite = this.card.meta.favorite || false

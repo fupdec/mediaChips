@@ -134,6 +134,16 @@
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
                 </template>
+                <div>Each time a video or meta page is opened, one view is added</div>
+              </v-tooltip>
+              <span class="mr-6">Count number of views:</span>
+              <v-switch v-model="countNumberOfViews" :label="countNumberOfViews?'Yes':'No'" inset class="d-inline mt-0 pt-0" hide-details/>
+            </div>
+            <div class="d-flex mt-6">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon v-bind="attrs" v-on="on" left>mdi-help-circle-outline</v-icon>
+                </template>
                 <div>Data scrapers for performers, specific meta</div>
               </v-tooltip>
               <span class="mr-6">Show adult content:</span>
@@ -773,6 +783,10 @@ export default {
     showAdultContent: {
       get() {return this.$store.state.Settings.showAdultContent},
       set(value) {this.$store.dispatch('updateSettingsState', {key:'showAdultContent', value})},
+    },
+    countNumberOfViews: {
+      get() {return this.$store.state.Settings.countNumberOfViews},
+      set(value) {this.$store.dispatch('updateSettingsState', {key:'countNumberOfViews', value})},
     },
     checkForUpdatesAtStartup: {
       get() {return this.$store.state.Settings.checkForUpdatesAtStartup},

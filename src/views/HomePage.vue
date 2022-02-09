@@ -371,8 +371,10 @@ export default {
         let data = { videos: this[typeVideos], id: video.id }
         ipcRenderer.send('openPlayer', data)
       }
+      let views = video.views || 0
+      if (this.$store.state.Settings.countNumberOfViews) ++views 
       this.$store.getters.videos.find({id: video.id}).assign({
-        views: (video.views||0)+1,
+        views: views,
         viewed: Date.now(),
       }).write()
     },

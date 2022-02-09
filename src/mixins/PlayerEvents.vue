@@ -31,6 +31,9 @@ export default {
     })
   },
   computed: {
+    settingsDb() {
+      return this.$store.state.settingsDb
+    },
   },
   methods: {
     watchLater(videoId) {
@@ -82,8 +85,10 @@ export default {
     videoWatched(videoId) {
       let video = this.$store.getters.videos.find({id: videoId})
       if (!video.value()) return 
+      let views = video.value().views || 0
+      if (this.settingsDb.countNumberOfViews) ++views
       video.assign({
-        views: (video.value().views||0)+1,
+        views: views,
         viewed: Date.now(),
       }).write()
     },
