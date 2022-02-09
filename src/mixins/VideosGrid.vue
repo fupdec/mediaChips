@@ -125,10 +125,10 @@ export default {
       this.timeout = setTimeout(() => {
         this.isGenerationBreak = false
         if (!this.isGenerationGridsRun) {
-          if (this.$store.state.Settings.videoPreviewStatic=='grid') this.createGrids(this.$store.getters.videosOnPage)
+          if (this.$store.state.Settings.videoPreviewStatic==='grid') this.createGrids(this.$store.getters.videosOnPage)
         }
         if (!this.isGenerationTimelinesRun) {
-          if (this.$store.state.Settings.videoPreviewHover=='timeline' || this.$store.state.Settings.videoView==0) 
+          if (this.$store.state.Settings.videoPreviewHover==='timeline' || this.$store.state.Settings.videoView===1) 
           this.createTimelines(this.$store.getters.videosOnPage)
         }
       }, 3000)
