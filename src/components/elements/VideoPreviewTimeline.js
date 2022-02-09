@@ -17,7 +17,11 @@ class VideoPreviewTimeline {
         .addOption('-frames:v', '1')
         .addOption('-vf',`scale=-1:180`)
         .save(output)
-        .on('end', () => { resolve(output) })
+        .on('end', () => {
+          setTimeout(() => {
+            resolve(output)
+          }, 500)
+        })
         .on('error', (e) => { reject(e) })
     })
   }

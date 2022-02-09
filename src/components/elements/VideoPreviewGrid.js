@@ -46,7 +46,7 @@ class VideoPreviewGrid {
         .on('end', function() {
           setTimeout(() => {
             resolve(intermediateOutput)
-          }, 1000)
+          }, 500)
         })
         .on('error', function(e) {
           reject(e)
