@@ -2,13 +2,13 @@
   <v-card outlined class="pa-4">
     <div class="d-flex">
       <div>
-        <div>mediaChips v0.11.1-beta</div>
+        <div>mediaChips v0.11.2-beta</div>
         <div class="text--secondary">by fupdec</div>
       </div>
       <v-spacer></v-spacer>
       <div class="text-center d-flex flex-column">
         <img :src="logoPath" alt="mediaChips" width="82" height="82">
-        <span>2021</span>
+        <span>2022</span>
       </div>
     </div>
     <div>Links</div>
