@@ -448,6 +448,7 @@ export default {
     })
     ipcRenderer.on('closePlayer', () => {
       this.player.stop()
+      this.player.src = ''
     })
     ipcRenderer.on('updateDb', async (event, dbType) => {
       await this.$store.dispatch('getDb', dbType)

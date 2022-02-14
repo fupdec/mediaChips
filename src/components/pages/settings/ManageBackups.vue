@@ -114,7 +114,6 @@
 <script>
 const fs = require('fs-extra')
 const path = require("path")
-const { dialog } = require('electron').remote
 const { ipcRenderer } = require('electron')
 const archiver = require('archiver')
 const StreamZip = require('node-stream-zip')
@@ -349,10 +348,10 @@ export default {
       })
       this.selectedBackup = []
     },
-    importBackup() {
+    async importBackup() {
       let importPath = path.join(this.pathToUserData, '/backups/')
 
-      dialog.showOpenDialog(null, { properties: ['openFile'] }).then(result => {
+      ipcRenderer.invoke('chooseFile').then(result => {
         if (result.filePaths.length === 0) return false
         let backupPath = result.filePaths[0]
         if (path.extname(backupPath) !== '.zip') {
@@ -402,7 +401,7 @@ export default {
     exportBackup() {
       if (this.selectedBackup.length == 0) { this.backupError = true; return false } 
       else this.backupError = false
-      dialog.showOpenDialog(null, { properties: ['openDirectory'] }).then(result => {
+      ipcRenderer.invoke('chooseDirectory').then(result => {
         if (result.filePaths.length === 0) return false
         let date = this.selectedBackup[0].date
         let backupPath = path.join(this.pathToUserData, '/backups/'+date+'.zip')

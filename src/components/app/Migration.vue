@@ -36,10 +36,9 @@
 
 
 <script>
-const remote = require('electron').remote
-const win = remote.getCurrentWindow()
-const {app} = require('electron').remote
-
+const {ipcRenderer} = require('electron')
+const configPath = path.join(__static, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath).toString())
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 
 export default {
@@ -57,9 +56,6 @@ export default {
     dialogMigration: false,
     dialogFinish: false,
   }),
-  computed: {
-    actualVersion() { return app.getVersion() },
-  },
   methods: {
     start() {
       if (this.versions.migration.includes('0.10.4')) {
@@ -108,10 +104,10 @@ export default {
           }
         ).write()
       }
-      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:this.actualVersion})
+      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:config.ver})
       this.dialogFinish = true
     },
-    close() { win.close() },
+    close() { ipcRenderer.send('closeApp') },
   },
 }
 </script>

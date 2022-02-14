@@ -1,9 +1,10 @@
-const {app} = require('electron').remote
 const fs = require("fs")
 const path = require("path")
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
-const pathToDbBookmarks = path.join(app.getPath('userData'), 'userfiles/databases/dbm.json')
+const configPath = path.join(__static, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath).toString())
+const pathToDbBookmarks = path.join(config.path, 'userfiles/databases/dbm.json')
 const adapterBookmarks = new FileSync(pathToDbBookmarks)
 const dbm = low(adapterBookmarks)
 

@@ -191,7 +191,7 @@
 </template>
 
 <script>
-const { dialog } = require('electron').remote
+const {ipcRenderer} = require('electron')
 const fs = require('fs')
 const path = require('path')
 const shortid = require('shortid')
@@ -288,13 +288,10 @@ export default {
       if (this.alertAddNewVideosHeight == 100) this.alertAddNewVideosHeight = undefined
       else this.alertAddNewVideosHeight = 100
     },
-    chooseMultipleDir() {
-      dialog.showOpenDialog(null, {
-        properties: ['openDirectory','multiSelections']
-      }).then(result => {
+    async chooseMultipleDir() {
+      await ipcRenderer.invoke('chooseDirectoryMultiple').then((result) => {
+        console.log(result)
         if (result.filePaths.length !== 0) this.folderPaths = result.filePaths.join('\n')
-      }).catch(err => {
-        this.$store.commit('addLog', {type:'error',text:'Video scanning process: '+err})
       })
     },
     scanDir() {

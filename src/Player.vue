@@ -15,10 +15,7 @@
 
 <script>
 console.clear()
-
-const {app} = require('electron').remote
 const { ipcRenderer } = require('electron')
-
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 
 export default {
@@ -29,7 +26,9 @@ export default {
   mixins: [HoveredImageFunctions],
   mounted() {
     this.$nextTick(function () {
-      this.$store.state.pathToUserData = app.getPath('userData')
+      ipcRenderer.invoke('getPathToUserData').then((result) => {
+        this.$store.state.pathToUserData = result
+      })
       ipcRenderer.on('toggleDarkMode', (event, value) => {
         this.getDarkMode(value)
       })

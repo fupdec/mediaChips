@@ -213,10 +213,7 @@
 
 
 <script>
-const remote = require('electron').remote
-const win = remote.getCurrentWindow()
-const { ipcRenderer } = require('electron')
-const { webFrame } = require('electron')
+const { ipcRenderer, webFrame } = require('electron')
 const path = require('path')
 const shell = require('electron').shell
 
@@ -225,18 +222,11 @@ export default {
   props: {
     disableRunApp: Boolean,
   },
-  components: {},
-  beforeCreate(){
-    win.on('maximize', ()=>{
-      this.maximized = true
-    })
-    win.on('unmaximize', ()=>{
-      this.maximized = false
-    })
-  },
   mounted () {
     this.$nextTick(function () {
       // requests from main process for system menu
+      ipcRenderer.on('maximize', () => { this.maximized = true })
+      ipcRenderer.on('unmaximize', () => { this.maximized = false })
       ipcRenderer.on('addNewVideos', () => { this.$store.state.Settings.dialogScanVideos=true })
       ipcRenderer.on('checkForUpdates', () => { this.checkForUpdates() })
       ipcRenderer.on('lockApp', () => { this.lock() })
@@ -256,11 +246,8 @@ export default {
       ipcRenderer.send('changeMenuItem', 'lock', this.$store.state.Settings.passwordProtection )
     })
   },
-  destroyed () {
-    win.removeAllListeners()
-  },
   data: () => ({
-    maximized: win.isMaximized(),
+    maximized: false,
   }),
   computed: {
     headerColor() {
@@ -305,17 +292,16 @@ export default {
     lock() {this.$emit('lock')},
     about() {this.$emit('about')},
     toggleDevTools() { ipcRenderer.send('toggleDevTools')},
-    minimize() {win.minimize()},
+    minimize() { ipcRenderer.invoke('minimize') },
     maximize() {
-      this.maximized = !this.maximized
-      win.maximize()
+      this.maximized = true
+      ipcRenderer.invoke('maximize')
     },
     unmaximize() {
-      this.maximized = !this.maximized
-      win.unmaximize()
-      // TODO: MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 unmaximize listeners added to [BrowserWindow]. Use emitter.setMaxListeners() to increase limit
+      this.maximized = false
+      ipcRenderer.invoke('unmaximize')
     },
-    close() {win.close()},
+    close() { ipcRenderer.send('closeApp') },
     toggleDarkMode() {
       let darkModeValue = !this.$store.state.Settings.darkMode
       this.$vuetify.theme.dark = darkModeValue

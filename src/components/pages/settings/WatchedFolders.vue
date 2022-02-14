@@ -58,7 +58,7 @@
 
 <script>
 const shell = require('electron').shell
-const { dialog } = require('electron').remote
+const { ipcRenderer } = require('electron')
 
 import vuescroll from 'vuescroll'
 
@@ -85,26 +85,23 @@ export default {
   },
   methods: {
     addFolder() {
-      dialog.showOpenDialog(null, {
-        properties: ['openDirectory','multiSelections']
-      }).then(result => {
-        if (result.filePaths.length !== 0) {
-          for (let i=0; i<result.filePaths.length; i++) {
-            let folderPath = result.filePaths[i]
-            let folder = {
-              name: folderPath,
-              path: folderPath,
-              watch: true,
-            }
-            if (_.filter(this.folders, {name: folderPath}).length) {
-              this.$store.dispatch('setNotification', {
-                type: 'error',
-                text: `Folder with path "${folderPath}" already added.`
-              })
-            } else {
-              this.folders.push(folder)
-              this.updateFolders()
-            }
+      ipcRenderer.invoke('chooseDirectoryMultiple').then(result => {
+        if (result.filePaths.length === 0) return false
+        for (let i=0; i<result.filePaths.length; i++) {
+          let folderPath = result.filePaths[i]
+          let folder = {
+            name: folderPath,
+            path: folderPath,
+            watch: true,
+          }
+          if (_.filter(this.folders, {name: folderPath}).length) {
+            this.$store.dispatch('setNotification', {
+              type: 'error',
+              text: `Folder with path "${folderPath}" already added.`
+            })
+          } else {
+            this.folders.push(folder)
+            this.updateFolders()
           }
         }
       }).catch(err => { console.log(err) })

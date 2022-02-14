@@ -571,10 +571,11 @@ const fs = require('fs')
 const path = require('path')
 const shell = require('electron').shell
 const { ipcRenderer } = require('electron')
-const {app} = require('electron').remote
 const axios = require("axios")
 const cheerio = require("cheerio")
 const { webFrame } = require('electron')
+const configPath = path.join(__static, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath).toString())
 
 import MetaList from '@/components/pages/meta/MetaList.vue'
 import MetaAssignedToVideos from '@/components/pages/meta/MetaAssignedToVideos.vue'
@@ -881,7 +882,7 @@ export default {
           const $ = cheerio.load(html)
           let lastVersion = $('a:contains("mediaChips v")').eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
-          let currentVersion = app.getVersion()
+          let currentVersion = config.ver
           if (this.compareVersion(currentVersion, lastVersion)) {
             this.updateApp = true
             this.$store.dispatch('setNotification', {

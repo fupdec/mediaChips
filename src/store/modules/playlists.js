@@ -1,7 +1,9 @@
-const {app} = require('electron').remote
+const fs = require("fs")
 const path = require("path")
 const FileSync = require('lowdb/adapters/FileSync')
-const pathToDbPlaylists = path.join(app.getPath('userData'), 'userfiles/databases/dbpl.json')
+const configPath = path.join(__static, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath).toString())
+const pathToDbPlaylists = path.join(config.path, 'userfiles/databases/dbpl.json')
 const adapterPlaylists = new FileSync(pathToDbPlaylists)
 const low = require('lowdb')
 const dbpl = low(adapterPlaylists)

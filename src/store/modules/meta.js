@@ -1,10 +1,11 @@
-const {app} = require('electron').remote
 const { ipcRenderer } = require('electron')
 const fs = require("fs")
 const path = require("path")
 const rimraf = require("rimraf")
 const FileSync = require('lowdb/adapters/FileSync')
-const pathToDbMeta = path.join(app.getPath('userData'), 'userfiles/databases/meta.json')
+const configPath = path.join(__static, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath).toString())
+const pathToDbMeta = path.join(config.path, 'userfiles/databases/meta.json')
 const adapterMeta = new FileSync(pathToDbMeta)
 const low = require('lowdb')
 const dbMeta = low(adapterMeta)

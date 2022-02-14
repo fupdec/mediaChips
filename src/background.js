@@ -1,6 +1,6 @@
 'use strict'
 
-import { ipcMain, app, protocol, BrowserWindow, Menu, MenuItem  } from 'electron'
+import { ipcMain, app, protocol, dialog, BrowserWindow, Menu, MenuItem, ipcRenderer  } from 'electron'
 import { createProtocol, /* installVueDevtools */} from 'vue-cli-plugin-electron-builder/lib'
 
 const fs = require("fs-extra")
@@ -12,6 +12,21 @@ const shell = require('electron').shell
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win, loading, player
+
+// write app data to json file 
+const configPath = path.join(__static, 'config.json')
+let userData = {
+  path: app.getPath('userData'),
+  ver: app.getVersion()
+} 
+try {
+  fs.writeFileSync(configPath, JSON.stringify(userData, null, 2), {
+    flag: 'w'
+  })
+} catch (e) {
+  if (e.code == 'EEXIST') console.log('\x1b[33m%s\x1b[0m', 'Path to userData folder is written')
+  else console.log('\x1b[31m%s\x1b[0m', e)
+}
 
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
@@ -69,7 +84,6 @@ function createPlayerWindow() {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
       nodeIntegrationInWorker: true,
       webSecurity: false,
-      enableRemoteModule: true,
       contextIsolation: false
     }
   })
@@ -100,7 +114,6 @@ function createMainWindow() {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,  
       nodeIntegrationInWorker: true,
       webSecurity: false,
-      enableRemoteModule: true,
       contextIsolation: false
     }
   })
@@ -116,6 +129,8 @@ function createMainWindow() {
     win = null  
     app.exit()
   })
+  window.on('maximize', () => { win.webContents.send('maximize') })
+  window.on('unmaximize', () => { win.webContents.send('unmaximize') })
   return window
 }
 
@@ -369,7 +384,42 @@ ipcMain.on('changeMenuItem', (event, menuId, value) => {
   else systemMenu.getMenuItemById(menuId).checked = value
 })
 
+// window events from render process
+ipcMain.on('closeApp', () => { win.close() })
+ipcMain.handle('maximize', () => { win.maximize() })
+ipcMain.handle('unmaximize', () => { win.unmaximize() })
+ipcMain.handle('minimize', () => { win.minimize() })
+// dialog events from render process
+ipcMain.handle('chooseDirectory', async (defaultPath) => { 
+  let selected
+  await dialog.showOpenDialog(win, {
+    properties: ['openDirectory'],
+    defaultPath: defaultPath
+  }).then(result => {
+    selected = result 
+  })
+  return selected
+})
+ipcMain.handle('chooseDirectoryMultiple', async () => { 
+  let selected
+  await dialog.showOpenDialog(win, {
+    properties: ['openDirectory','multiSelections']
+  }).then(result => {
+    selected = result 
+  })
+  return selected
+})
+ipcMain.handle('chooseFile', async () => { 
+  let selected
+  await dialog.showOpenDialog(win, {
+    properties: ['openFile']
+  }).then(result => {
+    selected = result 
+  })
+  return selected
+})
 // events from render process
+ipcMain.handle('getPathToUserData', () => { return app.getPath('userData') })
 ipcMain.on('openPlayer', (event, data) => {
   player.show()
   player.webContents.send('getDataForPlayer', data)

@@ -1,7 +1,9 @@
-const {app} = require('electron').remote
+const fs = require("fs")
 const path = require("path")
 const FileSync = require('lowdb/adapters/FileSync')
-const pathToDbSettings = path.join(app.getPath('userData'), 'userfiles/dbs.json')
+const configPath = path.join(__static, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath).toString())
+const pathToDbSettings = path.join(config.path, 'userfiles/dbs.json')
 const adapterSettings = new FileSync(pathToDbSettings)
 const low = require('lowdb')
 const dbs = low(adapterSettings)
@@ -79,7 +81,7 @@ dbs.defaults({
   showHeaderImageAboveProfile: true,
   showExperimentalFeatures: false,
   showSavedFilters: true,
-  databaseVersion: app.getVersion(),
+  databaseVersion: config.ver,
   widgets: {}
 }).write()
 

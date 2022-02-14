@@ -214,8 +214,7 @@
 </template>
 
 <script>
-const { dialog } = require('electron').remote
-const { clipboard } = require('electron')
+const { clipboard, ipcRenderer } = require('electron')
 const shell = require('electron').shell
 const fs = require('fs')
 const path = require('path')
@@ -226,7 +225,6 @@ ffmpeg.setFfprobePath(pathToFfprobe)
 import Functions from '@/mixins/Functions'
 import ShowImageFunction from '@/mixins/ShowImageFunction'
 import LabelFunctions from '@/mixins/LabelFunctions'
-import { ipcRenderer } from 'electron'
 import MetaGetters from '@/mixins/MetaGetters'
 
 export default {
@@ -533,10 +531,7 @@ export default {
     },
     moveFile() {
       // TODO create progress line for this process. If file are moving to another disk this proc can be long
-      dialog.showOpenDialog(null, { 
-        properties: ['openDirectory'],
-        defaultPath: path.dirname(this.video.path)
-      }).then(result => {
+      ipcRenderer.invoke('chooseDirectory', path.dirname(this.video.path)).then(result => {
         if (result.filePaths.length === 0) return
         let filePath = result.filePaths[0]
         let ids = this.$store.getters.getSelectedVideos

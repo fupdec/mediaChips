@@ -148,16 +148,14 @@
 console.clear()
 const fs = require('fs-extra')
 const path = require('path')
-const {app} = require('electron').remote
-const remote = require('electron').remote
-const win = remote.getCurrentWindow()
+const {ipcRenderer} = require('electron')
 const axios = require("axios")
 const cheerio = require("cheerio")
 const shell = require('electron').shell
 const chokidar = require('chokidar')
 const shortid = require('shortid')
-const Mousetrap = require('mousetrap')
-// const { ipcRenderer } = require('electron')
+const configPath = path.join(__static, 'config.json')
+const config = JSON.parse(fs.readFileSync(configPath).toString())
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -368,7 +366,7 @@ export default {
       this.password = ''
     },
     close() {
-      win.close()
+      ipcRenderer.send('closeApp')
     },
     initTheme() {
       this.$vuetify.theme.dark = this.$store.state.Settings.darkMode
@@ -380,9 +378,11 @@ export default {
       this.$vuetify.theme.themes.dark.accent = this.$store.state.Settings.appColorDarkAccent
     },
     initSystemInfo() {
-      this.versions.app = app.getVersion()
+      this.versions.app = config.ver
       this.versions.db = this.databaseVersion
-      this.$store.state.pathToUserData = app.getPath('userData')
+      ipcRenderer.invoke('getPathToUserData').then((result) => {
+        this.$store.state.pathToUserData = result
+      })
     },
     checkIsMigrationNeeded() {
       if (this.versions.db === this.versions.app) return false

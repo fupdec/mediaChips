@@ -32,9 +32,6 @@
 const _ = require("lodash")
 const path = require("path")
 const { ipcRenderer } = require('electron')
-const remote = require('electron').remote
-const win = remote.getCurrentWindow()
-
 import AppPlayer from '@/components/app/AppPlayer'
 
 export default {
