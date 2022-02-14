@@ -113,7 +113,7 @@ export default {
       if (fs.existsSync(imgPath)) return imgPath
       else {
         this.errorThumb = true
-        return path.join(__static, '/img/default.jpg')
+        return path.join(__static, '/img/default.png')
       }
     },
     showContextMenu(e) {

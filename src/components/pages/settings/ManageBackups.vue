@@ -79,8 +79,8 @@
     <v-dialog v-model="isBackupRestoredSuccessfully" width="500" persistent>
       <v-card>
         <v-card-text class="text-center py-6  d-flex flex-column align-center">
-          Backup successfully restored. Need to restart application.
-          <v-btn @click="restartApp" class="mx-6 mt-6" color="primary">
+          Backup successfully restored. Need to restart application manually.
+          <v-btn @click="closeApp" class="mx-6 mt-6" color="primary">
             <v-icon left>mdi-restart</v-icon> Restart </v-btn>
         </v-card-text>
       </v-card>
@@ -88,8 +88,8 @@
     <v-dialog v-model="dialogRestoreBackupError" width="500" persistent>
       <v-card>
         <v-card-text class="text-center py-6  d-flex flex-column align-center">
-          <div class="red--text">An error occurred while restoring a backup. Need to restart application.</div>
-          <v-btn @click="restartApp" class="mx-6 mt-6" color="primary">
+          <div class="red--text">An error occurred while restoring a backup. Need to restart application manually.</div>
+          <v-btn @click="closeApp" class="mx-6 mt-6" color="primary">
             <v-icon left>mdi-restart</v-icon> Restart </v-btn>
         </v-card-text>
       </v-card>
@@ -441,7 +441,7 @@ export default {
       this.$store.commit('addLog', { text: `Backup "${backupDate}" successfully deleted`, type: 'info' })
       this.backups = this.getBackups()
     },
-    restartApp() { ipcRenderer.send('reload') },
+    closeApp() { ipcRenderer.send('closeApp') },
     openDialog() {
       this.dialog = true
       setTimeout(() => { this.backups = this.getBackups() }, 500)

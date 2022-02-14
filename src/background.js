@@ -134,13 +134,6 @@ function createMainWindow() {
   return window
 }
 
-// Quit when all windows are closed.
-app.on('window-all-closed', () => {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') app.quit()
-})
-
 // create userdata folder if runs portable version
 if (process.env.PORTABLE_EXECUTABLE_DIR) {
   const userData = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'userdata')
@@ -181,17 +174,11 @@ app.whenReady().then(() => {
 })
 
 // Exit cleanly on request from parent process in development mode.
-if (isDevelopment) {
-  if (process.platform === 'win32') {
-    process.on('message', data => { if (data === 'graceful-exit') app.quit() })
-  } else process.on('SIGTERM', () => { app.quit() })
-}
-
-// restart application
-ipcMain.on('reload', function () {
-  if (isDevelopment) win.reload()
-  else { app.relaunch(); app.exit() } // TODO fix relaunch
-})
+// if (isDevelopment) {
+//   if (process.platform === 'win32') {
+//     process.on('message', data => { if (data === 'graceful-exit') app.exit() })
+//   } else process.on('SIGTERM', () => { app.exit() })
+// }
 
 let systemMenu = Menu.buildFromTemplate([
   {
@@ -223,7 +210,8 @@ let systemMenu = Menu.buildFromTemplate([
       { type:'separator' },
       { 
         label:'Exit', 
-        click() { app.quit() } 
+        accelerator: 'CommandOrControl+Q',
+        click() { app.exit() } 
       } 
     ]
   },

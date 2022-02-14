@@ -358,7 +358,7 @@ export default {
     },
     checkVideoImageExist(imgPath) {
       if (fs.existsSync(imgPath)) return imgPath
-      else return path.join(__static, '/img/default.jpg')
+      else return path.join(__static, '/img/default.png')
     },
     playVideo(video, typeVideos) {
       if (!fs.existsSync(video.path)) {
@@ -395,7 +395,7 @@ export default {
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
       imgPath = path.join(this.pathToUserData, '/media/meta/', `${metaId}/${cardId}_main.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
-      else return 'file://' + path.join(__static, '/img/default.jpg')
+      else return 'file://' + path.join(__static, '/img/default.png')
     },
     openMetaCardPage(metaId, metaCardId) { this.$router.push(`/metacard/?metaId=${metaId}&cardId=${metaCardId}&tabId=default`) },
     addNewTabMetaCard(metaId, metaCardId, metaCardName) {

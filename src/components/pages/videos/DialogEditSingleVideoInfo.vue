@@ -457,7 +457,7 @@ export default {
     getImg() {
       let imgPath = path.join(this.$store.getters.getPathToUserData, `/media/thumbs/${this.video.id}.jpg`)
       if (fs.existsSync(imgPath)) return imgPath
-      else return path.join(__static, '/img/default.jpg')
+      else return path.join(__static, '/img/default.png')
     },
     getTag(tagName) { return this.$store.getters.tags.find({name:tagName}).value() },
     playVideo() {

@@ -44,7 +44,7 @@ export default {
       let img = path.join(this.pathToUserData, `/media/meta/${metaId}/${cardId}_main.jpg`)
       let imgChecked = this.checkImageExist(img)
       if (imgChecked) return 'file://' + imgChecked
-      else return path.join('file://', __static, '/img/default.jpg')
+      else return path.join('file://', __static, '/img/default.png')
     },
     checkImageExist(imgPath) {
       if (fs.existsSync(imgPath)) return imgPath

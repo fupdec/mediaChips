@@ -541,7 +541,7 @@ export default {
       let cardId = this.$store.state.hoveredImageId, metaId = this.$store.state.hoveredImageMetaId
       let imgPath = path.join(this.pathToUserData, `/media/meta/${metaId}/${cardId}_main.jpg`)
       if (fs.existsSync(imgPath)) return 'file://' + imgPath
-      else return path.join('file://', __static, '/img/default.jpg')
+      else return path.join('file://', __static, '/img/default.png')
     },
   },
   methods: {
@@ -824,7 +824,7 @@ export default {
     },
     checkMarkerImageExist(imgPath) {
       if (fs.existsSync(imgPath)) return imgPath 
-      else return path.join(__static, '/img/default.jpg')
+      else return path.join(__static, '/img/default.png')
     },
     openDialogMarkerMeta(metaId) {
       this.dialogMarkerMeta = true
@@ -907,7 +907,7 @@ export default {
       if (fs.existsSync(imgPath)) return imgPath
       else {
         this.errorThumb = true
-        return path.join(__static, '/img/default.jpg')
+        return path.join(__static, '/img/default.png')
       }
     },
     getFileNameFromPath(videoPath) { return path.parse(videoPath).name },

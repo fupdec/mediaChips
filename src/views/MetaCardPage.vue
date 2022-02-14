@@ -519,7 +519,7 @@ export default {
       return videoFilters
     },
     getImgUrl(imgType) {
-      let imgUrl = path.join(__static, '/img/default.jpg')
+      let imgUrl = path.join(__static, '/img/default.png')
       if (this.checkImageExists(imgType)) imgUrl = this.getImagePath(imgType) 
       else if (imgType == 'avatar') if (this.checkImageExists('main')) imgUrl = this.getImagePath('main') 
       return 'file://' + imgUrl

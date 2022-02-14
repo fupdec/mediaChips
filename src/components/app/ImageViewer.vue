@@ -105,7 +105,7 @@ export default {
       let folder = this.folder.join(path.sep)
       let imagePath = path.join(folder, file.name+file.ext) 
       if (fs.existsSync(imagePath)) this.src = imagePath
-      else this.src = path.join(__static, '/img/default.jpg')
+      else this.src = path.join(__static, '/img/default.png')
     },
     close() { 
       this.$emit('close') 
