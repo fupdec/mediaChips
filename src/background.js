@@ -13,20 +13,8 @@ const shell = require('electron').shell
 // be closed automatically when the JavaScript object is garbage collected.
 let win, loading, player
 
-// write app data to json file 
-const configPath = path.join(__static, 'config.json')
-let userData = {
-  path: app.getPath('userData'),
-  ver: app.getVersion()
-} 
-try {
-  fs.writeFileSync(configPath, JSON.stringify(userData, null, 2), {
-    flag: 'w'
-  })
-} catch (e) {
-  if (e.code == 'EEXIST') console.log('\x1b[33m%s\x1b[0m', 'Path to userData folder is written')
-  else console.log('\x1b[31m%s\x1b[0m', e)
-}
+const remoteMain = require("@electron/remote/main")
+remoteMain.initialize();
 
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
@@ -117,6 +105,8 @@ function createMainWindow() {
       contextIsolation: false
     }
   })
+
+  remoteMain.enable(window.webContents)
 
   if (isDevelopment) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'index.html')
@@ -408,6 +398,7 @@ ipcMain.handle('chooseFile', async () => {
 })
 // events from render process
 ipcMain.handle('getPathToUserData', () => { return app.getPath('userData') })
+ipcMain.handle('getAppVersion', () => { return app.getVersion() })
 ipcMain.on('openPlayer', (event, data) => {
   player.show()
   player.webContents.send('getDataForPlayer', data)

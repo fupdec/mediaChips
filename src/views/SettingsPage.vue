@@ -574,8 +574,6 @@ const { ipcRenderer } = require('electron')
 const axios = require("axios")
 const cheerio = require("cheerio")
 const { webFrame } = require('electron')
-const configPath = path.join(__static, 'config.json')
-const config = JSON.parse(fs.readFileSync(configPath).toString())
 
 import MetaList from '@/components/pages/meta/MetaList.vue'
 import MetaAssignedToVideos from '@/components/pages/meta/MetaAssignedToVideos.vue'
@@ -583,6 +581,7 @@ import ThemeColors from '@/components/pages/settings/ThemeColors.vue'
 import ClearData from '@/components/pages/settings/ClearData.vue'
 import Registration from '@/components/pages/settings/Registration.vue'
 import vuescroll from 'vuescroll'
+import { async } from 'node-stream-zip'
 
 // TODO separate each tab to components
 
@@ -875,14 +874,17 @@ export default {
     },
     checkForUpdates() {
       this.isCheckingUpdate = true
-      axios.get(`https://github.com/fupdec/mediaChips/releases`).then((response) => {
+      axios.get(`https://github.com/fupdec/mediaChips/releases`).then(async (response) => {
         if(response.status === 200) {
           this.isCheckingUpdate = false
           const html = response.data;
           const $ = cheerio.load(html)
           let lastVersion = $('a:contains("mediaChips v")').eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
-          let currentVersion = config.ver
+          let currentVersion 
+          await ipcRenderer.invoke('getAppVersion').then((result) => {
+            currentVersion = result
+          })
           if (this.compareVersion(currentVersion, lastVersion)) {
             this.updateApp = true
             this.$store.dispatch('setNotification', {

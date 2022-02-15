@@ -1,10 +1,8 @@
-const fs = require("fs")
 const path = require("path")
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
-const configPath = path.join(__static, 'config.json')
-const config = JSON.parse(fs.readFileSync(configPath).toString())
-const pathToDbSavedFilters = path.join(config.path, 'userfiles/databases/dbsf.json')
+const app = require('@electron/remote').app
+const pathToDbSavedFilters = path.join(app.getPath('userData'), 'userfiles/databases/dbsf.json')
 const adapterSavedFilters = new FileSync(pathToDbSavedFilters)
 const dbsf = low(adapterSavedFilters)
 dbsf.defaults({

@@ -18,6 +18,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@electron/remote": "^2.0.4",
     "@simonwep/selection-js": "^2.0.1",
     "apexcharts": "^3.28.3",
     "archiver": "^5.3.0",

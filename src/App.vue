@@ -154,8 +154,6 @@ const cheerio = require("cheerio")
 const shell = require('electron').shell
 const chokidar = require('chokidar')
 const shortid = require('shortid')
-const configPath = path.join(__static, 'config.json')
-const config = JSON.parse(fs.readFileSync(configPath).toString())
 
 import HoveredImageFunctions from '@/mixins/HoveredImageFunctions'
 import PlayerEvents from '@/mixins/PlayerEvents'
@@ -378,8 +376,10 @@ export default {
       this.$vuetify.theme.themes.dark.accent = this.$store.state.Settings.appColorDarkAccent
     },
     initSystemInfo() {
-      this.versions.app = config.ver
       this.versions.db = this.databaseVersion
+      ipcRenderer.invoke('getAppVersion').then((result) => {
+        this.versions.app = result
+      })
       ipcRenderer.invoke('getPathToUserData').then((result) => {
         this.$store.state.pathToUserData = result
       })

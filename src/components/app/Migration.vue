@@ -37,8 +37,6 @@
 
 <script>
 const {ipcRenderer} = require('electron')
-const configPath = path.join(__static, 'config.json')
-const config = JSON.parse(fs.readFileSync(configPath).toString())
 import ManageBackups from '@/components/pages/settings/ManageBackups.vue'
 
 export default {
@@ -104,8 +102,13 @@ export default {
           }
         ).write()
       }
-      this.$store.dispatch('updateSettingsState', {key:'databaseVersion', value:config.ver})
-      this.dialogFinish = true
+      ipcRenderer.invoke('getAppVersion').then((result) => {
+        this.$store.dispatch('updateSettingsState', {
+          key:'databaseVersion', 
+          value:result
+        })
+        this.dialogFinish = true
+      })
     },
     close() { ipcRenderer.send('closeApp') },
   },
