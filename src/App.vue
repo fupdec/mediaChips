@@ -177,10 +177,10 @@ export default {
   },
   mixins: [HoveredImageFunctions, PlayerEvents],
   mounted() {
-    this.$nextTick(function () {
+    this.$nextTick(async () => {
       this.$store.commit('addLog', { text: '🚀 Application launched', color: 'green' })
       this.initTheme()
-      this.initSystemInfo()
+      await this.initSystemInfo()
       if (this.checkIsMigrationNeeded()) return
       // this.initPlugins()
       if (this.$store.state.Settings.checkForUpdatesAtStartup) this.checkForUpdates()
@@ -375,12 +375,12 @@ export default {
       this.$vuetify.theme.themes.dark.secondary = this.$store.state.Settings.appColorDarkSecondary
       this.$vuetify.theme.themes.dark.accent = this.$store.state.Settings.appColorDarkAccent
     },
-    initSystemInfo() {
+    async initSystemInfo() {
       this.versions.db = this.databaseVersion
-      ipcRenderer.invoke('getAppVersion').then((result) => {
+      await ipcRenderer.invoke('getAppVersion').then((result) => {
         this.versions.app = result
       })
-      ipcRenderer.invoke('getPathToUserData').then((result) => {
+      await ipcRenderer.invoke('getPathToUserData').then((result) => {
         this.$store.state.pathToUserData = result
       })
     },
