@@ -447,8 +447,7 @@ export default {
       this.updateVideoPlayer(data)
     })
     ipcRenderer.on('closePlayer', () => {
-      this.player.stop()
-      this.player.src = ''
+      this.closePlayer()
     })
     ipcRenderer.on('updateDb', async (event, dbType) => {
       await this.$store.dispatch('getDb', dbType)
@@ -776,6 +775,13 @@ export default {
         case 3: this.jumpToPrevMarker(); break
         case 4: this.jumpToNextMarker(); break
       }
+    },
+    closePlayer() {
+      this.stop()
+      setTimeout(() => {
+        this.player.removeAttribute('src')
+        this.player.load()
+      }, 1000);
     },
     // MARKERS
     initMarkerType() {

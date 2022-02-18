@@ -86,6 +86,8 @@ function createPlayerWindow() {
     window.hide()
     window.webContents.send('closePlayer')
   })
+  window.on('maximize', () => { player.webContents.send('maximize') })
+  window.on('unmaximize', () => { player.webContents.send('unmaximize') })
   return window
 }
 
@@ -364,9 +366,18 @@ ipcMain.on('changeMenuItem', (event, menuId, value) => {
 
 // window events from render process
 ipcMain.on('closeApp', () => { win.close() })
-ipcMain.handle('maximize', () => { win.maximize() })
-ipcMain.handle('unmaximize', () => { win.unmaximize() })
-ipcMain.handle('minimize', () => { win.minimize() })
+ipcMain.handle('maximize', (e, w) => { 
+  if (w === 'player') player.maximize() 
+  else win.maximize() 
+})
+ipcMain.handle('unmaximize', (e, w) => { 
+  if (w === 'player') player.unmaximize() 
+  else win.unmaximize() 
+})
+ipcMain.handle('minimize', (e, w) => { 
+  if (w === 'player') player.minimize() 
+  else win.minimize() 
+})
 // dialog events from render process
 ipcMain.handle('chooseDirectory', async (defaultPath) => { 
   let selected

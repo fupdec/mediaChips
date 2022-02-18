@@ -86,7 +86,7 @@ export default {
       let video = this.$store.getters.videos.find({id: videoId})
       if (!video.value()) return 
       let views = video.value().views || 0
-      if (this.settingsDb.countNumberOfViews) ++views
+      if (this.$store.state.Settings.countNumberOfViews) ++views
       video.assign({
         views: views,
         viewed: Date.now(),

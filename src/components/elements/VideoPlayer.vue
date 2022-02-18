@@ -48,18 +48,11 @@ export default {
     await this.$store.dispatch('getDb', 'metaCards')
     await this.$store.dispatch('getDb', 'settings')
     // window events
-    win.on('maximize', ()=>{ this.maximized = true })
-    win.on('unmaximize', ()=>{ this.maximized = false })
-  },
-  mounted() {
-    this.$nextTick(function () {
-    })
-  },
-  beforeDestroy() {
-    win.removeAllListeners()
+    ipcRenderer.on('maximize', () => { this.maximized = true })
+    ipcRenderer.on('unmaximize', () => { this.maximized = false })
   },
   data: () => ({
-    maximized: win.isMaximized(),
+    maximized: false,
     nowPlaying: '',
   }),
   computed: {
@@ -76,18 +69,18 @@ export default {
   methods: {
     getFileNameFromPath(videoPath) {return path.parse(videoPath).name},
     updateNowPlaying(video) { if (video) this.nowPlaying = video.path},
-    minimize() { win.minimize() },
+    minimize() { ipcRenderer.invoke('minimize', 'player') },
     maximize() {
-      this.maximized = !this.maximized
-      win.maximize()
+      this.maximized = true
+      ipcRenderer.invoke('maximize', 'player')
     },
     unmaximize() {
-      this.maximized = !this.maximized
-      win.unmaximize()
+      this.maximized = false
+      ipcRenderer.invoke('unmaximize', 'player')
     },
     close() {
       this.playlist = []
-      this.$refs.player.stop()
+      this.$refs.player.closePlayer()
       ipcRenderer.send('closePlayer')
     },
     toggleFullscreen() { this.$emit("toggleFullscreen") },
