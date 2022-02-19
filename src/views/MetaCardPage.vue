@@ -209,19 +209,11 @@
           <v-pagination v-model="videosCurrentPage" :length="videosPagesSum"
             :total-visible="getNumberOfPagesLimit" style="z-index:1"/>
           <v-spacer></v-spacer>
-          <v-overflow-btn v-if="videosPagesSum > 5"
-            v-model="videosCurrentPage" :items="pages" dense height="36" solo
-            class="items-per-page-dropdown jump-to-page-menu" 
-            disable-lookup hint="jump to page" persistent-hint hide-no-data
-            :menu-props="{ 
-              auto:true, 
-              contentClass:'jump-to-page-menu',
-              nudgeBottom: -110,
-              origin:'center center', 
-              transition:'scale-transition'
-            }"
-          ></v-overflow-btn>
-          <div v-else style="min-width:80px;"></div>
+          <v-text-field
+            v-model="jumpPage" solo dense type="number"
+            class="jump-to-page" hint="jump to page" persistent-hint
+            prepend-icon="mdi-redo" @click:prepend="jumpToPage($event)"
+          />
         </v-container>
       
         <div v-if="numberVideosMetaCard==0" class="text-center">

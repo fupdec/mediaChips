@@ -62,13 +62,11 @@
         <v-spacer/>
         <v-pagination v-model="currentPage" :length="pagesSum" :total-visible="getNumberOfPagesLimit"/>
         <v-spacer/>
-        <v-overflow-btn v-if="pagesSum > 5" 
-          v-model="currentPage" :items="pages" dense height="36" solo
-          class="items-per-page-dropdown jump-to-page-menu"
-          disable-lookup hint="jump to page" persistent-hint hide-no-data
-          :menu-props="{ auto:true, contentClass:'jump-to-page-menu',
-            nudgeBottom: -110, origin:'center center', transition:'scale-transition'}"/>
-        <div v-else style="min-width:80px;"></div>
+        <v-text-field
+          v-model="jumpPage" solo dense type="number"
+          class="jump-to-page" hint="jump to page" persistent-hint
+          prepend-icon="mdi-redo" @click:prepend="jumpToPage($event)"
+        />
       </v-container>
 
       <Loading />
@@ -169,8 +167,9 @@ export default {
     this.initFilters()
   },
   mounted() {
-    this.$nextTick(function () {
+    this.$nextTick(() => {
       this.initSelection()
+      this.jumpPage = this.currentPage
     })
   },
   destroyed() {
@@ -184,6 +183,7 @@ export default {
     ],
     cardsPerPagePreset: [20,40,60,80,100,150,200,300], // TODO create custom numbers in settings
     isScrollToTopVisible: false,
+    jumpPage: null,
   }),
   computed: {
     savedFilters() { return this.$store.state.SavedFilters.savedFilters[this.metaId] || [] },
@@ -304,8 +304,14 @@ export default {
       this.$store.state.Meta.filters = _.cloneDeep(this.savedFilters[i].filters)
       this.$store.dispatch('filterMetaCards') 
     },
+    jumpToPage() { 
+      if (this.jumpPage === null) return
+      let val = Number(this.jumpPage)
+      if (val < 1) val = 1
+      else if (val > this.pagesSum) val = this.pagesSum
+      if (val !== this.currentPage) this.currentPage = val 
+      this.jumpPage = val
+    },
   },
-  watch: {
-  }
 }
 </script>

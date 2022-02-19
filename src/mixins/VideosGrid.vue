@@ -15,7 +15,8 @@ export default {
     this.isGenerationBreak = true
   },
   mounted() {
-    this.$nextTick(function () {
+    this.$nextTick(() => {
+      this.jumpPage = this.videosCurrentPage
     })
   },
   data: () => ({
@@ -26,6 +27,7 @@ export default {
     timeout: null,
     numberOfCreatedGrid: 0,
     dropzone: false,
+    jumpPage: null,
   }),
   computed: {
     getNumberOfPagesLimit() {return this.$store.state.Settings.numberOfPagesLimit},
@@ -138,6 +140,14 @@ export default {
       let selected = this.$store.state.Videos.selection.select('.video-card')
       for (let i of selected) i.classList.remove('selected')
       this.$store.commit('updateSelectedVideos', [])
+    },
+    jumpToPage() { 
+      if (this.jumpPage === null) return
+      let val = Number(this.jumpPage)
+      if (val < 1) val = 1
+      else if (val > this.videosPagesSum) val = this.videosPagesSum
+      if (val !== this.videosCurrentPage) this.videosCurrentPage = val 
+      this.jumpPage = val
     },
     showDrop() { if (this.dropzone==false) this.dropzone = true },
     catchDrop(e) {

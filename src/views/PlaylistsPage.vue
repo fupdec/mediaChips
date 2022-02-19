@@ -38,19 +38,11 @@
       <v-spacer></v-spacer>
       <v-pagination v-model="playlistsCurrentPage" :length="playlistsPagesSum" :total-visible="getNumberOfPagesLimit"/>
       <v-spacer></v-spacer>
-      <v-overflow-btn v-if="playlistsPagesSum > 5"
-        v-model="playlistsCurrentPage" :items="pages" dense height="36" solo
-        class="items-per-page-dropdown width-70 jump-to-page-menu" 
-        disable-lookup hint="jump to page" persistent-hint hide-no-data
-        :menu-props="{ 
-          auto:true, 
-          contentClass:'jump-to-page-menu',
-          nudgeBottom: -110,
-          origin:'center center', 
-          transition:'scale-transition'
-        }"
-      ></v-overflow-btn>
-      <div v-else style="min-width:80px;"></div>
+      <v-text-field
+        v-model="jumpPage" solo dense type="number"
+        class="jump-to-page" hint="jump to page" persistent-hint
+        prepend-icon="mdi-redo" @click:prepend="jumpToPage($event)"
+      />
     </v-container>
 
     <div v-if="numberFilteredPlaylists==0" class="text-center"> 
@@ -115,6 +107,7 @@ export default {
   mounted() {
     this.$nextTick(function () {
       this.initFilters()
+      this.jumpPage = this.playlistsCurrentPage
       this.$store.state.Playlists.selection = new Selection({
         boundaries: ['.playlists-grid'],
         selectables: ['.playlist-card'],
@@ -149,6 +142,7 @@ export default {
     playlistsPerPagePreset: [20,40,60,80,100,150,200],
     selection: null,
     isScrollToTopVisible: false,
+    jumpPage: null,
   }),
   computed: {
     savedFilters() { return this.$store.state.SavedFilters.savedFilters.playlists || [] },
@@ -241,6 +235,14 @@ export default {
     applyFilter(i) { 
       this.$store.state.Settings.playlistFilters = _.cloneDeep(this.savedFilters[i].filters)
       this.$store.dispatch('filterPlaylists') 
+    },
+    jumpToPage() { 
+      if (this.jumpPage === null) return
+      let val = Number(this.jumpPage)
+      if (val < 1) val = 1
+      else if (val > this.playlistsPagesSum) val = this.playlistsPagesSum
+      if (val !== this.playlistsCurrentPage) this.playlistsCurrentPage = val 
+      this.jumpPage = val
     },
   },
   watch: {
