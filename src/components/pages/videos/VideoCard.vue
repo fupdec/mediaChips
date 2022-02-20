@@ -217,7 +217,9 @@
 const { clipboard, ipcRenderer } = require('electron')
 const shell = require('electron').shell
 const fs = require('fs')
+const mv = require('mv');
 const path = require('path')
+const shortid = require('shortid')
 const ffmpeg = require('fluent-ffmpeg')
 const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
 ffmpeg.setFfprobePath(pathToFfprobe)
@@ -505,7 +507,7 @@ export default {
           { name: `Update File Information`, type: 'item', icon: 'information-variant', function: ()=>{this.updateFileInfo()}},
           { type: 'divider' },
           { name: `Reveal in File Explorer`, type: 'item', icon: 'folder-open', function: ()=>{this.revealInFileExplorer()}, disabled: !this.isSelectedSingleVideo},
-          { name: `Move File to...`, type: 'item', icon: 'file-move', function: ()=>{this.moveFile()},},
+          { name: `Move File to...`, type: 'item', icon: 'file-move', function: ()=>{this.moveFile()}, disabled: this.$store.state.movingFiles},
           { type: 'divider' },
           { name: `Delete Video`, type: 'item', icon: 'delete', color: 'error', function: ()=>{this.$store.state.Videos.dialogDeleteVideo=true},},
         ]
@@ -529,30 +531,40 @@ export default {
       let videoPath = this.$store.getters.videos.find({id:videoId}).value().path
       shell.showItemInFolder(videoPath)
     },
-    moveFile() {
-      // TODO create progress line for this process. If file are moving to another disk this proc can be long
-      ipcRenderer.invoke('chooseDirectory', path.dirname(this.video.path)).then(result => {
-        if (result.filePaths.length === 0) return
-        let filePath = result.filePaths[0]
-        let ids = this.$store.getters.getSelectedVideos
-        let vids = this.$store.getters.videos
-        const vm = this
-        if (ids.length===0) return
-        ids.map(i => {
-          let oldPath = vids.find({id:i}).value().path
-          let fileName = path.basename(oldPath)
-          let newPath = path.join(filePath, fileName)
-          fs.rename(oldPath, newPath, function (err) {
-            if (err) {
-              vm.$store.commit('addLog', { type: 'error', text: `Failed to move file "${fileName}".` })
-              throw err
-            } else {
-              vids.find({id:i}).assign({ path: newPath, edit: Date.now() }).write()
-              vm.$store.commit('addLog', { type: 'info', text: `File "${fileName}" successfully moved!` })
-            }
+    async moveFile() {
+      const move = (oldPath, newPath) => {
+        return new Promise((resolve, reject) => {
+          mv(oldPath, newPath, (err) => {
+            if (err) reject(err)
+            else resolve(null)
           })
         })
-      }).catch(err => { this.$store.commit('addLog', {type: 'error', text: err}); return })
+      }
+      const result = await ipcRenderer.invoke('chooseDirectory', path.dirname(this.video.path))
+      if (result.filePaths.length === 0) return
+      let filePath = result.filePaths[0]
+      let ids = this.$store.getters.getSelectedVideos
+      if (ids.length===0) return
+      let vids = this.$store.getters.videos
+      let bpId = shortid.generate()
+      let bp = { id: bpId, text: 'Moving files', icon: 'file-move', }
+      this.$store.commit('addBackgroundProcess', bp)
+      this.$store.state.movingFiles = true
+      for (let i of ids) {
+        let oldPath = vids.find({id:i}).value().path
+        let fileName = path.basename(oldPath)
+        let newPath = path.join(filePath, fileName)
+        const moveError = await move(oldPath, newPath)
+        if (moveError) {
+          this.$store.commit('addLog', { type: 'error', text: `Failed to move file "${fileName}".` })
+          throw moveError
+        } else {
+          vids.find({id:i}).assign({ path: newPath, edit: Date.now() }).write()
+          this.$store.commit('addLog', { type: 'info', text: `File "${fileName}" successfully moved!` })
+        }
+      }
+      this.$store.commit('removeBackgroundProcess', bpId)
+      this.$store.state.movingFiles = false
     },
     filterVideosBy(metaId, metaCardId) {
       let filter = {

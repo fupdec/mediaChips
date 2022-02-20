@@ -379,11 +379,11 @@ ipcMain.handle('minimize', (e, w) => {
   else win.minimize() 
 })
 // dialog events from render process
-ipcMain.handle('chooseDirectory', async (defaultPath) => { 
+ipcMain.handle('chooseDirectory', async (e, defaultPath) => {
   let selected
   await dialog.showOpenDialog(win, {
     properties: ['openDirectory'],
-    defaultPath: defaultPath
+    defaultPath: defaultPath || ''
   }).then(result => {
     selected = result 
   })
