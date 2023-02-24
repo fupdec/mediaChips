@@ -879,7 +879,9 @@ export default {
           this.isCheckingUpdate = false
           const html = response.data;
           const $ = cheerio.load(html)
-          let lastVersion = $('a:contains("MediaChips v")').eq(0).text().trim()
+          let lastVersion = $('a:contains("MediaChips v")')
+          if (lastVersion.length == 0) lastVersion = $('a:contains("mediaChips v")')
+          lastVersion = lastVersion.eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
           let currentVersion 
           await ipcRenderer.invoke('getAppVersion').then((result) => {

@@ -420,7 +420,9 @@ export default {
         if (response.status === 200) {
           const html = response.data
           const $ = cheerio.load(html)
-          this.versions.new = $('a:contains("MediaChips v")').eq(0).text().trim() // from github
+          let lastVersion = $('a:contains("MediaChips v")')
+          if (lastVersion.length == 0) lastVersion = $('a:contains("mediaChips v")')
+          this.versions.new = lastVersion.eq(0).text().trim() // from github
           this.versions.new = this.versions.new.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
           if (this.getVer(this.versions.app) < this.getVer(this.versions.new)) {
             this.$store.commit('addLog',{text:`💿 Available new version: ${this.versions.new}`, color:'green'})
