@@ -207,7 +207,7 @@ export default {
     folder: null,
     watcher: null,
     foldersUpdated: false,
-    extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
+    extensions: ['.3gp','.avi','.dat','.f4v','.flv','.m4v','.mkv','.mod','.mov','.mp4','.mpeg','.mpg','.mts','.m2ts','.rm','.rmvb','.swf','.ts','.vob','.webm','.wmv','.yuv'],
     about: false,
     isNewVersionAvailable: false,
     isMigrationNeeded: false,

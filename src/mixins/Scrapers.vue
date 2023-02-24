@@ -150,8 +150,7 @@ export default {
         else if (found.boobs === "Unknown") delete found.boobs
         else found.boobs = [found.boobs]
       }
-      let profession = $('.sidebar-right .heading').next().find('.text-center')[0].children[0].data
-      if (profession) found.category = profession.trim().split(',').map(i=>i.trim().replace(/[^A-Za-z\s!?]/gm,''))
+      found.category = $('[data-test="link_span_profession"]').map((i,e)=>$(e).text().trim()).toArray()
       for (const i in found) if (found[i] === undefined) delete found[i]
       this.transfer.found = _.cloneDeep(found)
       resolve()
