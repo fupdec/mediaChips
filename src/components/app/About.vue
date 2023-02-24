@@ -2,26 +2,26 @@
   <v-card outlined class="pa-4">
     <div class="d-flex">
       <div>
-        <div>mediaChips v0.11.2-beta</div>
+        <div>MediaChips v0.11.3-beta</div>
         <div class="text--secondary">by fupdec</div>
       </div>
       <v-spacer></v-spacer>
       <div class="text-center d-flex flex-column">
-        <img :src="logoPath" alt="mediaChips" width="82" height="82">
+        <img :src="logoPath" alt="MediaChips" width="82" height="82">
         <span>2022</span>
       </div>
     </div>
     <div>Links</div>
     <div class="d-flex flex-wrap mt-2">
-      <v-btn @click="openLink('https://mediaChips.app/')" color="#1da6ff" rounded class="px-5 mb-2 mr-2">
+      <v-btn @click="openLink('https://MediaChips.app/')" color="#1da6ff" rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-web</v-icon> website </v-btn>
       <v-btn @click="openLink('https://github.com/fupdec/mediachips')" color="#eee" light rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-github</v-icon> Github </v-btn>
-      <v-btn @click="openLink('https://reddit.com/r/mediaChips/')" color="#ff4500" rounded class="px-5 mb-2 mr-2">
+      <v-btn @click="openLink('https://reddit.com/r/MediaChips/')" color="#ff4500" rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-reddit</v-icon> Reddit </v-btn>
       <v-btn @click="openLink('https://discord.gg/dEQPper2yu')" color="#7289DA" rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-discord</v-icon> Discord </v-btn>
-      <v-btn @click="openLink('https://patreon.com/mediaChips')" color="#ff424d" rounded class="px-5 mb-2 mr-2">
+      <v-btn @click="openLink('https://patreon.com/MediaChips')" color="#ff424d" rounded class="px-5 mb-2 mr-2">
         <v-icon left>mdi-patreon</v-icon> patreon </v-btn>
     </div>
     <v-divider class="my-4"></v-divider>

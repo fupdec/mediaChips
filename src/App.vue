@@ -53,7 +53,7 @@
         <v-card-title>
           <span>New version {{versions.new.replace(/ /gm,'')}} is available!</span>
           <v-spacer></v-spacer>
-          <img alt="mediaChips" width="60" height="60" :src="logoPath">
+          <img alt="MediaChips" width="60" height="60" :src="logoPath">
         </v-card-title>
         <v-card-actions class="pa-0">
           <v-btn @click="isNewVersionAvailable=false" class="ma-4">
@@ -416,11 +416,11 @@ export default {
       this.disableRunApp = this.phrase !== this.password 
     },
     checkForUpdates() {
-      axios.get(`https://github.com/fupdec/mediaChips/releases`).then((response) => {
+      axios.get(`https://github.com/fupdec/MediaChips/releases`).then((response) => {
         if (response.status === 200) {
           const html = response.data
           const $ = cheerio.load(html)
-          this.versions.new = $('a:contains("mediaChips v")').eq(0).text().trim() // from github
+          this.versions.new = $('a:contains("MediaChips v")').eq(0).text().trim() // from github
           this.versions.new = this.versions.new.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
           if (this.getVer(this.versions.app) < this.getVer(this.versions.new)) {
             this.$store.commit('addLog',{text:`💿 Available new version: ${this.versions.new}`, color:'green'})

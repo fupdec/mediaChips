@@ -60,7 +60,7 @@ module.exports = {
       entry: './src/main.js',
       template: 'public/index.html',
       filename: 'index.html',
-      title: 'mediaChips',
+      title: 'MediaChips',
     },
     player: {
       entry: './src/player.js',

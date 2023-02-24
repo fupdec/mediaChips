@@ -1,6 +1,6 @@
 <template>   
   <v-system-bar window app :class="{maximized:maximized}" :style="{background: headerColor}">
-    <img :src="logoPath" alt="mediaChips" width="16" height="16">
+    <img :src="logoPath" alt="MediaChips" width="16" height="16">
     <div class="app-menu-container">
       <v-menu bottom offset-y min-width="160">
         <template v-slot:activator="{ on, attrs }">
@@ -191,7 +191,7 @@
       </v-btn>
     </div>
     <v-spacer></v-spacer>
-    <span class="app-system-bar-title">{{$route.name + ' - '}}mediaChips</span>
+    <span class="app-system-bar-title">{{$route.name + ' - '}}MediaChips</span>
     <v-spacer></v-spacer>
     <div class="window-controls">
       <v-btn text tile small width="46" height="28" @click="minimize">

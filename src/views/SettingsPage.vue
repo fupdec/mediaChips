@@ -551,7 +551,7 @@
               </v-col>
               <v-col cols="12" v-if="updateApp" class="text-center">
                 <span class="pt-4 pr-4">New version available!</span>
-                <v-btn @click="openLink('https://mediaChips.app/downloads/')" color="primary" rounded>
+                <v-btn @click="openLink('https://MediaChips.app/downloads/')" color="primary" rounded>
                   <v-icon left>mdi-download</v-icon> Download from official website </v-btn>
               </v-col>
             </v-row>
@@ -874,12 +874,12 @@ export default {
     },
     checkForUpdates() {
       this.isCheckingUpdate = true
-      axios.get(`https://github.com/fupdec/mediaChips/releases`).then(async (response) => {
+      axios.get(`https://github.com/fupdec/MediaChips/releases`).then(async (response) => {
         if(response.status === 200) {
           this.isCheckingUpdate = false
           const html = response.data;
           const $ = cheerio.load(html)
-          let lastVersion = $('a:contains("mediaChips v")').eq(0).text().trim()
+          let lastVersion = $('a:contains("MediaChips v")').eq(0).text().trim()
           lastVersion = lastVersion.match(/\d{1,2}.\d{1,2}.\d{1,2}/)[0]
           let currentVersion 
           await ipcRenderer.invoke('getAppVersion').then((result) => {

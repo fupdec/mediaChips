@@ -1,16 +1,16 @@
 {
   "name": "mediachips",
-  "productName": "mediaChips",
-  "version": "0.11.2",
+  "productName": "MediaChips",
+  "version": "0.11.3",
   "author": {
     "name": "fupdec",
     "email": "altbbk@gmail.com"
   },
-  "homepage": "https://github.com/fupdec/mediaChips",
+  "homepage": "https://github.com/fupdec/MediaChips",
   "description": "Organize your media files with ease and convenience.",
   "private": false,
   "license": "GPL-3.0",
-  "repository": "github:fupdec/mediaChips",
+  "repository": "github:fupdec/MediaChips",
   "scripts": {
     "electron:build": "vue-cli-service electron:build",
     "electron:build_portable": "vue-cli-service electron:build --win portable",

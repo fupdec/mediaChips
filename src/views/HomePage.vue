@@ -5,8 +5,8 @@
       <v-container class="text-center">
         <v-row v-if="videosNumber==0">
           <v-col cols="12">
-            <img alt="mediaChips" width="200" height="200" :src="logoPath">
-            <h2 class="my-8">Welcome to mediaChips application!</h2>
+            <img alt="MediaChips" width="200" height="200" :src="logoPath">
+            <h2 class="my-8">Welcome to MediaChips application!</h2>
         
             <div v-if="metaNumber==0" cols="12">
               <div class="mb-4"> First, create a meta for your videos. 
