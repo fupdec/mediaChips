@@ -1,12 +1,12 @@
 import {computed} from 'vue'
 import {useTheme} from 'vuetify'
 import {useSettingsStore} from '@/stores/settings'
-import {isWinElectronUi} from '@/utils/debugWinElectronUi'
+import {isRealWinElectron} from '@/utils/debugWinElectronUi'
 
 export function useHeaderBarStyle(variant = 'app') {
   const theme = useTheme()
   const settingsStore = useSettingsStore()
-  const isWinElectron = isWinElectronUi()
+  const isWinElectron = isRealWinElectron()
 
   const SETTINGS = computed(() => settingsStore)
 

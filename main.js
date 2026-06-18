@@ -32,7 +32,7 @@ const {autoUpdater} = require('electron-updater')
 
 const isWindows = os.type() === 'Windows_NT'
 // TEMP: match src/utils/debugWinElectronUi.js — remove when done debugging header UI
-const TEMP_FORCE_WIN_ELECTRON_UI = true
+const TEMP_FORCE_WIN_ELECTRON_UI = false
 const useWinElectronFrame = isWindows || TEMP_FORCE_WIN_ELECTRON_UI
 
 let win = null

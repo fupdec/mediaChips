@@ -3,12 +3,12 @@
     :class="{
       'not-macos': !isMac,
       'player-active': player.active,
-      'electron-win': showWinElectronUi,
+      'electron-win': isWin && isElectron,
     }"
   >
     <template v-if="!isPlayerWindow">
       <SystemBar
-        v-if="showWinElectronUi && !isPlayerWindow"
+        v-if="isWin && isElectron && !isPlayerWindow"
         :disabled="store.isLocked"
         @lock="store.isLocked = true"
       />
@@ -78,7 +78,6 @@ import axios from "axios"
 import _ from "lodash"
 import {useEventBus} from "@/utils/eventBus"
 import {useWatcher} from '@/composable/Watcher'
-import {isWinElectronUi as shouldUseWinElectronUi} from '@/utils/debugWinElectronUi'
 
 import SystemBar from "@/components/app/SystemBar.vue"
 import AppBar from "@/components/app/AppBar.vue"
@@ -110,17 +109,16 @@ const upd = ref(0)
 const userAgent = navigator.userAgent.toLowerCase()
 const isElectron = userAgent.includes(' electron/')
 const isMac = userAgent.includes('mac')
+const isWin = userAgent.includes('windows')
 
 store.isElectron = isElectron
-
-const showWinElectronUi = shouldUseWinElectronUi()
 
 const isPlayerWindow = computed(() => !!route.query.player)
 const isPlayerShow = computed(() => isPlayerWindow.value || player.active)
 const contextMenu = computed(() => contextMenuStore)
 
 const addedTopClasses = computed(() => ({
-  'windows-os-added-top': showWinElectronUi,
+  'windows-os-added-top': isWin && isElectron,
   'added-top-tabs': store.tabs.length,
 }))
 

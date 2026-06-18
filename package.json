@@ -18,8 +18,6 @@
     "server-lan": "node -e \"process.env.MEDIA_CHIPS_ALLOW_LAN='1'; require('./app/server.js')\"",
     "server-dev": "nodemon --watch app/server.js --watch api app/server.js",
     "electron": "electron .",
-    "electron:debug-win-ui": "npm run build && electron .",
-    "dev:debug-win-ui": "VITE_DEBUG_WIN_ELECTRON_UI=1 vite",
     "electron:gpu-debug": "electron . --in-process-gpu",
     "download-parser-model": "node scripts/download-parser-model.js",
     "prepack": "npm run download-parser-model",
