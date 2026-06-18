@@ -3,6 +3,7 @@
     :class="{
       'not-macos': !isMac,
       'player-active': player.active,
+      'electron-win': isWin && isElectron,
     }"
   >
     <template v-if="!isPlayerWindow">
@@ -105,10 +106,12 @@ const eventBus = useEventBus()
 const isAppReady = ref(false)
 const upd = ref(0)
 
-const display = useDisplay()
-const isElectron = display.platform.value.electron
-const isMac = display.platform.value.mac
-const isWin = display.platform.value.win
+const userAgent = navigator.userAgent.toLowerCase()
+const isElectron = userAgent.includes(' electron/')
+const isMac = userAgent.includes('mac')
+const isWin = userAgent.includes('windows')
+
+store.isElectron = isElectron
 
 const isPlayerWindow = computed(() => !!route.query.player)
 const isPlayerShow = computed(() => isPlayerWindow.value || player.active)
@@ -204,15 +207,6 @@ function runAutoRegistration() {
 
 /* ------------------------- OTHER LOGIC ------------------------- */
 
-async function checkElectron() {
-  store.isElectron = navigator.userAgent.toLowerCase().includes(" electron/")
-}
-
-async function clearConsole() {
-  console.clear()
-  console.log(new Date().toLocaleTimeString())
-}
-
 const saveWindowSize = _.debounce(() => {
   const app_window = isPlayerWindow ? 'player' : 'win'
   const data = {
@@ -258,8 +252,6 @@ onMounted(async () => {
     await loadList("/api/playlist", "playlists")
   })
   eventBus.on("updatePage", () => ++upd.value)
-
-  await checkElectron()
 
   eventBus.on('update:watcher', handleUpdateWatcher)
 
@@ -347,6 +339,13 @@ body {
     &.added-top-tabs {
       padding-bottom: 28px;
     }
+  }
+}
+
+// backdrop-filter breaks GPU compositing in Electron on Windows (blank white window)
+.electron-win {
+  * {
+    backdrop-filter: none !important;
   }
 }
 </style>

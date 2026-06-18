@@ -15,21 +15,40 @@ if (!gotTheLock) {
 }
 
 const os = require('os')
-process.env.MEDIA_CHIPS_ALLOW_LAN = process.env.MEDIA_CHIPS_ALLOW_LAN || '1'
-const server = require('./app/server.js')
 const path = require('path')
+process.env.MEDIA_CHIPS_ALLOW_LAN = process.env.MEDIA_CHIPS_ALLOW_LAN || '1'
+
+if (process.platform === 'win32') {
+  const disableGpu = ['1', 'true', 'yes', 'on'].includes(
+    String(process.env.MEDIA_CHIPS_DISABLE_GPU || '').toLowerCase()
+  )
+  if (disableGpu) {
+    app.disableHardwareAcceleration()
+  }
+}
+
+const server = require('./app/server.js')
 const {autoUpdater} = require('electron-updater')
+
+const isWindows = os.type() === 'Windows_NT'
 
 let win = null
 let loading = null
 let player = null
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
+const sendConfigToWindow = (browserWindow) => {
+  if (!browserWindow || browserWindow.isDestroyed()) return
+  browserWindow.webContents.send('config', server.config)
+}
+
 const createWindow = () => {
   win = new BrowserWindow({
+    show: false,
     height: server.config.win?.height || 720,
     width: server.config.win?.width || 1280,
-    frame: os.type() !== 'Windows_NT',
+    frame: !isWindows,
+    thickFrame: isWindows,
     titleBarStyle: os.type() === 'Darwin' ? 'hidden' : 'default',
     trafficLightPosition: os.type() === 'Darwin' ? {x: 18, y: 15} : null,
     backgroundColor: '#333',
@@ -38,9 +57,9 @@ const createWindow = () => {
       preload: path.join(__dirname, './electron/preload.js'),
       contextIsolation: true,
       sandbox: false,
+      backgroundThrottling: false,
     },
   })
-  win.hide()
   win.loadURL(`http://localhost:${server.config.port}/`)
   win.on('closed', () => {
     if (process.platform !== 'darwin') app.quit()
@@ -64,14 +83,21 @@ const createWindow = () => {
   win.on('focus', () => {
     win.webContents.send('focus')
   })
+  win.once('ready-to-show', () => {
+    win.show()
+  })
   win.webContents.on('did-finish-load', () => {
-    win.webContents.send('config', server.config)
+    sendConfigToWindow(win)
+    // Renderer may mount after the first paint; resend config for late listeners.
+    setTimeout(() => sendConfigToWindow(win), 500)
+    setTimeout(() => sendConfigToWindow(win), 2000)
     if (isDevelopment) {
       // win.webContents.openDevTools();
     }
-    win.show()
   })
 }
+
+ipcMain.handle('get-config', () => server.config)
 
 // TODO speed up loading window display
 const createLoadingWindow = () => {

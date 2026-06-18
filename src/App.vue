@@ -114,27 +114,35 @@ function initializeApp(server) {
   loadConfig();
 }
 
-function loadConfig() {
+async function loadConfig() {
   // --- Electron mode ---
   if (window.electronAPI) {
-    console.log('⏳ Waiting for config from electronAPI...');
+    console.log('⏳ Loading config from Electron...');
 
-    // Set up config event handler
     window.electronAPI.on("config", (config) => {
-      console.log('✅ Config received from Electron');
-      applyConfig(config);
+      if (!isConfigLoaded.value) {
+        console.log('✅ Config received from Electron');
+        applyConfig(config);
+      }
     });
 
-    // Add timeout in case event doesn't arrive
+    try {
+      const config = await window.electronAPI.invoke('get-config');
+      if (config && !isConfigLoaded.value) {
+        console.log('✅ Config received via get-config');
+        applyConfig(config);
+        return;
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to load config via get-config:', error);
+    }
+
     setTimeout(() => {
       if (!isConfigLoaded.value) {
-        console.warn('⚠️ Config not received due to timeout');
-        // For player, try to get config another way
-        if (isPlayerWindow.value) {
-          fetchConfigFromServer();
-        }
+        console.warn('⚠️ Config not received via IPC, falling back to HTTP');
+        fetchConfigFromServer();
       }
-    }, 5000);
+    }, 1500);
 
     // --- Browser mode ---
   } else {
