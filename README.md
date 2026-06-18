@@ -1,100 +1,268 @@
-```
-npm install --build-from-source
-```
-> working with node v.14
-## Production
+<p align="center">
+  <img src="public/icons/logo.png" alt="MediaChips" width="120" />
+</p>
 
-1. compile frontend files into folder /dist
-```
-npm build
-```
+<h1 align="center">MediaChips</h1>
 
-2. first run of server / app (for creating config files, database)
-```
-npm server
-```
+<p align="center">
+  <strong>Organize, tag, and browse your local media library with ease.</strong>
+</p>
 
-## Development
+<p align="center">
+  <a href="https://mediachips.app">Website</a> ·
+  <a href="https://github.com/fupdec/mediaChips/releases">Downloads</a> ·
+  <a href="https://github.com/fupdec/mediaChips/issues">Issues</a> ·
+  <a href="https://github.com/fupdec/mediaChips/discussions">Discussions</a>
+</p>
 
-1. compile frontend files into folder /dist
-```
-npm build
-```
-2. first run of server / app (for creating config files, database)
-```
-npm server
-```
-3. copy file "config.json" from /dist to /public
-4. change IP to local in file "config.json"
-5. run server for development and autorestart after changing app files
-```
-npm server-dev
-```
-6. run vue service
-```
-npm serve
-```
+<p align="center">
+  <a href="https://github.com/fupdec/mediaChips/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0" /></a>
+  <a href="https://github.com/fupdec/mediaChips/releases"><img src="https://img.shields.io/github/v/release/fupdec/mediaChips?label=version" alt="Latest release" /></a>
+  <a href="https://mediachips.app"><img src="https://img.shields.io/badge/website-mediachips.app-2ea44f" alt="Website" /></a>
+</p>
 
-## Description of npm commands
-- serve - for frontend development
-- build - compile frontend files
-- lint - testing frontend
-- server - start server / app
-- server-dev - start server / app for development
-- electron - run app as electron window
-- pack - compile app for electron production
-- portable - compile app for electron production (only Windows OS)
-- dist - compile app for electron production
+---
 
-## Description of project folders
-- api - DB description, etc.
-- api/controllers - CRUD commands, DB management
-- api/migrations - app migration scipts
-- api/models - table models for DB
-- api/routes - list of URL for server commands
-- app - main folder with server script
-- databases - created dynamically. folder with DB files: sqlite, images
-- dist - created dynamically. compiled frontend files for production
-- electron - main script for running app in electron window
-- public - static files for dev
-- src - files for dev
+MediaChips is open-source software for organizing, tagging, filtering, and playing local video files.  
+Attach rich metadata — tags, ratings, favorites, bookmarks, text, dates, numbers, and more — then browse your library as visual cards, filter it in detail, and play files in the built-in or system player.
 
+> **Privacy first.** MediaChips does not collect your data or send it anywhere. The app is fully transparent — inspect the code, extend it, or self-host it on your network.
 
-## Решение проблем:
+---
 
-sqlite3 на Mac M1 требует python2 для компиляции под архитектуру процессора arm64.
-команда для генерации файлов под электрон.
+## Vue 3 rewrite (v0.13.0+)
 
-```
-npm install sqlite3 --build-from-source --target_arch=arm64 --fallback-to-build;
-```
-для работы sqlite3 как обычно, нужно перезапускать его установку
+Starting with **v0.13.0**, the `master` branch is a full rewrite:
 
-```
-npm install sqlite3;
+| | **Current (`master`)** | **Legacy (`legacy/vue2`)** |
+|---|---|---|
+| Stack | Vue 3 · Vite · Vuetify 3 · Express · Electron | Vue 2 · Webpack · Vuetify 2 |
+| Last release | [v0.13.0](https://github.com/fupdec/mediaChips/releases/tag/v0.13.0) | [v0.12.5-beta](https://github.com/fupdec/mediaChips/releases/tag/v0.12.5-beta) |
+| Status | Active development | Maintenance / reference only |
+
+To work with the old codebase:
+
+```bash
+git checkout legacy/vue2
 ```
 
-sqlite3 версии 5.1.6 хорошо работает как на macOS так и на Windows 11
+Older releases and tags remain available in [Releases](https://github.com/fupdec/mediaChips/releases).
 
-чтобы не приходилось билдить sqlite3 отдельно для электрон, а отдельно для разработки, 
-нужно запустить одновременно скрипты для разработки и запустить электрон приложение
+---
 
-## Подпись на macOS
+## Features
+
+### Media + Chips
+
+**Chips** (metadata) are pieces of information attached to your files: tags, ratings, favorites, bookmarks, text, dates, numbers, and custom types you define.  
+Each chip can be customized — add images, colors, countries, nested chips, and more.
+
+### Browse
+
+- Video cards with metadata, hover preview, and inline playback
+- Built-in player with timeline markers, playlist, and storyboard view
+- Customizable appearance: colors, card layout, chip styles, dark mode
+- Tabs for videos and tags, multiple databases
+
+### Filter & Sort
+
+- Filter by any parameter or tag
+- Save and load filter presets
+- Quick filters, favorites, and global search
+- Sort by rating, date, and other fields
+
+### Share on your LAN
+
+Open your library in a browser on any device on the local network — phone, tablet, TV, or another computer.  
+Desktop builds are available for **macOS**, **Windows**, and **Linux**.
+
+### Tools
+
+- Watched folders for new and removed files
+- File operations: move, delete, open containing folder
+- Password protection
+- Duplicate detection by file size
+- Data scraper for adult content
+- Path-based tag suggestions (optional ML model)
+
+---
+
+## Download
+
+Pre-built installers are published on GitHub:
+
+**[⬇ Download latest release](https://github.com/fupdec/mediaChips/releases/latest)**
+
+For macOS installation notes (Gatekeeper / quarantine), see [INSTALLATION.md](./INSTALLATION.md).
+
+---
+
+## Build from source
+
+### Requirements
+
+- **Node.js** 18 or newer (LTS recommended)
+- **npm** 9+
+- Platform build tools for native modules (`sqlite3`, `ffmpeg-static`)
+
+### Install dependencies
+
+```bash
+git clone https://github.com/fupdec/mediaChips.git
+cd mediaChips
+npm install
+npm run download-parser-model   # optional: ML path tag parser model
+```
+
+### Production
+
+1. Build the frontend into `/dist`:
+
+```bash
+npm run build
+```
+
+2. Start the server (creates config and database on first run):
+
+```bash
+npm run server
+```
+
+3. Open **http://localhost:12321** in your browser.
+
+To expose the server on your LAN:
+
+```bash
+npm run server-lan
+```
+
+### Development
+
+1. Build the frontend once:
+
+```bash
+npm run build
+```
+
+2. Start the backend (creates `public/config.json` on first run):
+
+```bash
+npm run server
+```
+
+3. Copy or edit `public/config.json` if needed (set `ip` to your machine's local address for LAN testing).
+
+4. Run the backend with auto-restart:
+
+```bash
+npm run server-dev
+```
+
+5. In a second terminal, run the Vite dev server for hot reload:
+
+```bash
+npm run dev
+```
+
+6. Open **http://localhost:3000** (frontend) — API requests go to the backend port from `config.json` (default **12321**).
+
+### Desktop app (Electron)
+
+```bash
+npm run build
+npm run electron
+```
+
+### Distribution packages
+
+| Command | Description |
+|---------|-------------|
+| `npm run pack` | Build unpacked app (`release/`) |
+| `npm run dist` | Build installers (NSIS / AppImage / DMG) |
+| `npm run portable` | Windows portable build |
+
+Build artifacts are written to the `release/` directory.
+
+---
+
+## npm scripts
+
+| Script | Description |
+|--------|-------------|
+| `dev` | Vite dev server with hot reload |
+| `build` | Compile frontend to `dist/` |
+| `preview` | Preview production build |
+| `server` | Start Express server / app backend |
+| `server-dev` | Start server with nodemon (auto-restart) |
+| `server-lan` | Start server bound to `0.0.0.0` for LAN access |
+| `electron` | Run the Electron desktop shell |
+| `download-parser-model` | Download ML model for path tag suggestions |
+| `pack` | Electron-builder — unpacked output |
+| `dist` | Electron-builder — full installers |
+| `portable` | Electron-builder — Windows portable |
+
+---
+
+## Project structure
 
 ```
-# Дайте права скриптам
-chmod +x scripts/*.sh
-
-# Запустите полный процесс
-npm run release
-
-# Или по шагам:
-npm run create-cert   # 1. Создать сертификат
-npm run build        # 2. Собрать приложение
-npm run sign         # 3. Подписать
-npm run dmg          # 4. Создать DMG
+api/            Database models, migrations, controllers, routes
+app/            Express server, tasks, default settings
+databases/      Created at runtime — SQLite DBs and generated images
+dist/           Production frontend build (generated)
+electron/       Electron preload scripts
+public/         Static assets, dev config (`config.json`)
+src/            Vue 3 frontend source
+models/         ML model files for path tag parser
+scripts/        Build and utility scripts
 ```
 
-## Примечание 
+---
 
-Electron >32 удаляет папку databases 
+## Troubleshooting
+
+### `sqlite3` on Apple Silicon (M1/M2/M3)
+
+If `sqlite3` fails to compile for `arm64`, rebuild it for Electron:
+
+```bash
+npm install sqlite3 --build-from-source --target_arch=arm64 --fallback-to-build
+```
+
+For regular Node.js development, reinstall normally:
+
+```bash
+npm install sqlite3
+```
+
+`sqlite3` **5.1.6+** works well on macOS and Windows 11.  
+To avoid rebuilding separately for Electron and for development, run dev scripts and Electron in parallel against the same `node_modules` install.
+
+### Electron and the `databases` folder
+
+Electron 32+ may remove the `databases` directory in certain build configurations.  
+Keep backups of your databases before packaging, or store them outside the app bundle.
+
+### macOS code signing
+
+MediaChips is open source and uses self-signed builds. See [INSTALLATION.md](./INSTALLATION.md) for opening the app on macOS.
+
+---
+
+## Contributing
+
+Found a bug or want a new feature?
+
+1. Check [existing issues](https://github.com/fupdec/mediaChips/issues)
+2. Open a new issue with steps to reproduce or a clear feature description
+3. Pull requests are welcome
+
+Community: [Discord](https://discord.gg/dEQPper2yu) · [Reddit](https://reddit.com/r/mediachips/)
+
+---
+
+## License
+
+MediaChips is licensed under the [GNU General Public License v3.0](./LICENSE).
+
+Copyright © 2020–2026 [MediaChips contributors](https://github.com/fupdec/mediaChips/graphs/contributors)

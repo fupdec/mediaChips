@@ -1,116 +1,100 @@
-# 🍎 Installing MediaChips on macOS
+# Installing MediaChips
 
-## 📦 Method 1: Easy Installation
+Pre-built installers are published on [GitHub Releases](https://github.com/fupdec/mediaChips/releases/latest).
 
-1. **Download** `MediaChips-0.13.0.dmg`
-2. **Open** the DMG file
-3. **Drag** MediaChips to Applications folder
-4. **Right-click** MediaChips in Applications
-5. Select **"Open"**
-6. Click **"Open"** in the security dialog
+| Platform | File |
+|----------|------|
+| macOS | `MediaChips-<version>.dmg` |
+| Windows | `MediaChips-<version>-win.exe` (installer) or portable build |
+| Linux | `MediaChips-<version>.AppImage` |
 
-## ⚡ Method 2: Terminal (Quickest)
+To build from source, see [README.md](./README.md).
+
+---
+
+## macOS
+
+### Method 1: Standard installation
+
+1. Download `MediaChips-<version>.dmg` from [Releases](https://github.com/fupdec/mediaChips/releases/latest).
+2. Open the DMG file.
+3. Drag **MediaChips** to the **Applications** folder.
+4. **Right-click** MediaChips in Applications and choose **Open**.
+5. Click **Open** in the security dialog.
+
+### Method 2: Terminal (fastest)
+
+After downloading and installing the app:
 
 ```bash
-# After downloading and mounting the DMG
 sudo xattr -rd com.apple.quarantine /Applications/MediaChips.app
-
-# Then open normally
 open /Applications/MediaChips.app
 ```
-❓ Why self-signed?
-MediaChips is 100% open source and free. Apple requires a $99/year developer fee for official signing. Instead of charging users, we use self-signing.
 
-🔒 Security Note
-You can verify the source code:
+### Why is the app self-signed?
 
-GitHub: https://github.com/mediachips/mediachips
+MediaChips is free and open source. Apple charges a yearly fee for notarized distribution, so community builds are self-signed instead of passing that cost on to users.
 
-All code is publicly auditable
+### Security
 
-No telemetry or data collection
+You can verify the application yourself:
 
-🛠 Troubleshooting
-"MediaChips is damaged"
-bash
+- Source code: [github.com/fupdec/mediaChips](https://github.com/fupdec/mediaChips)
+- All code is publicly auditable
+- No telemetry or data collection
+
+---
+
+## Windows
+
+1. Download the installer or portable build from [Releases](https://github.com/fupdec/mediaChips/releases/latest).
+2. Run the installer and follow the setup wizard, **or** extract/run the portable executable.
+3. If SmartScreen warns about an unknown publisher, choose **More info** → **Run anyway** (the build is not code-signed with a commercial certificate).
+
+---
+
+## Linux
+
+1. Download the `.AppImage` from [Releases](https://github.com/fupdec/mediaChips/releases/latest).
+2. Make it executable:
+
+```bash
+chmod +x MediaChips-*.AppImage
+./MediaChips-*.AppImage
 ```
+
+---
+
+## Troubleshooting (macOS)
+
+### "MediaChips is damaged and can't be opened"
+
+```bash
 sudo xattr -rd com.apple.quarantine /Applications/MediaChips.app
 sudo codesign --force --deep --sign - /Applications/MediaChips.app
 ```
-Won't open
-Go to System Settings → Privacy & Security
 
-Scroll down to "Security"
+### App won't open
 
-Click "Open Anyway" next to MediaChips
+1. Open **System Settings** → **Privacy & Security**.
+2. Scroll to **Security**.
+3. Click **Open Anyway** next to MediaChips.
 
-Still having issues?
-Completely remove:
+### Still not working
 
-bash
-```
+Remove the app and install again:
+
+```bash
 sudo rm -rf /Applications/MediaChips.app
 ```
-Redownload from GitHub Releases
 
-Follow Method 1 above
+Then redownload from [GitHub Releases](https://github.com/fupdec/mediaChips/releases/latest) and follow the installation steps above.
 
-📞 Need Help?
-GitHub Issues: https://github.com/mediachips/mediachips/issues
+---
 
-Discussions: https://github.com/mediachips/mediachips/discussions
+## Need help?
 
-text
-
-### 9. **Финальный скрипт для релиза**
-
-**scripts/release.sh:**
-```bash
-#!/bin/bash
-# Полный релиз MediaChips
-
-echo "🚀 Starting MediaChips release process..."
-echo "=========================================="
-
-# 1. Обновляем версию
-read -p "Version [current: $(node -p "require('./package.json').version")]: " version
-if [ ! -z "$version" ]; then
-    npm version "$version" --no-git-tag-version
-fi
-
-# 2. Создаем сертификат
-echo ""
-echo "🔐 Step 1: Creating certificate..."
-bash scripts/create-cert.sh
-
-# 3. Собираем приложение
-echo ""
-echo "🔨 Step 2: Building application..."
-npm run build
-
-# 4. Подписываем
-echo ""
-echo "📝 Step 3: Signing application..."
-bash scripts/sign-app.sh
-
-# 5. Создаем DMG
-echo ""
-echo "📦 Step 4: Creating DMG..."
-bash scripts/build-dmg.sh
-
-# 6. Проверяем
-echo ""
-echo "🔍 Step 5: Verification..."
-codesign -dv --verbose=4 "dist/MediaChips-$(node -p "require('./package.json').version").dmg"
-
-echo ""
-echo "=========================================="
-echo "🎉 Release complete!"
-echo ""
-echo "📁 Files created in dist/:"
-ls -lh dist/
-echo ""
-echo "📢 Next steps:"
-echo "1. Upload DMG to GitHub Releases"
-echo "2. Update INSTALLATION.md if needed"
-echo "3. Share with your users!"
+- [GitHub Issues](https://github.com/fupdec/mediaChips/issues)
+- [GitHub Discussions](https://github.com/fupdec/mediaChips/discussions)
+- [Discord](https://discord.gg/dEQPper2yu)
+- [Reddit](https://reddit.com/r/mediachips/)
