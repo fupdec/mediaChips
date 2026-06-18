@@ -7,11 +7,17 @@
     window
     app
   >
-    <v-menu bottom
-      theme="light"
-      offset-y
-      min-width="160"
-      class="system-menu">
+    <div class="app-menu-container">
+      <v-menu
+        bottom
+        offset-y
+        :offset="[1, -1]"
+        :transition="false"
+        min-width="150"
+        content-class="system-menu-dropdown"
+        class="system-menu"
+        :z-index="2000"
+      >
 
       <template v-slot:activator="{ props }">
         <v-btn
@@ -22,53 +28,56 @@
           size="small"
           variant="text"
         >
-          App
+          {{ t('systemBar.menu_app') }}
         </v-btn>
       </template>
 
       <v-list
         density="compact"
         class="context-menu"
-        rounded="lg"
+        :lines="false"
         nav
+        rounded="lg"
       >
+        <div class="wrapper">
+          <v-list-item
+            link
+            class="pr-3"
+            @click="lock"
+            :disabled="SETTINGS.passwordProtection !== '1'"
+          >
+            <v-list-item-title>
+              <v-icon class="mr-3">mdi-lock</v-icon>
+              {{ t('systemBar.lock') }}
+            </v-list-item-title>
+          </v-list-item>
 
-        <v-list-item
-          link
-          @click="lock"
-          :disabled="SETTINGS.passwordProtection !== '1'"
-        >
-          <template v-slot:prepend>
-            <v-icon size="small">mdi-lock</v-icon>
-          </template>
+          <v-divider class="ma-1"/>
 
-          <v-list-item-title>
-            Lock
-          </v-list-item-title>
-        </v-list-item>
-
-        <v-divider class="my-1"></v-divider>
-
-        <v-list-item link
-          density="compact"
-          @click="close">
-
-          <template v-slot:prepend>
-            <v-icon size="small">mdi-logout</v-icon>
-          </template>
-
-          <v-list-item-title>
-            Exit
-          </v-list-item-title>
-
-        </v-list-item>
+          <v-list-item
+            link
+            class="pr-3"
+            @click="close"
+          >
+            <v-list-item-title>
+              <v-icon class="mr-3">mdi-logout</v-icon>
+              {{ t('common.exit') }}
+            </v-list-item-title>
+          </v-list-item>
+        </div>
       </v-list>
-    </v-menu>
+      </v-menu>
 
-    <v-menu bottom
-      offset-y
-      min-width="160"
-      class="system-menu">
+      <v-menu
+        bottom
+        offset-y
+        :offset="[1, -1]"
+        :transition="false"
+        min-width="150"
+        content-class="system-menu-dropdown"
+        class="system-menu"
+        :z-index="2000"
+      >
       <template v-slot:activator="{ props }">
         <v-btn
           v-bind="props"
@@ -78,41 +87,48 @@
           size="small"
           variant="text"
         >
-          Help
+          {{ t('systemBar.menu_help') }}
         </v-btn>
       </template>
 
       <v-list
         density="compact"
         class="context-menu"
-        rounded="lg"
+        :lines="false"
         nav
+        rounded="lg"
       >
-        <v-list-item link
-          @click="toggleDevTools">
-          <template v-slot:prepend>
-            <v-icon size="small">mdi-tools</v-icon>
-          </template>
-          <v-list-item-title>
-            Toggle Developer Tools
-            <span class="pl-8">
-              <v-hotkey keys="Ctrl+Shift+I"></v-hotkey>
-            </span>
-          </v-list-item-title>
-        </v-list-item>
-        <v-divider class="my-1"></v-divider>
-        <v-list-item link
-          density="compact"
-          @click="about">
-          <template v-slot:prepend>
-            <v-icon size="small">mdi-information-variant</v-icon>
-          </template>
-          <v-list-item-title>
-            About
-          </v-list-item-title>
-        </v-list-item>
+        <div class="wrapper">
+          <v-list-item
+            link
+            class="pr-3"
+            @click="toggleDevTools"
+          >
+            <v-list-item-title class="system-menu-item-with-hotkey">
+              <span>
+                <v-icon class="mr-3">mdi-tools</v-icon>
+                {{ t('systemBar.toggle_dev_tools') }}
+              </span>
+              <v-hotkey keys="Ctrl+Shift+I" inline/>
+            </v-list-item-title>
+          </v-list-item>
+
+          <v-divider class="ma-1"/>
+
+          <v-list-item
+            link
+            class="pr-3"
+            @click="about"
+          >
+            <v-list-item-title>
+              <v-icon class="mr-3">mdi-information-variant</v-icon>
+              {{ t('settings.tabs.about') }}
+            </v-list-item-title>
+          </v-list-item>
+        </div>
       </v-list>
-    </v-menu>
+      </v-menu>
+    </div>
 
     <v-spacer></v-spacer>
     <div
@@ -135,6 +151,7 @@
 <script setup>
 import {ref, computed, onMounted, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useHeaderBarStyle} from '@/composable/useHeaderBarStyle'
@@ -152,6 +169,7 @@ const emit = defineEmits(['lock'])
 const maximized = ref(false)
 
 const router = useRouter()
+const {t} = useI18n()
 
 // Хранилища Pinia
 const settingsStore = useSettingsStore()
@@ -200,7 +218,7 @@ const forward = () => {
 
 const toggleDevTools = () => {
   if (window.electronAPI) {
-    window.electronAPI.send("toggleDevTools")
+    window.electronAPI.invoke('toggleDevTools')
   }
 }
 
@@ -258,10 +276,12 @@ onUnmounted(() => {
 <style lang="scss">
 .app-menu-container {
   -webkit-app-region: no-drag;
-  position: absolute;
-  top: 0;
-  left: 30px;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
   height: 100%;
+  flex: 0 0 auto;
 
   .v-btn {
     text-transform: capitalize;
@@ -278,26 +298,27 @@ onUnmounted(() => {
 
 .app-system-bar-title {
   position: absolute;
-  width: 100%;
+  left: 120px;
+  right: 138px;
   text-align: center;
   font-size: 12px;
-  pointer-events: none;
   -webkit-app-region: drag;
 }
 
 .v-system-bar {
-  overflow: hidden;
+  overflow: visible;
 
   &:before {
     content: "";
     position: absolute;
     height: 100%;
     top: 3px;
-    left: 3px;
+    left: 120px;
     right: 138px;
     background-color: transparent;
     -webkit-app-region: drag;
     pointer-events: none;
+    z-index: 0;
   }
 
   &.maximized:before {
@@ -311,8 +332,35 @@ onUnmounted(() => {
 }
 
 .system-menu-btn {
-  z-index: 1;
+  position: relative;
+  z-index: 2;
   -webkit-app-region: no-drag;
+}
+
+.system-menu-dropdown {
+  min-width: 150px !important;
+}
+
+.system-bar-custom .context-menu {
+  min-width: 150px;
+
+  .system-menu-item-with-hotkey {
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    > span:first-child {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    :deep(.v-hotkey) {
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+  }
 }
 
 @media (max-width: 840px) {

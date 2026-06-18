@@ -5,8 +5,6 @@
       'os-darwin': isMac && !fullscreen,
       'os-windows-electron': isWinElectron,
     }"
-    :elevation="isWinElectron ? 0 : undefined"
-    :flat="isWinElectron"
     density="compact"
     extension-height="36"
     :hide-on-scroll="xs"

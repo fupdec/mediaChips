@@ -36,7 +36,8 @@ const validInvokeChannels = [
   'unmaximize',
   'minimize',
   'relaunch',
-  'closePlayer'
+  'closePlayer',
+  'toggleDevTools'
 ];
 
 const validOnChannels = [

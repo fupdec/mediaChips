@@ -23,11 +23,8 @@ export function useHeaderBarStyle(variant = 'app') {
   })
 
   const colorRGBA = computed(() => {
-    if (isWinElectron) {
-      return color.value
-    }
-
-    const opacity = variant === 'system' ? 80 : 60
+    // Windows Electron: same semi-transparent header as macOS AppBar
+    const opacity = isWinElectron ? 60 : (variant === 'system' ? 80 : 60)
     return $readable.hexToRgba(color.value, opacity)
   })
 
@@ -40,10 +37,7 @@ export function useHeaderBarStyle(variant = 'app') {
 
     if (!g || typeof g !== 'string') return ''
 
-    let alpha = variant === 'system' ? 0.8 : 0.6
-    if (isWinElectron) {
-      alpha = 1
-    }
+    const alpha = isWinElectron ? 0.6 : (variant === 'system' ? 0.8 : 0.6)
 
     return 'background:' + $readable.addTransparencyToGradient(g, alpha)
   })

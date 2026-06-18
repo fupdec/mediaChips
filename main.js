@@ -31,6 +31,9 @@ const server = require('./app/server.js')
 const {autoUpdater} = require('electron-updater')
 
 const isWindows = os.type() === 'Windows_NT'
+// TEMP: match src/utils/debugWinElectronUi.js — remove when done debugging header UI
+const TEMP_FORCE_WIN_ELECTRON_UI = true
+const useWinElectronFrame = isWindows || TEMP_FORCE_WIN_ELECTRON_UI
 
 let win = null
 let loading = null
@@ -47,10 +50,10 @@ const createWindow = () => {
     show: false,
     height: server.config.win?.height || 720,
     width: server.config.win?.width || 1280,
-    frame: !isWindows,
-    thickFrame: isWindows,
-    titleBarStyle: os.type() === 'Darwin' ? 'hidden' : 'default',
-    trafficLightPosition: os.type() === 'Darwin' ? {x: 18, y: 15} : null,
+    frame: !useWinElectronFrame,
+    thickFrame: useWinElectronFrame,
+    titleBarStyle: os.type() === 'Darwin' && !useWinElectronFrame ? 'hidden' : 'default',
+    trafficLightPosition: os.type() === 'Darwin' && !useWinElectronFrame ? {x: 18, y: 15} : null,
     backgroundColor: '#333',
     icon: path.join(__dirname, 'dist/icons', 'icon.png'),
     webPreferences: {
@@ -98,6 +101,12 @@ const createWindow = () => {
 }
 
 ipcMain.handle('get-config', () => server.config)
+
+ipcMain.handle('toggleDevTools', () => {
+  if (win && !win.isDestroyed()) {
+    win.webContents.toggleDevTools()
+  }
+})
 
 // TODO speed up loading window display
 const createLoadingWindow = () => {

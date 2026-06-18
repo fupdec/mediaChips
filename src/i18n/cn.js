@@ -32,6 +32,12 @@ const cn = {
     activeProcessesCount: '活动进程：{count}。详情在通知列表中',
     openNotificationsList: '打开列表',
   },
+  systemBar: {
+    menu_app: '应用',
+    menu_help: '帮助',
+    lock: '锁定',
+    toggle_dev_tools: '开发者工具',
+  },
   operations: {
     moving: {
       title: '移动文件',

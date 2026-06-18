@@ -34,7 +34,8 @@ onMounted(() => {
     ></settings-switch>
 
     <!-- Password fields -->
-    <v-row v-if="SETTINGS.passwordProtection === '1'">
+    <v-row v-if="SETTINGS.passwordProtection === '1'"
+      class="mb-4">
       <v-col cols="12"
         sm="6">
         <v-text-field

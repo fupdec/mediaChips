@@ -344,24 +344,51 @@ body {
   }
 }
 
-// backdrop-filter breaks GPU compositing in Electron on Windows (blank white window)
+// Windows Electron header chrome (macOS-like transparency + blur)
 .electron-win {
-  * {
-    backdrop-filter: none !important;
-  }
-
   .system-bar-custom.v-system-bar {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     box-shadow: none !important;
     border-bottom: none !important;
+    overflow: visible;
+    z-index: 1010 !important;
   }
 
   .v-app-bar.os-windows-electron {
-    box-shadow: none !important;
     border-top: none !important;
+    box-shadow: none !important;
 
     .v-toolbar__underlay {
-      opacity: 1 !important;
+      opacity: 0;
     }
+
+    // macOS-style: bar is semi-transparent, blur only on toolbar buttons
+    .v-toolbar__content .v-btn {
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+
+      &:not(.v-btn--variant-flat) {
+        background: transparent !important;
+
+        .v-btn__overlay,
+        .v-btn__underlay {
+          opacity: 0;
+        }
+
+        &:hover .v-btn__overlay {
+          opacity: var(--v-hover-opacity);
+        }
+      }
+    }
+  }
+
+  .added-top.blur {
+    backdrop-filter: blur(10px);
+  }
+
+  .filters-drawer .filter-block {
+    backdrop-filter: blur(20px);
   }
 }
 </style>

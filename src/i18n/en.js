@@ -32,6 +32,12 @@ const en = {
     activeProcessesCount: 'Active processes: {count}. Details are in the notifications list',
     openNotificationsList: 'Open list',
   },
+  systemBar: {
+    menu_app: 'App',
+    menu_help: 'Help',
+    lock: 'Lock',
+    toggle_dev_tools: 'Toggle Developer Tools',
+  },
   operations: {
     moving: {
       title: 'Moving files',

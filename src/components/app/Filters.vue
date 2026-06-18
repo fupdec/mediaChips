@@ -6,7 +6,7 @@
     :temporary="filtersStore.attached"
     :scrim="false"
     disable-resize-watcher
-    width="400"
+    width="450"
     floating
   >
     <v-card variant="tonal" color="primary" class="filter-block" rounded="xl">

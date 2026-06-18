@@ -32,6 +32,12 @@ const es = {
     activeProcessesCount: 'Procesos activos: {count}. Los detalles están en la lista de notificaciones',
     openNotificationsList: 'Abrir lista',
   },
+  systemBar: {
+    menu_app: 'App',
+    menu_help: 'Ayuda',
+    lock: 'Bloquear',
+    toggle_dev_tools: 'Herramientas de desarrollo',
+  },
   operations: {
     moving: {
       title: 'Moviendo archivos',

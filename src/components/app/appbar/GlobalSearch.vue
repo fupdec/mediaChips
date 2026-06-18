@@ -8,7 +8,7 @@ import _ from 'lodash'
 
 const {t} = useI18n()
 
-useHotkey('/', () => {
+useHotkey('slash', () => {
   showSearch()
 })
 
@@ -188,7 +188,7 @@ function getNameHighlighted(text) {
         :action="showSearch"
         :text="t('appbar.buttons.search')"
         icon="magnify"
-        hotkey="/"
+        hotkey="slash"
       />
     </template>
     <template #default>

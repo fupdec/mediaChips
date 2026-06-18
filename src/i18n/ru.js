@@ -32,6 +32,12 @@ const ru = {
     activeProcessesCount: 'Активных процессов: {count}. Подробности в списке уведомлений',
     openNotificationsList: 'Открыть список',
   },
+  systemBar: {
+    menu_app: 'Приложение',
+    menu_help: 'Справка',
+    lock: 'Заблокировать',
+    toggle_dev_tools: 'Инструменты разработчика',
+  },
   operations: {
     moving: {
       title: 'Перемещение файлов',
