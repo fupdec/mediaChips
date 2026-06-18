@@ -1,0 +1,362 @@
+<template>
+  <v-form ref="form"
+    v-model="valid"
+    class="filter-form"
+  >
+    <v-btn
+      v-if="isDisabled"
+      icon="mdi-lock"
+      class="disabled-btn"
+      disabled
+    ></v-btn>
+
+    <v-card
+      class="mb-4 pa-1 rounded-xl filter"
+      :class="{ active: active, removed: removed, disabled: isDisabled }"
+      :disabled="isDisabled"
+      :variant="filter.active ? 'text' : 'plain'"
+    >
+      <div class="d-flex align-center justify-space-between">
+        <v-btn
+          @click="toggleRemoved"
+          color="error"
+          class="mr-2"
+          icon
+          size="small"
+          :title="removed ? t('common.restore') : t('common.remove')"
+          :variant="removed?'text':'plain'"
+        >
+          <v-icon v-if="removed"
+            size="20"
+            color="error">mdi-close-circle
+          </v-icon>
+          <v-icon v-else
+            size="20"
+            color="grey">mdi-close
+          </v-icon>
+        </v-btn>
+
+        <div class="d-flex align-center filter__title_block">
+          <v-icon size="small"
+            start>mdi-{{ icon }}
+          </v-icon>
+          <div class="text-body-2 filter__title">{{ title }}</div>
+
+          <v-select
+            v-if="filter.active"
+            @update:model-value="setCondition"
+            :model-value="condition"
+            :items="$readable.getListCond(filter.type)"
+            :rules="[(v) => !!v || t('validation.condition_required')]"
+            item-value="cond"
+            class="filter__cond ml-2 mt-0 pt-0"
+            :title="getConditionTitle(filter.type, condition)"
+            hide-details
+            density="compact"
+            rounded
+            variant="outlined"
+            :menu-props="{
+              contentClass: 'custom-list',
+            }"
+          >
+            <template v-slot:selection="{ item }">
+              <v-icon :icon="`mdi-${item.raw.icon}`"
+                size="small"></v-icon>
+            </template>
+            <template v-slot:item="{ item, props: menuProps }">
+              <v-list-item v-bind="menuProps">
+                <template v-slot:title>
+                  <div class="text-body-2 py-1">
+                    <v-icon :icon="`mdi-${item.raw.icon}`"
+                      size="small"></v-icon>
+                    <span class="pl-4">{{ getConditionText(item.raw.text) }}</span>
+                  </div>
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+        </div>
+
+        <v-btn @click="toggleActivation"
+          :variant="active?'text':'plain'"
+          :title="t('actions.activate')"
+          color="success"
+          class="ml-2"
+          icon
+          size="small">
+          <v-icon v-if="active"
+            size="20">mdi-checkbox-marked-circle
+          </v-icon>
+          <v-icon v-else
+            size="20"
+            color="grey">mdi-circle-outline
+          </v-icon>
+        </v-btn>
+      </div>
+
+      <div v-if="active">
+        <v-text-field
+          v-if="is_value_required && (filter.type === 'string' || filter.type === null)"
+          v-model="filterValue"
+          :disabled="is_locked || !is_value_required"
+          class="ma-1 pt-0"
+          hide-details
+          density="compact"
+          variant="outlined"
+          rounded
+        />
+
+        <v-text-field
+          v-if="filter.type === 'number' && parameter !== 'rating'"
+          :model-value="filterValue"
+          @update:model-value="setValue"
+          :disabled="is_locked || !is_value_required"
+          type="number"
+          class="ma-1 pt-0"
+          hide-details
+          density="compact"
+          variant="outlined"
+          rounded
+        >
+          <template v-slot:append>
+            <span
+              v-if="parameter === 'filesize'"
+              class="mr-2"
+              style="white-space: nowrap;"
+              v-html="$readable.getReadableFileSize(filter.val)"
+            ></span>
+            <span
+              v-if="parameter === 'duration'"
+              class="mr-2"
+              style="white-space: nowrap;"
+              v-html="$readable.getReadableDuration(filter.val)"
+            ></span>
+          </template>
+        </v-text-field>
+
+        <v-rating
+          v-if="parameter === 'rating' && filter.type !== 'rating'"
+          @update:model-value="setValue"
+          :model-value="Number(filter.val)"
+          color="yellow-darken-2"
+          background-color="grey-lighten-1"
+          empty-icon="mdi-star-outline"
+          half-icon="mdi-star-half-full"
+          density="compact"
+          half-increments
+          clearable
+          hover
+        />
+
+        <MetaInputRating
+          v-if="filter.type === 'rating'"
+          @update:model-value="setValue"
+          :model-value="filter.val"
+          :meta_id="parameter"
+        ></MetaInputRating>
+
+        <v-text-field
+          v-if="filter.type === 'date'"
+          @click="pickDate"
+          :model-value="filter.val"
+          :disabled="is_locked || !is_value_required"
+          class="ma-1 pt-0"
+          readonly
+          hide-details
+          density="compact"
+          rounded
+          variant="outlined"
+        />
+
+        <div
+          v-if="filter.type === 'array' && /\d/.test(parameter) && condition !== 'is null' && condition !== 'not null'"
+          class="pa-1"
+        >
+          <MetaInputArray
+            @update:model-value="setValue"
+            :model-value="filter.val"
+            :meta-id="parameter"
+            :cond="condition"
+            :disabled="is_locked || !is_value_required"
+            :rounded="true"
+            :hide-details="true"
+            :label="false"
+            density="compact"
+            purpose="filter"
+            variant="outlined"
+            multiple
+          />
+        </div>
+
+        <div v-if="parameter === 'country'"
+          class="pa-1">
+          <MetaInputCountry
+            @update:model-value="setValue"
+            :model-value="filter.val"
+            :cond="condition"
+            :disabled="is_locked || !is_value_required"
+            :view="{ hideIcon: true }"
+            purpose="filter"
+            variant="outlined"
+          />
+        </div>
+      </div>
+    </v-card>
+  </v-form>
+</template>
+
+<script setup>
+import {ref, computed, onMounted, watch, defineAsyncComponent} from 'vue'
+import {useI18n} from 'vue-i18n'
+import axios from 'axios'
+import _ from 'lodash'
+import {useAppStore} from '@/stores/app'
+import {useItemsStore} from '@/stores/items'
+
+// Async components
+const MetaInputArray = defineAsyncComponent(() => import("@/components/meta/input/MetaInputArray.vue"))
+const MetaInputCountry = defineAsyncComponent(() => import("@/components/meta/input/MetaInputCountry.vue"))
+const MetaInputRating = defineAsyncComponent(() => import("@/components/meta/input/MetaInputRating.vue"))
+
+// Props
+const props = defineProps({
+  filter: {
+    type: Object,
+    required: true
+  },
+  index: {
+    type: Number,
+    required: true
+  },
+  listBy: {
+    type: Array,
+    default: () => []
+  }
+})
+
+// Emits
+const emit = defineEmits([
+  'setCondition',
+  'setValue',
+  'remove',
+  'pickDate',
+  'setActive',
+  'valid'
+])
+
+// Reactive state
+const form = ref(null)
+const valid = ref(false)
+const active = ref(false)
+const icon = ref('shape')
+const title = ref('')
+
+// Stores and composables
+const appStore = useAppStore()
+const itemsStore = useItemsStore()
+const {t} = useI18n()
+
+// Computed properties
+const modelFilter = computed(() => props.filter)
+const removed = computed(() => modelFilter.value.removed)
+const parameter = computed(() => modelFilter.value.param)
+const condition = computed(() => modelFilter.value.cond)
+const is_locked = computed(() => modelFilter.value.lock)
+const isDisabled = computed(() => is_locked.value || (itemsStore.environment.media_type_id && itemsStore.find_duplicates))
+const is_value_required = computed(() => !['is null', 'not null'].includes(condition.value))
+
+// Methods
+const getParamData = (data) => {
+  const param = _.find(props.listBy, (i) => {
+    if (typeof i.param === 'string') {
+      return i.param === data
+    } else {
+      return i.param === Number(data)
+    }
+  })
+
+  if (param) {
+    icon.value = param.icon || 'shape'
+    title.value = param.textKey ? t(param.textKey) : param.text || ''
+    active.value = modelFilter.value.active
+  }
+}
+
+const filterValue = computed({
+  get() {
+    return modelFilter.value.val || ''
+  },
+  set(value) {
+    emit('setValue', value)
+  },
+})
+
+const setCondition = (val) => {
+  emit('setCondition', val)
+}
+
+const setValue = (val) => {
+  emit('setValue', val)
+}
+
+const toggleRemoved = () => {
+  emit('remove')
+}
+
+const pickDate = () => {
+  emit('pickDate')
+}
+
+const validate = () => {
+  if (form.value) {
+    form.value.validate()
+  }
+}
+
+const toggleActivation = async () => {
+  if (active.value == null) active.value = false
+  active.value = !active.value
+  emit('setActive', active.value)
+
+  try {
+    await axios({
+      method: "put",
+      url: appStore.localhost + "/api/FilterRow/" + modelFilter.value.id,
+      data: {
+        active: active.value,
+      },
+    })
+  } catch (error) {
+    console.error('Error toggling filter activation:', error)
+  }
+}
+
+const getConditionTitle = (type, condition) => {
+  const conditions = $readable.getListCond(type)
+  const item = conditions.find(i => i.cond == condition)
+  return item ? getConditionText(item.text) : ''
+}
+
+const getConditionText = (conditionText) => {
+  const key = conditionText?.replaceAll(' ', '_')
+  return key ? t(`filters.conditions.${key}`, conditionText) : ''
+}
+
+// Lifecycle
+onMounted(() => {
+  getParamData(parameter.value)
+})
+
+// Watchers
+watch(valid, (val) => {
+  emit('valid', val)
+})
+
+watch(() => modelFilter.value.active, (newValue) => {
+  active.value = newValue
+}, {immediate: true})
+
+defineExpose({
+  validate,
+})
+</script>

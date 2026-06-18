@@ -1,0 +1,16 @@
+[*.vue]
+# Базовые настройки отступов
+indent_size = 2
+max_line_length = 80
+
+# Критически важные настройки для переноса атрибутов:
+html_wrap_attributes = new-line
+html_wrap_attributes_indent_size = 1
+html_indent_attributes = true
+
+# Дополнительные настройки для желаемого формата:
+html_keep_line_breaks = true
+html_keep_line_breaks_in_text = true
+html_align_attributes = false
+html_closing_element_new_line = false
+html_empty_tag_style = paired

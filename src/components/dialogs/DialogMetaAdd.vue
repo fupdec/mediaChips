@@ -1,0 +1,286 @@
+<template>
+  <div>
+    <v-dialog
+      v-model="internalDialog"
+      scrollable
+      width="500"
+      @after-leave="resetForm"
+      activator="parent"
+    >
+      <template #activator="{ props: activatorProps }">
+        <v-btn
+          v-bind="activatorProps"
+          color="success"
+          rounded="xl"
+          variant="flat"
+          prepend-icon="mdi-plus"
+          text="Add new meta"
+        ></v-btn>
+      </template>
+
+      <template #default="{ isActive }">
+        <v-card>
+          <DialogHeader
+            @close="closeDialog"
+            :header="`Adding meta`"
+            :buttons="buttons"
+            closable
+          />
+
+          <v-card-text class="pa-4 meta-add-dialog-content">
+            <v-alert color="info" class="text-caption mb-4" variant="tonal" density="compact" rounded="xl">
+              {{ currentMetaType?.hint || 'Select a meta type' }}
+              <div v-show="metaType === 'array' || metaType === 'rating'">
+                After adding, a dialog with detailed settings will appear
+              </div>
+              <div v-show="metaType === 'array'">
+                You can view and manage tags on the page of this tag type. A link
+                of this page will appear in the navigation menu.
+              </div>
+            </v-alert>
+
+            <v-form
+              v-model="valid"
+              ref="form"
+              class="flex-grow-1"
+              @submit.prevent
+            >
+              <v-select
+                v-model="metaType"
+                :items="metaTypes"
+                item-title="text"
+                item-value="value"
+                :rules="[(v) => !!v || 'Type is required']"
+                :menu-props="{ attach: '.meta-add-dialog-content' }"
+                label="Type"
+              >
+                <template v-slot:selection="{ item }">
+                  <v-icon :icon="item.raw.icon" size="16" start />
+                  <span class="text-body-2">{{ item.raw.text }}</span>
+                </template>
+
+                <template v-slot:item="{ props, item }">
+                  <v-list-item
+                    v-bind="props"
+                    :prepend-icon="item.raw.icon"
+                    :title="item.raw.text"
+                    density="compact"
+                  />
+                </template>
+              </v-select>
+
+              <v-text-field
+                v-model="name"
+                :rules="[nameRules]"
+                label="Name"
+              />
+
+              <v-text-field
+                v-model="metaHint"
+                label="Hint"
+                hint="This text under the field is the hint"
+                persistent-hint
+              />
+
+              <DialogIcons
+                :icon="metaIcon"
+                @apply="changeIcon"
+              />
+
+              <v-switch
+                v-if="metaType === 'string'"
+                v-model="isLink"
+                label="Link to an Internet address"
+                hide-details
+              />
+            </v-form>
+          </v-card-text>
+        </v-card>
+      </template>
+    </v-dialog>
+  </div>
+</template>
+
+<script setup>
+import {ref, computed, onMounted, watch} from 'vue'
+import {useAppStore} from '@/stores/app'
+import {useNotificationsStore} from '@/stores/notifications'
+import DialogHeader from '@/components/elements/DialogHeader.vue'
+import DialogIcons from '@/components/dialogs/DialogIcons.vue'
+import MetaTypes from '@/assets/MetaTypes.js'
+import axios from 'axios'
+
+// Props
+const props = defineProps({
+  dialog: {
+    type: Boolean,
+    default: false
+  }
+})
+
+// Emits
+const emit = defineEmits(['update:model-value', 'added', 'close'])
+
+// Stores
+const appStore = useAppStore()
+const notificationsStore = useNotificationsStore()
+
+// Refs
+const form = ref(null)
+const internalDialog = ref(false)
+const dialogIcons = ref(false)
+const valid = ref(false)
+
+const metaTypes = ref(MetaTypes)
+const metaType = ref('array')
+const name = ref('')
+const singular = ref('')
+const metaHint = ref('')
+const metaIcon = ref('shape')
+const isLink = ref(false)
+
+// Buttons for DialogHeader
+const buttons = ref([])
+
+// Computed
+const apiUrl = computed(() => appStore.localhost)
+
+const currentMetaType = computed(() => {
+  return metaTypes.value.find((i) => i.value === metaType.value)
+})
+
+// Methods
+const initButtons = () => {
+  buttons.value = [
+    {
+      icon: 'plus',
+      text: 'Add',
+      color: 'success',
+      variant: 'flat',
+      action: addMeta
+    }
+  ]
+}
+
+const changeIcon = (icon) => {
+  dialogIcons.value = false
+  metaIcon.value = icon
+}
+
+const getHint = () => {
+  const type = metaType.value
+  const hints = {
+    string: 'for description or notes',
+    date: 'e.g. release date, last viewed date',
+    number: 'to count',
+    array: 'for tags. for example: red, green, blue',
+    boolean: 'true or false. like favourite',
+    rating: 'for scoring',
+    color: 'for color selection',
+    country: 'for country selection'
+  }
+  return hints[type] || 'Please select one of the types'
+}
+
+const nameRules = (value) => {
+  if (!value || value.trim().length === 0) {
+    return 'Name is required'
+  }
+  if (value.length < 2) {
+    return 'Name must be at least 2 characters'
+  }
+  if (value.length > 100) {
+    return 'Name must be less than 100 characters'
+  }
+  return true
+}
+
+const addMeta = async () => {
+  if (!form.value) return
+
+  const {valid: formValid} = await form.value.validate()
+  if (!formValid) return
+
+  try {
+    const metaData = {
+      type: metaType.value,
+      name: name.value,
+      nameSingular: metaType.value === 'array' ? (singular.value || name.value) : name.value,
+      hint: metaHint.value,
+      icon: metaIcon.value,
+      metaSetting: {
+        isLink: isLink.value
+      }
+    }
+
+    // Add pageSetting for array type
+    if (metaType.value === 'array') {
+      metaData.pageSetting = {
+        page: 1
+      }
+    }
+
+    const response = await axios.post(`${apiUrl.value}/api/Meta`, metaData)
+
+    if (response.data) {
+      notificationsStore.setNotification({
+        type: 'success',
+        title: `Meta "${name.value}" added successfully`
+      })
+
+      emit('added', metaType.value)
+      closeDialog()
+    }
+  } catch (error) {
+    console.error('Error adding meta:', error)
+
+    let errorMessage = 'Failed to add meta'
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message
+    }
+
+    notificationsStore.setNotification({
+      type: 'error',
+      text: errorMessage
+    })
+  }
+}
+
+const closeDialog = () => {
+  internalDialog.value = false
+  emit('close')
+}
+
+const resetForm = () => {
+  // Reset form fields
+  metaType.value = 'array'
+  name.value = ''
+  singular.value = ''
+  metaHint.value = ''
+  metaIcon.value = 'shape'
+  isLink.value = false
+  valid.value = false
+
+  // Reset form validation
+  if (form.value) {
+    form.value.reset()
+    form.value.resetValidation()
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  initButtons()
+})
+
+// Watchers
+watch(() => props.dialog, (newVal) => {
+  internalDialog.value = newVal
+})
+
+// Expose methods if needed
+defineExpose({
+  addMeta,
+  closeDialog
+})
+</script>

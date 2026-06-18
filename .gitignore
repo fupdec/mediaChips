@@ -1,0 +1,35 @@
+.DS_Store
+node_modules
+/dist
+/app_storage
+/models
+/databases
+/release
+.editorconfig
+server.log
+/public/config.json
+.project
+yarn.lock
+package-lock.json
+db.vuerd.json
+
+# local env files
+.env
+env
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

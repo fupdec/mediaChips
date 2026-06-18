@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="182.391 124.305 530.466 368.96" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<linearGradient gradientTransform="matrix(539.749 0 0 617.309 108.242 310.141)" gradientUnits="userSpaceOnUse" id="LinearGradient" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#f9f7ff" stop-opacity="0.05"/>
+    <stop offset="0.992694" stop-color="#2b00c7" stop-opacity="0.05"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(293.369 190.444 -326.852 503.498 280.992 143.596)" gradientUnits="userSpaceOnUse" id="LinearGradient_2" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#d3c6f3"/>
+        <stop offset="1" stop-color="#554c88"/>
+</linearGradient>
+</defs>
+    <clipPath id="ArtboardFrame">
+<rect height="368.96" width="530.466" x="182.391" y="124.305"/>
+</clipPath>
+    <g clip-path="url(#ArtboardFrame)" id="Layer" vectornator:layerName="Layer">
+<path d="M182.544 345.796C182.544 318.896 234.564 300.806 263.634 280.072C312.126 245.485 284.931 180.187 378.116 180.187C468.229 180.187 445.476 217.189 494.493 249.868C526.55 271.241 558.472 227.521 622.534 277.749C652.404 301.168 772.49 325.325 676.016 402.163C633.897 435.71 510.09 493.265 430.178 493.265C405.641 493.265 311.037 460.702 288.443 457.747C173.791 442.754 182.544 405.752 182.544 345.796Z" fill="url(#LinearGradient)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Овал 2"/>
+        <path d="M266.939 124.305C264.177 124.305 261.939 126.544 261.939 129.305L261.939 336.097C261.939 338.858 264.177 341.097 266.939 341.097L371.1 341.097L420.997 390.935L470.836 341.097L575.056 341.097C577.818 341.097 580.056 338.858 580.056 336.097L580.056 129.305C580.056 126.544 577.818 124.305 575.056 124.305L266.939 124.305Z" fill="url(#LinearGradient_2)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 3"/>
+        <g opacity="1" vectornator:layerName="Группа 7">
+<path d="M462.286 319.619L569.073 399.296" fill="none" opacity="1" stroke="#fd6666" stroke-linecap="butt" stroke-linejoin="round" stroke-width="25.7074" vectornator:layerName="Линия 1"/>
+            <path d="M447.624 355.586C447.624 316.419 479.375 284.667 518.542 284.667C557.709 284.667 589.46 316.419 589.46 355.586C589.46 394.753 557.709 426.504 518.542 426.504C479.375 426.504 447.624 394.753 447.624 355.586Z" fill="none" opacity="1" stroke="#fd6666" stroke-linecap="butt" stroke-linejoin="round" stroke-width="25.7074" vectornator:layerName="Овал 3"/>
+</g>
+</g>
+</svg>

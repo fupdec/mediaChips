@@ -1,0 +1,67 @@
+<script setup>
+import {useAttrs} from 'vue'
+
+const emit = defineEmits([
+  'update',     // Кастомное событие
+])
+import {useSettingsStore} from "@/stores/settings";
+
+const attrs = useAttrs()
+
+const settingsStore = useSettingsStore();
+
+const props = defineProps({
+  option: String,
+  title: String,
+  hint: String,
+  iconText: String,
+  iconColor: String,
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const setOption = (value) => {
+  $operable.setOption(value, props.option)
+  emit('update', value)
+}
+</script>
+
+<template>
+  <v-switch
+    v-bind="attrs"
+    :model-value="settingsStore[props.option]"
+    @update:modelValue="value => setOption(value)"
+    color="primary"
+    false-value="0"
+    true-value="1"
+    class="mt-0"
+    :disabled="disabled"
+    :hide-details="!hint"
+    inset
+  >
+    <template #label>
+      <v-card
+        v-if="title || hint"
+        :disabled="disabled"
+        class="d-flex flex-column ml-4"
+        flat
+      >
+
+        <div v-if="title" class="text-body-1 text-high-emphasis">
+          <v-icon v-if="iconText" :color="iconColor"
+            size="small"
+            start>mdi-{{iconText}}
+          </v-icon>
+          {{ title }}
+        </div>
+        <div v-if="hint" class="text-caption text-medium-emphasis mt-1">{{ hint }}</div>
+      </v-card>
+      <slot name="label"></slot>
+    </template>
+    <template #thumb>
+      <slot name="thumb"></slot>
+    </template>
+  </v-switch>
+</template>

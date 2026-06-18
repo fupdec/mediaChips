@@ -1,0 +1,76 @@
+<template>
+  <v-dialog
+    :model-value="modelValue"
+    @update:model-value="close"
+    @after-leave="close"
+    width="300"
+  >
+    <v-card>
+      <div class="pa-2">
+        <v-btn
+          @click="apply"
+          color="success"
+          block
+          rounded
+          variant="flat"
+          prepend-icon="mdi-check"
+        >
+          {{ t('common.apply') }}
+        </v-btn>
+      </div>
+      <v-color-picker
+        :model-value="palette"
+        @update:model-value="changeColor"
+        :modes="['hex']"
+      />
+    </v-card>
+  </v-dialog>
+</template>
+
+<script setup>
+import { ref, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const {t} = useI18n()
+
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true
+  },
+  color: {
+    type: String,
+    default: '#ffab00'
+  }
+})
+
+const emit = defineEmits(['update:modelValue', 'getColor', 'close'])
+
+const palette = ref(props.color)
+
+// Синхронизируем начальное значение
+onMounted(() => {
+  palette.value = props.color
+})
+
+// Отслеживаем изменения цвета извне
+watch(() => props.color, (newColor) => {
+  palette.value = newColor
+})
+
+const changeColor = (value) => {
+  // В Vuetify 3 v-color-picker возвращает объект
+  palette.value = typeof value === 'object' ? value.hex : value
+}
+
+const apply = () => {
+  console.log(palette.value)
+  emit('getColor', palette.value)
+  emit('update:modelValue', false)
+}
+
+const close = () => {
+  emit('close')
+  emit('update:modelValue', false)
+}
+</script>

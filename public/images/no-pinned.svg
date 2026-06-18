@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="354.37 264.84 60.856 66.0389" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<linearGradient gradientTransform="matrix(88.5667 -0.024871 -0.0250117 76.6698 326.89 294.43)" gradientUnits="userSpaceOnUse" id="LinearGradient" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#9582da"/>
+    <stop offset="1" stop-color="#ccbfef"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(11.1306 11.7418 -12.0169 23.0178 379.697 281.425)" gradientUnits="userSpaceOnUse" id="LinearGradient_2" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#c5b8e7"/>
+        <stop offset="1" stop-color="#887db8"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(9.3314 8.28734 -8.25208 7.80769 385.25 277.765)" gradientUnits="userSpaceOnUse" id="LinearGradient_3" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#d3c6f3"/>
+        <stop offset="1" stop-color="#8978b4"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(13.4105 9.30634 -9.49195 21.4307 392.627 271.26)" gradientUnits="userSpaceOnUse" id="LinearGradient_4" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#c5b8e7"/>
+        <stop offset="1" stop-color="#8471a2"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(9.08744 4.33769 -4.4242 12.8256 397.209 269.299)" gradientUnits="userSpaceOnUse" id="LinearGradient_5" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#d3c6f3"/>
+        <stop offset="1" stop-color="#9e97c0"/>
+</linearGradient>
+</defs>
+    <clipPath id="ArtboardFrame">
+<rect height="66.0389" width="60.856" x="354.37" y="264.84"/>
+</clipPath>
+    <g clip-path="url(#ArtboardFrame)" id="Layer" vectornator:layerName="Layer">
+<path d="M415.226 286.017L358.391 286.141C356.171 286.145 354.366 287.691 354.37 289.603L354.433 326.068L362.852 322.237L367.121 329.698L373.054 319.293L398.528 330.879L393.31 304.515L395.497 302.698L413.663 300.357L405.927 293.849L415.226 286.017Z" fill="url(#LinearGradient)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 2"/>
+        <path d="M381.099 290.8L369.693 301.946" fill="none" opacity="1" stroke="#cfcfcf" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" vectornator:layerName="Линия 1"/>
+        <path d="M389.121 282.972C384.563 278.307 378.59 276.74 375.781 279.485C374.16 281.069 376.546 286.14 381.104 290.805C385.663 295.47 390.668 297.963 392.289 296.379C395.098 293.634 393.679 287.637 389.121 282.972Z" fill="url(#LinearGradient_2)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 5"/>
+        <path d="M392.867 270.693L383.749 279.603C382.122 281.192 382.729 284.45 385.104 286.88C387.478 289.31 390.721 289.992 392.347 288.403L392.355 288.411L401.474 279.501C399.558 279.042 397.598 277.972 395.948 276.283C394.299 274.596 393.28 272.616 392.867 270.693Z" fill="url(#LinearGradient_3)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 4"/>
+        <path d="M407.008 278.821C405.79 280.011 401.812 277.916 398.128 274.146C394.444 270.376 392.449 266.364 393.667 265.174C391.188 267.597 392.17 272.612 395.854 276.383C399.538 280.153 404.529 281.244 407.008 278.821Z" fill="url(#LinearGradient_4)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 7"/>
+        <path d="M402.539 269.841C398.855 266.071 394.885 263.984 393.667 265.174C392.449 266.364 394.444 270.376 398.128 274.146C401.812 277.916 405.79 280.011 407.008 278.821C408.226 277.631 406.223 273.612 402.539 269.841Z" fill="url(#LinearGradient_5)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 8"/>
+</g>
+</svg>

@@ -1,0 +1,128 @@
+<template>
+  <div class="edit-dialog-media-panel">
+    <v-card variant="elevated" rounded="lg" elevation="3" class="edit-dialog-media-panel__card">
+      <template v-if="mode === 'media'">
+        <div class="edit-dialog-media-panel__image-wrap" :style="imageWrapStyle">
+          <v-img :src="imageSrc" cover class="edit-dialog-media-panel__image">
+            <DialogImageEditing
+              v-if="imageSrc"
+              :image="imageSrc"
+              :options="cropperOptions"
+              :image-path="imagePath"
+              :min-width="minWidth"
+              @edited="$emit('edited')"
+            />
+          </v-img>
+        </div>
+      </template>
+
+      <template v-else>
+        <div
+          class="edit-dialog-media-panel__image-wrap"
+          :style="imageWrapStyle"
+        >
+          <v-img
+            v-if="currentImage?.src"
+            :src="currentImage.src"
+            cover
+            class="edit-dialog-media-panel__image"
+          >
+            <DialogImageEditing
+              :image="currentImage.src"
+              :options="tagCropperOptions"
+              :image-path="currentImage.path"
+              :min-width="currentImage.width"
+              :min-height="currentImage.height"
+              @edited="$emit('edited')"
+            />
+          </v-img>
+          <v-sheet
+            v-else
+            color="grey-darken-3"
+            class="edit-dialog-media-panel__placeholder d-flex align-center justify-center"
+            :style="imageWrapStyle"
+          >
+            <v-icon size="48" color="grey">mdi-image-off-outline</v-icon>
+          </v-sheet>
+        </div>
+
+        <div v-if="images.length > 1" class="edit-dialog-media-panel__thumbs">
+          <v-btn
+            v-for="(item, index) in images"
+            :key="item.key || `${item.type}-${index}`"
+            :variant="index === currentIndex ? 'flat' : 'text'"
+            :color="index === currentIndex ? 'primary' : undefined"
+            size="x-small"
+            class="text-none"
+            @click="$emit('update:currentIndex', index)"
+          >
+            {{ item.type }}
+          </v-btn>
+        </div>
+      </template>
+    </v-card>
+  </div>
+</template>
+
+<script setup>
+import {computed} from 'vue'
+import DialogImageEditing from '@/components/dialogs/DialogImageEditing.vue'
+
+const props = defineProps({
+  mode: {
+    type: String,
+    default: 'media',
+    validator: (value) => ['media', 'tag'].includes(value),
+  },
+  imageSrc: {
+    type: String,
+    default: null,
+  },
+  imagePath: {
+    type: String,
+    default: null,
+  },
+  cropperOptions: {
+    type: Object,
+    default: () => ({aspectRatio: 16 / 9}),
+  },
+  minWidth: {
+    type: Number,
+    default: 500,
+  },
+  images: {
+    type: Array,
+    default: () => [],
+  },
+  currentIndex: {
+    type: Number,
+    default: 0,
+  },
+})
+
+defineEmits(['edited', 'update:currentIndex'])
+
+const currentImage = computed(() => props.images[props.currentIndex])
+
+const imageWrapStyle = computed(() => {
+  const ratio = props.mode === 'media'
+    ? (props.cropperOptions?.aspectRatio || 16 / 9)
+    : (currentImage.value?.aspectRatio || 1)
+
+  return {
+    aspectRatio: String(ratio),
+  }
+})
+
+const tagCropperOptions = computed(() => ({
+  aspectRatio: currentImage.value?.aspectRatio || 1,
+  viewMode: 1,
+  autoCropArea: 1,
+  movable: true,
+  rotatable: true,
+  scalable: true,
+  zoomable: true,
+  cropBoxMovable: true,
+  cropBoxResizable: true,
+}))
+</script>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="183.048 104.916 530.466 445.197" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<linearGradient gradientTransform="matrix(539.749 0 0 617.309 108.9 366.988)" gradientUnits="userSpaceOnUse" id="LinearGradient" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#f9f7ff" stop-opacity="0.05"/>
+    <stop offset="0.992694" stop-color="#2b00c7" stop-opacity="0.05"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(5.48419e-15 89.5637 -793.657 4.85975e-14 420.997 208.111)" gradientUnits="userSpaceOnUse" id="LinearGradient_2" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#d4c9f0"/>
+        <stop offset="0.993289" stop-color="#8981a5"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(87.7507 20.1317 -25.6535 111.819 298.709 245.95)" gradientUnits="userSpaceOnUse" id="LinearGradient_3" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#e4dbfd"/>
+        <stop offset="0.993289" stop-color="#9284c2"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(58.7488 106.773 -100.514 55.3047 425.708 39.7152)" gradientUnits="userSpaceOnUse" id="LinearGradient_4" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#f1ebff"/>
+        <stop offset="0.993289" stop-color="#9a8dca"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(109.652 0 0 109.652 402.276 159.742)" gradientUnits="userSpaceOnUse" id="LinearGradient_5" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0.00599483" stop-color="#c6b7fd"/>
+        <stop offset="1" stop-color="#6f6784"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(128.535 64.2703 -74.4821 148.958 413.885 243.934)" gradientUnits="userSpaceOnUse" id="LinearGradient_6" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0.00599483" stop-color="#c6b7fd"/>
+        <stop offset="1" stop-color="#6f6784"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(128.535 64.2703 -35.1274 70.2518 405.524 260.656)" gradientUnits="userSpaceOnUse" id="LinearGradient_7" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0.00599483" stop-color="#c6b7fd"/>
+        <stop offset="1" stop-color="#6f6784"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(54.5582 0 0 54.5582 393.718 408.406)" gradientUnits="userSpaceOnUse" id="LinearGradient_8" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#d8ccf8"/>
+        <stop offset="0.633984" stop-color="#7c6cb5"/>
+        <stop offset="0.990964" stop-color="#907add"/>
+</linearGradient>
+    <linearGradient gradientTransform="matrix(304.684 0 0 524.66 268.651 252.88)" gradientUnits="userSpaceOnUse" id="LinearGradient_9" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#efeaff"/>
+        <stop offset="0.658207" stop-color="#7c6cb5"/>
+        <stop offset="0.966915" stop-color="#7f64e3"/>
+</linearGradient>
+</defs>
+    <clipPath id="ArtboardFrame">
+<rect height="445.197" width="530.466" x="183.048" y="104.916"/>
+</clipPath>
+    <g clip-path="url(#ArtboardFrame)" id="Layer" vectornator:layerName="Layer">
+<path d="M183.202 402.643C183.202 375.744 235.222 357.653 264.292 336.919C312.784 302.332 285.588 237.035 378.774 237.035C468.887 237.035 446.134 274.036 495.15 306.716C527.207 328.089 559.129 284.368 623.191 334.596C653.061 358.015 773.147 382.172 676.674 459.01C634.555 492.557 510.748 550.112 430.835 550.112C406.299 550.112 311.694 517.549 289.101 514.594C174.448 499.601 183.202 462.599 183.202 402.643Z" fill="url(#LinearGradient)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Овал 2"/>
+        <path d="M420.997 208.111C505.134 208.111 573.34 228.161 573.34 252.893C573.34 277.625 505.134 297.675 420.997 297.675C336.861 297.675 268.655 277.625 268.655 252.893C268.655 228.161 336.861 208.111 420.997 208.111Z" fill="url(#LinearGradient_2)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Овал 1"/>
+        <g opacity="1" vectornator:layerName="Группа 5">
+<g opacity="1" vectornator:layerName="Группа 5">
+<path d="M321.995 144.45L400.086 206.69L372.834 325.473L307.056 247.865L321.995 144.45Z" fill="url(#LinearGradient_3)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Прямоугольник 1"/>
+    <path d="M497.497 184.714L400.049 206.85L321.995 144.45L417.782 129.556L497.497 184.714Z" fill="url(#LinearGradient_4)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Прямоугольник 2"/>
+    <path d="M497.497 184.714L400.046 206.861L372.834 325.473L467.759 284.733L497.497 184.714Z" fill="#7f72ae" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Прямоугольник 3"/>
+</g>
+            <path d="M402.276 159.742C402.276 129.462 426.823 104.916 457.102 104.916C487.382 104.916 511.928 129.462 511.928 159.742C511.928 190.021 487.382 214.568 457.102 214.568C426.823 214.568 402.276 190.021 402.276 159.742Z" fill="url(#LinearGradient_5)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Овал 1"/>
+            <g opacity="1" vectornator:layerName="Группа 4">
+<path d="M405.524 260.656L534.936 162.508L534.059 324.926L405.524 260.656Z" fill="url(#LinearGradient_6)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Многоугольник 1"/>
+                <path d="M534.059 324.926C524.359 344.326 487.722 345.665 452.228 327.917C416.734 310.169 395.824 280.055 405.524 260.656" fill="url(#LinearGradient_7)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 1"/>
+</g>
+</g>
+        <path d="M393.719 372.031L401.857 458.165C401.997 459.649 402.792 460.993 404.025 461.83L434.417 482.48C437.631 484.663 441.999 482.507 442.219 478.628L448.281 372.031C439.411 373.31 430.333 374.094 421 374.094C411.678 374.094 402.579 373.307 393.719 372.031Z" fill="url(#LinearGradient_8)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 3"/>
+        <path d="M268.652 252.893C268.652 319.829 336.86 374.081 420.996 374.081C505.132 374.081 573.34 319.829 573.34 252.893C573.34 277.625 505.132 297.674 420.996 297.674C336.86 297.674 268.652 277.625 268.652 252.893Z" fill="url(#LinearGradient_9)" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Кривая 2"/>
+        <g opacity="1" vectornator:layerName="Группа 2">
+<path d="M466.991 340.399L573.34 446.748" fill="none" opacity="1" stroke="#fd6666" stroke-linecap="butt" stroke-linejoin="round" stroke-width="25.7074" vectornator:layerName="Линия 1"/>
+            <path d="M573.34 340.399L466.991 446.748" fill="none" opacity="1" stroke="#fd6666" stroke-linecap="butt" stroke-linejoin="round" stroke-width="25.7074" vectornator:layerName="Линия 2"/>
+</g>
+</g>
+</svg>

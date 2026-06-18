@@ -1,0 +1,151 @@
+<template>
+  <v-card rounded="xl" elevation="4" class="px-4 mb-6" height="100%">
+    <settings-category-divider
+      icon="star"
+      :title="t('meta.settings.rating_customization')"
+    ></settings-category-divider>
+
+    <div class="text-center">
+      <v-chip variant="tonal" size="large" class="mb-4">
+        <v-list-item-subtitle>{{ t('common.preview') }}</v-list-item-subtitle>
+        <div class="d-flex align-center">
+          <v-rating
+            v-model="rating"
+            :length="settings.ratingMax"
+            :icon="`mdi-${settings.ratingIcon}`"
+            :full-icon="`mdi-${settings.ratingIcon}`"
+            :empty-icon="`mdi-${settings.ratingIconEmpty || settings.ratingIcon}`"
+            :half-increments="settings.ratingHalf"
+            :half-icon="`mdi-${settings.ratingIconHalf || settings.ratingIcon}`"
+            :active-color="settings.ratingColor"
+            :color="settings.ratingColor"
+            :bg-color="'grey'"
+            density="compact"
+            :clearable="true"
+            hover
+          />
+        </div>
+      </v-chip>
+    </div>
+
+    <v-row>
+      <v-col cols="12" md="6">
+        <DialogIcons
+          :icon="settings.ratingIcon"
+          @apply="changeIcon($event, 'ratingIcon')"
+        ></DialogIcons>
+
+        <div class="py-1"></div>
+
+        <DialogIcons
+          :icon="settings.ratingIconEmpty"
+          @apply="changeIcon($event, 'ratingIconEmpty')"
+        ></DialogIcons>
+
+        <div class="py-1"></div>
+
+        <DialogIcons
+          v-if="settings.ratingHalf"
+          :icon="settings.ratingIconHalf"
+          @apply="changeIcon($event, 'ratingIconHalf')"
+        ></DialogIcons>
+      </v-col>
+      <v-col cols="12" md="6">
+        <div class="text-medium-emphasis text-caption mt-2 mb-1">{{ t('meta.settings.fill_color') }}</div>
+        <div class="d-flex align-center mb-4">
+          <v-icon @click="dialogPalette = true" :color="settings.ratingColor" size="large" class="mr-2">mdi-circle</v-icon>
+          <v-btn @click="dialogPalette = true" color="primary" rounded variant="flat">
+            {{ t('meta.settings.select_color') }}
+          </v-btn>
+        </div>
+
+        <v-number-input
+          v-model="settings.ratingMax"
+          type="number"
+          :rules="[(v) => (v > 1 && v < 11) || t('validation.incorrect_value')]"
+          min="2"
+          max="10"
+          :label="t('meta.settings.max_value')"
+          :hint="t('meta.settings.rating_range_hint', {max: settings.ratingMax})"
+          variant="outlined"
+          rounded="xl"
+          class="mt-8"
+          max-width="200"
+        ></v-number-input>
+
+        <v-switch v-model="settings.ratingHalf" :label="t('meta.settings.half_increment')" inset/>
+      </v-col>
+    </v-row>
+
+    <ColorPicker
+      :dialog="dialogPalette"
+      :color="settings.ratingColor"
+      @close="dialogPalette = false"
+      @getColor="changeColor($event)"
+    />
+  </v-card>
+</template>
+
+<script setup>
+import {ref, reactive, watch, onMounted, nextTick} from 'vue'
+import {useI18n} from 'vue-i18n'
+import DialogIcons from '@/components/dialogs/DialogIcons.vue'
+import ColorPicker from '@/components/elements/ColorPicker.vue'
+import SettingsCategoryDivider
+  from "@/components/ui/SettingsCategoryDivider.vue";
+
+const props = defineProps({
+  meta: Object,
+})
+
+const emit = defineEmits(['update'])
+const {t} = useI18n()
+
+const rating = ref(1.5)
+const dialogPalette = ref(false)
+
+const settings = ref({
+  ratingIcon: "star",
+  ratingIconEmpty: "star-outline",
+  ratingIconHalf: "star-half-full",
+  ratingHalf: false,
+  ratingMax: 5,
+  ratingColor: "#ffab00",
+})
+
+const initSettings = () => {
+  if (props.meta) {
+    Object.keys(settings.value).forEach(key => {
+      if (key in props.meta) {
+        settings.value[key] = props.meta[key]
+      }
+    })
+  }
+}
+
+const changeIcon = (icon, iconType) => {
+  settings.value[iconType] = icon
+}
+
+const changeColor = (e) => {
+  settings.value.ratingColor = e
+  dialogPalette.value = false
+}
+
+
+onMounted(() => {
+  nextTick(() => {
+    initSettings()
+  })
+})
+
+watch(() => settings.value.ratingMax, (val) => {
+  val = parseInt(val)
+  if (val < 2 || val > 10) return
+  else if (rating.value > val) rating.value = val
+})
+
+watch(settings.value, () => {
+  emit('update', settings.value)
+}, { deep: true })
+</script>

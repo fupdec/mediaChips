@@ -1,0 +1,134 @@
+{
+  "name": "mediachips",
+  "productName": "MediaChips",
+  "version": "0.13.0",
+  "author": {
+    "name": "MediaChips contributors"
+  },
+  "homepage": "https://mediachips.app",
+  "description": "Organize your media files with ease and convenience.",
+  "private": false,
+  "license": "GPL-3.0",
+  "repository": "github:mediachips/mediachips",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node app/server.js",
+    "server-lan": "node -e \"process.env.MEDIA_CHIPS_ALLOW_LAN='1'; require('./app/server.js')\"",
+    "server-dev": "nodemon --watch app/server.js --watch api app/server.js",
+    "electron": "electron . --in-process-gpu",
+    "download-parser-model": "node scripts/download-parser-model.js",
+    "prepack": "npm run download-parser-model",
+    "pack": "electron-builder --dir",
+    "predist": "npm run download-parser-model",
+    "preportable": "npm run download-parser-model",
+    "portable": "electron-builder --win portable",
+    "dist": "electron-builder"
+  },
+  "main": "main.js",
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "@xenova/transformers": "^2.17.2",
+    "archiver": "^7.0.1",
+    "axios": "^1.13.2",
+    "chokidar": "^5.0.0",
+    "connect-history-api-fallback": "^2.0.0",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.19",
+    "electron-updater": "^6.6.2",
+    "express": "^5.2.1",
+    "express-ws": "^5.0.2",
+    "ffmpeg-static": "^5.3.0",
+    "ffprobe-static": "^3.1.0",
+    "filepond": "^4.32.10",
+    "filepond-plugin-file-encode": "^2.1.14",
+    "filepond-plugin-file-validate-type": "^1.2.9",
+    "fluent-ffmpeg": "^2.1.3",
+    "gsap": "^3.14.1",
+    "jimp": "^0.16.1",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
+    "mitt": "^3.0.1",
+    "node-machine-id": "^1.1.12",
+    "node-stream-zip": "^1.15.0",
+    "path-browserify": "^1.0.1",
+    "pinia": "^2.3.1",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
+    "string-crypto": "^3.0.2",
+    "umzug": "^3.8.2",
+    "v-viewer": "^3.0.22",
+    "viewerjs": "^1.11.7",
+    "vue": "^3.5.0",
+    "vue-advanced-cropper": "^2.8.9",
+    "vue-country-flag-next": "^2.3.2",
+    "vue-drag-drop": "^1.1.4",
+    "vue-filepond": "^7.0.4",
+    "vue-i18n": "^11.2.2",
+    "vue-router": "^4.3.0",
+    "vuedraggable": "^4.1.0",
+    "vuetify": "^3.11.6",
+    "vuewordcloud": "^19.0.0"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "nodemon": "^3.1.14",
+    "sass": "^1.75.0",
+    "sass-embedded": "^1.95.1",
+    "vite": "^7.3.0",
+    "vite-plugin-vuetify": "^2.1.2"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "build": {
+    "appId": "com.mediachips.app",
+    "productName": "MediaChips",
+    "copyright": "Copyright © 2026 MediaChips",
+    "directories": {
+      "output": "release"
+    },
+    "artifactName": "${productName}-${version}-${os}.${ext}",
+    "files": [
+      "!databases",
+      "!app_storage",
+      "!src"
+    ],
+    "extraResources": [
+      {
+        "from": "models",
+        "to": "models",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "verifyUpdateCodeSignature": false,
+      "icon": "public/icons/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "icon": "public/icons/icons.icns",
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "mac": {
+      "icon": "public/icons/icons.icns",
+      "category": "public.app-category.utilities"
+    }
+  }
+}

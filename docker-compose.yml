@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mediachips:
+    build: .
+    container_name: mediachips
+    restart: unless-stopped
+    ports:
+      - "12321:12321"
+    volumes:
+      # Основные данные приложения
+      - ./app_storage:/app/app_storage
+      - ./public/config.json:/app/public/config.json
+
+      # Media folders. Replace host paths with your own directories.
+      - ./media/video:/media/video:ro
+      - ./media/movies:/media/movies:ro
+      - ./media/series:/media/series:ro
+
+      # Add more media folders if needed.
+      # - ./media/another_folder:/media/another:ro
+
+    environment:
+      - NODE_ENV=production
+      - TZ=UTC
+      # Docker needs LAN binding so the published port can accept host traffic.
+      - MEDIA_CHIPS_ALLOW_LAN=1
+    networks:
+      - media-network
+
+networks:
+  media-network:
+    driver: bridge
