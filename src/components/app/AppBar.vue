@@ -1,7 +1,12 @@
 <template>
   <v-app-bar
     :color="colorRGBA"
-    :class="{ 'os-darwin': isMac && !fullscreen }"
+    :class="{
+      'os-darwin': isMac && !fullscreen,
+      'os-windows-electron': isWinElectron,
+    }"
+    :elevation="isWinElectron ? 0 : undefined"
+    :flat="isWinElectron"
     density="compact"
     extension-height="36"
     :hide-on-scroll="xs"
@@ -117,7 +122,7 @@
 <script setup>
 import {computed, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {useTheme, useDisplay} from 'vuetify'
+import {useDisplay} from 'vuetify'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
@@ -127,6 +132,7 @@ import {useRegistrationStore} from '@/stores/registration'
 import {useEventBus} from '@/utils/eventBus'
 import {useI18n} from 'vue-i18n'
 import {scrollMainTo} from '@/utils/mainScroll'
+import {useHeaderBarStyle} from '@/composable/useHeaderBarStyle'
 
 /* Components */
 import ItemsSelection from '@/components/app/appbar/elements/ItemsSelection.vue'
@@ -157,10 +163,9 @@ const route = useRoute()
 const router = useRouter()
 const {t} = useI18n()
 
-/* Vuetify Theme */
-const theme = useTheme()
+/* Vuetify display */
 const {platform, xs} = useDisplay()
-
+const {colorRGBA, gradient, isWinElectron} = useHeaderBarStyle('app')
 
 /* macOS detection */
 const isMac = platform.value.mac
@@ -174,45 +179,6 @@ const tabs = computed(() => app.tabs)
 const settings = computed(() => settingsStore)
 const toolbar = computed(() => toolbarStore)
 const reg = computed(() => registrationStore.reg)
-
-const color = computed(() => {
-  const c = theme.global.current.value.dark
-    ? settings.value.appColorDarkHeader
-    : settings.value.appColorLightHeader
-
-  // change meta theme-color
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', c || '#000000')
-
-  return c || '#000000'
-})
-
-// plugin readable
-const colorRGBA = computed(() => {
-  return $readable.hexToRgba(color.value, 60)
-})
-
-/* Gradient */
-const gradient = computed(() => {
-  if (settings.value.headerGradient == '0') return ''
-
-  let g = theme.global.current.value.dark
-    ? settings.value.headerGradientDark
-    : settings.value.headerGradientLight
-
-  if (!g || typeof g !== 'string') return ''
-
-  return 'background:' + $readable.addTransparencyToGradient(g, 0.6)
-})
-
-const barTheme = computed(() => {
-  if (color.value) {
-    return $readable.checkColorForDarkText(color.value) ? 'dark' : 'light'
-  } else {
-    return 'dark'
-  }
-})
 
 /* Methods */
 function toggleSort() {

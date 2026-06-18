@@ -134,10 +134,10 @@
 
 <script setup>
 import {ref, computed, onMounted, onUnmounted} from 'vue'
-import {useTheme} from 'vuetify'
 import {useRouter} from 'vue-router'
 import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
+import {useHeaderBarStyle} from '@/composable/useHeaderBarStyle'
 import WindowControls from '@/components/ui/WindowControls.vue' // Импортируем компонент
 
 // Пропсы
@@ -151,57 +151,17 @@ const emit = defineEmits(['lock'])
 // Реактивные переменные
 const maximized = ref(false)
 
-// Хуки
-const theme = useTheme()
 const router = useRouter()
 
 // Хранилища Pinia
 const settingsStore = useSettingsStore()
 const dialogsStore = useDialogsStore()
 
+const {colorRGBA, gradient, barTheme} = useHeaderBarStyle('system')
+
 // Компьютеды
 const SETTINGS = computed(() => settingsStore)
 const app_title = computed(() => settingsStore.app_title || 'MediaChips')
-
-const color = computed(() => {
-  const c = theme.global.current.value.dark
-    ? SETTINGS.value.appColorDarkHeader
-    : SETTINGS.value.appColorLightHeader
-
-  // change meta theme-color
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', c || '#000000')
-
-  return c || '#000000'
-})
-
-// plugin readable
-const colorRGBA = computed(() => {
-  return $readable.hexToRgba(color.value, 80)
-})
-
-/* Gradient */
-const gradient = computed(() => {
-  if (SETTINGS.value.headerGradient == '0') return ''
-
-  let g = theme.global.current.value.dark
-    ? SETTINGS.value.headerGradientDark
-    : SETTINGS.value.headerGradientLight
-
-  if (!g || typeof g !== 'string') return ''
-
-  return 'background:' + $readable.addTransparencyToGradient(g, 0.8)
-})
-
-
-const barTheme = computed(() => {
-  if (color.value) {
-    return $readable.checkColorForDarkText(color.value) ? 'dark' : 'light'
-  } else {
-    return 'dark'
-  }
-})
 
 // Методы окон (теперь вызываются из WindowControls через emits)
 const minimize = () => {
