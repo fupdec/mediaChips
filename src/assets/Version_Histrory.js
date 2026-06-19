@@ -1,5 +1,55 @@
 export const history = [
   {
+    id: '0.13.0',
+    version: 'v0.13.0-beta',
+    name: 'Vue 3 rewrite',
+    content: `
+      <p><strong>MediaChips v0.13.0</strong> is a major release: a full rewrite of the application on a modern stack while keeping the same core idea — organize local media, attach rich metadata, filter, and play files from your own library.</p>
+      <p>
+        🌐 <strong>Website:</strong> <a href="https://mediachips.app" target="_blank">mediachips.app</a><br>
+        📖 <strong>Installation:</strong> <a href="https://github.com/fupdec/mediaChips/blob/master/INSTALLATION.md" target="_blank">INSTALLATION.md</a><br>
+        🕰 <strong>Previous version (Vue 2):</strong> <a href="https://github.com/fupdec/mediaChips/releases/tag/v0.12.5-beta" target="_blank">v0.12.5-beta</a> · branch <a href="https://github.com/fupdec/mediaChips/tree/legacy/vue2" target="_blank">legacy/vue2</a>
+      </p>
+      <h3>Highlights</h3>
+      <ul>
+        <li><strong>Vue 3 rewrite</strong> — new UI on Vue 3, Vite, Vuetify 3, and Pinia</li>
+        <li><strong>Modern desktop stack</strong> — Electron 39, Express 5, Sequelize + SQLite</li>
+        <li><strong>Local AI tools</strong> — path tag parser and optional video frame recognition (runs locally, no Python)</li>
+        <li><strong>Database migration</strong> — import from legacy LowDB databases (Vue 2 era)</li>
+        <li><strong>LAN access</strong> — browse your library from other devices on the local network</li>
+        <li><strong>Privacy unchanged</strong> — no telemetry, no data collection, fully open source (GPL-3.0)</li>
+      </ul>
+      <h3>Added:</h3>
+      <ul>
+        <li>Full <strong>Vue 3 + Vite + Vuetify 3</strong> frontend rewrite</li>
+        <li><strong>Local path tag parser</strong> with optional ML-based semantic matching (<code>@xenova/transformers</code>)</li>
+        <li><strong>Video object recognition</strong> — suggest tags from video frames using a bundled local CLIP model</li>
+        <li><strong>Migration from LowDB</strong> — move data from older MediaChips databases (Vue 2)</li>
+        <li><strong>In-app documentation</strong> with contextual help in settings and dialogs</li>
+        <li><strong>Improved file moving</strong> — progress reporting, free disk space checks, cross-drive copy support</li>
+        <li><strong>Navigation menu visibility</strong> settings</li>
+        <li><strong>Metadata pinning</strong> improvements in media and tag edit dialogs</li>
+        <li><strong>Docker</strong> support (<code>Dockerfile</code>, <code>docker-compose.yml</code>)</li>
+        <li>Redesigned <strong>media and tag editing</strong> dialogs with a compact hero layout</li>
+        <li><strong>Mobile-friendly</strong> navigation and stats cards on the home page</li>
+      </ul>
+      <h3>Changed:</h3>
+      <ul>
+        <li>Default branch <code>master</code> now contains the <strong>Vue 3 codebase</strong> (clean release history)</li>
+        <li>Build system moved from <strong>Webpack → Vite</strong></li>
+        <li>State management moved from <strong>Vuex → Pinia</strong></li>
+        <li>Backend updated to <strong>Express 5</strong> with an improved task and WebSocket layer</li>
+        <li>Player layout and fullscreen behavior refined</li>
+        <li>README and installation docs rewritten in English</li>
+      </ul>
+      <h3>Fixed:</h3>
+      <ul>
+        <li>Player video wrapper height constraints in fullscreen and normal mode</li>
+        <li>Various UI issues in mobile navigation and home page widgets</li>
+      </ul>
+    `,
+  },
+  {
     id: '0.12.5',
     version: 'v0.12.5-beta',
     name: '',
