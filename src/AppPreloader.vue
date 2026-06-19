@@ -373,7 +373,6 @@ body {
 
   .v-app-bar.os-windows-electron {
     border-top: none !important;
-    box-shadow: none !important;
 
     .v-toolbar__underlay {
       opacity: 0;
