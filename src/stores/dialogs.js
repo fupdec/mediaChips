@@ -32,6 +32,9 @@ export const useDialogsStore = defineStore('useDialogsStore', {
       this.tabEditing.tab = tab
       this.tabEditing.show = true
     },
+    showAbout() {
+      this.about.show = true
+    },
   }
 })
 

@@ -38,6 +38,14 @@ const es = {
     lock: 'Bloquear',
     toggle_dev_tools: 'Herramientas de desarrollo',
   },
+  aboutApp: {
+    dialog_title: 'Acerca de MediaChips',
+    version: 'MediaChips v{version}-beta',
+    contributors: 'por los colaboradores de MediaChips',
+    version_history: 'Historial de versiones',
+    website: 'Sitio web',
+    libraries_thanks: 'Gracias a quienes trabajaron en estas bibliotecas',
+  },
   operations: {
     moving: {
       title: 'Moviendo archivos',

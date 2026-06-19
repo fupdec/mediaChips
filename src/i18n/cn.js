@@ -38,6 +38,14 @@ const cn = {
     lock: '锁定',
     toggle_dev_tools: '开发者工具',
   },
+  aboutApp: {
+    dialog_title: '关于 MediaChips',
+    version: 'MediaChips v{version}-beta',
+    contributors: 'MediaChips 贡献者',
+    version_history: '版本历史',
+    website: '网站',
+    libraries_thanks: '感谢这些优秀库的作者',
+  },
   operations: {
     moving: {
       title: '移动文件',

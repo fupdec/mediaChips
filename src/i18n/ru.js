@@ -38,6 +38,14 @@ const ru = {
     lock: 'Заблокировать',
     toggle_dev_tools: 'Инструменты разработчика',
   },
+  aboutApp: {
+    dialog_title: 'О MediaChips',
+    version: 'MediaChips v{version}-beta',
+    contributors: 'от сообщества MediaChips',
+    version_history: 'История версий',
+    website: 'Сайт',
+    libraries_thanks: 'Благодарим авторов этих замечательных библиотек',
+  },
   operations: {
     moving: {
       title: 'Перемещение файлов',

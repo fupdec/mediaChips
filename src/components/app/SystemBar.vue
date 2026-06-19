@@ -69,6 +69,7 @@
       </v-menu>
 
       <v-menu
+        v-model="helpMenuOpen"
         bottom
         offset-y
         :offset="[1, -1]"
@@ -118,7 +119,7 @@
           <v-list-item
             link
             class="pr-3"
-            @click="about"
+            @mouseup.stop="openAboutDialog"
           >
             <v-list-item-title>
               <v-icon class="mr-3">mdi-information-variant</v-icon>
@@ -149,7 +150,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted, nextTick} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useSettingsStore} from '@/stores/settings'
@@ -167,6 +168,7 @@ const emit = defineEmits(['lock'])
 
 // Реактивные переменные
 const maximized = ref(false)
+const helpMenuOpen = ref(false)
 
 const router = useRouter()
 const {t} = useI18n()
@@ -204,8 +206,11 @@ const lock = () => {
   emit('lock')
 }
 
-const about = () => {
-  dialogsStore.about.show = true
+const openAboutDialog = () => {
+  helpMenuOpen.value = false
+  nextTick(() => {
+    dialogsStore.showAbout()
+  })
 }
 
 const back = () => {
@@ -231,14 +236,6 @@ const handleUnmaximize = () => {
   maximized.value = false
 }
 
-const handleLockApp = () => {
-  lock()
-}
-
-const handleAboutApp = () => {
-  about()
-}
-
 const handleNavigationBack = () => {
   back()
 }
@@ -253,8 +250,6 @@ onMounted(() => {
     // Подписываемся на события IPC
     window.electronAPI.on('maximize', handleMaximize)
     window.electronAPI.on('unmaximize', handleUnmaximize)
-    window.electronAPI.on('lockApp', handleLockApp)
-    window.electronAPI.on('aboutApp', handleAboutApp)
     window.electronAPI.on('navigationBack', handleNavigationBack)
     window.electronAPI.on('navigationForward', handleNavigationForward)
   }
@@ -265,8 +260,6 @@ onUnmounted(() => {
     // Отписываемся от событий IPC
     window.electronAPI.removeListener('maximize', handleMaximize)
     window.electronAPI.removeListener('unmaximize', handleUnmaximize)
-    window.electronAPI.removeListener('lockApp', handleLockApp)
-    window.electronAPI.removeListener('aboutApp', handleAboutApp)
     window.electronAPI.removeListener('navigationBack', handleNavigationBack)
     window.electronAPI.removeListener('navigationForward', handleNavigationForward)
   }

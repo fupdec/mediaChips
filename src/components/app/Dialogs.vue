@@ -83,9 +83,10 @@
     <v-dialog
       v-model="dialogsStore.about.show"
       width="500"
+      :z-index="2400"
     >
       <v-card>
-        <v-card-title primary-title>About MediaChips</v-card-title>
+        <v-card-title primary-title>{{ t('aboutApp.dialog_title') }}</v-card-title>
         <v-card-text class="pa-2 pa-sm-4">
           <About/>
         </v-card-text>

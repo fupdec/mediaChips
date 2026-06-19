@@ -38,6 +38,14 @@ const en = {
     lock: 'Lock',
     toggle_dev_tools: 'Toggle Developer Tools',
   },
+  aboutApp: {
+    dialog_title: 'About MediaChips',
+    version: 'MediaChips v{version}-beta',
+    contributors: 'by MediaChips contributors',
+    version_history: 'Show version history',
+    website: 'Website',
+    libraries_thanks: 'Thanks to the people who worked on these wonderful libraries',
+  },
   operations: {
     moving: {
       title: 'Moving files',

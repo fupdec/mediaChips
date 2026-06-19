@@ -51,8 +51,14 @@ const validOnChannels = [
   'enter-full-screen',
   'leave-full-screen',
   'blur',
-  'focus'
+  'focus',
+  'aboutApp',
+  'lockApp',
+  'navigationBack',
+  'navigationForward',
 ];
+
+const listenerSubscriptions = new Map();
 
 // Экспортируем API с разными пространствами имен
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -109,9 +115,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
           }
         };
         ipcRenderer.on(channel, subscription);
+        listenerSubscriptions.set(callback, {channel, subscription});
 
         return () => {
           ipcRenderer.removeListener(channel, subscription);
+          listenerSubscriptions.delete(callback);
         };
       } else {
         // Для остальных каналов передаем как есть
@@ -120,14 +128,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
           callback(...args);
         };
         ipcRenderer.on(channel, subscription);
+        listenerSubscriptions.set(callback, {channel, subscription});
 
         return () => {
           ipcRenderer.removeListener(channel, subscription);
+          listenerSubscriptions.delete(callback);
         };
       }
     }
     console.warn(`[IPC] Blocked attempt to listen to channel: ${channel}`);
     return () => {};
+  },
+
+  removeListener: (channel, callback) => {
+    const entry = listenerSubscriptions.get(callback);
+    if (entry && entry.channel === channel) {
+      ipcRenderer.removeListener(channel, entry.subscription);
+      listenerSubscriptions.delete(callback);
+    }
   },
 
   // Для получения одного сообщения

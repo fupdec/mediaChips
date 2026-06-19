@@ -74,6 +74,7 @@ import {useSettingsStore} from "@/stores/settings"
 import {useContextMenu} from "@/stores/contextMenu"
 import {useRegistrationStore} from "@/stores/registration"
 import {useWatcherStore} from "@/stores/watcher"
+import {useDialogsStore} from "@/stores/dialogs"
 import axios from "axios"
 import _ from "lodash"
 import {useEventBus} from "@/utils/eventBus"
@@ -96,6 +97,7 @@ const player = usePlayerStore()
 const watcherStore = useWatcherStore()
 const registrationStore = useRegistrationStore()
 const contextMenuStore = useContextMenu()
+const dialogsStore = useDialogsStore()
 const route = useRoute()
 const {mobile} = useDisplay()
 const theme = useTheme()
@@ -218,6 +220,17 @@ const saveWindowSize = _.debounce(() => {
   $operable.updateConfig(data)
 }, 500)
 
+const handleAboutApp = () => {
+  dialogsStore.showAbout()
+}
+
+const handleLockApp = () => {
+  store.isLocked = true
+}
+
+let unsubscribeAboutApp
+let unsubscribeLockApp
+
 /* ------------------------- MOUNTED ------------------------- */
 
 onMounted(async () => {
@@ -268,12 +281,17 @@ onMounted(async () => {
       eventBus.emit("removeEntitiesFromState", data)
     })
 
+    unsubscribeAboutApp = window.electronAPI.on('aboutApp', handleAboutApp)
+    unsubscribeLockApp = window.electronAPI.on('lockApp', handleLockApp)
+
     window.addEventListener('resize', saveWindowSize)
   }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', saveWindowSize)
+  unsubscribeAboutApp?.()
+  unsubscribeLockApp?.()
 })
 </script>
 
