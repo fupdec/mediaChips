@@ -57,7 +57,7 @@
           >
             <v-card
               @click="open(m.raw)"
-              :disabled="m.raw.type!=='video'"
+              :disabled="!isEditableMediaType(m.raw)"
               style="height: 100%;"
               rounded="xl"
               variant="tonal"
@@ -157,6 +157,7 @@ import {storeToRefs} from 'pinia'
 import {useEventBus} from '@/utils/eventBus'
 import axios from 'axios'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {isEditableMediaType} from '@/utils/mediaType'
 const DialogMediaTypeAdd = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogMediaTypeAdd.vue')
 )

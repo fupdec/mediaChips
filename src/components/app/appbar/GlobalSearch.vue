@@ -18,6 +18,7 @@ import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from "@/stores/items";
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {getDefaultMediaTypeId, isImageMediaType} from '@/utils/mediaType'
 
 const router = useRouter()
 
@@ -153,10 +154,16 @@ function run() {
 //
 // CLICK ACTIONS
 //
-function openMedia(media) {
-  itemsStore.playVideo({
-    video: media,
-  })
+function openMedia(media, mediaTypeId) {
+  const type = mediaTypes.value.find(t => t.id === Number(mediaTypeId || media.mediaTypeId))
+
+  if (isImageMediaType(type)) {
+    itemsStore.viewImage({image: media})
+  } else {
+    itemsStore.playVideo({video: media})
+  }
+
+  hide()
 }
 
 function openMeta(metaId) {
@@ -171,7 +178,7 @@ function openMediaPage(mediaTypeId) {
 
 function openTag(tag) {
   $readable.hideHoverImage()
-  router.push(`/tag?metaId=${tag.metaId}&tagId=${tag.id}&mediaTypeId=1`)
+  router.push(`/tag?metaId=${tag.metaId}&tagId=${tag.id}&mediaTypeId=${getDefaultMediaTypeId(mediaTypes.value)}`)
   hide()
 }
 
@@ -231,7 +238,7 @@ function getNameHighlighted(text) {
                   v-for="file in group.data.slice(0, group.limit)"
                   :key="file.id"
                   density="compact"
-                  @click="openMedia(file)"
+                  @click="openMedia(file, group.mediaTypeId)"
                   @mouseover.stop="$readable.showHoverImage($event, group.mediaTypeId, file.id, 'media')"
                   @mouseleave.stop="$readable.hideHoverImage"
                 >

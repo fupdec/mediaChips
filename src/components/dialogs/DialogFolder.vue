@@ -8,7 +8,7 @@
     <v-card>
       <DialogHeader
         @close="closeDialog"
-        header="Watched folder"
+        :header="t('watcher.folder.title')"
         closable
       />
 
@@ -34,7 +34,7 @@
               <div v-if="panel !== index">
                 <v-chip
                   v-if="item.new.length"
-                  v-text="item.new.length"
+                  :text="t('watcher.folder.new_count', {count: item.new.length})"
                   color="success"
                   class="px-2 ml-2"
                   size="small"
@@ -42,7 +42,7 @@
                 />
                 <v-chip
                   v-if="item.lost.length"
-                  v-text="item.lost.length"
+                  :text="t('watcher.folder.lost_count', {count: item.lost.length})"
                   color="error"
                   class="px-2 ml-2"
                   size="small"
@@ -56,7 +56,7 @@
                 class="mb-4">
                 <v-card-actions>
                   <v-chip
-                    v-text="`New (${item.new.length})`"
+                    :text="t('watcher.folder.new_count', {count: item.new.length})"
                     color="success"
                     class="mb-2"
                     size="small"
@@ -71,7 +71,7 @@
                     rounded="xl"
                   >
                     <v-icon start>mdi-content-copy</v-icon>
-                    Copy paths
+                    {{ t('watcher.folder.copy_paths') }}
                   </v-btn>
                   <v-btn
                     @click="addFiles(item.new, item.type.id)"
@@ -81,7 +81,7 @@
                     rounded="xl"
                   >
                     <v-icon start>mdi-plus</v-icon>
-                    Add files
+                    {{ t('watcher.folder.add_files') }}
                   </v-btn>
                 </v-card-actions>
                 <v-card variant="outlined"
@@ -102,7 +102,7 @@
               <div v-if="item.lost.length > 0">
                 <v-card-actions>
                   <v-chip
-                    v-text="`Lost (${item.lost.length})`"
+                    :text="t('watcher.folder.lost_count', {count: item.lost.length})"
                     color="error"
                     class="mb-2"
                     variant="flat"
@@ -118,7 +118,7 @@
                     rounded="xl"
                   >
                     <v-icon start>mdi-delete</v-icon>
-                    Delete files from app
+                    {{ t('watcher.folder.delete_from_app') }}
                   </v-btn>
                 </v-card-actions>
                 <v-card variant="outlined"
@@ -144,7 +144,7 @@
                   color="green">mdi-folder-sync
                 </v-icon>
                 <div class="text-green">
-                  Media in the folder and in the database are synchronized!
+                  {{ t('watcher.folder.synchronized') }}
                 </div>
               </div>
             </v-expansion-panel-text>
@@ -157,6 +157,7 @@
 
 <script setup>
 import {ref} from 'vue'
+import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import {useWatcherStore} from '@/stores/watcher'
@@ -167,8 +168,9 @@ import {useEventBus} from '@/utils/eventBus'
 import axios from "axios"
 import useAppStore from "@/stores/app"
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {getMediaDeleteAssetFolder, isManagedMediaType} from '@/utils/mediaType'
 
-// Stores
+const {xs} = useDisplay()
 const watcherStore = useWatcherStore()
 const tasksStore = useTasksStore()
 const dialogsStore = useDialogsStore()
@@ -176,13 +178,8 @@ const notificationStore = useNotificationsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-// Props (если компонент получает данные через props)
-// const props = defineProps({})
-
-// Reactive data
 const panel = ref(0)
 
-// Methods
 const closeDialog = () => {
   watcherStore.dialogFolder = false
 }
@@ -198,42 +195,37 @@ const copyPaths = (files) => {
 
   notificationStore.setNotification({
     type: "success",
-    text: `Paths copied to clipboard`,
+    text: t('watcher.folder.paths_copied'),
   })
 }
 
 const addFiles = (files, mediaTypeId) => {
   watcherStore.dialogFolder = false
 
-  let paths = ''
-
-  for (let filePath of files) {
-    paths = paths + '\n' + filePath
-  }
-
-  tasksStore.mediaAdding.paths = paths
+  tasksStore.mediaAdding.directFiles = [...files]
+  tasksStore.mediaAdding.skipFileScan = true
+  tasksStore.mediaAdding.paths = files.join('\n')
   tasksStore.mediaAdding.dialogProcess = true
   tasksStore.mediaAdding.active = true
   tasksStore.mediaAdding.media_type_id = mediaTypeId
 
-  // Используем event bus или emit событие
   eventBus.emit("addMedia", () => {
     eventBus.emit("update:watcher")
   })
 }
 
 const removeFiles = async (lost, fileType) => {
-  dialogsStore.confirm.text = `.Delete files from app?`
+  dialogsStore.confirm.text = t('watcher.folder.delete_confirm')
   dialogsStore.confirm.show = true
   dialogsStore.confirm.action = async () => {
-    if (fileType.type !== 'video') return false
+    if (!isManagedMediaType(fileType)) return false
 
     watcherStore.dialogFolder = false
 
     let data = {
-      metaId: null, // для тега
-      with_file: false, // для медиа, удалить вместе с файлом
-      type: fileType.type, // для медиа/видео,
+      metaId: null,
+      with_file: false,
+      type: getMediaDeleteAssetFolder(fileType),
     }
 
     const deletePromises = lost.map(async (item) => {
@@ -248,15 +240,12 @@ const removeFiles = async (lost, fileType) => {
 
     await Promise.all(deletePromises)
 
-    // Используем event bus или emit событие
-    if (eventBus) {
-      eventBus.emit("removeEntitiesFromState", {
-        ids: lost.map((i) => i.id),
-        type: 'media',
-      })
+    eventBus.emit("removeEntitiesFromState", {
+      ids: lost.map((i) => i.id),
+      type: 'media',
+    })
 
-      eventBus.emit("update:watcher")
-    }
+    eventBus.emit("update:watcher")
   }
 }
 </script>

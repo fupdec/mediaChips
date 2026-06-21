@@ -4,6 +4,12 @@ import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
 import {useI18n} from 'vue-i18n'
 import axios from 'axios'
+import {
+  getCurrentMediaType,
+  matchesMediaTypeFilter,
+  getDefaultMediaTypeId,
+} from '@/utils/mediaType'
+import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 
 export function usePresetMeta(props) {
   const appStore = useAppStore()
@@ -26,6 +32,11 @@ export function usePresetMeta(props) {
     const item = props.item
     if (!item) return []
 
+    const currentMediaType = getCurrentMediaType(appStore.mediaTypes, ENV.value?.media_type_id)
+    const numberOfMediaLabel = currentMediaType
+      ? getMediaTypeName(currentMediaType, t)
+      : t('settings_labels.appearance.number_of_media')
+
     let params = [
       {
         name: 'filesize',
@@ -40,7 +51,7 @@ export function usePresetMeta(props) {
         text: t('settings_labels.appearance.duration'),
         icon: 'clock-outline',
         types: ['media'],
-        media_type_id: [1],
+        media_types: ['video'],
         show: SETTINGS.value.show_default_meta_duration === '1',
         value: $readable.getReadableDuration(item.duration),
       },
@@ -49,7 +60,7 @@ export function usePresetMeta(props) {
         text: t('settings_labels.appearance.resolution'),
         icon: 'monitor-screenshot',
         types: ['media'],
-        media_type_id: [1],
+        media_types: ['video', 'image'],
         show: SETTINGS.value.show_default_meta_resolution === '1',
         value: item.width + 'x' + item.height,
       },
@@ -65,7 +76,7 @@ export function usePresetMeta(props) {
         text: t('settings_labels.appearance.codec'),
         icon: 'filmstrip',
         types: ['media'],
-        media_type_id: [1],
+        media_types: ['video'],
         show: SETTINGS.value.show_default_meta_codec === '1',
       },
       {
@@ -73,7 +84,7 @@ export function usePresetMeta(props) {
         text: t('settings_labels.appearance.bitrate'),
         icon: 'filmstrip',
         types: ['media'],
-        media_type_id: [1],
+        media_types: ['video'],
         show: SETTINGS.value.show_default_meta_bitrate === '1',
         value: $readable.getReadableBitrate(item.bitrate),
       },
@@ -83,11 +94,11 @@ export function usePresetMeta(props) {
         icon: 'filmstrip',
         types: ['media'],
         show: SETTINGS.value.show_default_meta_fps === '1',
-        media_type_id: [1],
+        media_types: ['video'],
       },
       {
         name: 'numberOfMedia',
-        text: t('media.type_names.video'),
+        text: numberOfMediaLabel,
         icon: 'video-outline',
         types: ['tag'],
         show: SETTINGS.value.show_default_meta_number_media === '1',
@@ -109,17 +120,8 @@ export function usePresetMeta(props) {
 
     return params.filter((param) => {
       return param.types.some((type) => {
-        // Проверка типа
         if (type !== props.type) return false
-
-        // Если есть media_type_id, проверяем его
-        if (param.media_type_id?.length > 0) {
-          const currentMediaTypeId = ENV.value?.media_type_id
-          return param.media_type_id.includes(currentMediaTypeId)
-        }
-
-        // Если media_type_id нет - тип совпал, возвращаем true
-        return true
+        return matchesMediaTypeFilter(param, currentMediaType)
       })
     }).filter((i) => {
       return item[i.name] !== '' && item[i.name] !== null
@@ -128,7 +130,10 @@ export function usePresetMeta(props) {
 
   // Methods
   const countMediaInTag = () => {
-    let url = `/api/media/numberOfMediaWithTag?mediaTypeId=1&tagId=${props.item?.id}`
+    const mediaTypeId = ENV.value?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes)
+    if (!mediaTypeId) return
+
+    let url = `/api/media/numberOfMediaWithTag?mediaTypeId=${mediaTypeId}&tagId=${props.item?.id}`
     axios
       .get(appStore.localhost + url)
       .then((res) => {

@@ -8,6 +8,13 @@ import {useOperationsStore} from '@/stores/operations'
 import {useNotificationsStore} from '@/stores/notifications'
 import {useEventBus} from "@/utils/eventBus";
 import path from 'path-browserify'
+import {
+  getCurrentMediaType,
+  getDefaultMediaTypeId,
+  getMediaDeleteAssetFolder,
+  isImageMediaType,
+  isVideoMediaType,
+} from '@/utils/mediaType'
 
 export default function useItemContextMenu(item, type, meta, is_file_exists, emitFn) {
   const store = useAppStore()
@@ -21,6 +28,13 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
   const eventBus = useEventBus()
 
   const apiUrl = computed(() => store.localhost)
+
+  const currentMediaType = computed(() => {
+    if (type === 'media') {
+      return getCurrentMediaType(store.mediaTypes, item.mediaTypeId || itemsStore.environment?.media_type_id)
+    }
+    return getCurrentMediaType(store.mediaTypes, itemsStore.environment?.media_type_id)
+  })
 
   const getContextMenu = () => {
     let contextMenu = []
@@ -75,7 +89,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
       contextMenu.push({type: "divider"})
 
-      if (!itemsStore.isSelect) {
+      if (!itemsStore.isSelect && isVideoMediaType(currentMediaType.value)) {
         contextMenu.push({
           name: `Play video in`,
           type: "menu",
@@ -100,7 +114,32 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
             },
           ],
         })
+      }
 
+      if (!itemsStore.isSelect && isImageMediaType(currentMediaType.value)) {
+        contextMenu.push({
+          name: `View image`,
+          type: "item",
+          icon: "image-search",
+          disabled: !is_file_exists,
+          action: () => {
+            itemsStore.viewImage({image: item})
+          },
+        })
+        contextMenu.push({
+          name: `Open image file`,
+          type: "item",
+          icon: "file-image",
+          disabled: !is_file_exists,
+          action: () => {
+            if (window.$operable?.openPath) {
+              window.$operable.openPath(item.path)
+            }
+          },
+        })
+      }
+
+      if (!itemsStore.isSelect) {
         contextMenu.push({
           name: `Open file's folder`,
           type: "item",
@@ -198,7 +237,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
           url: "/tag",
           tagId: item.id,
           metaId: meta?.id,
-          mediaTypeId: 1,
+          mediaTypeId: getDefaultMediaTypeId(store.mediaTypes),
         },
       })
       eventBus.emit('getTabs')
@@ -383,7 +422,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       let data = {
         metaId: meta?.id,
         with_file: is_checked,
-        type: "videos",
+        type: getMediaDeleteAssetFolder(currentMediaType.value),
       }
 
       let deleted_items_names = []

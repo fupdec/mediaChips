@@ -57,6 +57,7 @@
     "path-browserify": "^1.0.1",
     "pinia": "^2.3.1",
     "sequelize": "^6.37.7",
+    "sharp": "^0.34.5",
     "sqlite3": "^5.1.7",
     "string-crypto": "^3.0.2",
     "umzug": "^3.8.2",

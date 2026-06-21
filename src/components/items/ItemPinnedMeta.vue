@@ -208,6 +208,7 @@ import {useItemsStore} from '@/stores/items'
 import {useEventBus} from "@/utils/eventBus"
 import {useRouter} from "vue-router";
 import {usePresetMeta} from "@/composable/ItemPresetMeta"
+import {getDefaultMediaTypeId} from '@/utils/mediaType'
 
 const router = useRouter()
 
@@ -311,7 +312,8 @@ const checkShow = (metaId) => {
 }
 
 const getPath = (tag) => {
-  return "/tag?metaId=" + tag.metaId + "&tagId=" + tag.id + "&mediaTypeId=1"
+  const mediaTypeId = itemsStore.environment?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes)
+  return "/tag?metaId=" + tag.metaId + "&tagId=" + tag.id + "&mediaTypeId=" + mediaTypeId
 }
 
 const openNewTab = (tag) => {
@@ -323,7 +325,7 @@ const openNewTab = (tag) => {
       icon: tag.meta.icon,
       url: '/tag',
       tagId: tag.id,
-      mediaTypeId: itemsStore.environment?.media_type_id || 1,
+      mediaTypeId: itemsStore.environment?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes),
       metaId: tag.metaId,
     },
   })

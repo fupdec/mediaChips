@@ -138,6 +138,7 @@ import DialogMarkAdding from '@/components/dialogs/DialogMarkAdding.vue'
 import {useEventBus} from '@/utils/eventBus'
 import path from "path-browserify"
 import {useRoute} from "vue-router";
+import {getDefaultMediaTypeId} from '@/utils/mediaType'
 
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
@@ -685,7 +686,7 @@ const initPlayingVideo = (video, videos, time) => {
   window.addEventListener("keydown", handleKey);
 
   // Загружаем метаданные
-  const url = "/api/MetaInMediaType?mediaTypeId=1"
+  const url = `/api/MetaInMediaType?mediaTypeId=${getDefaultMediaTypeId(appStore.mediaTypes)}`
   axios
     .get(apiUrl.value + url)
     .then((res) => {

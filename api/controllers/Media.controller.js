@@ -1,15 +1,27 @@
 const fs = require("fs")
 const path = require('path')
 const {parseItemsFromDb, filterItems} = require('../../app/tasks/items.js')
+const {getMediaDeleteAssetFolder} = require('../utils/mediaType')
 
 module.exports = function (db) {
   const dbPath = db.path
 
   // Retrieve all Media from the database.
   const getAll = function (req, res) {
-    let query = `SELECT media.*, videoMetadata.*, tags_in_media.media_tags, value_in_media.media_values
+    let query = `SELECT media.*,
+                        videoMetadata.duration,
+                        videoMetadata.bitrate,
+                        videoMetadata.codec,
+                        videoMetadata.fps,
+                        videoMetadata.time,
+                        COALESCE(videoMetadata.width, imageMetadata.width) AS width,
+                        COALESCE(videoMetadata.height, imageMetadata.height) AS height,
+                        imageMetadata.orientation,
+                        tags_in_media.media_tags,
+                        value_in_media.media_values
                  FROM media
                           LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
+                          LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId
                           LEFT JOIN (SELECT tagsInMedia.mediaId                                          id,
                                             GROUP_CONCAT(tagsInMedia.tagId || '^' || tagsInMedia.metaId) media_tags
                                      FROM tagsInMedia
@@ -27,7 +39,15 @@ module.exports = function (db) {
     db.sequelize.query(query).then(data => {
       // db.Media.findAll({include: {all: true}}).then(data => {
       let items_all = parseItemsFromDb(data[0])
-      let items_filtered = filterItems(req.body.filters, 'media', items_all, req.body.sortBy, req.body.direction, req.body.find_duplicates)
+      let items_filtered = filterItems(
+        req.body.filters,
+        'media',
+        items_all,
+        req.body.sortBy,
+        req.body.direction,
+        req.body.find_duplicates,
+        req.body.duplicates_by || 'filesize',
+      )
       res.status(201).send({items: items_filtered, total: items_all.length})
     }).catch(err => {
       res.status(500).send({
@@ -174,6 +194,7 @@ module.exports = function (db) {
     const type = req.body.type
     const id = req.body.id
     const mediaPath = path.join(dbPath, 'media/' + type)
+
     if (type === 'videos') {
       // удаляем все картинки сделанные для видео
       const thumbPath = path.join(mediaPath, 'thumbs', id + '.jpg')
@@ -197,6 +218,9 @@ module.exports = function (db) {
           if (fs.existsSync(markPath)) fs.unlinkSync(markPath)
         }
       })
+    } else if (type === getMediaDeleteAssetFolder({type: 'image'})) {
+      const thumbPath = path.join(mediaPath, 'thumbs', `${id}.jpg`)
+      if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath)
     }
 
     // удалить вместе с файлом?

@@ -30,7 +30,7 @@
 
     <v-switch inset
       v-if="editMode"
-      :disabled="!isPinnedToVideos"
+      :disabled="!isPinnedForMediaParser"
       v-model="settings.parser"
       hide-details
       class="mt-2">
@@ -45,7 +45,7 @@
     </v-switch>
 
     <v-alert
-      v-if="editMode && !isPinnedToVideos"
+      v-if="editMode && !isPinnedForMediaParser"
       type="info"
       class="text-caption mt-4 mb-4"
       variant="tonal"
@@ -253,6 +253,7 @@
 import {ref, computed, onMounted, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
+import {isVideoMediaType, isImageMediaType} from '@/utils/mediaType'
 import axios from 'axios'
 import SettingsCategoryDivider
   from "@/components/ui/SettingsCategoryDivider.vue";
@@ -305,6 +306,7 @@ const chipVariants = ref([
 ])
 
 const isPinnedToVideos = ref(false)
+const isPinnedForMediaParser = ref(false)
 const chipKey = ref(0)
 const randomColor = ref('#000000')
 
@@ -333,21 +335,21 @@ const generateRandomColor = () => {
   return color
 }
 
-const checkIsPinnedToVideos = async () => {
+const checkPinnedMediaTypes = async () => {
   try {
     const response = await axios.get(
       `${apiUrl.value}/api/MetaInMediaType?metaId=${props.meta.id}`
     )
     const pinnedMedia = response.data || []
 
-    // Проверяем, прикреплен ли к видео (нужно уточнить логику)
-    isPinnedToVideos.value = pinnedMedia.some(item =>
-      item.mediaType?.name?.toLowerCase().includes('video') ||
-      item.mediaType?.name?.toLowerCase().includes('movie')
+    isPinnedToVideos.value = pinnedMedia.some((item) => isVideoMediaType(item.mediaType))
+    isPinnedForMediaParser.value = pinnedMedia.some((item) =>
+      isVideoMediaType(item.mediaType) || isImageMediaType(item.mediaType)
     )
   } catch (error) {
     console.error('Error checking pinned media:', error)
     isPinnedToVideos.value = false
+    isPinnedForMediaParser.value = false
   }
 }
 
@@ -361,7 +363,7 @@ const showDocumentation = (id) => {
 onMounted(() => {
   nextTick(() => {
     initSettings()
-    checkIsPinnedToVideos()
+    checkPinnedMediaTypes()
     generateRandomColor()
   })
 })
@@ -373,7 +375,7 @@ watch(settings, (мф) => {
 
 watch(() => props.meta, () => {
   initSettings()
-  checkIsPinnedToVideos()
+  checkPinnedMediaTypes()
 }, {immediate: true})
 </script>
 

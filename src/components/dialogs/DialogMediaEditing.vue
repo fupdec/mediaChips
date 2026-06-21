@@ -53,6 +53,11 @@ import EditPinnedMetaValues from "@/components/items/EditPinnedMetaValues.vue"
 import EditDialogMediaPanel from "@/components/items/EditDialogMediaPanel.vue"
 import {useEventBus} from "@/utils/eventBus"
 import path from 'path-browserify'
+import {
+  getCurrentMediaType,
+  getMediaDeleteAssetFolder,
+  isImageMediaType,
+} from '@/utils/mediaType'
 
 const DialogHeader = defineAsyncComponent(() => import("@/components/elements/DialogHeader.vue"))
 
@@ -77,10 +82,20 @@ const cropperOps = ref({
 })
 
 const apiUrl = computed(() => appStore.localhost)
+
+const media = computed(() => props.media || dialogsStore.mediaEditing.media)
+
 const fileName = computed(() => {
-  const path = props.media?.path || ''
-  return path.split('/').pop() || ''
+  const filePath = media.value?.path || ''
+  return filePath.split('/').pop() || ''
 })
+
+const currentMediaType = computed(() =>
+  getCurrentMediaType(
+    appStore.mediaTypes,
+    media.value?.mediaTypeId || itemsStore.environment?.media_type_id
+  )
+)
 
 function initButtons() {
   buttons.value.push({
@@ -99,14 +114,37 @@ function initButtons() {
 }
 
 async function getImage() {
-  imgPath.value = path.join(appStore.mediaPath, 'videos/thumbs', `${props.media.id}.jpg`)
+  const currentMedia = media.value
+  if (!currentMedia?.id) return
+
+  const mediaType = getCurrentMediaType(
+    appStore.mediaTypes,
+    currentMedia.mediaTypeId || itemsStore.environment?.media_type_id
+  )
+
+  if (isImageMediaType(mediaType)) {
+    imgPath.value = path.join(appStore.mediaPath, 'images/thumbs', `${currentMedia.id}.jpg`)
+    thumb.value = await $operable.getLocalImage(imgPath.value)
+
+    if (thumb.value.includes('unavailable.png') && currentMedia.path) {
+      thumb.value = await $operable.getLocalImage(currentMedia.path, true)
+    }
+
+    const width = Number(currentMedia.width) || 1
+    const height = Number(currentMedia.height) || 1
+    cropperOps.value = {aspectRatio: width / height}
+    return
+  }
+
+  imgPath.value = path.join(appStore.mediaPath, 'videos/thumbs', `${currentMedia.id}.jpg`)
   thumb.value = await $operable.getLocalImage(imgPath.value)
+  cropperOps.value = {aspectRatio: 16 / 9}
 }
 
 async function onImageEdited() {
   await getImage()
   eventBus.emit('getItemsFromDb', {
-    ids: [props.media.id],
+    ids: [media.value.id],
     type: 'media'
   })
 }
@@ -137,16 +175,16 @@ function deleteMedia() {
         method: "post",
         url: apiUrl.value + "/api/media/deleteOne",
         data: {
-          type: "videos",
-          id: props.media.id,
+          type: getMediaDeleteAssetFolder(currentMediaType.value),
+          id: media.value.id,
           with_file: is_checked,
-          path: props.media.path,
+          path: media.value.path,
         },
       })
 
       eventBus.emit('removeEntitiesFromState', {
         detail: {
-          ids: [props.media.id],
+          ids: [media.value.id],
           type: 'media',
         }
       })

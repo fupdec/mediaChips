@@ -137,118 +137,53 @@
 </template>
 
 <script setup>
-import {computed} from 'vue'
+import {computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useToolbarStore} from '@/stores/toolbar'
 import {useEventBus} from "@/utils/eventBus";
+import {getCurrentMediaType, matchesMediaTypeFilter} from '@/utils/mediaType'
+import {MEDIA_SORT_PARAMS} from '@/utils/mediaSortFilter'
 
 /* ================= STORES ================= */
 
 const itemsStore = useItemsStore()
+const appStore = useAppStore()
 const toolbarStore = useToolbarStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
 /* ================= DATA ================= */
 
-const params = [
-  {param: 'path', icon: 'folder', textKey: 'filters.sort.path', types: ['media']},
-  {
-    param: 'name',
-    icon: 'alphabetical-variant',
-    textKey: 'filters.sort.name',
-    types: ['media', 'tag']
-  },
-  {param: 'rating', icon: 'star', textKey: 'filters.sort.rating', types: ['media', 'tag']},
-  {
-    param: 'createdAt',
-    icon: 'calendar-plus',
-    textKey: 'filters.sort.date_added',
-    types: ['media', 'tag']
-  },
-  {
-    param: 'updatedAt',
-    icon: 'calendar-edit',
-    textKey: 'filters.sort.date_updated',
-    types: ['media', 'tag']
-  },
-  {
-    param: 'viewedAt',
-    icon: 'calendar-cursor',
-    textKey: 'filters.sort.viewed_date',
-    types: ['media', 'tag']
-  },
-  {
-    param: 'views',
-    icon: 'eye',
-    textKey: 'filters.sort.views',
-    types: ['media', 'tag']
-  },
-  {param: 'filesize', icon: 'harddisk', textKey: 'filters.sort.filesize', types: ['media']},
-
-  {
-    param: 'duration',
-    icon: 'clock-outline',
-    textKey: 'filters.sort.duration',
-    types: ['media'],
-    media_type_id: [1]
-  },
-  {
-    param: 'bitrate',
-    icon: 'filmstrip',
-    textKey: 'filters.sort.bitrate',
-    types: ['media'],
-    media_type_id: [1]
-  },
-  {
-    param: 'fps',
-    icon: 'filmstrip',
-    textKey: 'filters.sort.framerate',
-    types: ['media'],
-    media_type_id: [1]
-  },
-  {
-    param: 'codec',
-    icon: 'filmstrip',
-    textKey: 'filters.sort.codec',
-    types: ['media'],
-    media_type_id: [1]
-  },
-  {
-    param: 'width',
-    icon: 'monitor-screenshot',
-    textKey: 'filters.sort.width',
-    types: ['media'],
-    media_type_id: [1]
-  },
-  {
-    param: 'height',
-    icon: 'monitor-screenshot',
-    textKey: 'filters.sort.height',
-    types: ['media'],
-    media_type_id: [1]
-  },
-
-  {
-    param: 'shuffle',
-    icon: 'shuffle-variant',
-    textKey: 'filters.sort.shuffle',
-    types: ['media', 'tag']
-  },
-]
+const params = MEDIA_SORT_PARAMS
 
 /* ================= COMPUTED ================= */
 
 const items = computed(() => itemsStore)
 const env = computed(() => itemsStore.environment)
 
-const sortParams = computed(() =>
-  params.filter(p =>
+const sortParams = computed(() => {
+  const currentMediaType = getCurrentMediaType(appStore.mediaTypes, env.value.media_type_id)
+
+  return params.filter(p =>
     p.types.includes(items.value.type) &&
-    (!p.media_type_id || p.media_type_id.includes(env.value.media_type_id))
+    matchesMediaTypeFilter(p, currentMediaType)
   )
-)
+})
+
+watch(sortParams, (nextParams) => {
+  const allowed = nextParams.map((param) => param.param)
+  const currentSortBy = items.value.sortBy
+
+  if (currentSortBy && currentSortBy !== 'shuffle' && !allowed.includes(currentSortBy)) {
+    const fallback = allowed.includes('createdAt') ? 'createdAt' : allowed[0]?.param
+    if (fallback) {
+      itemsStore.setSortBy(fallback)
+      eventBus.emit('setItemsSortBy', fallback)
+    }
+  }
+}, {immediate: true})
 
 /* ================= METHODS ================= */
 

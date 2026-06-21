@@ -31,6 +31,8 @@ export const useTasksStore = defineStore('useTasksStore', {
       is_parsing: true,
       is_exclude: false,
       is_check_duplicates: true,
+      skipFileScan: false,
+      directFiles: [],
     },
   }),
   actions: {

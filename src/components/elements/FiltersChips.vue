@@ -12,7 +12,7 @@
       inset
     >
       <template #label>
-        <div class="ml-2 text-medium-emphasis">{{ t('filters.show_only_duplicates_by_filesize') }}</div>
+        <div class="ml-2 text-medium-emphasis">{{ duplicatesLabel }}</div>
       </template>
     </v-switch>
 
@@ -128,6 +128,8 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
+import {getCurrentMediaType} from '@/utils/mediaType'
+import {getDuplicatesModeLabelKey} from '@/utils/mediaSortFilter'
 
 /* =========================
  * PROPS
@@ -155,6 +157,7 @@ const colsCache = ref(null)
  * ========================= */
 
 const itemsStore = useItemsStore()
+const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
@@ -171,8 +174,20 @@ const showIcons = computed(() =>
   settingsStore.showIconsInsteadTextOnFiltersChips === '1'
 )
 
-const meta = computed(() => useAppStore().meta)
-const tags = computed(() => useAppStore().tags)
+const duplicatesLabel = computed(() => {
+  if (itemsStore.type !== 'media') {
+    return t('filters.show_only_duplicates_by_filesize')
+  }
+
+  const mediaType = getCurrentMediaType(
+    appStore.mediaTypes,
+    itemsStore.environment?.media_type_id
+  )
+  return t(getDuplicatesModeLabelKey(mediaType))
+})
+
+const meta = computed(() => appStore.meta)
+const tags = computed(() => appStore.tags)
 
 /* =========================
  * METHODS

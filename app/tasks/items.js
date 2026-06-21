@@ -63,7 +63,7 @@ const parseItemsFromDb = (items) => {
   return parsed;
 }
 
-const filterItems = (filters_all, type, items, sortBy, direction, find_duplicates) => {
+const filterItems = (filters_all, type, items, sortBy, direction, find_duplicates, duplicates_by = 'filesize') => {
   // отсеиваем неактивные и без условий (в случае бага)
   let filters = filters_all.filter(i => i.active && i.cond)
 
@@ -72,11 +72,18 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
   if (FilterCols && FilterCols.video) {
     videoCols = FilterCols.video.map(i => i.param);
   } else if (FilterCols.default && FilterCols.default.video) {
-    // Если импортировали как default export
     videoCols = FilterCols.default.video.map(i => i.param);
   }
 
-  const isFilterByVideo = filters.some(i => videoCols.includes(i.param))
+  let imageCols = [];
+  if (FilterCols && FilterCols.image) {
+    imageCols = FilterCols.image.map(i => i.param);
+  } else if (FilterCols.default && FilterCols.default.image) {
+    imageCols = FilterCols.default.image.map(i => i.param);
+  }
+
+  const mediaMetadataCols = [...new Set([...videoCols, ...imageCols])];
+  const isFilterByVideo = filters.some(i => mediaMetadataCols.includes(i.param))
   const isFilterByMetaValue = filters.some(i => i.type !== 'array' && _.isNumber(i.param))
   const isFilterTypeArray = filters.some(i => i.type === 'array')
   let array_count = 0; // для подсчета фильтров с типом массив
@@ -190,7 +197,8 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
   }
 
   if (find_duplicates) {
-    let grouped_items = _.groupBy(items, 'filesize');
+    const groupKey = duplicates_by === 'path' ? 'path' : 'filesize'
+    let grouped_items = _.groupBy(items, groupKey);
     let items_dups = []
     for (let key in grouped_items) {
       if (grouped_items[key].length > 1) {

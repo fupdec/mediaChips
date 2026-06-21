@@ -71,6 +71,7 @@ import path from 'path-browserify'
 
 import { useAppStore } from '@/stores/app'
 import { useItemsStore } from '@/stores/items'
+import {getDefaultMediaTypeId} from '@/utils/mediaType'
 
 // props
 const props = defineProps({
@@ -146,7 +147,7 @@ const openTagPage = () => {
     query: {
       metaId: props.meta.id,
       tagId: props.tag.id,
-      mediaTypeId: 1,
+      mediaTypeId: getDefaultMediaTypeId(appStore.mediaTypes),
     },
   })
   $readable.hideHoverImage()

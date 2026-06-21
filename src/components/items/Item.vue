@@ -21,13 +21,22 @@
       :hover="true"
     >
       <div class="item_preview">
-        <ItemPreviewVideo v-if="type=='media'"
-                          @update-big-preview="(val) => big_preview = val"
-                          :media="item"
-                          :is-file-exists="is_file_exists"></ItemPreviewVideo>
-        <ItemPreviewTag v-if="type=='tag'"
-                        :tag="item"
-                        :meta="meta"></ItemPreviewTag>
+        <ItemPreviewVideo
+          v-if="type === 'media' && isVideoMedia"
+          @update-big-preview="(val) => big_preview = val"
+          :media="item"
+          :is-file-exists="is_file_exists"
+        />
+        <ItemPreviewImage
+          v-else-if="type === 'media' && isImageMedia"
+          :media="item"
+          :is-file-exists="is_file_exists"
+        />
+        <ItemPreviewTag
+          v-if="type=='tag'"
+          :tag="item"
+          :meta="meta"
+        />
 
         <ItemRating
           v-if="settingsStore.ratingAndFavoriteInCard != '1' && is_rating_active"
@@ -44,8 +53,10 @@
              v-html="'App not registered'"/>
       </div>
 
-      <v-progress-linear v-if="type=='media'"
-                         :value="(Number(item.time || 0) / item.duration) * 100"/>
+      <v-progress-linear
+        v-if="type === 'media' && isVideoMedia && item.duration"
+        :value="(Number(item.time || 0) / item.duration) * 100"
+      />
 
       <div @click="editItem"
            v-ripple="{ class: `text-primary` }"
@@ -146,11 +157,13 @@ import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useContextMenu} from '@/stores/contextMenu'
 import ItemPreviewVideo from '@/components/items/ItemPreviewVideo.vue'
+import ItemPreviewImage from '@/components/items/ItemPreviewImage.vue'
 import ItemPreviewTag from '@/components/items/ItemPreviewTag.vue'
 import ItemPinnedMeta from '@/components/items/ItemPinnedMeta.vue'
 import ItemRating from '@/components/items/ItemRating.vue'
 import ItemFavorite from '@/components/items/ItemFavorite.vue'
 import useItemContextMenu from '@/composable/ItemContextMenu'
+import {isImageMediaType, isVideoMediaType} from '@/utils/mediaType'
 
 const props = defineProps({
   item: Object,
@@ -158,6 +171,7 @@ const props = defineProps({
   x: Number,
   type: String,
   meta: Object,
+  mediaType: Object,
 })
 
 const emit = defineEmits([
@@ -178,6 +192,9 @@ const contextMenu = computed(() => contextMenuStore)
 
 const is_file_exists = ref(false)
 const big_preview = ref(false)
+
+const isVideoMedia = computed(() => isVideoMediaType(props.mediaType))
+const isImageMedia = computed(() => isImageMediaType(props.mediaType))
 
 const is_selected = computed(() => {
   return itemsStore.selection.includes(props.item.id)

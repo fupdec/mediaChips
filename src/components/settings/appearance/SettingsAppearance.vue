@@ -57,7 +57,7 @@ const chips_default_data = [
     value: 'show_default_meta_resolution',
   },
   {
-    icon: 'file-video-outline',
+    icon: 'file-outline',
     text: 'Extension',
     value: 'show_default_meta_ext',
   },
@@ -77,8 +77,8 @@ const chips_default_data = [
     value: 'show_default_meta_fps',
   },
   {
-    icon: 'video-outline',
-    text: 'Number of videos',
+    icon: 'folder-multiple-outline',
+    text: 'Number of media',
     value: 'show_default_meta_number_media',
   },
   {

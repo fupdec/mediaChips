@@ -90,6 +90,7 @@
         { 'chips-grid': items_type === 'tag' && ITEMS.view == '2' },
         { 'line-grid': mediaType?.type == 'video' && ITEMS.view == '2' },
         { 'wide-image': mediaType?.type == 'video' && ITEMS.view == '2' },
+        { 'image-grid': mediaType?.type == 'image' && ITEMS.view == '1' },
       ]"
     >
       <Item
@@ -98,6 +99,7 @@
         :type="items_type"
         :item="i"
         :meta="meta"
+        :media-type="mediaType"
         :reg="reg"
         :x="x"
       />
@@ -241,6 +243,11 @@ import ToolbarAppearance from "@/components/app/toolbar/ToolbarAppearance.vue";
 import DialogMediaAdding from '@/components/dialogs/DialogMediaAdding.vue'
 import TagsAdd from '@/components/app/appbar/elements/TagsAdd.vue'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {isVideoMediaType, getDefaultMediaTypeId, isImageMediaType} from '@/utils/mediaType'
+import {
+  getDuplicatesGroupKey,
+  normalizeSortBy,
+} from '@/utils/mediaSortFilter'
 
 // Пропсы
 const props = defineProps({
@@ -321,8 +328,10 @@ const image_filters_no_results = computed(() => {
     img_path = '/images/filters/filters-no-results-tag.svg';
   } else if (props.items_type === 'media') {
     img_path = '/images/filters/filters-no-results-file.svg';
-    if (props.mediaTypeId === 1) {
+    if (isVideoMediaType(mediaType.value)) {
       img_path = '/images/filters/filters-no-results-video.svg';
+    } else if (isImageMediaType(mediaType.value)) {
+      img_path = '/images/filters/filters-no-results-file.svg';
     }
   }
   return img_path;
@@ -415,11 +424,24 @@ const getPageSettings = async () => {
     .then((res) => {
       let vals = ["page", "limit", "size", "view", "sortBy", "sortDir"];
 
-      for (let i of vals)
+      for (let i of vals) {
+        let value = res.data[0][i]
+        if (i === 'sortBy' && props.items_type === 'media') {
+          value = normalizeSortBy(value, props.items_type, mediaType.value, value || 'createdAt')
+        }
         itemsStore.updateState({
           key: i,
-          value: res.data[0][i],
+          value,
         });
+      }
+
+      if (
+        props.items_type === 'media' &&
+        res.data[0].sortBy &&
+        res.data[0].sortBy !== itemsStore.sortBy
+      ) {
+        updatePageSetting({sortBy: itemsStore.sortBy});
+      }
 
       // if page settings created then update filter id for it
       if (res.data[1])
@@ -487,9 +509,17 @@ const getItemsFromDb = async (ids) => {
 
   // Подготавливаем query с безопасными значениями
   query.filters = _.cloneDeep(ITEMS.value.filters || []);
-  query.sortBy = ITEMS.value.sortBy || 'id';
+  query.sortBy = normalizeSortBy(
+    ITEMS.value.sortBy || 'id',
+    props.items_type,
+    mediaType.value,
+    'createdAt'
+  ) || 'id';
   query.direction = ITEMS.value.sortDir || 'desc';
   query.find_duplicates = ITEMS.value.find_duplicates || false;
+  if (props.items_type === 'media') {
+    query.duplicates_by = getDuplicatesGroupKey(mediaType.value);
+  }
   query.ids = ids || [];
 
   if (ids && ids.length > 0) {
@@ -676,13 +706,36 @@ const showDrop = (e) => {
 
 const catchDrop = (e) => {
   dropzone.value = false
-  let files = e.dataTransfer.files
-  let paths = ''
-  for (let f of files) {
-    paths = paths + '\n' + f.path;
+  if (!isElectron.value || props.items_type !== 'media' || !mediaType.value) return
+
+  const extensions = mediaType.value.extensions
+    .split(',')
+    .map((ext) => ext.trim().toLowerCase())
+    .filter(Boolean)
+
+  const files = Array.from(e.dataTransfer.files || [])
+    .map((file) => file.path)
+    .filter(Boolean)
+    .filter((filePath) => {
+      const ext = String(filePath).split('.').pop()?.toLowerCase()
+      return ext && extensions.includes(ext)
+    })
+
+  if (!files.length) {
+    $operable.setNotification({
+      type: 'warning',
+      title: t('media.adding.files'),
+      text: t('media.adding.no_matching_files'),
+    })
+    return
   }
-  tasksStore.mediaAdding.paths = paths
+
+  tasksStore.mediaAdding.media_type_id = props.mediaTypeId
+  tasksStore.mediaAdding.directFiles = files
+  tasksStore.mediaAdding.skipFileScan = true
+  tasksStore.mediaAdding.paths = files.join('\n')
   tasksStore.mediaAdding.dialogProcess = true
+  tasksStore.mediaAdding.active = true
   eventBus.emit('addMedia')
 }
 
@@ -812,13 +865,17 @@ const handleUpdateAssignedMeta = async () => {
 const handleOpenRandomItem = (event) => {
   const id = event;
   if (props.items_type === 'tag') {
-    let url = "/tag?metaId=" + meta.value.id + "&tagId=" + id + "&mediaTypeId=1";
+    let url = "/tag?metaId=" + meta.value.id + "&tagId=" + id + "&mediaTypeId=" + getDefaultMediaTypeId(appStore.mediaTypes);
     router.push(url);
   } else if (props.items_type === 'media') {
     const media = ITEMS.value.entities.find(i => i.id === id);
-    itemsStore.playVideo({
-      video: media,
-    })
+    if (isImageMediaType(mediaType.value)) {
+      itemsStore.viewImage({image: media})
+    } else {
+      itemsStore.playVideo({
+        video: media,
+      })
+    }
   }
 }
 

@@ -1,0 +1,30 @@
+import path from 'path-browserify'
+
+const isUnavailable = (src) => !src || src.includes('unavailable.png')
+
+export async function loadImageDisplayUrl(media, mediaPath, {preferFull = false} = {}) {
+  if (!media?.id) return null
+
+  const thumbPath = path.join(mediaPath, 'images/thumbs', `${media.id}.jpg`)
+
+  if (preferFull && media.path) {
+    const full = await $operable.getLocalImage(media.path, true)
+    if (!isUnavailable(full)) return full
+  }
+
+  const thumb = await $operable.getLocalImage(thumbPath)
+  if (!isUnavailable(thumb)) return thumb
+
+  if (media.path) {
+    const full = await $operable.getLocalImage(media.path, true)
+    if (!isUnavailable(full)) return full
+  }
+
+  return null
+}
+
+export function revokeImageObjectUrl(url) {
+  if (url && url.startsWith('blob:')) {
+    URL.revokeObjectURL(url)
+  }
+}

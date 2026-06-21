@@ -115,13 +115,29 @@
 
         <!-- Existing files (by path) -->
         <div v-if="duplicates_by_path.length">
-          <v-chip
-            @click="is_show_duplicates_by_path = !is_show_duplicates_by_path"
-            :text="t('media.adding.existing_count', {count: duplicates_by_path.length})"
-            color="info"
-            class="mb-2"
-            size="small"
-          />
+          <v-card-actions class="pa-0 mb-2">
+            <v-chip
+              @click="is_show_duplicates_by_path = !is_show_duplicates_by_path"
+              :text="t('media.adding.existing_count', {count: duplicates_by_path.length})"
+              color="info"
+              size="small"
+            />
+
+            <v-spacer></v-spacer>
+
+            <v-btn
+              @click="deletePathDuplicates"
+              :disabled="task.active"
+              color="error"
+              class="pr-4"
+              variant="flat"
+              rounded
+              size="small"
+            >
+              <v-icon icon="mdi-delete-alert" class="mr-1"></v-icon>
+              {{ t('media.adding.delete_incoming_files') }}
+            </v-btn>
+          </v-card-actions>
           <v-card v-if="is_show_duplicates_by_path" variant="outlined" class="pa-2">
             <v-virtual-scroll
               :height="duplicates_by_path.length > 10 ? 150 : duplicates_by_path.length * 15"
@@ -228,13 +244,7 @@ import {useTasksStore} from '@/stores/tasks'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useEventBus} from '@/utils/eventBus'
 
-// Props
-const props = defineProps({
-  dialog: {
-    type: Boolean,
-    required: true,
-  }
-})
+// Props - dialog state is controlled via tasksStore.mediaAdding.dialogProcess
 
 // Emits
 const emit = defineEmits(['close'])
@@ -288,6 +298,36 @@ const initButtons = () => {
 const stop = () => {
   tasksStore.mediaAdding.stopped = true
   buttons.value = []
+}
+
+const deletePathDuplicates = async () => {
+  dialogsStore.confirm.show = true
+  dialogsStore.confirm.text = t('media.adding.delete_files_confirm')
+  dialogsStore.confirm.action = async () => {
+    try {
+      const dupes = task.value.duplicates.filter(i => i.duplicate?.parameter === 'path')
+
+      for (const dupe of dupes) {
+        if (!dupe.path) continue
+
+        try {
+          await $operable.deleteLocalFile(dupe.path)
+        } catch (error) {
+          console.error('Error deleting local file:', error)
+        }
+      }
+
+      $operable.setNotification({
+        type: 'success',
+        title: t('media.adding.deleting_files'),
+        text: t('media.adding.files_deleted')
+      })
+
+      eventBus.emit('update:watcher')
+    } catch (error) {
+      console.error('Error deleting path duplicates:', error)
+    }
+  }
 }
 
 const deleteDuplicates = async (delete_type) => {
@@ -548,14 +588,6 @@ watch(() => task.value?.finished, (finished) => {
     if (task.value) {
       task.value.progress = 100
     }
-  }
-})
-
-// Watch for dialog prop changes
-watch(() => props.dialog, (newValue) => {
-  if (!newValue && buttons.value.length > 0) {
-    // Останавливаем задачу при закрытии диалога
-    stop()
   }
 })
 </script>

@@ -21,6 +21,21 @@ const {matchPathToTags} = require('../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../services/tagSuggester')
 const videoClipTagger = require('../services/videoClipTagger')
 const embeddingModel = require('../services/embeddingModel')
+const {isVideoMediaType, isImageMediaType} = require('../utils/mediaType')
+const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
+
+const GENERATED_MEDIA_FOLDERS = {
+  timelines: 'media/videos/timelines',
+  grids: 'media/videos/grids',
+  marks: 'media/videos/marks',
+  'image-thumbs': 'media/images/thumbs',
+}
+
+const resolveGeneratedFolderPath = (dbPath, folderKey) => {
+  const relativePath = GENERATED_MEDIA_FOLDERS[folderKey]
+  if (!relativePath) return null
+  return path.join(dbPath, relativePath)
+}
 
 module.exports = function (db) {
   const importSavedFilters = (req, res) => {
@@ -28,6 +43,13 @@ module.exports = function (db) {
   }
 
   const dbPath = db.path
+
+  const withTimeout = (promise, ms, label) => Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    }),
+  ])
   const Op = db.Sequelize.Op
   const Sequelize = db.Sequelize
 
@@ -243,13 +265,13 @@ module.exports = function (db) {
 
     const duplicate_by_path = await isUniqueByParameter('path', pathToFile);
     if (duplicate_by_path) {
-      return {duplicate: duplicate_by_path}
+      return {isCreated: false, duplicate: duplicate_by_path}
     }
 
-    if (is_check_duplicates) {
+    if (is_check_duplicates && !isImageMediaType(mediaType)) {
       const duplicate_by_filesize = await isUniqueByParameter('filesize', filesize);
       if (duplicate_by_filesize) {
-        return {duplicate: duplicate_by_filesize}
+        return {isCreated: false, duplicate: duplicate_by_filesize}
       }
     }
 
@@ -266,15 +288,27 @@ module.exports = function (db) {
       },
     })
 
+    if (!isCreated) {
+      return {
+        media,
+        isCreated: false,
+        duplicate: {
+          parameter: 'path',
+          path: media.path,
+          id: media.id,
+        },
+      }
+    }
+
     return {
       media,
-      isCreated,
-      duplicate: isCreated ? false : 'path',
+      isCreated: true,
+      duplicate: false,
     }
   }
 
   function createThumbMiddle(pathToFile, id) {
-    return new Promise((resolve, reject) => {
+    return withTimeout(new Promise((resolve, reject) => {
       let outputPathThumbs = path.join(dbPath, 'media/videos/thumbs')
       ffmpeg()
         .input(pathToFile)
@@ -290,7 +324,7 @@ module.exports = function (db) {
         .on('error', (err) => {
           reject(err.message)
         })
-    })
+    }), 120000, 'ffmpeg thumbnail')
   }
 
   function createThumbCustom(timestamp, inputPath, outputPath, width) {
@@ -336,7 +370,7 @@ module.exports = function (db) {
     }
 
     try {
-      let info = await getMetadata(pathToFile)
+      let info = await withTimeout(getMetadata(pathToFile), 60000, 'ffprobe')
       let duration = Math.floor(info.format.duration)
 
       let width, height, codec, fps
@@ -392,10 +426,7 @@ module.exports = function (db) {
       try {
         await createThumbMiddle(pathToFile, media.id)
       } catch (error) {
-        res.status(400).send({
-          message: error
-        })
-        return
+        console.error(`Thumbnail generation failed for ${pathToFile}:`, error)
       }
 
       res.status(201).send(media)
@@ -408,16 +439,49 @@ module.exports = function (db) {
   };
 
   const addMediaImage = async function (req, res) {
+    const pathToFile = req.body.path
+    const mediaType = req.body.type
+
     const {
       media,
-      isCreated
-    } = await addMediaToDb(req.body.path, req.body.type)
+      isCreated,
+      duplicate,
+    } = await addMediaToDb(pathToFile, mediaType, req.body.is_check_duplicates)
 
     if (isCreated) {
+      const metadata = await withTimeout(
+        getImageMetadata(pathToFile),
+        60000,
+        'image metadata'
+      ).catch(error => {
+        console.error(`Image metadata extraction failed for ${pathToFile}:`, error.message)
+        return null
+      })
+
+      if (metadata) {
+        await db.ImageMetadata.create({
+          mediaId: media.id,
+          width: metadata.width,
+          height: metadata.height,
+          orientation: metadata.orientation,
+        })
+      }
+
+      try {
+        await withTimeout(
+          createImageThumb(pathToFile, media.id, dbPath),
+          120000,
+          'image thumbnail'
+        )
+      } catch (error) {
+        console.error(`Thumbnail generation failed for ${pathToFile}:`, error.message)
+      }
+
       res.status(201).send(media)
     } else {
       res.status(202).send({
-        message: "Media already added."
+        message: "Media already added.",
+        duplicate,
       })
     }
   };
@@ -476,7 +540,12 @@ module.exports = function (db) {
       const media = await db.Media.findOne({where: {id: media_id}})
 
       if (media) {
-        if (media.mediaTypeId === 1) { // если это видео
+        const mediaType = await db.MediaType.findOne({
+          where: {id: media.mediaTypeId},
+          raw: true,
+        })
+
+        if (isVideoMediaType(mediaType)) {
           const metadata = await getVideoMetadata(media.dataValues.path)
 
           if (metadata) {
@@ -492,6 +561,23 @@ module.exports = function (db) {
                 mediaId: media_id,
               },
             })
+          }
+        } else if (isImageMediaType(mediaType)) {
+          const metadata = await getImageMetadata(media.dataValues.path)
+
+          if (metadata) {
+            await db.ImageMetadata.upsert({
+              mediaId: media_id,
+              width: metadata.width,
+              height: metadata.height,
+              orientation: metadata.orientation,
+            })
+          }
+
+          try {
+            await createImageThumb(media.dataValues.path, media_id, dbPath)
+          } catch (error) {
+            console.error(`Thumbnail regeneration failed for media ${media_id}:`, error.message)
           }
         }
 
@@ -897,35 +983,40 @@ module.exports = function (db) {
   };
 
   const getFolderSize = async function (req, res) {
-    const dirPath = path.join(dbPath, 'media', 'videos', req.body.folder)
-    const dirSize = async directory => {
-      const files = await readdir(directory);
-      const stats = files.map(file => stat(path.join(directory, file)));
-
-      return (await Promise.all(stats)).reduce((accumulator, {
-        size
-      }) => accumulator + size, 0);
+    const dirPath = resolveGeneratedFolderPath(dbPath, req.body.folder)
+    if (!dirPath) {
+      res.status(400).send({message: 'Unknown folder type'})
+      return
     }
+
+    const dirSize = async (directory) => {
+      if (!fs.existsSync(directory)) return 0
+
+      const files = await readdir(directory)
+      const stats = files.map(file => stat(path.join(directory, file)))
+
+      return (await Promise.all(stats)).reduce((accumulator, {size}) => accumulator + size, 0)
+    }
+
     const size = await dirSize(dirPath)
-    res.status(201).send({
-      size
-    })
+    res.status(201).send({size})
   };
 
   const clearData = async function (req, res) {
     const imageType = req.body.imageType
-    let delPath = 'media/'
-    if (['marks', 'grids', 'timelines'].includes(imageType)) {
-      delPath += 'videos/' + imageType
+    const delPath = resolveGeneratedFolderPath(dbPath, imageType)
+
+    if (!delPath) {
+      res.status(400).send({message: 'Unknown folder type'})
+      return
     }
-    delPath = path.join(dbPath, delPath)
+
     try {
-      await rmrf(delPath);
-      // create folder again if this folder for generated images
-      if (imageType && !fs.existsSync(delPath)) fs.mkdirSync(delPath)
+      await rmrf(delPath)
+      if (!fs.existsSync(delPath)) fs.mkdirSync(delPath, {recursive: true})
       res.sendStatus(201)
     } catch (err) {
-      res.status(400).send(err);
+      res.status(400).send(err)
     }
   };
 

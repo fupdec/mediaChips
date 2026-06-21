@@ -117,6 +117,45 @@ export const useItemsStore = defineStore('items', {
   // Действия (Actions)
   actions: {
 
+    async viewImage({image, in_system}) {
+      const isFileExists = await $operable.checkFileExists(image.path)
+
+      if (!isFileExists) {
+        $operable.setNotification({
+          type: 'error',
+          title: 'File not found on path',
+          text: image.path
+        })
+        return
+      }
+
+      if (in_system) {
+        await $operable.openPath(image.path)
+        await this.countViewNumber(image, 'media')
+        return
+      }
+
+      let images = [toRaw(image)]
+
+      if (this.entities.length > 0) {
+        images = this.entities.map(item => toRaw(item))
+
+        if (image.mediaTypeId) {
+          images = images.filter(item => item.mediaTypeId === image.mediaTypeId)
+        }
+      }
+
+      let index = images.findIndex(item => item.id === image.id)
+      if (index < 0) index = 0
+
+      await this.countViewNumber(image, 'media')
+
+      eventBus.emit('viewImage', {
+        images,
+        index,
+      })
+    },
+
     async playVideo({video, time, in_system}) {
       const settingsStore = useSettingsStore()
 

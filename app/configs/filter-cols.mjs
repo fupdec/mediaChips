@@ -146,6 +146,22 @@ export const Cols = {
       "text": "Codec",
       "textKey": "filters.sort.codec"
     }
+  ],
+  "image": [
+    {
+      "param": "width",
+      "type": "number",
+      "icon": "monitor-screenshot",
+      "text": "Width",
+      "textKey": "filters.sort.width"
+    },
+    {
+      "param": "height",
+      "type": "number",
+      "icon": "monitor-screenshot",
+      "text": "Height",
+      "textKey": "filters.sort.height"
+    }
   ]
 }
 

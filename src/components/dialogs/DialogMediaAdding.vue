@@ -21,7 +21,7 @@
         <!-- Заголовок диалога с кнопками действий -->
         <DialogHeader
           @close="isDialogVisible = false"
-          :header="t('media.adding.files')"
+          :header="dialogHeader"
           :buttons="dialogActionButtons"
           closable
         />
@@ -61,13 +61,25 @@
             />
           </v-form>
 
-          <!-- Опция проверки дубликатов -->
+          <!-- Опция проверки дубликатов (только для видео — по размеру файла) -->
           <v-checkbox
+            v-if="showFilesizeDuplicateCheck"
             v-model="mediaAddingState.is_check_duplicates"
             :label="t('media.adding.check_duplicates')"
             class="mt-0 mb-2 mr-4"
             hide-details
           />
+
+          <v-alert
+            v-else-if="isImageAdding"
+            type="info"
+            variant="tonal"
+            density="compact"
+            rounded="xl"
+            class="mb-2 text-caption"
+          >
+            {{ t('media.adding.images_skip_by_path_hint') }}
+          </v-alert>
 
           <!-- Опция парсинга тегов с кнопкой помощи -->
           <div class="d-flex align-center mb-2">
@@ -118,11 +130,15 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
+import {ref, computed, watch, onMounted} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useTasksStore} from '@/stores/tasks'
 import {useAppStore} from '@/stores/app'
+import {useItemsStore} from '@/stores/items'
+import {useItemsStore} from '@/stores/items'
+import {getCurrentMediaType, isImageMediaType} from '@/utils/mediaType'
+import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 
 // Компоненты
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -153,6 +169,7 @@ const props = defineProps({
 // Pinia stores
 const tasksStore = useTasksStore()
 const appStore = useAppStore()
+const itemsStore = useItemsStore()
 
 // Composable
 const mediaAdding = useMediaAdding()
@@ -165,6 +182,22 @@ const mediaForm = ref()
 // Computed свойства
 const isElectron = computed(() => appStore.isElectron)
 const mediaAddingState = computed(() => tasksStore.mediaAdding)
+
+const currentMediaType = computed(() =>
+  getCurrentMediaType(appStore.mediaTypes, itemsStore.environment?.media_type_id)
+)
+
+const isImageAdding = computed(() => isImageMediaType(currentMediaType.value))
+
+const showFilesizeDuplicateCheck = computed(() => !isImageAdding.value)
+
+const dialogHeader = computed(() => {
+  const typeName = getMediaTypeName(currentMediaType.value, t)
+  if (typeName) {
+    return t('media.adding.files_for_type', {type: typeName})
+  }
+  return t('media.adding.files')
+})
 
 // Кнопки действий в диалоге
 const dialogActionButtons = computed(() => [
@@ -192,12 +225,6 @@ const requiredPathRule = (value) => {
  */
 onMounted(() => {
   resetDialogState()
-  mediaAdding.setupEventListeners()
-  mediaAdding.dialogProcess = true
-})
-
-onUnmounted(() => {
-  mediaAdding.cleanupEventListeners()
 })
 
 const handleAddMedia = async () => {
@@ -207,7 +234,7 @@ const handleAddMedia = async () => {
 /**
  * Обрабатывает изменения пропса dialog для синхронизации с локальным состоянием
  */
-watch(() => isDialogVisible, (newValue) => {
+watch(isDialogVisible, (newValue) => {
   if (newValue) {
     resetDialogState()
   }
@@ -217,10 +244,20 @@ watch(() => isDialogVisible, (newValue) => {
  * Сбрасывает состояние диалога к начальным значениям
  */
 const resetDialogState = () => {
+  syncMediaTypeFromContext()
   tasksStore.mediaAdding.paths = ''
-  tasksStore.mediaAdding.is_exclude = false
+  tasksStore.mediaAdding.excluded = ''
+  tasksStore.mediaAdding.skipFileScan = false
+  tasksStore.mediaAdding.directFiles = []
   if (mediaForm.value) {
     mediaForm.value.reset()
+  }
+}
+
+const syncMediaTypeFromContext = () => {
+  const mediaTypeId = itemsStore.environment?.media_type_id
+  if (mediaTypeId) {
+    tasksStore.mediaAdding.media_type_id = Number(mediaTypeId)
   }
 }
 
@@ -249,6 +286,7 @@ const startMediaAddingProcess = async () => {
   }
 
   // Активируем задачу и показываем диалог процесса
+  syncMediaTypeFromContext()
   tasksStore.mediaAdding.dialogProcess = true
   tasksStore.mediaAdding.active = true
   isDialogVisible.value = false

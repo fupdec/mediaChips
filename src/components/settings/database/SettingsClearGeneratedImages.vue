@@ -31,6 +31,11 @@
       :button="$t('settings_labels.database.marks')"
       image-type="marks"
     />
+
+    <SettingsClearGeneratedImagesButton
+      :button="$t('settings_labels.database.image_thumbnails')"
+      image-type="image-thumbs"
+    />
   </div>
 </template>
 

@@ -6,6 +6,32 @@ import {useItemsStore} from '@/stores/items'
 import {useTasksStore} from '@/stores/tasks'
 import {useEventBus} from '@/utils/eventBus'
 
+const ADD_MEDIA_ENDPOINTS = {
+  video: 'addMediaVideo',
+  image: 'addMediaImage',
+  audio: 'addMediaAudio',
+  text: 'addMediaText',
+}
+
+const getAddMediaEndpoint = (type) => {
+  const normalized = String(type || '').toLowerCase()
+  return ADD_MEDIA_ENDPOINTS[normalized] || 'addMedia'
+}
+
+const filterPathsByExtensions = (paths, extensions) => {
+  const allowed = extensions
+    .split(',')
+    .map((ext) => ext.trim().toLowerCase())
+    .filter(Boolean)
+
+  return paths.filter((filePath) => {
+    const ext = String(filePath).split('.').pop()?.toLowerCase()
+    return ext && allowed.includes(ext)
+  })
+}
+
+let addMediaInProgress = false
+
 export const useMediaAdding = () => {
   // Stores and composables
   const appStore = useAppStore()
@@ -51,9 +77,16 @@ export const useMediaAdding = () => {
   })
 
   const addMedia = async () => {
+    if (addMediaInProgress) return
+    addMediaInProgress = true
+
+    const skipFileScan = task.value.skipFileScan
+    const directFiles = skipFileScan ? [...task.value.directFiles] : []
+    const savedMediaTypeId = task.value.media_type_id
+
     // Инициализация задачи
     task.value.active = true
-    task.value.status = "Scanning files..."
+    task.value.status = t('media.adding.scanning_files')
     task.value.processed = ""
     task.value.progress = 0
     task.value.stopped = false
@@ -72,6 +105,9 @@ export const useMediaAdding = () => {
     task.value.objectRecognitionProcessed = 0
     task.value.objectRecognitionTotal = 0
     task.value.objectRecognitionRemaining = 0
+    task.value.skipFileScan = false
+    task.value.directFiles = []
+    task.value.media_type_id = savedMediaTypeId
 
     const taskData = {
       title: "Adding files",
@@ -94,10 +130,12 @@ export const useMediaAdding = () => {
     if (!mediaType) {
       console.error('Media type not found')
       task.value.finished = true
+      task.value.active = false
       $operable.setNotification({
         title: 'Error',
         text: 'Media type not found',
       })
+      addMediaInProgress = false
       return
     }
 
@@ -115,19 +153,35 @@ export const useMediaAdding = () => {
     let files = []
 
     try {
-      // Получение списка файлов
-      for (const entryPath of paths) {
-        const response = await axios({
-          method: "post",
-          url: `${apiUrl.value}/api/Task/getFileList`,
-          data: {
-            path: entryPath,
-            filter: regexString,
-            excluded: task.value.is_exclude ? excluded : []
-          }
-        })
+      const addMediaEndpoint = getAddMediaEndpoint(mediaType.type)
 
-        files = files.concat(response.data)
+      if (skipFileScan && directFiles.length > 0) {
+        files = filterPathsByExtensions(directFiles, mediaType.extensions)
+        task.value.status = t('media.adding.preparing_files', {count: files.length})
+      } else {
+        // Получение списка файлов
+        for (let pathIndex = 0; pathIndex < paths.length; pathIndex += 1) {
+          const entryPath = paths[pathIndex]
+          task.value.status = paths.length > 1
+            ? `${t('media.adding.scanning_files')} (${pathIndex + 1}/${paths.length})`
+            : t('media.adding.scanning_files')
+          task.value.processed = t('media.adding.in_progress', {
+            current: pathIndex + 1,
+            total: paths.length,
+          })
+
+          const response = await axios({
+            method: "post",
+            url: `${apiUrl.value}/api/Task/getFileList`,
+            data: {
+              path: entryPath,
+              filter: regexString,
+              excluded: task.value.is_exclude ? excluded : []
+            }
+          })
+
+          files = files.concat(response.data)
+        }
       }
 
       // Фильтрация системных файлов (Unix ._ files)
@@ -137,10 +191,11 @@ export const useMediaAdding = () => {
       })
 
       // Обработка файлов
-      task.value.status = `Gathering metadata and adding files to the database...`
+      task.value.status = t('media.adding.gathering_metadata')
       task.value.total = files.length
       task.value.current = 0
       task.value.progress = 0
+      task.value.processed = t('media.adding.in_progress', {current: 0, total: files.length})
 
       const percentage = files.length > 0 ? 100 / files.length : 0
       const addedForParsing = []
@@ -156,10 +211,10 @@ export const useMediaAdding = () => {
 
         task.value.current = current
         task.value.progress = progress
-        task.value.processed = `Processed: ${current} / ${files.length}`
+        task.value.processed = t('media.adding.in_progress', {current, total: files.length})
 
         await tasksStore.updateTask(taskId, {
-          subtitle: `In progress: ${current} of ${files.length}`,
+          subtitle: t('media.adding.in_progress', {current, total: files.length}),
           progress: progress
         })
       }
@@ -170,7 +225,7 @@ export const useMediaAdding = () => {
         try {
           const response = await axios({
             method: "post",
-            url: `${apiUrl.value}/api/Task/addMedia${mediaType.type}`,
+            url: `${apiUrl.value}/api/Task/${addMediaEndpoint}`,
             data: {
               path: filePath,
               type: mediaType,
@@ -205,7 +260,7 @@ export const useMediaAdding = () => {
       await updateProgress(true)
 
       if (addedForParsing.length > 0) {
-        task.value.status = `Adding metadata to media...`
+        task.value.status = t('media.adding.adding_metadata')
         await parseTagsForAddedMedia(addedForParsing)
       }
 
@@ -217,12 +272,12 @@ export const useMediaAdding = () => {
         task.value.finished = true
         task.value.active = false
         task.value.media_type_id = null
-        task.value.status = 'Adding files is complete!'
+        task.value.status = t('media.adding.complete')
         keepTaskAfterComplete = String(mediaType.type || '').toLowerCase() === 'video'
 
         if (keepTaskAfterComplete) {
           await tasksStore.updateTask(taskId, {
-            subtitle: `Added ${task.value.added.length} media`,
+            subtitle: t('media.adding.added_count', {count: task.value.added.length}),
             progress: 100,
             color: 'success',
             done: true,
@@ -232,8 +287,8 @@ export const useMediaAdding = () => {
 
         $operable.setNotification({
           type: "success",
-          title: 'Adding files complete',
-          text: `Added ${task.value.added.length} media`,
+          title: t('media.adding.complete'),
+          text: t('media.adding.added_count', {count: task.value.added.length}),
           actions: [openProcessAction()],
         })
       } else {
@@ -241,21 +296,25 @@ export const useMediaAdding = () => {
         task.value.finished = true
         task.value.active = false
         task.value.media_type_id = null
-        task.value.status = 'Adding files is complete!'
+        task.value.status = t('media.adding.complete')
 
         $operable.setNotification({
           type: "info",
-          title: 'Adding files complete',
-          text: 'No new media found',
+          title: t('media.adding.complete'),
+          text: t('media.adding.no_new_media'),
           actions: [openProcessAction()],
         })
       }
 
-      // Обновление списка медиа
-      eventBus.emit('getItemsFromDb', {
-        ids: [],
-        type: 'media'
-      })
+      if (
+        !ENV.value.media_type_id ||
+        Number(ENV.value.media_type_id) === Number(mediaType.id)
+      ) {
+        eventBus.emit('getItemsFromDb', {
+          ids: [],
+          type: 'media'
+        })
+      }
 
       // Обновление watcher (если используется)
       eventBus.emit('update:watcher')
@@ -269,6 +328,7 @@ export const useMediaAdding = () => {
       task.value.status = null
       task.value.errors.push(error.message)
     } finally {
+      addMediaInProgress = false
       if (!keepTaskAfterComplete) {
         // Удаление задачи из UI
         await tasksStore.removeTask(taskId)

@@ -21,6 +21,7 @@
     </template>
 
     <Player v-show="isPlayerShow"/>
+    <ImageViewer/>
 
     <v-main
       v-if="isAppReady && !isPlayerWindow"
@@ -79,12 +80,14 @@ import axios from "axios"
 import _ from "lodash"
 import {useEventBus} from "@/utils/eventBus"
 import {useWatcher} from '@/composable/Watcher'
+import {useMediaAdding} from '@/composable/AddingMedia'
 
 import SystemBar from "@/components/app/SystemBar.vue"
 import AppBar from "@/components/app/AppBar.vue"
 import SideBar from "@/components/app/SideBar.vue"
 import BottomBar from "@/components/app/BottomBar.vue"
 import Player from "@/components/app/Player.vue"
+import ImageViewer from "@/components/app/ImageViewer.vue"
 import HoverImage from "@/components/app/HoverImage.vue"
 import NotificationsPool from "@/components/app/NotificationsPool.vue"
 import ContextMenu from "@/components/app/ContextMenu.vue"
@@ -127,6 +130,7 @@ const addedTopClasses = computed(() => ({
 const apiUrl = computed(() => store.localhost)
 
 const {runWatcher, stopWatcher, updateWatcher} = useWatcher(apiUrl.value)
+const {handleAddMedia, cleanupEventListeners} = useMediaAdding()
 
 /* ------------------------- API LOADERS ------------------------- */
 
@@ -267,6 +271,7 @@ onMounted(async () => {
   eventBus.on("updatePage", () => ++upd.value)
 
   eventBus.on('update:watcher', handleUpdateWatcher)
+  eventBus.on('addMedia', handleAddMedia)
 
   isAppReady.value = true
   runAutoRegistration()
@@ -289,6 +294,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  cleanupEventListeners()
   window.removeEventListener('resize', saveWindowSize)
   unsubscribeAboutApp?.()
   unsubscribeLockApp?.()

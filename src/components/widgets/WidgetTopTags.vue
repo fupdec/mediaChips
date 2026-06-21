@@ -73,6 +73,7 @@ import _groupBy from "lodash-es/groupBy"
 import _cloneDeep from "lodash-es/cloneDeep"
 import path from "path-browserify"
 import {getMetaName} from '@/utils/metaI18n'
+import {getDefaultMediaTypeId} from '@/utils/mediaType'
 
 const store = useAppStore()
 const router = useRouter()
@@ -139,7 +140,7 @@ function openPage(meta) {
 }
 
 function openTagPage(meta, tag) {
-  router.push(`/tag?metaId=${meta.id}&tagId=${tag.id}&mediaTypeId=1`)
+  router.push(`/tag?metaId=${meta.id}&tagId=${tag.id}&mediaTypeId=${getDefaultMediaTypeId(appStore.mediaTypes)}`)
 }
 
 /* ------------------------ WATCHERS ------------------------ */

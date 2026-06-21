@@ -29,6 +29,7 @@ module.exports = function (sequelize) {
   const ValuesInTag = require("./models/ValuesInTag.model")(sequelize, Sequelize);
   const ValuesInMedia = require("./models/ValuesInMedia.model")(sequelize, Sequelize);
   const VideoMetadata = require("./models/VideoMetadata.model")(sequelize, Sequelize);
+  const ImageMetadata = require("./models/ImageMetadata.model")(sequelize, Sequelize);
   const WatchedFolder = require("./models/WatchedFolder.model")(sequelize, Sequelize);
 
 
@@ -47,6 +48,15 @@ module.exports = function (sequelize) {
     foreignKey: 'mediaId'
   })
   VideoMetadata.belongsTo(Media, {
+    foreignKey: 'mediaId'
+  })
+
+  ImageMetadata.removeAttribute('id')
+  Media.hasOne(ImageMetadata, {
+    onDelete: "cascade",
+    foreignKey: 'mediaId'
+  })
+  ImageMetadata.belongsTo(Media, {
     foreignKey: 'mediaId'
   })
 
@@ -383,6 +393,7 @@ module.exports = function (sequelize) {
   db.ValuesInTag = ValuesInTag
   db.ValuesInMedia = ValuesInMedia
   db.VideoMetadata = VideoMetadata
+  db.ImageMetadata = ImageMetadata
   db.WatchedFolder = WatchedFolder
 
   return db

@@ -38,7 +38,7 @@
           size="x-small"
         >
           <v-icon class="mr-1" size="x-small">mdi-file-multiple</v-icon>
-          <span>{{ t('filters.duplicates') }}</span>
+          <span>{{ duplicatesButtonLabel }}</span>
         </v-btn>
 
         <v-btn @click="filtersStore.attached = !filtersStore.attached" variant="text" icon size="small">
@@ -194,6 +194,14 @@ import axios from 'axios'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
+import {
+  getCurrentMediaType,
+  isImageMediaType,
+  isVideoMediaType,
+} from '@/utils/mediaType'
+import {
+  sanitizeFiltersForMediaType,
+} from '@/utils/mediaSortFilter'
 
 import cols from "../../../app/configs/filter-cols.mjs";
 
@@ -222,7 +230,8 @@ const props = defineProps({
 })
 
 // Stores
-const filtersStore = useAppStore().filters
+const appStore = useAppStore()
+const filtersStore = appStore.filters
 const itemsStore = useItemsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
@@ -252,7 +261,18 @@ const filtersVisible = computed(() => filtersStore.visible)
 
 const ITEMS = computed(() => itemsStore)
 const ENV = computed(() => ITEMS.value.environment)
-const apiUrl = computed(() => useAppStore().localhost)
+const apiUrl = computed(() => appStore.localhost)
+
+const currentMediaType = computed(() =>
+  getCurrentMediaType(appStore.mediaTypes, ENV.value.media_type_id)
+)
+
+const duplicatesButtonLabel = computed(() => {
+  if (ITEMS.value.type !== 'media') return t('filters.duplicates')
+  return isImageMediaType(currentMediaType.value)
+    ? t('filters.duplicates_by_path')
+    : t('filters.duplicates')
+})
 
 const is_filters_changed = computed(() => {
   const a = _.cloneDeep(filtersPreviousState.value).sort()
@@ -299,10 +319,16 @@ const init = () => {
     media.sort((a, b) => translateFilterText(a) > translateFilterText(b) ? 1 : translateFilterText(b) > translateFilterText(a) ? -1 : 0)
     listByArray = [...listByArray, ...media]
 
-    if (ENV.value.media_type_id === 1) {
+    if (isVideoMediaType(currentMediaType.value)) {
       let video = withFilterI18n(cols.video || [], "Video")
       video.sort((a, b) => translateFilterText(a) > translateFilterText(b) ? 1 : translateFilterText(b) > translateFilterText(a) ? -1 : 0)
       listByArray = [...listByArray, ...video]
+    }
+
+    if (isImageMediaType(currentMediaType.value)) {
+      let image = withFilterI18n(cols.image || [], t('media.type_names.image'))
+      image.sort((a, b) => translateFilterText(a) > translateFilterText(b) ? 1 : translateFilterText(b) > translateFilterText(a) ? -1 : 0)
+      listByArray = [...listByArray, ...image]
     }
   } else if (ITEMS.value.type === 'tag') {
     let metaTag = withFilterI18n(cols.metaTag || [], "Tag")
@@ -330,7 +356,11 @@ const init = () => {
   }
 
   listBy.value = listByArray
-  filters.value = _.cloneDeep(ITEMS.value.filters)
+  filters.value = sanitizeFiltersForMediaType(
+    _.cloneDeep(ITEMS.value.filters),
+    ITEMS.value.type,
+    currentMediaType.value
+  )
   filtersPreviousState.value = _.cloneDeep(filters.value)
 }
 
@@ -580,6 +610,10 @@ watch(() => itemsStore.filters, (val) => {
 
 watch(() => props.isReady, (val) => {
   if (val) init()
+})
+
+watch(currentMediaType, () => {
+  if (props.isReady && ITEMS.value.type === 'media') init()
 })
 </script>
 

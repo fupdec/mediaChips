@@ -20,11 +20,11 @@ const chips_default_data = [
   { icon: 'harddisk', textKey: 'settings_labels.appearance.filesize', value: 'show_default_meta_filesize' },
   { icon: 'clock-outline', textKey: 'settings_labels.appearance.duration', value: 'show_default_meta_duration' },
   { icon: 'monitor-screenshot', textKey: 'settings_labels.appearance.resolution', value: 'show_default_meta_resolution' },
-  { icon: 'file-video-outline', textKey: 'settings_labels.appearance.extension', value: 'show_default_meta_ext' },
+  { icon: 'file-outline', textKey: 'settings_labels.appearance.extension', value: 'show_default_meta_ext' },
   { icon: 'filmstrip', textKey: 'settings_labels.appearance.codec', value: 'show_default_meta_codec' },
   { icon: 'filmstrip', textKey: 'settings_labels.appearance.bitrate', value: 'show_default_meta_bitrate' },
   { icon: 'filmstrip', textKey: 'settings_labels.appearance.framerate', value: 'show_default_meta_fps' },
-  { icon: 'video-outline', textKey: 'settings_labels.appearance.number_of_videos', value: 'show_default_meta_number_media' },
+  { icon: 'folder-multiple-outline', textKey: 'settings_labels.appearance.number_of_media', value: 'show_default_meta_number_media' },
   { icon: 'eye-outline', textKey: 'settings_labels.appearance.number_of_views', value: 'show_default_meta_number_views' },
 ];
 </script>
