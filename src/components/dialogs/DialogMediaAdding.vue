@@ -136,7 +136,6 @@ import {useI18n} from 'vue-i18n'
 import {useTasksStore} from '@/stores/tasks'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
-import {useItemsStore} from '@/stores/items'
 import {getCurrentMediaType, isImageMediaType} from '@/utils/mediaType'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 
