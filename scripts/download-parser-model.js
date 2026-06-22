@@ -2,7 +2,6 @@ const fs = require('fs')
 const path = require('path')
 
 const PARSER_MODEL = 'Xenova/all-MiniLM-L6-v2'
-const CLIP_MODEL = 'Xenova/clip-vit-base-patch32'
 const cacheDir = path.join(__dirname, '..', 'models')
 
 async function main() {
@@ -17,10 +16,6 @@ async function main() {
   console.log(`Downloading parser model ${PARSER_MODEL} to ${cacheDir}`)
   await pipeline('feature-extraction', PARSER_MODEL, {quantized: true})
   console.log('Parser model is ready')
-
-  console.log(`Downloading CLIP model ${CLIP_MODEL} to ${cacheDir}`)
-  await pipeline('zero-shot-image-classification', CLIP_MODEL, {quantized: true})
-  console.log('CLIP model is ready')
 }
 
 main().catch(error => {

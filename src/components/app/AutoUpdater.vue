@@ -1,64 +1,200 @@
 <template>
   <v-snackbar
     v-model="show"
-    :timeout="-1"
+    :timeout="snackbarTimeout"
     vertical
     variant="flat"
     rounded="lg"
+    :color="snackbarColor"
   >
-    {{ text }}
+    <div class="text-body-2">{{ message }}</div>
+
+    <v-progress-linear
+      v-if="status.state === 'downloading'"
+      :model-value="status.percent || 0"
+      color="success"
+      class="mt-3"
+      rounded
+      height="6"
+    />
 
     <template v-slot:actions>
       <v-btn
-        @click="show = false"
-        variant="text"
-        class="px-4 mr-4"
+        v-if="status.state === 'available'"
+        @click="handleDownload"
+        color="success"
+        variant="flat"
+        class="px-4"
+        :loading="isDownloading"
       >
-        <v-icon icon="mdi-close"
-          start></v-icon>
-        {{ t('common.close') }}
+        <v-icon icon="mdi-download" start></v-icon>
+        {{ t('auto_update.download') }}
       </v-btn>
 
       <v-btn
-        @click="openLink('https://mediachips.app/downloads')"
+        v-if="status.state === 'downloaded'"
+        @click="handleInstall"
         color="success"
         variant="flat"
         class="px-4"
       >
-        <v-icon icon="mdi-download"
-          start></v-icon>
+        <v-icon icon="mdi-restart" start></v-icon>
+        {{ t('auto_update.install_now') }}
+      </v-btn>
+
+      <v-btn
+        v-if="status.state === 'error'"
+        @click="handleRetry"
+        color="primary"
+        variant="flat"
+        class="px-4 mr-2"
+      >
+        <v-icon icon="mdi-refresh" start></v-icon>
+        {{ t('auto_update.retry') }}
+      </v-btn>
+
+      <v-btn
+        v-if="showFallbackDownload"
+        @click="openReleases"
+        color="success"
+        variant="flat"
+        class="px-4 mr-2"
+      >
+        <v-icon icon="mdi-open-in-new" start></v-icon>
         {{ t('common.download') }}
+      </v-btn>
+
+      <v-btn
+        v-if="showDismiss"
+        @click="handleDismiss"
+        variant="text"
+        class="px-4"
+      >
+        <v-icon icon="mdi-close" start></v-icon>
+        {{ dismissLabel }}
       </v-btn>
     </template>
   </v-snackbar>
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {computed, onMounted, onBeforeUnmount, ref, watch} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useI18n} from 'vue-i18n'
+import {useAppUpdater} from '@/composable/useAppUpdater'
 
 const appStore = useAppStore()
 const {t} = useI18n()
+const {status, lastCheckManual, ensureInitialized, check, download, install, dismiss, destroy} = useAppUpdater()
 
 const show = ref(false)
-const text = ref(t('auto_update.new_version_available'))
-const status = ref('info')
+const isDownloading = ref(false)
+const releasesUrl = 'https://github.com/fupdec/MediaChips/releases/latest'
 
-const openLink = (link) => {
-  window.open(link, "_blank")
+const message = computed(() => {
+  switch (status.value.state) {
+    case 'checking':
+      return t('auto_update.checking')
+    case 'available':
+      return t('auto_update.available', {
+        current: status.value.currentVersion,
+        next: status.value.nextVersion,
+      })
+    case 'downloading':
+      return t('auto_update.downloading', {
+        percent: Math.round(status.value.percent || 0),
+      })
+    case 'downloaded':
+      return t('auto_update.ready_to_install', {
+        version: status.value.nextVersion,
+      })
+    case 'up-to-date':
+      return t('auto_update.up_to_date', {
+        version: status.value.currentVersion,
+      })
+    case 'error':
+      return t('auto_update.error', {
+        message: status.value.message || t('auto_update.error_unknown'),
+      })
+    default:
+      return ''
+  }
+})
+
+const snackbarColor = computed(() => {
+  if (status.value.state === 'error') return 'error'
+  if (status.value.state === 'downloaded') return 'success'
+  return undefined
+})
+
+const snackbarTimeout = computed(() => {
+  if (['checking', 'downloading', 'available', 'downloaded', 'error'].includes(status.value.state)) {
+    return -1
+  }
+  return 4000
+})
+
+const showDismiss = computed(() => (
+  ['available', 'downloaded', 'error', 'up-to-date'].includes(status.value.state)
+))
+
+const dismissLabel = computed(() => (
+  status.value.state === 'up-to-date' ? t('common.close') : t('auto_update.later')
+))
+
+const showFallbackDownload = computed(() => (
+  status.value.state === 'error' || status.value.state === 'disabled'
+))
+
+watch(status, (value) => {
+  if (value.state === 'checking' && lastCheckManual.value) {
+    show.value = true
+    return
+  }
+
+  if (['available', 'downloading', 'downloaded', 'error'].includes(value.state)) {
+    show.value = true
+    return
+  }
+
+  if (value.state === 'up-to-date' && lastCheckManual.value) {
+    show.value = true
+  }
+}, {deep: true})
+
+async function handleDownload() {
+  isDownloading.value = true
+  try {
+    await download()
+  } finally {
+    isDownloading.value = false
+  }
+}
+
+function handleInstall() {
+  install()
+}
+
+function handleRetry() {
+  check({manual: true})
+}
+
+function handleDismiss() {
+  show.value = false
+  dismiss()
+}
+
+function openReleases() {
+  window.open(status.value.releasesUrl || releasesUrl, '_blank', 'noopener,noreferrer')
 }
 
 onMounted(() => {
-  if (appStore.isElectron && window.electronAPI) {
-    window.electronAPI.on("autoUpdater", (event, data) => {
-      console.log('AutoUpdater event:', data)
-      if (data && data.includes('Update available')) {
-        status.value = 'success'
-        show.value = true
-        text.value = data
-      }
-    })
+  if (appStore.isElectron && window.electronAPI?.updater) {
+    ensureInitialized()
   }
+})
+
+onBeforeUnmount(() => {
+  destroy()
 })
 </script>

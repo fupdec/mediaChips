@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache ML models
+        uses: actions/cache@v4
+        with:
+          path: models
+          key: mediachips-models-${{ hashFiles('scripts/download-parser-model.js') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build unpacked Linux app
+        run: npm run pack
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false

@@ -178,10 +178,45 @@ npm run electron
 | Command | Description |
 |---------|-------------|
 | `npm run pack` | Build unpacked app (`release/`) |
-| `npm run dist` | Build installers (NSIS / AppImage / DMG) |
+| `npm run dist` | Build installers (NSIS / AppImage / DMG + ZIP) |
 | `npm run portable` | Windows portable build |
+| `npm run dist:publish` | Build frontend and publish all installers to GitHub Releases |
 
 Build artifacts are written to the `release/` directory.
+
+### Publishing a release (maintainers)
+
+Desktop auto-update reads installers from [GitHub Releases](https://github.com/fupdec/MediaChips/releases).
+
+1. Bump `version` in `package.json` (semver, e.g. `0.13.1`).
+2. Commit the change on `main`.
+3. Create and push a matching tag (tag must equal version with a `v` prefix):
+
+```bash
+git tag v0.13.1
+git push origin v0.13.1
+```
+
+4. The [Release workflow](.github/workflows/release.yml) builds **Windows (NSIS)**, **macOS (universal DMG + arch ZIPs)**, and **Linux (AppImage)** in parallel and uploads them to the GitHub Release together with `latest.yml` / `latest-mac.yml` / `latest-linux.yml` required by `electron-updater`.
+
+Expected asset names (legacy style):
+
+| Platform | File |
+|----------|------|
+| Windows | `MediaChips.vX.Y.Z.Windows.Installer.exe` |
+| macOS (install) | `MediaChips.vX.Y.Z.Mac.dmg` |
+| macOS (auto-update) | `MediaChips.vX.Y.Z.Mac.arm64.zip`, `MediaChips.vX.Y.Z.Mac.x64.zip` |
+| Linux | `MediaChips.vX.Y.Z.Linux.AppImage` |
+5. Installed desktop apps with **Settings → About → Check for updates at startup** will detect the new version automatically.
+
+No extra GitHub secrets are required: the workflow uses the built-in `GITHUB_TOKEN` with `contents: write`.
+
+**Notes**
+
+- Tag `vX.Y.Z` must match `package.json` `version` exactly.
+- Portable Windows builds are not auto-updated in-app; users must download manually.
+- macOS builds are currently **unsigned** (`mac.identity: null`). Users may need to bypass Gatekeeper on first launch (see [INSTALLATION.md](./INSTALLATION.md)).
+- For signed macOS/Windows builds later, add secrets `CSC_LINK`, `CSC_KEY_PASSWORD` (and Apple notarization vars) to the repository.
 
 ---
 
@@ -199,6 +234,8 @@ Build artifacts are written to the `release/` directory.
 | `download-parser-model` | Download ML model for path tag suggestions |
 | `pack` | Electron-builder — unpacked output |
 | `dist` | Electron-builder — full installers |
+| `dist:publish` | Build frontend + publish all platforms to GitHub Releases |
+| `dist:win` / `dist:mac` / `dist:linux` | Publish a single platform (used in CI) |
 | `portable` | Electron-builder — Windows portable |
 
 ---

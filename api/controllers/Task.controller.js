@@ -1312,6 +1312,27 @@ module.exports = function (db) {
     }
   }
 
+  const clipModelStatus = async (req, res) => {
+    try {
+      res.status(201).send(videoClipTagger.getStatus(db))
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while checking CLIP model status."
+      })
+    }
+  }
+
+  const downloadClipModel = async (req, res) => {
+    try {
+      await videoClipTagger.loadModel(db)
+      res.status(201).send(videoClipTagger.getStatus(db))
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while downloading CLIP model."
+      })
+    }
+  }
+
   return {
     importSavedFilters,
     checkFileExists,
@@ -1344,5 +1365,7 @@ module.exports = function (db) {
     parsePathTags,
     parserStatus,
     downloadParserModel,
+    clipModelStatus,
+    downloadClipModel,
   }
 }

@@ -69,7 +69,7 @@ async function loadModel(db) {
 
       env.cacheDir = cacheDir
       env.localModelPath = cacheDir
-      env.allowRemoteModels = false
+      env.allowRemoteModels = true
       env.allowLocalModels = true
 
       classifier = await pipeline('zero-shot-image-classification', CLIP_MODEL, {

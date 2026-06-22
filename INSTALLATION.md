@@ -4,9 +4,19 @@ Pre-built installers are published on [GitHub Releases](https://github.com/fupde
 
 | Platform | File |
 |----------|------|
-| macOS | `MediaChips-<version>.dmg` |
-| Windows | `MediaChips-<version>-win.exe` (installer) or portable build |
-| Linux | `MediaChips-<version>.AppImage` |
+| macOS | `MediaChips.v<version>.Mac.dmg` (installer) — auto-update uses `MediaChips.v<version>.Mac.<arch>.zip` |
+| Windows | `MediaChips.v<version>.Windows.Installer.exe` (NSIS installer) |
+| Linux | `MediaChips.v<version>.Linux.AppImage` |
+
+### In-app auto-update (desktop)
+
+NSIS (Windows), ZIP (macOS), and AppImage (Linux) builds support automatic updates inside the app:
+
+1. Open **Settings → About**.
+2. Enable **Check for updates at startup** (enabled by default).
+3. When a new release is published on GitHub, the app offers to download and install it.
+
+Portable Windows builds and development builds do not support in-app auto-update — download a new installer from [Releases](https://github.com/fupdec/MediaChips/releases/latest) instead.
 
 To build from source, see [README.md](./README.md).
 

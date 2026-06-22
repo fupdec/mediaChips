@@ -28,7 +28,7 @@ if (process.platform === 'win32') {
 }
 
 const server = require('./app/server.js')
-const {autoUpdater} = require('electron-updater')
+const {initAppUpdater} = require('./electron/autoUpdater')
 
 const isWindows = os.type() === 'Windows_NT'
 // TEMP: match src/utils/debugWinElectronUi.js — remove when done debugging header UI
@@ -163,7 +163,7 @@ app.on('second-instance', () => {
 app.on('ready', () => {
   createLoadingWindow()
   createWindow()
-  //autoUpdater.checkForUpdates()
+  initAppUpdater({getWindow: () => win})
 })
 
 app.on("activate", () => {
@@ -223,47 +223,6 @@ ipcMain.handle('relaunch', () => {
   app.relaunch()
   app.exit()
 })
-
-
-// auto updating
-// only needed in development mode
-Object.defineProperty(app, 'isPackaged', {
-  get() {
-    return true;
-  }
-});
-autoUpdater.setFeedURL({
-  "provider": "github",
-  "private": true,
-  "owner": "vitvvk",
-  "repo": "mediachips",
-});
-autoUpdater.autoDownload = false
-autoUpdater.autoInstallOnAppQuit = true
-
-/*New Update Available*/
-autoUpdater.on("update-available", async (info) => {
-  const text = `Update available. Current version ${app.getVersion()}`
-  win.webContents.send('autoUpdater', text)
-  const pth = await autoUpdater.downloadUpdate();
-  console.info('\x1b[7m%s\x1b[0m', pth);
-  win.webContents.send('autoUpdater', pth)
-});
-
-autoUpdater.on("update-not-available", (info) => {
-  const text = `No update available. Current version ${app.getVersion()}`
-  win.webContents.send('autoUpdater', text)
-});
-
-/*Download Completion Message*/
-autoUpdater.on("update-downloaded", (info) => {
-  const text = `Update downloaded. Current version ${app.getVersion()}`
-  win.webContents.send('autoUpdater', text)
-});
-
-autoUpdater.on("error", (info) => {
-  win.webContents.send('autoUpdater', info)
-});
 
 let systemMenu = Menu.buildFromTemplate([
   {

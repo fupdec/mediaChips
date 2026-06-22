@@ -37,7 +37,12 @@ const validInvokeChannels = [
   'minimize',
   'relaunch',
   'closePlayer',
-  'toggleDevTools'
+  'toggleDevTools',
+  'updater:check',
+  'updater:download',
+  'updater:install',
+  'updater:get-state',
+  'updater:is-supported',
 ];
 
 const validOnChannels = [
@@ -56,6 +61,7 @@ const validOnChannels = [
   'lockApp',
   'navigationBack',
   'navigationForward',
+  'updater:status',
 ];
 
 const listenerSubscriptions = new Map();
@@ -164,7 +170,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.once(channel, (event, ...args) => callback(...args));
       }
     }
-  }
+  },
+
+  updater: {
+    check: () => ipcRenderer.invoke('updater:check'),
+    download: () => ipcRenderer.invoke('updater:download'),
+    install: () => ipcRenderer.invoke('updater:install'),
+    getState: () => ipcRenderer.invoke('updater:get-state'),
+    isSupported: () => ipcRenderer.invoke('updater:is-supported'),
+    onStatus: (callback) => {
+      const subscription = (_event, payload) => callback(payload)
+      ipcRenderer.on('updater:status', subscription)
+      return () => ipcRenderer.removeListener('updater:status', subscription)
+    },
+  },
 });
 
 // Экспортируем утилиты как отдельные глобальные объекты

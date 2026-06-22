@@ -93,6 +93,7 @@ import NotificationsPool from "@/components/app/NotificationsPool.vue"
 import ContextMenu from "@/components/app/ContextMenu.vue"
 import AutoUpdater from "@/components/app/AutoUpdater.vue"
 import Dialogs from "@/components/app/Dialogs.vue"
+import {useAppUpdater} from '@/composable/useAppUpdater'
 
 const settingsStore = useSettingsStore()
 const store = useAppStore()
@@ -106,6 +107,7 @@ const {mobile} = useDisplay()
 const theme = useTheme()
 const {locale} = useI18n()
 
+const {init: initAppUpdater} = useAppUpdater()
 const eventBus = useEventBus()
 
 const isAppReady = ref(false)
@@ -239,6 +241,13 @@ let unsubscribeLockApp
 
 onMounted(async () => {
   await initSettings()
+
+  if (store.isElectron && window.electronAPI?.updater) {
+    initAppUpdater({
+      checkAtStartup: settingsStore.checkForUpdatesAtStartup === '1',
+    })
+  }
+
   applyTheme()
   applyLocale()
   checkLogin()

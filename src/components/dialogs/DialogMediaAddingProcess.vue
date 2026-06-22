@@ -53,7 +53,21 @@
             </v-btn>
 
             <v-btn
-              v-if="canRecognizeObjects"
+              v-if="canRecognizeObjects && clipModelNeedsDownload"
+              @click="downloadClipModel"
+              :loading="clipModelDownloading"
+              :disabled="clipModelDownloading"
+              color="secondary"
+              rounded
+              variant="outlined"
+            >
+              <v-icon icon="mdi-download"
+                start/>
+              {{ t('media.adding.download_video_recognition_model') }}
+            </v-btn>
+
+            <v-btn
+              v-if="canRecognizeObjects && clipModelReady"
               @click="recognizeVideoObjects"
               :loading="task.recognizingObjects"
               :disabled="task.recognizingObjects"
@@ -69,6 +83,13 @@
               v-if="canRecognizeObjects"
               id="media.video_object_recognition"
             />
+          </div>
+
+          <div
+            v-if="canRecognizeObjects && clipModelNeedsDownload"
+            class="text-caption text-medium-emphasis mb-4"
+          >
+            {{ t('media.adding.download_video_recognition_model_hint') }}
           </div>
 
           <div v-if="task.recognizingObjects || task.objectRecognitionTotal > 0" class="mb-4">
@@ -263,6 +284,8 @@ const is_show_added = ref(false)
 const is_show_duplicates_by_filesize = ref(false)
 const is_show_duplicates_by_path = ref(false)
 const is_show_errors = ref(false)
+const clipModelStatus = ref('unknown')
+const clipModelDownloading = ref(false)
 
 // Computed properties
 const task = computed(() => tasksStore.mediaAdding)
@@ -270,6 +293,10 @@ const canRecognizeObjects = computed(() => (
   task.value.finished &&
   task.value.added.length > 0 &&
   String(task.value.addedMediaType || '').toLowerCase() === 'video'
+))
+const clipModelReady = computed(() => ['downloaded', 'loaded'].includes(clipModelStatus.value))
+const clipModelNeedsDownload = computed(() => (
+  !clipModelReady.value && !['loading'].includes(clipModelStatus.value)
 ))
 
 const duplicates_by_path = computed(() => {
@@ -417,7 +444,51 @@ const openProcessAction = () => ({
   hide: true,
 })
 
+const fetchClipModelStatus = async () => {
+  try {
+    const response = await axios.get(`${appStore.localhost}/api/Task/clipModelStatus`)
+    clipModelStatus.value = response.data?.status || 'unknown'
+  } catch (error) {
+    console.error('Error checking CLIP model status:', error)
+    clipModelStatus.value = 'error'
+  }
+}
+
+const downloadClipModel = async () => {
+  clipModelDownloading.value = true
+  clipModelStatus.value = 'loading'
+
+  try {
+    const response = await axios.post(`${appStore.localhost}/api/Task/downloadClipModel`)
+    clipModelStatus.value = response.data?.status || 'downloaded'
+    $operable.setNotification({
+      type: 'success',
+      title: t('media.adding.download_video_recognition_model'),
+      text: t('settings.path_parser.statuses.downloaded'),
+    })
+  } catch (error) {
+    console.error('Error downloading CLIP model:', error)
+    clipModelStatus.value = 'error'
+    $operable.setNotification({
+      type: 'error',
+      title: t('media.adding.download_video_recognition_model'),
+      text: error.response?.data?.message || error.message,
+    })
+  } finally {
+    clipModelDownloading.value = false
+  }
+}
+
 const recognizeVideoObjects = async () => {
+  if (!clipModelReady.value) {
+    $operable.setNotification({
+      type: 'warning',
+      title: t('media.adding.recognize_video_objects'),
+      text: t('media.adding.download_video_recognition_model_hint'),
+    })
+    return
+  }
+
   task.value.recognizingObjects = true
   task.value.objectRecognitionProgress = 0
   task.value.objectRecognitionProcessed = 0
@@ -588,6 +659,18 @@ watch(() => task.value?.finished, (finished) => {
     if (task.value) {
       task.value.progress = 100
     }
+    if (
+      task.value.added.length > 0 &&
+      String(task.value.addedMediaType || '').toLowerCase() === 'video'
+    ) {
+      fetchClipModelStatus()
+    }
+  }
+})
+
+watch(canRecognizeObjects, (enabled) => {
+  if (enabled) {
+    fetchClipModelStatus()
   }
 })
 </script>

@@ -91,9 +91,15 @@ module.exports = (app, db) => {
   router.get("/suggestTagsFromPaths", Task.suggestTagsFromPaths);
   router.post("/suggestTagsFromPaths", Task.suggestTagsFromPaths);
 
-  // suggest localized tags by classifying extracted video frames with bundled CLIP
+  // suggest localized tags by classifying extracted video frames with local CLIP
   router.post("/suggestTagsFromVideoFrames", Task.suggestTagsFromVideoFrames);
   router.post("/streamVideoObjectRecognition", Task.streamVideoObjectRecognition);
+
+  // check local CLIP model state for video object recognition
+  router.get("/clipModelStatus", Task.clipModelStatus);
+
+  // download and warm up the local CLIP model
+  router.post("/downloadClipModel", Task.downloadClipModel);
 
   // parse tags from one or more file paths
   router.post("/parsePathTags", Task.parsePathTags);

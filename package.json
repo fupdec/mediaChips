@@ -1,7 +1,7 @@
 {
   "name": "mediachips",
   "productName": "MediaChips",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "author": {
     "name": "MediaChips contributors"
   },
@@ -9,7 +9,7 @@
   "description": "Organize your media files with ease and convenience.",
   "private": false,
   "license": "GPL-3.0",
-  "repository": "github:mediachips/mediachips",
+  "repository": "github:fupdec/MediaChips",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -25,7 +25,11 @@
     "predist": "npm run download-parser-model",
     "preportable": "npm run download-parser-model",
     "portable": "electron-builder --win portable",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "dist:publish": "npm run build && npm run predist && electron-builder --publish always",
+    "dist:win": "npm run predist && electron-builder --win --publish always",
+    "dist:mac": "npm run predist && electron-builder --mac --publish always",
+    "dist:linux": "npm run predist && electron-builder --linux --publish always"
   },
   "main": "main.js",
   "dependencies": {
@@ -95,7 +99,6 @@
     "directories": {
       "output": "release"
     },
-    "artifactName": "${productName}-${version}-${os}.${ext}",
     "files": [
       "!databases",
       "!app_storage",
@@ -112,8 +115,12 @@
     ],
     "win": {
       "target": "nsis",
+      "artifactName": "${productName}.v${version}.Windows.Installer.${ext}",
       "verifyUpdateCodeSignature": false,
       "icon": "public/icons/icon.png"
+    },
+    "portable": {
+      "artifactName": "${productName}.v${version}.Windows.Portable.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -123,14 +130,42 @@
     },
     "linux": {
       "icon": "public/icons/icons.icns",
+      "artifactName": "${productName}.v${version}.Linux.AppImage",
       "target": [
         "AppImage"
       ],
       "category": "Utility"
     },
+    "dmg": {
+      "artifactName": "${productName}.v${version}.Mac.${ext}"
+    },
+    "zip": {
+      "artifactName": "${productName}.v${version}.Mac.${arch}.${ext}"
+    },
     "mac": {
       "icon": "public/icons/icons.icns",
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "identity": null,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "fupdec",
+      "repo": "MediaChips"
     }
   }
 }

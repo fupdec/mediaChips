@@ -1,5 +1,25 @@
 export const history = [
   {
+    id: '0.13.1',
+    version: 'v0.13.1',
+    name: 'In-app auto-update',
+    content: `
+      <p><strong>MediaChips v0.13.1</strong> adds built-in update checks and one-click install for desktop builds published on GitHub Releases.</p>
+      <h3>Added:</h3>
+      <ul>
+        <li><strong>In-app auto-update</strong> for Windows (NSIS), macOS (ZIP), and Linux (AppImage)</li>
+        <li><strong>Settings → About</strong> — manual update check and “check at startup” option</li>
+        <li><strong>GitHub Actions</strong> release pipeline for all three platforms</li>
+        <li><strong>CLIP model on demand</strong> — video object recognition model is downloaded from the import dialog when needed (~150 MB), not bundled in the installer</li>
+      </ul>
+      <h3>Notes:</h3>
+      <ul>
+        <li>Users on <strong>v0.13.0</strong> must install v0.13.1 manually once; later updates can be installed from inside the app</li>
+        <li><strong>Portable</strong> Windows builds still require a manual download</li>
+      </ul>
+    `,
+  },
+  {
     id: '0.13.0',
     version: 'v0.13.0-beta',
     name: 'Vue 3 rewrite',

@@ -34,6 +34,48 @@
       </div>
     </div>
 
+    <template v-if="isElectron">
+      <v-divider class="my-4"></v-divider>
+
+      <div class="mb-2 text-body-1 text-high-emphasis">{{ t('auto_update.title') }}</div>
+
+      <div v-if="updaterDisabledReason === 'portable'" class="text-body-2 text-medium-emphasis mb-4">
+        {{ t('auto_update.portable_hint') }}
+      </div>
+
+      <settings-switch
+        v-if="updaterSupported"
+        option="checkForUpdatesAtStartup"
+        :title="t('auto_update.check_at_startup')"
+        class="mb-2"
+      />
+
+      <div class="d-flex flex-wrap align-center ga-2 mt-2">
+        <v-btn
+          v-if="updaterSupported"
+          @click="handleCheckUpdates"
+          color="primary"
+          variant="flat"
+          rounded
+          :loading="isChecking"
+        >
+          <v-icon start>mdi-update</v-icon>
+          {{ t('auto_update.check_now') }}
+        </v-btn>
+
+        <v-btn
+          v-if="!updaterSupported"
+          @click="openReleases"
+          color="primary"
+          variant="outlined"
+          rounded
+        >
+          <v-icon start>mdi-download</v-icon>
+          {{ t('auto_update.download_from_github') }}
+        </v-btn>
+      </div>
+    </template>
+
     <v-divider class="my-4"></v-divider>
 
     <div class="d-flex flex-column">
@@ -56,20 +98,27 @@
 </template>
 
 <script setup>
-import {computed} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {getProjectDependencies} from '@/utils/projectDependencies'
+import {useAppUpdater} from '@/composable/useAppUpdater'
+import SettingsSwitch from '@/components/ui/SettingsSwitch.vue'
 
 const {t} = useI18n()
 const appStore = useAppStore()
 const dialogsStore = useDialogsStore()
+const {ensureInitialized, check, isSupported, status} = useAppUpdater()
 
 const libraries = getProjectDependencies()
 const appVersion = computed(() => appStore.appVersion)
 const dialogs = computed(() => dialogsStore)
 const currentYear = new Date().getFullYear()
+const isChecking = ref(false)
+const isElectron = computed(() => appStore.isElectron)
+const updaterSupported = computed(() => isSupported.value)
+const updaterDisabledReason = computed(() => status.value.reason)
 
 const logoPath = computed(() => {
   try {
@@ -82,6 +131,25 @@ const logoPath = computed(() => {
 const openLink = (link) => {
   window.open(link, '_blank', 'noopener,noreferrer')
 }
+
+const openReleases = () => {
+  openLink(status.value.releasesUrl || 'https://github.com/fupdec/MediaChips/releases/latest')
+}
+
+async function handleCheckUpdates() {
+  isChecking.value = true
+  try {
+    await check({manual: true})
+  } finally {
+    isChecking.value = false
+  }
+}
+
+onMounted(async () => {
+  if (isElectron.value && window.electronAPI?.updater) {
+    await ensureInitialized()
+  }
+})
 </script>
 
 <style scoped>
