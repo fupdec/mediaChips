@@ -139,13 +139,11 @@
     "dmg": {
       "artifactName": "${productName}.v${version}.Mac.${ext}"
     },
-    "zip": {
-      "artifactName": "${productName}.v${version}.Mac.${arch}.${ext}"
-    },
     "mac": {
       "icon": "public/icons/icons.icns",
       "category": "public.app-category.utilities",
       "identity": null,
+      "artifactName": "${productName}.v${version}.Mac.${arch}.${ext}",
       "target": [
         {
           "target": "dmg",
