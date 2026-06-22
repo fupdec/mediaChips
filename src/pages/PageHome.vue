@@ -1,34 +1,46 @@
 <template>
   <v-container>
-    <!-- SALUTATION BLOCK -->
-    <div v-if="settingsStore.show_salutation === '1'"
-      class="mt-4">
-      <p>{{ t('home.welcome') }}</p>
-      <p>{{ t('home.documentation_hint') }}</p>
+    <v-card
+      v-if="settingsStore.show_salutation === '1'"
+      class="rounded-lg mb-6"
+      color="primary"
+      variant="tonal"
+    >
+      <v-card-text class="pa-3">
+        <div class="d-flex align-center text-body-1 font-weight-medium mb-2">
+          <v-icon class="mr-2" size="20">mdi-hand-wave-outline</v-icon>
+          {{ t('home.welcome') }}
+        </div>
 
-      <v-btn
-        color="primary"
-        class="mt-2"
-        rounded
-        @click="emitShowDocs"
-      >
-        <v-icon start>mdi-book-open-variant-outline</v-icon>
-        {{ t('home.show_documentation') }}
-      </v-btn>
-    </div>
+        <div class="text-body-2 text-medium-emphasis mb-3">
+          {{ t('home.documentation_hint') }}
+        </div>
 
-    <v-spacer class="my-8"></v-spacer>
+        <v-btn
+          color="primary"
+          rounded
+          size="small"
+          variant="tonal"
+          @click="emitShowDocs"
+        >
+          <v-icon start size="18">mdi-book-open-variant-outline</v-icon>
+          {{ t('home.show_documentation') }}
+        </v-btn>
+      </v-card-text>
+    </v-card>
 
-    <!-- IP ALERT -->
     <v-alert
       v-if="settingsStore.show_ip_at_home_screen === '1'"
       type="info"
-      class="caption rounded-xl mb-4"
+      icon="mdi-web"
+      class="mb-6"
+      rounded="lg"
+      density="compact"
       variant="tonal"
       closable
       @click:close="hideAlert"
     >
-      <div>
+      <div class="text-body-2">
         {{ t('settings_labels.general.browser_access') }}
       </div>
 
@@ -36,43 +48,158 @@
         @click="copy"
         color="info"
         :title="t('settings_labels.general.copy_link')"
-        rounded="xl"
+        rounded
         size="small"
-        variant="outlined"
-        class="mt-3"
+        variant="text"
+        class="mt-2 px-0"
       >
-        <v-icon start
-          size="small">mdi-content-copy
-        </v-icon>
-        <span>{{ t('settings_labels.general.copy_link') }}:</span>
-        <b class="ml-1">{{ apiUrl }}</b>
+        <v-icon start size="18">mdi-content-copy</v-icon>
+        <span class="text-body-2">{{ t('settings_labels.general.copy_link') }}:</span>
+        <span class="text-body-2 font-weight-medium ml-1">{{ apiUrl }}</span>
       </v-btn>
     </v-alert>
 
-    <!-- Widgets -->
-    <widget-total-stats class="mt-2"/>
-    <widget-top-tags/>
+    <div class="d-flex justify-end mb-2">
+      <v-btn
+        @click="showWidgetsDialog = true"
+        v-tooltip:top="t('home.customize_widgets')"
+        color="primary"
+        variant="text"
+        rounded
+        size="small"
+      >
+        <v-icon start>mdi-view-dashboard-edit-outline</v-icon>
+        {{ t('home.customize_widgets') }}
+      </v-btn>
+    </div>
+
+    <DialogHomeWidgets v-model="showWidgetsDialog"/>
+
+    <HomeWidgetRenderer
+      v-for="widgetId in orderedEnabledWidgets"
+      :key="widgetId"
+      :widget-id="widgetId"
+      :continue-watching="continueWatching"
+      :favorites="favorites"
+      :top-views="topViews"
+      :limits="limits"
+      :on-open-media="openMediaItem"
+      :on-open-continue="openContinueItem"
+      :on-open-continue-list="openContinueList"
+      :on-open-favorites-list="openFavoritesList"
+      :on-open-top-views-list="openTopViewsList"
+    />
   </v-container>
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount} from "vue"
+import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue"
+import axios from "axios"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
+import {useItemsStore} from "@/stores/items"
 import {useEventBus} from "@/utils/eventBus"
-import WidgetTopTags from "@/components/widgets/WidgetTopTags.vue"
-import WidgetTotalStats from "@/components/widgets/WidgetTotalStats.vue"
+import {useHomeWidgets} from '@/composable/useHomeWidgets'
+import {loadHomeMediaThumbs} from "@/utils/homeMediaThumbs"
+import {useOpenMediaList} from "@/utils/openMediaList"
+import {findMediaTypeById, isVideoMediaType} from "@/utils/mediaType"
+import HomeWidgetRenderer from '@/components/widgets/HomeWidgetRenderer.vue'
+import DialogHomeWidgets from '@/components/dialogs/DialogHomeWidgets.vue'
 
-// Pinia store
 const store = useAppStore()
 const settingsStore = useSettingsStore()
+const itemsStore = useItemsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
+const {openMediaList} = useOpenMediaList()
+const {orderedEnabledWidgets, limits, isWidgetEnabled} = useHomeWidgets()
+
+const continueWatching = ref([])
+const favorites = ref([])
+const topViews = ref([])
+const showWidgetsDialog = ref(false)
 
 const apiUrl = computed(() => store.localhost)
 
-/* ----------------- Actions ----------------- */
+const shouldLoadMedia = computed(() =>
+  isWidgetEnabled('continue') || isWidgetEnabled('favorites') || isWidgetEnabled('topViews'),
+)
+
+async function loadHomeMedia() {
+  if (!shouldLoadMedia.value) {
+    continueWatching.value = []
+    favorites.value = []
+    topViews.value = []
+    return
+  }
+
+  try {
+    const response = await axios.get(`${apiUrl.value}/api/home/media`, {
+      params: {
+        continueLimit: limits.value.continue,
+        favoritesLimit: limits.value.favorites,
+        topViewsLimit: limits.value.topViews,
+      },
+    })
+    const data = response.data || {}
+
+    continueWatching.value = data.continueWatching || []
+    favorites.value = data.favorites || []
+    topViews.value = data.topViews || []
+
+    const allItems = [
+      ...continueWatching.value,
+      ...favorites.value,
+      ...topViews.value,
+    ]
+
+    await loadHomeMediaThumbs(allItems, store.mediaTypes)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function openMediaItem(item) {
+  const mediaType = findMediaTypeById(store.mediaTypes, item.mediaTypeId)
+
+  if (isVideoMediaType(mediaType)) {
+    await itemsStore.playVideo({
+      video: item,
+      videos: [item],
+    })
+    return
+  }
+
+  await openMediaList({mediaTypeId: item.mediaTypeId})
+}
+
+async function openContinueItem(item) {
+  const mediaType = findMediaTypeById(store.mediaTypes, item.mediaTypeId)
+
+  if (!isVideoMediaType(mediaType)) {
+    await openMediaList({sortBy: 'viewedAt', sortDir: 'desc', mediaTypeId: item.mediaTypeId})
+    return
+  }
+
+  await itemsStore.playVideo({
+    video: item,
+    time: item.time,
+    videos: [item],
+  })
+}
+
+function openContinueList() {
+  openMediaList({sortBy: 'viewedAt', sortDir: 'desc'})
+}
+
+function openFavoritesList() {
+  openMediaList({sortBy: 'viewedAt', sortDir: 'desc'})
+}
+
+function openTopViewsList() {
+  openMediaList({sortBy: 'views', sortDir: 'desc'})
+}
 
 function emitShowDocs() {
   eventBus.emit("showDocumentation", "app")
@@ -82,16 +209,20 @@ function copy() {
   navigator.clipboard.writeText(apiUrl.value)
 }
 
-async function setOption(option, value) {
-  await $operable.setOption(option, value)
+async function hideAlert() {
+  await $operable.setOption(0, "show_ip_at_home_screen")
 }
 
-async function hideAlert() {
-  await setOption("show_ip_at_home_screen", 0)
-}
+watch(
+  () => [limits.value.continue, limits.value.favorites, limits.value.topViews, shouldLoadMedia.value],
+  () => loadHomeMedia(),
+)
+
+onMounted(() => {
+  loadHomeMedia()
+})
 
 onBeforeUnmount(() => {
-  // аналог beforeDestroy
-  setOption("show_salutation", 0)
+  $operable.setOption(0, "show_salutation")
 })
 </script>

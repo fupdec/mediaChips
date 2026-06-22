@@ -1,12 +1,14 @@
 <script setup>
-import {ref, computed, nextTick} from 'vue'
+import {ref, computed, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {useRouter} from 'vue-router'
 import {useHotkey} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import axios from 'axios'
 import _ from 'lodash'
+import {useEventBus} from '@/utils/eventBus'
 
 const {t} = useI18n()
+const eventBus = useEventBus()
 
 useHotkey('slash', () => {
   showSearch()
@@ -51,6 +53,14 @@ function showSearch() {
   results.value = []
   focusSearchField()
 }
+
+onMounted(() => {
+  eventBus.on('showGlobalSearch', showSearch)
+})
+
+onBeforeUnmount(() => {
+  eventBus.off('showGlobalSearch', showSearch)
+})
 
 async function focusSearchField() {
   await nextTick()

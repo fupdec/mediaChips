@@ -107,11 +107,14 @@ import {computed, ref} from 'vue'
 import {useTasksStore} from '@/stores/tasks'
 import {mergeProps} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {onMounted, onBeforeUnmount} from 'vue'
+import {useEventBus} from '@/utils/eventBus'
 
 // i18n
 const {t} = useI18n()
 
 const tasksStore = useTasksStore()
+const eventBus = useEventBus()
 
 const menuVisible = ref(false)
 
@@ -133,6 +136,18 @@ const remove = (action, id) => {
   }
   tasksStore.removeTask(id)
 }
+
+const openTasksMenu = () => {
+  menuVisible.value = true
+}
+
+onMounted(() => {
+  eventBus.on('openTasksMenu', openTasksMenu)
+})
+
+onBeforeUnmount(() => {
+  eventBus.off('openTasksMenu', openTasksMenu)
+})
 </script>
 
 <style lang="scss" scoped>

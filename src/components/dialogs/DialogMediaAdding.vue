@@ -5,7 +5,7 @@
     scrollable
     width="800"
   >
-    <template v-slot:activator="{ props: activatorProps }">
+    <template v-if="!hideActivator" v-slot:activator="{ props: activatorProps }">
       <AppBarButton
         v-bind="activatorProps"
         :action="()=>isDialogVisible=true"
@@ -162,7 +162,17 @@ const props = defineProps({
     type: String,
     default: 'text',
   },
+  hideActivator: {
+    type: Boolean,
+    default: false,
+  },
+  modelValue: {
+    type: Boolean,
+    default: undefined,
+  },
 })
+
+const emit = defineEmits(['update:modelValue'])
 
 // Pinia stores
 const tasksStore = useTasksStore()
@@ -173,16 +183,31 @@ const itemsStore = useItemsStore()
 const mediaAdding = useMediaAdding()
 
 // Реактивные переменные
-const isDialogVisible = ref(false)
+const internalDialogVisible = ref(false)
 const isFormValid = ref(false)
 const mediaForm = ref()
+
+const isDialogVisible = computed({
+  get() {
+    return props.modelValue !== undefined
+      ? props.modelValue
+      : internalDialogVisible.value
+  },
+  set(value) {
+    internalDialogVisible.value = value
+    emit('update:modelValue', value)
+  },
+})
 
 // Computed свойства
 const isElectron = computed(() => appStore.isElectron)
 const mediaAddingState = computed(() => tasksStore.mediaAdding)
 
 const currentMediaType = computed(() =>
-  getCurrentMediaType(appStore.mediaTypes, itemsStore.environment?.media_type_id)
+  getCurrentMediaType(
+    appStore.mediaTypes,
+    tasksStore.mediaAdding.media_type_id || itemsStore.environment?.media_type_id,
+  )
 )
 
 const isImageAdding = computed(() => isImageMediaType(currentMediaType.value))
@@ -251,7 +276,8 @@ const resetDialogState = () => {
 }
 
 const syncMediaTypeFromContext = () => {
-  const mediaTypeId = itemsStore.environment?.media_type_id
+  const mediaTypeId = tasksStore.mediaAdding.media_type_id
+    || itemsStore.environment?.media_type_id
   if (mediaTypeId) {
     tasksStore.mediaAdding.media_type_id = Number(mediaTypeId)
   }

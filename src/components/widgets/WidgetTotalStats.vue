@@ -1,36 +1,45 @@
 <template>
-  <v-row class="mb-4">
-    <v-col cols="12" md="3" sm="6">
-      <v-card class="rounded-xl card-total" color="primary" variant="tonal">
-        <v-card-title class="text-h3 card-total-title">{{ animatedTags }}</v-card-title>
-        <v-card-title class="text-h5 card-total-title card-total-label">{{ t('widgets.stats.tags') }}</v-card-title>
-        <v-icon class="icon">mdi-tag</v-icon>
+  <v-row class="mb-2 widget-total-stats" dense>
+    <v-col cols="6" md="3">
+      <v-card class="rounded-lg card-total" color="primary" variant="tonal">
+        <v-card-text class="card-total-content">
+          <div class="card-total-value">{{ animatedTags }}</div>
+          <div class="card-total-label">{{ t('widgets.stats.tags') }}</div>
+          <v-icon class="icon">mdi-tag</v-icon>
+        </v-card-text>
       </v-card>
     </v-col>
 
-    <v-col cols="12" md="3" sm="6">
-      <v-card class="rounded-xl card-total" color="primary" variant="tonal">
-        <v-card-title class="text-h3 card-total-title">{{ animatedMetas }}</v-card-title>
-        <v-card-title class="text-h5 card-total-title card-total-label">{{ t('widgets.stats.meta') }}</v-card-title>
-        <v-icon class="icon">mdi-shape</v-icon>
+    <v-col cols="6" md="3">
+      <v-card class="rounded-lg card-total" color="primary" variant="tonal">
+        <v-card-text class="card-total-content">
+          <div class="card-total-value">{{ animatedMetas }}</div>
+          <div class="card-total-label">{{ t('widgets.stats.meta') }}</div>
+          <v-icon class="icon">mdi-shape</v-icon>
+        </v-card-text>
       </v-card>
     </v-col>
 
-    <v-col cols="12" md="3" sm="6">
-      <v-card class="rounded-xl card-total" color="primary" variant="tonal">
-        <v-card-title class="text-h3 card-total-title">{{ animatedFiles }}</v-card-title>
-        <v-card-title class="text-h5 card-total-title card-total-label">{{ t('widgets.stats.files') }}</v-card-title>
-        <v-icon class="icon">mdi-file</v-icon>
+    <v-col cols="6" md="3">
+      <v-card class="rounded-lg card-total" color="primary" variant="tonal">
+        <v-card-text class="card-total-content">
+          <div class="card-total-value">{{ animatedFiles }}</div>
+          <div class="card-total-label">{{ t('widgets.stats.files') }}</div>
+          <v-icon class="icon">mdi-file</v-icon>
+        </v-card-text>
       </v-card>
     </v-col>
 
-    <v-col cols="12" md="3" sm="6">
-      <v-card class="rounded-xl card-total" color="primary" variant="tonal">
-        <v-card-title class="text-h3 card-total-title">
-          {{ animatedFilesize }} <span class="text-h5">{{ filesizeText }}</span>
-        </v-card-title>
-        <v-card-title class="text-h5 card-total-title card-total-label">{{ t('widgets.stats.disk_space') }}</v-card-title>
-        <v-icon class="icon">mdi-harddisk</v-icon>
+    <v-col cols="6" md="3">
+      <v-card class="rounded-lg card-total" color="primary" variant="tonal">
+        <v-card-text class="card-total-content">
+          <div class="card-total-value">
+            {{ animatedFilesize }}
+            <span class="card-total-unit">{{ filesizeText }}</span>
+          </div>
+          <div class="card-total-label">{{ t('widgets.stats.disk_space') }}</div>
+          <v-icon class="icon">mdi-harddisk</v-icon>
+        </v-card-text>
       </v-card>
     </v-col>
   </v-row>
@@ -108,29 +117,52 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-.card-total {
-  height: 100%;
-  position: relative;
-  isolation: isolate;
-  text-align: left;
-  overflow: hidden;
+.widget-total-stats {
+  .card-total {
+    height: 100%;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
 
-  .card-total-title {
+  .card-total-content {
+    position: relative;
+    padding: 10px 12px !important;
+    min-height: 64px;
+  }
+
+  .card-total-value {
     position: relative;
     z-index: 2;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    padding-right: 28px;
+  }
+
+  .card-total-unit {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 2px;
   }
 
   .card-total-label {
-    padding-right: 64px;
+    position: relative;
+    z-index: 2;
+    margin-top: 2px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    opacity: 0.85;
+    padding-right: 28px;
   }
 
   .icon {
     position: absolute;
-    right: 15px;
-    bottom: 15px;
+    right: 8px;
+    bottom: 8px;
     z-index: 1;
-    opacity: 0.25;
-    font-size: 35px;
+    opacity: 0.22;
+    font-size: 22px;
     pointer-events: none;
   }
 }

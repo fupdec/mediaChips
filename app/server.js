@@ -385,6 +385,7 @@ try {
 // ==================== API ENDPOINTS ====================
 const routeFiles = [
   "PinnedMeta.routes",
+  "Home.routes",
   "FilterRow.routes",
   "FilterRowsInSavedFilter.routes",
   "Tag.routes",

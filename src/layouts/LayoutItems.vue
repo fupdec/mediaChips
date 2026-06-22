@@ -205,6 +205,7 @@ import DialogMediaAdding from '@/components/dialogs/DialogMediaAdding.vue'
 import TagsAdd from '@/components/app/appbar/elements/TagsAdd.vue'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {isVideoMediaType, getDefaultMediaTypeId, isImageMediaType} from '@/utils/mediaType'
+import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 import {
   getDuplicatesGroupKey,
   normalizeSortBy,
@@ -807,6 +808,7 @@ const showDrop = (e) => {
     return false;
   }
   if (containsFiles(e)) {
+    e.preventDefault()
     if (isElectron.value && props.items_type === 'media' && dropzone.value == false) {
       dropzone.value = true;
     }
@@ -817,35 +819,15 @@ const catchDrop = (e) => {
   dropzone.value = false
   if (!isElectron.value || props.items_type !== 'media' || !mediaType.value) return
 
-  const extensions = mediaType.value.extensions
-    .split(',')
-    .map((ext) => ext.trim().toLowerCase())
-    .filter(Boolean)
+  const paths = collectDroppedPaths(e)
+  if (!paths.length) return
 
-  const files = Array.from(e.dataTransfer.files || [])
-    .map((file) => file.path)
-    .filter(Boolean)
-    .filter((filePath) => {
-      const ext = String(filePath).split('.').pop()?.toLowerCase()
-      return ext && extensions.includes(ext)
-    })
-
-  if (!files.length) {
-    $operable.setNotification({
-      type: 'warning',
-      title: t('media.adding.files'),
-      text: t('media.adding.no_matching_files'),
-    })
-    return
-  }
-
-  tasksStore.mediaAdding.media_type_id = props.mediaTypeId
-  tasksStore.mediaAdding.directFiles = files
-  tasksStore.mediaAdding.skipFileScan = true
-  tasksStore.mediaAdding.paths = files.join('\n')
-  tasksStore.mediaAdding.dialogProcess = true
-  tasksStore.mediaAdding.active = true
-  eventBus.emit('addMedia')
+  startDroppedMediaAdding({
+    paths,
+    mediaTypeId: props.mediaTypeId,
+    tasksStore,
+    eventBus,
+  })
 }
 
 // События

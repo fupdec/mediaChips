@@ -1,7 +1,10 @@
 <template>
-  <div class="item">
-    <v-card class="item-mark"
-      :class="[{ 'no-file': !is_file_exists }]">
+  <div class="item" :class="{ 'item--plain-card': plainCard }">
+    <v-card
+      class="item-mark"
+      :class="[{ 'no-file': !is_file_exists }]"
+      :elevation="plainCard ? 2 : undefined"
+    >
       <v-responsive
         @mouseover.capture="playPreview"
         @click="stopPlayingPreview"
@@ -94,7 +97,11 @@ const props = defineProps({
   mark: {
     type: Object,
     required: true
-  }
+  },
+  plainCard: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const appStore = useAppStore()
@@ -297,6 +304,7 @@ const play = () => {
   const videoItem = props.mark.medium
   itemsStore.playVideo({
     video: videoItem,
+    time: props.mark.time,
   })
   stopPlayingPreview()
 }
