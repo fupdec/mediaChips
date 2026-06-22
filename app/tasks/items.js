@@ -2,6 +2,7 @@
 
 import _ from "lodash";
 import * as FilterCols from '../configs/filter-cols.mjs';
+import { parseCountries } from '../../src/utils/country.js'
 
 const parseItemsFromDb = (items) => {
   const parseTagsAndValues = (item) => {
@@ -163,9 +164,8 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
         let tags = []
         if (by === 'country') {
           if (!_.isEmpty(item.country)) {
-            tags = item.country.split(',')
+            tags = parseCountries(item.country)
           }
-          // TODO пофиксить список стран в имени которых есть запятая
         } else {
           tags = item.tags.filter(i => i.metaId === by)
           tags = tags.map(i => i.tagId)

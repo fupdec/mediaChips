@@ -320,6 +320,7 @@ import {useItemsStore} from '@/stores/items'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useScraperStore} from '@/stores/scraper'
 import {useEventBus} from '@/utils/eventBus'
+import {parseCountries, serializeCountries} from '@/utils/country'
 import axios from 'axios'
 import _ from 'lodash'
 import path from 'path-browserify'
@@ -643,7 +644,7 @@ const save = async () => {
 
   // Обрабатываем страну (только для тегов)
   if (isTag.value && updateData.country && updateData.country.length) {
-    updateData.country = updateData.country.join(',')
+    updateData.country = serializeCountries(updateData.country)
   } else if (isTag.value) {
     updateData.country = null
   }
@@ -765,7 +766,7 @@ const transferScrapedInfo = async () => {
 onMounted(async () => {
   // Инициализация значений
   if (isTag.value) {
-    const countries = props.tag.country ? props.tag.country.split(',') : []
+    const countries = parseCountries(props.tag.country)
     vals.value = {
       country: countries,
       name: props.tag.name || null,

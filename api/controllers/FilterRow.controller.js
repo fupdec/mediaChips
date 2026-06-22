@@ -1,4 +1,5 @@
 module.exports = function (db) {
+  const { serializeCountries } = require('../utils/country')
   // Create and Save a new FilterRow
   const create = async function (req, res) {
     let filterObj = req.body.filter
@@ -7,7 +8,7 @@ module.exports = function (db) {
     if (filterObj.type == 'array' && filterObj.param !== 'country')
       filterObj.val = null
     if (filterObj.param == 'country' && filterObj.val) {
-      filterObj.val = filterObj.val.join(',')
+      filterObj.val = serializeCountries(filterObj.val)
     }
 
     const [filterRow, isCreated] = await db.FilterRow.findOrCreate({

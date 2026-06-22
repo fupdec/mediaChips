@@ -66,7 +66,7 @@
 import { reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CountryFlag from 'vue-country-flag-next'
-import Countries from '@/assets/Countries'
+import { parseCountries, getCountryCode } from '@/utils/country'
 import path from 'path-browserify'
 
 import { useAppStore } from '@/stores/app'
@@ -107,9 +107,7 @@ const images = reactive({
 // computed
 const ITEMS = computed(() => itemsStore)
 
-const countries = computed(() =>
-  props.tag.country ? props.tag.country.split(',') : []
-)
+const countries = computed(() => parseCountries(props.tag.country))
 
 const avatar = computed(() =>
   images.avatar || images.main
@@ -153,10 +151,7 @@ const openTagPage = () => {
   $readable.hideHoverImage()
 }
 
-const getFlag = (name) => {
-  const country = Countries.find(i => i.name === name)
-  return country ? country.code : ''
-}
+const getFlag = (name) => getCountryCode(name)
 
 // lifecycle
 onMounted(getImages)

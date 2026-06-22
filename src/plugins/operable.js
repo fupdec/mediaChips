@@ -1,6 +1,7 @@
 import axios from "axios";
 import path from "path-browserify";
 import _ from 'lodash'
+import {parseCountries} from '@/utils/country'
 import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
 import {useNotificationsStore} from '@/stores/notifications'
@@ -310,7 +311,7 @@ export default {
               }
               // Handle the country field special case
               if (filterRow.param === 'country' && filterRow.val) {
-                filterRow.val = filterRow.val.split(',');
+                filterRow.val = parseCountries(filterRow.val);
                 return filterRow;
               }
 

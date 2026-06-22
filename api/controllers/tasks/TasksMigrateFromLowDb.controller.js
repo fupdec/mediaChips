@@ -5,6 +5,7 @@ const rimraf = require("rimraf")
 const StreamZip = require('node-stream-zip')
 const {Umzug, SequelizeStorage} = require("umzug");
 const _ = require("lodash");
+const { serializeCountries } = require('../../utils/country')
 
 module.exports = function (db) {
   const dbPath = db.path
@@ -343,7 +344,7 @@ module.exports = function (db) {
               rating: i.meta.rating || 0,
               favorite: i.meta.favorite || false,
               bookmark: i.meta.bookmark || null,
-              country: i.meta.country ? i.meta.country.join() : null,
+              country: serializeCountries(i.meta.country),
               color: i.meta.color || null,
               views: i.views || 0,
               createdAt: (new Date(i.date).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
