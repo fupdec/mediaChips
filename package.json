@@ -1,7 +1,7 @@
 {
   "name": "mediachips",
   "productName": "MediaChips",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "author": {
     "name": "MediaChips contributors"
   },
@@ -140,12 +140,31 @@
       "category": "Utility"
     },
     "dmg": {
-      "artifactName": "${productName}.v${version}.Mac.${arch}.${ext}"
+      "artifactName": "${productName}.v${version}.Mac.${arch}.${ext}",
+      "title": "Install ${productName}",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 140,
+          "y": 180
+        },
+        {
+          "x": 400,
+          "y": 180,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "mac": {
       "icon": "public/icons/icons.icns",
       "category": "public.app-category.utilities",
-      "identity": null,
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
       "artifactName": "${productName}.v${version}.Mac.${arch}.${ext}",
       "target": [
         {
