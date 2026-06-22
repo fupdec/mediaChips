@@ -129,7 +129,7 @@
       "allowToChangeInstallationDirectory": true
     },
     "linux": {
-      "icon": "public/icons/icons.icns",
+      "icon": "public/icons/icon.png",
       "artifactName": "${productName}.v${version}.Linux.AppImage",
       "target": [
         "AppImage"
