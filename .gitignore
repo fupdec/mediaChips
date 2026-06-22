@@ -10,7 +10,6 @@ server.log
 /public/config.json
 .project
 yarn.lock
-package-lock.json
 db.vuerd.json
 
 # local env files
