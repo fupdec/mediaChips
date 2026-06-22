@@ -4,7 +4,7 @@ Pre-built installers are published on [GitHub Releases](https://github.com/fupde
 
 | Platform | File |
 |----------|------|
-| macOS | `MediaChips.v<version>.Mac.dmg` (installer) — auto-update uses `MediaChips.v<version>.Mac.<arch>.zip` |
+| macOS | `MediaChips.v<version>.Mac.arm64.dmg` / `MediaChips.v<version>.Mac.x64.dmg` — auto-update uses `MediaChips.v<version>.Mac.<arch>.zip` |
 | Windows | `MediaChips.v<version>.Windows.Installer.exe` (NSIS installer) |
 | Linux | `MediaChips.v<version>.Linux.AppImage` |
 

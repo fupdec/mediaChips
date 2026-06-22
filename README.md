@@ -197,14 +197,14 @@ git tag v0.13.1
 git push origin v0.13.1
 ```
 
-4. The [Release workflow](.github/workflows/release.yml) builds **Windows (NSIS)**, **macOS (universal DMG + arch ZIPs)**, and **Linux (AppImage)** in parallel and uploads them to the GitHub Release together with `latest.yml` / `latest-mac.yml` / `latest-linux.yml` required by `electron-updater`.
+4. The [Release workflow](.github/workflows/release.yml) builds **Windows (NSIS)**, **macOS (arm64 + x64 DMG/ZIP)**, and **Linux (AppImage)** in parallel and uploads them to the GitHub Release together with `latest.yml` / `latest-mac.yml` / `latest-linux.yml` required by `electron-updater`.
 
 Expected asset names (legacy style):
 
 | Platform | File |
 |----------|------|
 | Windows | `MediaChips.vX.Y.Z.Windows.Installer.exe` |
-| macOS (install) | `MediaChips.vX.Y.Z.Mac.dmg` |
+| macOS (install) | `MediaChips.vX.Y.Z.Mac.arm64.dmg`, `MediaChips.vX.Y.Z.Mac.x64.dmg` |
 | macOS (auto-update) | `MediaChips.vX.Y.Z.Mac.arm64.zip`, `MediaChips.vX.Y.Z.Mac.x64.zip` |
 | Linux | `MediaChips.vX.Y.Z.Linux.AppImage` |
 5. Installed desktop apps with **Settings → About → Check for updates at startup** will detect the new version automatically.

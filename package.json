@@ -137,7 +137,7 @@
       "category": "Utility"
     },
     "dmg": {
-      "artifactName": "${productName}.v${version}.Mac.${ext}"
+      "artifactName": "${productName}.v${version}.Mac.${arch}.${ext}"
     },
     "mac": {
       "icon": "public/icons/icons.icns",
@@ -148,7 +148,8 @@
         {
           "target": "dmg",
           "arch": [
-            "universal"
+            "arm64",
+            "x64"
           ]
         },
         {
