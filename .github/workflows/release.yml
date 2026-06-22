@@ -10,8 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: ${{ matrix.name }}
+  build:
+    name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -19,13 +19,13 @@ jobs:
         include:
           - os: windows-latest
             name: Windows
-            script: dist:win
+            script: dist:win:ci
           - os: macos-latest
             name: macOS
-            script: dist:mac
+            script: dist:mac:ci
           - os: ubuntu-latest
             name: Linux
-            script: dist:linux
+            script: dist:linux:ci
 
     steps:
       - name: Checkout
@@ -60,8 +60,41 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Build and publish installers
+      - name: Build installers
         run: npm run ${{ matrix.script }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.name }}
+          path: release/**
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: List release files
+        run: find release -type f | sort
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: MediaChips ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release/**/*

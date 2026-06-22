@@ -29,7 +29,10 @@
     "dist:publish": "npm run build && npm run predist && electron-builder --publish always",
     "dist:win": "npm run predist && electron-builder --win --publish always",
     "dist:mac": "npm run predist && electron-builder --mac --publish always",
-    "dist:linux": "npm run predist && electron-builder --linux --publish always"
+    "dist:linux": "npm run predist && electron-builder --linux --publish always",
+    "dist:win:ci": "npm run predist && electron-builder --win --publish never",
+    "dist:mac:ci": "npm run predist && electron-builder --mac --publish never",
+    "dist:linux:ci": "npm run predist && electron-builder --linux --publish never"
   },
   "main": "main.js",
   "dependencies": {
