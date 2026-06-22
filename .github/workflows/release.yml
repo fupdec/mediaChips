@@ -65,11 +65,25 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
+      - name: Collect distribution files
+        shell: bash
+        run: |
+          mkdir -p dist-assets
+          shopt -s nullglob
+          for pattern in '*.exe' '*.dmg' '*.zip' '*.AppImage' '*.blockmap' 'latest*.yml'; do
+            for file in release/$pattern; do
+              cp "$file" dist-assets/
+            done
+          done
+          echo "Distribution files:"
+          ls -la dist-assets/
+          test "$(ls -A dist-assets)"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.name }}
-          path: release/**
+          path: dist-assets/*
           if-no-files-found: error
           retention-days: 7
 
@@ -77,6 +91,7 @@ jobs:
     name: Publish GitHub Release
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Download artifacts
@@ -86,15 +101,52 @@ jobs:
           merge-multiple: true
 
       - name: List release files
-        run: find release -type f | sort
+        run: find release -maxdepth 1 -type f | sort
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: MediaChips ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          files: |
-            release/**/*
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG exists, uploading assets"
+          else
+            gh release create "$TAG" \
+              --title "MediaChips $TAG" \
+              --generate-notes
+          fi
+
+          upload_file() {
+            local file="$1"
+            local attempt=1
+            while [ "$attempt" -le 5 ]; do
+              if gh release upload "$TAG" "$file" --clobber; then
+                echo "Uploaded $(basename "$file")"
+                return 0
+              fi
+              echo "Upload failed for $(basename "$file"), retry $attempt/5..."
+              sleep $((attempt * 20))
+              attempt=$((attempt + 1))
+            done
+            return 1
+          }
+
+          mapfile -t yml_files < <(find release -maxdepth 1 -type f -name 'latest*.yml' | sort)
+          mapfile -t asset_files < <(find release -maxdepth 1 -type f \( \
+            -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.blockmap' \
+          \) | sort)
+
+          echo "Uploading ${#yml_files[@]} metadata file(s), then ${#asset_files[@]} asset(s)"
+
+          for file in "${yml_files[@]}"; do
+            upload_file "$file"
+          done
+
+          for file in "${asset_files[@]}"; do
+            upload_file "$file"
+          done
+
+          gh release edit "$TAG" --draft=false
