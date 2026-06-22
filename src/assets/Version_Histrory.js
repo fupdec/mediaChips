@@ -4,18 +4,34 @@ export const history = [
     version: 'v0.13.1',
     name: 'In-app auto-update',
     content: `
-      <p><strong>MediaChips v0.13.1</strong> adds built-in update checks and one-click install for desktop builds published on GitHub Releases.</p>
+      <p><strong>MediaChips v0.13.1</strong> adds in-app auto-update, automated GitHub releases, Images media type, server-side pagination, and Windows Electron UI fixes.</p>
       <h3>Added:</h3>
       <ul>
         <li><strong>In-app auto-update</strong> for Windows (NSIS), macOS (ZIP), and Linux (AppImage)</li>
         <li><strong>Settings → About</strong> — manual update check and “check at startup” option</li>
-        <li><strong>GitHub Actions</strong> release pipeline for all three platforms</li>
-        <li><strong>CLIP model on demand</strong> — video object recognition model is downloaded from the import dialog when needed (~150 MB), not bundled in the installer</li>
+        <li><strong>GitHub Actions</strong> — CI and multi-platform release pipeline</li>
+        <li><strong>Images media type</strong> across backend and UI</li>
+        <li><strong>Server-side media pagination</strong> and virtual grid for infinite scroll</li>
+        <li><strong>CLIP on demand</strong> — video recognition model downloaded from the import dialog (~150 MB)</li>
+        <li>Localized <strong>About</strong> dialog with auto-parsed dependencies</li>
+      </ul>
+      <h3>Changed:</h3>
+      <ul>
+        <li>Smaller installers — CLIP no longer bundled</li>
+        <li>macOS: separate arm64 and x64 DMG/ZIP builds</li>
+        <li>Windows Electron header UI polish; SystemBar only on Windows</li>
+      </ul>
+      <h3>Fixed:</h3>
+      <ul>
+        <li>Blank white Electron window on Windows 11</li>
+        <li>About dialog on macOS; production build import error</li>
+        <li>List page regressions after pagination</li>
       </ul>
       <h3>Notes:</h3>
       <ul>
-        <li>Users on <strong>v0.13.0</strong> must install v0.13.1 manually once; later updates can be installed from inside the app</li>
+        <li>Users on <strong>v0.13.0</strong> must install v0.13.1 manually once</li>
         <li><strong>Portable</strong> Windows builds still require a manual download</li>
+        <li>Full changelog: <a href="https://github.com/fupdec/MediaChips/blob/master/CHANGELOG.md" target="_blank">CHANGELOG.md</a></li>
       </ul>
     `,
   },
