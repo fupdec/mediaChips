@@ -1,4 +1,13 @@
 const {filterItems} = require('../../app/tasks/items.js')
+const {
+  buildMediaFilterQuery,
+  canUseSqlMediaFilters,
+  getMediaFromClause,
+  getNavigationSelect,
+  getSortExpression,
+  requiresMetadataJoinForFilters,
+  requiresMetadataJoinForSort,
+} = require('./mediaFilterSql')
 
 const MEDIA_BASE_SELECT = `SELECT media.*,
   videoMetadata.duration,
@@ -39,15 +48,20 @@ const createItemShell = (row) => ({
 })
 
 async function fetchBaseMediaRows(db, mediaTypeId, ids = []) {
-  let query = `${MEDIA_BASE_SELECT} WHERE media.mediaTypeId = :mediaTypeId`
-  const replacements = {mediaTypeId}
-
   if (ids.length) {
-    query += ` AND media.id IN (:ids)`
-    replacements.ids = ids
+    const [rows] = await db.sequelize.query(
+      `${MEDIA_BASE_SELECT} WHERE media.id IN (:ids)`,
+      {replacements: {ids}},
+    )
+    return rows
   }
 
-  const [rows] = await db.sequelize.query(query, {replacements})
+  if (!mediaTypeId) return []
+
+  const [rows] = await db.sequelize.query(
+    `${MEDIA_BASE_SELECT} WHERE media.mediaTypeId = :mediaTypeId`,
+    {replacements: {mediaTypeId}},
+  )
   return rows
 }
 
@@ -108,7 +122,12 @@ async function attachMediaRelations(db, items, mediaTypeId, ids = []) {
   return items
 }
 
-async function loadMediaItems(db, options = {}) {
+function orderRowsByIds(rows, ids) {
+  const rowsById = new Map(rows.map((row) => [row.id, row]))
+  return ids.map((id) => rowsById.get(id)).filter(Boolean)
+}
+
+async function loadMediaItemsLegacy(db, options = {}) {
   const {
     mediaTypeId,
     ids = [],
@@ -164,7 +183,315 @@ async function loadMediaItems(db, options = {}) {
   }
 }
 
+async function loadMediaItemsSql(db, options = {}) {
+  const {
+    mediaTypeId,
+    ids = [],
+    filters = [],
+    sortBy = 'id',
+    direction = 'desc',
+    page = 1,
+    limit = null,
+    includeNavigation = false,
+    skipTotals = false,
+  } = options
+
+  const filterQuery = buildMediaFilterQuery(filters, {mediaTypeId, ids})
+  if (!filterQuery.ok) {
+    return loadMediaItemsLegacy(db, options)
+  }
+
+  const {whereSql, replacements} = filterQuery
+  const whereClause = `WHERE ${whereSql}`
+  const sortExpr = getSortExpression(sortBy)
+  const sortDir = direction === 'asc' ? 'ASC' : 'DESC'
+  const joinForFilters = requiresMetadataJoinForFilters(filters)
+  const joinForSort = requiresMetadataJoinForSort(sortBy)
+  const fromForCount = getMediaFromClause(joinForFilters)
+  const fromForSort = getMediaFromClause(joinForFilters || joinForSort)
+
+  const shouldPaginate = !ids.length && limit > 0 && limit < 101
+  const safePage = Math.max(1, Number(page) || 1)
+  const pageLimit = shouldPaginate ? limit : null
+  const queryReplacements = {...replacements}
+
+  let idQuery = `SELECT media.id
+    ${fromForSort}
+    ${whereClause}
+    ORDER BY ${sortExpr} ${sortDir}`
+
+  if (shouldPaginate) {
+    queryReplacements.limit = pageLimit
+    queryReplacements.offset = (safePage - 1) * pageLimit
+    idQuery += ' LIMIT :limit OFFSET :offset'
+  }
+
+  const queries = [db.sequelize.query(idQuery, {replacements: queryReplacements})]
+
+  if (!skipTotals) {
+    queries.push(
+      db.sequelize.query(
+        `SELECT COUNT(*) AS totalFiltered,
+          COALESCE(SUM(media.filesize), 0) AS totalFilesize
+        ${fromForCount}
+        ${whereClause}`,
+        {replacements},
+      ),
+      db.sequelize.query(
+        `SELECT COUNT(*) AS totalUnfiltered
+         FROM media
+         WHERE media.mediaTypeId = :mediaTypeId`,
+        {replacements: {mediaTypeId}},
+      ),
+    )
+  }
+
+  const results = await Promise.all(queries)
+  const [idRows] = results[0]
+
+  let totalUnfiltered = null
+  let totalFiltered = null
+  let totalFilesize = null
+
+  if (!skipTotals) {
+    const [[totals]] = results[1]
+    const [[unfiltered]] = results[2]
+    totalUnfiltered = Number(unfiltered.totalUnfiltered) || 0
+    totalFiltered = Number(totals.totalFiltered) || 0
+    totalFilesize = Number(totals.totalFilesize) || 0
+  }
+
+  const pageIds = idRows.map((row) => row.id)
+
+  let navigation
+  if (includeNavigation) {
+    const [navRows] = await db.sequelize.query(
+      `${getNavigationSelect()}
+      ${fromForSort}
+      ${whereClause}
+      ORDER BY ${sortExpr} ${sortDir}`,
+      {replacements},
+    )
+    navigation = navRows.map(toNavigationItem)
+  }
+
+  const rows = pageIds.length
+    ? await fetchBaseMediaRows(db, mediaTypeId, pageIds)
+    : []
+  const orderedRows = orderRowsByIds(rows, pageIds)
+  let items = orderedRows.map(createItemShell)
+  await attachMediaRelations(db, items, mediaTypeId, pageIds)
+
+  const result = {
+    items,
+    total: totalUnfiltered,
+    totalFiltered,
+    totalFilesize,
+    navigation,
+    page: shouldPaginate ? safePage : 1,
+    limit: shouldPaginate ? pageLimit : (totalFiltered ?? items.length),
+  }
+
+  if (!skipTotals && shouldPaginate && totalFiltered != null) {
+    result.pages = Math.max(1, Math.ceil(totalFiltered / pageLimit))
+  }
+
+  return result
+}
+
+async function loadMediaItems(db, options = {}) {
+  if (canUseSqlMediaFilters(options)) {
+    return loadMediaItemsSql(db, options)
+  }
+  return loadMediaItemsLegacy(db, options)
+}
+
+async function loadMediaPool(db, mediaTypeId) {
+  const rows = await fetchBaseMediaRows(db, mediaTypeId)
+  const items = rows.map(createItemShell)
+  await attachMediaRelations(db, items, mediaTypeId)
+  return items
+}
+
+async function getFilteredMediaSummary(db, options = {}) {
+  const {
+    mediaTypeId,
+    filters = [],
+    sortBy = 'id',
+    direction = 'desc',
+    previewLimit = 4,
+    find_duplicates = false,
+    duplicates_by = 'filesize',
+  } = options
+
+  if (find_duplicates || !canUseSqlMediaFilters(options)) {
+    const result = await loadMediaItemsLegacy(db, {
+      ...options,
+      limit: null,
+      includeNavigation: false,
+    })
+
+    return {
+      count: result.totalFiltered,
+      previewIds: result.items.slice(0, previewLimit).map((item) => item.id),
+    }
+  }
+
+  const filterQuery = buildMediaFilterQuery(filters, {mediaTypeId, ids: []})
+  if (!filterQuery.ok) {
+    const result = await loadMediaItemsLegacy(db, {
+      ...options,
+      limit: null,
+      includeNavigation: false,
+    })
+
+    return {
+      count: result.totalFiltered,
+      previewIds: result.items.slice(0, previewLimit).map((item) => item.id),
+    }
+  }
+
+  const {whereSql, replacements} = filterQuery
+  const whereClause = `WHERE ${whereSql}`
+  const joinForFilters = requiresMetadataJoinForFilters(filters)
+  const joinForSort = requiresMetadataJoinForSort(sortBy)
+  const fromForCount = getMediaFromClause(joinForFilters)
+  const fromForSort = getMediaFromClause(joinForFilters || joinForSort)
+  const sortExpr = getSortExpression(sortBy)
+  const sortDir = direction === 'asc' ? 'ASC' : 'DESC'
+
+  const [[totals], [previewRows]] = await Promise.all([
+    db.sequelize.query(
+      `SELECT COUNT(*) AS totalFiltered ${fromForCount} ${whereClause}`,
+      {replacements},
+    ),
+    db.sequelize.query(
+      `SELECT media.id
+      ${fromForSort}
+      ${whereClause}
+      ORDER BY ${sortExpr} ${sortDir}
+      LIMIT :previewLimit`,
+      {replacements: {...replacements, previewLimit}},
+    ),
+  ])
+
+  return {
+    count: Number(totals.totalFiltered) || 0,
+    previewIds: previewRows.map((row) => row.id),
+  }
+}
+
+async function loadFilteredMediaIds(db, options = {}) {
+  if (options.find_duplicates || !canUseSqlMediaFilters(options)) {
+    const result = await loadMediaItemsLegacy(db, {
+      ...options,
+      limit: null,
+      includeNavigation: false,
+    })
+
+    return {
+      ids: result.items.map((item) => item.id),
+      totalFiltered: result.totalFiltered,
+      totalFilesize: result.totalFilesize,
+    }
+  }
+
+  const {
+    mediaTypeId,
+    filters = [],
+  } = options
+
+  const filterQuery = buildMediaFilterQuery(filters, {mediaTypeId, ids: []})
+  if (!filterQuery.ok) {
+    const result = await loadMediaItemsLegacy(db, {
+      ...options,
+      limit: null,
+      includeNavigation: false,
+    })
+
+    return {
+      ids: result.items.map((item) => item.id),
+      totalFiltered: result.totalFiltered,
+      totalFilesize: result.totalFilesize,
+    }
+  }
+
+  const {whereSql, replacements} = filterQuery
+  const whereClause = `WHERE ${whereSql}`
+  const joinForFilters = requiresMetadataJoinForFilters(options.filters || [])
+  const joinForSort = requiresMetadataJoinForSort(options.sortBy || 'id')
+  const fromForCount = getMediaFromClause(joinForFilters)
+  const fromForSort = getMediaFromClause(joinForFilters || joinForSort)
+
+  const [[totals], [idRows]] = await Promise.all([
+    db.sequelize.query(
+      `SELECT
+        COUNT(*) AS totalFiltered,
+        COALESCE(SUM(media.filesize), 0) AS totalFilesize
+      ${fromForCount}
+      ${whereClause}`,
+      {replacements},
+    ),
+    db.sequelize.query(
+      `SELECT media.id
+      ${fromForSort}
+      ${whereClause}
+      ORDER BY ${getSortExpression(options.sortBy || 'id')} ${options.direction === 'asc' ? 'ASC' : 'DESC'}`,
+      {replacements},
+    ),
+  ])
+
+  return {
+    ids: idRows.map((row) => row.id),
+    totalFiltered: Number(totals.totalFiltered) || 0,
+    totalFilesize: Number(totals.totalFilesize) || 0,
+  }
+}
+
+async function loadMediaBasicsByIds(db, ids = []) {
+  if (!ids.length) return []
+
+  const [rows] = await db.sequelize.query(
+    `SELECT id, path, name, basename, filesize, mediaTypeId
+     FROM media
+     WHERE id IN (:ids)`,
+    {replacements: {ids}},
+  )
+
+  return rows
+}
+
+async function loadMediaPlaylistItems(db, ids = []) {
+  if (!ids.length) return []
+
+  const [rows] = await db.sequelize.query(
+    `SELECT
+      id, path, name, basename, ext, mediaTypeId,
+      filesize, rating, favorite, views, viewedAt
+     FROM media
+     WHERE id IN (:ids)`,
+    {replacements: {ids}},
+  )
+
+  const orderedRows = orderRowsByIds(rows, ids)
+  return orderedRows.map(createItemShell)
+}
+
+async function loadMediaForPlayback(db, ids = []) {
+  if (!ids.length) return []
+
+  const rows = await fetchBaseMediaRows(db, null, ids)
+  const orderedRows = orderRowsByIds(rows, ids)
+  return orderedRows.map(createItemShell)
+}
+
 module.exports = {
   loadMediaItems,
+  loadMediaPool,
+  getFilteredMediaSummary,
+  loadFilteredMediaIds,
+  loadMediaBasicsByIds,
+  loadMediaPlaylistItems,
+  loadMediaForPlayback,
   toNavigationItem,
 }

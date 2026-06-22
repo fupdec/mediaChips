@@ -40,18 +40,26 @@ import {useDisplay} from 'vuetify';
 import {storeToRefs} from 'pinia';
 import axios from 'axios';
 import DialogHeader from '@/components/elements/DialogHeader.vue';
-import {useAppStore} from '@/stores/app'; // Импортируем ваш Pinia store
+import {useAppStore} from '@/stores/app';
+import {useItemsStore} from '@/stores/items';
+import {useEventBus} from '@/utils/eventBus';
 
 const props = defineProps({
   dialog: Boolean,
+  mediaIds: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(['close', 'add']);
 
 const {smAndDown} = useDisplay()
 const appStore = useAppStore()
+const itemsStore = useItemsStore()
 const {localhost: apiUrl} = storeToRefs(appStore);
 const {t} = useI18n()
+const eventBus = useEventBus()
 
 const dialogLocal = ref(props.dialog);
 const name = ref('');
@@ -71,6 +79,7 @@ const buttons = computed(() => [{
 // Следим за изменением props.dialog и синхронизируем с локальной переменной
 watch(() => props.dialog, (newVal) => {
   dialogLocal.value = newVal;
+  if (newVal) name.value = '';
 });
 
 // Следим за изменением dialogLocal и эмитим событие при закрытии
@@ -80,24 +89,54 @@ watch(dialogLocal, (newVal) => {
   }
 });
 
-const addPlaylist = () => {
-  form.value?.validate();
+const addPlaylist = async () => {
+  await form.value?.validate();
   if (!valid.value) return;
 
-  axios({
-    method: "post",
-    url: apiUrl.value + "/api/playlist/",
-    data: {
-      name: name.value,
-    },
-  })
-    .then(() => {
-      name.value = '';
-      emit("add");
-    })
-    .catch((e) => {
-      console.log(e);
+  try {
+    const res = await axios({
+      method: "post",
+      url: apiUrl.value + "/api/playlist/",
+      data: {
+        name: name.value,
+      },
     });
+
+    const playlistName = name.value
+    const playlistId = res.data?.id
+
+    if (playlistId && props.mediaIds.length > 0) {
+      for (const mediaId of props.mediaIds) {
+        await axios({
+          method: "post",
+          url: apiUrl.value + "/api/mediaInPlaylists/",
+          data: {
+            mediaId,
+            playlistId,
+          },
+        })
+      }
+      itemsStore.isSelect = false
+    }
+
+    name.value = '';
+    eventBus.emit('getPlaylists')
+
+    if (props.mediaIds.length > 0) {
+      $operable.setNotification({
+        type: 'success',
+        title: t('playlists.create_playlist'),
+        text: t('playlists.created_and_added', {
+          name: res.data?.name || playlistName,
+          count: props.mediaIds.length,
+        }),
+      })
+    }
+
+    emit("add", playlistId);
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 const nameRules = (value) => {

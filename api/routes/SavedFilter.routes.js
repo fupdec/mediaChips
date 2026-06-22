@@ -5,6 +5,10 @@ module.exports = (app, db) => {
   // Create a new SavedFilter
   router.post("/", SavedFilter.create);
 
+  router.get("/dynamicPlaylists", SavedFilter.dynamicPlaylistsSummary);
+
+  router.get("/:id/media", SavedFilter.getPlaylistMedia);
+
   // Retrieve a single SavedFilter with id
   router.get("/:id", SavedFilter.findOne);
 

@@ -11,6 +11,15 @@ module.exports = (app, db) => {
   // get all media
   router.post("/items", Media.getAll);
 
+  // get filtered media ids (for bulk selection)
+  router.post("/ids", Media.getFilteredIds);
+
+  // get minimal media rows by ids (for bulk delete, etc.)
+  router.post("/basics", Media.getBasicsByIds);
+
+  // batch playlist/media thumbs
+  router.post("/thumbs", Media.getThumbs);
+
   // get all media
   router.get("/get-stats", Media.getStats);
 

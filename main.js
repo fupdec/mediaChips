@@ -16,6 +16,7 @@ if (!gotTheLock) {
 }
 
 const os = require('os')
+const fs = require('fs')
 const path = require('path')
 process.env.MEDIA_CHIPS_ALLOW_LAN = process.env.MEDIA_CHIPS_ALLOW_LAN || '1'
 
@@ -103,6 +104,17 @@ const createWindow = () => {
 
 ipcMain.handle('get-config', () => server.config)
 
+ipcMain.handle('checkFileExists', async (_event, data) => {
+  const filePath = typeof data === 'string' ? data : data?.path
+  if (!filePath) return false
+
+  try {
+    return fs.existsSync(filePath)
+  } catch {
+    return false
+  }
+})
+
 ipcMain.handle('openPath', async (event, data) => {
   let entryPath = typeof data === 'string' ? data : data?.path
   if (!entryPath) return {error: 'Path is required'}
@@ -112,6 +124,20 @@ ipcMain.handle('openPath', async (event, data) => {
 
   const error = await shell.openPath(entryPath)
   return error ? {error} : {success: true}
+})
+
+ipcMain.handle('dialog:saveFile', async (event, options = {}) => {
+  const result = await dialog.showSaveDialog({
+    defaultPath: options.defaultPath,
+    filters: options.filters || [{name: 'All Files', extensions: ['*']}],
+  })
+
+  if (result.canceled || !result.filePath) {
+    return {canceled: true}
+  }
+
+  fs.writeFileSync(result.filePath, options.content ?? '', 'utf8')
+  return {canceled: false, filePath: result.filePath}
 })
 
 ipcMain.handle('toggleDevTools', () => {

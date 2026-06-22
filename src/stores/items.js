@@ -3,6 +3,7 @@ import {defineStore} from 'pinia'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
+import {getDuplicatesGroupKey} from '@/utils/mediaSortFilter'
 import axios from "axios"
 import _ from "lodash"
 
@@ -66,6 +67,11 @@ export const useItemsStore = defineStore('items', {
       return state.itemsOnPage.every(item =>
         state.selection.includes(item.id)
       )
+    },
+
+    // Проверить, выбраны ли все отфильтрованные элементы
+    isAllFilteredSelected: (state) => {
+      return state.totalFiltered > 0 && state.selection.length === state.totalFiltered
     },
 
     // Получить активные фильтры
@@ -163,18 +169,20 @@ export const useItemsStore = defineStore('items', {
       })
     },
 
-    async playVideo({video, time, in_system}) {
+    async playVideo({video, time, in_system, videos, trustPath = false}) {
       const settingsStore = useSettingsStore()
 
-      const isFileExists = await $operable.checkFileExists(video.path)
+      if (!trustPath) {
+        const isFileExists = await $operable.checkFileExists(video.path)
 
-      if (!isFileExists) {
-        $operable.setNotification({
-          type: 'error',
-          title: 'File not found on path',
-          text: video.path
-        })
-        return
+        if (!isFileExists) {
+          $operable.setNotification({
+            type: 'error',
+            title: 'File not found on path',
+            text: video.path
+          })
+          return
+        }
       }
 
       if (in_system || settingsStore.isPlayVideoInSystemPlayer === "1") {
@@ -182,20 +190,23 @@ export const useItemsStore = defineStore('items', {
 
         await this.countViewNumber(video, 'media')
       } else {
-        // Преобразуем Proxy объекты в обычные
-        let videos = [toRaw(video)];
+        let playlistVideos = videos?.length
+          ? videos.map(item => toRaw(item))
+          : [toRaw(video)]
 
-        const playlistSource = this.navigationItems.length > 0
-          ? this.navigationItems
-          : this.entities
+        if (!videos?.length) {
+          const playlistSource = this.navigationItems.length > 0
+            ? this.navigationItems
+            : this.entities
 
-        if (playlistSource.length > 0) {
-          videos = playlistSource.map(item => toRaw(item));
+          if (playlistSource.length > 0) {
+            playlistVideos = playlistSource.map(item => toRaw(item))
+          }
         }
 
         const data = {
           video: toRaw(video),
-          videos: videos,
+          videos: playlistVideos,
           time: time || 0
         };
 
@@ -407,9 +418,32 @@ export const useItemsStore = defineStore('items', {
       this.selection = this.itemsOnPage.map(item => item.id)
     },
 
-    // Выбрать все элементы вообще
-    selectAll() {
+    // Выбрать все элементы, подходящие под текущие фильтры
+    async selectAllFiltered() {
+      if (this.type === 'media') {
+        const appStore = useAppStore()
+        const mediaTypeId = this.environment.media_type_id
+        const mediaType = appStore.mediaTypes?.find((item) => item.id === mediaTypeId)
+
+        const response = await axios.post(`${appStore.localhost}/api/media/ids`, {
+          mediaTypeId,
+          filters: this.filters,
+          sortBy: this.sortBy,
+          direction: this.sortDir,
+          find_duplicates: this.find_duplicates,
+          duplicates_by: getDuplicatesGroupKey(mediaType),
+        })
+
+        this.selection = response.data.ids || []
+        return
+      }
+
       this.selection = this.entities.map(item => item.id)
+    },
+
+    // Выбрать все элементы вообще
+    async selectAll() {
+      await this.selectAllFiltered()
     },
 
     // Очистить выбор

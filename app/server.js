@@ -359,6 +359,11 @@ sequelize.sync().then(async () => {
       await umzug.up();
       console.log('\x1b[32m%s\x1b[0m', '✅ Migrations applied');
     }
+
+    await sequelize.query('PRAGMA journal_mode = WAL');
+    await sequelize.query('PRAGMA synchronous = NORMAL');
+    await sequelize.query('PRAGMA temp_store = MEMORY');
+    await sequelize.query('PRAGMA cache_size = -64000');
   } catch (migrationError) {
     console.log('\x1b[33m%s\x1b[0m', '⚠️ Migration error:', migrationError.message);
   }

@@ -1,4 +1,5 @@
 module.exports = function (db) {
+  const {getManualPlaylistsSummary} = require('../services/playlistSummary')
   // Create and Save a new Playlist
   const create = function (req, res) {
     db.Playlist.create(req.body)
@@ -25,6 +26,17 @@ module.exports = function (db) {
         message: err.message || "Some error occurred while retrieving media."
       })
     })
+  };
+
+  const findSummary = async function (req, res) {
+    try {
+      const data = await getManualPlaylistsSummary(db)
+      res.status(201).send(data)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while retrieving playlists.',
+      })
+    }
   };
 
   // Update a Playlist by the id in the request
@@ -63,6 +75,7 @@ module.exports = function (db) {
   return {
     create,
     findAll,
+    findSummary,
     update,
     deleteOne,
   }

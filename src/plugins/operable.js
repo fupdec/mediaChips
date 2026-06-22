@@ -42,14 +42,21 @@ export default {
       },
 
       async checkFileExists(filePath) {
+        if (typeof window !== 'undefined') {
+          if (window.$electronOperable?.checkFileExists) {
+            return window.$electronOperable.checkFileExists(filePath)
+          }
+          if (window.operableAPI?.checkFileExists) {
+            return window.operableAPI.checkFileExists(filePath)
+          }
+        }
+
         let is_exists = false
         await axios.post(IP + "/api/Task/checkFileExists", {
           path: filePath,
         }).then(response => {
           is_exists = response.status === 200 || response.status === 201
-        }).catch(error => {
-          // console.log(error)
-        })
+        }).catch(() => {})
         return is_exists
       },
 
@@ -345,8 +352,8 @@ export default {
                 }
               }
 
-              // Normalize param (convert string to number when needed)
-              if (filterRow.param && /\d/.test(filterRow.param)) {
+              // Normalize param (convert string meta id to number when needed)
+              if (filterRow.param != null && /^\d+$/.test(String(filterRow.param))) {
                 filterRow.param = Number(filterRow.param);
               }
 

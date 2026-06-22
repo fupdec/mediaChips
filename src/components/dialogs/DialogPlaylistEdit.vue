@@ -130,6 +130,7 @@ import {useAppStore} from '@/stores/app';
 import DialogHeader from '@/components/elements/DialogHeader.vue';
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue';
 import {sortBy} from 'lodash';
+import {buildM3uPlaylist, downloadTextFile, playlistExportFilename} from '@/utils/playlistExport';
 
 const props = defineProps({
   dialog: Boolean,
@@ -154,6 +155,12 @@ const drag = ref(false);
 const form = ref(null);
 
 const buttons = computed(() => [
+  {
+    icon: "file-export",
+    text: t('playlists.export'),
+    action: exportPlaylist,
+    disabled: videos.value.length === 0,
+  },
   {
     icon: "delete",
     text: t('common.delete'),
@@ -221,6 +228,54 @@ const close = () => {
 const deletePlaylist = () => {
   emit("delete");
   dialogDeletePlaylist.value = false;
+};
+
+const exportPlaylist = async () => {
+  if (videos.value.length === 0) {
+    $operable.setNotification({
+      type: 'warning',
+      title: t('playlists.export'),
+      text: t('playlists.export_empty'),
+    })
+    return
+  }
+
+  const content = buildM3uPlaylist(videos.value, name.value || props.playlist?.name)
+  const defaultPath = playlistExportFilename(name.value || props.playlist?.name)
+  const filters = [{name: 'M3U Playlist', extensions: ['m3u8', 'm3u']}]
+
+  try {
+    if (window.electronAPI?.invoke) {
+      const result = await window.electronAPI.invoke('dialog:saveFile', {
+        defaultPath,
+        content,
+        filters,
+      })
+
+      if (result?.canceled) return
+
+      $operable.setNotification({
+        type: 'success',
+        title: t('playlists.export'),
+        text: t('playlists.export_success', {path: result.filePath}),
+      })
+      return
+    }
+
+    downloadTextFile(content, defaultPath)
+    $operable.setNotification({
+      type: 'success',
+      title: t('playlists.export'),
+      text: t('playlists.export_success', {path: defaultPath}),
+    })
+  } catch (error) {
+    console.error(error)
+    $operable.setNotification({
+      type: 'error',
+      title: t('playlists.export'),
+      text: error.message,
+    })
+  }
 };
 
 const getVideos = async () => {

@@ -87,7 +87,22 @@ export const usePlayerStore = defineStore('player', {
         this.statusText = ''
         this.statusIcon = ''
       }, 3000)
-    }
+    },
+    setPlaylistItems(videos, {host = ''} = {}) {
+      const currentId = this.playlist[this.nowPlaying]?.id
+      this.playlist = (videos || []).map((item) => ({
+        ...item,
+        key: String(item.id),
+        thumb: item.thumb?.startsWith?.('http')
+          ? item.thumb
+          : (item.thumb ? `${host}${item.thumb}` : '/images/unavailable.png'),
+      }))
+
+      if (currentId != null) {
+        const nextIndex = this.playlist.findIndex((item) => item.id === currentId)
+        if (nextIndex >= 0) this.nowPlaying = nextIndex
+      }
+    },
   }
 })
 

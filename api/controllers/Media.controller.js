@@ -1,7 +1,11 @@
 const fs = require("fs")
 const path = require('path')
 const {getMediaDeleteAssetFolder} = require('../utils/mediaType')
-const {loadMediaItems} = require('../services/mediaItemsLoader')
+const {
+  loadMediaItems,
+  loadFilteredMediaIds,
+  loadMediaBasicsByIds,
+} = require('../services/mediaItemsLoader')
 
 module.exports = function (db) {
   const dbPath = db.path
@@ -24,6 +28,7 @@ module.exports = function (db) {
         page,
         limit: limit > 0 ? limit : null,
         includeNavigation: req.body.includeNavigation === true && !ids.length,
+        skipTotals: req.body.skipTotals === true,
       })
 
       res.status(201).send(result)
@@ -33,6 +38,63 @@ module.exports = function (db) {
       })
     }
   };
+
+  const getFilteredIds = async function (req, res) {
+    try {
+      const result = await loadFilteredMediaIds(db, {
+        mediaTypeId: req.body.mediaTypeId,
+        filters: req.body.filters,
+        sortBy: req.body.sortBy,
+        direction: req.body.direction,
+        find_duplicates: req.body.find_duplicates,
+        duplicates_by: req.body.duplicates_by || 'filesize',
+      })
+
+      res.status(201).send(result)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while retrieving media ids.',
+      })
+    }
+  }
+
+  const getBasicsByIds = async function (req, res) {
+    try {
+      const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
+      const items = await loadMediaBasicsByIds(db, ids)
+      res.status(201).send({items})
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while retrieving media.',
+      })
+    }
+  }
+
+  const getThumbs = async function (req, res) {
+    try {
+      const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
+      const mediaType = String(req.body.mediaType || 'videos')
+      const thumbs = {}
+      const basePath = path.join(dbPath, 'media', mediaType)
+
+      for (const id of ids) {
+        for (const folder of ['grids', 'thumbs']) {
+          const filePath = path.join(basePath, folder, `${id}.jpg`)
+          if (!fs.existsSync(filePath)) continue
+
+          const buffer = fs.readFileSync(filePath)
+          thumbs[id] = `data:image/jpeg;base64,${buffer.toString('base64')}`
+          break
+        }
+      }
+
+      res.status(201).send({thumbs})
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while retrieving thumbnails.',
+      })
+    }
+  }
 
   // Retrieve all Media from the database.
   const getStats = function (req, res) {
@@ -238,6 +300,9 @@ module.exports = function (db) {
     deleteOne,
     getOneById,
     getAll,
+    getFilteredIds,
+    getBasicsByIds,
+    getThumbs,
     getStats,
   }
 }

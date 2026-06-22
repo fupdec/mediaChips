@@ -8,6 +8,9 @@ module.exports = (app, db) => {
   // Retrieve all Playlist
   router.get("/", Playlist.findAll);
 
+  // Lightweight playlist list for the playlists page
+  router.get("/summary", Playlist.findSummary);
+
   // Update a Playlist with id
   router.put("/:id", Playlist.update);
 

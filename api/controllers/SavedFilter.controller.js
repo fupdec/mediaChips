@@ -1,11 +1,26 @@
 module.exports = function (db) {
   // Create and Save a new SavedFilter
   const Op = db.Sequelize.Op
+  const {
+    getDynamicPlaylistsSummary,
+    getFilteredMediaForPlayback,
+    getFilteredMediaForSavedFilter,
+  } = require('../services/savedFilterMedia')
 
   const create = function (req, res) {
-    db.SavedFilter.findOrCreate({
-        where: req.body
-      })
+    const payload = {
+      name: req.body.name ?? null,
+      mediaTypeId: req.body.mediaTypeId ?? null,
+      metaId: req.body.metaId ?? null,
+      tagId: req.body.tagId ?? null,
+      tabId: req.body.tabId ?? null,
+    }
+
+    const savePromise = payload.name
+      ? db.SavedFilter.create(payload).then(instance => [instance, true])
+      : db.SavedFilter.findOrCreate({where: payload})
+
+    savePromise
       .then(data => {
         res.status(201).send(data)
       })
@@ -96,11 +111,41 @@ module.exports = function (db) {
       })
   };
 
+  const dynamicPlaylistsSummary = async function (req, res) {
+    try {
+      const data = await getDynamicPlaylistsSummary(db)
+      res.status(201).send(data)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while retrieving dynamic playlists."
+      })
+    }
+  };
+
+  const getPlaylistMedia = async function (req, res) {
+    try {
+      const forPlayback = req.query.mode === 'play' || req.query.playback === '1'
+      const result = forPlayback
+        ? await getFilteredMediaForPlayback(db, parseInt(req.params.id))
+        : await getFilteredMediaForSavedFilter(db, parseInt(req.params.id))
+      res.status(201).send({
+        items: result.items,
+        count: result.count,
+      })
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while retrieving playlist media."
+      })
+    }
+  };
+
   return {
     create,
     findOne,
     findAll,
     update,
-    deleteOne
+    deleteOne,
+    dynamicPlaylistsSummary,
+    getPlaylistMedia,
   }
 }
