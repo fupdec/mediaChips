@@ -1,8 +1,6 @@
 <template>
   <v-dialog
-    v-if="dialogsStore.mediaEditing.show"
-    :model-value="dialogsStore.mediaEditing.show"
-    @click:outside="dialogsStore.mediaEditing.show = false"
+    v-model="dialogsStore.mediaEditing.show"
     :fullscreen="xs"
     :width="xl ? 1400 : 1000"
     scrollable
@@ -98,7 +96,7 @@ const currentMediaType = computed(() =>
 )
 
 function initButtons() {
-  buttons.value.push({
+  buttons.value = [{
     icon: "delete",
     text: t('common.delete'),
     color: "error",
@@ -110,7 +108,7 @@ function initButtons() {
     color: "success",
     outlined: false,
     action: save,
-  })
+  }]
 }
 
 async function getImage() {

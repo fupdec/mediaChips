@@ -239,9 +239,9 @@ const stopSmoothScroll = (event) => {
 }
 
 const editItem = () => {
-  if (props.type == 'media') {
-    dialogsStore.editMedia(props.item)
-  } else if (props.type == 'tag') {
+  if (props.type === 'media' || props.mediaType) {
+    dialogsStore.editMedia(props.item, props.mediaType)
+  } else if (props.type === 'tag') {
     dialogsStore.editTag(props.item, props.meta)
   }
 }

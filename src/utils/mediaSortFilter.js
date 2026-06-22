@@ -102,8 +102,9 @@ export function getSortParams(itemsType, mediaType) {
 export function normalizeSortBy(sortBy, itemsType, mediaType, fallback = 'createdAt') {
   if (sortBy === 'shuffle') return sortBy
 
+  const normalized = sortBy == null ? '' : String(sortBy)
   const allowed = getSortParams(itemsType, mediaType).map((param) => param.param)
-  return allowed.includes(sortBy) ? sortBy : fallback
+  return allowed.includes(normalized) ? normalized : fallback
 }
 
 export function getAllowedFilterParams(itemsType, mediaType) {

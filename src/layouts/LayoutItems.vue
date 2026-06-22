@@ -49,49 +49,8 @@
     <Loading v-if="loader.is_busy"/>
 
     <div
-      v-if="ITEMS.itemsOnPage.length > 0 && !is_infinite_scroll"
-      class="d-flex align-center my-8"
-    >
-      <v-form v-if="pages > 4"
-        @submit.prevent="jumpToPage(ITEMS.jumpPage)">
-        <v-number-input
-          v-model="ITEMS.jumpPage"
-          @click:append-outer="jumpToPage(ITEMS.jumpPage)"
-          append-outer-icon="mdi-redo"
-          :max="pages"
-          :min="1"
-          type="number"
-          max-width="100px"
-          min-width="100px"
-          density="compact"
-          variant="outlined"
-          hide-details
-          color="primary"
-          control-variant="stacked"
-        ></v-number-input>
-      </v-form>
-
-      <v-pagination
-        v-model="ITEMS.page"
-        @update:model-value="changePage"
-        :length="pages"
-        :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
-        active-color="primary"
-        density="comfortable"
-        rounded
-      ></v-pagination>
-    </div>
-
-    <div
-      :class="[
-        `item__size-${ITEMS.size}`,
-        `gap-size-${SETTINGS.gapSize}`,
-        { 'card-grid': ITEMS.view == '1' },
-        { 'chips-grid': items_type === 'tag' && ITEMS.view == '2' },
-        { 'line-grid': mediaType?.type == 'video' && ITEMS.view == '2' },
-        { 'wide-image': mediaType?.type == 'video' && ITEMS.view == '2' },
-        { 'image-grid': mediaType?.type == 'image' && ITEMS.view == '1' },
-      ]"
+      v-if="ITEMS.itemsOnPage.length"
+      :class="itemsGridClasses"
     >
       <Item
         v-for="(i, x) in ITEMS.itemsOnPage"
@@ -190,13 +149,15 @@
     </div>
 
     <div
-      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && loader.show && ITEMS.page != pages"
-      :class="{ 'infinite-loader': is_not_full_height }"
+      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && (loader.show || isLoadingMore) && ITEMS.page != pages"
+      :class="{ 'infinite-loader': is_not_full_height && items_type !== 'media' }"
       class="infinite-loader-full-height"
     >
       <Loading
+        v-if="items_type !== 'media'"
         v-intersect="infiniteScrolling"
       />
+      <Loading v-else-if="isLoadingMore" />
     </div>
 
     <v-card
@@ -228,7 +189,7 @@ import {useRegistrationStore} from '@/stores/registration'
 import {useToolbarStore} from '@/stores/toolbar'
 import {useRouter} from 'vue-router'
 import {useEventBus} from '@/utils/eventBus'
-import {scrollMainTo} from '@/utils/mainScroll'
+import {scrollMainTo, getMainScrollEl} from '@/utils/mainScroll'
 import useVideoImageGenerator from '@/composable/GeneratingThumbsForVideos'
 
 // Компоненты
@@ -270,10 +231,11 @@ const eventBus = useEventBus()
 const router = useRouter()
 const {t} = useI18n()
 
-const {generateImages} = useVideoImageGenerator()
-
 // Константы из Vuetify
 const {xs} = useDisplay()
+
+// Запускает watcher генерации превью в composable
+useVideoImageGenerator()
 
 // Реактивные переменные
 const mediaType = ref(null)
@@ -288,8 +250,10 @@ const loader = ref({
   is_busy: true,
 })
 const is_not_full_height = ref(false)
+const isLoadingMore = ref(false)
 const dropzone = ref(false)
 const container = ref(null)
+let mediaScrollEl = null
 
 // Компьютеды
 const ITEMS = computed(() => itemsStore)
@@ -301,6 +265,25 @@ const activeFilters = computed(() => {
   return ITEMS.value.filters.filter(i => i && i.active);
 });
 const is_infinite_scroll = computed(() => ITEMS.value.limit === 101)
+const isImageGrid = computed(() =>
+  props.items_type === 'media' && mediaType.value?.type === 'image' && ITEMS.value.view == '1'
+)
+const isWideImage = computed(() =>
+  props.items_type === 'media' && mediaType.value?.type === 'video' && ITEMS.value.view == '2'
+)
+const isLineGrid = computed(() => isWideImage.value)
+const isChipsGrid = computed(() =>
+  props.items_type === 'tag' && ITEMS.value.view == '2'
+)
+const itemsGridClasses = computed(() => [
+  `item__size-${ITEMS.value.size}`,
+  `gap-size-${SETTINGS.value.gapSize}`,
+  {'card-grid': ITEMS.value.view == '1'},
+  {'chips-grid': isChipsGrid.value},
+  {'line-grid': isLineGrid.value},
+  {'wide-image': isWideImage.value},
+  {'image-grid': isImageGrid.value},
+])
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
 const apiUrl = computed(() => appStore.localhost)
@@ -308,11 +291,9 @@ const ENV = computed(() => ITEMS.value.environment)
 
 const filesize_all = computed(() => {
   if (props.items_type !== 'media') return ""
-  let sum = 0;
-  for (let i of ITEMS.value.entities) {
-    sum += i?.filesize || 0;
-  }
-  return $readable.getReadableFileSize(sum);
+  const sum = ITEMS.value.totalFilesize
+  if (!sum) return ""
+  return $readable.getReadableFileSize(sum)
 })
 
 const pageTitle = computed(() => {
@@ -422,12 +403,16 @@ const getPageSettings = async () => {
     },
   })
     .then((res) => {
+      if (!res.data?.[0]) return
+
       let vals = ["page", "limit", "size", "view", "sortBy", "sortDir"];
 
       for (let i of vals) {
         let value = res.data[0][i]
+        if (value === undefined || value === null) continue
+
         if (i === 'sortBy' && props.items_type === 'media') {
-          value = normalizeSortBy(value, props.items_type, mediaType.value, value || 'createdAt')
+          value = normalizeSortBy(value, props.items_type, mediaType.value, 'createdAt')
         }
         itemsStore.updateState({
           key: i,
@@ -496,6 +481,35 @@ const getMediaType = async () => {
     });
 }
 
+const applyMediaListResponse = (response, {append = false} = {}) => {
+  const pageItems = response.data.items || []
+
+  itemsStore.updateState({
+    key: 'navigationItems',
+    value: response.data.navigation || [],
+  })
+  itemsStore.updateState({
+    key: 'totalFiltered',
+    value: response.data.totalFiltered ?? pageItems.length,
+  })
+  itemsStore.updateState({
+    key: 'totalFilesize',
+    value: response.data.totalFilesize || 0,
+  })
+
+  totalInDb.value = response.data.total || 0
+  total.value = response.data.totalFiltered ?? pageItems.length
+  pages.value = response.data.pages || 1
+
+  const nextItems = append
+    ? _.uniqBy([...ITEMS.value.itemsOnPage, ...pageItems], 'id')
+    : pageItems
+
+  itemsStore.updateState({key: 'entities', value: nextItems})
+  itemsStore.updateState({key: 'itemsOnPage', value: nextItems})
+  itemsStore.updateState({key: 'isFiltersLoaded', value: true})
+}
+
 const getItemsFromDb = async (ids) => {
   let url = "/api/";
   let query = {};
@@ -522,6 +536,18 @@ const getItemsFromDb = async (ids) => {
   }
   query.ids = ids || [];
 
+  if (props.items_type === 'media') {
+    query.includeNavigation = false
+    const pageLimit = is_infinite_scroll.value ? 25 : ITEMS.value.limit
+    query.page = ITEMS.value.page || 1
+    query.limit = pageLimit
+  }
+
+  const appendMediaPage = props.items_type === 'media'
+    && is_infinite_scroll.value
+    && ITEMS.value.page > 1
+    && (!ids || !ids.length)
+
   if (ids && ids.length > 0) {
     await axios.post(apiUrl.value + url, query)
       .then((res) => {
@@ -535,56 +561,69 @@ const getItemsFromDb = async (ids) => {
       });
     loader.value.is_busy = false;
   } else {
-    itemsStore.updateState({
-      key: "isFiltersLoaded",
-      value: false,
-    });
+    if (!appendMediaPage) {
+      itemsStore.updateState({
+        key: "isFiltersLoaded",
+        value: false,
+      });
 
-    itemsStore.updateState({
-      key: "itemsOnPage",
-      value: [],
-    });
-    loader.value.is_busy = true;
-    loader.value.show = false;
+      itemsStore.updateState({
+        key: "itemsOnPage",
+        value: [],
+      });
+      loader.value.is_busy = true;
+      loader.value.show = false;
+    }
 
     try {
       const response = await axios.post(apiUrl.value + url, query);
 
-      clearTimeout(loader.value.timeout);
-      loader.value.is_busy = false;
-      loader.value.timeout = setTimeout(() => {
-        loader.value.show = true;
-      }, 500);
-
-      itemsStore.updateState({
-        key: "entities",
-        value: response.data.items || []
-      });
-      totalInDb.value = response.data.total || 0;
-      itemsStore.updateState({key: "itemsOnPage", value: []});
-
-      if (is_infinite_scroll.value) {
-        itemsStore.updateState({key: "page", value: 1});
+      if (!appendMediaPage) {
+        clearTimeout(loader.value.timeout);
+        loader.value.is_busy = false;
+        loader.value.timeout = setTimeout(() => {
+          loader.value.show = true;
+        }, 500);
       }
 
-      getEntitiesOnPage();
+      if (props.items_type === 'media') {
+        applyMediaListResponse(response, {append: appendMediaPage})
+      } else {
+        itemsStore.updateState({
+          key: "entities",
+          value: response.data.items || []
+        });
+        totalInDb.value = response.data.total || 0;
+        itemsStore.updateState({key: "itemsOnPage", value: []});
+
+        if (is_infinite_scroll.value) {
+          itemsStore.updateState({key: "page", value: 1});
+        }
+
+        getEntitiesOnPage();
+      }
 
     } catch (error) {
-      // Все равно завершаем загрузку, чтобы UI не завис
       loader.value.is_busy = false;
       itemsStore.updateState({key: "isFiltersLoaded", value: true});
 
-      // Показываем пользователю сообщение
       if (typeof window !== 'undefined' && window.showNotification) {
         window.showNotification(t('notifications_text.server_error_logs'), 'error');
       }
 
-      // Устанавливаем пустые данные
-      itemsStore.updateState({key: "entities", value: []});
-      totalInDb.value = 0;
-      getEntitiesOnPage();
+      if (props.items_type === 'media') {
+        itemsStore.updateState({key: "itemsOnPage", value: []});
+        itemsStore.updateState({key: "entities", value: []});
+        itemsStore.updateState({key: "navigationItems", value: []});
+        total.value = 0;
+        totalInDb.value = 0;
+      } else {
+        itemsStore.updateState({key: "entities", value: []});
+        totalInDb.value = 0;
+        getEntitiesOnPage();
+      }
 
-      throw error; // Пробрасываем дальше для обработки
+      throw error;
     }
   }
 }
@@ -651,17 +690,67 @@ const changePage = (val) => {
     key: "page",
     value: val,
   });
+
+  if (props.items_type === 'media') {
+    updatePageSetting({page: val});
+    getItemsFromDb();
+    return
+  }
+
   getEntitiesOnPage();
   updatePageSetting({page: val});
 }
 
-const infiniteScrolling = () => {
+const loadNextInfinitePage = async () => {
+  if (!is_infinite_scroll.value) return;
   if (ITEMS.value.page >= pages.value) return;
-  itemsStore.updateState({
-    key: "page",
-    value: ITEMS.value.page + 1,
-  });
-  getEntitiesOnPage();
+  if (loader.value.is_busy || isLoadingMore.value) return;
+
+  isLoadingMore.value = true;
+  try {
+    itemsStore.updateState({
+      key: "page",
+      value: ITEMS.value.page + 1,
+    });
+
+    if (props.items_type === 'media') {
+      await getItemsFromDb();
+    } else {
+      getEntitiesOnPage();
+    }
+  } finally {
+    isLoadingMore.value = false;
+  }
+}
+
+const infiniteScrolling = (isIntersecting) => {
+  if (isIntersecting === false) return;
+  loadNextInfinitePage();
+}
+
+const onMediaInfiniteScroll = _.throttle(() => {
+  if (!is_infinite_scroll.value || props.items_type !== 'media') return;
+  const el = getMainScrollEl();
+  if (!el) return;
+
+  const threshold = 400;
+  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+  if (nearBottom) loadNextInfinitePage();
+}, 150);
+
+const bindMediaInfiniteScroll = () => {
+  unbindMediaInfiniteScroll();
+  if (!is_infinite_scroll.value || props.items_type !== 'media') return;
+  mediaScrollEl = getMainScrollEl();
+  mediaScrollEl?.addEventListener('scroll', onMediaInfiniteScroll, {passive: true});
+}
+
+const unbindMediaInfiniteScroll = () => {
+  if (mediaScrollEl) {
+    mediaScrollEl.removeEventListener('scroll', onMediaInfiniteScroll);
+    mediaScrollEl = null;
+  }
+  onMediaInfiniteScroll.cancel();
 }
 
 const scrollTop = () => {
@@ -746,6 +835,9 @@ const emit = defineEmits(['addMedia', 'playVideo'])
 onMounted(async () => {
   // clearing previous values
   itemsStore.updateState({key: "itemsOnPage", value: []});
+  itemsStore.updateState({key: "navigationItems", value: []});
+  itemsStore.updateState({key: "totalFiltered", value: 0});
+  itemsStore.updateState({key: "totalFilesize", value: 0});
   itemsStore.updateState({key: "isSelect", value: false});
   itemsStore.updateState({key: "selection", value: []});
   itemsStore.updateState({key: "filters", value: []});
@@ -763,9 +855,12 @@ onMounted(async () => {
   eventBus.on('setItemsView', handleSetItemsView);
   eventBus.on('updateAssignedMeta', handleUpdateAssignedMeta);
   eventBus.on('openRandomItem', handleOpenRandomItem);
+
+  bindMediaInfiniteScroll();
 })
 
 onBeforeUnmount(() => {
+  unbindMediaInfiniteScroll();
   if (is_infinite_scroll.value) updatePageSetting({page: 1});
   itemsStore.updateState({
     key: "isFiltersLoaded",
@@ -796,6 +891,7 @@ const handleGetItemsFromDb = (event) => {
 
 const handleSetItemsFilters = async (event) => {
   const val = event;
+  itemsStore.updateState({key: 'page', value: 1});
   await updatePageSetting({
     page: 1,
     query: val,
@@ -815,14 +911,29 @@ const handleSetItemsLimit = (event) => {
     page: 1,
     limit: val,
   });
+
+  if (props.items_type === 'media') {
+    getItemsFromDb();
+    return
+  }
+
   getEntitiesOnPage();
 }
 
 const handleRemoveEntitiesFromState = (event) => {
   const {ids, type} = event;
-  if (type === props.items_type) {
-    getEntitiesOnPage(ids);
+  if (type !== props.items_type) return
+
+  if (props.items_type === 'media') {
+    for (const id of ids) {
+      itemsStore.removeItem(id)
+    }
+    total.value = ITEMS.value.totalFiltered
+    totalInDb.value = Math.max(0, totalInDb.value - ids.length)
+    return
   }
+
+  getEntitiesOnPage(ids);
 }
 
 const handleSetItemsSortDir = (event) => {
@@ -864,11 +975,15 @@ const handleUpdateAssignedMeta = async () => {
 
 const handleOpenRandomItem = (event) => {
   const id = event;
+  const navigationPool = ITEMS.value.navigationItems.length
+    ? ITEMS.value.navigationItems
+    : ITEMS.value.entities
+
   if (props.items_type === 'tag') {
     let url = "/tag?metaId=" + meta.value.id + "&tagId=" + id + "&mediaTypeId=" + getDefaultMediaTypeId(appStore.mediaTypes);
     router.push(url);
   } else if (props.items_type === 'media') {
-    const media = ITEMS.value.entities.find(i => i.id === id);
+    const media = navigationPool.find(i => i.id === id);
     if (isImageMediaType(mediaType.value)) {
       itemsStore.viewImage({image: media})
     } else {
@@ -885,11 +1000,8 @@ watch(() => ITEMS.size, (val, old) => {
   updatePageSetting({size: val});
 })
 
-// Следим за изменением элементов
-watch(() => itemsStore.itemsOnPage, (videos) => {
-  if (itemsStore.type === 'media') {
-    generateImages(videos)
-  }
+watch(is_infinite_scroll, () => {
+  bindMediaInfiniteScroll();
 })
 </script>
 

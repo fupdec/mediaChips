@@ -28,6 +28,9 @@ export const useItemsStore = defineStore('items', {
     sortDir: 'asc',
     entities: [],
     itemsOnPage: [],
+    navigationItems: [],
+    totalFiltered: 0,
+    totalFilesize: 0,
     name: 'Tags',
     nameSingular: 'Tag',
     icon: 'shape',
@@ -137,8 +140,12 @@ export const useItemsStore = defineStore('items', {
 
       let images = [toRaw(image)]
 
-      if (this.entities.length > 0) {
-        images = this.entities.map(item => toRaw(item))
+      const playlistSource = this.navigationItems.length > 0
+        ? this.navigationItems
+        : this.entities
+
+      if (playlistSource.length > 0) {
+        images = playlistSource.map(item => toRaw(item))
 
         if (image.mediaTypeId) {
           images = images.filter(item => item.mediaTypeId === image.mediaTypeId)
@@ -178,8 +185,12 @@ export const useItemsStore = defineStore('items', {
         // Преобразуем Proxy объекты в обычные
         let videos = [toRaw(video)];
 
-        if (this.entities.length > 0) {
-          videos = this.entities.map(item => toRaw(item));
+        const playlistSource = this.navigationItems.length > 0
+          ? this.navigationItems
+          : this.entities
+
+        if (playlistSource.length > 0) {
+          videos = playlistSource.map(item => toRaw(item));
         }
 
         const data = {
@@ -297,6 +308,12 @@ export const useItemsStore = defineStore('items', {
         this.entities.splice(indexEntities, 1)
       }
 
+      const indexNavigation = this.navigationItems.findIndex(i => i.id === id)
+      if (indexNavigation > -1) {
+        this.navigationItems.splice(indexNavigation, 1)
+        this.totalFiltered = Math.max(0, this.totalFiltered - 1)
+      }
+
       // Удалить из выбранных, если там есть
       const selectionIndex = this.selection.indexOf(id)
       if (selectionIndex > -1) {
@@ -326,6 +343,14 @@ export const useItemsStore = defineStore('items', {
       if (indexEntities > -1) {
         this.entities[indexEntities] = {
           ...this.entities[indexEntities],
+          ...item
+        }
+      }
+
+      const indexNavigation = this.navigationItems.findIndex(i => i.id === id)
+      if (indexNavigation > -1) {
+        this.navigationItems[indexNavigation] = {
+          ...this.navigationItems[indexNavigation],
           ...item
         }
       }

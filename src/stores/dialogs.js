@@ -1,4 +1,7 @@
 import {defineStore} from 'pinia'
+import {useAppStore} from '@/stores/app'
+import {useItemsStore} from '@/stores/items'
+import {getCurrentMediaType} from '@/utils/mediaType'
 
 export const useDialogsStore = defineStore('useDialogsStore', {
   state: () => ({
@@ -19,9 +22,21 @@ export const useDialogsStore = defineStore('useDialogsStore', {
     scraperMultiple: {show: false, performers: [], progress: 0},
   }),
   actions: {
-    editMedia(media) {
-      this.mediaEditing.media = media
-      this.mediaEditing.show = true
+    editMedia(media, mediaType = null) {
+      const appStore = useAppStore()
+      const itemsStore = useItemsStore()
+      const resolvedMediaType = mediaType || getCurrentMediaType(
+        appStore.mediaTypes,
+        media?.mediaTypeId || itemsStore.environment?.media_type_id,
+      )
+
+      this.$patch({
+        mediaEditing: {
+          show: true,
+          media: media ? {...media} : null,
+          mediaType: resolvedMediaType || {type: null},
+        },
+      })
     },
     editTag(tag, meta) {
       this.tagEditing.tag = tag

@@ -34,9 +34,12 @@
       </v-btn>
     </template>
     <template v-slot:selection="{ item }">
-      <v-icon :icon="`mdi-${item.raw.icon}`"
-        size="small"></v-icon>
-      <span class="pl-2">{{ t(item.raw.textKey) }}</span>
+      <template v-if="item?.raw?.textKey">
+        <v-icon :icon="`mdi-${item.raw.icon}`"
+          size="small"></v-icon>
+        <span class="pl-2">{{ t(item.raw.textKey) }}</span>
+      </template>
+      <span v-else class="pl-2">{{ selectionLabel }}</span>
     </template>
     <template v-slot:item="{ item, props: menuProps }">
       <v-list-item v-bind="menuProps"
@@ -172,12 +175,17 @@ const sortParams = computed(() => {
   )
 })
 
+const selectionLabel = computed(() => {
+  const current = sortParams.value.find((param) => param.param === items.value.sortBy)
+  return current ? t(current.textKey) : t('filters.sort_by')
+})
+
 watch(sortParams, (nextParams) => {
-  const allowed = nextParams.map((param) => param.param)
-  const currentSortBy = items.value.sortBy
+  const allowed = nextParams.map((param) => String(param.param))
+  const currentSortBy = items.value.sortBy == null ? '' : String(items.value.sortBy)
 
   if (currentSortBy && currentSortBy !== 'shuffle' && !allowed.includes(currentSortBy)) {
-    const fallback = allowed.includes('createdAt') ? 'createdAt' : allowed[0]?.param
+    const fallback = allowed.includes('createdAt') ? 'createdAt' : allowed[0]
     if (fallback) {
       itemsStore.setSortBy(fallback)
       eventBus.emit('setItemsSortBy', fallback)

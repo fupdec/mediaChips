@@ -1,59 +1,37 @@
 const fs = require("fs")
 const path = require('path')
-const {parseItemsFromDb, filterItems} = require('../../app/tasks/items.js')
 const {getMediaDeleteAssetFolder} = require('../utils/mediaType')
+const {loadMediaItems} = require('../services/mediaItemsLoader')
 
 module.exports = function (db) {
   const dbPath = db.path
 
   // Retrieve all Media from the database.
-  const getAll = function (req, res) {
-    let query = `SELECT media.*,
-                        videoMetadata.duration,
-                        videoMetadata.bitrate,
-                        videoMetadata.codec,
-                        videoMetadata.fps,
-                        videoMetadata.time,
-                        COALESCE(videoMetadata.width, imageMetadata.width) AS width,
-                        COALESCE(videoMetadata.height, imageMetadata.height) AS height,
-                        imageMetadata.orientation,
-                        tags_in_media.media_tags,
-                        value_in_media.media_values
-                 FROM media
-                          LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
-                          LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId
-                          LEFT JOIN (SELECT tagsInMedia.mediaId                                          id,
-                                            GROUP_CONCAT(tagsInMedia.tagId || '^' || tagsInMedia.metaId) media_tags
-                                     FROM tagsInMedia
-                                     GROUP BY id) AS tags_in_media ON media.id = tags_in_media.id
-                          LEFT JOIN (SELECT valuesInMedia.mediaId                                            id,
-                                            GROUP_CONCAT(valuesInMedia.value || '^' || valuesInMedia.metaId) media_values
-                                     FROM valuesInMedia
-                                     GROUP BY id) AS value_in_media ON media.id = value_in_media.id
-                 WHERE media.mediaTypeId = ${req.body.mediaTypeId}`
-    let ids = req.body.ids
-    if (ids && ids.length) {
-      query += ` AND media.id in (${ids.join()})`
-    }
+  const getAll = async function (req, res) {
+    try {
+      const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
+      const limit = Number(req.body.limit)
+      const page = Number(req.body.page) || 1
 
-    db.sequelize.query(query).then(data => {
-      // db.Media.findAll({include: {all: true}}).then(data => {
-      let items_all = parseItemsFromDb(data[0])
-      let items_filtered = filterItems(
-        req.body.filters,
-        'media',
-        items_all,
-        req.body.sortBy,
-        req.body.direction,
-        req.body.find_duplicates,
-        req.body.duplicates_by || 'filesize',
-      )
-      res.status(201).send({items: items_filtered, total: items_all.length})
-    }).catch(err => {
+      const result = await loadMediaItems(db, {
+        mediaTypeId: req.body.mediaTypeId,
+        ids,
+        filters: req.body.filters,
+        sortBy: req.body.sortBy,
+        direction: req.body.direction,
+        find_duplicates: req.body.find_duplicates,
+        duplicates_by: req.body.duplicates_by || 'filesize',
+        page,
+        limit: limit > 0 ? limit : null,
+        includeNavigation: req.body.includeNavigation === true && !ids.length,
+      })
+
+      res.status(201).send(result)
+    } catch (err) {
       res.status(500).send({
         message: err.message || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
   // Retrieve all Media from the database.

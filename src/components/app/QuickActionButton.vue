@@ -192,7 +192,10 @@ const selectVisible = () => {
 }
 
 const selectAll = () => {
-  const ids = ITEMS.value.entities.map(i => i.id)
+  const source = ITEMS.value.navigationItems.length
+    ? ITEMS.value.navigationItems
+    : ITEMS.value.entities
+  const ids = source.map(i => i.id)
   itemsStore.updateState({
     key: 'selection',
     value: ids

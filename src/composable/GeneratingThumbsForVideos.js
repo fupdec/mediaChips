@@ -26,6 +26,8 @@ export default function useVideoImageGenerator() {
   })
 
   const timeout = ref(null)
+  const processedVideoIds = ref(new Set())
+  const lastItemsCount = ref(0)
 
 // Computed свойства
   const apiUrl = computed(() => appStore.localhost)
@@ -168,7 +170,36 @@ export default function useVideoImageGenerator() {
     }
   }
 
+  const getVideosToProcess = (videos) => {
+    if (!Array.isArray(videos) || !videos.length) return []
+
+    return videos.filter((video) => video?.id && !processedVideoIds.value.has(video.id))
+  }
+
+  const markVideosProcessed = (videos) => {
+    for (const video of videos) {
+      if (video?.id) processedVideoIds.value.add(video.id)
+    }
+  }
+
+  const resetProcessedVideos = () => {
+    processedVideoIds.value = new Set()
+  }
+
   const generateImages = (videos) => {
+    if (!Array.isArray(videos)) return
+
+    if (videos.length === 0) {
+      resetProcessedVideos()
+      lastItemsCount.value = 0
+      return
+    }
+
+    if (videos.length < lastItemsCount.value) {
+      resetProcessedVideos()
+    }
+    lastItemsCount.value = videos.length
+
     // Очищаем предыдущий таймаут
     if (timeout.value) {
       clearTimeout(timeout.value)
@@ -181,15 +212,20 @@ export default function useVideoImageGenerator() {
 
     // Устанавливаем новый таймаут
     timeout.value = setTimeout(() => {
+      const videosToProcess = getVideosToProcess(videos)
+      if (!videosToProcess.length) return
+
+      markVideosProcessed(videosToProcess)
+
       if (!grid.value.active && settingsStore.videoPreviewStatic === 'grid') {
-        createGrids(videos)
+        createGrids(videosToProcess)
       }
 
       if (!timeline.value.active &&
         (settingsStore.videoPreviewHover === 'timeline' ||
           itemsStore.view === 2 ||
           itemsStore.view === '2')) {
-        createTimelines(videos)
+        createTimelines(videosToProcess)
       }
     }, 3000)
   }

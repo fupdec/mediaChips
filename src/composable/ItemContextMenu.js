@@ -214,8 +214,8 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
   }
 
   const editItem = () => {
-    if (type === 'media') {
-      dialogsStore.editMedia(item)
+    if (type === 'media' || currentMediaType.value) {
+      dialogsStore.editMedia(item, currentMediaType.value)
     } else if (type === 'tag') {
       dialogsStore.editTag(item, meta)
     }

@@ -39,8 +39,6 @@
     <DialogMediaEditing
       v-if="dialogsStore.mediaEditing.show"
       @close="dialogsStore.mediaEditing.show = false"
-      :media="dialogsStore.mediaEditing.media"
-      :media-type="dialogsStore.mediaEditing.mediaType"
     />
 
     <DialogBulkEditingItems
