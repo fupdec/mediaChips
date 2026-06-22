@@ -215,8 +215,8 @@ No extra GitHub secrets are required: the workflow uses the built-in `GITHUB_TOK
 
 - Tag `vX.Y.Z` must match `package.json` `version` exactly.
 - Portable Windows builds are not auto-updated in-app; users must download manually.
-- macOS builds are currently **unsigned** (`mac.identity: null`). Users may need to bypass Gatekeeper on first launch (see [INSTALLATION.md](./INSTALLATION.md)).
-- For signed macOS/Windows builds later, add secrets `CSC_LINK`, `CSC_KEY_PASSWORD` (and Apple notarization vars) to the repository.
+- macOS builds are **ad-hoc signed** (`identity: "-"`). Users still confirm the first launch via right-click → Open (see [INSTALLATION.md](./INSTALLATION.md)).
+- For fully trusted macOS/Windows builds later, add secrets `CSC_LINK`, `CSC_KEY_PASSWORD` (and Apple notarization vars) to the repository.
 
 ---
 
@@ -282,7 +282,7 @@ Keep backups of your databases before packaging, or store them outside the app b
 
 ### macOS code signing
 
-MediaChips is open source and uses self-signed builds. See [INSTALLATION.md](./INSTALLATION.md) for opening the app on macOS.
+Community macOS builds use **ad-hoc signing** so Apple Silicon does not show the unfixable "app is damaged" dialog. Users still need one right-click → **Open** on first launch. See [INSTALLATION.md](./INSTALLATION.md).
 
 ---
 

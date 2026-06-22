@@ -67,7 +67,7 @@ export function useAppUpdater() {
   }
 
   function dismiss() {
-    if (['available', 'downloaded', 'error', 'up-to-date'].includes(status.value.state)) {
+    if (['available', 'available-manual', 'downloaded', 'downloaded-manual', 'error', 'up-to-date'].includes(status.value.state)) {
       status.value = {...status.value, state: 'idle'}
     }
   }

@@ -20,7 +20,7 @@
 
     <template v-slot:actions>
       <v-btn
-        v-if="status.state === 'available'"
+        v-if="status.state === 'available' && !status.manualInstall"
         @click="handleDownload"
         color="success"
         variant="flat"
@@ -32,7 +32,18 @@
       </v-btn>
 
       <v-btn
-        v-if="status.state === 'downloaded'"
+        v-if="status.state === 'available-manual' || showManualInstall"
+        @click="handleInstall"
+        color="success"
+        variant="flat"
+        class="px-4"
+      >
+        <v-icon icon="mdi-download" start></v-icon>
+        {{ t('auto_update.download_dmg') }}
+      </v-btn>
+
+      <v-btn
+        v-if="status.state === 'downloaded' && !status.manualInstall"
         @click="handleInstall"
         color="success"
         variant="flat"
@@ -100,6 +111,11 @@ const message = computed(() => {
         current: status.value.currentVersion,
         next: status.value.nextVersion,
       })
+    case 'available-manual':
+      return t('auto_update.available_manual', {
+        current: status.value.currentVersion,
+        next: status.value.nextVersion,
+      })
     case 'downloading':
       return t('auto_update.downloading', {
         percent: Math.round(status.value.percent || 0),
@@ -108,11 +124,18 @@ const message = computed(() => {
       return t('auto_update.ready_to_install', {
         version: status.value.nextVersion,
       })
+    case 'downloaded-manual':
+      return t('auto_update.ready_to_install_manual', {
+        version: status.value.nextVersion,
+      })
     case 'up-to-date':
       return t('auto_update.up_to_date', {
         version: status.value.currentVersion,
       })
     case 'error':
+      if (isSignatureError.value) {
+        return t('auto_update.mac_unsigned_error')
+      }
       return t('auto_update.error', {
         message: status.value.message || t('auto_update.error_unknown'),
       })
@@ -122,20 +145,30 @@ const message = computed(() => {
 })
 
 const snackbarColor = computed(() => {
-  if (status.value.state === 'error') return 'error'
-  if (status.value.state === 'downloaded') return 'success'
+  if (status.value.state === 'error' && !isSignatureError.value) return 'error'
+  if (['downloaded', 'downloaded-manual'].includes(status.value.state)) return 'success'
   return undefined
 })
 
+const isSignatureError = computed(() => {
+  const message = String(status.value.message || '')
+  return /code signature/i.test(message) || /не удалось удовлетворить требован/i.test(message)
+})
+
+const showManualInstall = computed(() => (
+  status.value.state === 'downloaded-manual' ||
+  (status.value.state === 'error' && isSignatureError.value)
+))
+
 const snackbarTimeout = computed(() => {
-  if (['checking', 'downloading', 'available', 'downloaded', 'error'].includes(status.value.state)) {
+  if (['checking', 'downloading', 'available', 'available-manual', 'downloaded', 'downloaded-manual', 'error'].includes(status.value.state)) {
     return -1
   }
   return 4000
 })
 
 const showDismiss = computed(() => (
-  ['available', 'downloaded', 'error', 'up-to-date'].includes(status.value.state)
+  ['available', 'available-manual', 'downloaded', 'downloaded-manual', 'error', 'up-to-date'].includes(status.value.state)
 ))
 
 const dismissLabel = computed(() => (
@@ -143,7 +176,8 @@ const dismissLabel = computed(() => (
 ))
 
 const showFallbackDownload = computed(() => (
-  status.value.state === 'error' || status.value.state === 'disabled'
+  status.value.state === 'disabled' ||
+  (status.value.state === 'error' && !isSignatureError.value)
 ))
 
 watch(status, (value) => {
@@ -152,7 +186,7 @@ watch(status, (value) => {
     return
   }
 
-  if (['available', 'downloading', 'downloaded', 'error'].includes(value.state)) {
+  if (['available', 'available-manual', 'downloading', 'downloaded', 'downloaded-manual', 'error'].includes(value.state)) {
     show.value = true
     return
   }

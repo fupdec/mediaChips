@@ -5,16 +5,6 @@ All notable changes to MediaChips are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.13.2] - 2026-06-22
-
-### Added
-
-- **CHANGELOG.md** — release notes for v0.13.1 and later versions
-
-### Fixed
-
-- Release workflow version validation aligned with package version
-
 ## [0.13.1] - 2026-06-22
 
 ### Added
@@ -47,12 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linux CI build — use PNG icon instead of ICNS
 - macOS CI build — avoid universal binary failure with native `sharp` modules
 - Release publish workflow — single publish job, installer-only uploads, retries, git checkout for `gh release create`
+- **macOS auto-update** — unsigned builds cannot use in-place install; updater offers **Download DMG** instead of ShipIt install
+- macOS DMG window layout for drag-to-Applications install
 
 ### Upgrade notes
 
-- **From v0.13.0:** install v0.13.1 manually once; in-app auto-update works starting from this version
+- **From v0.13.0:** install v0.13.1 manually once; in-app auto-update works starting from this version (Windows/Linux fully; macOS checks for updates and opens DMG)
 - **Portable Windows** builds do not support in-app auto-update
-- **macOS** builds are unsigned; see [INSTALLATION.md](./INSTALLATION.md) for Gatekeeper steps
+- **macOS** builds are unsigned; see [INSTALLATION.md](./INSTALLATION.md) for Gatekeeper and manual update steps
 
 ## [0.13.0] - 2026-06-19
 

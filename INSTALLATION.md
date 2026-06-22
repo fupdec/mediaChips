@@ -4,7 +4,7 @@ Pre-built installers are published on [GitHub Releases](https://github.com/fupde
 
 | Platform | File |
 |----------|------|
-| macOS | `MediaChips.v<version>.Mac.arm64.dmg` / `MediaChips.v<version>.Mac.x64.dmg` — auto-update uses `MediaChips.v<version>.Mac.<arch>.zip` |
+| macOS | `MediaChips.v<version>.Mac.arm64.dmg` / `MediaChips.v<version>.Mac.x64.dmg` — signed builds auto-update via ZIP; unsigned builds use DMG manually |
 | Windows | `MediaChips.v<version>.Windows.Installer.exe` (NSIS installer) |
 | Linux | `MediaChips.v<version>.Linux.AppImage` |
 
@@ -16,6 +16,8 @@ NSIS (Windows), ZIP (macOS), and AppImage (Linux) builds support automatic updat
 2. Enable **Check for updates at startup** (enabled by default).
 3. When a new release is published on GitHub, the app offers to download and install it.
 
+**macOS (unsigned builds):** the app can detect new versions, but Apple blocks in-place install without a Developer ID signature. Use **Download DMG** in the update notification and install manually (see macOS section below).
+
 Portable Windows builds and development builds do not support in-app auto-update — download a new installer from [Releases](https://github.com/fupdec/MediaChips/releases/latest) instead.
 
 To build from source, see [README.md](./README.md).
@@ -24,26 +26,43 @@ To build from source, see [README.md](./README.md).
 
 ## macOS
 
-### Method 1: Standard installation
+> **First launch without an Apple certificate:** macOS will warn that the developer is unknown. That is expected for open-source builds. After installing, use **right-click → Open** once — later launches work normally with a double-click.
 
-1. Download `MediaChips-<version>.dmg` from [Releases](https://github.com/fupdec/mediaChips/releases/latest).
-2. Open the DMG file.
-3. Drag **MediaChips** to the **Applications** folder.
-4. **Right-click** MediaChips in Applications and choose **Open**.
-5. Click **Open** in the security dialog.
+### Quick start (recommended)
 
-### Method 2: Terminal (fastest)
+1. Download the DMG for your Mac:
+   - Apple Silicon (M1/M2/M3/M4): `MediaChips.v<version>.Mac.arm64.dmg`
+   - Intel: `MediaChips.v<version>.Mac.x64.dmg`
+2. Open the DMG and drag **MediaChips** to **Applications**.
+3. Open **Finder → Applications**.
+4. **Right-click** (or Control-click) **MediaChips** and choose **Open**.
+5. In the dialog, click **Open** again.
 
-After downloading and installing the app:
+Do **not** double-click the app the first time — macOS only shows the **Open** button in the security dialog after a right-click open.
+
+### Method 2: Terminal (if the app still won't open)
+
+After copying the app to Applications:
 
 ```bash
-sudo xattr -rd com.apple.quarantine /Applications/MediaChips.app
+xattr -rd com.apple.quarantine /Applications/MediaChips.app
 open /Applications/MediaChips.app
 ```
 
-### Why is the app self-signed?
+`sudo` is usually not required. Use it only if you get a permission error.
 
-MediaChips is free and open source. Apple charges a yearly fee for notarized distribution, so community builds are self-signed instead of passing that cost on to users.
+### Two different macOS warnings
+
+| What you see | Cause | Comfortable fix |
+|--------------|-------|-----------------|
+| **"cannot be opened because the developer cannot be verified"** | No Apple Developer ID (expected) | Right-click → **Open**, or **System Settings → Privacy & Security → Open Anyway** |
+| **"is damaged and can't be opened"** / **Move to Trash** | Download quarantine + missing code signature on Apple Silicon | Remove quarantine (`xattr` above) or use a build with ad-hoc signing |
+
+Community releases are **ad-hoc signed** (not notarized). That removes the harsh "damaged" / trash dialog on Apple Silicon, but macOS still asks you to confirm the first launch.
+
+### Why isn't the app notarized?
+
+MediaChips is free and open source. Apple charges a yearly fee for notarized distribution, so community builds stay ad-hoc signed instead of passing that cost on to users.
 
 ### Security
 
@@ -79,10 +98,15 @@ chmod +x MediaChips-*.AppImage
 
 ### "MediaChips is damaged and can't be opened"
 
+This usually means the downloaded file is still quarantined, or you are using an older unsigned build:
+
 ```bash
-sudo xattr -rd com.apple.quarantine /Applications/MediaChips.app
-sudo codesign --force --deep --sign - /Applications/MediaChips.app
+xattr -rd com.apple.quarantine /Applications/MediaChips.app
+codesign --force --deep --sign - /Applications/MediaChips.app
+open /Applications/MediaChips.app
 ```
+
+If that does not help, download the latest release — newer builds are ad-hoc signed in CI.
 
 ### App won't open
 

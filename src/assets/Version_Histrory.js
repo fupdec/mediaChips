@@ -7,7 +7,7 @@ export const history = [
       <p><strong>MediaChips v0.13.1</strong> adds in-app auto-update, automated GitHub releases, Images media type, server-side pagination, and Windows Electron UI fixes.</p>
       <h3>Added:</h3>
       <ul>
-        <li><strong>In-app auto-update</strong> for Windows (NSIS), macOS (ZIP), and Linux (AppImage)</li>
+        <li><strong>In-app auto-update</strong> for Windows (NSIS) and Linux (AppImage); on macOS — check for updates and download DMG (unsigned build)</li>
         <li><strong>Settings → About</strong> — manual update check and “check at startup” option</li>
         <li><strong>GitHub Actions</strong> — CI and multi-platform release pipeline</li>
         <li><strong>Images media type</strong> across backend and UI</li>
@@ -30,6 +30,7 @@ export const history = [
       <h3>Notes:</h3>
       <ul>
         <li>Users on <strong>v0.13.0</strong> must install v0.13.1 manually once</li>
+        <li><strong>macOS (unsigned):</strong> use <strong>Download DMG</strong> in the update notification — in-place install is blocked by Apple</li>
         <li><strong>Portable</strong> Windows builds still require a manual download</li>
         <li>Full changelog: <a href="https://github.com/fupdec/MediaChips/blob/master/CHANGELOG.md" target="_blank">CHANGELOG.md</a></li>
       </ul>

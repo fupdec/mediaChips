@@ -62,8 +62,6 @@ jobs:
 
       - name: Build installers
         run: npm run ${{ matrix.script }}
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - name: Collect distribution files
         shell: bash
