@@ -6,6 +6,7 @@ module.exports = function (db) {
         where: {
           playlistId: req.params.id
         },
+        order: [['order', 'ASC']],
         include: [db.Media, db.Playlist]
       })
       .then(data => {

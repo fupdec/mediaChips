@@ -191,15 +191,8 @@ const selectVisible = () => {
   })
 }
 
-const selectAll = () => {
-  const source = ITEMS.value.navigationItems.length
-    ? ITEMS.value.navigationItems
-    : ITEMS.value.entities
-  const ids = source.map(i => i.id)
-  itemsStore.updateState({
-    key: 'selection',
-    value: ids
-  })
+const selectAll = async () => {
+  await itemsStore.selectAllFiltered()
 }
 </script>
 

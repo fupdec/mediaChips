@@ -138,7 +138,7 @@
               text: t('common.save'),
               color: 'success',
               outlined: false,
-              actions: save,
+              action: save,
             },
           ]"
           closable
@@ -506,19 +506,19 @@ const save = async () => {
       url: `${apiUrl.value}/api/SavedFilter`,
       data: {
         name: filterName.value,
-        mediaTypeId: ENV.value.media_type_id,
-        metaId: ENV.value.meta_id,
-        tagId: ENV.value.tag_id,
-        tabId: ENV.value.tab_id
+        mediaTypeId: ENV.value.media_type_id ?? null,
+        metaId: ENV.value.meta_id ?? null,
+        tagId: ENV.value.tag_id ?? null,
+        tabId: ENV.value.tab_id ?? null,
       }
     })
-    savedFilter = response.data[0]
+    savedFilter = response.data?.[0] || response.data
   } catch (error) {
     console.error('Error saving filter:', error)
     return
   }
 
-  if (!_.isEmpty(savedFilter)) {
+  if (savedFilter?.id) {
     await addFilterRows(savedFilter.id, true)
   }
 

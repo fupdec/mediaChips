@@ -19,6 +19,10 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.INTEGER,
         defaultValue: 0,
       },
+      contentHash: {
+        type: Sequelize.STRING(64),
+        allowNull: true,
+      },
       rating: {
         type: Sequelize.INTEGER,
         defaultValue: 0

@@ -110,5 +110,14 @@ module.exports = (app, db) => {
   // download and warm up the local parser model
   router.post("/downloadParserModel", Task.downloadParserModel);
 
+  // content hash backfill for existing media
+  router.get("/contentHashBackfillStatus", Task.contentHashBackfillStatus);
+  router.post("/streamContentHashBackfill", Task.streamContentHashBackfill);
+
+  // find and relink missing media files on disk
+  router.get("/missingMediaStatus", Task.missingMediaStatus);
+  router.post("/streamFindMissingMedia", Task.streamFindMissingMedia);
+  router.post("/relinkMissingMedia", Task.relinkMissingMedia);
+
   app.use('/api/Task', router);
 };

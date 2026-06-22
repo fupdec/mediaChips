@@ -23,6 +23,15 @@ const videoClipTagger = require('../services/videoClipTagger')
 const embeddingModel = require('../services/embeddingModel')
 const {isVideoMediaType, isImageMediaType} = require('../utils/mediaType')
 const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
+const {computeContentHash, fileExists} = require('../services/contentHash')
+const {
+  getContentHashBackfillStatus,
+  iterateContentHashBackfill,
+} = require('../services/contentHashBackfill')
+const {
+  getMissingMediaStatus,
+  iterateMissingMediaSearch,
+} = require('../services/missingMediaFinder')
 
 const GENERATED_MEDIA_FOLDERS = {
   timelines: 'media/videos/timelines',
@@ -240,7 +249,6 @@ module.exports = function (db) {
     let stats = await stat(pathToFile)
     let filesize = stats.size;
 
-    // проверка на дубликат по размеру файла
     const isUniqueByParameter = async (parameter, value) => {
       let duplicate
 
@@ -273,24 +281,88 @@ module.exports = function (db) {
       return {isCreated: false, duplicate: duplicate_by_path}
     }
 
-    if (is_check_duplicates && !isImageMediaType(mediaType)) {
-      const duplicate_by_filesize = await isUniqueByParameter('filesize', filesize);
-      if (duplicate_by_filesize) {
-        return {isCreated: false, duplicate: duplicate_by_filesize}
+    let contentHash = null
+    try {
+      contentHash = await computeContentHash(pathToFile)
+    } catch (error) {
+      console.error(`Content hash failed for ${pathToFile}:`, error.message)
+    }
+
+    if (is_check_duplicates && contentHash) {
+      let duplicate_by_hash = await db.Media.findOne({
+        where: {contentHash},
+      })
+
+      if (!duplicate_by_hash) {
+        const legacyCandidates = await db.Media.findAll({
+          where: {
+            filesize,
+            contentHash: null,
+          },
+        })
+
+        const missingPathCandidates = []
+
+        for (const candidate of legacyCandidates) {
+          const candidatePathExists = await fileExists(candidate.path)
+
+          if (!candidatePathExists) {
+            missingPathCandidates.push(candidate)
+            continue
+          }
+
+          try {
+            const candidateHash = await computeContentHash(candidate.path)
+            await candidate.update({contentHash: candidateHash})
+
+            if (candidateHash === contentHash) {
+              duplicate_by_hash = candidate
+              break
+            }
+          } catch (error) {
+            console.error(`Content hash failed for ${candidate.path}:`, error.message)
+          }
+        }
+
+        if (!duplicate_by_hash && missingPathCandidates.length === 1) {
+          duplicate_by_hash = missingPathCandidates[0]
+          await duplicate_by_hash.update({contentHash})
+        }
       }
+
+      if (duplicate_by_hash) {
+        const existingPathExists = await fileExists(duplicate_by_hash.path)
+
+        return {
+          isCreated: false,
+          duplicate: {
+            parameter: 'content_hash',
+            path: duplicate_by_hash.path,
+            id: duplicate_by_hash.id,
+            reason: existingPathExists ? 'duplicate' : 'moved',
+            new_path: pathToFile,
+          },
+        }
+      }
+    }
+
+    const defaults = {
+      filesize: filesize,
+      ext: path.extname(pathToFile),
+      basename: path.basename(pathToFile),
+      name: path.parse(pathToFile).name,
+      mediaTypeId: mediaType.id,
+    }
+
+    if (contentHash) {
+      defaults.contentHash = contentHash
     }
 
     const [media, isCreated] = await db.Media.findOrCreate({
       where: {
         path: pathToFile,
       },
-      defaults: {
-        filesize: filesize,
-        ext: path.extname(pathToFile),
-        basename: path.basename(pathToFile),
-        name: path.parse(pathToFile).name,
-        mediaTypeId: mediaType.id,
-      },
+      defaults,
     })
 
     if (!isCreated) {
@@ -1338,6 +1410,131 @@ module.exports = function (db) {
     }
   }
 
+  const contentHashBackfillStatus = async (req, res) => {
+    try {
+      const status = await getContentHashBackfillStatus(db)
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while checking content hash status."
+      })
+    }
+  }
+
+  const streamContentHashBackfill = async (req, res) => {
+    const writeEvent = (event) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    let stopped = false
+    req.on('close', () => {
+      stopped = true
+    })
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      for await (const event of iterateContentHashBackfill(db, {
+        shouldStop: () => stopped || res.writableEnded,
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: err.message || "Some error occurred while backfilling content hashes."
+      })
+      res.end()
+    }
+  }
+
+  const missingMediaStatus = async (req, res) => {
+    try {
+      const status = await getMissingMediaStatus(db)
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while checking missing media status."
+      })
+    }
+  }
+
+  const streamFindMissingMedia = async (req, res) => {
+    const writeEvent = (event) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    let stopped = false
+    req.on('close', () => {
+      stopped = true
+    })
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const folders = Array.isArray(req.body?.folders) ? req.body.folders : []
+
+      for await (const event of iterateMissingMediaSearch(db, {
+        folders,
+        shouldStop: () => stopped || res.writableEnded,
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: err.message || "Some error occurred while searching for missing media."
+      })
+      res.end()
+    }
+  }
+
+  const relinkMissingMedia = async (req, res) => {
+    try {
+      const matches = Array.isArray(req.body?.matches) ? req.body.matches : []
+      let updated = 0
+
+      for (const item of matches) {
+        const filePath = item.newPath || item.path
+        const mediaId = item.id
+
+        if (!filePath || !mediaId) continue
+
+        const data = {
+          path: filePath,
+          basename: path.basename(filePath),
+          name: path.parse(filePath).name,
+          ext: path.extname(filePath),
+        }
+
+        if (item.contentHash) {
+          data.contentHash = item.contentHash
+        }
+
+        await db.Media.update(data, {
+          where: {id: mediaId},
+          silent: true,
+        })
+
+        updated += 1
+      }
+
+      res.status(201).send({updated})
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while relinking missing media."
+      })
+    }
+  }
+
   return {
     importSavedFilters,
     checkFileExists,
@@ -1372,5 +1569,10 @@ module.exports = function (db) {
     downloadParserModel,
     clipModelStatus,
     downloadClipModel,
+    contentHashBackfillStatus,
+    streamContentHashBackfill,
+    missingMediaStatus,
+    streamFindMissingMedia,
+    relinkMissingMedia,
   }
 }

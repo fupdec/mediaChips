@@ -8,6 +8,7 @@
       {'big-preview': big_preview},
       {'item-media': type === 'media'},
       {'item-tag': type === 'tag'},
+      {'item--selecting': itemsStore.isSelect},
       `item__size-${itemsStore.size}`,
       `item-view-${itemsStore.view}`,
     ]"
@@ -128,17 +129,11 @@
       </div>
     </v-chip>
 
-    <v-overlay
+    <div
       v-if="itemsStore.isSelect"
       @click.stop="toggleSelect"
-      :model-value="true"
-      :scrim="is_selected ? 'primary' : '#000'"
-      z-index="1"
-      absolute
-      contained
-      class="align-center justify-center"
-      style="cursor: pointer; border-radius: 14px;"
-      activator="parent"
+      :class="{ 'item-select-overlay--selected': is_selected }"
+      class="item-select-overlay"
     >
       <v-btn v-if="is_selected"
              color="primary"
@@ -146,7 +141,7 @@
              icon>
         <v-icon> mdi-check</v-icon>
       </v-btn>
-    </v-overlay>
+    </div>
   </div>
 </template>
 

@@ -1,5 +1,41 @@
 .item {
   position: relative;
+
+  &--selecting {
+    overflow: hidden;
+  }
+
+  .item-select-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    cursor: pointer;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: #000;
+      opacity: 0.32;
+      pointer-events: none;
+    }
+
+    &--selected::before {
+      background: rgb(var(--v-theme-primary));
+    }
+
+    .v-btn {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
   & > .v-card {
     z-index: initial;
   }

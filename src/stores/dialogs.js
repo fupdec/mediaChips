@@ -14,6 +14,7 @@ export const useDialogsStore = defineStore('useDialogsStore', {
     markAdding: {show: false, type: 'favorite', meta: {}, time: null, end: null, color: '#fff', is_end_time_active: false},
     error: {show: false, text: null},
     confirm: {show: false, text: null, action: null, checkBox: false, checkBoxText: ''},
+    playlistAdd: {show: false, mediaIds: []},
     process: {show: false, text: null},
     tabEditing: {show: false, tab: null},
     about: {show: false},
@@ -49,6 +50,14 @@ export const useDialogsStore = defineStore('useDialogsStore', {
     },
     showAbout() {
       this.about.show = true
+    },
+    createPlaylistForMedia(mediaIds) {
+      this.playlistAdd.mediaIds = Array.isArray(mediaIds) ? mediaIds : [mediaIds]
+      this.playlistAdd.show = true
+    },
+    closePlaylistAdd() {
+      this.playlistAdd.show = false
+      this.playlistAdd.mediaIds = []
     },
   }
 })

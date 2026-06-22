@@ -15,6 +15,8 @@ import {
   isImageMediaType,
   isVideoMediaType,
 } from '@/utils/mediaType'
+import translate from '@/utils/translate'
+import {resolveSelectedMediaItems} from '@/utils/resolveSelection'
 
 export default function useItemContextMenu(item, type, meta, is_file_exists, emitFn) {
   const store = useAppStore()
@@ -169,23 +171,40 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
         action: organizeFolderByTag,
       })
 
-      let menuPlaylists = (playlistsStore || []).map(i => {
-        return {
+      const getMediaIdsForPlaylist = () => {
+        if (itemsStore.isSelect) return [...itemsStore.selection]
+        return [item.id]
+      }
+
+      let menuPlaylists = [
+        {
+          name: translate('playlists.create_playlist', {}, settingsStore.locale),
+          type: "item",
+          icon: "playlist-plus",
+          action: () => {
+            dialogsStore.createPlaylistForMedia(getMediaIdsForPlaylist())
+          },
+        },
+      ]
+
+      if ((playlistsStore || []).length > 0) {
+        menuPlaylists.push({type: "divider"})
+        menuPlaylists.push(...(playlistsStore || []).map(i => ({
           name: i.name,
           type: "item",
           icon: "plus",
           action: async () => {
             await addMediaToPlaylist(item.id, i.id)
           },
-        }
-      })
+        })))
+      }
 
       contextMenu.push({
-        name: `Add to playlist`,
+        name: translate('playlists.add_to_playlist', {}, settingsStore.locale),
         type: "menu",
         icon: "playlist-plus",
         menu: menuPlaylists,
-        disabled: (itemsStore.isSelect && itemsStore.selection.length === 0) || menuPlaylists.length == 0,
+        disabled: itemsStore.isSelect && itemsStore.selection.length === 0,
       })
 
       contextMenu.push({type: "divider"})
@@ -250,12 +269,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
   const parseMetadata = async () => {
     let videos = [];
     if (itemsStore.isSelect) {
-      let ids = itemsStore.selection;
-      let entities = itemsStore.entities;
-      for (let id of ids) {
-        const x = entities.findIndex((i) => i.id === id);
-        if (x > -1) videos.push(entities[x]);
-      }
+      videos = await resolveSelectedMediaItems(itemsStore.selection)
     } else videos.push(item);
 
     let vals = [];
@@ -410,6 +424,8 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
     })
   }
 
+  const resolveSelectedMedia = resolveSelectedMediaItems
+
   const deleteItem = () => {
     const deleteItems = async () => {
       const is_checked = dialogsStore.confirm.checkBox
@@ -426,14 +442,16 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       }
 
       let deleted_items_names = []
+      const itemsToDelete = type === 'media' && itemsStore.isSelect
+        ? await resolveSelectedMedia(ids)
+        : ids
+          .map((id) => itemsStore.entities.find((entry) => entry.id === id))
+          .filter(Boolean)
 
-      for (const id of ids) {
-        let found = itemsStore.entities.find((s) => s.id === id)
-        if (!found) continue
-
+      for (const found of itemsToDelete) {
         deleted_items_names.push(found.name)
 
-        data = {...data, ...{id, path: found.path}}
+        data = {...data, ...{id: found.id, path: found.path}}
 
         try {
           await axios({

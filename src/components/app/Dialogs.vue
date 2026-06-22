@@ -56,6 +56,14 @@
       @close="dialogsStore.confirm.show = false"
     />
 
+    <DialogPlaylistAdd
+      v-if="dialogsStore.playlistAdd.show"
+      :dialog="dialogsStore.playlistAdd.show"
+      :mediaIds="dialogsStore.playlistAdd.mediaIds"
+      @close="dialogsStore.closePlaylistAdd()"
+      @add="dialogsStore.closePlaylistAdd()"
+    />
+
     <DialogFolder v-if="watcherStore.dialogFolder"/>
 
     <DialogSelectFolder
@@ -157,6 +165,9 @@ const DialogFolder = defineAsyncComponent(() =>
 )
 const DialogGlobalDeleteConfirm = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogGlobalDeleteConfirm.vue')
+)
+const DialogPlaylistAdd = defineAsyncComponent(() =>
+  import('@/components/dialogs/DialogPlaylistAdd.vue')
 )
 const DialogSelectFolder = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogSelectFolder.vue')

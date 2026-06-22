@@ -64,9 +64,18 @@ const parseItemsFromDb = (items) => {
   return parsed;
 }
 
+const resolveMetaId = (param) => {
+  if (typeof param === 'number' && Number.isFinite(param)) return param
+  if (typeof param === 'string' && /^\d+$/.test(param)) return Number(param)
+  return null
+}
+
 const filterItems = (filters_all, type, items, sortBy, direction, find_duplicates, duplicates_by = 'filesize') => {
   // отсеиваем неактивные и без условий (в случае бага)
-  let filters = filters_all.filter(i => i.active && i.cond)
+  let filters = filters_all.filter(i => {
+    const isActive = i.active === true || i.active === 1 || i.active === '1'
+    return isActive && i.cond
+  })
 
   // Исправляем обращение к FilterCols
   let videoCols = [];
@@ -90,15 +99,18 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
   let array_count = 0; // для подсчета фильтров с типом массив
 
   const filterItem = (item) => {
-    const compare = (sign, a, b) => {
-      if (b === undefined || b === null || b.length == 0) return false
-      if (sign === 'equal' || sign === '=') return a == b
-      if (sign === 'not equal' || sign === '!==') return a != b
-      if (sign === 'greater than' || sign === '>') return a < b
-      if (sign === 'less than' || sign === '<') return a > b
-      if (sign === 'greater than or equal' || sign === '>=') return a <= b
-      if (sign === 'less than or equal' || sign === '<=') return a >= b
-      else return false
+    const compareNumber = (sign, filterValue, itemValue) => {
+      const a = Number(filterValue)
+      const b = Number(itemValue)
+      if (Number.isNaN(a) || Number.isNaN(b)) return false
+
+      if (sign === 'equal' || sign === '=') return b === a
+      if (sign === 'not equal' || sign === '!==') return b !== a
+      if (sign === 'greater than' || sign === '>') return b > a
+      if (sign === 'less than' || sign === '<') return b < a
+      if (sign === 'greater than or equal' || sign === '>=') return b >= a
+      if (sign === 'less than or equal' || sign === '<=') return b <= a
+      return false
     }
 
     let filters_matches = [];
@@ -110,17 +122,17 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
       let type = filter.type
       let flag = filter.flag
       let is_match = false;
-      let item_val = item[by];
+      const metaId = resolveMetaId(by)
+      let item_val
+
+      if (metaId !== null) {
+        const found = item.values?.find(i => Number(i.metaId) === metaId)
+        item_val = found?.value
+      } else {
+        item_val = item[by]
+      }
 
       if (type == 'string' && val) val = val.toLowerCase().trim()
-
-      // если фильтруем по мете то берем значение меты в этом предмете
-      if (typeof by !== 'string') {
-        const found = item.values.find(i => i.metaId === by)
-        if (found) {
-          item_val = found.value;
-        }
-      }
       if (type === 'boolean') {
         is_match = item_val === '1' || item_val === 1
         if (cond === '!=') {
@@ -129,15 +141,18 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
       } else if (type === 'date') {
         item_val = new Date(item_val)
         val = new Date(val)
-        is_match = compare(cond, val, item_val)
-      } else if (type === 'number' || type === 'rating') {
-        if (typeof item_val === 'string') {
-          item_val = Number(item_val)
-        }
-        if (item_val !== null && item_val !== undefined) {
-          is_match = compare(cond, val, item_val)
+        if (Number.isNaN(item_val.getTime()) || Number.isNaN(val.getTime())) {
+          is_match = false
         } else {
-          is_match = false;
+          is_match = compareNumber(cond, val.getTime(), item_val.getTime())
+        }
+      } else if (type === 'number' || type === 'rating') {
+        if (item_val === null || item_val === undefined || item_val === '') {
+          is_match = false
+        } else if (val === null || val === undefined || val === '') {
+          is_match = false
+        } else {
+          is_match = compareNumber(cond, val, item_val)
         }
       } else if (type === 'string') {
         if (cond == 'includes' || cond == 'like') {
@@ -166,8 +181,8 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
           if (!_.isEmpty(item.country)) {
             tags = parseCountries(item.country)
           }
-        } else {
-          tags = item.tags.filter(i => i.metaId === by)
+        } else if (metaId !== null) {
+          tags = item.tags.filter(i => Number(i.metaId) === metaId)
           tags = tags.map(i => i.tagId)
         }
 

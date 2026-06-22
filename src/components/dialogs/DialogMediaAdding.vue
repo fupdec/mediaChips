@@ -61,9 +61,8 @@
             />
           </v-form>
 
-          <!-- Опция проверки дубликатов (только для видео — по размеру файла) -->
+          <!-- Проверка дубликатов по содержимому файла -->
           <v-checkbox
-            v-if="showFilesizeDuplicateCheck"
             v-model="mediaAddingState.is_check_duplicates"
             :label="t('media.adding.check_duplicates')"
             class="mt-0 mb-2 mr-4"
@@ -71,7 +70,7 @@
           />
 
           <v-alert
-            v-else-if="isImageAdding"
+            v-if="isImageAdding"
             type="info"
             variant="tonal"
             density="compact"
@@ -187,8 +186,6 @@ const currentMediaType = computed(() =>
 )
 
 const isImageAdding = computed(() => isImageMediaType(currentMediaType.value))
-
-const showFilesizeDuplicateCheck = computed(() => !isImageAdding.value)
 
 const dialogHeader = computed(() => {
   const typeName = getMediaTypeName(currentMediaType.value, t)

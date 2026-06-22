@@ -161,6 +161,20 @@
               </v-card>
             </v-col>
           </v-row>
+
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-card class="mb-6" elevation="4" rounded="xl">
+                <SettingsContentHashBackfill/>
+              </v-card>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-card class="mb-6" elevation="4" rounded="xl">
+                <SettingsFindMissingMedia/>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-container>
       </v-window-item>
 
@@ -226,6 +240,12 @@ const SettingsDatabases = defineAsyncComponent(() =>
 )
 const SettingsClearGeneratedImages = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsClearGeneratedImages.vue")
+)
+const SettingsContentHashBackfill = defineAsyncComponent(() =>
+  import("@/components/settings/database/SettingsContentHashBackfill.vue")
+)
+const SettingsFindMissingMedia = defineAsyncComponent(() =>
+  import("@/components/settings/database/SettingsFindMissingMedia.vue")
 )
 const SettingsGeneral = defineAsyncComponent(() =>
   import("@/components/settings/general/SettingsGeneral.vue")

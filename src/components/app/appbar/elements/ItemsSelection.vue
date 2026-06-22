@@ -39,6 +39,10 @@ const { t } = useI18n()
 const filesizes = computed(() => {
   if (itemsStore.type !== 'media') return ''
 
+  if (itemsStore.isAllFilteredSelected) {
+    return $readable.getReadableFileSize(itemsStore.totalFilesize)
+  }
+
   const selectedFiles = itemsStore.entities.filter(i =>
     itemsStore.selection.includes(i.id)
   )
@@ -76,7 +80,7 @@ function selectVisible() {
   itemsStore.selection = itemsStore.itemsOnPage.map(i => i.id)
 }
 
-function selectAll() {
-  itemsStore.selection = itemsStore.entities.map(i => i.id)
+async function selectAll() {
+  await itemsStore.selectAllFiltered()
 }
 </script>

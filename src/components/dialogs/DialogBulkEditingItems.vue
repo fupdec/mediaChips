@@ -16,6 +16,28 @@
       />
 
       <v-card-text class="pa-2 pa-sm-4">
+        <v-alert
+          v-if="itemsStore.selection.length"
+          type="info"
+          class="text-caption mb-4"
+          variant="tonal"
+          density="compact"
+          rounded="xl"
+        >
+          {{ t('bulk_editing.selected_count', { count: itemsStore.selection.length }) }}
+        </v-alert>
+
+        <v-alert
+          v-if="saving"
+          type="warning"
+          class="text-caption mb-4"
+          variant="tonal"
+          density="compact"
+          rounded="xl"
+        >
+          {{ t('bulk_editing.saving') }}
+        </v-alert>
+
         <v-alert v-if="pinned.length" type="info" class="text-caption mb-4" variant="tonal" density="compact" rounded="xl" closable>
           <span>{{ t('bulk_editing.mode_hint') }}<br>{{ t('bulk_editing.processing_hint') }}<br>
             <v-icon icon="mdi-cancel" color="info" size="small" class="mr-1"/> {{ t('bulk_editing.mode_keep') }} <br>
@@ -187,6 +209,7 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
+import {shouldReloadListAfterBulkAction} from '@/utils/resolveSelection'
 
 const {xs, xl} = useDisplay()
 const appStore = useAppStore()
@@ -202,6 +225,7 @@ const buttons = ref([])
 const values = ref({})
 const edits = ref({})
 const key = ref(Date.now())
+const saving = ref(false)
 const datePicker = ref({
   dialog: false,
   metaId: null,
@@ -254,102 +278,45 @@ const save = async () => {
   const items_type = itemsStore.type
   const selected_items_ids = itemsStore.selection
 
+  if (!selected_items_ids.length || saving.value) return
+
+  const changes = pinned.value
+    .map((meta) => ({
+      metaId: meta.id,
+      editType: edits.value[meta.id] || 0,
+      metaType: meta.type,
+      value: values.value[meta.id],
+    }))
+    .filter((change) => change.editType > 0)
+
+  if (!changes.length) {
+    close()
+    return
+  }
+
+  saving.value = true
+
   try {
-    for (let item_id of selected_items_ids) {
-      for (let meta_id in values.value) {
-        meta_id = Number(meta_id)
-        const meta = pinned.value.find(i => i.id === meta_id)
-        const edit_type = edits.value[meta_id]
-        const value = values.value[meta_id]
-
-        if (!meta) continue
-
-        if (edit_type === 1 || edit_type === 2) { // если удалить или заменить
-          if (meta.type === "array") {
-            await axios({
-              method: "post",
-              url: appStore.localhost + `/api/TagsIn${items_type}/deleteAllTagsByMetaId`,
-              data: {
-                itemId: item_id,
-                metaId: meta_id,
-              },
-            })
-          } else {
-            await axios({
-              method: "post",
-              url: appStore.localhost + `/api/ValuesIn${items_type}/delete`,
-              data: {
-                itemId: item_id,
-                metaId: meta_id,
-              },
-            })
-          }
-        }
-
-        if (edit_type === 2) { // заменить
-          if (meta.type === "array") {
-            // записываем новые теги
-            await axios({
-              method: "post",
-              url: appStore.localhost + `/api/TagsIn${items_type}`,
-              data: value.map(i => ({
-                parentTagId: items_type === 'tag' ? item_id : undefined,
-                mediaId: items_type === 'media' ? item_id : undefined,
-                metaId: meta_id,
-                tagId: i,
-              })),
-            })
-          } else {
-            // записываем новое значение
-            await axios({
-              method: "post",
-              url: appStore.localhost + `/api/ValuesIn${items_type}`,
-              data: [{
-                value: value,
-                metaId: meta_id,
-                mediaId: items_type === 'media' ? item_id : undefined,
-                tagId: items_type === 'tag' ? item_id : undefined,
-              }],
-            })
-          }
-        } else if (edit_type === 3) { // добавить
-          for (let tag_id of value) {
-            let data = {
-              metaId: meta_id,
-              tagId: tag_id,
-            }
-
-            if (items_type === 'media') {
-              data.mediaId = item_id
-            } else if (items_type === 'tag') {
-              data.parentTagId = item_id
-            }
-
-            await axios({
-              method: "post",
-              url: appStore.localhost + `/api/TagsIn${items_type}/createOne`,
-              data,
-            })
-          }
-        }
-      }
-    }
+    await axios.post(`${appStore.localhost}/api/bulk-meta/apply`, {
+      itemType: items_type,
+      itemIds: selected_items_ids,
+      changes,
+    })
 
     close()
 
-    // обновляем предметы на фронте
-    eventBus.emit("getItemsFromDb", {
-      ids: selected_items_ids,
-      type: items_type,
-    });
+    const reloadList = shouldReloadListAfterBulkAction(selected_items_ids)
+    eventBus.emit('getItemsFromDb', reloadList
+      ? {type: items_type}
+      : {ids: selected_items_ids, type: items_type})
 
-    // Сбрасываем выделение
     itemsStore.selection = []
     itemsStore.selected_last = null
     itemsStore.isSelect = false
-
   } catch (error) {
     console.error('Error saving bulk edits:', error)
+  } finally {
+    saving.value = false
   }
 }
 

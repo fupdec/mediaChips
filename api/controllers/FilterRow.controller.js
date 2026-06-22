@@ -2,81 +2,81 @@ module.exports = function (db) {
   const { serializeCountries } = require('../utils/country')
   // Create and Save a new FilterRow
   const create = async function (req, res) {
-    let filterObj = req.body.filter
-    let val = filterObj.val
-    // getting values from filter row
-    if (filterObj.type == 'array' && filterObj.param !== 'country')
-      filterObj.val = null
-    if (filterObj.param == 'country' && filterObj.val) {
-      filterObj.val = serializeCountries(filterObj.val)
-    }
+    try {
+      const filterObj = {...req.body.filter}
+      const val = filterObj.val
+      const rowId = req.body.rowId || null
+      const filterId = req.body.filterId
 
-    const [filterRow, isCreated] = await db.FilterRow.findOrCreate({
-      where: {
-        id: req.body.rowId,
-      },
-      defaults: filterObj,
-    }).catch(err => {
+      if (filterObj.type == 'array' && filterObj.param !== 'country') {
+        filterObj.val = null
+      }
+      if (filterObj.param == 'country' && val) {
+        filterObj.val = serializeCountries(val)
+      }
+
+      const allowedFields = ['param', 'type', 'cond', 'val', 'active', 'note', 'lock', 'union']
+      const payload = {}
+      for (const key of allowedFields) {
+        if (Object.prototype.hasOwnProperty.call(filterObj, key)) {
+          payload[key] = filterObj[key]
+        }
+      }
+
+      let filterRow
+
+      if (rowId) {
+        const existing = await db.FilterRow.findByPk(rowId)
+        if (existing) {
+          await existing.update(payload)
+          filterRow = existing
+        } else {
+          filterRow = await db.FilterRow.create(payload)
+        }
+      } else {
+        filterRow = await db.FilterRow.create(payload)
+      }
+
+      if (filterId) {
+        await db.FilterRowsInSavedFilter.findOrCreate({
+          where: {
+            filterId,
+            rowId: filterRow.id,
+          },
+          defaults: {
+            filterId,
+            rowId: filterRow.id,
+          },
+        })
+      }
+
+      if (filterObj.type == 'array' && filterObj.param !== 'country') {
+        await db.TagsInFilterRow.destroy({
+          where: {
+            rowId: filterRow.id,
+          },
+        })
+
+        if (filterObj.cond?.includes('null') === false && val !== undefined && val !== null && val !== '') {
+          for (const tagId of val) {
+            await db.TagsInFilterRow.findOrCreate({
+              where: {
+                tagId,
+                rowId: filterRow.id,
+                metaId: filterRow.param,
+              },
+            })
+          }
+        }
+      }
+
+      res.status(201).send(filterRow)
+    } catch (err) {
       console.log(err)
       res.status(500).send({
         message: err.message || "Some error occurred while performing query."
       })
-    })
-
-    if (isCreated) {
-      await db.FilterRowsInSavedFilter.create({
-        filterId: req.body.filterId,
-        rowId: filterRow.id
-      }).catch(err => {
-        console.log(err)
-        res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
-        })
-      })
-    } else {
-      await db.FilterRow.update(filterObj, {
-        where: {
-          id: req.body.rowId,
-        },
-      }).catch(err => {
-        console.log(err)
-        res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
-        })
-      })
     }
-
-    if (filterObj.type == 'array' && filterObj.param !== 'country') {
-      // deleting previously stored values
-      await db.TagsInFilterRow.destroy({
-        where: {
-          rowId: filterRow.id
-        }
-      }).catch(err => {
-        console.log(err)
-        res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
-        })
-      })
-      // TODO fix multiple filter rows with tags as param 'by'
-      if (!filterObj.cond.includes('null') && val !== undefined && val !== null && val !== '')
-        for (let i of val) {
-          console.log(i)
-          await db.TagsInFilterRow.findOrCreate({
-            where: {
-              tagId: i,
-              rowId: filterRow.id,
-              metaId: filterRow.param
-            }
-          }).catch(err => {
-            console.log(err)
-            res.status(500).send({
-              message: err.message || "Some error occurred while performing query."
-            })
-          })
-        }
-    }
-    res.sendStatus(201)
   };
 
   // Find a single FilterRow with an id

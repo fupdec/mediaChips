@@ -116,6 +116,7 @@
           <v-chip
             @click="is_show_added = !is_show_added"
             :text="t('media.adding.added_count', {count: task.added.length})"
+            prepend-icon="mdi-plus"
             color="success"
             class="mb-2"
             size="small"
@@ -136,29 +137,14 @@
 
         <!-- Existing files (by path) -->
         <div v-if="duplicates_by_path.length">
-          <v-card-actions class="pa-0 mb-2">
-            <v-chip
-              @click="is_show_duplicates_by_path = !is_show_duplicates_by_path"
-              :text="t('media.adding.existing_count', {count: duplicates_by_path.length})"
-              color="info"
-              size="small"
-            />
-
-            <v-spacer></v-spacer>
-
-            <v-btn
-              @click="deletePathDuplicates"
-              :disabled="task.active"
-              color="error"
-              class="pr-4"
-              variant="flat"
-              rounded
-              size="small"
-            >
-              <v-icon icon="mdi-delete-alert" class="mr-1"></v-icon>
-              {{ t('media.adding.delete_incoming_files') }}
-            </v-btn>
-          </v-card-actions>
+          <v-chip
+            @click="is_show_duplicates_by_path = !is_show_duplicates_by_path"
+            :text="t('media.adding.existing_count', {count: duplicates_by_path.length})"
+            prepend-icon="mdi-check"
+            color="info"
+            class="mb-2"
+            size="small"
+          />
           <v-card v-if="is_show_duplicates_by_path" variant="outlined" class="pa-2">
             <v-virtual-scroll
               :height="duplicates_by_path.length > 10 ? 150 : duplicates_by_path.length * 15"
@@ -173,12 +159,56 @@
           </v-card>
         </div>
 
-        <!-- Duplicates by filesize -->
-        <div v-if="duplicates_by_filesize.length">
+        <!-- Moved files (same content, old path missing) -->
+        <div v-if="moved_files.length">
           <v-card-actions class="pa-0 mt-4 mb-2">
             <v-chip
-              @click="is_show_duplicates_by_filesize = !is_show_duplicates_by_filesize"
-              :text="t('media.adding.duplicates_by_size_count', {count: duplicates_by_filesize.length})"
+              @click="is_show_moved_files = !is_show_moved_files"
+              :text="t('media.adding.moved_files_count', {count: moved_files.length})"
+              color="secondary"
+              size="small"
+            />
+
+            <v-spacer></v-spacer>
+
+            <v-btn
+              @click="relinkMovedFiles"
+              :disabled="task.active"
+              color="primary"
+              class="pr-4"
+              variant="flat"
+              rounded
+              size="small"
+            >
+              <v-icon icon="mdi-folder-move" class="mr-1"></v-icon>
+              {{ t('media.adding.relink_moved_files') }}
+            </v-btn>
+          </v-card-actions>
+
+          <v-card v-if="is_show_moved_files" variant="outlined" class="pa-2">
+            <v-virtual-scroll
+              :height="moved_files.length > 10 ? 150 : moved_files.length * 30"
+              :items="moved_files"
+              class="virtual-scroller"
+              item-height="30"
+            >
+              <template v-slot:default="{ item }">
+                <div class="text-caption selectable">
+                  <div>{{ item.path }}</div>
+                  <div class="text-medium-emphasis">{{ item.duplicate?.path }}</div>
+                </div>
+              </template>
+            </v-virtual-scroll>
+          </v-card>
+        </div>
+
+        <!-- Duplicates by content hash -->
+        <div v-if="duplicates_by_content_hash.length">
+          <v-card-actions class="pa-0 mt-4 mb-2">
+            <v-chip
+              @click="is_show_duplicates_by_content_hash = !is_show_duplicates_by_content_hash"
+              :text="t('media.adding.duplicates_by_content_count', {count: duplicates_by_content_hash.length})"
+              prepend-icon="mdi-alert"
               color="warning"
               size="small"
             />
@@ -212,10 +242,10 @@
             </v-btn>
           </v-card-actions>
 
-          <v-card v-if="is_show_duplicates_by_filesize" variant="outlined" class="pa-2">
+          <v-card v-if="is_show_duplicates_by_content_hash" variant="outlined" class="pa-2">
             <v-virtual-scroll
-              :height="duplicates_by_filesize.length > 10 ? 150 : duplicates_by_filesize.length * 15"
-              :items="duplicates_by_filesize"
+              :height="duplicates_by_content_hash.length > 10 ? 150 : duplicates_by_content_hash.length * 15"
+              :items="duplicates_by_content_hash"
               class="virtual-scroller"
               item-height="15"
             >
@@ -281,7 +311,8 @@ const eventBus = useEventBus()
 // Reactive state
 const buttons = ref([])
 const is_show_added = ref(false)
-const is_show_duplicates_by_filesize = ref(false)
+const is_show_duplicates_by_content_hash = ref(false)
+const is_show_moved_files = ref(false)
 const is_show_duplicates_by_path = ref(false)
 const is_show_errors = ref(false)
 const clipModelStatus = ref('unknown')
@@ -305,10 +336,16 @@ const duplicates_by_path = computed(() => {
     .map(i => i.path)
 })
 
-const duplicates_by_filesize = computed(() => {
+const duplicates_by_content_hash = computed(() => {
   return task.value.duplicates
-    .filter(i => i.duplicate?.parameter === 'filesize')
+    .filter(i => i.duplicate?.parameter === 'content_hash' && i.duplicate?.reason === 'duplicate')
     .map(i => i.path)
+})
+
+const moved_files = computed(() => {
+  return task.value.duplicates.filter(
+    i => i.duplicate?.parameter === 'content_hash' && i.duplicate?.reason === 'moved',
+  )
 })
 
 // Methods
@@ -327,42 +364,14 @@ const stop = () => {
   buttons.value = []
 }
 
-const deletePathDuplicates = async () => {
-  dialogsStore.confirm.show = true
-  dialogsStore.confirm.text = t('media.adding.delete_files_confirm')
-  dialogsStore.confirm.action = async () => {
-    try {
-      const dupes = task.value.duplicates.filter(i => i.duplicate?.parameter === 'path')
-
-      for (const dupe of dupes) {
-        if (!dupe.path) continue
-
-        try {
-          await $operable.deleteLocalFile(dupe.path)
-        } catch (error) {
-          console.error('Error deleting local file:', error)
-        }
-      }
-
-      $operable.setNotification({
-        type: 'success',
-        title: t('media.adding.deleting_files'),
-        text: t('media.adding.files_deleted')
-      })
-
-      eventBus.emit('update:watcher')
-    } catch (error) {
-      console.error('Error deleting path duplicates:', error)
-    }
-  }
-}
-
 const deleteDuplicates = async (delete_type) => {
   dialogsStore.confirm.show = true
   dialogsStore.confirm.text = t('media.adding.delete_files_confirm')
   dialogsStore.confirm.action = async () => {
     try {
-      const dupes = task.value.duplicates.filter(i => i.duplicate?.parameter === 'filesize')
+      const dupes = task.value.duplicates.filter(
+        i => i.duplicate?.parameter === 'content_hash' && i.duplicate?.reason === 'duplicate',
+      )
 
       for (const dupe of dupes) {
         const file_path = delete_type === 'incoming' ? dupe.path : dupe.duplicate?.path
@@ -406,12 +415,56 @@ const deleteDuplicates = async (delete_type) => {
         text: t('media.adding.files_deleted')
       })
 
-      // Обновляем стор watcher
       eventBus.emit('update:watcher')
 
     } catch (error) {
       console.error('Error deleting duplicates:', error)
     }
+  }
+}
+
+const relinkMovedFiles = async () => {
+  const dupes = moved_files.value
+
+  if (!dupes.length) return
+
+  try {
+    for (const dupe of dupes) {
+      if (!dupe.duplicate?.id || !dupe.path) continue
+
+      await axios({
+        method: "post",
+        url: appStore.localhost + "/api/media/updatePath",
+        data: {
+          id: dupe.duplicate.id,
+          path: dupe.path,
+        },
+      })
+    }
+
+    const ids = dupes.map(i => i.duplicate?.id).filter(Boolean)
+
+    if (ids.length > 0) {
+      eventBus.emit('getItemsFromDb', {
+        ids: ids,
+        type: 'media',
+      })
+    }
+
+    $operable.setNotification({
+      type: 'success',
+      title: t('media.adding.relink_moved_files'),
+      text: t('media.adding.paths_relinked', {count: dupes.length}),
+    })
+
+    eventBus.emit('update:watcher')
+  } catch (error) {
+    console.error('Error relinking moved files:', error)
+    $operable.setNotification({
+      type: 'error',
+      title: t('media.adding.relink_moved_files'),
+      text: error.response?.data?.message || error.message,
+    })
   }
 }
 

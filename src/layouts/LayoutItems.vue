@@ -66,7 +66,7 @@
     <!-- TODO запоминать номер страницы и сохранять в БД -->
 
     <div
-      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.page == pages"
+      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length >= ITEMS.totalFiltered && ITEMS.totalFiltered > 0"
       class="scroll-top-after-items"
     >
       <v-btn
@@ -149,7 +149,7 @@
     </div>
 
     <div
-      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && (loader.show || isLoadingMore) && ITEMS.page != pages"
+      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length < ITEMS.totalFiltered && (loader.show || isLoadingMore)"
       :class="{ 'infinite-loader': is_not_full_height && items_type !== 'media' }"
       class="infinite-loader-full-height"
     >
@@ -484,22 +484,41 @@ const getMediaType = async () => {
 const applyMediaListResponse = (response, {append = false} = {}) => {
   const pageItems = response.data.items || []
 
-  itemsStore.updateState({
-    key: 'navigationItems',
-    value: response.data.navigation || [],
-  })
-  itemsStore.updateState({
-    key: 'totalFiltered',
-    value: response.data.totalFiltered ?? pageItems.length,
-  })
-  itemsStore.updateState({
-    key: 'totalFilesize',
-    value: response.data.totalFilesize || 0,
-  })
+  if (response.data.navigation) {
+    itemsStore.updateState({
+      key: 'navigationItems',
+      value: response.data.navigation,
+    })
+  }
 
-  totalInDb.value = response.data.total || 0
-  total.value = response.data.totalFiltered ?? pageItems.length
-  pages.value = response.data.pages || 1
+  if (response.data.totalFiltered != null) {
+    itemsStore.updateState({
+      key: 'totalFiltered',
+      value: response.data.totalFiltered,
+    })
+    total.value = response.data.totalFiltered
+  } else if (!append) {
+    itemsStore.updateState({
+      key: 'totalFiltered',
+      value: pageItems.length,
+    })
+    total.value = pageItems.length
+  }
+
+  if (response.data.totalFilesize != null) {
+    itemsStore.updateState({
+      key: 'totalFilesize',
+      value: response.data.totalFilesize || 0,
+    })
+  }
+
+  if (response.data.total != null) {
+    totalInDb.value = response.data.total || 0
+  }
+
+  if (response.data.pages != null) {
+    pages.value = response.data.pages || 1
+  }
 
   const nextItems = append
     ? _.uniqBy([...ITEMS.value.itemsOnPage, ...pageItems], 'id')
@@ -536,17 +555,18 @@ const getItemsFromDb = async (ids) => {
   }
   query.ids = ids || [];
 
+  const appendMediaPage = props.items_type === 'media'
+    && is_infinite_scroll.value
+    && ITEMS.value.page > 1
+    && (!ids || !ids.length)
+
   if (props.items_type === 'media') {
     query.includeNavigation = false
     const pageLimit = is_infinite_scroll.value ? 25 : ITEMS.value.limit
     query.page = ITEMS.value.page || 1
     query.limit = pageLimit
+    query.skipTotals = appendMediaPage
   }
-
-  const appendMediaPage = props.items_type === 'media'
-    && is_infinite_scroll.value
-    && ITEMS.value.page > 1
-    && (!ids || !ids.length)
 
   if (ids && ids.length > 0) {
     await axios.post(apiUrl.value + url, query)
@@ -703,8 +723,8 @@ const changePage = (val) => {
 
 const loadNextInfinitePage = async () => {
   if (!is_infinite_scroll.value) return;
-  if (ITEMS.value.page >= pages.value) return;
   if (loader.value.is_busy || isLoadingMore.value) return;
+  if (ITEMS.value.itemsOnPage.length >= ITEMS.value.totalFiltered) return;
 
   isLoadingMore.value = true;
   try {
