@@ -190,10 +190,20 @@ export default {
       },
 
       async openPath(entryPath, isDirectory) {
-        return await axios.post(IP + "/api/Task/openPath", {
-          path: entryPath,
-          isDir: isDirectory,
-        });
+        try {
+          return await axios.post(IP + "/api/Task/openPath", {
+            path: entryPath,
+            isDir: isDirectory,
+          });
+        } catch (error) {
+          const message = error.response?.data?.message || error.message
+          operable.setNotification({
+            type: 'error',
+            title: 'Failed to open path',
+            text: message,
+          })
+          throw error
+        }
       },
 
       async getWatchedFolders() {

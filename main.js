@@ -4,6 +4,7 @@ const {
   ipcMain,
   Menu,
   dialog,
+  shell,
 } = require('electron')
 process.electron_app = app
 
@@ -101,6 +102,17 @@ const createWindow = () => {
 }
 
 ipcMain.handle('get-config', () => server.config)
+
+ipcMain.handle('openPath', async (event, data) => {
+  let entryPath = typeof data === 'string' ? data : data?.path
+  if (!entryPath) return {error: 'Path is required'}
+
+  entryPath = path.normalize(entryPath)
+  if (data?.isDir) entryPath = path.dirname(entryPath)
+
+  const error = await shell.openPath(entryPath)
+  return error ? {error} : {success: true}
+})
 
 ipcMain.handle('toggleDevTools', () => {
   if (win && !win.isDestroyed()) {

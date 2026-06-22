@@ -140,25 +140,30 @@ module.exports = function (db) {
   }
 
   const openPath = async function (req, res) {
-    let entryPath = path.join(req.body.path)
+    let entryPath = path.normalize(req.body.path)
     if (req.body.isDir) entryPath = path.dirname(entryPath)
 
-    function getCommandLine() {
-      switch (process.platform) {
-        case 'darwin' :
-          return 'open';
-        case 'win32' :
-          return 'start ""';
-        case 'win64' :
-          return 'start ""';
-        default :
-          return 'xdg-open';
-      }
+    const fail = (message) => res.status(400).send({message})
+
+    try {
+      const {shell} = require('electron')
+      const error = await shell.openPath(entryPath)
+      if (error) return fail(error)
+      return res.sendStatus(201)
+    } catch (_) {
+      // Non-Electron environment (e.g. standalone API dev server)
     }
 
-    const exec = require('child_process').exec;
-    exec(getCommandLine() + ` "${entryPath}"`);
-    res.sendStatus(201)
+    const command = process.platform === 'darwin'
+      ? `open ${JSON.stringify(entryPath)}`
+      : process.platform === 'win32'
+        ? `start "" ${JSON.stringify(entryPath)}`
+        : `xdg-open ${JSON.stringify(entryPath)}`
+
+    exec(command, (err) => {
+      if (err) return fail(err.message)
+      res.sendStatus(201)
+    })
   }
 
   const getFileList = async function (req, res) {
