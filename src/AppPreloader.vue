@@ -94,6 +94,7 @@ import ContextMenu from "@/components/app/ContextMenu.vue"
 import AutoUpdater from "@/components/app/AutoUpdater.vue"
 import Dialogs from "@/components/app/Dialogs.vue"
 import {useAppUpdater} from '@/composable/useAppUpdater'
+import {useAppZoom} from '@/composable/useAppZoom'
 
 const settingsStore = useSettingsStore()
 const store = useAppStore()
@@ -121,6 +122,7 @@ const isWin = userAgent.includes('windows')
 store.isElectron = isElectron
 
 const isPlayerWindow = computed(() => !!route.query.player)
+const appZoom = route.query.player ? null : useAppZoom()
 const isPlayerShow = computed(() => isPlayerWindow.value || player.active)
 const contextMenu = computed(() => contextMenuStore)
 
@@ -236,6 +238,7 @@ const handleLockApp = () => {
 
 let unsubscribeAboutApp
 let unsubscribeLockApp
+let unsubscribeZoomChanged
 
 /* ------------------------- MOUNTED ------------------------- */
 
@@ -251,6 +254,17 @@ onMounted(async () => {
   applyTheme()
   applyLocale()
   checkLogin()
+
+  if (appZoom) {
+    await appZoom.initFromSettings()
+    window.addEventListener('keydown', appZoom.handleKeydown)
+    window.addEventListener('wheel', appZoom.handleWheel, {passive: false})
+
+    if (store.isElectron && window.electronAPI?.on) {
+      unsubscribeZoomChanged = window.electronAPI.on('zoom-changed', appZoom.syncFromElectron)
+    }
+  }
+
   await getMachineId()
   await getFolders()
 
@@ -307,6 +321,12 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', saveWindowSize)
   unsubscribeAboutApp?.()
   unsubscribeLockApp?.()
+  unsubscribeZoomChanged?.()
+
+  if (appZoom) {
+    window.removeEventListener('keydown', appZoom.handleKeydown)
+    window.removeEventListener('wheel', appZoom.handleWheel)
+  }
 })
 </script>
 

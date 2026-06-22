@@ -86,6 +86,7 @@
               <v-card class="mb-6" elevation="4" rounded="xl">
                 <v-card-text>
                   <SettingsAppearanceDarkMode></SettingsAppearanceDarkMode>
+                  <SettingsAppearanceZoom></SettingsAppearanceZoom>
                 </v-card-text>
               </v-card>
 
@@ -211,6 +212,8 @@ import SettingsAppearanceCards
   from "@/components/settings/appearance/SettingsAppearanceCards.vue";
 import SettingsAppearanceDarkMode
   from "@/components/settings/appearance/SettingsAppearanceDarkMode.vue";
+import SettingsAppearanceZoom
+  from "@/components/settings/appearance/SettingsAppearanceZoom.vue";
 import SettingsAppearancePage
   from "@/components/settings/appearance/SettingsAppearancePage.vue";
 

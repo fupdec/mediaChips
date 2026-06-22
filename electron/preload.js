@@ -43,6 +43,8 @@ const validInvokeChannels = [
   'updater:install',
   'updater:get-state',
   'updater:is-supported',
+  'setZoomFactor',
+  'getZoomFactor',
 ];
 
 const validOnChannels = [
@@ -62,6 +64,7 @@ const validOnChannels = [
   'navigationBack',
   'navigationForward',
   'updater:status',
+  'zoom-changed',
 ];
 
 const listenerSubscriptions = new Map();

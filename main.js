@@ -40,7 +40,27 @@ const useWinElectronFrame = isWindows || TEMP_FORCE_WIN_ELECTRON_UI
 let win = null
 let loading = null
 let player = null
+let suppressZoomChangedEvent = false
 const isDevelopment = process.env.NODE_ENV !== 'production'
+
+const bindZoomChangedListener = (browserWindow) => {
+  if (!browserWindow || browserWindow.isDestroyed()) return
+
+  browserWindow.webContents.on('zoom-changed', () => {
+    if (suppressZoomChangedEvent) return
+    browserWindow.webContents.send('zoom-changed', browserWindow.webContents.getZoomFactor())
+  })
+}
+
+const setWebContentsZoomFactor = (webContents, factor) => {
+  if (!webContents || webContents.isDestroyed()) return 1
+
+  const clamped = Math.min(3, Math.max(0.5, Number(factor) || 1))
+  suppressZoomChangedEvent = true
+  webContents.setZoomFactor(clamped)
+  suppressZoomChangedEvent = false
+  return clamped
+}
 
 const sendConfigToWindow = (browserWindow) => {
   if (!browserWindow || browserWindow.isDestroyed()) return
@@ -88,6 +108,7 @@ const createWindow = () => {
   win.on('focus', () => {
     win.webContents.send('focus')
   })
+  bindZoomChangedListener(win)
   win.once('ready-to-show', () => {
     win.show()
   })
@@ -103,6 +124,18 @@ const createWindow = () => {
 }
 
 ipcMain.handle('get-config', () => server.config)
+
+ipcMain.handle('setZoomFactor', (event, factor) => {
+  const browserWindow = BrowserWindow.fromWebContents(event.sender)
+  if (!browserWindow || browserWindow.isDestroyed()) return 1
+  return setWebContentsZoomFactor(browserWindow.webContents, factor)
+})
+
+ipcMain.handle('getZoomFactor', (event) => {
+  const browserWindow = BrowserWindow.fromWebContents(event.sender)
+  if (!browserWindow || browserWindow.isDestroyed()) return 1
+  return browserWindow.webContents.getZoomFactor()
+})
 
 ipcMain.handle('checkFileExists', async (_event, data) => {
   const filePath = typeof data === 'string' ? data : data?.path
@@ -283,6 +316,16 @@ let systemMenu = Menu.buildFromTemplate([
         }
       }
     ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      {role: 'zoomIn'},
+      {role: 'zoomOut'},
+      {role: 'resetZoom'},
+      {type: 'separator'},
+      {role: 'togglefullscreen'},
+    ],
   },
   {
     label: 'Edit',
