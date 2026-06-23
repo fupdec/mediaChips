@@ -382,6 +382,8 @@ const es = {
     },
     top_tags: {
       top_by_views: 'Top {count} por vistas',
+      top_by_menu: 'Top {count} por orden del menú',
+      top_alphabet: 'Top {count} alfabéticamente',
       open_tag: "Abrir etiqueta '{name}'",
       show_more: 'Mostrar {count} más de {total}',
       show_more_short: '+{count}',
@@ -437,7 +439,7 @@ const es = {
       typing: 'Escritura',
       result: 'Resultado',
       count_views: 'Contar número de vistas',
-      count_views_hint: 'Las vistas se agregan cuando se abre un medio o una etiqueta',
+      count_views_hint: 'Las vistas se agregan cuando se abre un medio, una etiqueta o una página de categoría',
       language: 'Idioma',
       languages: {
         en: 'Inglés',
@@ -452,6 +454,12 @@ const es = {
       home_widget_extended_stats: 'Estadísticas extendidas',
       home_widget_quick_actions: 'Acciones rápidas',
       home_widget_top_tags: 'Etiquetas más vistas',
+    },
+    meta: {
+      sort_label: 'Ordenar metadatos',
+      sort_popularity: 'Por popularidad',
+      sort_menu: 'Por orden del menú',
+      sort_alphabet: 'Alfabéticamente',
     },
     appearance: {
       title: 'Apariencia',

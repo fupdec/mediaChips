@@ -33,13 +33,17 @@
         class="added-top blur"
       ></div>
 
-      <div class="main-scroll">
-        <div :class="addedTopClasses"
-          class="main-scroll-inner">
+      <div class="main-scroll" :class="{'main-scroll--settings': isSettingsPage}">
+        <div
+          :class="[addedTopClasses, {'main-scroll-inner--settings': isSettingsPage}]"
+          class="main-scroll-inner"
+        >
           <router-view :key="route.fullPath + upd"/>
 
-          <div v-if="settingsStore.bottomBar == '1' || mobile"
-            class="py-6"></div>
+          <div
+            v-if="(settingsStore.bottomBar == '1' || mobile) && !isSettingsPage"
+            class="py-6"
+          ></div>
         </div>
       </div>
     </v-main>
@@ -130,6 +134,8 @@ const addedTopClasses = computed(() => ({
   'windows-os-added-top': isWin && isElectron,
   'added-top-tabs': store.tabs.length,
 }))
+
+const isSettingsPage = computed(() => route.path === '/settings')
 
 const apiUrl = computed(() => store.localhost)
 
@@ -371,6 +377,17 @@ body {
       padding-top: calc(48px + 32px + 28px);
     }
   }
+}
+
+.main-scroll--settings {
+  overflow: hidden;
+}
+
+.main-scroll-inner--settings {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .added-top {

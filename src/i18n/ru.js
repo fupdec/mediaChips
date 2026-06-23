@@ -382,6 +382,8 @@ const ru = {
     },
     top_tags: {
       top_by_views: 'Топ {count} по просмотрам',
+      top_by_menu: 'Топ {count} по порядку в меню',
+      top_alphabet: 'Топ {count} по алфавиту',
       open_tag: "Открыть тег «{name}»",
       show_more: 'Показать еще {count} из {total}',
       show_more_short: '+{count}',
@@ -437,7 +439,7 @@ const ru = {
       typing: 'Ввод',
       result: 'Результат',
       count_views: 'Считать количество просмотров',
-      count_views_hint: 'Просмотры добавляются при открытии медиа или тега',
+      count_views_hint: 'Просмотры добавляются при открытии медиа, тега или страницы категории',
       language: 'Язык',
       languages: {
         en: 'Английский',
@@ -452,6 +454,12 @@ const ru = {
       home_widget_extended_stats: 'Расширенная статистика',
       home_widget_quick_actions: 'Быстрые действия',
       home_widget_top_tags: 'Топ тегов по просмотрам',
+    },
+    meta: {
+      sort_label: 'Сортировка метаданных',
+      sort_popularity: 'По популярности',
+      sort_menu: 'По списку в меню',
+      sort_alphabet: 'По алфавиту',
     },
     appearance: {
       title: 'Внешний вид',

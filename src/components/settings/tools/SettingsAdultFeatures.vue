@@ -15,9 +15,7 @@
       option="showAdultContent"
     ></settings-switch>
 
-    <v-card v-if="settingsStore.showAdultContent == '1'"
-      color="rgb(150 150 150 / 9%)"
-      variant="flat">
+    <div v-if="settingsStore.showAdultContent == '1'">
       <v-row>
         <v-col cols="12"
           sm="6">
@@ -65,7 +63,7 @@
           </v-btn>
         </v-col>
       </v-row>
-    </v-card>
+    </div>
   </div>
 </template>
 

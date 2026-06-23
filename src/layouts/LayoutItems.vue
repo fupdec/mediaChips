@@ -323,6 +323,9 @@ const image_filters_no_results = computed(() => {
 const init = async () => {
   if (props.items_type === 'tag') {
     await getMeta();
+    if (!props.tagId && meta.value?.id) {
+      await itemsStore.countViewNumber(meta.value, 'meta')
+    }
   } else if (props.items_type === 'media') {
     await getMediaType();
   }

@@ -29,7 +29,7 @@
       <div class="text-medium-emphasis">{{ t('meta.dialogs.meta_missing_add_first') }}</div>
     </div>
 
-    <div v-if="initiated && meta.length" class="d-flex align-center">
+    <div v-if="initiated && meta.length" class="d-flex align-center flex-wrap ga-4 mb-2">
       <v-text-field
         v-model="search"
         append-inner-icon="mdi-magnify"
@@ -42,10 +42,21 @@
         max-width="300"
       ></v-text-field>
 
+      <v-select
+        :model-value="sortMode"
+        @update:model-value="setSortMode"
+        :items="sortOptions"
+        :label="t('settings_labels.meta.sort_label')"
+        hide-details
+        variant="filled"
+        density="compact"
+        max-width="260"
+      ></v-select>
+
       <v-switch
         v-model="detailed"
         :label="t('common.detailed')"
-        class="mt-0 ml-6"
+        class="mt-0"
         inset
         hide-details
         density="compact"
@@ -137,6 +148,11 @@
                     <v-icon color="grey" start size="small">mdi-text-box-search</v-icon>
                     <span class="text-medium-emphasis">{{ t('meta.fields.parser') }}</span>
                   </v-chip>
+
+                  <v-chip v-if="settingsStore.count_number_of_views === '1'" size="small" variant="outlined">
+                    <v-icon color="primary" start size="small">mdi-eye</v-icon>
+                    <span class="text-medium-emphasis">{{ m.views || 0 }}</span>
+                  </v-chip>
                 </div>
               </v-card-text>
 
@@ -191,12 +207,15 @@
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
+import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import axios from 'axios'
 import _ from 'lodash'
 import MetaManager from '@/components/dialogs/DialogMetaManager.vue'
+import {getMetaSortOptions, groupMetaByType, META_SORT_MODES} from '@/utils/metaSort'
 
 const appStore = useAppStore()
+const settingsStore = useSettingsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
@@ -210,24 +229,23 @@ const editMode = ref(false)
 const metaKey = ref(0)
 
 const apiUrl = computed(() => appStore.localhost)
+const sortMode = computed(() => settingsStore.meta_sort_mode || META_SORT_MODES.menu)
+const sortOptions = computed(() => getMetaSortOptions(t))
 
 const filteredMeta = computed(() => {
   const searchTerm = search.value?.toLowerCase() || ''
 
-  let filtered = meta.value.filter(item => {
+  const filtered = meta.value.filter(item => {
     if (!searchTerm) return true
     return item.name.toLowerCase().includes(searchTerm)
   })
 
-  const customOrder = ['array', 'number', 'date', 'string', 'rating']
-
-  filtered = _.orderBy(filtered, [
-    (item) => customOrder.indexOf(item.type),
-    'value',
-  ])
-
-  return _.groupBy(filtered, 'type')
+  return groupMetaByType(filtered, sortMode.value)
 })
+
+const setSortMode = (value) => {
+  $operable.setOption(value, 'meta_sort_mode')
+}
 
 const isSearchEmpty = computed(() => _.isEmpty(filteredMeta.value))
 

@@ -15,7 +15,7 @@
             {{ getMetaName(category.meta, t) }}
           </div>
           <div class="text-caption text-medium-emphasis">
-            {{ t('widgets.top_tags.top_by_views', { count: category.tags.length }) }}
+            {{ t(subtitleKey, { count: category.tags.length }) }}
           </div>
         </div>
       </div>
@@ -42,7 +42,7 @@
             </div>
 
             <v-chip
-              v-if="tag.views"
+              v-if="tag.views && sortMode === META_SORT_MODES.popularity"
               class="widget-top-tags__badge"
               color="primary"
               size="x-small"
@@ -78,13 +78,19 @@
 import {ref, computed, watch, onMounted} from "vue"
 import {useRouter} from "vue-router"
 import {useAppStore} from "@/stores/app"
+import {useSettingsStore} from "@/stores/settings"
 import {useI18n} from 'vue-i18n'
-import _orderBy from "lodash-es/orderBy"
 import _groupBy from "lodash-es/groupBy"
 import _cloneDeep from "lodash-es/cloneDeep"
 import path from "path-browserify"
 import {getMetaName} from '@/utils/metaI18n'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {
+  sortMetaItems,
+  sortTagItems,
+  getTopTagsSubtitleKey,
+  META_SORT_MODES,
+} from '@/utils/metaSort'
 
 const props = defineProps({
   limit: {
@@ -94,6 +100,7 @@ const props = defineProps({
 })
 
 const store = useAppStore()
+const settingsStore = useSettingsStore()
 const router = useRouter()
 const {t} = useI18n()
 
@@ -101,6 +108,8 @@ const tagsTop = ref([])
 
 const tags = computed(() => store.tags)
 const metas = computed(() => store.meta)
+const sortMode = computed(() => settingsStore.meta_sort_mode || META_SORT_MODES.menu)
+const subtitleKey = computed(() => getTopTagsSubtitleKey(sortMode.value))
 
 async function getTagsTop(activeGroup = null) {
   if (!metas.value.length) return
@@ -108,18 +117,23 @@ async function getTagsTop(activeGroup = null) {
   const grouped = _groupBy(tags.value, "metaId")
   const reservedCopy = _cloneDeep(grouped)
   const groups = []
+  const visibleMetas = sortMetaItems(
+    metas.value.filter((meta) => meta.type === 'array' && !meta.hidden),
+    sortMode.value,
+  )
 
-  for (const metaId in grouped) {
+  for (const meta of visibleMetas) {
+    const metaId = String(meta.id)
+    if (!grouped[metaId]?.length) continue
+
     let limit = props.limit
 
-    if (activeGroup && activeGroup.meta.id === Number(metaId)) {
+    if (activeGroup && activeGroup.meta.id === meta.id) {
       limit = activeGroup.limit + 10
     }
 
-    const sorted = _orderBy(grouped[metaId], "views", "desc").slice(0, limit)
-
-    const meta = store.getMetaById(Number(metaId))
-    if (!meta || meta.hidden || !sorted.length) continue
+    const sorted = sortTagItems(grouped[metaId], sortMode.value).slice(0, limit)
+    if (!sorted.length) continue
 
     for (const tag of sorted) {
       const imgPath = path.join(
@@ -152,6 +166,7 @@ function openTagPage(meta, tag) {
 watch(tags, () => getTagsTop())
 watch(metas, () => getTagsTop())
 watch(() => props.limit, () => getTagsTop())
+watch(sortMode, () => getTagsTop())
 
 onMounted(() => {
   window.dispatchEvent(new CustomEvent("getTags"))

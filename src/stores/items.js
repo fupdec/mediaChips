@@ -270,23 +270,41 @@ export const useItemsStore = defineStore('items', {
       const appStore = useAppStore()
       const settingsStore = useSettingsStore()
 
-      if (settingsStore.count_number_of_views === '1') {
+      if (settingsStore.count_number_of_views !== '1' || !item?.id) return
 
-        await axios({
-          method: "put",
-          url: appStore.localhost + `/api/media/` + item.id,
-          data: {
-            views: item.views + 1,
-            viewedAt: $readable.getDateForDB(),
-            silent: true,
-          },
-        })
+      const apiModels = {
+        media: 'Media',
+        tag: 'Tag',
+        meta: 'Meta',
+      }
+      const model = apiModels[itemType] || 'Media'
+      const data = {
+        views: (item.views || 0) + 1,
+        silent: true,
+      }
 
-        // Эмит события для обновления
-        eventBus.emit('getItemsFromDb', {
-          ids: [item.id],
-          type: itemType || 'media',
-        })
+      if (itemType === 'media' || itemType === 'tag') {
+        data.viewedAt = $readable.getDateForDB()
+      }
+
+      await axios({
+        method: 'put',
+        url: `${appStore.localhost}/api/${model}/${item.id}`,
+        data,
+      })
+
+      if (itemType === 'meta') {
+        eventBus.emit('getMeta')
+        return
+      }
+
+      eventBus.emit('getItemsFromDb', {
+        ids: [item.id],
+        type: itemType || 'media',
+      })
+
+      if (itemType === 'tag') {
+        eventBus.emit('getTags')
       }
     },
 

@@ -382,6 +382,8 @@ const en = {
     },
     top_tags: {
       top_by_views: 'Top {count} by views',
+      top_by_menu: 'Top {count} by menu order',
+      top_alphabet: 'Top {count} alphabetically',
       open_tag: "Open tag '{name}'",
       show_more: 'Show more {count} of {total}',
       show_more_short: '+{count}',
@@ -437,7 +439,7 @@ const en = {
       typing: 'Typing',
       result: 'Result',
       count_views: 'Count number of views',
-      count_views_hint: 'Views are added when media or tag is opened',
+      count_views_hint: 'Views are added when media, tag, or category page is opened',
       language: 'Language',
       languages: {
         en: 'English',
@@ -452,6 +454,12 @@ const en = {
       home_widget_extended_stats: 'Extended statistics',
       home_widget_quick_actions: 'Quick actions',
       home_widget_top_tags: 'Top tags by views',
+    },
+    meta: {
+      sort_label: 'Sort metadata',
+      sort_popularity: 'By popularity',
+      sort_menu: 'By menu order',
+      sort_alphabet: 'Alphabetically',
     },
     appearance: {
       title: 'Appearance',

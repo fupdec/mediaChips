@@ -7,6 +7,10 @@ module.exports = (sequelize, Sequelize) => {
       icon: Sequelize.TEXT,
       hint: Sequelize.TEXT,
       order: Sequelize.INTEGER,
+      views: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
       oldId: Sequelize.TEXT,
       synonyms: {
         type: Sequelize.BOOLEAN,

@@ -382,6 +382,8 @@ const cn = {
     },
     top_tags: {
       top_by_views: '按观看次数排名前 {count}',
+      top_by_menu: '按菜单顺序排名前 {count}',
+      top_alphabet: '按字母顺序排名前 {count}',
       open_tag: "打开标签“{name}”",
       show_more: '再显示 {count} 个，共 {total} 个',
       show_more_short: '+{count}',
@@ -437,7 +439,7 @@ const cn = {
       typing: '输入',
       result: '结果',
       count_views: '统计观看次数',
-      count_views_hint: '打开媒体或标签时会增加观看次数',
+      count_views_hint: '打开媒体、标签或分类页面时会增加观看次数',
       language: '语言',
       languages: {
         en: '英语',
@@ -452,6 +454,12 @@ const cn = {
       home_widget_extended_stats: '扩展统计',
       home_widget_quick_actions: '快捷操作',
       home_widget_top_tags: '按观看次数排序的标签',
+    },
+    meta: {
+      sort_label: '元数据排序',
+      sort_popularity: '按热度',
+      sort_menu: '按菜单顺序',
+      sort_alphabet: '按字母顺序',
     },
     appearance: {
       title: '外观',

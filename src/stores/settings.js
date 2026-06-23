@@ -48,6 +48,7 @@ export const useSettingsStore = defineStore('useSettingsStore', {
     "group_chips_in_card_description": "1",
     "show_preset_metadata_in_card": "1",
     "count_number_of_views": "1",
+    "meta_sort_mode": "menu",
     "system_dark_mode": "1",
     "open_player_in_separate_window": "1",
     "show_quick_action_button": "1",
