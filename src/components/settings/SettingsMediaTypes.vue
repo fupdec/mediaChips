@@ -1,136 +1,102 @@
 <template>
-  <v-card flat max-width="800" style="margin: auto" class="my-6 px-4">
-    <!--    <v-btn @click="dialogAdd = true" color="success" rounded variant="flat">-->
-    <!--      <v-icon start>mdi-plus</v-icon>-->
-    <!--      Add new media type-->
-    <!--    </v-btn>-->
+  <v-container max-width="960">
+    <div v-if="!mediaTypes.length" class="layout-img">
+      <v-img src="/images/no-data.svg" max-height="40vh" class="my-4" contain></v-img>
+      <div class="text-medium-emphasis">{{ t('media.type.please_add_media_first') }}</div>
+    </div>
 
-    <!--    <v-btn @click="$root.$emit('showDoc', 'media_types')" class="ml-4 mr-2" color="primary" icon>-->
-    <!--      <v-icon>mdi-help-circle</v-icon>-->
-    <!--    </v-btn>-->
+    <div v-if="inited && mediaTypes.length" class="d-flex justify-start mb-2">
+      <v-switch
+        v-model="detailed"
+        :label="t('common.detailed')"
+        class="mt-0"
+        inset
+        hide-details
+        density="compact"
+      />
+    </div>
 
-    <v-data-iterator
-      v-if="inited"
-      :items="mediaTypes"
-      :search="search"
-      :sort-by="sortBy"
-      :sort-desc="sortDesc"
-      :items-per-page="-1"
-      :no-data-text="t('media.type.please_add_media_first')"
-      :no-results-text="t('media.type.no_media_found')"
-      class="mt-6"
-      hide-default-footer
+    <v-card
+      v-for="m in sortedMediaTypesList"
+      :key="m.id"
+      @click="open(m)"
+      :disabled="!isEditableMediaType(m)"
+      style="background-color: rgb(120 120 120 / 5%) !important;"
+      class="media-type-card pa-4 mb-4 mt-4 rounded-xl"
+      variant="flat"
+      hover
     >
-      <!--      <template v-slot:header>-->
-      <!--        <div v-if="mediaTypes.length" class="d-flex flex-wrap align-start justify-space-between">-->
-      <!--          <v-text-field-->
-      <!--            v-model="search"-->
-      <!--            append-icon="mdi-magnify"-->
-      <!--            placeholder="Enter text for quick search"-->
-      <!--            hint="by name, type, hint, icon, date"-->
-      <!--            style="max-width: 350px"-->
-      <!--            autofocus-->
-      <!--            clearable-->
-      <!--            rounded-->
-      <!--            filled-->
-      <!--            density="compact"-->
-      <!--          ></v-text-field>-->
+      <div class="media-type-card__header d-flex align-center">
+        <v-icon class="mr-3" color="grey">mdi-{{ m.icon }}</v-icon>
+        <span class="text-body-1 text-medium-emphasis">{{ getMediaTypeName(m, t) }}</span>
 
-      <!--          <div class="mx-2"/>-->
+        <v-chip
+          v-if="!detailed && m.hidden !== 1"
+          class="ml-4"
+          size="small"
+          variant="outlined"
+          style="pointer-events: none;"
+        >
+          <v-icon start color="success" size="small">mdi-check</v-icon>
+          <span class="text-medium-emphasis">{{ t('media.type.show_in_navbar') }}</span>
+        </v-chip>
 
-      <!--          <v-switch-->
-      <!--            v-model="detailed"-->
-      <!--            label="Detailed"-->
-      <!--            class="mt-1"-->
-      <!--            inset-->
-      <!--          />-->
-      <!--        </div>-->
-      <!--      </template>-->
+        <v-spacer/>
 
-      <template v-slot:default="{ items }">
-        <v-row v-if="detailed" class="mb-4">
-          <v-col
-            v-for="m in items"
-            :key="m.raw.id"
-            cols="12"
-            sm="6"
-          >
-            <v-card
-              @click="open(m.raw)"
-              :disabled="!isEditableMediaType(m.raw)"
-              style="height: 100%;"
-              rounded="xl"
-              variant="tonal"
-              hover
+        <v-icon
+          v-if="isEditableMediaType(m)"
+          size="20"
+          color="grey"
+        >
+          mdi-chevron-right
+        </v-icon>
+      </div>
+
+      <div v-if="detailed" class="media-type-card__body" style="pointer-events: none;">
+        <div class="media-type-card__section">
+          <div class="text-medium-emphasis text-caption mb-2">{{ t('media.type.extensions') }}</div>
+          <div class="d-flex flex-wrap ga-1">
+            <v-chip
+              v-for="ext in getExtensions(m)"
+              :key="`${m.id}_${ext}`"
+              variant="outlined"
+              size="small"
             >
-              <v-card-title>
-                <v-icon start>mdi-{{ m.raw.icon }}</v-icon>
-                <span>{{ getMediaTypeName(m.raw, t) }}</span>
-              </v-card-title>
-              <v-card-text>
-                <v-card variant="tonal" rounded="xl" class="pa-2 mb-2">
-                  <span class="pl-2">{{ t('media.type.extensions') }}</span>
-                  <v-chip-group column class="px-2" style="pointer-events: none;">
-                    <v-chip v-for="ext in m.raw.extensions.split(',')" :key="ext" variant="tonal" size="small"
-                            class="px-2">
-                      <span>{{ ext }}</span>
-                    </v-chip>
-                  </v-chip-group>
-                </v-card>
-
-                <v-card variant="tonal" rounded="xl" class="pa-2">
-                  <span class="pl-2">{{ t('media.type.pinned_meta') }}</span>
-                  <span v-if="pinnedMeta[m.raw.id]?.length === 0">
-                    {{ t('common.not_added') }}
-                  </span>
-                  <v-chip-group v-else column class="px-2" style="pointer-events: none;">
-                    <v-chip
-                      v-for="pm in pinnedMeta[m.raw.id] || []"
-                      :key="pm.id"
-                      variant="tonal"
-                      size="small"
-                      class="px-2"
-                    >
-                      <v-icon size="small" start>mdi-{{ pm.meta?.icon }}</v-icon>
-                      <span>{{ pm.meta?.name }}</span>
-                    </v-chip>
-                  </v-chip-group>
-                </v-card>
-
-                <v-chip
-                  v-if="m.raw.hidden !== 1"
-                  class="mt-2"
-                  style="pointer-events: none;"
-                  size="small"
-                  variant="tonal"
-                >
-                  <v-icon start color="success">mdi-check</v-icon>
-                  <span>{{ t('media.type.show_in_navbar') }}</span>
-                </v-chip>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <v-chip-group v-else column>
-          <v-chip
-            v-for="m in items"
-            :key="m.raw.id"
-            @click="open(m.raw)"
-          >
-            <v-icon size="20" start>mdi-{{ m.raw.icon }}</v-icon>
-            {{ getMediaTypeName(m.raw, t) }}
-          </v-chip>
-        </v-chip-group>
-      </template>
-
-      <template v-slot:no-results>
-        <div class="layout-img">
-          <v-img src="/images/filters/filters-no-results-file.svg" max-height="40vh" class="my-4" contain></v-img>
-          <div>{{ t('media.type.no_media_found') }}</div>
+              <span class="text-medium-emphasis">{{ ext }}</span>
+            </v-chip>
+          </div>
         </div>
-      </template>
-    </v-data-iterator>
+
+        <div class="media-type-card__section">
+          <div class="text-medium-emphasis text-caption mb-2">{{ t('media.type.pinned_meta') }}</div>
+          <div v-if="pinnedMeta[m.id]?.length" class="d-flex flex-wrap ga-1">
+            <v-chip
+              v-for="pm in pinnedMeta[m.id]"
+              :key="pm.id"
+              variant="outlined"
+              size="small"
+            >
+              <v-icon class="mr-1" color="grey" size="small">mdi-{{ pm.meta?.icon }}</v-icon>
+              <span class="text-medium-emphasis">{{ pm.meta?.name }}</span>
+            </v-chip>
+          </div>
+          <v-chip v-else size="small" variant="outlined">
+            <span class="text-medium-emphasis">{{ t('media.type.no_pinned_meta') }}</span>
+          </v-chip>
+        </div>
+
+        <div class="media-type-card__section media-type-card__section--flags">
+          <v-chip
+            v-if="m.hidden !== 1"
+            size="small"
+            variant="outlined"
+          >
+            <v-icon start color="success" size="small">mdi-check</v-icon>
+            <span class="text-medium-emphasis">{{ t('media.type.show_in_navbar') }}</span>
+          </v-chip>
+        </div>
+      </div>
+    </v-card>
 
     <DialogMediaTypeAdd
       v-if="dialogAdd"
@@ -146,7 +112,7 @@
       @update="updateMediaTypes"
       @close="dialogEdit = false"
     />
-  </v-card>
+  </v-container>
 </template>
 
 <script setup>
@@ -156,8 +122,10 @@ import {useAppStore} from '@/stores/app'
 import {storeToRefs} from 'pinia'
 import {useEventBus} from '@/utils/eventBus'
 import axios from 'axios'
+import _ from 'lodash'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {isEditableMediaType} from '@/utils/mediaType'
+
 const DialogMediaTypeAdd = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogMediaTypeAdd.vue')
 )
@@ -170,9 +138,6 @@ const {localhost} = storeToRefs(appStore)
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-const search = ref('')
-const sortBy = ref('name')
-const sortDesc = ref(false)
 const selected = ref(null)
 const pinnedMeta = ref({})
 const dialogAdd = ref(false)
@@ -181,13 +146,19 @@ const inited = ref(false)
 const detailed = ref(true)
 
 const apiUrl = computed(() => localhost.value)
-
 const mediaTypes = computed(() => appStore.mediaTypes)
-const meta = computed(() => appStore.meta)
+
+const sortedMediaTypesList = computed(() => _.orderBy(mediaTypes.value, ['order', 'name']))
+
+function getExtensions(mediaType) {
+  return String(mediaType.extensions || '')
+    .split(',')
+    .map(ext => ext.trim())
+    .filter(Boolean)
+}
 
 onMounted(async () => {
   await init()
-  // Загружаем данные из store
   eventBus.emit('getMediaTypes')
   eventBus.emit('getMeta')
 })
@@ -201,7 +172,7 @@ watch(mediaTypes, (newTypes) => {
 async function init() {
   if (mediaTypes.value.length === 0) return
 
-  for (let mediaType of mediaTypes.value) {
+  for (const mediaType of mediaTypes.value) {
     const res = await axios.get(`${apiUrl.value}/api/MetaInMediaType?mediaTypeId=${mediaType.id}`)
     pinnedMeta.value[mediaType.id] = res.data
   }
@@ -223,22 +194,16 @@ async function getMetaInMediaTypes(mediaTypeId) {
   }
 }
 
-function checkAssignment(metaId, mediaTypeId) {
-  const pinnedMetaList = pinnedMeta.value[mediaTypeId]?.map((i) => i.metaId) || []
-  return pinnedMetaList.includes(metaId)
-}
-
 function open(media) {
+  if (!isEditableMediaType(media)) return
   selected.value = media
   dialogEdit.value = true
 }
 
 function updateMediaTypes() {
-  // Обновляем данные
   eventBus.emit('getMediaTypes')
   dialogEdit.value = false
 
-  // Также обновляем прикрепленные метаданные для редактированного типа
   if (selected.value) {
     getMetaInMediaTypes(selected.value.id).then(data => {
       pinnedMeta.value[selected.value.id] = data
@@ -246,3 +211,34 @@ function updateMediaTypes() {
   }
 }
 </script>
+
+<style scoped>
+.layout-img {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+}
+
+.media-type-card__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(120 120 120 / 15%);
+}
+
+.media-type-card__section {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.media-type-card__section--flags {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+}
+</style>
