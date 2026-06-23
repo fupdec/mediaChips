@@ -23,7 +23,8 @@ const videoClipTagger = require('../services/videoClipTagger')
 const embeddingModel = require('../services/embeddingModel')
 const {isVideoMediaType, isImageMediaType} = require('../utils/mediaType')
 const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
-const {computeContentHash, fileExists} = require('../services/contentHash')
+const {computeContentHashForPath, fileExists, verifyContentHashMatch, resolveExistingPath} = require('../services/contentHash')
+const {normalizeMediaPath, pathsEquivalent, buildPathLookupVariants} = require('../utils/normalizeUserPath')
 const {
   getContentHashBackfillStatus,
   iterateContentHashBackfill,
@@ -246,45 +247,46 @@ module.exports = function (db) {
     res.status(201).send(fileList)
   }
 
-  const addMediaToDb = async (pathToFile, mediaType, is_check_duplicates) => {
-    let stats = await stat(pathToFile)
+  const findMediaByPath = async (pathToFile) => {
+    const variants = buildPathLookupVariants(pathToFile)
+
+    if (!variants.length) return null
+
+    return db.Media.findOne({
+      where: {
+        [Op.or]: variants.map((variant) => ({
+          path: Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('path')),
+            '=',
+            variant.toLowerCase(),
+          ),
+        })),
+      },
+    })
+  }
+
+  const addMediaToDb = async (rawPathToFile, mediaType, is_check_duplicates) => {
+    const pathToFile = normalizeMediaPath(rawPathToFile)
+    const resolvedPath = await resolveExistingPath(pathToFile) || pathToFile
+    let stats = await stat(resolvedPath)
     let filesize = stats.size;
 
-    const isUniqueByParameter = async (parameter, value) => {
-      let duplicate
+    const existingByPath = await findMediaByPath(pathToFile)
 
-      if (parameter === 'path') {
-        duplicate = await db.Media.findOne({
-          where: {
-            path: Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('path')), '=', value.toLowerCase(),
-            ),
-          },
-        });
-      } else {
-        duplicate = await db.Media.findOne({where: {[parameter]: value}})
+    if (existingByPath) {
+      return {
+        isCreated: false,
+        duplicate: {
+          parameter: 'path',
+          path: existingByPath.path,
+          id: existingByPath.id,
+        },
       }
-
-
-      if (duplicate) {
-        return {
-          parameter: parameter,
-          path: duplicate.dataValues.path,
-          id: duplicate.dataValues.id,
-        }
-      } else {
-        return false;
-      }
-    }
-
-    const duplicate_by_path = await isUniqueByParameter('path', pathToFile);
-    if (duplicate_by_path) {
-      return {isCreated: false, duplicate: duplicate_by_path}
     }
 
     let contentHash = null
     try {
-      contentHash = await computeContentHash(pathToFile)
+      contentHash = await computeContentHashForPath(resolvedPath)
     } catch (error) {
       console.error(`Content hash failed for ${pathToFile}:`, error.message)
     }
@@ -298,22 +300,21 @@ module.exports = function (db) {
         const legacyCandidates = await db.Media.findAll({
           where: {
             filesize,
-            contentHash: null,
+            mediaTypeId: mediaType.id,
+            [Op.or]: [
+              {contentHash: null},
+              {contentHash: ''},
+            ],
           },
         })
 
-        const missingPathCandidates = []
-
         for (const candidate of legacyCandidates) {
-          const candidatePathExists = await fileExists(candidate.path)
-
-          if (!candidatePathExists) {
-            missingPathCandidates.push(candidate)
+          if (!(await fileExists(candidate.path))) {
             continue
           }
 
           try {
-            const candidateHash = await computeContentHash(candidate.path)
+            const candidateHash = await computeContentHashForPath(candidate.path)
             await candidate.update({contentHash: candidateHash})
 
             if (candidateHash === contentHash) {
@@ -324,10 +325,31 @@ module.exports = function (db) {
             console.error(`Content hash failed for ${candidate.path}:`, error.message)
           }
         }
+      }
 
-        if (!duplicate_by_hash && missingPathCandidates.length === 1) {
-          duplicate_by_hash = missingPathCandidates[0]
-          await duplicate_by_hash.update({contentHash})
+      if (duplicate_by_hash && pathsEquivalent(duplicate_by_hash.path, pathToFile)) {
+        return {
+          isCreated: false,
+          duplicate: {
+            parameter: 'path',
+            path: duplicate_by_hash.path,
+            id: duplicate_by_hash.id,
+          },
+        }
+      }
+
+      if (duplicate_by_hash && await fileExists(duplicate_by_hash.path)) {
+        const isSameContent = await verifyContentHashMatch(duplicate_by_hash.path, contentHash)
+
+        if (!isSameContent) {
+          try {
+            const correctedHash = await computeContentHashForPath(duplicate_by_hash.path)
+            await duplicate_by_hash.update({contentHash: correctedHash})
+          } catch (error) {
+            console.error(`Content hash correction failed for ${duplicate_by_hash.path}:`, error.message)
+          }
+
+          duplicate_by_hash = null
         }
       }
 
@@ -567,14 +589,16 @@ module.exports = function (db) {
   const addMediaAudio = async function (req, res) {
     const {
       media,
-      isCreated
-    } = await addMediaToDb(req.body.path, req.body.type)
+      isCreated,
+      duplicate,
+    } = await addMediaToDb(req.body.path, req.body.type, req.body.is_check_duplicates)
 
     if (isCreated) {
       res.status(201).send(media)
     } else {
       res.status(202).send({
-        message: "Media already added."
+        message: "Media already added.",
+        duplicate,
       })
     }
   };
@@ -582,14 +606,16 @@ module.exports = function (db) {
   const addMediaText = async function (req, res) {
     const {
       media,
-      isCreated
-    } = await addMediaToDb(req.body.path, req.body.type)
+      isCreated,
+      duplicate,
+    } = await addMediaToDb(req.body.path, req.body.type, req.body.is_check_duplicates)
 
     if (isCreated) {
       res.status(201).send(media)
     } else {
-      res.status(400).send({
-        message: "Media already added."
+      res.status(202).send({
+        message: "Media already added.",
+        duplicate,
       })
     }
   };
@@ -598,14 +624,16 @@ module.exports = function (db) {
   const addMedia = async function (req, res) {
     const {
       media,
-      isCreated
+      isCreated,
+      duplicate,
     } = await addMediaToDb(req.body.path, req.body.type, req.body.is_check_duplicates)
 
     if (isCreated) {
       res.status(201).send(media)
     } else {
       res.status(202).send({
-        message: "Media already added."
+        message: "Media already added.",
+        duplicate,
       })
     }
   };
@@ -1439,6 +1467,7 @@ module.exports = function (db) {
 
       for await (const event of iterateContentHashBackfill(db, {
         shouldStop: () => stopped || res.writableEnded,
+        force: String(req.query.force || '').toLowerCase() === 'true',
       })) {
         writeEvent(event)
       }

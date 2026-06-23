@@ -1,7 +1,7 @@
 module.exports = function (db) {
   // Create many tags in media
   const bulkCreate = function (req, res) {
-    db.TagsInMedia.bulkCreate(req.body).then(data => {
+    db.TagsInMedia.bulkCreate(req.body, {ignoreDuplicates: true}).then(data => {
       res.status(201).send(data)
     }).catch(err => {
       res.status(500).send({

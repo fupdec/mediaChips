@@ -1,9 +1,15 @@
-const {computeContentHash, fileExists} = require('./contentHash')
+const {computeContentHashForPath, resolveExistingPath} = require('./contentHash')
 
 async function getContentHashBackfillStatus(db) {
+  const Op = db.Sequelize.Op
   const total = await db.Media.count()
   const pending = await db.Media.count({
-    where: {contentHash: null},
+    where: {
+      [Op.or]: [
+        {contentHash: null},
+        {contentHash: ''},
+      ],
+    },
   })
 
   return {
@@ -14,9 +20,9 @@ async function getContentHashBackfillStatus(db) {
 }
 
 async function backfillMediaContentHash(db, media) {
-  const exists = await fileExists(media.path)
+  const resolvedPath = await resolveExistingPath(media.path)
 
-  if (!exists) {
+  if (!resolvedPath) {
     return {
       status: 'missing',
       id: media.id,
@@ -25,7 +31,7 @@ async function backfillMediaContentHash(db, media) {
   }
 
   try {
-    const contentHash = await computeContentHash(media.path)
+    const contentHash = await computeContentHashForPath(media.path)
 
     await db.Media.update(
       {contentHash},
@@ -47,15 +53,24 @@ async function backfillMediaContentHash(db, media) {
   }
 }
 
-async function* iterateContentHashBackfill(db, {shouldStop = () => false} = {}) {
-  const total = await db.Media.count({
-    where: {contentHash: null},
-  })
+async function* iterateContentHashBackfill(db, {shouldStop = () => false, force = false} = {}) {
+  const Op = db.Sequelize.Op
+  const where = force
+    ? {}
+    : {
+      [Op.or]: [
+        {contentHash: null},
+        {contentHash: ''},
+      ],
+    }
+
+  const total = await db.Media.count({where})
 
   let processed = 0
   let hashed = 0
   let missing = 0
   let failed = 0
+  let lastId = 0
 
   yield {
     type: 'progress',
@@ -69,13 +84,17 @@ async function* iterateContentHashBackfill(db, {shouldStop = () => false} = {}) 
 
   while (!shouldStop()) {
     const media = await db.Media.findOne({
-      where: {contentHash: null},
+      where: {
+        ...where,
+        id: {[Op.gt]: lastId},
+      },
       order: [['id', 'ASC']],
       raw: true,
     })
 
     if (!media) break
 
+    lastId = media.id
     const result = await backfillMediaContentHash(db, media)
     processed += 1
 

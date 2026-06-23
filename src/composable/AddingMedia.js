@@ -96,6 +96,8 @@ export const useMediaAdding = () => {
     task.value.errors = []
     task.value.duplicates = []
     task.value.added = []
+    task.value.addedMedia = []
+    task.value.parsingTags = false
     task.value.suggestedTags = []
     task.value.videoSuggestedTags = []
     task.value.addedMediaTypeId = null
@@ -243,6 +245,13 @@ export const useMediaAdding = () => {
             // Файл добавлен
             task.value.added.push(filePath)
 
+            if (response.data?.id) {
+              task.value.addedMedia.push({
+                path: filePath,
+                mediaId: response.data.id,
+              })
+            }
+
             if (task.value.is_parsing && response.data?.id) {
               addedForParsing.push({path: filePath, mediaId: response.data.id})
             }
@@ -345,7 +354,11 @@ export const useMediaAdding = () => {
     return chunks
   }
 
-  const parseTagsForAddedMedia = async (items) => {
+  const parseTagsForAddedMedia = async (items, {onlyNew = false} = {}) => {
+    if (!items?.length) return 0
+
+    let parsedCount = 0
+
     for (const chunk of chunkArray(items, 100)) {
       if (task.value.stopped) break
 
@@ -364,14 +377,64 @@ export const useMediaAdding = () => {
         vals = chunk.flatMap(item => $readable.parseFilePath(item.path, item.mediaId))
       }
 
-      for (const valsChunk of chunkArray(vals, 500)) {
+      for (const valsChunk of chunkArray(vals, onlyNew ? 50 : 500)) {
         if (!valsChunk.length) continue
-        await axios({
-          method: "post",
-          url: `${apiUrl.value}/api/TagsInMedia`,
-          data: valsChunk
+
+        if (onlyNew) {
+          for (const item of valsChunk) {
+            const response = await axios({
+              method: "post",
+              url: `${apiUrl.value}/api/TagsInMedia/createOne`,
+              data: {data: item},
+            })
+            if (response.data?.[1]) parsedCount += 1
+          }
+        } else {
+          await axios({
+            method: "post",
+            url: `${apiUrl.value}/api/TagsInMedia`,
+            data: valsChunk
+          })
+          parsedCount += valsChunk.length
+        }
+      }
+    }
+
+    return parsedCount
+  }
+
+  const reparseTagsForAddedMedia = async () => {
+    const items = task.value.addedMedia || []
+    if (!items.length || task.value.parsingTags) return 0
+
+    task.value.parsingTags = true
+    const previousStatus = task.value.status
+
+    try {
+      task.value.status = t('media.adding.adding_metadata')
+      const parsedCount = await parseTagsForAddedMedia(items, {onlyNew: true})
+
+      const mediaIds = [...new Set(items.map((item) => item.mediaId))]
+      if (mediaIds.length > 0) {
+        eventBus.emit('getItemsFromDb', {
+          ids: mediaIds,
+          type: 'media',
         })
       }
+
+      $operable.setNotification({
+        type: parsedCount > 0 ? 'success' : 'info',
+        title: t('media.adding.reparse_tags'),
+        text: parsedCount > 0
+          ? t('media.adding.reparse_tags_added', {count: parsedCount})
+          : t('media.adding.reparse_tags_none'),
+        icon: 'text-box-search',
+      })
+
+      return parsedCount
+    } finally {
+      task.value.parsingTags = false
+      task.value.status = previousStatus || t('media.adding.complete')
     }
   }
 
@@ -432,6 +495,8 @@ export const useMediaAdding = () => {
     // Methods
     addMedia,
     handleAddMedia,
+    parseTagsForAddedMedia,
+    reparseTagsForAddedMedia,
 
     // Lifecycle methods
     setupEventListeners,

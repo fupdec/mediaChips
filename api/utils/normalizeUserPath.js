@@ -1,3 +1,6 @@
+const path = require('path')
+const {pathVariants} = require('../services/contentHash')
+
 function normalizeUserPath(value) {
   if (value == null || typeof value !== 'string') return value
 
@@ -20,6 +23,48 @@ function normalizeUserPath(value) {
   return result
 }
 
+function normalizeMediaPath(value) {
+  if (value == null || typeof value !== 'string') return value
+
+  let result = normalizeUserPath(value)
+  result = path.normalize(result)
+
+  if (typeof result.normalize === 'function') {
+    result = result.normalize('NFC')
+  }
+
+  return result
+}
+
+function pathsEquivalent(left, right) {
+  if (!left || !right) return false
+  if (left === right) return true
+
+  const leftCanonical = normalizeMediaPath(left)
+  const rightCanonical = normalizeMediaPath(right)
+
+  if (leftCanonical === rightCanonical) return true
+  if (leftCanonical.toLowerCase() === rightCanonical.toLowerCase()) return true
+
+  const leftSet = new Set(pathVariants(leftCanonical).map((item) => item.toLowerCase()))
+
+  return pathVariants(rightCanonical).some((item) => leftSet.has(item.toLowerCase()))
+}
+
+function buildPathLookupVariants(value) {
+  const canonical = normalizeMediaPath(value)
+  const variants = new Set(pathVariants(canonical))
+
+  if (canonical) {
+    variants.add(canonical)
+  }
+
+  return [...variants]
+}
+
 module.exports = {
   normalizeUserPath,
+  normalizeMediaPath,
+  pathsEquivalent,
+  buildPathLookupVariants,
 }

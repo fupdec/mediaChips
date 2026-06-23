@@ -39,36 +39,63 @@
       {{ currentPath }}
     </div>
 
-    <div v-if="active || lastSummary" class="text-caption text-medium-emphasis mb-4">
-      <template v-if="active">
-        {{ t('settings_labels.database.content_hash_backfill_progress', {
-          processed: counters.processed,
-          total: counters.total,
-          hashed: counters.hashed,
-          missing: counters.missing,
-          failed: counters.failed,
-        }) }}
-      </template>
-      <template v-else-if="lastSummary">
-        {{ t('settings_labels.database.content_hash_backfill_complete', {
-          hashed: lastSummary.hashed,
-          missing: lastSummary.missing,
-          failed: lastSummary.failed,
-        }) }}
-      </template>
+    <div v-if="active" class="text-caption text-medium-emphasis mb-4">
+      {{ t('settings_labels.database.content_hash_backfill_progress', {
+        processed: counters.processed,
+        total: counters.total,
+        hashed: counters.hashed,
+        missing: counters.missing,
+        failed: counters.failed,
+      }) }}
     </div>
+
+    <div v-if="lastSummary" class="text-body-2 mb-4">
+      {{ t('settings_labels.database.content_hash_backfill_complete', {
+        hashed: lastSummary.hashed,
+        missing: lastSummary.missing,
+        failed: lastSummary.failed,
+      }) }}
+    </div>
+
+    <v-alert
+      v-if="lastSummary && lastSummary.missing > 0"
+      type="warning"
+      variant="tonal"
+      density="compact"
+      rounded="xl"
+      class="mb-4"
+    >
+      <span class="text-caption">
+        {{ t('settings_labels.database.content_hash_backfill_missing_hint', {
+          count: lastSummary.missing,
+        }) }}
+      </span>
+    </v-alert>
 
     <v-btn
       v-if="!active"
-      @click="startBackfill"
+      @click="startBackfill(false)"
       :disabled="status.pending === 0 || status.total === 0"
       color="primary"
       rounded
       variant="flat"
-      class="pr-4"
+      class="pr-4 mr-2"
     >
       <v-icon icon="mdi-play" start/>
       {{ t('settings_labels.database.content_hash_backfill_start') }}
+    </v-btn>
+
+    <v-btn
+      v-if="!active"
+      @click="startBackfill(true)"
+      :disabled="status.total === 0"
+      color="secondary"
+      rounded
+      variant="outlined"
+      class="pr-4"
+    >
+      <v-icon icon="mdi-refresh" start/>
+      {{ t('settings_labels.database.content_hash_backfill_recalculate') }}
     </v-btn>
 
     <v-btn
@@ -131,8 +158,9 @@ const stopBackfill = () => {
   abortController?.abort()
 }
 
-const startBackfill = async () => {
-  if (active.value || status.value.pending === 0) return
+const startBackfill = async (force = false) => {
+  if (active.value) return
+  if (!force && status.value.pending === 0) return
 
   active.value = true
   progress.value = 0
@@ -140,7 +168,7 @@ const startBackfill = async () => {
   lastSummary.value = null
   counters.value = {
     processed: 0,
-    total: status.value.pending,
+    total: force ? status.value.total : status.value.pending,
     hashed: 0,
     missing: 0,
     failed: 0,
@@ -149,10 +177,12 @@ const startBackfill = async () => {
   abortController = new AbortController()
 
   taskId = tasksStore.setTask({
-    title: t('settings_labels.database.content_hash_backfill'),
+    title: force
+      ? t('settings_labels.database.content_hash_backfill_recalculate')
+      : t('settings_labels.database.content_hash_backfill'),
     subtitle: t('settings_labels.database.content_hash_backfill_progress', {
       processed: 0,
-      total: status.value.pending,
+      total: counters.value.total,
       hashed: 0,
       missing: 0,
       failed: 0,
@@ -163,7 +193,9 @@ const startBackfill = async () => {
   })
 
   try {
-    const response = await fetch(`${appStore.localhost}/api/Task/streamContentHashBackfill`, {
+    const response = await fetch(
+      `${appStore.localhost}/api/Task/streamContentHashBackfill?force=${force ? 'true' : 'false'}`,
+      {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       signal: abortController.signal,
@@ -216,6 +248,18 @@ const startBackfill = async () => {
           done: true,
           action: () => {},
         })
+
+        if (!event.stopped) {
+          const summary = lastSummary.value
+          $operable.setNotification({
+            type: summary.hashed > 0 ? 'success' : 'info',
+            title: force
+              ? t('settings_labels.database.content_hash_backfill_recalculate')
+              : t('settings_labels.database.content_hash_backfill'),
+            text: t('settings_labels.database.content_hash_backfill_complete', summary),
+            icon: 'mdi-fingerprint',
+          })
+        }
       }
 
       if (event.type === 'error') {

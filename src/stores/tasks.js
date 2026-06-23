@@ -18,6 +18,8 @@ export const useTasksStore = defineStore('useTasksStore', {
       errors: [],
       duplicates: [],
       added: [],
+      addedMedia: [],
+      parsingTags: false,
       suggestedTags: [],
       videoSuggestedTags: [],
       addedMediaTypeId: null,

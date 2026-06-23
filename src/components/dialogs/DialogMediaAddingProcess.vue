@@ -53,6 +53,24 @@
             </v-btn>
 
             <v-btn
+              v-if="canReparseTags"
+              @click="reparseTags"
+              :loading="task.parsingTags"
+              :disabled="task.parsingTags"
+              color="primary"
+              rounded
+              variant="outlined"
+            >
+              <v-icon icon="mdi-text-box-search-outline"
+                start/>
+              {{ t('media.adding.reparse_tags') }}
+            </v-btn>
+            <ButtonDocumentation
+              v-if="canReparseTags"
+              id="media.parser"
+            />
+
+            <v-btn
               v-if="canRecognizeObjects && clipModelNeedsDownload"
               @click="downloadClipModel"
               :loading="clipModelDownloading"
@@ -140,20 +158,25 @@
           <v-chip
             @click="is_show_duplicates_by_path = !is_show_duplicates_by_path"
             :text="t('media.adding.existing_count', {count: duplicates_by_path.length})"
-            prepend-icon="mdi-check"
+            :prepend-icon="duplicateMarkers.inLibrary.icon"
             color="info"
             class="mb-2"
             size="small"
           />
           <v-card v-if="is_show_duplicates_by_path" variant="outlined" class="pa-2">
             <v-virtual-scroll
-              :height="duplicates_by_path.length > 10 ? 150 : duplicates_by_path.length * 15"
+              :height="duplicates_by_path.length > 10 ? 150 : duplicates_by_path.length * 22"
               :items="duplicates_by_path"
               class="virtual-scroller"
-              item-height="15"
+              item-height="22"
             >
               <template v-slot:default="{ item }">
-                <div class="text-caption selectable">{{ item }}</div>
+                <DuplicatePathRow
+                  :icon="duplicateMarkers.inLibrary.icon"
+                  :color="duplicateMarkers.inLibrary.color"
+                  :label="t('media.adding.duplicate_file_in_library')"
+                  :path="item"
+                />
               </template>
             </v-virtual-scroll>
           </v-card>
@@ -165,6 +188,7 @@
             <v-chip
               @click="is_show_moved_files = !is_show_moved_files"
               :text="t('media.adding.moved_files_count', {count: moved_files.length})"
+              :prepend-icon="duplicateMarkers.moved.icon"
               color="secondary"
               size="small"
             />
@@ -187,15 +211,25 @@
 
           <v-card v-if="is_show_moved_files" variant="outlined" class="pa-2">
             <v-virtual-scroll
-              :height="moved_files.length > 10 ? 150 : moved_files.length * 30"
+              :height="moved_files.length > 10 ? 150 : moved_files.length * 44"
               :items="moved_files"
               class="virtual-scroller"
-              item-height="30"
+              item-height="44"
             >
               <template v-slot:default="{ item }">
-                <div class="text-caption selectable">
-                  <div>{{ item.path }}</div>
-                  <div class="text-medium-emphasis">{{ item.duplicate?.path }}</div>
+                <div class="duplicate-entry selectable">
+                  <DuplicatePathRow
+                    :icon="duplicateMarkers.incoming.icon"
+                    :color="duplicateMarkers.incoming.color"
+                    :label="t('media.adding.duplicate_file_incoming')"
+                    :path="item.path"
+                  />
+                  <DuplicatePathRow
+                    :icon="duplicateMarkers.movedOld.icon"
+                    :color="duplicateMarkers.movedOld.color"
+                    :label="t('media.adding.duplicate_file_old_path')"
+                    :path="item.duplicate?.path"
+                  />
                 </div>
               </template>
             </v-virtual-scroll>
@@ -208,7 +242,7 @@
             <v-chip
               @click="is_show_duplicates_by_content_hash = !is_show_duplicates_by_content_hash"
               :text="t('media.adding.duplicates_by_content_count', {count: duplicates_by_content_hash.length})"
-              prepend-icon="mdi-alert"
+              :prepend-icon="duplicateMarkers.contentDuplicate.icon"
               color="warning"
               size="small"
             />
@@ -224,7 +258,7 @@
               rounded
               size="small"
             >
-              <v-icon icon="mdi-delete-alert" class="mr-1"></v-icon>
+              <v-icon :icon="duplicateMarkers.incomingDelete.icon" class="mr-1"/>
               {{ t('media.adding.delete_incoming_files') }}
             </v-btn>
 
@@ -237,20 +271,42 @@
               rounded
               size="small"
             >
-              <v-icon icon="mdi-delete-alert" class="mr-1"></v-icon>
+              <v-icon :icon="duplicateMarkers.inLibraryDelete.icon" class="mr-1"/>
               {{ t('media.adding.delete_existing_files') }}
             </v-btn>
           </v-card-actions>
 
           <v-card v-if="is_show_duplicates_by_content_hash" variant="outlined" class="pa-2">
             <v-virtual-scroll
-              :height="duplicates_by_content_hash.length > 10 ? 150 : duplicates_by_content_hash.length * 15"
+              :height="duplicates_by_content_hash.length > 10 ? 150 : duplicates_by_content_hash.length * 44"
               :items="duplicates_by_content_hash"
               class="virtual-scroller"
-              item-height="15"
+              item-height="44"
             >
               <template v-slot:default="{ item }">
-                <div class="text-caption selectable">{{ item }}</div>
+                <div class="duplicate-entry selectable">
+                  <DuplicatePathRow
+                    v-if="pathsLookSame(item.path, item.duplicate?.path)"
+                    :icon="duplicateMarkers.inLibrary.icon"
+                    :color="duplicateMarkers.inLibrary.color"
+                    :label="t('media.adding.duplicate_file_in_library')"
+                    :path="item.path"
+                  />
+                  <template v-else>
+                    <DuplicatePathRow
+                      :icon="duplicateMarkers.incoming.icon"
+                      :color="duplicateMarkers.incoming.color"
+                      :label="t('media.adding.duplicate_file_incoming')"
+                      :path="item.path"
+                    />
+                    <DuplicatePathRow
+                      :icon="duplicateMarkers.inLibrary.icon"
+                      :color="duplicateMarkers.inLibrary.color"
+                      :label="t('media.adding.duplicate_file_in_library')"
+                      :path="item.duplicate?.path"
+                    />
+                  </template>
+                </div>
               </template>
             </v-virtual-scroll>
           </v-card>
@@ -289,11 +345,13 @@ import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
+import DuplicatePathRow from "@/components/dialogs/DuplicatePathRow.vue"
 import axios from 'axios'
 import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useEventBus} from '@/utils/eventBus'
+import {useMediaAdding} from '@/composable/AddingMedia'
 
 // Props - dialog state is controlled via tasksStore.mediaAdding.dialogProcess
 
@@ -307,6 +365,7 @@ const appStore = useAppStore()
 const tasksStore = useTasksStore()
 const dialogsStore = useDialogsStore()
 const eventBus = useEventBus()
+const {reparseTagsForAddedMedia} = useMediaAdding()
 
 // Reactive state
 const buttons = ref([])
@@ -318,12 +377,47 @@ const is_show_errors = ref(false)
 const clipModelStatus = ref('unknown')
 const clipModelDownloading = ref(false)
 
+const duplicateMarkers = {
+  inLibrary: {
+    icon: 'mdi-database-check',
+    color: 'info',
+  },
+  incoming: {
+    icon: 'mdi-file-import-outline',
+    color: 'warning',
+  },
+  incomingDelete: {
+    icon: 'mdi-file-remove-outline',
+    color: 'error',
+  },
+  inLibraryDelete: {
+    icon: 'mdi-database-remove-outline',
+    color: 'error',
+  },
+  contentDuplicate: {
+    icon: 'mdi-file-compare',
+    color: 'warning',
+  },
+  moved: {
+    icon: 'mdi-folder-move-outline',
+    color: 'secondary',
+  },
+  movedOld: {
+    icon: 'mdi-database-off-outline',
+    color: 'secondary',
+  },
+}
+
 // Computed properties
 const task = computed(() => tasksStore.mediaAdding)
 const canRecognizeObjects = computed(() => (
   task.value.finished &&
   task.value.added.length > 0 &&
   String(task.value.addedMediaType || '').toLowerCase() === 'video'
+))
+const canReparseTags = computed(() => (
+  task.value.finished &&
+  task.value.addedMedia.length > 0
 ))
 const clipModelReady = computed(() => ['downloaded', 'loaded'].includes(clipModelStatus.value))
 const clipModelNeedsDownload = computed(() => (
@@ -339,7 +433,6 @@ const duplicates_by_path = computed(() => {
 const duplicates_by_content_hash = computed(() => {
   return task.value.duplicates
     .filter(i => i.duplicate?.parameter === 'content_hash' && i.duplicate?.reason === 'duplicate')
-    .map(i => i.path)
 })
 
 const moved_files = computed(() => {
@@ -362,6 +455,15 @@ const initButtons = () => {
 const stop = () => {
   tasksStore.mediaAdding.stopped = true
   buttons.value = []
+}
+
+const reparseTags = async () => {
+  await reparseTagsForAddedMedia()
+}
+
+const pathsLookSame = (left, right) => {
+  if (!left || !right) return false
+  return left === right || String(left).toLowerCase() === String(right).toLowerCase()
 }
 
 const deleteDuplicates = async (delete_type) => {
@@ -747,5 +849,13 @@ watch(canRecognizeObjects, (enabled) => {
       background-color: rgba(0, 0, 0, 0.05);
     }
   }
+}
+
+.duplicate-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  min-height: 40px;
 }
 </style>
