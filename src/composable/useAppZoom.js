@@ -117,13 +117,11 @@ export function useAppZoom() {
     }
   }
 
-  function handleWheel(event) {
+  function blockPinchZoom(event) {
     if (!shouldHandleZoomShortcut(event)) return
+    if (!event.ctrlKey && !event.metaKey) return
 
     event.preventDefault()
-
-    if (event.deltaY < 0) zoomIn()
-    else zoomOut()
   }
 
   return {
@@ -135,7 +133,7 @@ export function useAppZoom() {
     initFromSettings,
     syncFromElectron,
     handleKeydown,
-    handleWheel,
+    blockPinchZoom,
     formatZoomPercent,
   }
 }

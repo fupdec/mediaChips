@@ -126,47 +126,62 @@ export const useItemsStore = defineStore('items', {
   // Действия (Actions)
   actions: {
 
-    async viewImage({image, in_system}) {
-      const isFileExists = await $operable.checkFileExists(image.path)
+    viewImage({image, in_system, previewSrc = null}) {
+      const rawImage = toRaw(image)
 
+      if (in_system) {
+        void this.openImageInSystem(rawImage)
+        return
+      }
+
+      eventBus.emit('viewImage', {
+        imageIds: [rawImage.id],
+        index: 0,
+        fallbackImage: rawImage,
+        previewSrc: previewSrc || null,
+      })
+
+      void this.countViewNumber(rawImage, 'media')
+    },
+
+    async openImageInSystem(image) {
+      const isFileExists = await $operable.checkFileExists(image.path)
       if (!isFileExists) {
         $operable.setNotification({
           type: 'error',
           title: 'File not found on path',
-          text: image.path
+          text: image.path,
         })
         return
       }
 
-      if (in_system) {
-        await $operable.openPath(image.path)
-        await this.countViewNumber(image, 'media')
-        return
-      }
+      await $operable.openPath(image.path)
+      void this.countViewNumber(image, 'media')
+    },
 
-      let images = [toRaw(image)]
-
-      const playlistSource = this.navigationItems.length > 0
+    buildImageViewerPlaylistIds(image) {
+      const source = this.navigationItems.length > 0
         ? this.navigationItems
         : this.entities
 
-      if (playlistSource.length > 0) {
-        images = playlistSource.map(item => toRaw(item))
+      if (!source.length) return [image.id]
 
-        if (image.mediaTypeId) {
-          images = images.filter(item => item.mediaTypeId === image.mediaTypeId)
+      const mediaTypeId = image.mediaTypeId
+      const ids = []
+
+      for (const item of source) {
+        if (!mediaTypeId || item.mediaTypeId === mediaTypeId) {
+          ids.push(item.id)
         }
       }
 
-      let index = images.findIndex(item => item.id === image.id)
-      if (index < 0) index = 0
+      return ids.length ? ids : [image.id]
+    },
 
-      await this.countViewNumber(image, 'media')
-
-      eventBus.emit('viewImage', {
-        images,
-        index,
-      })
+    resolveMediaById(id) {
+      return this.navigationItems.find((item) => item.id === id)
+        || this.entities.find((item) => item.id === id)
+        || null
     },
 
     async findFirstPlayableVideo(videos = []) {

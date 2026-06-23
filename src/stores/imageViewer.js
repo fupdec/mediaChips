@@ -1,9 +1,12 @@
 import {defineStore} from 'pinia'
+import {useItemsStore} from '@/stores/items'
 
 export const useImageViewerStore = defineStore('imageViewer', {
   state: () => ({
     active: false,
-    images: [],
+    imageIds: [],
+    fallbackImage: null,
+    previewSrc: null,
     index: 0,
     fullscreen: false,
     scale: 1,
@@ -16,33 +19,53 @@ export const useImageViewerStore = defineStore('imageViewer', {
 
   getters: {
     currentImage(state) {
-      return state.images[state.index] || null
+      const id = state.imageIds[state.index]
+      if (id == null) return state.fallbackImage
+
+      const itemsStore = useItemsStore()
+      const image = itemsStore.resolveMediaById(id)
+
+      if (image) return image
+      if (state.fallbackImage?.id === id) return state.fallbackImage
+
+      return null
     },
     hasPrev(state) {
       return state.index > 0
     },
     hasNext(state) {
-      return state.index < state.images.length - 1
+      return state.index < state.imageIds.length - 1
     },
     counter(state) {
-      if (!state.images.length) return ''
-      return `${state.index + 1} / ${state.images.length}`
+      if (!state.imageIds.length) return ''
+      return `${state.index + 1} / ${state.imageIds.length}`
     },
   },
 
   actions: {
-    open({images, index = 0}) {
-      this.images = images
-      this.index = Math.min(Math.max(index, 0), Math.max(images.length - 1, 0))
+    open({imageIds, index = 0, fallbackImage = null, previewSrc = null}) {
+      this.imageIds = imageIds
+      this.fallbackImage = fallbackImage
+      this.previewSrc = previewSrc
+      this.index = Math.min(Math.max(index, 0), Math.max(imageIds.length - 1, 0))
       this.active = true
       this.isFileExists = true
       this.resetTransform()
     },
 
+    setPlaylist(imageIds, index) {
+      if (!imageIds?.length) return
+
+      this.imageIds = imageIds
+      this.index = Math.min(Math.max(index, 0), Math.max(imageIds.length - 1, 0))
+    },
+
     close() {
       this.active = false
       this.fullscreen = false
-      this.images = []
+      this.imageIds = []
+      this.fallbackImage = null
+      this.previewSrc = null
       this.index = 0
       this.loading = false
       this.src = null

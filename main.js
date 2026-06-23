@@ -46,7 +46,23 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 const bindZoomChangedListener = (browserWindow) => {
   if (!browserWindow || browserWindow.isDestroyed()) return
 
-  browserWindow.webContents.on('zoom-changed', () => {
+  const {webContents} = browserWindow
+
+  webContents.on('before-input-event', (event, input) => {
+    if (
+      input.type === 'gesturePinchBegin'
+      || input.type === 'gesturePinchUpdate'
+      || input.type === 'gesturePinchEnd'
+    ) {
+      event.preventDefault()
+    }
+  })
+
+  try {
+    webContents.setVisualZoomLevelLimits(1, 1)
+  } catch {}
+
+  webContents.on('zoom-changed', () => {
     if (suppressZoomChangedEvent) return
     browserWindow.webContents.send('zoom-changed', browserWindow.webContents.getZoomFactor())
   })
@@ -502,6 +518,8 @@ const startPlayer = (videos_data) => {
     player.webContents.send('config', server.config);
     player.webContents.send('play-video', videos_data);
   })
+
+  bindZoomChangedListener(player)
 }
 
 // for passing state between windows

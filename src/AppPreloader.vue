@@ -258,7 +258,7 @@ onMounted(async () => {
   if (appZoom) {
     await appZoom.initFromSettings()
     window.addEventListener('keydown', appZoom.handleKeydown)
-    window.addEventListener('wheel', appZoom.handleWheel, {passive: false})
+    window.addEventListener('wheel', appZoom.blockPinchZoom, {passive: false})
 
     if (store.isElectron && window.electronAPI?.on) {
       unsubscribeZoomChanged = window.electronAPI.on('zoom-changed', appZoom.syncFromElectron)
@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
 
   if (appZoom) {
     window.removeEventListener('keydown', appZoom.handleKeydown)
-    window.removeEventListener('wheel', appZoom.handleWheel)
+    window.removeEventListener('wheel', appZoom.blockPinchZoom)
   }
 })
 </script>

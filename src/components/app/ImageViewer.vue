@@ -6,7 +6,6 @@
     content-class="dialog-image-viewer"
     width="2000"
     no-click-animation
-    eager
   >
     <div
       ref="viewerRootRef"
@@ -86,14 +85,14 @@
         @dblclick="onDoubleClick"
       >
         <v-progress-circular
-          v-if="viewer.loading"
+          v-if="viewer.loading && !displaySrc"
           indeterminate
           color="white"
           size="64"
         />
 
         <img
-          v-else-if="displaySrc"
+          v-if="displaySrc"
           :src="displaySrc"
           :style="transformStyle"
           class="image-viewer__image"
@@ -101,7 +100,7 @@
           alt=""
         />
 
-        <div v-else class="image-viewer__error">
+        <div v-else-if="!viewer.loading" class="image-viewer__error">
           <v-alert type="error" variant="tonal">
             {{ t('image.cannot_obtain') }}
           </v-alert>
@@ -130,9 +129,10 @@ import {ref, computed, onMounted, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
+import {useItemsStore} from '@/stores/items'
 import {useImageViewerStore} from '@/stores/imageViewer'
 import {useEventBus} from '@/utils/eventBus'
-import {loadImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
+import {loadThumbDisplayUrl, loadFullImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
 
 const appStore = useAppStore()
 const dialogsStore = useDialogsStore()
@@ -153,6 +153,8 @@ const panState = ref({
 })
 
 let objectUrl = null
+let ownsObjectUrl = false
+let loadToken = 0
 
 const currentName = computed(() => viewer.currentImage?.name || '')
 
@@ -182,12 +184,26 @@ const infoLine = computed(() => {
 })
 
 const clearObjectUrl = () => {
-  revokeImageObjectUrl(objectUrl)
+  if (ownsObjectUrl) {
+    revokeImageObjectUrl(objectUrl)
+  }
   objectUrl = null
+  ownsObjectUrl = false
   displaySrc.value = null
 }
 
+const setDisplaySrc = (src, {owned = false} = {}) => {
+  if (owned && objectUrl && objectUrl !== src) {
+    revokeImageObjectUrl(objectUrl)
+  }
+
+  objectUrl = owned && src?.startsWith('blob:') ? src : null
+  ownsObjectUrl = owned && Boolean(objectUrl)
+  displaySrc.value = src
+}
+
 const loadCurrentImage = async () => {
+  const token = ++loadToken
   const image = viewer.currentImage
   if (!image) {
     clearObjectUrl()
@@ -197,19 +213,40 @@ const loadCurrentImage = async () => {
   viewer.setLoading(true)
   clearObjectUrl()
 
-  const exists = await $operable.checkFileExists(image.path)
-  viewer.setFileExists(exists)
+  const previewSrc = viewer.previewSrc
+  viewer.previewSrc = null
+
+  if (previewSrc) {
+    setDisplaySrc(previewSrc, {owned: false})
+    viewer.setLoading(false)
+  }
+
+  const existsPromise = $operable.checkFileExists(image.path)
+
+  if (!previewSrc) {
+    try {
+      const thumbSrc = await loadThumbDisplayUrl(image, appStore.mediaPath)
+      if (token === loadToken && thumbSrc) {
+        setDisplaySrc(thumbSrc, {owned: true})
+        viewer.setLoading(false)
+      }
+    } catch (error) {
+      console.error('Failed to load image thumbnail for viewer:', error)
+    }
+  }
 
   try {
-    const src = await loadImageDisplayUrl(image, appStore.mediaPath, {preferFull: true})
-    if (src) {
-      objectUrl = src.startsWith('blob:') ? src : null
-      displaySrc.value = src
+    const fullSrc = await loadFullImageDisplayUrl(image)
+    if (token === loadToken && fullSrc) {
+      setDisplaySrc(fullSrc, {owned: true})
     }
   } catch (error) {
-    console.error('Failed to load image for viewer:', error)
+    console.error('Failed to load full image for viewer:', error)
   } finally {
-    viewer.setLoading(false)
+    if (token === loadToken) {
+      viewer.setFileExists(await existsPromise)
+      viewer.setLoading(false)
+    }
   }
 }
 
@@ -329,11 +366,21 @@ const onKeyDown = (event) => {
   }
 }
 
-const openFromEvent = async ({images, index = 0}) => {
-  if (!images?.length) return
+const openFromEvent = ({imageIds, index = 0, fallbackImage = null, previewSrc = null}) => {
+  if (!imageIds?.length) return
 
-  viewer.open({images, index})
-  await loadCurrentImage()
+  viewer.open({imageIds, index, fallbackImage, previewSrc})
+
+  if (fallbackImage) {
+    queueMicrotask(() => {
+      const itemsStore = useItemsStore()
+      const playlistIds = itemsStore.buildImageViewerPlaylistIds(fallbackImage)
+      const playlistIndex = Math.max(0, playlistIds.indexOf(fallbackImage.id))
+      viewer.setPlaylist(playlistIds, playlistIndex)
+    })
+  }
+
+  void loadCurrentImage()
 }
 
 onMounted(() => {

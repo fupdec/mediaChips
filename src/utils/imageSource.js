@@ -23,6 +23,23 @@ export async function loadImageDisplayUrl(media, mediaPath, {preferFull = false}
   return null
 }
 
+export async function loadThumbDisplayUrl(media, mediaPath) {
+  if (!media?.id) return null
+
+  const thumbPath = path.join(mediaPath, 'images/thumbs', `${media.id}.jpg`)
+  const thumb = await $operable.getLocalImage(thumbPath)
+  if (!isUnavailable(thumb)) return thumb
+
+  return null
+}
+
+export async function loadFullImageDisplayUrl(media) {
+  if (!media?.path) return null
+
+  const full = await $operable.getLocalImage(media.path, true)
+  return isUnavailable(full) ? null : full
+}
+
 export function revokeImageObjectUrl(url) {
   if (url && url.startsWith('blob:')) {
     URL.revokeObjectURL(url)

@@ -1,5 +1,8 @@
 <template>
-  <div :class="{ 'no-file': !isFileExists }">
+  <div
+    ref="containerRef"
+    :class="{ 'no-file': !isFileExists }"
+  >
     <v-responsive
       v-if="isViewCard || isViewTimeline"
       v-ripple="{ class: 'text-primary' }"
@@ -41,8 +44,11 @@ const props = defineProps({
 const store = useAppStore()
 const itemsStore = useItemsStore()
 
+const containerRef = ref(null)
 const thumb = ref(null)
 let thumbObjectUrl = null
+let thumbObserver = null
+let thumbLoadStarted = false
 
 const ITEMS = computed(() => itemsStore)
 
@@ -79,6 +85,11 @@ const clearThumbUrl = () => {
   thumbObjectUrl = null
 }
 
+const stopThumbObserver = () => {
+  thumbObserver?.disconnect()
+  thumbObserver = null
+}
+
 const regenerateThumb = async () => {
   await axios.post(`${store.localhost}/api/Task/updateMediaInfo`, {
     id: props.media.id,
@@ -86,6 +97,9 @@ const regenerateThumb = async () => {
 }
 
 const loadThumb = async () => {
+  if (thumbLoadStarted || !props.media?.id) return
+  thumbLoadStarted = true
+  stopThumbObserver()
   clearThumbUrl()
 
   const src = await loadImageDisplayUrl(props.media, store.mediaPath)
@@ -110,19 +124,42 @@ const loadThumb = async () => {
   }
 }
 
-const openViewer = () => {
-  if (!props.isFileExists) return
-  itemsStore.viewImage({image: props.media})
+const scheduleThumbLoad = () => {
+  stopThumbObserver()
+  thumbLoadStarted = false
+
+  if (!containerRef.value || !props.isFileExists) return
+
+  thumbObserver = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return
+    void loadThumb()
+  }, {
+    rootMargin: '300px 0px',
+  })
+
+  thumbObserver.observe(containerRef.value)
 }
 
-onMounted(loadThumb)
+const openViewer = () => {
+  if (!props.isFileExists) return
+  itemsStore.viewImage({
+    image: props.media,
+    previewSrc: thumb.value || null,
+  })
+}
 
-onBeforeUnmount(clearThumbUrl)
+onMounted(scheduleThumbLoad)
+
+onBeforeUnmount(() => {
+  stopThumbObserver()
+  clearThumbUrl()
+})
 
 watch(
   () => [props.media?.id, props.isFileExists],
   () => {
-    loadThumb()
+    thumb.value = null
+    scheduleThumbLoad()
   }
 )
 </script>
