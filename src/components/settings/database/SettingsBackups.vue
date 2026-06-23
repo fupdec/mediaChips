@@ -133,8 +133,8 @@
 
         <v-card-text class="pt-8">
           <v-alert
+            v-if="filePath.trim() && isFileExists === false"
             type="error"
-            :value="isFileExists === false"
             density="compact"
             rounded="xl"
             variant="tonal"
@@ -149,7 +149,9 @@
           </v-btn>
 
           <v-text-field
-            v-model="filePath"
+            :model-value="filePath"
+            @update:model-value="onFilePathInput"
+            @blur="validateFilePath"
             :label="t('settings_labels.database.path_to_backup')"
             autofocus
           ></v-text-field>
@@ -177,8 +179,8 @@
 
         <v-card-text class="pt-8">
           <v-alert
+            v-if="folderPath.trim() && isFolderExists === false"
             type="error"
-            :value="isFolderExists === false"
             density="compact"
             rounded="xl"
             variant="tonal"
@@ -193,7 +195,9 @@
           </v-btn>
 
           <v-text-field
-            v-model="folderPath"
+            :model-value="folderPath"
+            @update:model-value="onFolderPathInput"
+            @blur="validateFolderPath"
             :label="t('settings_labels.database.path_to_folder')"
             autofocus
           ></v-text-field>
@@ -204,7 +208,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch} from 'vue'
+import {ref, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import axios from 'axios'
@@ -214,6 +218,7 @@ import {useDialogsStore} from '@/stores/dialogs'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
+import {normalizePastedFilePath} from '@/utils/filePathInput'
 
 /* ---------- UI ---------- */
 
@@ -235,6 +240,37 @@ const selected = ref([])
 
 const filePath = ref('')
 const folderPath = ref('')
+
+const onFilePathInput = (value) => {
+  filePath.value = normalizePastedFilePath(value)
+  isFileExists.value = null
+}
+
+const onFolderPathInput = (value) => {
+  folderPath.value = normalizePastedFilePath(value)
+  isFolderExists.value = null
+}
+
+const validateFilePath = async () => {
+  const path = normalizePastedFilePath(filePath.value)
+  filePath.value = path
+  if (!path) {
+    isFileExists.value = null
+    return
+  }
+  isFileExists.value = await $operable.checkFileExists(path)
+}
+
+const validateFolderPath = async () => {
+  const path = normalizePastedFilePath(folderPath.value)
+  folderPath.value = path
+  if (!path) {
+    isFolderExists.value = null
+    return
+  }
+  isFolderExists.value = await $operable.checkFileExists(path)
+}
+
 const isFileExists = ref(null)
 const isFolderExists = ref(null)
 
@@ -316,24 +352,48 @@ async function restoreBackup() {
 }
 
 async function importBackup() {
-  isFileExists.value = await $operable.checkFileExists(filePath.value);
+  const path = normalizePastedFilePath(filePath.value)
+  filePath.value = path
+  if (!path) return
+
+  isFileExists.value = await $operable.checkFileExists(path)
   if (isFileExists.value === false) return
 
-  await axios({
-    method: "post",
-    url: apiUrl.value + "/api/TasksBackups/importBackup",
-    data: {
-      path: filePath.value,
-    },
-  }).then(() => {
-    getBackups()
+  $operable.setNotification({
+    type: 'info',
+    title: t('settings_labels.database.import_backup'),
+    text: t('settings_labels.database.import_backup_started'),
   })
-  dialogImport.value = false
-  filePath.value = ''
+
+  try {
+    await axios.post(`${apiUrl.value}/api/TasksBackups/importBackup`, {path})
+    await getBackups()
+    dialogImport.value = false
+    filePath.value = ''
+    $operable.setNotification({
+      type: 'success',
+      title: t('settings_labels.database.import_backup'),
+      text: t('settings_labels.database.import_backup_success'),
+    })
+  } catch (error) {
+    console.error('Import backup failed:', error)
+    const message = error.response?.data?.message
+      || (typeof error.response?.data === 'string' ? error.response.data : null)
+      || t('settings_labels.database.failed_import_backup')
+    $operable.setNotification({
+      type: 'error',
+      title: t('settings_labels.database.import_backup'),
+      text: message,
+    })
+  }
 }
 
 async function exportBackup() {
-  isFolderExists.value = await $operable.checkFileExists(folderPath.value)
+  const path = normalizePastedFilePath(folderPath.value)
+  folderPath.value = path
+  if (!path) return
+
+  isFolderExists.value = await $operable.checkFileExists(path)
   if (isFolderExists.value === false) return
 
   dialogExport.value = false
@@ -343,7 +403,7 @@ async function exportBackup() {
     for (const i of selected.value) {
       await axios.post(`${apiUrl.value}/api/TasksBackups/exportBackup`, {
         archive: i.date,
-        path: folderPath.value,
+        path,
       })
     }
   } catch (error) {
@@ -368,14 +428,17 @@ function relaunchApp() {
 
 async function chooseDir() {
   const res = await window.electronAPI.invoke('showOpenDialog', ['openDirectory'])
-  if (res.filePaths?.length) folderPath.value = res.filePaths[0]
+  if (res.filePaths?.length) {
+    folderPath.value = res.filePaths[0]
+    isFolderExists.value = true
+  }
 }
 
 async function chooseFile() {
   const res = await window.electronAPI.invoke('showOpenDialog', ['openFile'])
-  if (res.filePaths?.length) filePath.value = res.filePaths[0]
+  if (res.filePaths?.length) {
+    filePath.value = res.filePaths[0]
+    isFileExists.value = true
+  }
 }
-
-watch(filePath, () => (isFileExists.value = null))
-watch(folderPath, () => (isFolderExists.value = null))
 </script>

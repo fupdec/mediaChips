@@ -169,53 +169,86 @@ export const useItemsStore = defineStore('items', {
       })
     },
 
+    async findFirstPlayableVideo(videos = []) {
+      for (const item of videos) {
+        const candidate = toRaw(item)
+        if (!candidate?.path) continue
+
+        if (await $operable.checkFileExists(candidate.path)) {
+          return candidate
+        }
+      }
+
+      return null
+    },
+
     async playVideo({video, time, in_system, videos, trustPath = false}) {
       const settingsStore = useSettingsStore()
+      const hasPlaylist = Boolean(videos?.length)
+      let playlistVideos = hasPlaylist
+        ? videos.map(item => toRaw(item))
+        : null
+      let targetVideo = toRaw(video)
 
-      if (!trustPath) {
-        const isFileExists = await $operable.checkFileExists(video.path)
+      if (hasPlaylist) {
+        const playable = await this.findFirstPlayableVideo(playlistVideos)
+        targetVideo = playable
+          || playlistVideos.find((item) => item?.path)
+          || playlistVideos[0]
+
+        if (!targetVideo) {
+          $operable.setNotification({
+            type: 'error',
+            title: 'File not found on path',
+            text: 'No playable videos found in playlist',
+          })
+          return false
+        }
+      } else if (!trustPath) {
+        const isFileExists = await $operable.checkFileExists(targetVideo.path)
 
         if (!isFileExists) {
           $operable.setNotification({
             type: 'error',
             title: 'File not found on path',
-            text: video.path
+            text: targetVideo.path
           })
-          return
+          return false
         }
       }
 
       if (in_system || settingsStore.isPlayVideoInSystemPlayer === "1") {
-        await $operable.openPath(video.path)
+        await $operable.openPath(targetVideo.path)
 
-        await this.countViewNumber(video, 'media')
-      } else {
-        let playlistVideos = videos?.length
-          ? videos.map(item => toRaw(item))
-          : [toRaw(video)]
+        await this.countViewNumber(targetVideo, 'media')
+        return true
+      }
 
-        if (!videos?.length) {
-          const playlistSource = this.navigationItems.length > 0
-            ? this.navigationItems
-            : this.entities
+      if (!playlistVideos?.length) {
+        playlistVideos = [targetVideo]
 
-          if (playlistSource.length > 0) {
-            playlistVideos = playlistSource.map(item => toRaw(item))
-          }
-        }
+        const playlistSource = this.navigationItems.length > 0
+          ? this.navigationItems
+          : this.entities
 
-        const data = {
-          video: toRaw(video),
-          videos: playlistVideos,
-          time: time || 0
-        };
-
-        if (settingsStore.open_player_in_separate_window == '1' && window.electronAPI?.send) {
-          window.electronAPI.send("open-player", data);
-        } else {
-          eventBus.emit("playVideo", data);
+        if (playlistSource.length > 0) {
+          playlistVideos = playlistSource.map(item => toRaw(item))
         }
       }
+
+      const data = {
+        video: targetVideo,
+        videos: playlistVideos,
+        time: time || 0
+      };
+
+      if (settingsStore.open_player_in_separate_window == '1' && window.electronAPI?.send) {
+        window.electronAPI.send("open-player", data);
+      } else {
+        eventBus.emit("playVideo", data);
+      }
+
+      return true
     },
 
     async countViewNumber(item, itemType) {

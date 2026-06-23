@@ -97,8 +97,9 @@ module.exports = function (db) {
   }
 
   const checkFileExists = async function (req, res) {
-    let filePath = path.join(req.body.path)
-    const exist = fs.existsSync(filePath)
+    const {normalizeUserPath} = require('../utils/normalizeUserPath')
+    const filePath = normalizeUserPath(req.body.path)
+    const exist = filePath && fs.existsSync(filePath)
     if (exist) res.sendStatus(201)
     else res.sendStatus(400)
   }

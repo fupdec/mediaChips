@@ -58,14 +58,17 @@
       <v-chip
         v-for="(filter, index) in filters"
         :key="index"
-        v-show="isTooltip || filter.active"
+        v-show="shouldShowFilter(filter)"
         class="ma-1 px-2"
-        color="primary"
+        :class="{
+          readonly: isTooltip,
+          'filter-chip--inactive': isTooltip && !isFilterRowActive(filter),
+        }"
+        :color="getChipColor(filter)"
         size="small"
-        :variant="isTooltip ? 'outlined' : 'tonal'"
+        :variant="getChipVariant(filter)"
         :disabled="(filter.lock && !isTooltip) || !itemsStore.isFiltersLoaded"
-        :class="{ readonly: isTooltip }"
-        :title="isTooltip ? '' : t('filters.deactivate_filter')"
+        :title="getChipTitle(filter)"
         @click="deactivate(index)"
       >
         <!-- LOCK -->
@@ -206,6 +209,30 @@ const deactivate = index => {
   eventBus.emit("deactivateFilter", index);
 }
 
+const isFilterRowActive = (filter) => filter.active !== false && !filter.removed
+
+const shouldShowFilter = (filter) => {
+  if (filter.removed) return false
+  if (props.isTooltip) return true
+  return isFilterRowActive(filter)
+}
+
+const getChipVariant = (filter) => {
+  if (!props.isTooltip) return 'tonal'
+  return isFilterRowActive(filter) ? 'flat' : 'outlined'
+}
+
+const getChipColor = (filter) => {
+  if (!props.isTooltip) return 'primary'
+  return isFilterRowActive(filter) ? 'primary' : 'default'
+}
+
+const getChipTitle = (filter) => {
+  if (!props.isTooltip) return t('filters.deactivate_filter')
+  if (isFilterRowActive(filter)) return t('filters.filter_row_active')
+  return t('filters.filter_row_inactive')
+}
+
 const getBy = (param, show) => {
   const isMeta = /\d/.test(param.toString())
 
@@ -264,5 +291,9 @@ const getValForTypeNumber = (parameter, number) => {
 <style scoped lang="scss">
 .readonly {
   pointer-events: none;
+}
+
+.filter-chip--inactive {
+  opacity: 0.55;
 }
 </style>

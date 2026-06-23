@@ -15,7 +15,7 @@
           rounded="xl"
           class="text-body-2"
         >
-          {{ text }}
+          {{ displayText }}
         </v-alert>
         <Loading/>
       </v-card-text>
@@ -24,8 +24,9 @@
 </template>
 
 <script setup>
-import {defineAsyncComponent} from 'vue'
+import {computed, defineAsyncComponent} from 'vue'
 import {useDisplay} from 'vuetify'
+import {useI18n} from 'vue-i18n'
 
 const props = defineProps({
   dialog: {
@@ -34,11 +35,14 @@ const props = defineProps({
   },
   text: {
     type: String,
-    default: 'Please wait until the end of the process. This may take several minutes.'
+    default: undefined
   }
 })
 
+const {t} = useI18n()
 const {xs} = useDisplay()
+
+const displayText = computed(() => props.text ?? t('process.wait_until_end'))
 
 const Loading = defineAsyncComponent(() =>
   import('@/components/elements/Loading.vue')

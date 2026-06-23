@@ -54,17 +54,16 @@
 
       <div class="notifications-list">
         <v-card-text class="py-2 px-1">
-          <transition-group name="slide-y-transition">
-            <template
-              v-for="item in activityItems"
-              :key="item.key"
+          <template
+            v-for="item in activityItems"
+            :key="item.key"
+          >
+            <v-card
+              v-if="item.kind === 'task'"
+              class="task-notification"
+              elevation="3"
+              rounded="lg"
             >
-              <v-card
-                v-if="item.kind === 'task'"
-                class="task-notification"
-                elevation="3"
-                rounded="lg"
-              >
                 <template #prepend>
                   <v-avatar :color="item.color || 'primary'">
                     <v-icon :icon="`mdi-${item.icon || 'cog'}`" dark></v-icon>
@@ -111,12 +110,11 @@
                 </v-card-actions>
               </v-card>
 
-              <Notification
-                v-else
-                :notification="item.notification"
-              />
-            </template>
-          </transition-group>
+            <Notification
+              v-else
+              :notification="item.notification"
+            />
+          </template>
 
           <div v-if="activityItems.length === 0" class="text-center py-2">
             <div class="layout-img">

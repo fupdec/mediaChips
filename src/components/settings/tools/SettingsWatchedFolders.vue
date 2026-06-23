@@ -121,7 +121,8 @@
 
             <!-- Path Input -->
             <v-text-field
-              v-model="folderData.path"
+              :model-value="folderData.path"
+              @update:model-value="onFolderPathInput"
               :rules="[(v) => !!v || t('validation.path_required')]"
               :label="t('settings_labels.tools.path_to_folder')"
               required
@@ -199,6 +200,7 @@ import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import SettingsCategoryDivider
   from "@/components/ui/SettingsCategoryDivider.vue"
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
+import {normalizePastedFilePath} from '@/utils/filePathInput'
 
 const appStore = useAppStore()
 const watcherStore = useWatcherStore()
@@ -223,6 +225,10 @@ const folderData = ref({
   name: '',
   selectedTypes: []
 })
+
+const onFolderPathInput = (value) => {
+  folderData.value.path = normalizePastedFilePath(value)
+}
 
 // Watcher State (вместо стора)
 const currentFolder = ref(null)

@@ -31,7 +31,8 @@
         </v-btn>
 
         <v-text-field
-          v-model="root_folder"
+          :model-value="root_folder"
+          @update:model-value="onRootFolderInput"
           @change="getExample"
           :label="t('settings_labels.database.path_to_folder')"
           variant="outlined"
@@ -132,6 +133,7 @@ import {useItemsStore} from '@/stores/items'
 import {useOperationsStore} from '@/stores/operations'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import {useEventBus} from '@/utils/eventBus'
+import {normalizePastedFilePath} from '@/utils/filePathInput'
 
 const {smAndDown} = useDisplay()
 const {t} = useI18n()
@@ -150,6 +152,10 @@ const meta_list = ref([])
 const structure = ref([])
 const root_folder = ref(null)
 const example = ref('')
+
+const onRootFolderInput = (value) => {
+  root_folder.value = normalizePastedFilePath(value)
+}
 
 const dragOptions = {
   animation: 200,

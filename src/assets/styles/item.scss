@@ -1299,3 +1299,11 @@
     opacity: 1;
   }
 }
+
+.no-file {
+  .thumb,
+  img,
+  .v-img__img {
+    filter: saturate(0.1) opacity(50%);
+  }
+}

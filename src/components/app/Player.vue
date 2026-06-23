@@ -206,14 +206,54 @@ const initPlayer = () => {
   })
 }
 
-const loadSrc = async (video, start_time) => {
-  // проверяем есть ли файл в системе
-  playerStore.is_file_exists = await $operable.checkFileExists(video.path)
+const resolvePlayableVideo = async (initialVideo) => {
+  const playlist = playerStore.playlist
+  const candidates = []
 
-  if (!playerStore.is_file_exists) {
-    console.error('Player: File does not exist:', video.path)
+  if (playlist.length > 0) {
+    const startIndex = Math.max(0, _.findIndex(playlist, (i) => i.id == initialVideo.id))
+
+    for (let offset = 0; offset < playlist.length; offset++) {
+      const index = (startIndex + offset) % playlist.length
+      candidates.push({video: playlist[index], index})
+    }
+  } else if (initialVideo?.path) {
+    candidates.push({video: initialVideo, index: 0})
+  }
+
+  for (const {video: candidate, index} of candidates) {
+    if (!candidate?.path) continue
+
+    if (await $operable.checkFileExists(candidate.path)) {
+      return {video: candidate, index}
+    }
+  }
+
+  if (initialVideo?.id) {
+    const index = playlist.length > 0
+      ? Math.max(0, _.findIndex(playlist, (i) => i.id == initialVideo.id))
+      : 0
+    return {video: initialVideo, index}
+  }
+
+  return null
+}
+
+const loadSrc = async (video, start_time) => {
+  const resolved = await resolvePlayableVideo(video)
+
+  if (!resolved) {
+    console.error('Player: No playable video found in playlist:', video?.path)
+    playerStore.is_file_exists = false
     playerStore.playbackError = true
     return
+  }
+
+  video = resolved.video
+  playerStore.is_file_exists = await $operable.checkFileExists(video.path)
+
+  if (playerStore.playlist.length > 0) {
+    playerStore.nowPlaying = resolved.index
   }
 
   // подргужаем соурс и получаем данные о видео
@@ -221,9 +261,6 @@ const loadSrc = async (video, start_time) => {
   await getMarks(video)
   await getMetadata(video)
   playerStore.trackCurrentTime()
-
-  const index = _.findIndex(playerStore.playlist, (i) => i.id == video.id)
-  playerStore.nowPlaying = index
 
   playerStore.player.playbackRate = playerStore.speed
 

@@ -1,11 +1,25 @@
 <template>
   <v-container ref="container">
-    <div class="text-md-h2 d-flex align-center my-6">
+    <div class="text-md-h2 d-flex align-center my-6 playlists-page-title">
       <v-icon size="42" start>mdi-format-list-bulleted</v-icon>
       {{ t('navigation.playlists') }}
+      <v-spacer />
+      <v-btn
+        variant="text"
+        size="small"
+        color="primary"
+        class="smart-playlists-docs-link"
+        @click="showSmartPlaylistsDocs"
+      >
+        <v-icon start size="18">mdi-help-circle-outline</v-icon>
+        {{ t('playlists.smart_playlists_docs') }}
+      </v-btn>
     </div>
 
-    <template v-if="is_dynamic_loading || dynamicPlaylists.length">
+    <section
+      v-if="is_dynamic_loading || dynamicPlaylists.length"
+      class="smart-playlists-section"
+    >
       <div class="section-title text-h5 mb-4 d-flex align-center">
         <v-icon start>mdi-filter-variant</v-icon>
         {{ t('playlists.dynamic_playlists') }}
@@ -35,14 +49,14 @@
           :video-count="playlist.count"
           :thumbs-loading="!is_dynamic_thumbs_loaded"
           :playing="playingPlaylistId === playlist.id"
-          :show-edit="false"
           @play="playDynamic(playlist)"
+          @edit="editDynamic(playlist)"
         />
       </div>
 
       <div
         v-if="is_dynamic_loading"
-        class="dynamic-playlists-list mb-10"
+        class="dynamic-playlists-list"
       >
         <DynamicPlaylistRow
           v-for="index in dynamicRowSkeletonCount"
@@ -54,7 +68,7 @@
 
       <div
         v-else-if="dynamicList.length"
-        class="dynamic-playlists-list mb-10"
+        class="dynamic-playlists-list"
       >
         <DynamicPlaylistRow
           v-for="playlist in dynamicList"
@@ -63,9 +77,10 @@
           :thumbs-loading="!is_dynamic_thumbs_loaded"
           :playing="playingPlaylistId === playlist.id"
           @play="playDynamic(playlist)"
+          @edit="editDynamic(playlist)"
         />
       </div>
-    </template>
+    </section>
 
     <div class="section-title text-h5 mb-4 d-flex align-center">
       <v-icon start>mdi-playlist-play</v-icon>
@@ -109,6 +124,15 @@
       :dialog="dialogPlaylistEdit"
       :playlist="playlist_edit"
     />
+
+    <DialogSmartPlaylistEdit
+      v-if="dialogSmartPlaylistEdit"
+      @close="dialogSmartPlaylistEdit = false"
+      @delete="deleteSmartPlaylist"
+      @updatePlaylist="onSmartPlaylistUpdated"
+      :dialog="dialogSmartPlaylistEdit"
+      :playlist="smart_playlist_edit"
+    />
   </v-container>
 </template>
 
@@ -119,18 +143,23 @@ import {useDisplay} from 'vuetify'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {usePlayerStore} from '@/stores/player'
+import {useSettingsStore} from '@/stores/settings'
 import axios from "axios"
 import DialogPlaylistAdd from "@/components/dialogs/DialogPlaylistAdd.vue"
 import DialogPlaylistEdit from "@/components/dialogs/DialogPlaylistEdit.vue"
+import DialogSmartPlaylistEdit from "@/components/dialogs/DialogSmartPlaylistEdit.vue"
 import PlaylistCard from "@/components/playlists/PlaylistCard.vue"
 import DynamicPlaylistRow from "@/components/playlists/DynamicPlaylistRow.vue"
 import {loadPlaylistThumbs} from '@/utils/playlistThumbs'
+import {useEventBus} from '@/utils/eventBus'
 
 const appStore = useAppStore()
 const itemsStore = useItemsStore()
 const playerStore = usePlayerStore()
+const settingsStore = useSettingsStore()
 const {t} = useI18n()
 const {width} = useDisplay()
+const eventBus = useEventBus()
 
 const container = ref(null)
 const playlists = ref([])
@@ -141,8 +170,10 @@ const is_dynamic_loading = ref(false)
 const is_dynamic_thumbs_loaded = ref(false)
 const playingPlaylistId = ref(null)
 const dialogPlaylistEdit = ref(false)
+const dialogSmartPlaylistEdit = ref(false)
 const dialogPlaylistAdd = ref(false)
 const playlist_edit = ref(null)
+const smart_playlist_edit = ref(null)
 
 const apiUrl = computed(() => appStore.localhost)
 
@@ -167,13 +198,54 @@ const enrichMediaItem = (item) => ({
 })
 
 const playVideos = async (videos) => {
-  if (!videos?.length) return
+  if (!videos?.length) return false
 
-  await itemsStore.playVideo({
+  return itemsStore.playVideo({
     video: videos[0],
     videos,
     trustPath: true,
   })
+}
+
+const applyFullPlaylist = async (videos) => {
+  const firstPlayable = await itemsStore.findFirstPlayableVideo(videos)
+    || videos.find((item) => item?.path)
+    || videos[0]
+
+  if (!firstPlayable) return false
+
+  const isSeparatePlayer = settingsStore.open_player_in_separate_window == '1'
+    && window.electronAPI?.send
+
+  if (playerStore.active) {
+    playerStore.setPlaylistItems(videos, {host: apiUrl.value})
+
+    const currentVideo = playerStore.playlist[playerStore.nowPlaying]
+    const shouldRestart = playerStore.playbackError
+      || !playerStore.is_file_exists
+      || currentVideo?.id !== firstPlayable.id
+
+    if (shouldRestart) {
+      await itemsStore.playVideo({
+        video: firstPlayable,
+        videos,
+        trustPath: true,
+      })
+    }
+
+    return true
+  }
+
+  if (isSeparatePlayer) {
+    window.electronAPI.send('open-player', {
+      video: firstPlayable,
+      videos,
+      time: 0,
+    })
+    return true
+  }
+
+  return false
 }
 
 const play = async (playlist) => {
@@ -189,7 +261,7 @@ const play = async (playlist) => {
 }
 
 const playDynamic = async (playlist) => {
-  if (!playlist.count || playingPlaylistId.value) return
+  if (playingPlaylistId.value) return
 
   playingPlaylistId.value = playlist.id
   let started = false
@@ -199,14 +271,13 @@ const playDynamic = async (playlist) => {
 
     if (firstId) {
       try {
-        const basicsRes = await axios.post(`${apiUrl.value}/api/media/basics`, {
+        const basicsRes = await axios.post(`${apiUrl.value}/api/Media/basics`, {
           ids: [firstId],
         })
         const firstVideo = basicsRes.data?.items?.[0]
 
         if (firstVideo) {
-          await playVideos([enrichMediaItem(firstVideo)])
-          started = true
+          started = await playVideos([enrichMediaItem(firstVideo)])
         }
       } catch (e) {
         console.log('Quick play failed, loading full playlist:', e)
@@ -217,6 +288,7 @@ const playDynamic = async (playlist) => {
       params: {mode: 'play'},
     })
     const videos = (res.data.items || []).map(enrichMediaItem)
+    const videoCount = Number(res.data.count ?? videos.length) || videos.length
 
     if (!videos.length) {
       if (!started) {
@@ -228,12 +300,24 @@ const playDynamic = async (playlist) => {
       return
     }
 
-    if (started && playerStore.active) {
-      playerStore.setPlaylistItems(videos, {host: apiUrl.value})
-      return
+    if (playlist.count !== videoCount) {
+      playlist.count = videoCount
+      const stored = dynamicPlaylists.value.find((item) => item.id === playlist.id)
+      if (stored) stored.count = videoCount
     }
 
-    await playVideos(videos)
+    if (started) {
+      if (await applyFullPlaylist(videos)) return
+    }
+
+    const played = await playVideos(videos)
+
+    if (!played && !started) {
+      $operable.setNotification({
+        type: 'error',
+        title: t('playlists.preparing_playback_failed'),
+      })
+    }
   } catch (e) {
     console.log('Error loading dynamic playlist videos:', e)
     $operable.setNotification({
@@ -245,27 +329,48 @@ const playDynamic = async (playlist) => {
   }
 }
 
-const loadDynamicPlaylists = async () => {
-  is_dynamic_loading.value = true
-  is_dynamic_thumbs_loaded.value = false
-
-  try {
-    const res = await axios.get(`${apiUrl.value}/api/SavedFilter/dynamicPlaylists`)
-    dynamicPlaylists.value = (res.data || []).map((playlist) => ({
-      ...playlist,
-      thumbs: [],
-    }))
-  } catch (e) {
-    console.log('Error loading dynamic playlists:', e)
-    dynamicPlaylists.value = []
-  } finally {
-    is_dynamic_loading.value = false
-  }
-
+const loadDynamicPlaylistSummaries = async () => {
   if (!dynamicPlaylists.value.length) {
     is_dynamic_thumbs_loaded.value = true
     return
   }
+
+  let legacySummaries = null
+
+  const applySummary = async (playlist) => {
+    try {
+      const res = await axios.get(`${apiUrl.value}/api/SavedFilter/${playlist.id}/summary`)
+      playlist.count = Number(res.data?.count) || 0
+      playlist.previewIds = res.data?.previewIds || []
+      return
+    } catch (e) {
+      if (e.response?.status !== 404) {
+        console.log(`Error loading summary for playlist ${playlist.id}:`, e)
+        playlist.count = 0
+        playlist.previewIds = []
+        return
+      }
+    }
+
+    try {
+      if (!legacySummaries) {
+        const res = await axios.get(`${apiUrl.value}/api/SavedFilter/dynamicPlaylists`)
+        legacySummaries = new Map((res.data || []).map((item) => [item.id, item]))
+      }
+      const match = legacySummaries.get(playlist.id)
+      playlist.count = Number(match?.count) || 0
+      playlist.previewIds = match?.previewIds || []
+    } catch (e) {
+      console.log(`Error loading fallback summary for playlist ${playlist.id}:`, e)
+      playlist.count = 0
+      playlist.previewIds = []
+    }
+  }
+
+  await Promise.all(dynamicPlaylists.value.map(async (playlist) => {
+    await applySummary(playlist)
+    playlist.countLoading = false
+  }))
 
   try {
     await loadPlaylistThumbs(dynamicPlaylists.value)
@@ -276,12 +381,62 @@ const loadDynamicPlaylists = async () => {
   }
 }
 
+const loadDynamicPlaylists = async () => {
+  is_dynamic_loading.value = true
+  is_dynamic_thumbs_loaded.value = false
+
+  try {
+    const res = await axios.get(`${apiUrl.value}/api/SavedFilter/dynamicPlaylists/basic`)
+    dynamicPlaylists.value = (res.data || []).map((playlist) => ({
+      ...playlist,
+      count: null,
+      countLoading: true,
+      previewIds: [],
+      thumbs: [],
+    }))
+  } catch (e) {
+    if (e.response?.status === 404) {
+      try {
+        const res = await axios.get(`${apiUrl.value}/api/SavedFilter/dynamicPlaylists`)
+        dynamicPlaylists.value = (res.data || []).map((playlist) => ({
+          ...playlist,
+          count: Number(playlist.count) || 0,
+          countLoading: false,
+          previewIds: playlist.previewIds || [],
+          thumbs: [],
+        }))
+        is_dynamic_loading.value = false
+        if (!dynamicPlaylists.value.length) {
+          is_dynamic_thumbs_loaded.value = true
+          return
+        }
+        try {
+          await loadPlaylistThumbs(dynamicPlaylists.value)
+        } catch (thumbError) {
+          console.log('Error loading dynamic playlist thumbs:', thumbError)
+        } finally {
+          is_dynamic_thumbs_loaded.value = true
+        }
+        return
+      } catch (fallbackError) {
+        console.log('Error loading dynamic playlists (fallback):', fallbackError)
+      }
+    }
+    console.log('Error loading dynamic playlists:', e)
+    dynamicPlaylists.value = []
+  } finally {
+    is_dynamic_loading.value = false
+  }
+
+  void loadDynamicPlaylistSummaries()
+}
+
 const getPlaylists = async () => {
   is_manual_loaded.value = false
   is_thumbs_loaded.value = false
 
   try {
-    const res = await axios.get(`${apiUrl.value}/api/playlist/summary`)
+    const res = await axios.get(`${apiUrl.value}/api/Playlist/summary`)
     playlists.value = (res.data || []).map((playlist) => ({
       ...playlist,
       thumbs: [],
@@ -327,6 +482,48 @@ const edit = (playlist) => {
   dialogPlaylistEdit.value = true
 }
 
+const editDynamic = (playlist) => {
+  smart_playlist_edit.value = playlist
+  dialogSmartPlaylistEdit.value = true
+}
+
+const onSmartPlaylistUpdated = async () => {
+  const playlistId = smart_playlist_edit.value?.id
+  await loadDynamicPlaylists()
+  if (playlistId) {
+    const updated = dynamicPlaylists.value.find((item) => item.id === playlistId)
+    if (updated) smart_playlist_edit.value = updated
+  }
+}
+
+const deleteSmartPlaylist = async () => {
+  dialogSmartPlaylistEdit.value = false
+
+  if (!smart_playlist_edit.value?.id) return
+
+  try {
+    const savedFilter = smart_playlist_edit.value
+    const filters = await $operable.getFilters(savedFilter.id)
+
+    await axios.delete(`${apiUrl.value}/api/SavedFilter/${savedFilter.id}`)
+
+    for (const row of filters) {
+      if (row?.id) {
+        await axios.delete(`${apiUrl.value}/api/FilterRow/${row.id}`)
+      }
+    }
+  } catch (e) {
+    console.log(e)
+  }
+
+  smart_playlist_edit.value = null
+  await loadDynamicPlaylists()
+}
+
+const showSmartPlaylistsDocs = () => {
+  eventBus.emit('showDocumentation', 'playlists.smart')
+}
+
 onMounted(() => {
   loadAllPlaylists()
 })
@@ -347,5 +544,9 @@ onMounted(() => {
 
 .section-title {
   font-weight: 600;
+}
+
+.smart-playlists-section {
+  margin-bottom: 48px;
 }
 </style>

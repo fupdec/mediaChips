@@ -52,7 +52,16 @@
         </template>
       </div>
 
-      <div v-if="!skeleton" class="dynamic-playlist-row__play-wrap">
+      <div v-if="!skeleton" class="dynamic-playlist-row__actions">
+        <v-btn
+          icon
+          variant="text"
+          class="dynamic-playlist-row__edit"
+          @click.stop="emit('edit')"
+        >
+          <v-icon>mdi-pencil-outline</v-icon>
+        </v-btn>
+
         <v-progress-circular
           v-if="playing"
           indeterminate
@@ -97,14 +106,18 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['play'])
+const emit = defineEmits(['play', 'edit'])
 const {t} = useI18n()
 
 const displayThumbs = computed(() => (props.playlist.thumbs || []).slice(0, 4))
 
-const videoCount = computed(() => props.playlist.count || 0)
+const videoCount = computed(() => {
+  if (props.playlist.countLoading) return null
+  return Number(props.playlist.count) || 0
+})
 
 const videoCountLabel = computed(() => {
+  if (videoCount.value == null) return t('playlists.count_loading')
   const count = videoCount.value
   if (count === 0) return t('playlists.no_videos_added')
   if (count === 1) return t('playlists.one_video')
@@ -200,12 +213,12 @@ const handleClick = () => {
   opacity: 0.7;
 }
 
-.dynamic-playlist-row__play-wrap {
+.dynamic-playlist-row__actions {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  gap: 2px;
+  min-width: 72px;
 }
 </style>

@@ -360,7 +360,7 @@ async function getFilteredMediaSummary(db, options = {}) {
   const sortExpr = getSortExpression(sortBy)
   const sortDir = direction === 'asc' ? 'ASC' : 'DESC'
 
-  const [[totals], [previewRows]] = await Promise.all([
+  const [countQuery, previewQuery] = await Promise.all([
     db.sequelize.query(
       `SELECT COUNT(*) AS totalFiltered ${fromForCount} ${whereClause}`,
       {replacements},
@@ -374,6 +374,9 @@ async function getFilteredMediaSummary(db, options = {}) {
       {replacements: {...replacements, previewLimit}},
     ),
   ])
+
+  const totals = countQuery[0][0] || {}
+  const previewRows = previewQuery[0]
 
   return {
     count: Number(totals.totalFiltered) || 0,
@@ -423,7 +426,7 @@ async function loadFilteredMediaIds(db, options = {}) {
   const fromForCount = getMediaFromClause(joinForFilters)
   const fromForSort = getMediaFromClause(joinForFilters || joinForSort)
 
-  const [[totals], [idRows]] = await Promise.all([
+  const [countQuery, idQuery] = await Promise.all([
     db.sequelize.query(
       `SELECT
         COUNT(*) AS totalFiltered,
@@ -440,6 +443,9 @@ async function loadFilteredMediaIds(db, options = {}) {
       {replacements},
     ),
   ])
+
+  const totals = countQuery[0][0] || {}
+  const idRows = idQuery[0]
 
   return {
     ids: idRows.map((row) => row.id),

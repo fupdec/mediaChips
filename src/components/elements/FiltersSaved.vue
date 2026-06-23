@@ -2,8 +2,8 @@
   <div v-if="savedFilters.length" :key="route.fullPath + 'sf'" class="sf-chips d-flex flex-wrap">
     <v-chip
       v-for="sf in savedFilters"
-      @click="activate(sf)"
       :key="sf.id"
+      @click="activate(sf)"
       class="ma-1"
       variant="tonal"
       color="primary"
@@ -14,37 +14,26 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
-import { useItemsStore } from '@/stores/items'
-import { useEventBus } from '@/utils/eventBus'
+import {computed, onBeforeUnmount} from 'vue'
+import {useRoute} from 'vue-router'
+import {useItemsStore} from '@/stores/items'
+import {useEventBus} from '@/utils/eventBus'
 
-// Components (если нужно)
-// import FiltersChips from '@/components/elements/FiltersChips.vue'
-
-// Router
 const route = useRoute()
-
-// Store
 const itemsStore = useItemsStore()
 const eventBus = useEventBus()
 
-// Computed properties
 const savedFilters = computed(() => itemsStore.filters_saved || [])
 
-// Methods
 const activate = (savedFilter) => {
   let filters = savedFilter.filters
-  // Удаляем id из фильтров
   if (filters && Array.isArray(filters)) {
-    filters = filters.map(filter => ({ ...filter, id: null }))
+    filters = filters.map((filter) => ({...filter, id: null}))
   }
 
-  // Emit event (можно использовать provide/inject или событие через event bus)
   eventBus.emit('applySavedFilter', filters)
 }
 
-// Cleanup
 onBeforeUnmount(() => {
   itemsStore.clearSavedFilters()
 })

@@ -15,7 +15,7 @@ export async function loadPlaylistThumbs(playlists, {mediaType = 'videos'} = {})
   }
 
   try {
-    const response = await axios.post(`${appStore.localhost}/api/media/thumbs`, {
+    const response = await axios.post(`${appStore.localhost}/api/Media/thumbs`, {
       ids: previewIds,
       mediaType,
     })

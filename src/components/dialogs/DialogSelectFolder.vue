@@ -23,7 +23,12 @@
       />
 
       <v-card-text class="pa-2 pa-sm-4">
-        <v-alert v-if="!isFolderExists" type="error" density="compact" variant="outlined">
+        <v-alert
+          v-if="folderPath.trim() && isFolderExists === false"
+          type="error"
+          density="compact"
+          variant="outlined"
+        >
           {{ t('settings_labels.database.folder_missing') }}
         </v-alert>
 
@@ -43,7 +48,7 @@
           <v-text-field
             :label="t('settings_labels.database.path_to_folder')"
             v-model="folderPath"
-            @update:model-value="isFolderExists = true"
+            @blur="validateFolderPath"
             :rules="[(v) => !!v || t('validation.write_path')]"
             variant="outlined"
             rounded="pill"
@@ -62,6 +67,7 @@ import {storeToRefs} from 'pinia'
 import {useAppStore} from '@/stores/app'
 import {useOperationsStore} from '@/stores/operations'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
+import {normalizePastedFilePath} from '@/utils/filePathInput'
 
 const emit = defineEmits(['select'])
 
@@ -74,8 +80,29 @@ const {isElectron} = storeToRefs(appStore)
 const operations = computed(() => operationsStore)
 
 const valid = ref(true)
-const isFolderExists = ref(true)
+const isFolderExists = ref(null)
 const form = ref(null)
+
+const onFolderPathInput = (value) => {
+  if (operations.value.moving) {
+    operations.value.moving.folderPath = normalizePastedFilePath(value)
+  }
+  isFolderExists.value = null
+}
+
+const validateFolderPath = async () => {
+  const path = folderPath.value.trim()
+  if (!path) {
+    isFolderExists.value = null
+    return
+  }
+  try {
+    isFolderExists.value = await $operable.checkFileExists(path)
+  } catch (error) {
+    console.error('Error checking folder:', error)
+    isFolderExists.value = false
+  }
+}
 
 const dialogLocal = computed({
   get() {
@@ -93,9 +120,7 @@ const folderPath = computed({
     return operations.value?.moving?.folderPath || ''
   },
   set(value) {
-    if (operations.value.moving) {
-      operations.value.moving.folderPath = value
-    }
+    onFolderPathInput(value)
   },
 })
 
@@ -104,6 +129,7 @@ const chooseDir = async () => {
     const result = await window.electronAPI.invoke('showOpenDialog', ['openDirectory'])
     if (result.filePaths.length !== 0) {
       folderPath.value = result.filePaths[0]
+      isFolderExists.value = true
     }
   } catch (error) {
     console.error('Error choosing directory:', error)

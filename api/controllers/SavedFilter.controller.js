@@ -2,7 +2,9 @@ module.exports = function (db) {
   // Create and Save a new SavedFilter
   const Op = db.Sequelize.Op
   const {
+    getDynamicPlaylistsBasic,
     getDynamicPlaylistsSummary,
+    getSavedFilterPlaylistSummary,
     getFilteredMediaForPlayback,
     getFilteredMediaForSavedFilter,
   } = require('../services/savedFilterMedia')
@@ -111,6 +113,17 @@ module.exports = function (db) {
       })
   };
 
+  const dynamicPlaylistsBasic = async function (req, res) {
+    try {
+      const data = await getDynamicPlaylistsBasic(db)
+      res.status(201).send(data)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while retrieving dynamic playlists."
+      })
+    }
+  };
+
   const dynamicPlaylistsSummary = async function (req, res) {
     try {
       const data = await getDynamicPlaylistsSummary(db)
@@ -118,6 +131,20 @@ module.exports = function (db) {
     } catch (err) {
       res.status(500).send({
         message: err.message || "Some error occurred while retrieving dynamic playlists."
+      })
+    }
+  };
+
+  const getPlaylistSummary = async function (req, res) {
+    try {
+      const data = await getSavedFilterPlaylistSummary(db, parseInt(req.params.id, 10))
+      res.status(201).send({
+        count: Number(data.count) || 0,
+        previewIds: data.previewIds || [],
+      })
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while retrieving playlist summary."
       })
     }
   };
@@ -145,7 +172,9 @@ module.exports = function (db) {
     findAll,
     update,
     deleteOne,
+    dynamicPlaylistsBasic,
     dynamicPlaylistsSummary,
+    getPlaylistSummary,
     getPlaylistMedia,
   }
 }

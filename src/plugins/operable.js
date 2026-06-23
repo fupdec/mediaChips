@@ -5,12 +5,11 @@ import {parseCountries} from '@/utils/country'
 import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
 import {useNotificationsStore} from '@/stores/notifications'
+import {normalizePastedFilePath} from '@/utils/filePathInput'
 
 export default {
   install(app, options = {}) {
     const {router, store} = options
-
-    let IP = store.localhost
 
     const operable = {
 
@@ -30,7 +29,6 @@ export default {
           config = remote.data;
         }
         store.localhost = `http://${config.ip}:${config.port}`;
-        IP = store.localhost
         store.appVersion = config.appVersion;
         store.dbPath = config.path;
 
@@ -42,28 +40,44 @@ export default {
       },
 
       async checkFileExists(filePath) {
+        filePath = normalizePastedFilePath(filePath)
+        if (!filePath) return false
+
         if (typeof window !== 'undefined') {
           if (window.$electronOperable?.checkFileExists) {
-            return window.$electronOperable.checkFileExists(filePath)
+            const exists = await window.$electronOperable.checkFileExists(filePath)
+            if (exists) return true
           }
           if (window.operableAPI?.checkFileExists) {
-            return window.operableAPI.checkFileExists(filePath)
+            const exists = await window.operableAPI.checkFileExists(filePath)
+            if (exists) return true
           }
         }
 
-        let is_exists = false
-        await axios.post(IP + "/api/Task/checkFileExists", {
-          path: filePath,
-        }).then(response => {
-          is_exists = response.status === 200 || response.status === 201
-        }).catch(() => {})
-        return is_exists
+        const apiBase = store.localhost
+        if (!apiBase) return false
+
+        try {
+          const response = await axios.post(apiBase + "/api/Task/checkFileExists", {
+            path: filePath,
+          })
+          if (response.status === 200 || response.status === 201) {
+            return true
+          }
+        } catch {}
+
+        try {
+          const response = await axios.post(apiBase + "/api/resolve-path", {filePath})
+          return Boolean(response.data?.exists)
+        } catch {
+          return false
+        }
       },
 
       async getLocalImage(imgPath, outside) {
         try {
           const res = await axios.post(
-            IP + "/api/get-file",
+            store.localhost + "/api/get-file",
             {url: imgPath, outside},
             {responseType: "blob"}
           );
@@ -74,7 +88,7 @@ export default {
       },
 
       async updateConfig(data) {
-        return axios.post(IP + "/api/update-config", data);
+        return axios.post(store.localhost + "/api/update-config", data);
       },
 
       async createImage(image, outputPath, sizes) {
@@ -88,7 +102,7 @@ export default {
           url = image;
         }
 
-        return axios.post(IP + "/api/Task/createImage", {
+        return axios.post(store.localhost + "/api/Task/createImage", {
           image,
           outputPath,
           url,
@@ -97,13 +111,13 @@ export default {
       },
 
       async deleteLocalFile(filePath) {
-        return axios.post(IP + "/api/Task/deleteFile", {
+        return axios.post(store.localhost + "/api/Task/deleteFile", {
           path: filePath,
         });
       },
 
       async createThumb(timestamp, inputPath, outputPath, width, overwrite) {
-        return axios.post(IP + "/api/Task/createThumb", {
+        return axios.post(store.localhost + "/api/Task/createThumb", {
           timestamp,
           inputPath,
           outputPath,
@@ -113,7 +127,7 @@ export default {
       },
 
       async getOption(option) {
-        return axios.get(IP + `/api/Setting/${option}`);
+        return axios.get(store.localhost + `/api/Setting/${option}`);
       },
       /*
       @param {Array} properties - array of options for the Electron dialog window
@@ -189,16 +203,16 @@ export default {
       setOption: _.debounce(async function(value, option) {
         let settings = useSettingsStore()
         settings[option] = value;
-        return await axios.put(IP + `/api/Setting/${option}`, {value});
+        return await axios.put(store.localhost + `/api/Setting/${option}`, {value});
       }, 10),
 
       async createDbEntry(value, model) {
-        return await axios.post(IP + `/api/${model}`, value);
+        return await axios.post(store.localhost + `/api/${model}`, value);
       },
 
       async openPath(entryPath, isDirectory) {
         try {
-          return await axios.post(IP + "/api/Task/openPath", {
+          return await axios.post(store.localhost + "/api/Task/openPath", {
             path: entryPath,
             isDir: isDirectory,
           });
@@ -215,7 +229,7 @@ export default {
 
       async getWatchedFolders() {
         try {
-          const res = await axios.get(`${IP}/api/MediaTypesInWatchedFolders`)
+          const res = await axios.get(`${store.localhost}/api/MediaTypesInWatchedFolders`)
           const watchedFolders = res.data
 
           const types = {}
@@ -254,7 +268,7 @@ export default {
           // Request saved filters from the server
           const response = await axios({
             method: 'post',
-            url: `${IP}/api/SavedFilter/findAll`,
+            url: `${store.localhost}/api/SavedFilter/findAll`,
             data: {
               mediaTypeId: ENV.media_type_id || null,
               metaId: ENV.meta_id || null,
@@ -312,7 +326,7 @@ export default {
         try {
           // Request filter rows
           const response = await axios.get(
-            `${IP}/api/FilterRowsInSavedFilter?filterId=${savedFilterId}`
+            `${store.localhost}/api/FilterRowsInSavedFilter?filterId=${savedFilterId}`
           );
 
           let filters = response.data || [];
@@ -336,7 +350,7 @@ export default {
               if (filterRow.type === 'array' && filterRow.param !== 'country') {
                 try {
                   const tagsResponse = await axios.get(
-                    `${IP}/api/TagsInFilterRow?rowId=${filterRow.id}`
+                    `${store.localhost}/api/TagsInFilterRow?rowId=${filterRow.id}`
                   );
 
                   const tags = tagsResponse.data || [];

@@ -6,7 +6,10 @@
     hover
     @click="emit('click')"
   >
-    <div class="home-media-card__preview">
+    <div
+      class="home-media-card__preview"
+      :class="{ 'no-file': !isFileExists }"
+    >
       <v-img
         v-if="thumb"
         :src="thumb"
@@ -72,7 +75,7 @@
 </template>
 
 <script setup>
-import {computed} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -96,6 +99,19 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['click'])
+
+const isFileExists = ref(true)
+
+async function checkFileExists() {
+  if (!props.item?.path) {
+    isFileExists.value = false
+    return
+  }
+  isFileExists.value = await $operable.checkFileExists(props.item.path)
+}
+
+onMounted(checkFileExists)
+watch(() => props.item?.path, checkFileExists)
 
 dayjs.extend(relativeTime)
 
@@ -144,6 +160,13 @@ const subtitle = computed(() => {
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: rgba(var(--v-theme-on-surface), 0.06);
+
+    &.no-file {
+      .home-media-card__thumb,
+      :deep(.v-img__img) {
+        filter: saturate(0.1) opacity(50%);
+      }
+    }
   }
 
   &__thumb {

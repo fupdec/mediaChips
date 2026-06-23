@@ -85,6 +85,10 @@ export const docs = [
     name: 'Playlists',
     icon: 'mdi-format-list-bulleted',
     selector: ['[href="/playlists"]'],
+    children: [
+      { id: 'playlists.smart', name: 'Smart playlists', icon: 'mdi-filter-variant' },
+      { id: 'playlists.manual', name: 'Manual playlists', icon: 'mdi-playlist-play' },
+    ],
   },
   {
     id: 'markers',

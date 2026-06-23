@@ -39,7 +39,8 @@
     </v-btn>
 
     <v-textarea
-      v-model="searchPaths"
+      :model-value="searchPaths"
+      @update:model-value="onSearchPathsInput"
       :label="t('settings_labels.database.find_missing_media_paths_label')"
       :hint="t('media.adding.paths_hint')"
       :disabled="active"
@@ -169,6 +170,7 @@ import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import {normalizePastedFilePathsText} from '@/utils/filePathInput'
 
 const {t} = useI18n()
 const appStore = useAppStore()
@@ -182,6 +184,11 @@ const status = ref({
 })
 
 const searchPaths = ref('')
+
+const onSearchPathsInput = (value) => {
+  searchPaths.value = normalizePastedFilePathsText(value)
+}
+
 const matches = ref([])
 const selectedIds = ref([])
 const selectAll = ref(false)

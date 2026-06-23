@@ -1,9 +1,9 @@
 const {Op} = require('sequelize')
 const {parseCountries} = require('../../src/utils/country.js')
 const {
-  getFilteredMediaSummary,
   loadFilteredMediaIds,
   loadMediaPlaylistItems,
+  getFilteredMediaSummary,
 } = require('./mediaItemsLoader')
 
 function normalizeFilterRow(row, tagsByRowId = null) {
@@ -126,6 +126,51 @@ async function getFilteredMediaForSavedFilter(db, savedFilterId, options = {}) {
   }
 }
 
+async function getSavedFilterPlaylistSummary(db, savedFilterId, options = {}) {
+  const {
+    mediaTypeId = await getVideoMediaTypeId(db),
+    sortBy = 'id',
+    direction = 'desc',
+    previewLimit = 4,
+  } = options
+
+  if (!mediaTypeId) {
+    return {count: 0, previewIds: []}
+  }
+
+  const filters = await loadSavedFilterRows(db, savedFilterId)
+
+  return getFilteredMediaSummary(db, {
+    mediaTypeId,
+    filters,
+    sortBy,
+    direction,
+    previewLimit,
+    find_duplicates: false,
+    duplicates_by: 'filesize',
+  })
+}
+
+async function getDynamicPlaylistsBasic(db) {
+  const mediaTypeId = await getVideoMediaTypeId(db)
+  if (!mediaTypeId) return []
+
+  const savedFilters = await db.SavedFilter.findAll({
+    where: {
+      name: {[Op.not]: null},
+      mediaTypeId,
+    },
+    order: [['name', 'ASC']],
+    attributes: ['id', 'name'],
+    raw: true,
+  })
+
+  return savedFilters.map((savedFilter) => ({
+    id: savedFilter.id,
+    name: savedFilter.name,
+  }))
+}
+
 async function getDynamicPlaylistsSummary(db) {
   const mediaTypeId = await getVideoMediaTypeId(db)
   if (!mediaTypeId) return []
@@ -148,18 +193,21 @@ async function getDynamicPlaylistsSummary(db) {
 
   const summaries = await Promise.all(savedFilters.map(async (savedFilter) => {
     const filters = filtersBySavedFilterId.get(savedFilter.id) || []
-    const {count, previewIds} = await getFilteredMediaSummary(db, {
+    const summary = await getFilteredMediaSummary(db, {
       mediaTypeId,
       filters,
       sortBy: 'id',
       direction: 'desc',
+      previewLimit: 4,
+      find_duplicates: false,
+      duplicates_by: 'filesize',
     })
 
     return {
       id: savedFilter.id,
       name: savedFilter.name,
-      count,
-      previewIds,
+      count: Number(summary.count) || 0,
+      previewIds: summary.previewIds || [],
     }
   }))
 
@@ -196,7 +244,9 @@ async function getFilteredMediaForPlayback(db, savedFilterId, options = {}) {
 }
 
 module.exports = {
+  getDynamicPlaylistsBasic,
   getDynamicPlaylistsSummary,
+  getSavedFilterPlaylistSummary,
   getFilteredMediaForPlayback,
   getFilteredMediaForSavedFilter,
   getVideoMediaTypeId,

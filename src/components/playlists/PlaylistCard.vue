@@ -58,16 +58,6 @@
           <v-icon size="30">mdi-play</v-icon>
         </v-btn>
       </div>
-
-      <v-chip
-        v-if="videoCount > 0"
-        size="small"
-        class="playlist-cover__count"
-        variant="flat"
-        prepend-icon="mdi-video"
-      >
-        {{ videoCount }}
-      </v-chip>
     </div>
 
     <div
@@ -143,11 +133,14 @@ const {t} = useI18n()
 const displayThumbs = computed(() => (props.playlist.thumbs || []).slice(0, 4))
 
 const videoCount = computed(() => {
-  if (props.videoCount != null) return props.videoCount
-  return props.playlist.media?.length || props.playlist.count || 0
+  if (props.playlist.countLoading) return null
+  if (props.videoCount != null) return Number(props.videoCount) || 0
+  if (props.playlist.count != null) return Number(props.playlist.count) || 0
+  return props.playlist.media?.length || 0
 })
 
 const videoCountLabel = computed(() => {
+  if (videoCount.value == null) return t('playlists.count_loading')
   const count = videoCount.value
   if (count === 0) return t('playlists.no_videos_added')
   if (count === 1) return t('playlists.one_video')
@@ -261,15 +254,6 @@ const collageClass = computed(() => {
 
 .play-btn {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-}
-
-.playlist-cover__count {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.62) !important;
-  color: #fff;
 }
 
 .playlist-card__footer {

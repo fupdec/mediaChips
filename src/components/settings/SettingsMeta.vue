@@ -1,6 +1,6 @@
 <template>
   <v-container max-width="960">
-    <div class="d-flex align-center">
+    <div class="d-flex align-center flex-wrap ga-2">
       <v-btn
         color="success"
         rounded="xl"
@@ -10,7 +10,16 @@
         @click="openCreateDialog"
       ></v-btn>
 
-      <button-documentation id="meta_types"></button-documentation>
+      <v-btn
+        variant="text"
+        size="small"
+        color="primary"
+        class="meta-docs-link"
+        @click="showMetaDocs"
+      >
+        <v-icon start size="18">mdi-help-circle-outline</v-icon>
+        {{ t('meta.dialogs.custom_metadata_docs') }}
+      </v-btn>
     </div>
 
     <v-spacer class="my-6"></v-spacer>
@@ -186,7 +195,6 @@ import {useAppStore} from '@/stores/app'
 import {useEventBus} from '@/utils/eventBus'
 import axios from 'axios'
 import _ from 'lodash'
-import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue";
 import MetaManager from '@/components/dialogs/DialogMetaManager.vue'
 
 // Stores
@@ -285,6 +293,10 @@ const openEditDialog = (metaItem) => {
 const closeEditDialog = () => {
   editDialog.value = false
   selectedMeta.value = null
+}
+
+const showMetaDocs = () => {
+  eventBus.emit('showDocumentation', 'meta')
 }
 
 // Lifecycle hooks

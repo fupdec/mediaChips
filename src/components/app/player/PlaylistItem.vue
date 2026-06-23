@@ -1,12 +1,12 @@
 <template>
   <v-card :disabled="!is_file_exists || is_now_playing">
+    <div :class="{ 'no-file': !is_file_exists }">
     <v-img
       @click="play"
       :key="video.id"
       :src="thumb"
       :aspect-ratio="16 / 9"
       :id="'video_'+video.id"
-      :class="{'no-file':!is_file_exists}"
       class="thumb"
       contain
     >
@@ -22,6 +22,7 @@
         class="time"
         v-text="getDuration(video.duration)"/>
     </v-img>
+    </div>
 
     <div v-if="is_now_playing" class="playing-overlay">
       <v-chip size="small" variant="flat" color="primary">

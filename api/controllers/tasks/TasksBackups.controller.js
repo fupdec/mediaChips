@@ -150,8 +150,13 @@ module.exports = function (app, db) {
   };
 
   const importBackup = async (req, res) => {
-    const archive = path.basename(req.body.path)
-    const fromPath = req.body.path
+    const {normalizeUserPath} = require('../../utils/normalizeUserPath')
+    const fromPath = normalizeUserPath(req.body.path)
+    if (!fromPath || !fs.existsSync(fromPath)) {
+      res.status(400).send({message: 'File not found'})
+      return
+    }
+    const archive = path.basename(fromPath)
     const toPath = path.join(backupsPath, archive)
     try {
       fse.copySync(fromPath, toPath, {overwrite: false})

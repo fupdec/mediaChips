@@ -135,6 +135,7 @@ import axios from "axios"
 import { useAppStore } from '@/stores/app'
 import { useOperationsStore } from '@/stores/operations'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
+import {normalizePastedFilePath} from '@/utils/filePathInput'
 
 const props = defineProps({
   media: Object,
@@ -172,6 +173,11 @@ const headerButtons = computed(() => [{
 }])
 
 const onPathInput = (value) => {
+  const normalized = normalizePastedFilePath(value)
+  if (normalized !== value) {
+    file_path.value = normalized
+    value = normalized
+  }
   is_different_path.value = path.normalize(props.media.path) !== path.normalize(value || '')
 }
 
