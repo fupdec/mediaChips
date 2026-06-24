@@ -33,6 +33,10 @@ const {
   getMissingMediaStatus,
   iterateMissingMediaSearch,
 } = require('../services/missingMediaFinder')
+const {
+  getVideoImagesGenerationStatus,
+  iterateVideoImagesGeneration,
+} = require('../services/videoImagesGeneration')
 
 const GENERATED_MEDIA_FOLDERS = {
   timelines: 'media/videos/timelines',
@@ -60,6 +64,17 @@ module.exports = function (db) {
       setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
     }),
   ])
+
+  const createStreamAbortSignal = (req) => {
+    let stopped = false
+    const stop = () => {
+      stopped = true
+    }
+
+    req.on('aborted', stop)
+
+    return () => stopped
+  }
   const Op = db.Sequelize.Op
   const Sequelize = db.Sequelize
 
@@ -1450,23 +1465,61 @@ module.exports = function (db) {
     }
   }
 
-  const streamContentHashBackfill = async (req, res) => {
+  const videoImagesGenerationStatus = async (req, res) => {
+    try {
+      const status = await getVideoImagesGenerationStatus(db, dbPath)
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while checking video images generation status.',
+      })
+    }
+  }
+
+  const streamVideoImagesGeneration = async (req, res) => {
+    const imageType = String(req.query.type || '').toLowerCase()
     const writeEvent = (event) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
-
-    let stopped = false
-    req.on('close', () => {
-      stopped = true
-    })
 
     try {
       res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
       res.setHeader('Cache-Control', 'no-cache')
       res.setHeader('X-Accel-Buffering', 'no')
 
+      const shouldStop = createStreamAbortSignal(req)
+
+      for await (const event of iterateVideoImagesGeneration(db, dbPath, imageType, {
+        shouldStop,
+        force: String(req.query.force || '').toLowerCase() === 'true',
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: err.message || 'Some error occurred while generating video images.',
+      })
+      res.end()
+    }
+  }
+
+  const streamContentHashBackfill = async (req, res) => {
+    const writeEvent = (event) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const shouldStop = createStreamAbortSignal(req)
+
       for await (const event of iterateContentHashBackfill(db, {
-        shouldStop: () => stopped || res.writableEnded,
+        shouldStop,
         force: String(req.query.force || '').toLowerCase() === 'true',
       })) {
         writeEvent(event)
@@ -1498,21 +1551,17 @@ module.exports = function (db) {
       res.write(`${JSON.stringify(event)}\n`)
     }
 
-    let stopped = false
-    req.on('close', () => {
-      stopped = true
-    })
-
     try {
       res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
       res.setHeader('Cache-Control', 'no-cache')
       res.setHeader('X-Accel-Buffering', 'no')
 
       const folders = Array.isArray(req.body?.folders) ? req.body.folders : []
+      const shouldStop = createStreamAbortSignal(req)
 
       for await (const event of iterateMissingMediaSearch(db, {
         folders,
-        shouldStop: () => stopped || res.writableEnded,
+        shouldStop,
       })) {
         writeEvent(event)
       }
@@ -1601,6 +1650,8 @@ module.exports = function (db) {
     downloadClipModel,
     contentHashBackfillStatus,
     streamContentHashBackfill,
+    videoImagesGenerationStatus,
+    streamVideoImagesGeneration,
     missingMediaStatus,
     streamFindMissingMedia,
     relinkMissingMedia,

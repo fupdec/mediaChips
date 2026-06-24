@@ -1,69 +1,66 @@
 <template>
-  <v-menu
-    v-model="showMenu"
-    @update:model-value="hideAll"
-    :close-on-content-click="false"
-    nudge-bottom="10"
-    offset-y
-    eager
-    location="bottom end"
-    :target="menuTarget"
-  >
-    <template #activator="{ props: activatorProps }">
-      <v-tooltip location="bottom">
-        <template #activator="{ props: tooltipProps }">
-          <v-badge
-            :model-value="!!badge"
-            :content="badge"
-            color="secondary"
-            offset-x="35"
-            offset-y="10"
-          >
-            <v-btn
-              ref="activatorRef"
-              v-bind="mergeProps(activatorProps, tooltipProps)"
-              icon
-            >
-              <v-icon>mdi-bell-outline</v-icon>
-            </v-btn>
-          </v-badge>
-        </template>
-        <span>{{ t("appbar.notifications") }}</span>
-      </v-tooltip>
-    </template>
-
-    <v-card width="400" class="notifications-wrap" rounded="lg">
-      <v-card-actions class="px-4">
-        <div class="d-flex align-center">
-          <v-icon size="20" start>mdi-bell</v-icon>
+  <div class="notifications-menu">
+    <v-badge
+      :model-value="!!badge"
+      :content="badge"
+      color="secondary"
+      offset-x="35"
+      offset-y="10"
+    >
+      <v-btn
+        ref="activatorRef"
+        icon
+      >
+        <v-icon>mdi-bell-outline</v-icon>
+        <v-tooltip activator="parent" location="bottom">
           {{ t("appbar.notifications") }}
-        </div>
-        <v-spacer></v-spacer>
-        <v-btn
-          v-if="notifications.length > 0"
-          @click="closeAll"
-          variant="outlined"
-          size="small"
-        >
-          <v-icon start>mdi-notification-clear-all</v-icon>
-          {{ t('appbar.closeAll') }}
-        </v-btn>
-      </v-card-actions>
+        </v-tooltip>
+      </v-btn>
+    </v-badge>
 
-      <v-divider></v-divider>
-
-      <div class="notifications-list">
-        <v-card-text class="py-2 px-1">
-          <template
-            v-for="item in activityItems"
-            :key="item.key"
+    <v-menu
+      ref="menuRef"
+      v-model="showMenu"
+      :activator="activatorRef"
+      location="bottom end"
+      origin="top end"
+      offset="8"
+      :close-on-content-click="false"
+      scroll-strategy="reposition"
+      @update:model-value="hideAll"
+    >
+      <v-card width="400" class="notifications-wrap" rounded="lg">
+        <v-card-actions class="px-4">
+          <div class="d-flex align-center">
+            <v-icon size="20" start>mdi-bell</v-icon>
+            {{ t("appbar.notifications") }}
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn
+            v-if="notifications.length > 0"
+            @click="closeAll"
+            variant="outlined"
+            size="small"
           >
-            <v-card
-              v-if="item.kind === 'task'"
-              class="task-notification"
-              elevation="3"
-              rounded="lg"
+            <v-icon start>mdi-notification-clear-all</v-icon>
+            {{ t('appbar.closeAll') }}
+          </v-btn>
+        </v-card-actions>
+
+        <v-divider></v-divider>
+
+        <div class="notifications-list">
+          <v-card-text class="py-2 px-1">
+            <template
+              v-for="item in activityItems"
+              :key="item.key"
             >
+              <v-card
+                v-if="item.kind === 'task'"
+                class="task-notification"
+                elevation="3"
+                rounded="lg"
+              >
                 <template #prepend>
                   <v-avatar :color="item.color || 'primary'">
                     <v-icon :icon="`mdi-${item.icon || 'cog'}`" dark></v-icon>
@@ -110,33 +107,34 @@
                 </v-card-actions>
               </v-card>
 
-            <Notification
-              v-else
-              :notification="item.notification"
-            />
-          </template>
+              <Notification
+                v-else
+                :notification="item.notification"
+              />
+            </template>
 
-          <div v-if="activityItems.length === 0" class="text-center py-2">
-            <div class="layout-img">
-              <v-img
-                src="/images/bell.svg"
-                max-height="140"
-                class="my-4"
-                contain
-              ></v-img>
-              <div class="text-medium-emphasis">
-                {{ t("appbar.noNotifications") }}
+            <div v-if="activityItems.length === 0" class="text-center py-2">
+              <div class="layout-img">
+                <v-img
+                  src="/images/bell.svg"
+                  max-height="140"
+                  class="my-4"
+                  contain
+                ></v-img>
+                <div class="text-medium-emphasis">
+                  {{ t("appbar.noNotifications") }}
+                </div>
               </div>
             </div>
-          </div>
-        </v-card-text>
-      </div>
-    </v-card>
-  </v-menu>
+          </v-card-text>
+        </div>
+      </v-card>
+    </v-menu>
+  </div>
 </template>
 
 <script setup>
-import { computed, mergeProps, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useTasksStore } from '@/stores/tasks'
 import {useI18n} from "vue-i18n";
@@ -146,6 +144,7 @@ import Notification from '@/components/app/Notification.vue'
 const notificationsStore = useNotificationsStore()
 const tasksStore = useTasksStore()
 const activatorRef = ref(null)
+const menuRef = ref(null)
 
 const {t} = useI18n()
 
@@ -177,11 +176,16 @@ const activityItems = computed(() => {
 })
 
 const badge = computed(() => activityItems.value.length)
-const menuTarget = computed(() => activatorRef.value?.$el || activatorRef.value)
 
 const showMenu = computed({
   get: () => notificationsStore.show,
   set: (value) => notificationsStore.show = value
+})
+
+watch(() => notificationsStore.show, async (show) => {
+  if (!show) return
+  await nextTick()
+  menuRef.value?.updateLocation?.()
 })
 
 // Методы
@@ -212,6 +216,11 @@ const closeAll = () => {
 </script>
 
 <style lang="scss" scoped>
+.notifications-menu {
+  display: inline-flex;
+  align-items: center;
+}
+
 .notifications-wrap {
   .notification {
     width: calc(100% - 10px);

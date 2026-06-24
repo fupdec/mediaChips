@@ -2,7 +2,7 @@
   <div class="mx-4 pb-4">
     <settings-category-divider
       :title="t('settings_labels.database.content_hash_backfill')"
-      icon="mdi-fingerprint"
+      icon="fingerprint"
     />
 
     <v-alert

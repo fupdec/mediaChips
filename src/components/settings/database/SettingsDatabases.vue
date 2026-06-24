@@ -1,5 +1,10 @@
 <template>
   <div class="mx-4">
+    <settings-category-divider
+      :title="t('settings.tabs.database')"
+      icon="database-outline"
+    />
+
     <!-- Actions -->
     <v-card-actions>
       <v-btn
@@ -124,6 +129,7 @@ import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 
 import SettingsBackups from '@/components/settings/database/SettingsBackups.vue'
+import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
 

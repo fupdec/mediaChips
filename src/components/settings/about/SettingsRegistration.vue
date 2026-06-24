@@ -1,5 +1,10 @@
 <template>
   <div class="mx-4">
+    <settings-category-divider
+      :title="t('registration.activation_key')"
+      icon="key-variant"
+    />
+
     <v-table class="mb-4">
       <tbody>
       <tr>
@@ -294,6 +299,7 @@ import {useI18n} from 'vue-i18n'
 import {useRegistrationStore} from '@/stores/registration'
 import {useNotificationsStore} from '@/stores/notifications'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
+import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 
 // Инициализация хранилищ
 const registrationStore = useRegistrationStore()

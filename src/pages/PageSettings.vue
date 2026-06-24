@@ -111,10 +111,14 @@
           <SettingsMediaTypes/>
         </div>
 
-        <div v-show="tab === 'database'">
+        <div v-if="tab === 'database'">
           <SettingsList>
             <SettingsSection>
               <SettingsDatabases/>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsGenerateVideoImages/>
             </SettingsSection>
 
             <SettingsSection>
@@ -187,6 +191,9 @@ const SettingsDatabases = defineAsyncComponent(() =>
 )
 const SettingsClearGeneratedImages = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsClearGeneratedImages.vue")
+)
+const SettingsGenerateVideoImages = defineAsyncComponent(() =>
+  import("@/components/settings/database/SettingsGenerateVideoImages.vue")
 )
 const SettingsContentHashBackfill = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsContentHashBackfill.vue")

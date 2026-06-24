@@ -2,7 +2,7 @@
   <div class="mx-4">
     <settings-category-divider
       :title="$t('settings_labels.database.clear_generated_images')"
-      icon="image-multiple-outline"
+      icon="delete-sweep"
     ></settings-category-divider>
 
     <v-alert

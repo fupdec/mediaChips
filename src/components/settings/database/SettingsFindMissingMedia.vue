@@ -2,7 +2,7 @@
   <div class="mx-4 pb-4">
     <settings-category-divider
       :title="t('settings_labels.database.find_missing_media')"
-      icon="mdi-file-search-outline"
+      icon="file-search-outline"
     />
 
     <v-alert

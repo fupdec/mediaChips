@@ -114,6 +114,10 @@ module.exports = (app, db) => {
   router.get("/contentHashBackfillStatus", Task.contentHashBackfillStatus);
   router.post("/streamContentHashBackfill", Task.streamContentHashBackfill);
 
+  // batch generation of video preview images
+  router.get("/videoImagesGenerationStatus", Task.videoImagesGenerationStatus);
+  router.post("/streamVideoImagesGeneration", Task.streamVideoImagesGeneration);
+
   // find and relink missing media files on disk
   router.get("/missingMediaStatus", Task.missingMediaStatus);
   router.post("/streamFindMissingMedia", Task.streamFindMissingMedia);
