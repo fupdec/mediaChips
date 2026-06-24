@@ -1,5 +1,5 @@
 <template>
-  <v-card rounded="xl" elevation="4" class="px-4 mb-6">
+  <SettingsSection padded>
     <v-switch
       v-model="settings.hidden"
       hide-details
@@ -55,11 +55,14 @@
     >
       {{ t('meta.settings.active_after_pinning_media') }}
     </v-alert>
-  </v-card>
+  </SettingsSection>
 
-  <v-card rounded="xl" elevation="4" class="px-4">
-    <settings-category-divider icon="post"
-      :title="t('meta.settings.cards_appearance')"></settings-category-divider>
+  <SettingsSection padded>
+    <settings-category-divider
+      icon="post"
+      compact
+      :title="t('meta.settings.cards_appearance')"
+    />
     <div class="text-high-emphasis">{{ t('meta.settings.image_aspect_ratio') }}</div>
 
     <v-alert
@@ -130,11 +133,14 @@
         </template>
       </v-radio>
     </v-radio-group>
-  </v-card>
+  </SettingsSection>
 
-  <v-card rounded="xl" elevation="4" class="px-4 pb-4 mt-6">
-    <settings-category-divider icon="tag"
-      :title="t('meta.settings.chips_appearance')"></settings-category-divider>
+  <SettingsSection padded>
+    <settings-category-divider
+      icon="tag"
+      compact
+      :title="t('meta.settings.chips_appearance')"
+    />
 
     <div class="d-flex align-center flex-wrap justify-space-between mt-4 mb-4">
       <div class="text-body-1 text-high-emphasis mr-6">
@@ -187,11 +193,14 @@
           inset/>
       </v-col>
     </v-row>
-  </v-card>
+  </SettingsSection>
 
-  <v-card rounded="xl" elevation="4" class="px-4 pb-4 mt-6">
-    <settings-category-divider icon="shape"
-      :title="t('meta.settings.preset_meta_in_tags')"></settings-category-divider>
+  <SettingsSection padded>
+    <settings-category-divider
+      icon="shape"
+      compact
+      :title="t('meta.settings.preset_meta_in_tags')"
+    />
 
     <v-row>
       <v-col cols="12"
@@ -246,7 +255,7 @@
         </v-switch>
       </v-col>
     </v-row>
-  </v-card>
+  </SettingsSection>
 </template>
 
 <script setup>
@@ -255,9 +264,9 @@ import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {isVideoMediaType, isImageMediaType, isAudioMediaType, isTextMediaType} from '@/utils/mediaType'
 import axios from 'axios'
-import SettingsCategoryDivider
-  from "@/components/ui/SettingsCategoryDivider.vue";
-import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue";
+import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import SettingsSection from '@/components/ui/SettingsSection.vue'
+import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
 
 // Props
 const props = defineProps({

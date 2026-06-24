@@ -1,9 +1,10 @@
 <template>
-  <v-card rounded="xl" elevation="4" class="px-4 mb-6" height="100%">
+  <SettingsSection padded>
     <settings-category-divider
       icon="star"
+      compact
       :title="t('meta.settings.rating_customization')"
-    ></settings-category-divider>
+    />
 
     <div class="text-center">
       <v-chip variant="tonal" size="large" class="mb-4">
@@ -83,16 +84,16 @@
       @close="dialogPalette = false"
       @getColor="changeColor($event)"
     />
-  </v-card>
+  </SettingsSection>
 </template>
 
 <script setup>
-import {ref, reactive, watch, onMounted, nextTick} from 'vue'
+import {ref, watch, onMounted, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import ColorPicker from '@/components/elements/ColorPicker.vue'
-import SettingsCategoryDivider
-  from "@/components/ui/SettingsCategoryDivider.vue";
+import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import SettingsSection from '@/components/ui/SettingsSection.vue'
 
 const props = defineProps({
   meta: Object,

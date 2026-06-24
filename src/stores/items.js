@@ -116,10 +116,14 @@ export const useItemsStore = defineStore('items', {
           : []);
 
       return [...assigned].sort((a, b) => {
-        const nameA = a.meta?.name || '';
-        const nameB = b.meta?.name || '';
-        return nameA.localeCompare(nameB);
-      });
+        const orderA = Number.isFinite(a?.order) ? a.order : 0
+        const orderB = Number.isFinite(b?.order) ? b.order : 0
+        if (orderA !== orderB) return orderA - orderB
+
+        const nameA = a.meta?.name || ''
+        const nameB = b.meta?.name || ''
+        return nameA.localeCompare(nameB)
+      })
     }
   },
 

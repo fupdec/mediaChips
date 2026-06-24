@@ -65,6 +65,7 @@
                     :item="tag"
                     :tags="tag.tags"
                     :values="tag.values"
+                    :assignment="pinnedMeta"
                     :is-show-all="true"
                     type="tag"
                     tag-page
@@ -358,6 +359,7 @@ const getCompletionStatus = async () => {
   try {
     const pinnedRes = await axios.get(apiUrl.value + "/api/PinnedMeta?metaId=" + meta.value.id)
     pinned = pinnedRes.data || []
+    pinnedMeta.value = pinned
   } catch (e) {
     console.log(e)
   }

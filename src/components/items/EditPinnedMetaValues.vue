@@ -331,6 +331,7 @@ import 'dayjs/locale/es'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/ru'
 import {usePresetMeta} from '@/composable/ItemPresetMeta'
+import {sortPinnedAssignmentItems} from '@/utils/pinnedMetaOrder'
 
 // Components
 import MetaInputArray from '@/components/meta/input/MetaInputArray.vue'
@@ -520,7 +521,7 @@ const getMetaValues = async () => {
 
       // Получаем закрепленные метаданные (только для тегов)
       const pinnedResponse = await axios.get(`${apiUrl.value}/api/PinnedMeta?metaId=${props.meta.id}`)
-      assignedItems.value = pinnedResponse.data
+      assignedItems.value = sortPinnedAssignmentItems(pinnedResponse.data)
       scraperStore.pinned = assignedItems.value
 
     } else if (isMedia.value) {
@@ -531,8 +532,7 @@ const getMetaValues = async () => {
       const valuesResponse = await axios.get(`${apiUrl.value}/api/ValuesInMedia?mediaId=${currentItemId.value}`)
       values = valuesResponse.data
 
-      // Используем assigned из store для медиа
-      assignedItems.value = itemsStore.assigned || []
+      assignedItems.value = sortPinnedAssignmentItems(itemsStore.assigned || [])
     }
 
     // Инициализируем значения для всех ассоциированных мета

@@ -33,6 +33,11 @@
           {{ t("settings.tabs.media") }}
         </v-tab>
 
+        <v-tab value="assignment">
+          <v-icon start>mdi-pin-outline</v-icon>
+          {{ t("settings.tabs.field_pinning") }}
+        </v-tab>
+
         <v-tab value="database">
           <v-icon start>mdi-database-outline</v-icon>
           {{ t("settings.tabs.database") }}
@@ -111,6 +116,10 @@
           <SettingsMediaTypes/>
         </div>
 
+        <div v-show="tab === 'assignment'">
+          <SettingsMetaAssignment/>
+        </div>
+
         <div v-if="tab === 'database'">
           <SettingsList>
             <SettingsSection>
@@ -132,6 +141,10 @@
             <SettingsSection>
               <SettingsFindMissingMedia/>
             </SettingsSection>
+
+            <SettingsSection>
+              <SettingsFaceRecognition/>
+            </SettingsSection>
           </SettingsList>
         </div>
 
@@ -152,7 +165,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, defineAsyncComponent} from "vue"
+import {ref, onMounted, watch, nextTick, defineAsyncComponent} from "vue"
 import {useRoute} from "vue-router"
 import {useI18n} from "vue-i18n"
 import SettingsList from "@/components/ui/SettingsList.vue"
@@ -173,6 +186,9 @@ const SettingsWatchedFolders = defineAsyncComponent(() =>
 )
 const SettingsMeta = defineAsyncComponent(() =>
   import("@/components/settings/SettingsMeta.vue")
+)
+const SettingsMetaAssignment = defineAsyncComponent(() =>
+  import("@/components/settings/SettingsMetaAssignment.vue")
 )
 const SettingsMediaTypes = defineAsyncComponent(() =>
   import("@/components/settings/SettingsMediaTypes.vue")
@@ -201,6 +217,9 @@ const SettingsContentHashBackfill = defineAsyncComponent(() =>
 const SettingsFindMissingMedia = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsFindMissingMedia.vue")
 )
+const SettingsFaceRecognition = defineAsyncComponent(() =>
+  import("@/components/settings/database/SettingsFaceRecognition.vue")
+)
 const SettingsGeneral = defineAsyncComponent(() =>
   import("@/components/settings/general/SettingsGeneral.vue")
 )
@@ -221,9 +240,44 @@ const tab = ref("general")
 const route = useRoute()
 const {t} = useI18n()
 
-onMounted(() => {
-  if (route.query.tab === "about") tab.value = "about"
-})
+const SETTINGS_SECTION_IDS = {
+  generate_video_images: 'settings-generate-video-images',
+  face_recognition: 'settings-face-recognition',
+}
+
+function scrollToSettingsSection(sectionId, attempts = 12) {
+  const element = document.getElementById(sectionId)
+  if (element) {
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+    return
+  }
+
+  if (attempts <= 0) return
+
+  requestAnimationFrame(() => {
+    scrollToSettingsSection(sectionId, attempts - 1)
+  })
+}
+
+function applyRouteSettings() {
+  if (route.query.tab) {
+    tab.value = String(route.query.tab)
+  }
+
+  const sectionId = SETTINGS_SECTION_IDS[route.query.section]
+  if (!sectionId) return
+
+  nextTick(() => {
+    scrollToSettingsSection(sectionId)
+  })
+}
+
+onMounted(applyRouteSettings)
+
+watch(() => route.fullPath, applyRouteSettings)
 </script>
 
 <style scoped>

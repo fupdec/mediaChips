@@ -61,9 +61,6 @@
             class="mt-4"
           />
 
-          <settings-category-divider icon="pin" title="Pinned"></settings-category-divider>
-          <MetaSettingsPinned :meta="meta"/>
-
           <!-- Array settings -->
           <MetaSettingsArray
             v-if="meta.type === 'array'"
@@ -98,8 +95,6 @@ import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import MetaSettingsArray from '@/components/dialogs/meta/MetaSettingsArray.vue'
 import MetaSettingsRating from '@/components/dialogs/meta/MetaSettingsRating.vue'
 import axios from 'axios'
-import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";
-import MetaSettingsPinned from "@/components/dialogs/meta/MetaSettingsPinned.vue";
 
 // Props
 const props = defineProps({

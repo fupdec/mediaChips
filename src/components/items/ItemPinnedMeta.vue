@@ -48,16 +48,16 @@
         </div>
       </div>
 
-      <!-- TAGS -->
+      <!-- PINNED FIELDS -->
       <div
-        v-for="category in tagsComputed"
-        :key="`${category[0].metaId}_${item.id}`"
+        v-for="category in pinnedCategoriesComputed"
+        :key="`${category.kind}_${category.metaId}_${item.id}`"
         class="tag-page-param"
       >
-        <div class="tag-page-param__value">
+        <div v-if="category.kind === 'tags'" class="tag-page-param__value">
           <v-chip-group column>
             <v-chip
-              v-for="tag in category"
+              v-for="tag in category.items"
               :key="`${tag.id}_${item.id}`"
               @click.stop.prevent="showMenu($event, tag)"
               @mouseenter="$readable.showHoverImage($event, tag.metaId, tag.id)"
@@ -68,29 +68,17 @@
           </v-chip-group>
         </div>
 
-        <div class="tag-page-param__title">
-          <span>{{ category[0].meta.name }}</span>
-          <v-icon size="18">mdi-{{ category[0].meta.icon }}</v-icon>
-        </div>
-      </div>
-
-      <!-- VALUES -->
-      <div
-        v-for="category in valuesComputed"
-        :key="`${category[0].id}_${item.id}`"
-        class="tag-page-param"
-      >
-        <div class="tag-page-param__value">
+        <div v-else class="tag-page-param__value">
           <v-chip
-            v-for="i in category"
+            v-for="i in category.items"
             :key="`${i.name}_${item.id}`"
           >{{ i.value }}
           </v-chip>
         </div>
 
         <div class="tag-page-param__title">
-          <span>{{ category[0].name }}</span>
-          <v-icon size="18">mdi-{{ category[0].icon }}</v-icon>
+          <span>{{ category.kind === 'tags' ? category.items[0].meta.name : category.items[0].name }}</span>
+          <v-icon size="18">mdi-{{ category.kind === 'tags' ? category.items[0].meta.icon : category.items[0].icon }}</v-icon>
         </div>
       </div>
     </div>
@@ -115,46 +103,38 @@
         ></v-chip>
       </div>
 
-      <!-- TAGS GROUPED -->
+      <!-- PINNED FIELDS GROUPED -->
       <div
-        v-for="category in tagsComputed"
-        :key="`${category[0].metaId}_${item.id}`"
+        v-for="category in pinnedCategoriesComputed"
+        :key="`${category.kind}_${category.metaId}_${item.id}`"
         class="category"
       >
         <div class="category-name d-flex align-center ga-2">
-          <v-icon start>mdi-{{ category[0].meta.icon }}</v-icon>
-          {{ category[0].meta.name }}
+          <v-icon start>mdi-{{ category.kind === 'tags' ? category.items[0].meta.icon : category.items[0].icon }}</v-icon>
+          {{ category.kind === 'tags' ? category.items[0].meta.name : category.items[0].name }}
         </div>
 
-        <v-chip
-          v-for="tag in category"
-          :key="`${tag.id}_${item.id}`"
-          :color="tag.meta?.color ? tag.color : undefined"
-          :variant="tag.meta?.chipVariant"
-          :label="tag.meta?.chipLabel"
-          :text="tag.name"
-          @click.stop.prevent="showMenu($event, tag)"
-          @mouseenter="$readable.showHoverImage($event, tag.metaId, tag.id)"
-          @mouseleave="$readable.hideHoverImage"
-        ></v-chip>
-      </div>
+        <template v-if="category.kind === 'tags'">
+          <v-chip
+            v-for="tag in category.items"
+            :key="`${tag.id}_${item.id}`"
+            :color="tag.meta?.color ? tag.color : undefined"
+            :variant="tag.meta?.chipVariant"
+            :label="tag.meta?.chipLabel"
+            :text="tag.name"
+            @click.stop.prevent="showMenu($event, tag)"
+            @mouseenter="$readable.showHoverImage($event, tag.metaId, tag.id)"
+            @mouseleave="$readable.hideHoverImage"
+          ></v-chip>
+        </template>
 
-      <!-- VALUES GROUPED -->
-      <div
-        v-for="category in valuesComputed"
-        :key="`${category[0].id}_${item.id}`"
-        class="category"
-      >
-        <div class="category-name d-flex align-center ga-2">
-          <v-icon start>mdi-{{ category[0].icon }}</v-icon>
-          {{ category[0].name }}
-        </div>
-
-        <v-chip
-          v-for="i in category"
-          :key="`${i.name}_${item.id}`"
-          :text="i.value"
-        ></v-chip>
+        <template v-else>
+          <v-chip
+            v-for="i in category.items"
+            :key="`${i.name}_${item.id}`"
+            :text="i.value"
+          ></v-chip>
+        </template>
       </div>
     </div>
 
@@ -171,25 +151,24 @@
         :text="meta.value || item[meta.name]"
       ></v-chip>
 
-      <!-- TAGS FLAT -->
-      <v-chip
-        v-for="tag in tagsComputed"
-        :key="`${tag.id}_${item.id}`"
-        :color="tag.meta?.color ? tag.color : undefined"
-        :variant="tag.meta?.chipVariant"
-        :label="tag.meta?.chipLabel"
-        :prepend-icon="`mdi-${tag?.meta?.icon}`"
-        :text="tag.name"
-        @click.stop.prevent="showMenu($event, tag)"
-      ></v-chip>
+      <!-- PINNED FIELDS FLAT -->
+      <template v-for="entry in pinnedFlatComputed" :key="`${entry.kind}_${entry.metaId}_${entry.data.id || entry.data.name}_${item.id}`">
+        <v-chip
+          v-if="entry.kind === 'tag'"
+          :color="entry.data.meta?.color ? entry.data.color : undefined"
+          :variant="entry.data.meta?.chipVariant"
+          :label="entry.data.meta?.chipLabel"
+          :prepend-icon="`mdi-${entry.data?.meta?.icon}`"
+          :text="entry.data.name"
+          @click.stop.prevent="showMenu($event, entry.data)"
+        ></v-chip>
 
-      <!-- VALUES FLAT -->
-      <v-chip
-        v-for="value in valuesComputed"
-        :key="`${value.id}_${item.id}`"
-        :prepend-icon="`mdi-${value.icon}`"
-        :text="value.name"
-      ></v-chip>
+        <v-chip
+          v-else
+          :prepend-icon="`mdi-${entry.data.icon}`"
+          :text="entry.data.name"
+        ></v-chip>
+      </template>
     </div>
   </div>
 </template>
@@ -209,6 +188,11 @@ import {useEventBus} from "@/utils/eventBus"
 import {useRouter} from "vue-router";
 import {usePresetMeta} from "@/composable/ItemPresetMeta"
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {
+  groupByPinnedAssignmentOrder,
+  sortByPinnedAssignmentOrder,
+  sortPinnedAssignmentItems,
+} from '@/utils/pinnedMetaOrder'
 
 const router = useRouter()
 
@@ -220,6 +204,7 @@ const props = defineProps({
   type: {type: String, required: true},
   tagPage: {type: Boolean, default: false},
   isShowAll: {type: Boolean, default: false},
+  assignment: {type: Array, default: () => []},
 })
 
 // composable for default meta
@@ -248,8 +233,19 @@ const isGrouped = computed(() =>
   settingsStore.group_chips_in_card_description === '1' || props.tagPage
 )
 
+const usePinnedMetaIdKey = computed(() =>
+  itemsStore.type === 'tag' || props.tagPage
+)
+
+const assignmentRows = computed(() => {
+  if (props.assignment?.length) {
+    return sortPinnedAssignmentItems(props.assignment)
+  }
+  return itemsStore.sortedAssigned
+})
+
 /* TAGS */
-const tagsComputed = computed(() => {
+const tagItems = computed(() => {
   if (!metaStore.length || !tagsStore.length || !props.tags?.length) return []
 
   let result = props.tags
@@ -260,20 +256,27 @@ const tagsComputed = computed(() => {
       return tag && meta ? {...tag, meta} : null
     })
     .filter(Boolean)
-    .filter(tag => tag && tag.meta && tag.id) // Additional filtering
+    .filter(tag => tag && tag.meta && tag.id)
+    .filter(tag => checkShow(tag.metaId))
 
   if (result.length === 0) return []
 
-  result = _.orderBy(result, ['name'])
-  result = result.filter(i => i && i.meta && checkShow(i.metaId))
-
-  if (result.length === 0) return []
-
-  return isGrouped.value ? _.groupBy(result, 'metaId') : result
+  return sortByPinnedAssignmentOrder(
+    result,
+    assignmentRows.value,
+    (tag) => tag.metaId,
+    {usePinnedMetaId: usePinnedMetaIdKey.value},
+  )
 })
 
+const tagGroups = computed(() =>
+  groupByPinnedAssignmentOrder(_.groupBy(tagItems.value, 'metaId'), assignmentRows.value, {
+    usePinnedMetaId: usePinnedMetaIdKey.value,
+  }),
+)
+
 /* VALUES */
-const valuesComputed = computed(() => {
+const valueItems = computed(() => {
   if (!metaStore.length || !props.values?.length) return []
 
   let result = props.values
@@ -283,16 +286,59 @@ const valuesComputed = computed(() => {
       return meta ? {...meta, value: i.value} : null
     })
     .filter(Boolean)
-    .filter(meta => meta && meta.id) // Additional filtering
+    .filter(meta => meta && meta.id)
+    .filter(meta => checkShow(meta.id))
 
   if (result.length === 0) return []
 
-  result = _.orderBy(result, ['name'])
-  result = result.filter(i => i && i.id && checkShow(i.id))
+  return sortByPinnedAssignmentOrder(
+    result,
+    assignmentRows.value,
+    (value) => value.id,
+    {usePinnedMetaId: usePinnedMetaIdKey.value},
+  )
+})
 
-  if (result.length === 0) return []
+const valueGroups = computed(() =>
+  groupByPinnedAssignmentOrder(_.groupBy(valueItems.value, 'id'), assignmentRows.value, {
+    usePinnedMetaId: usePinnedMetaIdKey.value,
+  }),
+)
 
-  return isGrouped.value ? _.groupBy(result, 'id') : result
+const pinnedCategoriesComputed = computed(() => {
+  const categories = [
+    ...tagGroups.value.map((items) => ({
+      kind: 'tags',
+      metaId: items[0].metaId,
+      items,
+    })),
+    ...valueGroups.value.map((items) => ({
+      kind: 'values',
+      metaId: items[0].id,
+      items,
+    })),
+  ]
+
+  return sortByPinnedAssignmentOrder(
+    categories,
+    assignmentRows.value,
+    (category) => category.metaId,
+    {usePinnedMetaId: usePinnedMetaIdKey.value},
+  )
+})
+
+const pinnedFlatComputed = computed(() => {
+  const items = [
+    ...tagItems.value.map((tag) => ({kind: 'tag', metaId: tag.metaId, data: tag})),
+    ...valueItems.value.map((value) => ({kind: 'value', metaId: value.id, data: value})),
+  ]
+
+  return sortByPinnedAssignmentOrder(
+    items,
+    assignmentRows.value,
+    (entry) => entry.metaId,
+    {usePinnedMetaId: usePinnedMetaIdKey.value},
+  )
 })
 
 // проверяем стоит ли отображать эти метаданные

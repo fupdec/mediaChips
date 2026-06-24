@@ -23,6 +23,7 @@ module.exports = function (db) {
       include: [{
         model: db.Meta,
       }],
+      order: [['order', 'ASC']],
     }).then(async (data) => {
       res.status(201).send(data)
     }).catch(err => {

@@ -14,22 +14,21 @@ module.exports = function (db) {
 
   // Retrieve all MetaInMediaType from the database.
   const findAll = function (req, res) {
-    let where = {}
-    let include = {}
+    const where = {}
+    let include
+
     if (req.query.mediaTypeId) {
       where.mediaTypeId = req.query.mediaTypeId
-      include = [{
-        model: db.Meta,
-      }]
-    }
-    if (req.query.metaId) {
+      include = [{model: db.Meta}]
+    } else if (req.query.metaId) {
       where.metaId = req.query.metaId
-      include = db.MediaType
+      include = [{model: db.MediaType}]
     }
-    db.MetaInMediaType.findAll({
-      where: where,
-      include: include,
-    }).then((data) => {
+
+    const query = {where, order: [['order', 'ASC']]}
+    if (include) query.include = include
+
+    db.MetaInMediaType.findAll(query).then((data) => {
       res.status(201).send(data)
     }).catch(err => {
       console.log(err)

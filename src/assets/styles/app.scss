@@ -2,6 +2,7 @@
 @import "./player.scss";
 @import "./image-viewer.scss";
 @import "./tag-page.scss";
+@import "./meta-assignment.scss";
 
 html {
   //overflow-y: hidden !important;
@@ -1170,6 +1171,14 @@ header {
   .v-list-item--variant-outlined {
     margin-bottom: 4px;
   }
+}
+
+.dialog-settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 560px;
+  margin-inline: auto;
 }
 
 @import "./item.scss";

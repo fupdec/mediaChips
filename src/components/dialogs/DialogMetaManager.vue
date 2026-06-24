@@ -4,7 +4,7 @@
     v-model="internalDialog"
     :fullscreen="xs"
     scrollable
-    :width="!editMode ? 960 : hasOptions ? 960 : 500"
+    :width="600"
     @after-leave="resetDialogState"
   >
     <v-card>
@@ -15,150 +15,110 @@
         closable
       />
 
-      <v-card-text :key="metaKey" class="pa-4 meta-manager-dialog-content">
-        <v-row>
-          <!-- Левая колонка - основные поля -->
-          <v-col cols="12" :md="!editMode ? 5 : hasOptions ? 5 : 12">
-            <v-card rounded="xl" elevation="4" class="pa-4">
-              <!-- Подсказка только для режима создания -->
-              <v-alert
-                v-if="!editMode && metaSettings.type === 'array'"
-                type="info"
-                class="text-caption mb-4"
-                variant="tonal"
-                density="compact"
-                rounded="xl"
+      <v-card-text :key="metaKey" class="px-4 pb-6 pt-6 meta-manager-dialog-content">
+        <div class="dialog-settings-stack">
+          <SettingsSection padded>
+            <v-alert
+              v-if="!editMode && metaSettings.type === 'array'"
+              type="info"
+              class="text-caption mb-4 mt-2"
+              variant="tonal"
+              density="compact"
+              rounded="xl"
+            >
+              {{ t('meta.dialogs.array_meta_info') }}
+            </v-alert>
+
+            <v-form
+              v-model="valid"
+              ref="form"
+              class="flex-grow-1"
+              @submit.prevent
+            >
+              <v-select
+                v-if="!editMode"
+                v-model="metaSettings.type"
+                :items="metaTypes"
+                item-title="text"
+                item-value="value"
+                :rules="[(v) => !!v || t('validation.type_required')]"
+                :menu-props="{ attach: '.meta-manager-dialog-content' }"
+                persistent-hint
+                :hint="getHint()"
+                :label="t('common.type')"
+                class="mb-3"
               >
-                {{ t('meta.dialogs.array_meta_info') }}
-              </v-alert>
-
-              <v-form
-                v-model="valid"
-                ref="form"
-                class="flex-grow-1"
-                @submit.prevent
-              >
-                <!-- Поле выбора типа метаданных (только при создании) -->
-                <v-select
-                  v-if="!editMode"
-                  v-model="metaSettings.type"
-                  :items="metaTypes"
-                  item-title="text"
-                  item-value="value"
-                  :rules="[(v) => !!v || t('validation.type_required')]"
-                  :menu-props="{ attach: '.meta-manager-dialog-content' }"
-                  persistent-hint
-                  :hint="getHint()"
-                  :label="t('common.type')"
-                  class="mb-3"
-                >
-                  <template v-slot:selection="{ item }">
-                    <v-icon :icon="item.raw.icon" size="16" start />
-                    <span class="text-body-2">{{ item.raw.text }}</span>
-                  </template>
-
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item
-                      v-bind="props"
-                      :prepend-icon="item.raw.icon"
-                      :title="item.raw.text"
-                      density="compact"
-                    />
-                  </template>
-                </v-select>
-
-                <!-- Основные поля -->
-                <v-text-field
-                  v-model="metaSettings.name"
-                  :rules="[nameRules]"
-                  :label="t('common.name')"
-                  class="mb-3"
-                  density="comfortable"
-                />
-
-                <v-text-field
-                  v-model="metaSettings.hint"
-                  :label="t('common.hint')"
-                  :hint="t('meta.fields.hint_help')"
-                  persistent-hint
-                  class="mb-3"
-                  density="comfortable"
-                />
-
-                <!-- Выбор иконки -->
-                <DialogIcons
-                  :icon="metaSettings.icon"
-                  @apply="changeIcon"
-                  class="mb-4"
-                />
-              </v-form>
-            </v-card>
-
-            <v-card rounded="xl" elevation="4" class="px-4 pb-4 mt-6">
-              <!-- Настройки закрепления (только в режиме редактирования) -->
-              <settings-category-divider icon="pin" :title="t('meta.fields.pinned')">
-                <template #actions>
-                  <button-documentation id="meta.assign"></button-documentation>
+                <template v-slot:selection="{ item }">
+                  <v-icon :icon="item.raw.icon" size="16" start />
+                  <span class="text-body-2">{{ item.raw.text }}</span>
                 </template>
-              </settings-category-divider>
-              <MetaSettingsPinned v-if="editMode" :meta="metaSettings" class="mb-4" />
 
-              <v-alert
-                v-else
-                type="info"
-                class="text-caption"
-                variant="tonal"
-                density="compact"
-                rounded="xl"
-              >
-                {{ t('meta.dialogs.settings_active_after_adding') }}
-              </v-alert>
-            </v-card>
-          </v-col>
+                <template v-slot:item="{ props, item }">
+                  <v-list-item
+                    v-bind="props"
+                    :prepend-icon="item.raw.icon"
+                    :title="item.raw.text"
+                    density="compact"
+                  />
+                </template>
+              </v-select>
 
-          <!-- Правая колонка - настройки -->
-          <v-col cols="12" md="7">
-            <!-- Настройки массива (для array типа) -->
-            <MetaSettingsArray
-              v-if="metaSettings.type === 'array'"
-              @update="updateMetaSettings"
-              :meta="metaSettings"
-              :edit-mode="editMode"
-              class="mb-4"
-            />
-
-            <!-- Настройки рейтинга (для rating типа) -->
-            <MetaSettingsRating
-              v-if="metaSettings.type === 'rating'"
-              @update="updateMetaSettings"
-              :meta="metaSettings"
-              class="mb-4"
-            />
-
-            <!-- Switch для ссылок (для string типа) -->
-            <v-card
-              v-if="metaSettings.type === 'string'"
-              rounded="xl" elevation="4" class="pa-4" style="height: 100%"
-            >
-              <v-switch
-                v-model="metaSettings.isLink"
-                :label="t('meta.fields.link')"
-                hide-details
-                inset
+              <v-text-field
+                v-model="metaSettings.name"
+                :rules="[nameRules]"
+                :label="t('common.name')"
+                class="mb-3"
+                density="comfortable"
               />
-            </v-card>
 
-            <!-- Дополнительные настройки для других типов могут быть добавлены здесь -->
-            <v-card v-if="!editMode && !hasOptions"
-              rounded="xl" elevation="4"
-              class="pa-4 d-flex flex-column justify-center align-center"
-              height="100%"
-            >
-              <v-icon size="48" color="grey-lighten-1" class="mb-2">mdi-cog</v-icon>
-              <div>{{ t('meta.fields.no_additional_settings') }}</div>
-            </v-card>
-          </v-col>
-        </v-row>
+              <v-text-field
+                v-model="metaSettings.hint"
+                :label="t('common.hint')"
+                :hint="t('meta.fields.hint_help')"
+                persistent-hint
+                class="mb-3"
+                density="comfortable"
+              />
+
+              <DialogIcons
+                :icon="metaSettings.icon"
+                @apply="changeIcon"
+              />
+            </v-form>
+          </SettingsSection>
+
+          <MetaSettingsArray
+            v-if="metaSettings.type === 'array'"
+            @update="updateMetaSettings"
+            :meta="metaSettings"
+            :edit-mode="editMode"
+          />
+
+          <MetaSettingsRating
+            v-if="metaSettings.type === 'rating'"
+            @update="updateMetaSettings"
+            :meta="metaSettings"
+          />
+
+          <SettingsSection v-if="metaSettings.type === 'string'" padded>
+            <settings-category-divider icon="link-variant" compact :title="t('meta.fields.link')"/>
+            <v-switch
+              v-model="metaSettings.isLink"
+              :label="t('meta.fields.link')"
+              hide-details
+              inset
+            />
+          </SettingsSection>
+
+          <SettingsSection
+            v-if="!editMode && !hasOptions"
+            padded
+            class="d-flex flex-column justify-center align-center text-center"
+          >
+            <v-icon size="48" color="grey-lighten-1" class="mb-2">mdi-cog</v-icon>
+            <div>{{ t('meta.fields.no_additional_settings') }}</div>
+          </SettingsSection>
+        </div>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -183,9 +143,8 @@ import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import MetaSettingsArray from '@/components/dialogs/meta/MetaSettingsArray.vue'
 import MetaSettingsRating from '@/components/dialogs/meta/MetaSettingsRating.vue'
-import MetaSettingsPinned from "@/components/dialogs/meta/MetaSettingsPinned.vue";
-import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";
-import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue";
+import SettingsSection from '@/components/ui/SettingsSection.vue'
+import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import MetaTypes from '@/assets/MetaTypes.js'
 import axios from 'axios'
 import _ from 'lodash'
