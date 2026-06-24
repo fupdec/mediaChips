@@ -422,21 +422,32 @@ routeFiles.forEach(routeFile => {
 });
 
 // ==================== FILE UTILITIES ====================
+const {normalizeMediaPath} = require('../api/utils/normalizeUserPath')
+const {pathVariants} = require('../api/services/contentHash')
+
 function resolveFilePath(filePath) {
   if (!filePath) return null;
 
   console.log('Resolving file path:', filePath);
 
+  const normalizedPath = normalizeMediaPath(filePath)
+
+  for (const variant of pathVariants(normalizedPath)) {
+    if (fs.existsSync(variant)) {
+      return variant;
+    }
+  }
+
   // If the path is absolute, check it
-  if (path.isAbsolute(filePath)) {
+  if (path.isAbsolute(normalizedPath)) {
     // Check if the file exists at the absolute path
-    if (fs.existsSync(filePath)) {
-      return filePath;
+    if (fs.existsSync(normalizedPath)) {
+      return normalizedPath;
     }
 
     // Look for database ID in the path
     const dbIdRegex = /databases\/([a-f0-9]{12})/;
-    const match = filePath.match(dbIdRegex);
+    const match = normalizedPath.match(dbIdRegex);
 
     if (match) {
       const dbIdInPath = match[1];
@@ -454,7 +465,7 @@ function resolveFilePath(filePath) {
   const activeDb = config.databases.find(db => db.active);
   if (activeDb) {
     // Remove possible path prefixes
-    const cleanPath = filePath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
+    const cleanPath = normalizedPath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
 
     const possiblePaths = [
       path.join(databasesPath, activeDb.id, 'media', cleanPath),
@@ -472,7 +483,7 @@ function resolveFilePath(filePath) {
 
   // Try to find the file in all databases
   for (const db of config.databases) {
-    const cleanPath = filePath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
+    const cleanPath = normalizedPath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
 
     const possiblePaths = [
       path.join(databasesPath, db.id, 'media', cleanPath),
@@ -488,7 +499,7 @@ function resolveFilePath(filePath) {
     }
   }
 
-  console.log(`File not found: ${filePath}`);
+  console.log(`File not found: ${normalizedPath}`);
   return null;
 }
 
@@ -683,11 +694,12 @@ app.post('/api/resolve-path', (req, res) => {
   }
 
   const resolvedPath = resolveFilePath(filePath);
+  const normalizedPath = normalizeMediaPath(filePath);
 
   // Check all databases
   const results = [];
   for (const db of config.databases) {
-    const cleanPath = filePath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
+    const cleanPath = normalizedPath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
 
     const possiblePaths = [
       path.join(databasesPath, db.id, 'media', cleanPath),

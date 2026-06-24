@@ -49,7 +49,8 @@
           <!-- Форма с путями к файлам -->
           <v-form ref="mediaForm" v-model="isFormValid">
             <v-textarea
-              v-model="mediaAddingState.paths"
+              :model-value="mediaAddingState.paths"
+              @update:model-value="onPathsInput"
               :rules="[requiredPathRule]"
               :label="t('media.adding.paths_label')"
               :hint="t('media.adding.paths_hint')"
@@ -114,7 +115,8 @@
           <!-- Поле для исключенных путей (показывается условно) -->
           <v-textarea
             v-if="tasksStore.mediaAdding.is_exclude"
-            v-model="mediaAddingState.excluded"
+            :model-value="mediaAddingState.excluded"
+            @update:model-value="onExcludedInput"
             :label="t('media.adding.excluded_paths_label')"
             :hint="t('media.adding.excluded_paths_hint')"
             variant="outlined"
@@ -143,6 +145,7 @@ import DialogHeader from '@/components/elements/DialogHeader.vue'
 import AppBarButton from "@/components/app/appbar/AppBarButton.vue"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import {useMediaAdding} from '@/composable/AddingMedia'
+import {normalizePastedFilePathsText} from '@/utils/filePathInput'
 
 
 // Хуки
@@ -239,6 +242,14 @@ const requiredPathRule = (value) => {
   return true
 }
 
+const onPathsInput = (value) => {
+  tasksStore.mediaAdding.paths = normalizePastedFilePathsText(value)
+}
+
+const onExcludedInput = (value) => {
+  tasksStore.mediaAdding.excluded = normalizePastedFilePathsText(value)
+}
+
 // Методы
 
 /**
@@ -288,12 +299,12 @@ const syncMediaTypeFromContext = () => {
  */
 const selectMultipleDirectories = async () => {
   const paths = await $operable.showOpenDialog(['openDirectory', 'multiSelections'])
-  tasksStore.mediaAdding.paths = paths
+  tasksStore.mediaAdding.paths = normalizePastedFilePathsText(paths || '')
 }
 
 const selectMultipleDirectoriesExcluded = async () => {
   const paths = await $operable.showOpenDialog(['openDirectory', 'multiSelections'])
-  tasksStore.mediaAdding.excluded = paths
+  tasksStore.mediaAdding.excluded = normalizePastedFilePathsText(paths || '')
 }
 
 /**
@@ -309,6 +320,8 @@ const startMediaAddingProcess = async () => {
 
   // Активируем задачу и показываем диалог процесса
   syncMediaTypeFromContext()
+  tasksStore.mediaAdding.paths = normalizePastedFilePathsText(tasksStore.mediaAdding.paths || '')
+  tasksStore.mediaAdding.excluded = normalizePastedFilePathsText(tasksStore.mediaAdding.excluded || '')
   tasksStore.mediaAdding.dialogProcess = true
   tasksStore.mediaAdding.active = true
   isDialogVisible.value = false
@@ -328,13 +341,13 @@ const handleFileDrop = (event) => {
 
   // Добавляем пути новых файлов
   const newPaths = Array.from(files)
-    .map(file => file.path)
+    .map(file => normalizePastedFilePathsText(file.path || ''))
     .filter(Boolean)
     .join('\n')
 
   if (newPaths) {
     const updatedPaths = existingPaths
-      ? `${existingPaths}\n${newPaths}`
+      ? normalizePastedFilePathsText(`${existingPaths}\n${newPaths}`)
       : newPaths
 
     tasksStore.mediaAdding.paths = updatedPaths

@@ -154,11 +154,14 @@ ipcMain.handle('getZoomFactor', (event) => {
 })
 
 ipcMain.handle('checkFileExists', async (_event, data) => {
-  const filePath = typeof data === 'string' ? data : data?.path
-  if (!filePath) return false
+  const {normalizeMediaPath} = require('./api/utils/normalizeUserPath')
+  const {resolveExistingPath} = require('./api/services/contentHash')
+  const rawPath = typeof data === 'string' ? data : data?.path
+  if (!rawPath) return false
 
   try {
-    return fs.existsSync(filePath)
+    const filePath = normalizeMediaPath(rawPath)
+    return Boolean(await resolveExistingPath(filePath))
   } catch {
     return false
   }

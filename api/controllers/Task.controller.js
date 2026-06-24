@@ -113,10 +113,9 @@ module.exports = function (db) {
   }
 
   const checkFileExists = async function (req, res) {
-    const {normalizeUserPath} = require('../utils/normalizeUserPath')
-    const filePath = normalizeUserPath(req.body.path)
-    const exist = filePath && fs.existsSync(filePath)
-    if (exist) res.sendStatus(201)
+    const filePath = normalizeMediaPath(req.body.path)
+    const resolved = filePath ? await resolveExistingPath(filePath) : null
+    if (resolved) res.sendStatus(201)
     else res.sendStatus(400)
   }
 
@@ -282,7 +281,12 @@ module.exports = function (db) {
 
   const addMediaToDb = async (rawPathToFile, mediaType, is_check_duplicates) => {
     const pathToFile = normalizeMediaPath(rawPathToFile)
-    const resolvedPath = await resolveExistingPath(pathToFile) || pathToFile
+    const resolvedPath = await resolveExistingPath(pathToFile)
+
+    if (!resolvedPath) {
+      throw new Error(`File not found: ${pathToFile}`)
+    }
+
     let stats = await stat(resolvedPath)
     let filesize = stats.size;
 
@@ -384,11 +388,13 @@ module.exports = function (db) {
       }
     }
 
+    const storedPath = resolvedPath
+
     const defaults = {
       filesize: filesize,
-      ext: path.extname(pathToFile),
-      basename: path.basename(pathToFile),
-      name: path.parse(pathToFile).name,
+      ext: path.extname(storedPath),
+      basename: path.basename(storedPath),
+      name: path.parse(storedPath).name,
       mediaTypeId: mediaType.id,
     }
 
@@ -398,7 +404,7 @@ module.exports = function (db) {
 
     const [media, isCreated] = await db.Media.findOrCreate({
       where: {
-        path: pathToFile,
+        path: storedPath,
       },
       defaults,
     })
@@ -550,42 +556,50 @@ module.exports = function (db) {
   }
 
   const addMediaVideo = async function (req, res) {
-    let pathToFile = req.body.path
-    let mediaType = req.body.type
-    let is_check_duplicates = req.body.is_check_duplicates
+    try {
+      const pathToFile = req.body.path
+      const mediaType = req.body.type
+      const is_check_duplicates = req.body.is_check_duplicates
 
-    const {
-      media,
-      isCreated,
-      duplicate,
-    } = await addMediaToDb(pathToFile, mediaType, is_check_duplicates)
+      const {
+        media,
+        isCreated,
+        duplicate,
+      } = await addMediaToDb(pathToFile, mediaType, is_check_duplicates)
 
-    if (isCreated) {
-      const metadata = await getVideoMetadata(pathToFile)
+      if (isCreated) {
+        const videoPath = media.path
+        const metadata = await getVideoMetadata(videoPath)
 
-      if (metadata) {
-        await db.VideoMetadata.create({
-          mediaId: media.id,
-          duration: metadata.duration,
-          bitrate: metadata.bitrate,
-          width: metadata.width,
-          height: metadata.height,
-          codec: metadata.codec,
-          fps: metadata.fps,
+        if (metadata) {
+          await db.VideoMetadata.create({
+            mediaId: media.id,
+            duration: metadata.duration,
+            bitrate: metadata.bitrate,
+            width: metadata.width,
+            height: metadata.height,
+            codec: metadata.codec,
+            fps: metadata.fps,
+          })
+        }
+
+        try {
+          await createThumbMiddle(videoPath, media.id)
+        } catch (error) {
+          console.error(`Thumbnail generation failed for ${videoPath}:`, error)
+        }
+
+        res.status(201).send(media)
+      } else {
+        res.status(202).send({
+          message: "Media already added.",
+          duplicate,
         })
       }
-
-      try {
-        await createThumbMiddle(pathToFile, media.id)
-      } catch (error) {
-        console.error(`Thumbnail generation failed for ${pathToFile}:`, error)
-      }
-
-      res.status(201).send(media)
-    } else {
-      res.status(202).send({
-        message: "Media already added.",
-        duplicate,
+    } catch (error) {
+      console.error('addMediaVideo failed:', error)
+      res.status(400).send({
+        message: error.message || String(error),
       })
     }
   };
@@ -1081,7 +1095,7 @@ module.exports = function (db) {
           const min_ar = min_width / min_height // minimal aspect ratio;
 
           // обрезаем изображение если оно не соответствует пропорциям
-          if (min_ar != ar) {
+          if (Math.abs(min_ar - ar) > 0.01) {
             let calc_height, calc_width, x, y;
             if (1 > min_ar) {
               // если изображение вертикальное

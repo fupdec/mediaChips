@@ -306,6 +306,10 @@ const registrationStore = useRegistrationStore()
 const notificationsStore = useNotificationsStore()
 const {t} = useI18n()
 
+function getErrorMessage(error, fallback) {
+  return error.response?.data?.message || error.message || fallback
+}
+
 // Локальные реактивные переменные
 const dialog = ref(false)
 const dialogDeactivateConfirm = ref(false)
@@ -434,11 +438,12 @@ const register = async () => {
       registrationStatus.value = data?.message || t('registration.registration_failed')
     }
   } catch (error) {
-    registrationStatus.value = error.message
+    const errorText = getErrorMessage(error, t('registration.registration_failed'))
+    registrationStatus.value = errorText
 
     notificationsStore.setNotification({
       type: 'error',
-      text: error.message
+      text: errorText
     })
   } finally {
     isQueryRun.value = false

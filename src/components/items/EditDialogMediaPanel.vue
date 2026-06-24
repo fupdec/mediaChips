@@ -10,6 +10,7 @@
               :options="cropperOptions"
               :image-path="imagePath"
               :min-width="minWidth"
+              :min-height="mediaMinHeight"
               @edited="$emit('edited')"
             />
           </v-img>
@@ -103,6 +104,11 @@ const props = defineProps({
 defineEmits(['edited', 'update:currentIndex'])
 
 const currentImage = computed(() => props.images[props.currentIndex])
+
+const mediaMinHeight = computed(() => {
+  const ratio = props.cropperOptions?.aspectRatio || 16 / 9
+  return Math.max(1, Math.round(props.minWidth / ratio))
+})
 
 const imageWrapStyle = computed(() => {
   const ratio = props.mode === 'media'

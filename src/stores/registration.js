@@ -1,6 +1,7 @@
 import {defineStore} from 'pinia'
 import axios from 'axios'
 import useSettingsStore from './settings'
+import {useAppStore} from './app'
 import {useNotificationsStore} from './notifications'
 
 const LICENSE_API_BASE_URL = import.meta.env.VITE_LICENSE_API_URL || 'https://mediachips.app/wp-json/mediachips/v1/license'
@@ -55,6 +56,26 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
       return 'mc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
     },
 
+    async ensureMachineId() {
+      if (this.machineId) return this.machineId
+
+      try {
+        const appStore = useAppStore()
+        if (appStore.localhost) {
+          const response = await axios.get(`${appStore.localhost}/api/Task/getMachineId`)
+          if (response.data) {
+            this.machineId = response.data
+            return this.machineId
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch machine id from API:', error.message)
+      }
+
+      this.machineId = this.generateMachineId()
+      return this.machineId
+    },
+
     async checkLicense(licenseCode) {
       const response = await axios.post(`${this.licenseApiBaseUrl}/check`, {
         license_code: licenseCode,
@@ -63,19 +84,23 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
       return response.data
     },
 
-    async activateLicense(licenseCode, fingerprint = this.machineId) {
+    async activateLicense(licenseCode, fingerprint) {
+      const resolvedFingerprint = fingerprint || await this.ensureMachineId()
+
       const response = await axios.post(`${this.licenseApiBaseUrl}/activate`, {
         license_code: licenseCode,
-        fingerprint,
+        fingerprint: resolvedFingerprint,
       })
 
       return response.data
     },
 
-    async deactivateLicense(licenseCode, fingerprint = this.machineId) {
+    async deactivateLicense(licenseCode, fingerprint) {
+      const resolvedFingerprint = fingerprint || await this.ensureMachineId()
+
       const response = await axios.post(`${this.licenseApiBaseUrl}/deactivate`, {
         license_code: licenseCode,
-        fingerprint,
+        fingerprint: resolvedFingerprint,
       })
 
       return response.data
@@ -94,14 +119,10 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
         return {success: true, skipped: true}
       }
 
-      if (!this.machineId) {
-        console.warn('Auto registration skipped: machineId is not available')
-        return {success: false, skipped: true, error: 'Device id is not available'}
-      }
-
       const licenseCode = info.license_code
 
       try {
+        await this.ensureMachineId()
         const checkData = await this.checkLicense(licenseCode)
         if (!checkData) {
           const error = `Key "${licenseCode}" not found`
