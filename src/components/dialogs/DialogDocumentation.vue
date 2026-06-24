@@ -40,15 +40,16 @@
             <div class="treeview-wrapper">
               <!-- Treeview -->
               <v-treeview
-                v-model:active="activeItems"
-                @update:activated="updateActive"
+                v-model:activated="activatedIds"
+                v-model:opened="openedIds"
+                @update:activated="updateActivated"
                 :items="filteredItems"
                 :search="search"
                 :open-all="isOpenAll"
+                active-strategy="single-leaf"
                 open-on-click
                 item-title="name"
                 item-value="id"
-                return-object
                 activatable
                 hoverable
                 density="comfortable"
@@ -329,7 +330,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useEventBus } from "@/utils/eventBus"
@@ -347,7 +348,8 @@ const dialogsStore = useDialogsStore()
 // Реактивные данные
 const isOpenAll = ref(false)
 const errorSelector = ref(false)
-const activeItems = ref([])
+const activatedIds = ref([])
+const openedIds = ref([])
 const selected = ref({})
 const search = ref('')
 const items = computed(() => localizeDocumentation(Documentation, locale.value))
@@ -429,20 +431,43 @@ const closeDialog = () => {
   dialogs.value.documentation = false
 }
 
-// Ключевой метод - обновление выбора
-const updateActive = (selectedNodes) => {
-  console.log('🔄 updateActive called with:', selectedNodes)
-  if (selectedNodes.length > 0) {
-    selected.value = selectedNodes[0]
-    console.log('🎯 Selected item:', selected.value)
-  } else {
-    selected.value = {}
+const getAncestorIds = (nodes, id, path = []) => {
+  for (const node of nodes) {
+    if (node.id === id) return path
+
+    if (node.children) {
+      const found = getAncestorIds(node.children, id, [...path, node.id])
+      if (found) return found
+    }
   }
+
+  return null
+}
+
+const selectById = (id, { scroll = false } = {}) => {
+  const foundItem = getSelected(items.value, id)
+  if (!foundItem) return
+
+  const ancestors = getAncestorIds(items.value, id) ?? []
+  openedIds.value = [...new Set([...openedIds.value, ...ancestors])]
+  activatedIds.value = [id]
+  selected.value = foundItem
+
+  if (scroll) scrollToArticle(id)
+}
+
+const updateActivated = (ids) => {
+  if (!ids.length) {
+    selected.value = {}
+    return
+  }
+
+  selectById(ids[ids.length - 1], { scroll: false })
 }
 
 const resetSelection = () => {
-  // Сбрасываем выделение при закрытии диалога
-  activeItems.value = []
+  activatedIds.value = []
+  openedIds.value = []
   selected.value = {}
 }
 
@@ -477,30 +502,32 @@ const getSelected = (nodes, id) => {
 
 watch(items, (localizedItems) => {
   const currentId = selected.value?.id
-  const nextSelected = currentId ? getSelected(localizedItems, currentId) : localizedItems[0]
+  if (!currentId) return
 
+  const nextSelected = getSelected(localizedItems, currentId)
   selected.value = nextSelected || {}
-  activeItems.value = nextSelected ? [nextSelected] : []
+  activatedIds.value = nextSelected ? [currentId] : []
+
+  if (nextSelected) {
+    const ancestors = getAncestorIds(localizedItems, currentId) ?? []
+    openedIds.value = [...new Set([...openedIds.value, ...ancestors])]
+  }
 })
 
-// Хуки жизненного цикла
+watch(() => dialogsStore.documentation, (isOpen) => {
+  if (isOpen && selected.value?.id) {
+    nextTick(() => selectById(selected.value.id, { scroll: true }))
+  }
+})
+
 onMounted(() => {
-  // Устанавливаем начальный выбор
-  if (items.value && items.value.length > 0) {
-    selected.value = items.value[0]
-    activeItems.value = [items.value[0]]
+  if (items.value?.length) {
+    selectById(items.value[0].id)
   }
 
   eventBus.on('showDocumentation', (id) => {
-    console.log('📚 showDocumentation event:', id)
-
-    const foundItem = getSelected(items.value, id)
-    if (foundItem) {
-      selected.value = foundItem
-      activeItems.value = [foundItem]
-      scrollToArticle(id)
-      dialogs.value.documentation = true
-    }
+    dialogs.value.documentation = true
+    nextTick(() => selectById(id, { scroll: true }))
   })
 })
 </script>
