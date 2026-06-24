@@ -38,16 +38,18 @@
     </v-btn>
 
     <!-- Folders List -->
-    <v-list class="px-0"
+    <v-list
+      class="px-0 settings-outlined-list"
       density="compact"
-      rounded="xl">
-
+      rounded="xl"
+      bg-color="transparent"
+    >
       <v-list-item
         v-for="folder in watcherStore.folders"
         :key="folder.id"
         rounded="pill"
-        class="py-4 mb-1"
-        style="background-color: rgba(0, 0, 0, 0.06)"
+        variant="outlined"
+        class="py-4"
       >
         <template #prepend>
           <v-avatar

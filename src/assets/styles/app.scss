@@ -1164,5 +1164,13 @@ header {
   }
 }
 
+.settings-outlined-list {
+  background: transparent !important;
+
+  .v-list-item--variant-outlined {
+    margin-bottom: 4px;
+  }
+}
+
 @import "./item.scss";
 @import "./screen.scss";

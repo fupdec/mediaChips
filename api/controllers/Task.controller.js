@@ -1103,6 +1103,42 @@ module.exports = function (db) {
     }
   };
 
+  const getDirectorySize = async (directory) => {
+    if (!fs.existsSync(directory)) return 0
+
+    const entries = await readdir(directory, {withFileTypes: true})
+    const sizes = await Promise.all(entries.map(async (entry) => {
+      const entryPath = path.join(directory, entry.name)
+      if (entry.isDirectory()) return getDirectorySize(entryPath)
+      if (entry.isFile()) {
+        const {size} = await stat(entryPath)
+        return size
+      }
+      return 0
+    }))
+
+    return sizes.reduce((sum, size) => sum + size, 0)
+  }
+
+  const getDatabaseSizes = async function (req, res) {
+    const ids = req.body?.ids
+    if (!Array.isArray(ids) || !ids.length) {
+      res.status(400).send({message: 'ids array is required'})
+      return
+    }
+
+    try {
+      const sizes = {}
+      await Promise.all(ids.map(async (id) => {
+        const dbDir = path.join(db.path_databases, id)
+        sizes[id] = await getDirectorySize(dbDir)
+      }))
+      res.status(201).send({sizes})
+    } catch (err) {
+      res.status(400).send({message: err.message || String(err)})
+    }
+  };
+
   const getFolderSize = async function (req, res) {
     const dirPath = resolveGeneratedFolderPath(dbPath, req.body.folder)
     if (!dirPath) {
@@ -1633,6 +1669,7 @@ module.exports = function (db) {
     createImage,
     deleteFile,
     deleteDb,
+    getDatabaseSizes,
     getFolderSize,
     clearData,
     searchMediaByPath,

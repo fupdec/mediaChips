@@ -25,14 +25,16 @@
     </v-card-actions>
 
     <!-- List -->
-    <v-list density="compact" rounded class="px-0">
+    <v-list density="compact" rounded class="px-0 settings-outlined-list" bg-color="transparent">
       <v-list-item
         v-for="db in databases"
         :key="db.id"
-        :class="['list-item-rounded', { active: db.active }]"
+        :class="{ active: db.active }"
+        :color="db.active ? 'success' : undefined"
         @click="openActivate(db)"
         rounded="pill"
-        class="py-4 mb-1"
+        variant="outlined"
+        class="py-4"
       >
         <template v-if="db.active" #prepend>
           <v-avatar color="success">
@@ -49,6 +51,7 @@
         <v-list-item-subtitle>
           {{ t('settings_labels.database.created') }} {{ $readable.getDateFromMs(db.createdAt) }}
           <span class="ml-4">ID: {{ db.id }}</span>
+          <span class="ml-4 text-medium-emphasis">{{ formatDbSize(db.id) }}</span>
         </v-list-item-subtitle>
 
         <template #append>
@@ -122,7 +125,7 @@
 </template>
 
 <script setup>
-import {ref, computed, inject} from 'vue'
+import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import axios from 'axios'
 import {useAppStore} from '@/stores/app'
@@ -151,6 +154,7 @@ const headerText = ref('')
 const buttons = ref([])
 
 const formRef = ref(null)
+const dbSizes = ref({})
 
 /* computed */
 const databases = computed({
@@ -161,6 +165,27 @@ const databases = computed({
 })
 
 const apiUrl = computed(() => store.localhost)
+
+async function loadDatabaseSizes() {
+  const ids = databases.value.map(item => item.id)
+  if (!ids.length) {
+    dbSizes.value = {}
+    return
+  }
+
+  try {
+    const {data} = await axios.post(`${apiUrl.value}/api/task/getDatabaseSizes`, {ids})
+    dbSizes.value = data.sizes || {}
+  } catch (error) {
+    console.error('Error loading database sizes:', error)
+  }
+}
+
+function formatDbSize(id) {
+  const size = dbSizes.value[id]
+  if (size == null) return '…'
+  return $readable.getReadableFileSize(size)
+}
 
 /* actions */
 function openAdd() {
@@ -272,18 +297,17 @@ async function confirmRemoving(item) {
 function relaunchApp() {
   window?.electronAPI?.invoke('relaunch')
 }
+
+onMounted(loadDatabaseSizes)
+watch(databases, loadDatabaseSizes)
 </script>
 
 <style scoped>
-.list-item-rounded {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-.list-item-rounded.active {
+.v-list-item.active {
   pointer-events: none;
 }
 
-.list-item-rounded.active .v-btn {
+.v-list-item.active .v-btn {
   pointer-events: all;
 }
 </style>

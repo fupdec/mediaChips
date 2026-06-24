@@ -72,6 +72,9 @@ module.exports = (app, db) => {
   // deleting database
   router.post("/deleteDb", Task.deleteDb);
 
+  // get database sizes
+  router.post("/getDatabaseSizes", Task.getDatabaseSizes);
+
   // get folder Size
   router.post("/getFolderSize", Task.getFolderSize);
 

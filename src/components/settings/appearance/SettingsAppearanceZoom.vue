@@ -53,23 +53,25 @@ const zoomPercent = computed(() => Math.round(zoom.value * 100))
       </span>
     </div>
 
-    <v-btn
-      size="small"
-      variant="text"
-      class="mt-2 px-0"
-      :disabled="zoom === 1"
-      @click="resetZoom"
-    >
-      {{ t('settings_labels.appearance.zoom_reset') }}
-    </v-btn>
+    <div class="app-zoom__footer d-flex align-center flex-wrap ga-3 mt-2">
+      <v-btn
+        size="small"
+        variant="outlined"
+        rounded
+        :disabled="zoom === 1"
+        @click="resetZoom"
+      >
+        {{ t('settings_labels.appearance.zoom_reset') }}
+      </v-btn>
 
-    <div class="app-zoom__hotkeys text-caption text-medium-emphasis mt-2 d-flex align-center flex-wrap ga-2">
-      <v-hotkey keys="ctrl++" inline/>
-      <span aria-hidden="true">·</span>
-      <v-hotkey keys="ctrl+-" inline/>
-      <span>{{ t('settings_labels.appearance.zoom_hint_or') }}</span>
-      <v-hotkey keys="ctrl+0" inline/>
-      <span>{{ t('settings_labels.appearance.zoom_hint_reset') }}</span>
+      <div class="app-zoom__hotkeys text-caption text-medium-emphasis d-flex align-center flex-wrap ga-2">
+        <v-hotkey keys="ctrl++" inline/>
+        <span aria-hidden="true">·</span>
+        <v-hotkey keys="ctrl+-" inline/>
+        <span>{{ t('settings_labels.appearance.zoom_hint_or') }}</span>
+        <v-hotkey keys="ctrl+0" inline/>
+        <span>{{ t('settings_labels.appearance.zoom_hint_reset') }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -78,6 +80,10 @@ const zoomPercent = computed(() => Math.round(zoom.value * 100))
 .app-zoom-slider {
   max-width: 280px;
   min-width: 180px;
+}
+
+.app-zoom__footer {
+  row-gap: 8px;
 }
 
 .app-zoom__hotkeys {
