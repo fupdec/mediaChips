@@ -162,6 +162,29 @@ export const Cols = {
       "text": "Height",
       "textKey": "filters.sort.height"
     }
+  ],
+  "audio": [
+    {
+      "param": "duration",
+      "type": "number",
+      "icon": "timer-outline",
+      "text": "Duration",
+      "textKey": "filters.sort.duration"
+    },
+    {
+      "param": "bitrate",
+      "type": "number",
+      "icon": "filmstrip",
+      "text": "Bitrate",
+      "textKey": "filters.sort.bitrate"
+    },
+    {
+      "param": "codec",
+      "type": "string",
+      "icon": "filmstrip",
+      "text": "Codec",
+      "textKey": "filters.sort.codec"
+    }
   ]
 }
 

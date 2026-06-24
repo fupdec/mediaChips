@@ -103,7 +103,7 @@ import {useEventBus} from "@/utils/eventBus"
 import {useHomeWidgets} from '@/composable/useHomeWidgets'
 import {loadHomeMediaThumbs} from "@/utils/homeMediaThumbs"
 import {useOpenMediaList} from "@/utils/openMediaList"
-import {findMediaTypeById, isVideoMediaType} from "@/utils/mediaType"
+import {findMediaTypeById, isAudioMediaType, isVideoMediaType} from "@/utils/mediaType"
 import HomeWidgetRenderer from '@/components/widgets/HomeWidgetRenderer.vue'
 import DialogHomeWidgets from '@/components/dialogs/DialogHomeWidgets.vue'
 
@@ -163,7 +163,7 @@ async function loadHomeMedia() {
 async function openMediaItem(item) {
   const mediaType = findMediaTypeById(store.mediaTypes, item.mediaTypeId)
 
-  if (isVideoMediaType(mediaType)) {
+  if (isVideoMediaType(mediaType) || isAudioMediaType(mediaType)) {
     await itemsStore.playVideo({
       video: item,
       videos: [item],
@@ -177,7 +177,7 @@ async function openMediaItem(item) {
 async function openContinueItem(item) {
   const mediaType = findMediaTypeById(store.mediaTypes, item.mediaTypeId)
 
-  if (!isVideoMediaType(mediaType)) {
+  if (!isVideoMediaType(mediaType) && !isAudioMediaType(mediaType)) {
     await openMediaList({sortBy: 'viewedAt', sortDir: 'desc', mediaTypeId: item.mediaTypeId})
     return
   }

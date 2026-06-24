@@ -21,7 +21,7 @@ const {matchPathToTags} = require('../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../services/tagSuggester')
 const videoClipTagger = require('../services/videoClipTagger')
 const embeddingModel = require('../services/embeddingModel')
-const {isVideoMediaType, isImageMediaType} = require('../utils/mediaType')
+const {isVideoMediaType, isImageMediaType, isAudioMediaType} = require('../utils/mediaType')
 const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
 const {computeContentHashForPath, fileExists, verifyContentHashMatch, resolveExistingPath} = require('../services/contentHash')
 const {normalizeMediaPath, pathsEquivalent, buildPathLookupVariants} = require('../utils/normalizeUserPath')
@@ -512,6 +512,43 @@ module.exports = function (db) {
     }
   }
 
+  const getAudioMetadata = async (pathToFile) => {
+    function getMetadata(pathToFile) {
+      return new Promise((resolve, reject) => {
+        return ffmpeg.ffprobe(pathToFile, (error, info) => {
+          if (error) {
+            reject(error)
+          } else if (!info?.format?.duration || info.format.duration < 1) {
+            reject('duration less than 1 sec.')
+          } else {
+            resolve(info)
+          }
+        })
+      })
+    }
+
+    try {
+      const info = await withTimeout(getMetadata(pathToFile), 60000, 'ffprobe')
+      const duration = Math.floor(info.format.duration)
+
+      let codec
+      for (const stream of info.streams) {
+        if (stream.codec_type !== 'audio') continue
+        codec = stream.codec_name
+        break
+      }
+
+      return {
+        duration,
+        bitrate: info.format.bit_rate,
+        codec,
+      }
+    } catch (error) {
+      console.error(error)
+      return false
+    }
+  }
+
   const addMediaVideo = async function (req, res) {
     let pathToFile = req.body.path
     let mediaType = req.body.type
@@ -602,13 +639,27 @@ module.exports = function (db) {
   };
 
   const addMediaAudio = async function (req, res) {
+    const pathToFile = req.body.path
+    const mediaType = req.body.type
+
     const {
       media,
       isCreated,
       duplicate,
-    } = await addMediaToDb(req.body.path, req.body.type, req.body.is_check_duplicates)
+    } = await addMediaToDb(pathToFile, mediaType, req.body.is_check_duplicates)
 
     if (isCreated) {
+      const metadata = await getAudioMetadata(pathToFile)
+
+      if (metadata) {
+        await db.VideoMetadata.create({
+          mediaId: media.id,
+          duration: metadata.duration,
+          bitrate: metadata.bitrate,
+          codec: metadata.codec,
+        })
+      }
+
       res.status(201).send(media)
     } else {
       res.status(202).send({
@@ -699,6 +750,17 @@ module.exports = function (db) {
             await createImageThumb(media.dataValues.path, media_id, dbPath)
           } catch (error) {
             console.error(`Thumbnail regeneration failed for media ${media_id}:`, error.message)
+          }
+        } else if (isAudioMediaType(mediaType)) {
+          const metadata = await getAudioMetadata(media.dataValues.path)
+
+          if (metadata) {
+            await db.VideoMetadata.upsert({
+              mediaId: media_id,
+              duration: metadata.duration,
+              bitrate: metadata.bitrate,
+              codec: metadata.codec,
+            })
           }
         }
 

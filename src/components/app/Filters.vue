@@ -198,6 +198,7 @@ import {
   getCurrentMediaType,
   isImageMediaType,
   isVideoMediaType,
+  isAudioMediaType,
 } from '@/utils/mediaType'
 import {
   sanitizeFiltersForMediaType,
@@ -329,6 +330,12 @@ const init = () => {
       let image = withFilterI18n(cols.image || [], t('media.type_names.image'))
       image.sort((a, b) => translateFilterText(a) > translateFilterText(b) ? 1 : translateFilterText(b) > translateFilterText(a) ? -1 : 0)
       listByArray = [...listByArray, ...image]
+    }
+
+    if (isAudioMediaType(currentMediaType.value)) {
+      let audio = withFilterI18n(cols.audio || [], t('media.type_names.audio'))
+      audio.sort((a, b) => translateFilterText(a) > translateFilterText(b) ? 1 : translateFilterText(b) > translateFilterText(a) ? -1 : 0)
+      listByArray = [...listByArray, ...audio]
     }
   } else if (ITEMS.value.type === 'tag') {
     let metaTag = withFilterI18n(cols.metaTag || [], "Tag")

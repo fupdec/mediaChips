@@ -25,6 +25,7 @@
         >
           <template #media>
             <EditDialogMediaPanel
+              v-if="!isAudioMedia"
               mode="media"
               :image-src="thumb"
               :image-path="imgPath"
@@ -32,6 +33,15 @@
               :min-width="500"
               @edited="onImageEdited"
             />
+            <v-sheet
+              v-else
+              color="grey-darken-3"
+              rounded="lg"
+              class="d-flex align-center justify-center"
+              min-height="240"
+            >
+              <v-icon size="72" color="grey">mdi-music</v-icon>
+            </v-sheet>
           </template>
         </EditPinnedMetaValues>
       </v-card-text>
@@ -54,6 +64,7 @@ import path from 'path-browserify'
 import {
   getCurrentMediaType,
   getMediaDeleteAssetFolder,
+  isAudioMediaType,
   isImageMediaType,
 } from '@/utils/mediaType'
 
@@ -95,6 +106,8 @@ const currentMediaType = computed(() =>
   )
 )
 
+const isAudioMedia = computed(() => isAudioMediaType(currentMediaType.value))
+
 function initButtons() {
   buttons.value = [{
     icon: "delete",
@@ -131,6 +144,12 @@ async function getImage() {
     const width = Number(currentMedia.width) || 1
     const height = Number(currentMedia.height) || 1
     cropperOps.value = {aspectRatio: width / height}
+    return
+  }
+
+  if (isAudioMediaType(mediaType)) {
+    imgPath.value = null
+    thumb.value = null
     return
   }
 

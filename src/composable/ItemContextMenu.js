@@ -12,6 +12,7 @@ import {
   getCurrentMediaType,
   getDefaultMediaTypeId,
   getMediaDeleteAssetFolder,
+  isAudioMediaType,
   isImageMediaType,
   isVideoMediaType,
 } from '@/utils/mediaType'
@@ -94,6 +95,33 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       if (!itemsStore.isSelect && isVideoMediaType(currentMediaType.value)) {
         contextMenu.push({
           name: `Play video in`,
+          type: "menu",
+          icon: "play-circle",
+          disabled: !is_file_exists || (!store.reg && store.x > 14),
+          menu: [
+            {
+              name: `MediaChips Player`,
+              type: "item",
+              icon: "open-in-app",
+              disabled: !is_file_exists,
+              action: play,
+            },
+            {
+              name: `External Player`,
+              type: "item",
+              icon: "open-in-new",
+              disabled: !is_file_exists,
+              action: () => {
+                play(true)
+              },
+            },
+          ],
+        })
+      }
+
+      if (!itemsStore.isSelect && isAudioMediaType(currentMediaType.value)) {
+        contextMenu.push({
+          name: `Play audio in`,
           type: "menu",
           icon: "play-circle",
           disabled: !is_file_exists || (!store.reg && store.x > 14),

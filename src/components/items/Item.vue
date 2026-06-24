@@ -33,6 +33,11 @@
           :media="item"
           :is-file-exists="is_file_exists"
         />
+        <ItemPreviewAudio
+          v-else-if="type === 'media' && isAudioMedia"
+          :media="item"
+          :is-file-exists="is_file_exists"
+        />
         <ItemPreviewTag
           v-if="type=='tag'"
           :tag="item"
@@ -55,7 +60,7 @@
       </div>
 
       <v-progress-linear
-        v-if="type === 'media' && isVideoMedia && item.duration"
+        v-if="type === 'media' && (isVideoMedia || isAudioMedia) && item.duration"
         :value="(Number(item.time || 0) / item.duration) * 100"
       />
 
@@ -153,12 +158,13 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useContextMenu} from '@/stores/contextMenu'
 import ItemPreviewVideo from '@/components/items/ItemPreviewVideo.vue'
 import ItemPreviewImage from '@/components/items/ItemPreviewImage.vue'
+import ItemPreviewAudio from '@/components/items/ItemPreviewAudio.vue'
 import ItemPreviewTag from '@/components/items/ItemPreviewTag.vue'
 import ItemPinnedMeta from '@/components/items/ItemPinnedMeta.vue'
 import ItemRating from '@/components/items/ItemRating.vue'
 import ItemFavorite from '@/components/items/ItemFavorite.vue'
 import useItemContextMenu from '@/composable/ItemContextMenu'
-import {isImageMediaType, isVideoMediaType} from '@/utils/mediaType'
+import {isAudioMediaType, isImageMediaType, isVideoMediaType} from '@/utils/mediaType'
 
 const props = defineProps({
   item: Object,
@@ -190,6 +196,7 @@ const big_preview = ref(false)
 
 const isVideoMedia = computed(() => isVideoMediaType(props.mediaType))
 const isImageMedia = computed(() => isImageMediaType(props.mediaType))
+const isAudioMedia = computed(() => isAudioMediaType(props.mediaType))
 
 const is_selected = computed(() => {
   return itemsStore.selection.includes(props.item.id)

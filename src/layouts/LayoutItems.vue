@@ -204,7 +204,7 @@ import ToolbarAppearance from "@/components/app/toolbar/ToolbarAppearance.vue";
 import DialogMediaAdding from '@/components/dialogs/DialogMediaAdding.vue'
 import TagsAdd from '@/components/app/appbar/elements/TagsAdd.vue'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
-import {isVideoMediaType, getDefaultMediaTypeId, isImageMediaType} from '@/utils/mediaType'
+import {isVideoMediaType, getDefaultMediaTypeId, isImageMediaType, isAudioMediaType} from '@/utils/mediaType'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 import {
   getDuplicatesGroupKey,
@@ -991,7 +991,7 @@ const handleOpenRandomItem = (event) => {
     const media = navigationPool.find(i => i.id === id);
     if (isImageMediaType(mediaType.value)) {
       itemsStore.viewImage({image: media})
-    } else {
+    } else if (isVideoMediaType(mediaType.value) || isAudioMediaType(mediaType.value)) {
       itemsStore.playVideo({
         video: media,
       })

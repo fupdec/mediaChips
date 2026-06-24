@@ -1,12 +1,14 @@
 import Cols from '../../app/configs/filter-cols.mjs'
 import {
   getMediaTypeKey,
+  isAudioMediaType,
   isImageMediaType,
   isVideoMediaType,
   matchesMediaTypeFilter,
 } from '@/utils/mediaType'
 
 export const VIDEO_ONLY_FILTER_PARAMS = ['duration', 'bitrate', 'fps', 'codec']
+export const AUDIO_ONLY_FILTER_PARAMS = ['duration', 'bitrate', 'codec']
 
 export const MEDIA_SORT_PARAMS = [
   {param: 'path', icon: 'folder', textKey: 'filters.sort.path', types: ['media']},
@@ -47,14 +49,14 @@ export const MEDIA_SORT_PARAMS = [
     icon: 'clock-outline',
     textKey: 'filters.sort.duration',
     types: ['media'],
-    media_types: ['video'],
+    media_types: ['video', 'audio'],
   },
   {
     param: 'bitrate',
     icon: 'filmstrip',
     textKey: 'filters.sort.bitrate',
     types: ['media'],
-    media_types: ['video'],
+    media_types: ['video', 'audio'],
   },
   {
     param: 'fps',
@@ -68,7 +70,7 @@ export const MEDIA_SORT_PARAMS = [
     icon: 'filmstrip',
     textKey: 'filters.sort.codec',
     types: ['media'],
-    media_types: ['video'],
+    media_types: ['video', 'audio'],
   },
   {
     param: 'width',
@@ -125,6 +127,11 @@ export function getAllowedFilterParams(itemsType, mediaType) {
     }
     if (isImageMediaType(mediaType)) {
       for (const item of Cols.image || []) {
+        params.add(item.param)
+      }
+    }
+    if (isAudioMediaType(mediaType)) {
+      for (const item of Cols.audio || []) {
         params.add(item.param)
       }
     }
