@@ -11,6 +11,12 @@ module.exports = (app, db) => {
   // Retrieve all Marks from the database.
   router.get("/", Mark.findAll);
 
+  // Retrieve marks with filtering, sorting and pagination
+  router.post("/items", Mark.getItems);
+
+  // Retrieve metas available for mark type filtering
+  router.get("/filter-metas", Mark.getFilterMetas);
+
   // Delete a Mark with id
   router.delete("/:id", Mark.deleteOne);
 

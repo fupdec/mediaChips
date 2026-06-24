@@ -1,3 +1,5 @@
+const {getMarkFilterMetas, loadMarkItems} = require('../services/markItemsLoader')
+
 module.exports = function (db) {
   // Create and Save a new Mark
   const create = function (req, res) {
@@ -59,6 +61,30 @@ module.exports = function (db) {
       })
   };
 
+  const getItems = function (req, res) {
+    loadMarkItems(db, req.body || {})
+      .then((data) => {
+        res.status(201).send(data)
+      })
+      .catch((err) => {
+        res.status(500).send({
+          message: err.message || "Some error occurred while performing query."
+        })
+      })
+  }
+
+  const getFilterMetas = function (req, res) {
+    getMarkFilterMetas(db)
+      .then((data) => {
+        res.status(201).send(data)
+      })
+      .catch((err) => {
+        res.status(500).send({
+          message: err.message || "Some error occurred while performing query."
+        })
+      })
+  }
+
   // Delete a Mark with the specified id in the request
   const deleteOne = function (req, res) {
     db.Mark
@@ -81,6 +107,8 @@ module.exports = function (db) {
     create,
     findAllForVideo,
     findAll,
+    getItems,
+    getFilterMetas,
     deleteOne
   }
 }

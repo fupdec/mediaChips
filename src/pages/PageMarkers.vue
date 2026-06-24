@@ -1,122 +1,243 @@
 <template>
   <v-container>
-    <div class="text-md-h2 d-flex align-center my-6">
-      <v-icon size="42" start>mdi-tooltip-outline</v-icon>
-      {{ t('navigation.markers') }}
+    <div class="my-6">
+      <div class="text-md-h2 d-flex align-baseline">
+        <v-icon size="42" start>mdi-tooltip-outline</v-icon>
+        {{ t('navigation.markers') }}
+        <span v-if="!marksStore.isLoading && marksStore.totalFiltered > 0" class="text-h5 ml-2">
+          <template v-if="marksStore.totalFiltered !== marksStore.total">
+            ({{ marksStore.totalFiltered }} of {{ marksStore.total }})
+          </template>
+          <template v-else>
+            ({{ marksStore.totalFiltered }})
+          </template>
+        </span>
+      </div>
+
+      <div class="markers-toolbar d-flex align-center ga-3 mt-4">
+        <v-text-field
+          v-model="searchInput"
+          :placeholder="t('markers.search_placeholder')"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          density="compact"
+          rounded="xl"
+          clearable
+          hide-details
+          class="markers-toolbar__search"
+          @click:clear="applySearch('')"
+          @keydown.enter="applySearch(searchInput)"
+          @blur="applySearch(searchInput)"
+        />
+
+        <v-autocomplete
+          :model-value="marksStore.sortBy"
+          @update:model-value="onSortChange"
+          :items="MARK_SORT_PARAMS"
+          item-value="param"
+          rounded="xl"
+          variant="outlined"
+          density="compact"
+          min-width="200"
+          :label="t('filters.sort_by')"
+          :placeholder="t('filters.select_parameter')"
+          class="markers-toolbar__sort"
+          hide-details
+          :disabled="marksStore.isLoading"
+        >
+          <template #prepend>
+            <v-btn
+              v-tooltip:top="t('filters.change_direction')"
+              color="primary"
+              variant="tonal"
+              size="small"
+              icon
+              @click="toggleSortDir"
+            >
+              <v-icon>
+                {{ marksStore.sortDir === 'asc' ? 'mdi-sort-ascending' : 'mdi-sort-descending' }}
+              </v-icon>
+            </v-btn>
+          </template>
+          <template #selection="{ item }">
+            <v-icon :icon="`mdi-${item.raw.icon}`" size="small"/>
+            <span class="pl-2">{{ t(item.raw.textKey) }}</span>
+          </template>
+          <template #item="{ item, props: menuProps }">
+            <v-list-item v-bind="menuProps" density="compact">
+              <template #title>
+                <div class="text-body-2 py-1">
+                  <v-icon :icon="`mdi-${item.raw.icon}`" size="small"/>
+                  <span class="pl-4">{{ t(item.raw.textKey) }}</span>
+                </div>
+              </template>
+            </v-list-item>
+          </template>
+        </v-autocomplete>
+      </div>
     </div>
 
-    <div
-      v-if="marks.length && pagination.last_page > 1"
-      class="d-flex align-center my-4"
+    <v-chip-group
+      :model-value="marksStore.selectedTypes"
+      @update:model-value="onTypesChange"
+      color="primary"
+      class="mb-4"
+      column
+      multiple
     >
-      <v-pagination
-        v-model="pagination.current_page"
-        @update:model-value="getMarksOnPage"
-        :length="pagination.last_page"
-        :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
-        class="my-4"
-        active-color="primary"
-        density="comfortable"
-        rounded
-      ></v-pagination>
-    </div>
+      <v-chip value="favorite" size="small">
+        <v-icon icon="mdi-heart" size="small" start/>
+        {{ t('meta.default_names.favorite') }}
+      </v-chip>
+      <v-chip value="bookmark" size="small">
+        <v-icon icon="mdi-bookmark" size="small" start/>
+        {{ t('meta.default_names.bookmark') }}
+      </v-chip>
+      <v-chip
+        v-for="meta in marksStore.filterMetas"
+        :key="meta.id"
+        :value="String(meta.id)"
+        size="small"
+        :prepend-icon="`mdi-${meta.icon || 'tag'}`"
+        :text="meta.name"
+      />
+    </v-chip-group>
 
-    <v-row>
+    <Loading v-if="marksStore.isLoading"/>
+
+    <v-row v-else-if="marksStore.marksOnPage.length">
       <v-col
-        v-for="mark in pagination.items_on_page"
+        v-for="mark in marksStore.marksOnPage"
         :key="mark.id"
         cols="12"
         sm="4"
         md="3"
         xl="2"
       >
-        <item-marker :mark="mark"></item-marker>
+        <ItemMarker :mark="mark"/>
       </v-col>
     </v-row>
 
-
-    <div v-if="pagination.items_on_page.length == 0"
-      class="layout-img">
-      <v-img src="/images/no-data.svg"
+    <div
+      v-if="marksStore.isLoaded && marksStore.total === 0"
+      class="layout-img"
+    >
+      <v-img
+        src="/images/no-data.svg"
         max-height="40vh"
         class="my-4"
-        contain></v-img>
+        contain
+      />
       <div class="text--secondary">{{ t('markers.no_markers_add_first') }}</div>
     </div>
 
     <div
-      v-if="marks.length && pagination.last_page > 1"
-      class="d-flex align-center my-4"
+      v-else-if="marksStore.isLoaded && marksStore.totalFiltered === 0"
+      class="layout-img"
     >
-      <v-pagination
-        v-model="pagination.current_page"
-        @update:model-value="getMarksOnPage"
-        :length="pagination.last_page"
-        :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
+      <v-img
+        src="/images/filters/filters-no-results-marks.svg"
+        max-height="40vh"
         class="my-4"
-        active-color="primary"
-        density="comfortable"
+        contain
+      />
+      <div class="text--secondary">{{ t('markers.no_results') }}</div>
+    </div>
+
+    <div
+      v-if="marksStore.marksOnPage.length && !marksStore.hasMore && marksStore.totalFiltered > 0"
+      class="scroll-top-after-items d-flex justify-center my-8"
+    >
+      <v-btn
+        @click="scrollTop"
+        color="primary"
         rounded
-      ></v-pagination>
+        variant="outlined"
+      >
+        <v-icon start>mdi-format-vertical-align-top</v-icon>
+        {{ t('items.scroll_to_top') }}
+      </v-btn>
+    </div>
+
+    <div
+      v-if="marksStore.marksOnPage.length && marksStore.hasMore && (marksStore.isLoadingMore || showInfiniteLoader)"
+      class="infinite-loader-full-height"
+    >
+      <Loading v-intersect="infiniteScrolling"/>
     </div>
   </v-container>
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue'
+import {ref, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useDisplay} from 'vuetify'
-import {useAppStore} from '@/stores/app'
-import {useSettingsStore} from '@/stores/settings'
-import axios from "axios"
-import ItemMarker from "@/components/items/ItemMarker.vue"
+import {useMarksStore} from '@/stores/marks'
+import {MARK_SORT_PARAMS} from '@/utils/markSort'
+import {scrollMainTo} from '@/utils/mainScroll'
+import useMarkImageGenerator from '@/composable/GeneratingThumbsForMarks'
+import ItemMarker from '@/components/items/ItemMarker.vue'
+import Loading from '@/components/elements/Loading.vue'
 
-const appStore = useAppStore()
-const settingsStore = useSettingsStore()
-const {xs} = useDisplay()
 const {t} = useI18n()
+const marksStore = useMarksStore()
 
-// Refs
-const marks = ref([])
-const pagination = ref({
-  items_on_page: [],
-  total_items: 0,
-  current_page: 1,
-  last_page: 1,
-})
+useMarkImageGenerator()
 
-// Computed
-const apiUrl = computed(() => appStore.localhost)
-const SETTINGS = computed(() => settingsStore)
+const searchInput = ref('')
+const showInfiniteLoader = ref(false)
 
-// Methods
-const getMarks = async () => {
-  try {
-    const res = await axios.get(apiUrl.value + "/api/mark")
-    marks.value = res.data || []
-    getMarksOnPage()
-  } catch (e) {
-    console.log(e)
-  }
+const onTypesChange = (types) => {
+  marksStore.setSelectedTypes(types || [])
 }
 
-const getMarksOnPage = () => {
-  let p = pagination.value
-  p.total_items = marks.value.length
-  const limit = 24
-  p.last_page = Math.ceil(p.total_items / limit)
-
-  if (p.current_page > p.last_page) {
-    p.current_page = 1
+const onSortChange = (sortBy) => {
+  if (marksStore.sortBy === sortBy) {
+    toggleSortDir()
+    return
   }
-
-  const start = (p.current_page - 1) * limit
-  const end = start + limit
-  p.items_on_page = marks.value.slice(start, end)
+  marksStore.setSortBy(sortBy)
 }
 
-// Lifecycle
-onMounted(() => {
-  getMarks()
+const toggleSortDir = () => {
+  marksStore.setSortDir(marksStore.sortDir === 'asc' ? 'desc' : 'asc')
+}
+
+const applySearch = (value) => {
+  const nextValue = value || ''
+  if (nextValue === marksStore.search) return
+  marksStore.setSearch(nextValue)
+}
+
+const infiniteScrolling = (isIntersecting) => {
+  if (isIntersecting === false) return
+  marksStore.loadNextPage()
+}
+
+const scrollTop = () => {
+  scrollMainTo({top: 0, behavior: 'smooth'})
+}
+
+onMounted(async () => {
+  await marksStore.loadFilterMetas()
+  await marksStore.fetchMarks()
+
+  setTimeout(() => {
+    showInfiniteLoader.value = true
+  }, 500)
 })
 </script>
+
+<style lang="scss" scoped>
+.markers-toolbar {
+  &__search {
+    flex: 0 1 400px;
+    max-width: 400px;
+    min-width: 0;
+  }
+
+  &__sort {
+    flex: 0 0 auto;
+    width: min(100%, 280px);
+  }
+}
+</style>

@@ -91,6 +91,7 @@ import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
 import {useI18n} from 'vue-i18n'
+import {useEventBus} from '@/utils/eventBus'
 import path from 'path-browserify'
 
 const props = defineProps({
@@ -108,6 +109,7 @@ const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 const itemsStore = useItemsStore()
 const {t} = useI18n()
+const eventBus = useEventBus()
 
 // Refs
 const video = ref(null)
@@ -310,12 +312,20 @@ const play = () => {
 }
 
 // Lifecycle
+const handleUpdateMarkImage = (id) => {
+  if (props.mark.id === id) {
+    getImg()
+  }
+}
+
 onMounted(() => {
+  eventBus.on('updateMarkImage', handleUpdateMarkImage)
   getImg()
   checkFileExists()
 })
 
 onUnmounted(() => {
+  eventBus.off('updateMarkImage', handleUpdateMarkImage)
   stopPlayingPreview()
 
   // Полная очистка при размонтировании

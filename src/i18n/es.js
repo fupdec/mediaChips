@@ -339,6 +339,15 @@ const es = {
   },
   markers: {
     no_markers_add_first: 'No hay marcadores. Agréguelos primero en el reproductor de la aplicación.',
+    no_results: 'No hay marcadores que coincidan con los filtros seleccionados',
+    search_placeholder: 'Buscar marcadores...',
+    sort: {
+      time: 'Marca de tiempo',
+      video_name: 'Nombre del video',
+      tag_name: 'Nombre de la etiqueta',
+      type: 'Tipo',
+      id: 'ID',
+    },
   },
   editing: {
     progress_filling_data: 'Progreso de llenado de datos',
@@ -1086,6 +1095,7 @@ const es = {
     in_progress: 'En progreso:',
     generating_grid_images: 'Generando imágenes de cuadrícula',
     generating_timeline_images: 'Generando imágenes de la línea de tiempo',
+    generating_mark_images: 'Generando imágenes de marcadores',
   },
   registration: {
     status: 'Estado',

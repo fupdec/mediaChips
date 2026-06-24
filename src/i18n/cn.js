@@ -339,6 +339,15 @@ const cn = {
   },
   markers: {
     no_markers_add_first: '没有标记。请先在应用播放器中添加。',
+    no_results: '没有符合所选筛选条件的标记',
+    search_placeholder: '搜索标记...',
+    sort: {
+      time: '时间戳',
+      video_name: '视频名称',
+      tag_name: '标签名称',
+      type: '类型',
+      id: 'ID',
+    },
   },
   editing: {
     progress_filling_data: '数据填写进度',
@@ -1086,6 +1095,7 @@ const cn = {
     in_progress: '进行中：',
     generating_grid_images: '正在生成网格图像',
     generating_timeline_images: '正在生成时间线图像',
+    generating_mark_images: '正在生成标记图像',
   },
   registration: {
     status: '状态',

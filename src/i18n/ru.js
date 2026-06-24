@@ -339,6 +339,15 @@ const ru = {
   },
   markers: {
     no_markers_add_first: 'Маркеров нет. Сначала добавьте их в плеере приложения.',
+    no_results: 'Нет маркеров, соответствующих выбранным фильтрам',
+    search_placeholder: 'Поиск маркеров...',
+    sort: {
+      time: 'Время',
+      video_name: 'Название видео',
+      tag_name: 'Название тега',
+      type: 'Тип',
+      id: 'ID',
+    },
   },
   editing: {
     progress_filling_data: 'Прогресс заполнения данных',
@@ -1086,6 +1095,7 @@ const ru = {
     in_progress: 'В процессе:',
     generating_grid_images: 'Генерация изображений сетки',
     generating_timeline_images: 'Генерация изображений таймлайна',
+    generating_mark_images: 'Генерация изображений маркеров',
   },
   registration: {
     status: 'Статус',

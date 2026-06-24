@@ -339,6 +339,15 @@ const en = {
   },
   markers: {
     no_markers_add_first: 'There are no markers. Please add them first in application player.',
+    no_results: 'No markers matching the selected filters',
+    search_placeholder: 'Search markers...',
+    sort: {
+      time: 'Timestamp',
+      video_name: 'Video name',
+      tag_name: 'Tag name',
+      type: 'Type',
+      id: 'ID',
+    },
   },
   editing: {
     progress_filling_data: 'Progress of filling data',
@@ -1086,6 +1095,7 @@ const en = {
     in_progress: 'In progress:',
     generating_grid_images: 'Generating grids images',
     generating_timeline_images: 'Generating timeline images',
+    generating_mark_images: 'Generating marker images',
   },
   registration: {
     status: 'Status',
