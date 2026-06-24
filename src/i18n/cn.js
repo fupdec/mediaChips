@@ -964,7 +964,6 @@ const cn = {
       assignment_anchor_media: '媒体类型',
       pinned_fields: '已固定字段',
       available_fields: '可用字段',
-      tag_page_preview: '每个标签页将显示',
       tag_form_preview: '标签编辑表单',
       add_field_slot: '从下方列表添加子字段',
       drag_to_reorder: '拖动以更改显示顺序',

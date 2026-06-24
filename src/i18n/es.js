@@ -964,7 +964,6 @@ const es = {
       assignment_anchor_media: 'Tipo de medio',
       pinned_fields: 'Campos fijados',
       available_fields: 'Campos disponibles',
-      tag_page_preview: 'Cada página de etiqueta mostrará',
       tag_form_preview: 'Formulario de edición de etiqueta',
       add_field_slot: 'Añade campos secundarios desde la lista inferior',
       drag_to_reorder: 'Arrastra para cambiar el orden',

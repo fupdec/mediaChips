@@ -964,7 +964,6 @@ const en = {
       assignment_anchor_media: 'Media type',
       pinned_fields: 'Pinned fields',
       available_fields: 'Available fields',
-      tag_page_preview: 'Each tag page will show',
       tag_form_preview: 'Tag edit form',
       add_field_slot: 'Add child fields from the list below',
       drag_to_reorder: 'Drag to change display order',

@@ -1,15 +1,14 @@
 <script setup>
 import {ref, computed} from "vue";
 import {useI18n} from "vue-i18n";
-import {useTheme} from "vuetify";
-import {useAppStore} from "@/stores/app"; // или this.$store в Options API
-import {useSettingsStore} from "@/stores/settings"; // или this.$store в Options API
+import {useSettingsStore} from "@/stores/settings";
 import SettingsHeaderGradient from "@/components/settings/appearance/SettingsHeaderGradient.vue";
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
+import {useAppTheme} from "@/composable/useAppTheme";
 
-const theme = useTheme();
 const {t} = useI18n();
+const {applyTheme} = useAppTheme();
 
 const dialogPalette = ref(false);
 const dialogHeaderGradient = ref(false);
@@ -19,29 +18,25 @@ const gradientThemeDark = ref(false);
 
 const SETTINGS = useSettingsStore()
 
+function normalizeColor(value) {
+  if (!value) return value
+  if (typeof value === 'object') return value.hex ?? value.rgba ?? value
+  return value
+}
+
 function openDialogPalette(type) {
   colorType.value = type;
   palette.value = SETTINGS[type];
   dialogPalette.value = true;
 }
 
-function applyTheme() {
-  const isDarkMode = SETTINGS.darkMode === "1";
-  const mode = isDarkMode ? "dark" : "light";
-
-  const primary = isDarkMode ? SETTINGS.appColorDarkPrimary : SETTINGS.appColorLightPrimary;
-  const secondary = isDarkMode ? SETTINGS.appColorDarkSecondary : SETTINGS.appColorLightSecondary;
-
-  theme.themes.value[mode].colors.primary = primary
-  theme.themes.value[mode].colors.secondary = secondary
-
-  theme.change(isDarkMode ? "dark" : "light")
-}
-
-async function applyColor() {
+function applyColor() {
   dialogPalette.value = false;
-  await $operable.setOption(palette.value, colorType.value);
+  const value = normalizeColor(palette.value);
+  const option = colorType.value;
+  SETTINGS[option] = value;
   applyTheme();
+  $operable.setOption(value, option);
 }
 
 function openDialogHeaderGradientLight() {
@@ -56,8 +51,9 @@ function openDialogHeaderGradientDark() {
 
 function saveHeaderGradient(values) {
   const key = "headerGradient" + (values.themeDark ? "Dark" : "Light");
-  $operable.setOption(values.gradient, key);
+  SETTINGS[key] = values.gradient;
   applyTheme();
+  $operable.setOption(values.gradient, key);
 }
 </script>
 

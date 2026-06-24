@@ -35,7 +35,7 @@
           class="meta-assignment-panel__toggle"
         >
           <v-btn value="media" size="small" variant="outlined">
-            <v-icon start size="18">mdi-folder-play-outline</v-icon>
+            <v-icon start size="18">mdi-file-outline</v-icon>
             {{ t('meta.settings.segment_to_media', {count: pinnedMedia.length}) }}
           </v-btn>
           <v-btn

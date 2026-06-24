@@ -71,7 +71,7 @@
 <script setup>
 import {ref, computed, onMounted, onBeforeUnmount} from "vue"
 import {useRoute} from "vue-router"
-import {useDisplay, useTheme} from "vuetify"
+import {useDisplay} from "vuetify"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {usePlayerStore} from "@/stores/player"
@@ -99,6 +99,7 @@ import AutoUpdater from "@/components/app/AutoUpdater.vue"
 import Dialogs from "@/components/app/Dialogs.vue"
 import {useAppUpdater} from '@/composable/useAppUpdater'
 import {useAppZoom} from '@/composable/useAppZoom'
+import {useAppTheme} from '@/composable/useAppTheme'
 
 const settingsStore = useSettingsStore()
 const store = useAppStore()
@@ -109,10 +110,10 @@ const contextMenuStore = useContextMenu()
 const dialogsStore = useDialogsStore()
 const route = useRoute()
 const {mobile} = useDisplay()
-const theme = useTheme()
 const {locale} = useI18n()
 
 const {init: initAppUpdater} = useAppUpdater()
+const {applyTheme} = useAppTheme()
 const eventBus = useEventBus()
 
 const isAppReady = ref(false)
@@ -168,27 +169,6 @@ async function loadList(url, field) {
 
 function handleUpdateWatcher() {
   updateWatcher(watcherStore.folders)
-}
-
-function applyTheme() {
-  let isDarkMode
-
-  if (settingsStore.system_dark_mode == '1') {
-    const match = window.matchMedia('(prefers-color-scheme: dark)')
-    isDarkMode = match.matches
-  } else {
-    isDarkMode = settingsStore.darkMode == "1"
-  }
-
-  const mode = isDarkMode ? "dark" : "light"
-
-  const primary = isDarkMode ? settingsStore.appColorDarkPrimary : settingsStore.appColorLightPrimary
-  const secondary = isDarkMode ? settingsStore.appColorDarkSecondary : settingsStore.appColorLightSecondary
-
-  theme.themes.value[mode].colors.primary = primary
-  theme.themes.value[mode].colors.secondary = secondary
-
-  theme.change(isDarkMode ? "dark" : "light")
 }
 
 function applyLocale() {

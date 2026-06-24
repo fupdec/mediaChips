@@ -1,9 +1,5 @@
 <template>
   <div class="meta-to-meta-board">
-    <div class="text-caption text-medium-emphasis mb-2">
-      {{ t('meta.settings.tag_page_preview') }}
-    </div>
-
     <v-card class="meta-to-meta-board__preview rounded-xl pa-3 mb-4" variant="flat">
       <div class="meta-to-meta-board__preview-header d-flex align-center flex-wrap ga-2 mb-2 text-caption text-medium-emphasis">
         <v-icon size="14">mdi-tag-outline</v-icon>

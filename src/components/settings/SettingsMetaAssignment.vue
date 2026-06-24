@@ -29,7 +29,7 @@
       class="settings-meta-assignment__toggle mb-4"
     >
       <v-btn value="media" size="small" variant="outlined">
-        <v-icon start size="18">mdi-folder-play-outline</v-icon>
+        <v-icon start size="18">mdi-file-outline</v-icon>
         {{ t('settings_labels.field_pinning.view_by_media') }}
       </v-btn>
       <v-btn value="tags" size="small" variant="outlined">
