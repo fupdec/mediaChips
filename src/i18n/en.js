@@ -672,6 +672,7 @@ const en = {
       video: 'Videos',
       image: 'Images',
       audio: 'Audios',
+      text: 'Texts',
       book: 'Books',
       document: 'Documents',
     },

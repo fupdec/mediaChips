@@ -672,6 +672,7 @@ const cn = {
       video: '视频',
       image: '图片',
       audio: '音频',
+      text: '文本',
       book: '书籍',
       document: '文档',
     },

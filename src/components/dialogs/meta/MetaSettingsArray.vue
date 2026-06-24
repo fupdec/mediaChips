@@ -253,7 +253,7 @@
 import {ref, computed, onMounted, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
-import {isVideoMediaType, isImageMediaType, isAudioMediaType} from '@/utils/mediaType'
+import {isVideoMediaType, isImageMediaType, isAudioMediaType, isTextMediaType} from '@/utils/mediaType'
 import axios from 'axios'
 import SettingsCategoryDivider
   from "@/components/ui/SettingsCategoryDivider.vue";
@@ -346,7 +346,8 @@ const checkPinnedMediaTypes = async () => {
     isPinnedForMediaParser.value = pinnedMedia.some((item) =>
       isVideoMediaType(item.mediaType) ||
       isImageMediaType(item.mediaType) ||
-      isAudioMediaType(item.mediaType)
+      isAudioMediaType(item.mediaType) ||
+      isTextMediaType(item.mediaType)
     )
   } catch (error) {
     console.error('Error checking pinned media:', error)

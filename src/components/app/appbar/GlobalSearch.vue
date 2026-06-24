@@ -20,7 +20,7 @@ import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from "@/stores/items";
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
-import {getDefaultMediaTypeId, isImageMediaType} from '@/utils/mediaType'
+import {getDefaultMediaTypeId, isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
 
 const router = useRouter()
 
@@ -169,8 +169,12 @@ function openMedia(media, mediaTypeId) {
 
   if (isImageMediaType(type)) {
     itemsStore.viewImage({image: media})
-  } else {
+  } else if (isVideoMediaType(type) || isAudioMediaType(type)) {
     itemsStore.playVideo({video: media})
+  } else if (isTextMediaType(type) && media.path) {
+    $operable.openPath(media.path)
+  } else {
+    router.push(`/media?mediaTypeId=${mediaTypeId || media.mediaTypeId}`)
   }
 
   hide()

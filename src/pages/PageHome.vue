@@ -103,7 +103,7 @@ import {useEventBus} from "@/utils/eventBus"
 import {useHomeWidgets} from '@/composable/useHomeWidgets'
 import {loadHomeMediaThumbs} from "@/utils/homeMediaThumbs"
 import {useOpenMediaList} from "@/utils/openMediaList"
-import {findMediaTypeById, isAudioMediaType, isVideoMediaType} from "@/utils/mediaType"
+import {findMediaTypeById, isAudioMediaType, isTextMediaType, isVideoMediaType} from "@/utils/mediaType"
 import HomeWidgetRenderer from '@/components/widgets/HomeWidgetRenderer.vue'
 import DialogHomeWidgets from '@/components/dialogs/DialogHomeWidgets.vue'
 
@@ -168,6 +168,11 @@ async function openMediaItem(item) {
       video: item,
       videos: [item],
     })
+    return
+  }
+
+  if (isTextMediaType(mediaType) && item.path) {
+    await $operable.openPath(item.path)
     return
   }
 

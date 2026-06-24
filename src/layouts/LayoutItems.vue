@@ -204,7 +204,7 @@ import ToolbarAppearance from "@/components/app/toolbar/ToolbarAppearance.vue";
 import DialogMediaAdding from '@/components/dialogs/DialogMediaAdding.vue'
 import TagsAdd from '@/components/app/appbar/elements/TagsAdd.vue'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
-import {isVideoMediaType, getDefaultMediaTypeId, isImageMediaType, isAudioMediaType} from '@/utils/mediaType'
+import {isVideoMediaType, getDefaultMediaTypeId, isImageMediaType, isAudioMediaType, isTextMediaType} from '@/utils/mediaType'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 import {
   getDuplicatesGroupKey,
@@ -270,7 +270,7 @@ const isImageGrid = computed(() =>
   props.items_type === 'media' && mediaType.value?.type === 'image' && ITEMS.value.view == '1'
 )
 const isWideImage = computed(() =>
-  props.items_type === 'media' && mediaType.value?.type === 'video' && ITEMS.value.view == '2'
+  props.items_type === 'media' && isVideoMediaType(mediaType.value) && ITEMS.value.view == '2'
 )
 const isLineGrid = computed(() => isWideImage.value)
 const isChipsGrid = computed(() =>
@@ -995,6 +995,8 @@ const handleOpenRandomItem = (event) => {
       itemsStore.playVideo({
         video: media,
       })
+    } else if (isTextMediaType(mediaType.value) && media?.path) {
+      $operable.openPath(media.path)
     }
   }
 }

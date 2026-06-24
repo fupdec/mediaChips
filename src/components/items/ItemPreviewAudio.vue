@@ -1,7 +1,7 @@
 <template>
   <div :class="{ 'no-file': !isFileExists }">
     <v-responsive
-      v-if="isViewCard || isViewTimeline"
+      v-if="isViewCard"
       v-ripple="{ class: 'text-primary' }"
       :aspect-ratio="1"
       class="audio-preview-container"
@@ -29,10 +29,6 @@ const itemsStore = useItemsStore()
 
 const isViewCard = computed(() =>
   itemsStore.view === 1 || itemsStore.view === '1'
-)
-
-const isViewTimeline = computed(() =>
-  itemsStore.view === 2 || itemsStore.view === '2'
 )
 
 const durationLabel = computed(() => {

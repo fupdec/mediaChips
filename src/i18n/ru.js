@@ -672,6 +672,7 @@ const ru = {
       video: 'Видео',
       image: 'Изображения',
       audio: 'Аудио',
+      text: 'Тексты',
       book: 'Книги',
       document: 'Документы',
     },

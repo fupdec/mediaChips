@@ -25,7 +25,7 @@
         >
           <template #media>
             <EditDialogMediaPanel
-              v-if="!isAudioMedia"
+              v-if="isImageMedia"
               mode="media"
               :image-src="thumb"
               :image-path="imgPath"
@@ -34,7 +34,7 @@
               @edited="onImageEdited"
             />
             <v-sheet
-              v-else
+              v-else-if="isAudioMedia"
               color="grey-darken-3"
               rounded="lg"
               class="d-flex align-center justify-center"
@@ -42,6 +42,24 @@
             >
               <v-icon size="72" color="grey">mdi-music</v-icon>
             </v-sheet>
+            <v-sheet
+              v-else-if="isTextMedia"
+              color="grey-darken-3"
+              rounded="lg"
+              class="d-flex align-center justify-center"
+              min-height="240"
+            >
+              <v-icon size="72" color="grey">mdi-file-document-outline</v-icon>
+            </v-sheet>
+            <EditDialogMediaPanel
+              v-else
+              mode="media"
+              :image-src="thumb"
+              :image-path="imgPath"
+              :cropper-options="cropperOps"
+              :min-width="500"
+              @edited="onImageEdited"
+            />
           </template>
         </EditPinnedMetaValues>
       </v-card-text>
@@ -66,6 +84,7 @@ import {
   getMediaDeleteAssetFolder,
   isAudioMediaType,
   isImageMediaType,
+  isTextMediaType,
 } from '@/utils/mediaType'
 
 const DialogHeader = defineAsyncComponent(() => import("@/components/elements/DialogHeader.vue"))
@@ -107,6 +126,8 @@ const currentMediaType = computed(() =>
 )
 
 const isAudioMedia = computed(() => isAudioMediaType(currentMediaType.value))
+const isImageMedia = computed(() => isImageMediaType(currentMediaType.value))
+const isTextMedia = computed(() => isTextMediaType(currentMediaType.value))
 
 function initButtons() {
   buttons.value = [{
@@ -147,7 +168,7 @@ async function getImage() {
     return
   }
 
-  if (isAudioMediaType(mediaType)) {
+  if (isAudioMediaType(mediaType) || isTextMediaType(mediaType)) {
     imgPath.value = null
     thumb.value = null
     return

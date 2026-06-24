@@ -672,6 +672,7 @@ const es = {
       video: 'Videos',
       image: 'Imágenes',
       audio: 'Audios',
+      text: 'Textos',
       book: 'Libros',
       document: 'Documentos',
     },

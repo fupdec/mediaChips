@@ -10,6 +10,8 @@ const MEDIA_TYPE_KEYS = {
   audio: 'audio',
   audios: 'audio',
   music: 'audio',
+  text: 'text',
+  texts: 'text',
   book: 'book',
   books: 'book',
   document: 'document',

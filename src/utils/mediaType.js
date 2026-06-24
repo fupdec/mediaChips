@@ -1,6 +1,7 @@
 export const MEDIA_TYPE_VIDEO = 'video'
 export const MEDIA_TYPE_IMAGE = 'image'
 export const MEDIA_TYPE_AUDIO = 'audio'
+export const MEDIA_TYPE_TEXT = 'text'
 
 export const normalizeMediaTypeKey = (value) => String(value || '').trim().toLowerCase()
 
@@ -12,8 +13,13 @@ export const isImageMediaType = (mediaType) => getMediaTypeKey(mediaType) === ME
 
 export const isAudioMediaType = (mediaType) => getMediaTypeKey(mediaType) === MEDIA_TYPE_AUDIO
 
+export const isTextMediaType = (mediaType) => getMediaTypeKey(mediaType) === MEDIA_TYPE_TEXT
+
 export const isEditableMediaType = (mediaType) =>
-  isVideoMediaType(mediaType) || isImageMediaType(mediaType) || isAudioMediaType(mediaType)
+  isVideoMediaType(mediaType) ||
+  isImageMediaType(mediaType) ||
+  isAudioMediaType(mediaType) ||
+  isTextMediaType(mediaType)
 
 export const isManagedMediaType = (mediaType) => isEditableMediaType(mediaType)
 
@@ -34,6 +40,7 @@ export const getMediaDeleteAssetFolder = (mediaType) => {
   if (key === MEDIA_TYPE_VIDEO) return 'videos'
   if (key === MEDIA_TYPE_IMAGE) return 'images'
   if (key === MEDIA_TYPE_AUDIO) return 'audios'
+  if (key === MEDIA_TYPE_TEXT) return 'texts'
   return null
 }
 

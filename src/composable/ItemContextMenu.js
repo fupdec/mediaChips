@@ -14,6 +14,7 @@ import {
   getMediaDeleteAssetFolder,
   isAudioMediaType,
   isImageMediaType,
+  isTextMediaType,
   isVideoMediaType,
 } from '@/utils/mediaType'
 import translate from '@/utils/translate'
@@ -160,6 +161,20 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
           name: `Open image file`,
           type: "item",
           icon: "file-image",
+          disabled: !is_file_exists,
+          action: () => {
+            if (window.$operable?.openPath) {
+              window.$operable.openPath(item.path)
+            }
+          },
+        })
+      }
+
+      if (!itemsStore.isSelect && isTextMediaType(currentMediaType.value)) {
+        contextMenu.push({
+          name: `Open text file`,
+          type: "item",
+          icon: "file-document-outline",
           disabled: !is_file_exists,
           action: () => {
             if (window.$operable?.openPath) {

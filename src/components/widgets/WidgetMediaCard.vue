@@ -80,7 +80,7 @@ import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useAppStore} from '@/stores/app'
-import {findMediaTypeById, isAudioMediaType, isImageMediaType, isVideoMediaType} from '@/utils/mediaType'
+import {findMediaTypeById, isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
 
 const props = defineProps({
   item: {
@@ -126,6 +126,7 @@ const placeholderIcon = computed(() => {
   if (isImageMediaType(mediaType.value)) return 'mdi-image'
   if (isVideoMediaType(mediaType.value)) return 'mdi-movie-open'
   if (isAudioMediaType(mediaType.value)) return 'mdi-music'
+  if (isTextMediaType(mediaType.value)) return 'mdi-file-document-outline'
   return 'mdi-file'
 })
 
