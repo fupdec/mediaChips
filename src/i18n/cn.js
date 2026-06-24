@@ -549,8 +549,10 @@ const cn = {
     tools: {
       open_app_data_folder: '打开 MediaChips 存储活动数据库、生成的媒体文件和应用数据的本地文件夹',
       open_app_folder: '打开应用文件夹',
+      open_data_folder_btn: '打开',
       bulk_edit_paths: '批量编辑文件路径',
       bulk_edit_file_paths: '批量编辑文件路径',
+      bulk_edit_paths_btn: '编辑',
       search_for: '搜索...',
       case_sensitive: '区分大小写',
       update_with: '更新为...',
@@ -571,6 +573,7 @@ const cn = {
       remove_watched_folder: '移除监视文件夹',
       remove_watched_folder_confirm: '此文件夹将从监视列表中移除。\n确定吗？',
       analyze_paths_tooltip: '分析数据库中所有文件夹和文件名，并使用建议标签打开相同的添加标签对话框',
+      suggest_tags_btn: '分析',
       adult_features: '成人功能',
       data_scraper: '数据抓取器',
       data_scraper_hint: '从互联网解析表演者信息',

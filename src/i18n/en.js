@@ -549,8 +549,10 @@ const en = {
     tools: {
       open_app_data_folder: 'Open the local folder where MediaChips stores the active database, generated media files and app data',
       open_app_folder: "Open app's folder",
+      open_data_folder_btn: 'Open',
       bulk_edit_paths: 'Bulk editing of file paths',
       bulk_edit_file_paths: 'Bulk edit file paths',
+      bulk_edit_paths_btn: 'Edit',
       search_for: 'Search for...',
       case_sensitive: 'Case sensitive',
       update_with: 'Update with...',
@@ -571,6 +573,7 @@ const en = {
       remove_watched_folder: 'Remove Watched Folder',
       remove_watched_folder_confirm: 'This folder will be removed from watchlists. \nAre you sure?',
       analyze_paths_tooltip: 'Analyze all folder and file names in the database and open the same tag adding dialog with suggested tags',
+      suggest_tags_btn: 'Analyze',
       adult_features: 'Adult features',
       data_scraper: 'Data Scraper',
       data_scraper_hint: 'Parsing info about performer from the Internet',

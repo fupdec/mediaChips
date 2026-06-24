@@ -549,8 +549,10 @@ const es = {
     tools: {
       open_app_data_folder: 'Abrir la carpeta local donde MediaChips almacena la base de datos activa, archivos multimedia generados y datos de la aplicación',
       open_app_folder: 'Abrir carpeta de la aplicación',
+      open_data_folder_btn: 'Abrir',
       bulk_edit_paths: 'Edición masiva de rutas de archivo',
       bulk_edit_file_paths: 'Editar rutas de archivo en masa',
+      bulk_edit_paths_btn: 'Editar',
       search_for: 'Buscar...',
       case_sensitive: 'Distinguir mayúsculas y minúsculas',
       update_with: 'Actualizar con...',
@@ -571,6 +573,7 @@ const es = {
       remove_watched_folder: 'Quitar carpeta vigilada',
       remove_watched_folder_confirm: 'Esta carpeta se quitará de las listas de vigilancia. \n¿Está seguro?',
       analyze_paths_tooltip: 'Analizar todos los nombres de carpetas y archivos de la base de datos y abrir el mismo diálogo de agregar etiquetas con etiquetas sugeridas',
+      suggest_tags_btn: 'Analizar',
       adult_features: 'Funciones para adultos',
       data_scraper: 'Extractor de datos',
       data_scraper_hint: 'Extracción de información sobre el intérprete desde Internet',

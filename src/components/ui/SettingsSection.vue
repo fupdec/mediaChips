@@ -1,7 +1,12 @@
 <template>
-  <section class="settings-section" :class="sectionClass">
+  <v-card
+    class="settings-section"
+    :class="sectionClass"
+    rounded="xl"
+    variant="flat"
+  >
     <slot/>
-  </section>
+  </v-card>
 </template>
 
 <script setup>
@@ -20,7 +25,15 @@ const sectionClass = computed(() => ({
 </script>
 
 <style scoped>
+.settings-section {
+  background-color: rgb(120 120 120 / 5%) !important;
+}
+
+.settings-section:not(.settings-section--padded) {
+  padding-block: 16px;
+}
+
 .settings-section--padded {
-  padding-inline: 16px;
+  padding: 16px;
 }
 </style>

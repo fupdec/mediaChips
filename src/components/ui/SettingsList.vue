@@ -14,7 +14,7 @@
 .settings-list {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 24px;
 }
 
 .settings-list > :slotted(*) {

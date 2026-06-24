@@ -1,31 +1,26 @@
 <template>
   <div class="mx-4">
-    <div class="tool-row mb-4">
-        <v-btn
-          @click="openFolder"
-          color="primary"
-          rounded
-          variant="flat"
-        >
-          <v-icon icon="mdi-folder-open"
-            start/>
-          {{ t('settings_labels.tools.open_app_folder') }}
-        </v-btn>
-
-      <v-tooltip :text="t('settings_labels.tools.open_app_data_folder')">
-        <template #activator="{ props }">
-          <v-icon
-            v-bind="props"
-            class="ml-3 text-medium-emphasis"
-            icon="mdi-help-circle-outline"
-          />
-        </template>
-      </v-tooltip>
+    <div class="tool-action mb-4">
+      <div class="tool-action__hint text-caption text-medium-emphasis">
+        {{ t('settings_labels.tools.open_app_data_folder') }}
+      </div>
+      <v-btn
+        @click="openFolder"
+        color="primary"
+        rounded
+        variant="flat"
+      >
+        <v-icon icon="mdi-folder-open" start/>
+        {{ t('settings_labels.tools.open_data_folder_btn') }}
+      </v-btn>
     </div>
 
     <ToolQuickAddTags class="mb-4"/>
 
-    <div class="tool-row">
+    <div class="tool-action">
+      <div class="tool-action__hint text-caption text-medium-emphasis">
+        {{ t('settings_labels.tools.replace_paths_hint') }}
+      </div>
       <v-dialog
         v-model="dialog"
         :fullscreen="xs"
@@ -39,9 +34,8 @@
             rounded
             variant="flat"
           >
-            <v-icon icon="mdi-find-replace"
-              start/>
-            {{ t('settings_labels.tools.bulk_edit_file_paths') }}
+            <v-icon icon="mdi-find-replace" start/>
+            {{ t('settings_labels.tools.bulk_edit_paths_btn') }}
           </v-btn>
         </template>
 
@@ -106,16 +100,6 @@
           </v-card-text>
         </v-card>
       </v-dialog>
-
-      <v-tooltip :text="t('settings_labels.tools.replace_paths_hint')">
-        <template #activator="{ props }">
-          <v-icon
-            v-bind="props"
-            class="ml-3 text-medium-emphasis"
-            icon="mdi-help-circle-outline"
-          />
-        </template>
-      </v-tooltip>
     </div>
   </div>
 </template>
@@ -225,9 +209,16 @@ const openFolder = () => {
 </script>
 
 <style scoped>
-.tool-row {
+.tool-action {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tool-action__hint {
+  max-width: 640px;
+  line-height: 1.4;
 }
 
 .path-string {

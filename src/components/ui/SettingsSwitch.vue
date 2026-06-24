@@ -36,19 +36,16 @@ const setOption = (value) => {
     color="primary"
     false-value="0"
     true-value="1"
-    class="mt-0"
+    class="mt-0 settings-switch"
     :disabled="disabled"
     :hide-details="!hint"
     inset
   >
     <template #label>
-      <v-card
+      <div
         v-if="title || hint"
-        :disabled="disabled"
         class="d-flex flex-column ml-4"
-        flat
       >
-
         <div v-if="title" class="text-body-1 text-high-emphasis">
           <v-icon v-if="iconText" :color="iconColor"
             size="small"
@@ -57,7 +54,7 @@ const setOption = (value) => {
           {{ title }}
         </div>
         <div v-if="hint" class="text-caption text-medium-emphasis mt-1">{{ hint }}</div>
-      </v-card>
+      </div>
       <slot name="label"></slot>
     </template>
     <template #thumb>
@@ -65,3 +62,10 @@ const setOption = (value) => {
     </template>
   </v-switch>
 </template>
+
+<style scoped>
+.settings-switch :deep(.v-label) {
+  background-color: transparent !important;
+  opacity: 1;
+}
+</style>

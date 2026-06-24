@@ -549,8 +549,10 @@ const ru = {
     tools: {
       open_app_data_folder: 'Открыть локальную папку, где MediaChips хранит активную базу данных, сгенерированные медиафайлы и данные приложения',
       open_app_folder: 'Открыть папку приложения',
+      open_data_folder_btn: 'Открыть',
       bulk_edit_paths: 'Массовое редактирование путей к файлам',
       bulk_edit_file_paths: 'Массово редактировать пути файлов',
+      bulk_edit_paths_btn: 'Редактировать',
       search_for: 'Искать...',
       case_sensitive: 'С учетом регистра',
       update_with: 'Заменить на...',
@@ -571,6 +573,7 @@ const ru = {
       remove_watched_folder: 'Удалить отслеживаемую папку',
       remove_watched_folder_confirm: 'Эта папка будет удалена из списка отслеживания. \nВы уверены?',
       analyze_paths_tooltip: 'Проанализировать все имена папок и файлов в базе данных и открыть диалог добавления тегов с предложенными тегами',
+      suggest_tags_btn: 'Анализировать',
       adult_features: 'Функции для взрослых',
       data_scraper: 'Скрапер данных',
       data_scraper_hint: 'Парсинг информации об исполнителе из интернета',

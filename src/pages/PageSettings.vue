@@ -64,7 +64,7 @@
 
         <div v-show="tab === 'appearance'">
           <SettingsList>
-            <SettingsSection>
+            <SettingsSection padded>
               <SettingsAppearanceDarkMode/>
               <SettingsAppearanceZoom/>
             </SettingsSection>

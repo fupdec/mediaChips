@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div class="tool-row">
+    <div class="tool-action">
+      <div class="tool-action__hint text-caption text-medium-emphasis">
+        {{ t('settings_labels.tools.analyze_paths_tooltip') }}
+      </div>
       <v-btn
         @click="openSuggestedTags"
         :loading="loading"
@@ -8,22 +11,9 @@
         rounded
         variant="flat"
       >
-        <v-icon
-          icon="mdi-tag-plus-outline"
-          start
-        />
-        {{ t('media.adding.add_suggested_tags') }}
+        <v-icon icon="mdi-tag-plus-outline" start/>
+        {{ t('settings_labels.tools.suggest_tags_btn') }}
       </v-btn>
-
-      <v-tooltip :text="t('settings_labels.tools.analyze_paths_tooltip')">
-        <template #activator="{ props }">
-          <v-icon
-            v-bind="props"
-            class="ml-3 text-medium-emphasis"
-            icon="mdi-help-circle-outline"
-          />
-        </template>
-      </v-tooltip>
     </div>
 
     <v-alert
@@ -99,8 +89,15 @@ async function openSuggestedTags() {
 </script>
 
 <style scoped>
-.tool-row {
+.tool-action {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tool-action__hint {
+  max-width: 640px;
+  line-height: 1.4;
 }
 </style>
