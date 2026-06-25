@@ -92,15 +92,10 @@ onMounted(() => {
 .system-bar-player {
   top: 0 !important;
   left: 0 !important;
-  border-top-left-radius: var(--player-window-radius, 15px) !important;
-  border-top-right-radius: var(--player-window-radius, 15px) !important;
+  border-radius: 0 !important;
   overflow: hidden;
   -webkit-app-region: drag;
   width: 100% !important;
-
-  &.maximized {
-    border-radius: 0 !important;
-  }
 
   .app-system-bar-title {
     position: absolute !important;
