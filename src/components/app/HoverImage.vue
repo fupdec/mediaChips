@@ -28,6 +28,8 @@ const contextMenuVisible = computed(
 const style = computed(() => ({
   top: `${hover.y + 30}px`,
   left: `${hover.x + 30}px`,
+  width: `${hover.previewWidth || 160}px`,
+  height: `${hover.previewHeight || 160}px`,
 }))
 
 /* methods */

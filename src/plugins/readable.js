@@ -1,6 +1,30 @@
 import MetaTypes from '@/assets/MetaTypes.js'
 import useItemsStore from "@/stores/items";
 
+function getHoverPreviewDimensions(width, height, {maxSize = 180, defaultRatio = 16 / 9} = {}) {
+  const w = Number(width) || 0
+  const h = Number(height) || 0
+  let ratio = defaultRatio
+
+  if (w > 0 && h > 0) {
+    ratio = w / h
+  }
+
+  ratio = Math.min(Math.max(ratio, 9 / 16), 21 / 9)
+
+  if (ratio >= 1) {
+    return {
+      previewWidth: maxSize,
+      previewHeight: Math.round(maxSize / ratio),
+    }
+  }
+
+  return {
+    previewWidth: Math.round(maxSize * ratio),
+    previewHeight: maxSize,
+  }
+}
+
 export default {
   install(app, options = {}) {
     const {router, store, i18n} = options
@@ -318,19 +342,25 @@ export default {
         return hsp < 185
       },
 
-      showHoverImage(event, metaId, tagId, data_type) {
+      showHoverImage(event, metaId, tagId, data_type, options = {}) {
         if (event.buttons !== 0) return
 
         let x = event.clientX
         let y = event.clientY
-        const imgSize = 160
-        const offset = 60
+        const offset = 30
+        const isMedia = data_type === 'media'
+        const {previewWidth, previewHeight} = isMedia
+          ? getHoverPreviewDimensions(options.width, options.height, {
+            maxSize: 180,
+            defaultRatio: options.isVideo ? 16 / 9 : 1,
+          })
+          : {previewWidth: 160, previewHeight: 160}
 
         const appHeight = window.innerHeight
         const appWidth = window.innerWidth
 
-        if (appWidth < x + imgSize + offset) x -= imgSize + offset
-        if (appHeight < y + imgSize + offset) y -= imgSize + offset
+        if (appWidth < x + previewWidth + offset) x -= previewWidth + offset
+        if (appHeight < y + previewHeight + offset) y -= previewHeight + offset
 
         const hover = store.hover
         hover.delay = Date.now()
@@ -340,6 +370,8 @@ export default {
         hover.timeout = setTimeout(() => {
           hover.x = x
           hover.y = y
+          hover.previewWidth = previewWidth
+          hover.previewHeight = previewHeight
           hover.show = true
           hover.tagId = tagId
           hover.metaId = metaId
@@ -354,6 +386,8 @@ export default {
       hideHoverImage() {
         clearTimeout(store.hover.timeout);
         store.hover.show = false
+        store.hover.previewWidth = 160
+        store.hover.previewHeight = 160
       },
 
       parseFilePath(filePath, mediaId) {

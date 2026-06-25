@@ -206,7 +206,18 @@ async function search() {
     const [mediaRes, tagRes] = await Promise.all([
       axios.post(
         `${apiUrl.value}/api/media/search`,
-        {query: `SELECT * FROM media WHERE name LIKE '%${escaped}%' LIMIT ${RESULT_LIMIT}`},
+        {
+          query: `
+            SELECT media.*,
+              COALESCE(videoMetadata.width, imageMetadata.width) AS width,
+              COALESCE(videoMetadata.height, imageMetadata.height) AS height
+            FROM media
+            LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
+            LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId
+            WHERE media.name LIKE '%${escaped}%'
+            LIMIT ${RESULT_LIMIT}
+          `,
+        },
         {signal},
       ),
       axios.post(
@@ -358,6 +369,20 @@ function onItemMouseenter(row, index) {
   selectedIndex.value = index
 }
 
+function showResultHover(event, row) {
+  if (row.group.is_media) {
+    const type = mediaTypes.value.find(item => item.id === row.group.mediaTypeId)
+    $readable.showHoverImage(event, row.group.mediaTypeId, row.item.id, 'media', {
+      width: row.item.width,
+      height: row.item.height,
+      isVideo: isVideoMediaType(type),
+    })
+    return
+  }
+
+  $readable.showHoverImage(event, row.item.metaId, row.item.id)
+}
+
 function getNameHighlighted(text) {
   return $readable.highlightChars(text, query.value.trim(), true)
 }
@@ -465,14 +490,11 @@ function getNameHighlighted(text) {
               v-else
               class="global-search__item d-flex align-center px-3 text-caption"
               :class="{'global-search__item--active': index === selectedIndex}"
-              @mouseenter="onItemMouseenter(row, index)"
+              @mouseenter="onItemMouseenter(row, index); showResultHover($event, row)"
+              @mouseleave.stop="$readable.hideHoverImage"
               @click="row.group.is_media
                 ? openMedia(row.item, row.group.mediaTypeId)
                 : openTag(row.item)"
-              @mouseover.stop="row.group.is_media
-                ? $readable.showHoverImage($event, row.group.mediaTypeId, row.item.id, 'media')
-                : $readable.showHoverImage($event, row.item.metaId, row.item.id)"
-              @mouseleave.stop="$readable.hideHoverImage"
             >
               <v-icon size="14" class="text-medium-emphasis mr-2">
                 mdi-{{ row.group.is_media ? 'file-outline' : 'tag-outline' }}

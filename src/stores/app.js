@@ -21,6 +21,8 @@ export const useAppStore = defineStore('app', {
       delay: 0,
       x: 0,
       y: 0,
+      previewWidth: 160,
+      previewHeight: 160,
     },
     media: [],
     mediaTypes: [],
