@@ -1,5 +1,5 @@
 <template>
-  <v-container max-width="960">
+  <div>
     <div v-if="!mediaTypes.length" class="layout-img">
       <v-img src="/images/no-data.svg" max-height="40vh" class="my-4" contain></v-img>
       <div class="text-medium-emphasis">{{ t('media.type.please_add_media_first') }}</div>
@@ -112,7 +112,7 @@
       @update="updateMediaTypes"
       @close="dialogEdit = false"
     />
-  </v-container>
+  </div>
 </template>
 
 <script setup>

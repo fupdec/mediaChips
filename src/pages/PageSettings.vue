@@ -51,6 +51,7 @@
       </aside>
 
       <div class="settings-page-layout__content">
+        <v-container max-width="960" class="settings-page-layout__container">
         <div v-show="tab === 'general'">
           <SettingsList>
             <SettingsSection>
@@ -159,6 +160,7 @@
             </SettingsSection>
           </SettingsList>
         </div>
+        </v-container>
       </div>
     </div>
   </div>
@@ -292,6 +294,7 @@ watch(() => route.fullPath, applyRouteSettings)
   display: flex;
   align-items: stretch;
   gap: 24px;
+  width: 100%;
   height: 100%;
   max-width: 1200px;
   margin-inline: auto;
@@ -330,7 +333,9 @@ watch(() => route.fullPath, applyRouteSettings)
   overscroll-behavior: contain;
 }
 
-.settings-page :deep(.settings-list-container) {
+.settings-page-layout__container {
+  width: 100%;
+  padding-inline: 0;
   padding-bottom: 16px;
 }
 

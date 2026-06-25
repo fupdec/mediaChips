@@ -1,5 +1,5 @@
 <template>
-  <v-container max-width="960">
+  <div>
     <div class="d-flex align-center flex-wrap ga-2">
       <v-btn
         color="success"
@@ -200,7 +200,7 @@
       @updated="getMeta"
       @close="closeEditDialog"
     />
-  </v-container>
+  </div>
 </template>
 
 <script setup>

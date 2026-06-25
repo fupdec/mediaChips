@@ -1,5 +1,5 @@
 <template>
-  <v-container class="settings-meta-assignment" max-width="1100">
+  <div class="settings-meta-assignment">
     <div class="settings-meta-assignment__intro mb-4">
       <div class="d-flex align-center flex-wrap ga-2 mb-1">
         <h2 class="text-h6">{{ t('settings_labels.field_pinning.title') }}</h2>
@@ -115,7 +115,7 @@
         />
       </main>
     </div>
-  </v-container>
+  </div>
 </template>
 
 <script setup>
