@@ -2,7 +2,7 @@
 
 import _ from "lodash";
 import * as FilterCols from '../configs/filter-cols.mjs';
-import { parseCountries } from '../../src/utils/country.js'
+import { parseCountries } from '../../api/utils/country.js'
 
 const parseItemsFromDb = (items) => {
   const parseTagsAndValues = (item) => {

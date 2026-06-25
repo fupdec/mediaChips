@@ -1,5 +1,5 @@
 const {Op} = require('sequelize')
-const {parseCountries} = require('../../src/utils/country.js')
+const {parseCountries} = require('../utils/country')
 const {
   loadFilteredMediaIds,
   loadMediaPlaylistItems,
