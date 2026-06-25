@@ -1,5 +1,43 @@
 export const history = [
   {
+    id: '0.14.1-beta',
+    version: 'v0.14.1-beta',
+    name: 'Electron 42 and Windows build fixes',
+    content: `
+      <p><strong>MediaChips v0.14.1-beta</strong> upgrades to Electron 42 and Vite 8, replaces native dependencies for packaged Windows builds, and fixes Task API, license activation, and global search issues.</p>
+      <h3>Added:</h3>
+      <ul>
+        <li><strong>Global search UX</strong> — virtual scrolling and keyboard navigation</li>
+      </ul>
+      <h3>Changed:</h3>
+      <ul>
+        <li><strong>Electron 42 and Vite 8</strong> with Rolldown-compatible build configuration</li>
+        <li><strong>Database layer</strong> — <code>better-sqlite3</code> with Sequelize adapter and Node/Electron rebuild scripts</li>
+        <li><strong>Image processing</strong> — Jimp instead of <code>sharp</code> for metadata, thumbnails, and batch generation</li>
+        <li><strong>Video processing</strong> — spawn-based ffmpeg helpers; binaries unpacked from asar on Windows</li>
+        <li><strong>Separate player window</strong> — synced title, stop on close, improved Windows chrome</li>
+        <li>Dependency cleanup — removed unused <code>lodash-es</code>, <code>vue-drag-drop</code>, and <code>vuewordcloud</code></li>
+      </ul>
+      <h3>Fixed:</h3>
+      <ul>
+        <li><strong>Windows packaged builds</strong> — Task API routes, video image generation, timeline generation, and file resolution</li>
+        <li><strong>Windows license registration</strong> — device ID lookup via Electron IPC and fallback HTTP endpoints</li>
+        <li>Electron API calls using LAN IP instead of localhost; license fingerprint in dev mode</li>
+        <li>Global search hover preview aspect ratio for video results</li>
+        <li>Task API registration when native image processing fails to load on Windows Electron</li>
+      </ul>
+      <h3>Notes:</h3>
+      <ul>
+        <li><strong>From v0.14.0-beta:</strong> in-app auto-update should deliver this beta</li>
+        <li><strong>From v0.13.1 or older:</strong> install v0.14.0-beta or v0.14.1-beta manually once</li>
+        <li><strong>macOS (unsigned):</strong> use <strong>Download DMG</strong> in the update notification</li>
+        <li><strong>Portable</strong> Windows builds still require a manual download</li>
+        <li>This is a <strong>beta</strong> — report issues on GitHub before stable v0.14.0</li>
+        <li>Full changelog: <a href="https://github.com/fupdec/MediaChips/blob/master/CHANGELOG.md" target="_blank">CHANGELOG.md</a></li>
+      </ul>
+    `,
+  },
+  {
     id: '0.14.0-beta',
     version: 'v0.14.0-beta',
     name: 'Home widgets and settings overhaul',

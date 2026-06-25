@@ -5,6 +5,41 @@ All notable changes to MediaChips are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.1-beta] - 2026-06-26
+
+### Added
+
+- **Global search UX** — virtual scrolling and keyboard navigation for faster browsing through large result sets
+
+### Changed
+
+- **Electron 42 and Vite 8** upgrade with Rolldown-compatible build configuration
+- **Database layer** — replaced `sqlite3` with `better-sqlite3` and a Sequelize dialect adapter; separate Node/Electron rebuild scripts for dev server and packaged app
+- **Image processing** — replaced `sharp` with Jimp for metadata, thumbnails, and batch image generation
+- **Video processing** — replaced `fluent-ffmpeg` with spawn-based helpers; ffmpeg binaries unpacked from asar on Windows
+- **Separate player window** — title synced with the current file, playback stops when the window closes, improved Windows window chrome
+- **Dependency cleanup** — removed unused `lodash-es`, `vue-drag-drop`, and `vuewordcloud`; consolidated on `lodash`
+- **rimraf v6** — callers migrated to the promise API
+- **Native module rebuild hooks** (`preelectron` / `preserver`) so `better-sqlite3` matches the active Node or Electron runtime
+
+### Fixed
+
+- **Windows packaged builds** — Task API routes missing because `fs-extra` and `rimraf` were not bundled; improved route load diagnostics
+- **Windows packaged builds** — video image generation, timeline generation, and file resolution on Windows paths
+- **Windows license registration** — device ID lookup via Electron IPC and fallback HTTP endpoints; activation no longer fails with 404 when the local API base URL is wrong
+- **Electron API calls using LAN IP instead of localhost** — API requests stay on the page origin so `config.ip` no longer breaks local desktop sessions on Windows
+- **License fingerprint in dev mode** — no longer falls back to Vite HTML; validates a real hex device ID
+- **Global search** — hover preview aspect ratio for video results
+- **Task API registration on Electron** — lazy-loaded image modules and video-core fallback when native image processing fails to load on Windows
+
+### Upgrade notes
+
+- **From v0.14.0-beta:** in-app auto-update should deliver this beta; otherwise install manually once
+- **From v0.13.1 or older:** install v0.14.0-beta or v0.14.1-beta manually first
+- **Portable Windows** builds do not support in-app auto-update
+- **macOS** builds are unsigned; see [INSTALLATION.md](./INSTALLATION.md) for Gatekeeper steps and manual DMG update flow
+- This is a **beta** — report issues on GitHub before the stable v0.14.0 release
+
 ## [0.14.0-beta] - 2026-06-25
 
 ### Added
