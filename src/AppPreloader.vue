@@ -185,14 +185,11 @@ async function getFolders() {
 }
 
 async function getMachineId() {
-  await axios
-    .get(apiUrl.value + "/api/Task/getMachineId")
-    .then((res) => {
-      registrationStore.machineId = res.data
-    })
-    .catch((e) => {
-      console.log(e)
-    })
+  try {
+    await registrationStore.ensureMachineId()
+  } catch (error) {
+    console.warn('Failed to fetch machine id:', error.message)
+  }
 }
 
 function runAutoRegistration() {

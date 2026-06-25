@@ -50,29 +50,20 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
       }
     },
 
-    // Генерация machineId
-    generateMachineId() {
-      // Генерируем новый ID
-      return 'mc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-    },
-
     async ensureMachineId() {
       if (this.machineId) return this.machineId
 
-      try {
-        const appStore = useAppStore()
-        if (appStore.localhost) {
-          const response = await axios.get(`${appStore.localhost}/api/Task/getMachineId`)
-          if (response.data) {
-            this.machineId = response.data
-            return this.machineId
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to fetch machine id from API:', error.message)
+      const appStore = useAppStore()
+      if (!appStore.localhost) {
+        throw new Error('Device id is not available')
       }
 
-      this.machineId = this.generateMachineId()
+      const response = await axios.get(`${appStore.localhost}/api/Task/getMachineId`)
+      if (!response.data) {
+        throw new Error('Device id is not available')
+      }
+
+      this.machineId = response.data
       return this.machineId
     },
 
@@ -110,10 +101,6 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
      * On startup: verify stored license key on the public license API.
      */
     async tryAutoRegisterOnStartup() {
-      if (this.reg) {
-        return {success: true, skipped: true}
-      }
-
       const info = this.regInfo
       if (!info || typeof info !== 'object' || !info.license_code) {
         return {success: true, skipped: true}
@@ -121,8 +108,24 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
 
       const licenseCode = info.license_code
 
+      let machineId
       try {
-        await this.ensureMachineId()
+        machineId = await this.ensureMachineId()
+      } catch (error) {
+        console.warn('Auto registration skipped: device id is not available')
+        return {success: false, skipped: true, error: 'Device id is not available'}
+      }
+
+      try {
+        const today = new Date().toISOString().substring(0, 10)
+        const storedFingerprints = [info.fingerprint_1, info.fingerprint_2, info.fingerprint_3]
+        const isAlreadyActivated = storedFingerprints.includes(machineId)
+        const isExpired = today > info.license_expiry && info.license_expiry !== '0000-00-00'
+
+        if (isAlreadyActivated && !isExpired) {
+          return {success: true, skipped: true}
+        }
+
         const checkData = await this.checkLicense(licenseCode)
         if (!checkData) {
           const error = `Key "${licenseCode}" not found`
@@ -130,7 +133,6 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
           return {success: false, error}
         }
 
-        const today = new Date().toISOString().substring(0, 10)
         const isKeyExpired = today > checkData.license_expiry && checkData.license_expiry !== '0000-00-00'
         if (isKeyExpired) {
           const error = 'This activation key has expired'
@@ -140,7 +142,7 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
 
         const activations = calculateActivations(checkData)
         const fingerprints = [checkData.fingerprint_1, checkData.fingerprint_2, checkData.fingerprint_3]
-        const isDeviceRegistered = fingerprints.includes(this.machineId)
+        const isDeviceRegistered = fingerprints.includes(machineId)
 
         if (activations >= 3 && !isDeviceRegistered) {
           const error = 'The number of activations has been exceeded'
@@ -239,13 +241,10 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
           return false
         }
 
-        // Инициализируем machineId если нужно
         if (!state.machineId) {
-          // Теперь this доступен и можно вызвать generateMachineId
-          this.machineId = this.generateMachineId()
+          return false
         }
 
-        // Проверяем привязку к устройству
         const arr = [info.fingerprint_1, info.fingerprint_2, info.fingerprint_3]
         return arr.includes(state.machineId)
 

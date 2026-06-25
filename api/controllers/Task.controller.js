@@ -1055,14 +1055,14 @@ module.exports = function (db) {
   };
 
 
-  const {
-    machineId
-  } = require('node-machine-id')
-
   const getMachineId = async function (req, res) {
-    machineId().then((id) => {
-      res.status(201).send(id)
-    })
+    try {
+      const id = await machineId()
+      res.status(200).send(id)
+    } catch (error) {
+      console.error('getMachineId failed:', error)
+      res.status(500).send({message: 'Failed to get machine id'})
+    }
   };
 
 
