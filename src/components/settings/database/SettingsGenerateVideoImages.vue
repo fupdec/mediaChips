@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-4 pb-4">
+  <div id="settings-generate-video-images" class="mx-4 pb-4">
     <settings-category-divider
       :title="t('settings_labels.database.generate_video_images')"
       icon="image-auto-adjust"

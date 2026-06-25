@@ -23,6 +23,11 @@
           {{ t("settings.tabs.tools") }}
         </v-tab>
 
+        <v-tab value="video">
+          <v-icon start>mdi-video-outline</v-icon>
+          {{ t("settings.tabs.video") }}
+        </v-tab>
+
         <v-tab value="meta">
           <v-icon start>mdi-shape-outline</v-icon>
           {{ t("settings.tabs.meta") }}
@@ -50,16 +55,12 @@
         </v-tabs>
       </aside>
 
-      <div class="settings-page-layout__content">
+      <div ref="contentRef" class="settings-page-layout__content">
         <v-container max-width="960" class="settings-page-layout__container">
-        <div v-show="tab === 'general'">
+        <div v-if="tab === 'general'">
           <SettingsList>
             <SettingsSection>
               <SettingsGeneral/>
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsVideoPlayer/>
             </SettingsSection>
 
             <SettingsSection>
@@ -68,7 +69,7 @@
           </SettingsList>
         </div>
 
-        <div v-show="tab === 'appearance'">
+        <div v-else-if="tab === 'appearance'">
           <SettingsList>
             <SettingsSection padded>
               <SettingsAppearanceDarkMode/>
@@ -89,14 +90,10 @@
           </SettingsList>
         </div>
 
-        <div v-show="tab === 'tools'">
+        <div v-else-if="tab === 'tools'">
           <SettingsList>
             <SettingsSection>
               <SettingsTools/>
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsVideoPreview/>
             </SettingsSection>
 
             <SettingsSection>
@@ -109,22 +106,14 @@
           </SettingsList>
         </div>
 
-        <div v-show="tab === 'meta'">
-          <SettingsMeta/>
-        </div>
-
-        <div v-show="tab === 'media'">
-          <SettingsMediaTypes/>
-        </div>
-
-        <div v-show="tab === 'assignment'">
-          <SettingsMetaAssignment/>
-        </div>
-
-        <div v-if="tab === 'database'">
+        <div v-else-if="tab === 'video'">
           <SettingsList>
             <SettingsSection>
-              <SettingsDatabases/>
+              <SettingsVideoPlayer/>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsVideoPreview/>
             </SettingsSection>
 
             <SettingsSection>
@@ -134,6 +123,26 @@
             <SettingsSection>
               <SettingsClearGeneratedImages/>
             </SettingsSection>
+          </SettingsList>
+        </div>
+
+        <div v-else-if="tab === 'meta'">
+          <SettingsMeta/>
+        </div>
+
+        <div v-else-if="tab === 'media'">
+          <SettingsMediaTypes/>
+        </div>
+
+        <div v-else-if="tab === 'assignment'">
+          <SettingsMetaAssignment/>
+        </div>
+
+        <div v-else-if="tab === 'database'">
+          <SettingsList>
+            <SettingsSection>
+              <SettingsDatabases/>
+            </SettingsSection>
 
             <SettingsSection>
               <SettingsContentHashBackfill/>
@@ -142,14 +151,10 @@
             <SettingsSection>
               <SettingsFindMissingMedia/>
             </SettingsSection>
-
-            <SettingsSection>
-              <SettingsFaceRecognition/>
-            </SettingsSection>
           </SettingsList>
         </div>
 
-        <div v-show="tab === 'about'">
+        <div v-else-if="tab === 'about'">
           <SettingsList>
             <SettingsSection>
               <SettingsRegistration/>
@@ -219,9 +224,6 @@ const SettingsContentHashBackfill = defineAsyncComponent(() =>
 const SettingsFindMissingMedia = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsFindMissingMedia.vue")
 )
-const SettingsFaceRecognition = defineAsyncComponent(() =>
-  import("@/components/settings/database/SettingsFaceRecognition.vue")
-)
 const SettingsGeneral = defineAsyncComponent(() =>
   import("@/components/settings/general/SettingsGeneral.vue")
 )
@@ -239,20 +241,25 @@ const About = defineAsyncComponent(() =>
 )
 
 const tab = ref("general")
+const contentRef = ref(null)
 const route = useRoute()
 const {t} = useI18n()
 
 const SETTINGS_SECTION_IDS = {
   generate_video_images: 'settings-generate-video-images',
-  face_recognition: 'settings-face-recognition',
 }
 
 function scrollToSettingsSection(sectionId, attempts = 12) {
+  const scrollContainer = contentRef.value
   const element = document.getElementById(sectionId)
-  if (element) {
-    element.scrollIntoView({
+  if (scrollContainer && element) {
+    const top = element.getBoundingClientRect().top
+      - scrollContainer.getBoundingClientRect().top
+      + scrollContainer.scrollTop
+
+    scrollContainer.scrollTo({
+      top: Math.max(0, top - 8),
       behavior: 'smooth',
-      block: 'start',
     })
     return
   }
@@ -279,11 +286,19 @@ function applyRouteSettings() {
 
 onMounted(applyRouteSettings)
 
+watch(tab, () => {
+  if (contentRef.value) {
+    contentRef.value.scrollTop = 0
+  }
+})
+
 watch(() => route.fullPath, applyRouteSettings)
 </script>
 
 <style scoped>
 .settings-page {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
@@ -293,9 +308,10 @@ watch(() => route.fullPath, applyRouteSettings)
 .settings-page-layout {
   display: flex;
   align-items: stretch;
+  flex: 1 1 auto;
   gap: 24px;
   width: 100%;
-  height: 100%;
+  min-height: 0;
   max-width: 1200px;
   margin-inline: auto;
   padding: 8px 16px 0;
