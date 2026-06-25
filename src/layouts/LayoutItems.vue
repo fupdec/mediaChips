@@ -48,6 +48,16 @@
 
     <Loading v-if="loader.is_busy"/>
 
+    <ItemsPaginationBar
+      v-if="showPagination"
+      v-model:page="paginationPage"
+      v-model:jump-page="paginationJumpPage"
+      :pages="pages"
+      :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
+      @change="changePage"
+      @jump="jumpToPage"
+    />
+
     <div
       v-if="ITEMS.itemsOnPage.length"
       :class="itemsGridClasses"
@@ -80,39 +90,15 @@
       </v-btn>
     </div>
 
-    <div
-      v-if="ITEMS.itemsOnPage.length > 0 && !is_infinite_scroll"
-      class="d-flex align-center my-8"
-    >
-      <v-form v-if="pages > 4"
-        @submit.prevent="jumpToPage(ITEMS.jumpPage)">
-        <v-number-input
-          v-model="ITEMS.jumpPage"
-          @click:append-outer="jumpToPage(ITEMS.jumpPage)"
-          append-outer-icon="mdi-redo"
-          :max="pages"
-          :min="1"
-          type="number"
-          max-width="100px"
-          min-width="100px"
-          density="compact"
-          variant="outlined"
-          hide-details
-          color="primary"
-          control-variant="stacked"
-        ></v-number-input>
-      </v-form>
-
-      <v-pagination
-        v-model="ITEMS.page"
-        @update:model-value="changePage"
-        :length="pages"
-        :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
-        active-color="primary"
-        density="comfortable"
-        rounded
-      ></v-pagination>
-    </div>
+    <ItemsPaginationBar
+      v-if="showPagination"
+      v-model:page="paginationPage"
+      v-model:jump-page="paginationJumpPage"
+      :pages="pages"
+      :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
+      @change="changePage"
+      @jump="jumpToPage"
+    />
 
     <div v-if="0 == total && total == totalInDb"
       class="layout-img">
@@ -149,15 +135,17 @@
     </div>
 
     <div
-      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length < ITEMS.totalFiltered && (loader.show || isLoadingMore)"
+      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length < ITEMS.totalFiltered"
       :class="{ 'infinite-loader': is_not_full_height && items_type !== 'media' }"
       class="infinite-loader-full-height"
     >
-      <Loading
-        v-if="items_type !== 'media'"
-        v-intersect="infiniteScrolling"
+      <Loading v-if="isLoadingMore" />
+
+      <div
+        v-intersect="infiniteIntersectOptions"
+        class="infinite-scroll-sentinel"
+        aria-hidden="true"
       />
-      <Loading v-else-if="isLoadingMore" />
     </div>
 
     <v-card
@@ -176,7 +164,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
+import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import axios from 'axios'
@@ -198,6 +186,7 @@ import Filters from '@/components/app/Filters.vue'
 import SavedFilters from '@/components/elements/FiltersSaved.vue'
 import FiltersChips from '@/components/elements/FiltersChips.vue'
 import Loading from '@/components/elements/Loading.vue'
+import ItemsPaginationBar from '@/components/elements/ItemsPaginationBar.vue'
 import QuickActionButton from '@/components/app/QuickActionButton.vue'
 import ToolbarSort from '@/components/app/toolbar/ToolbarSort.vue'
 import ToolbarAppearance from "@/components/app/toolbar/ToolbarAppearance.vue";
@@ -254,6 +243,8 @@ const is_not_full_height = ref(false)
 const isLoadingMore = ref(false)
 const dropzone = ref(false)
 const container = ref(null)
+const scrollRoot = ref(null)
+const INFINITE_PAGE_SIZE = 25
 let mediaScrollEl = null
 
 // Компьютеды
@@ -266,6 +257,29 @@ const activeFilters = computed(() => {
   return ITEMS.value.filters.filter(i => i && i.active);
 });
 const is_infinite_scroll = computed(() => ITEMS.value.limit === 101)
+const showPagination = computed(() => (
+  ITEMS.value.itemsOnPage.length > 0 && !is_infinite_scroll.value && pages.value > 0
+))
+const paginationPage = computed({
+  get: () => ITEMS.value.page,
+  set: (value) => {
+    itemsStore.updateState({key: 'page', value})
+  },
+})
+const paginationJumpPage = computed({
+  get: () => ITEMS.value.jumpPage,
+  set: (value) => {
+    itemsStore.updateState({key: 'jumpPage', value})
+  },
+})
+const infiniteIntersectOptions = computed(() => ({
+  handler: infiniteScrolling,
+  options: {
+    root: scrollRoot.value,
+    rootMargin: '400px 0px',
+    threshold: 0,
+  },
+}))
 const isImageGrid = computed(() =>
   props.items_type === 'media' && mediaType.value?.type === 'image' && ITEMS.value.view == '1'
 )
@@ -415,6 +429,10 @@ const getPageSettings = async () => {
         let value = res.data[0][i]
         if (value === undefined || value === null) continue
 
+        if (i === 'page' && props.items_type === 'media' && Number(res.data[0].limit) === 101) {
+          value = 1
+        }
+
         if (i === 'sortBy' && props.items_type === 'media') {
           value = normalizeSortBy(value, props.items_type, mediaType.value, 'createdAt')
         }
@@ -562,21 +580,28 @@ const getItemsFromDb = async (ids) => {
   const appendMediaPage = props.items_type === 'media'
     && is_infinite_scroll.value
     && ITEMS.value.page > 1
+    && ITEMS.value.itemsOnPage.length > 0
     && (!ids || !ids.length)
+
+  if (props.items_type === 'media' && is_infinite_scroll.value && !appendMediaPage && (!ids || !ids.length)) {
+    itemsStore.updateState({key: 'page', value: 1})
+    query.page = 1
+  }
 
   if (props.items_type === 'media') {
     query.includeNavigation = false
-    const pageLimit = is_infinite_scroll.value ? 25 : ITEMS.value.limit
+    const pageLimit = is_infinite_scroll.value ? INFINITE_PAGE_SIZE : ITEMS.value.limit
     query.page = ITEMS.value.page || 1
     query.limit = pageLimit
     query.skipTotals = appendMediaPage
   }
 
   if (ids && ids.length > 0) {
+    query.filters = []
     await axios.post(apiUrl.value + url, query)
       .then((res) => {
         for (let id of ids) {
-          let item = res.data.items.find(i => i.id === id);
+          let item = res.data.items.find(i => Number(i.id) === Number(id))
           itemsStore.updateItem({id, item})
         }
       })
@@ -611,7 +636,32 @@ const getItemsFromDb = async (ids) => {
       }
 
       if (props.items_type === 'media') {
+        const previousCount = appendMediaPage ? ITEMS.value.itemsOnPage.length : 0
         applyMediaListResponse(response, {append: appendMediaPage})
+
+        if (response.data.page != null) {
+          itemsStore.updateState({key: 'page', value: response.data.page})
+        }
+
+        if (appendMediaPage && response.data.items?.length === 0) {
+          itemsStore.updateState({
+            key: 'totalFiltered',
+            value: ITEMS.value.itemsOnPage.length,
+          })
+          total.value = ITEMS.value.itemsOnPage.length
+        } else if (appendMediaPage && ITEMS.value.itemsOnPage.length === previousCount) {
+          itemsStore.updateState({
+            key: 'totalFiltered',
+            value: ITEMS.value.itemsOnPage.length,
+          })
+          total.value = ITEMS.value.itemsOnPage.length
+        } else if (appendMediaPage) {
+          await nextTick()
+          maybeLoadMoreIfNearBottom()
+        } else if (is_infinite_scroll.value) {
+          await nextTick()
+          maybeLoadMoreIfNearBottom()
+        }
       } else {
         itemsStore.updateState({
           key: "entities",
@@ -667,7 +717,8 @@ const getEntitiesOnPage = (ids_remove = []) => {
   let items = ITEMS.value.entities;
 
   total.value = items.length;
-  const limit = is_infinite_scroll.value ? 25 : ITEMS.value.limit;
+  itemsStore.updateState({key: 'totalFiltered', value: items.length});
+  const limit = is_infinite_scroll.value ? INFINITE_PAGE_SIZE : ITEMS.value.limit;
   const pagesCount = Math.ceil(total.value / limit);
   pages.value = pagesCount;
   if (ITEMS.value.page > pagesCount) {
@@ -718,32 +769,66 @@ const changePage = (val) => {
   if (props.items_type === 'media') {
     updatePageSetting({page: val});
     getItemsFromDb();
+    scrollTop();
     return
   }
 
   getEntitiesOnPage();
   updatePageSetting({page: val});
+  scrollTop();
+}
+
+const getNextInfiniteMediaPage = () => {
+  if (!ITEMS.value.itemsOnPage.length) return 1
+  return Math.floor(ITEMS.value.itemsOnPage.length / INFINITE_PAGE_SIZE) + 1
+}
+
+const refreshScrollRoot = () => {
+  scrollRoot.value = getMainScrollEl()
+  return scrollRoot.value
 }
 
 const loadNextInfinitePage = async () => {
   if (!is_infinite_scroll.value) return;
   if (loader.value.is_busy || isLoadingMore.value) return;
+  if (ITEMS.value.totalFiltered <= 0) return;
   if (ITEMS.value.itemsOnPage.length >= ITEMS.value.totalFiltered) return;
 
   isLoadingMore.value = true;
   try {
-    itemsStore.updateState({
-      key: "page",
-      value: ITEMS.value.page + 1,
-    });
-
     if (props.items_type === 'media') {
+      itemsStore.updateState({
+        key: "page",
+        value: getNextInfiniteMediaPage(),
+      });
       await getItemsFromDb();
     } else {
+      itemsStore.updateState({
+        key: "page",
+        value: ITEMS.value.page + 1,
+      });
       getEntitiesOnPage();
     }
   } finally {
     isLoadingMore.value = false;
+  }
+}
+
+const maybeLoadMoreIfNearBottom = () => {
+  if (!is_infinite_scroll.value) return;
+  if (loader.value.is_busy || isLoadingMore.value) return;
+  if (ITEMS.value.totalFiltered <= 0) return;
+  if (ITEMS.value.itemsOnPage.length >= ITEMS.value.totalFiltered) return;
+
+  const el = refreshScrollRoot() || getMainScrollEl();
+  if (!el) return;
+
+  const threshold = 400;
+  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+  const shortPage = el.scrollHeight <= el.clientHeight + threshold;
+
+  if (nearBottom || shortPage) {
+    loadNextInfinitePage();
   }
 }
 
@@ -765,7 +850,7 @@ const onMediaInfiniteScroll = _.throttle(() => {
 const bindMediaInfiniteScroll = () => {
   unbindMediaInfiniteScroll();
   if (!is_infinite_scroll.value || props.items_type !== 'media') return;
-  mediaScrollEl = getMainScrollEl();
+  mediaScrollEl = refreshScrollRoot();
   mediaScrollEl?.addEventListener('scroll', onMediaInfiniteScroll, {passive: true});
 }
 
@@ -786,9 +871,9 @@ const toggleCustomization = () => {
   toolbarStore.appearance.show = !toolbarStore.appearance.show
 }
 
-const jumpToPage = () => {
-  if (ITEMS.value.jumpPage === null) return;
-  let val = Number(ITEMS.value.jumpPage);
+const jumpToPage = (value = ITEMS.value.jumpPage) => {
+  if (value === null || value === undefined) return;
+  let val = Number(value);
   if (val < 1) val = 1;
   else if (val > pages.value) val = pages.value;
   if (val !== ITEMS.value.page) itemsStore.updateState({
@@ -847,7 +932,18 @@ onMounted(async () => {
   itemsStore.updateState({key: "selection", value: []});
   itemsStore.updateState({key: "filters", value: []});
 
+  if (props.items_type === 'media' && ITEMS.value.limit === 101) {
+    itemsStore.updateState({key: 'page', value: 1});
+  }
+
   await init();
+
+  refreshScrollRoot();
+
+  if (props.items_type === 'media' && is_infinite_scroll.value) {
+    await nextTick();
+    maybeLoadMoreIfNearBottom();
+  }
 
   // Слушатели событий (нужно будет перенести на provide/inject или event bus в Vue 3)
   // Временное решение:
@@ -1030,5 +1126,11 @@ watch(is_infinite_scroll, () => {
   display: flex;
   justify-content: center;
   padding: 60px 0 24px;
+}
+
+.infinite-scroll-sentinel {
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
 }
 </style>

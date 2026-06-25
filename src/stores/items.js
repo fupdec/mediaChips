@@ -9,6 +9,8 @@ import _ from "lodash"
 
 const eventBus = useEventBus()
 
+const sameItemId = (left, right) => Number(left) === Number(right)
+
 export const useItemsStore = defineStore('items', {
   // Состояние (State)
   state: () => ({
@@ -378,18 +380,18 @@ export const useItemsStore = defineStore('items', {
     // Удалить элемент по ID
     removeItem(id) {
       // Удалить с текущей страницы
-      const indexPage = this.itemsOnPage.findIndex(i => i.id === id)
+      const indexPage = this.itemsOnPage.findIndex(i => sameItemId(i.id, id))
       if (indexPage > -1) {
         this.itemsOnPage.splice(indexPage, 1)
       }
 
       // Удалить из всех элементов
-      const indexEntities = this.entities.findIndex(i => i.id === id)
+      const indexEntities = this.entities.findIndex(i => sameItemId(i.id, id))
       if (indexEntities > -1) {
         this.entities.splice(indexEntities, 1)
       }
 
-      const indexNavigation = this.navigationItems.findIndex(i => i.id === id)
+      const indexNavigation = this.navigationItems.findIndex(i => sameItemId(i.id, id))
       if (indexNavigation > -1) {
         this.navigationItems.splice(indexNavigation, 1)
         this.totalFiltered = Math.max(0, this.totalFiltered - 1)
@@ -409,47 +411,55 @@ export const useItemsStore = defineStore('items', {
 
     // Обновить элемент по ID
     updateItem({id, item}) {
-      // Обновить на текущей странице
-      const indexPage = this.itemsOnPage.findIndex(i => i.id === id)
+      if (!item) return
+
+      const mergeItem = (current) => ({
+        ...current,
+        ...item,
+      })
+
+      const indexPage = this.itemsOnPage.findIndex(i => sameItemId(i.id, id))
       if (indexPage > -1) {
-        // Сохраняем существующие свойства, обновляем новыми
-        this.itemsOnPage[indexPage] = {
-          ...this.itemsOnPage[indexPage],
-          ...item
-        }
+        this.itemsOnPage.splice(indexPage, 1, mergeItem(this.itemsOnPage[indexPage]))
       }
 
-      // Обновить во всех элементах
-      const indexEntities = this.entities.findIndex(i => i.id === id)
+      const indexEntities = this.entities.findIndex(i => sameItemId(i.id, id))
       if (indexEntities > -1) {
-        this.entities[indexEntities] = {
-          ...this.entities[indexEntities],
-          ...item
-        }
+        this.entities.splice(indexEntities, 1, mergeItem(this.entities[indexEntities]))
       }
 
-      const indexNavigation = this.navigationItems.findIndex(i => i.id === id)
+      const indexNavigation = this.navigationItems.findIndex(i => sameItemId(i.id, id))
       if (indexNavigation > -1) {
-        this.navigationItems[indexNavigation] = {
-          ...this.navigationItems[indexNavigation],
-          ...item
-        }
+        this.navigationItems.splice(
+          indexNavigation,
+          1,
+          mergeItem(this.navigationItems[indexNavigation]),
+        )
       }
     },
 
     // Обновить поле элемента (альтернативный метод)
     updateItemField({id, field, value}) {
-      // Найти элемент на текущей странице
-      const itemOnPage = this.itemsOnPage.find(i => i.id === id)
-      if (itemOnPage) {
-        itemOnPage[field] = value
+      const applyField = (target) => {
+        if (target) target[field] = value
       }
 
-      // Найти элемент во всех элементах
-      const itemInEntities = this.entities.find(i => i.id === id)
-      if (itemInEntities) {
-        itemInEntities[field] = value
+      applyField(this.itemsOnPage.find(i => sameItemId(i.id, id)))
+      applyField(this.entities.find(i => sameItemId(i.id, id)))
+      applyField(this.navigationItems.find(i => sameItemId(i.id, id)))
+    },
+
+    removeTagFromItem({itemId, tagId}) {
+      const nextTags = (tags) => (tags || []).filter((entry) => !sameItemId(entry.tagId, tagId))
+      const applyTags = (target) => {
+        if (target?.tags) {
+          target.tags = nextTags(target.tags)
+        }
       }
+
+      applyTags(this.itemsOnPage.find(i => sameItemId(i.id, itemId)))
+      applyTags(this.entities.find(i => sameItemId(i.id, itemId)))
+      applyTags(this.navigationItems.find(i => sameItemId(i.id, itemId)))
     },
 
     // Установить поле сортировки
