@@ -38,6 +38,7 @@ export const usePlayerStore = defineStore('player', {
     playlistMode: ['autoplay'],
 
     marks: [],
+    mediaWindowTitle: '',
   }),
   actions: {
     trackCurrentTime() {

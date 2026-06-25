@@ -289,8 +289,17 @@ app.on('window-all-closed', () => {
     app.quit();
 });
 
+function stopPlayerPlayback() {
+  if (player && !player.isDestroyed()) {
+    player.webContents.send('stop-playing-video')
+  }
+}
+
 ipcMain.handle('closePlayer', () => {
-  player.hide()
+  stopPlayerPlayback()
+  if (player && !player.isDestroyed()) {
+    player.hide()
+  }
 })
 
 ipcMain.handle('maximize', (event, args) => {
@@ -486,11 +495,12 @@ ipcMain.handle('showOpenDialog', async (event, properties) => {
 const startPlayer = (videos_data) => {
   player = new BrowserWindow({
     frame: false,
+    thickFrame: isWindows,
     height: server.config.player?.height || 720,
     width: server.config.player?.width || 1280,
     titleBarStyle: 'hidden',
     trafficLightPosition: os.type() === 'Darwin' ? {x: 12, y: 8} : null,
-    backgroundColor: '#333',
+    backgroundColor: '#000000',
     icon: path.join(__dirname, 'dist/icons', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, './electron/preload.js'),
@@ -507,6 +517,10 @@ const startPlayer = (videos_data) => {
 
   player.on('unmaximize', () => {
     player.webContents.send('unmaximize')
+  })
+
+  player.on('close', () => {
+    stopPlayerPlayback()
   })
 
   player.on('closed', (e) => {

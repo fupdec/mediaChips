@@ -7,7 +7,7 @@
     window
   >
     <v-spacer></v-spacer>
-    <div class="app-system-bar-title">{{ appTitle }}</div>
+    <div class="app-system-bar-title" :title="appTitle">{{ appTitle }}</div>
     <v-spacer></v-spacer>
 
     <!-- Импортируем компонент кнопок окна -->
@@ -24,6 +24,7 @@
 
 <script setup>
 import {ref, onMounted, computed} from 'vue'
+import {storeToRefs} from 'pinia'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import WindowControls from '@/components/ui/WindowControls.vue'
@@ -40,10 +41,14 @@ const props = defineProps({
 const {platform} = useDisplay()
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
+const {mediaWindowTitle} = storeToRefs(playerStore)
 
 const maximized = ref(false)
 
-const appTitle = computed(() => appStore.app_title)
+const appTitle = computed(() => {
+  if (mediaWindowTitle.value) return mediaWindowTitle.value
+  return appStore.app_title || 'MediaChips'
+})
 
 // Методы окон (теперь вызываются из WindowControls через emits)
 function minimize() {
@@ -87,9 +92,27 @@ onMounted(() => {
 .system-bar-player {
   top: 0 !important;
   left: 0 !important;
-  border-top-left-radius: 15px !important;
-  border-top-right-radius: 15px !important;
+  border-top-left-radius: var(--player-window-radius, 15px) !important;
+  border-top-right-radius: var(--player-window-radius, 15px) !important;
+  overflow: hidden;
   -webkit-app-region: drag;
   width: 100% !important;
+
+  &.maximized {
+    border-radius: 0 !important;
+  }
+
+  .app-system-bar-title {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    text-align: center;
+    padding: 0 138px 0 80px;
+    max-width: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+  }
 }
 </style>

@@ -3,7 +3,7 @@
     @update:model-value="closePlayer"
     :model-value="isActive"
     :persistent="isPlayerWindow"
-    :content-class="isPlayerWindow?'player-separate-window':'dialog-player'"
+    :content-class="playerDialogClass"
     width="2000"
     no-click-animation
     eager
@@ -140,6 +140,7 @@ import {useEventBus} from '@/utils/eventBus'
 import path from "path-browserify"
 import {useRoute} from "vue-router";
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {isWinElectronUi} from '@/utils/debugWinElectronUi'
 
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
@@ -164,6 +165,12 @@ const timeoutControls = ref(-1)
 const player = computed(() => playerStore)
 const isPlayerWindow = computed(() => !!route.query.player)
 const isActive = computed(() => isPlayerWindow.value || playerStore.active)
+const playerDialogClass = computed(() => {
+  if (!isPlayerWindow.value) return 'dialog-player'
+  return isWinElectronUi()
+    ? 'player-separate-window player-separate-window--win'
+    : 'player-separate-window'
+})
 const SETTINGS = computed(() => settingsStore)
 const reg = computed(() => registrationStore)
 const video = computed(() => playerStore.playlist[playerStore.nowPlaying])
@@ -173,6 +180,19 @@ const apiUrl = computed(() => appStore.localhost)
 const os = computed(() => window.os ? window.os.type() : false)
 
 // Methods
+const buildPlayerWindowTitle = (video) => {
+  const base = appStore.app_title || 'MediaChips'
+  const fileName = video?.basename || video?.name
+  return fileName ? `${base} - ${fileName}` : base
+}
+
+const updatePlayerWindowTitle = (video) => {
+  if (!isPlayerWindow.value) return
+  const title = buildPlayerWindowTitle(video)
+  playerStore.mediaWindowTitle = title
+  document.title = title
+}
+
 const closePlayer = async () => {
   if (video.value) {
     await updatePlaybackTime(video.value)
@@ -183,10 +203,16 @@ const closePlayer = async () => {
     playerStore.player.src = null
   }
 
+  clearInterval(playerStore.currentTimeTimeout)
   playerStore.currentTime = 0
   playerStore.active = false
   playerStore.paused = false
   window.removeEventListener("keydown", handleKey)
+
+  if (isPlayerWindow.value) {
+    playerStore.mediaWindowTitle = ''
+    document.title = appStore.app_title || 'MediaChips'
+  }
 }
 
 const initPlayer = () => {
@@ -292,9 +318,8 @@ const loadSrc = async (video, start_time) => {
     playerStore.player.src = ""
   }
 
-  // Обновление заголовка
   if (isPlayerWindow.value) {
-    document.title = video.basename
+    updatePlayerWindowTitle(video)
   }
 
   playerStore.changePlayerStatusText({
@@ -719,6 +744,7 @@ const initPlayingVideo = (video, videos, time) => {
   });
 
   // Загружаем и воспроизводим видео
+  updatePlayerWindowTitle(video)
   loadSrc(video, time);
   playerStore.active = true;
 
@@ -837,6 +863,18 @@ watch(() => playerStore.volume, (newValue, oldValue) => {
 
   .status-text {
     top: 28px;
+  }
+}
+
+.player-separate-window--win {
+  --player-window-radius: 8px;
+  overflow: hidden;
+  border-radius: var(--player-window-radius);
+
+  &:has(.player.fullscreen),
+  &:has(.system-bar-player.maximized) {
+    --player-window-radius: 0px;
+    border-radius: 0;
   }
 }
 
