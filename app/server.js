@@ -611,6 +611,15 @@ app.post('/api/update-config', (req, res) => {
   res.json({ success: true, message: 'Configuration updated' });
 });
 
+function isClientAbortError(err) {
+  return err?.code === 'ECONNABORTED' || err?.message === 'Request aborted';
+}
+
+function safeJsonError(res, req, status, payload) {
+  if (req.aborted || res.writableEnded || res.headersSent) return;
+  res.status(status).json(payload);
+}
+
 // IMPORTANT: Fixed endpoint for retrieving files
 app.post('/api/get-file', (req, res) => {
   console.log('=== FILE REQUEST ===');
@@ -662,21 +671,46 @@ app.post('/api/get-file', (req, res) => {
 
     // Send file
     res.sendFile(resolvedPath, (err) => {
-      if (err) {
-        console.error('Error sending file:', err);
-        try {
-          const stats = fs.statSync(resolvedPath);
-          const fileStream = fs.createReadStream(resolvedPath);
-          res.setHeader('Content-Length', stats.size);
-          fileStream.pipe(res);
-        } catch (streamErr) {
-          res.status(500).json({ error: 'File stream error', details: streamErr.message });
-        }
+      if (!err) return;
+
+      if (isClientAbortError(err) || req.aborted || res.writableEnded) {
+        return;
+      }
+
+      console.error('Error sending file:', err);
+
+      if (res.headersSent) return;
+
+      try {
+        const stats = fs.statSync(resolvedPath);
+        const fileStream = fs.createReadStream(resolvedPath);
+
+        fileStream.on('error', (streamErr) => {
+          if (!isClientAbortError(streamErr)) {
+            console.error('File stream error:', streamErr);
+          }
+          safeJsonError(res, req, 500, {
+            error: 'File stream error',
+            details: streamErr.message
+          });
+        });
+
+        req.on('close', () => {
+          fileStream.destroy();
+        });
+
+        res.setHeader('Content-Length', stats.size);
+        fileStream.pipe(res);
+      } catch (streamErr) {
+        safeJsonError(res, req, 500, {
+          error: 'File stream error',
+          details: streamErr.message
+        });
       }
     });
   } catch (err) {
     console.error('Error processing file:', err);
-    res.status(500).json({ error: 'Server error', details: err.message });
+    safeJsonError(res, req, 500, { error: 'Server error', details: err.message });
   }
 });
 
@@ -803,6 +837,13 @@ router.get('/api/video/:id', (req, res) => {
       };
 
       res.writeHead(206, head);
+      file.on('error', (streamErr) => {
+        if (!isClientAbortError(streamErr)) {
+          console.error('Video stream error:', streamErr);
+        }
+        file.destroy();
+      });
+      req.on('close', () => file.destroy());
       file.pipe(res);
     } else {
       const head = {
@@ -811,11 +852,19 @@ router.get('/api/video/:id', (req, res) => {
       };
 
       res.writeHead(200, head);
-      fs.createReadStream(videoPath).pipe(res);
+      const file = fs.createReadStream(videoPath);
+      file.on('error', (streamErr) => {
+        if (!isClientAbortError(streamErr)) {
+          console.error('Video stream error:', streamErr);
+        }
+        file.destroy();
+      });
+      req.on('close', () => file.destroy());
+      file.pipe(res);
     }
   }).catch(err => {
     console.error('Video streaming error:', err);
-    res.status(500).json({ message: err.message || "Database error" });
+    safeJsonError(res, req, 500, { message: err.message || "Database error" });
   });
 });
 

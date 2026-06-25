@@ -243,11 +243,13 @@
       aspect-ratio: 16 / 9; /* Современный и самый простой способ */
       display: inline-flex;
       overflow: hidden;
-      //.thumb {
-      //  border-radius: 2px;
-      //  background-color: #000;
-      //}
       transform-origin: bottom center;
+      video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: #000;
+      }
       .time {
         position: absolute;
         bottom: 2px;

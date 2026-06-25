@@ -19,8 +19,8 @@
     <video
       :src="playerStore.player?.src"
       ref="preview"
-      id="player_preview"
       muted
+      preload="metadata"
     ></video>
     <div class="time">
       <v-chip
@@ -35,14 +35,14 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
+import {ref, computed, watch, onBeforeUnmount} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import _ from 'lodash'
 
-const playerStore = usePlayerStore()
+const SEEK_MIN_DELTA = 0.25
 
+const playerStore = usePlayerStore()
 const preview = ref(null)
-const seeked = ref(false)
 
 const aspectRatio = computed(() => {
   const item = playerStore.playlist[playerStore.nowPlaying]
@@ -51,7 +51,7 @@ const aspectRatio = computed(() => {
 
 const shouldShowPreview = computed(() => {
   return playerStore.is_file_exists &&
-    playerStore.progress_hover &&
+    playerStore.progress_hover != null &&
     !playerStore.is_mark_hover
 })
 
@@ -63,44 +63,25 @@ const formattedTime = computed(() => {
   return $readable.getReadableDuration(time)
 })
 
-// Methods
-async function getImg() {
-  if (!preview.value) return
+const throttledSeek = _.throttle((time) => {
+  const video = preview.value
+  if (!video || !Number.isFinite(time)) return
+  if (Math.abs(video.currentTime - time) < SEEK_MIN_DELTA) return
 
-  seeked.value = false
+  video.pause()
+  video.currentTime = time
+}, 80, {leading: true, trailing: true})
+
+function updatePreviewFrame() {
+  if (playerStore.progress_hover == null) return
+
   const time = playerStore.duration / 100 * playerStore.progress_hover
-
-  // Используем debounce для установки currentTime
-  debouncedSetCurrentTime(time)
-
-  preview.value.playbackRate = 0
-
-  try {
-    await preview.value.play()
-  } catch (error) {
-    console.error('Error playing preview:', error)
-  }
+  throttledSeek(time)
 }
 
-// Debounced функция для установки currentTime
-const debouncedSetCurrentTime = _.debounce((time) => {
-  if (preview.value) {
-    preview.value.currentTime = time
-  }
-}, 200)
+watch(() => playerStore.progress_hover, updatePreviewFrame)
 
-// Lifecycle hooks
-onMounted(() => {
-  const previewElement = document.getElementById('player_preview')
-  if (previewElement) {
-    previewElement.addEventListener('seeked', () => {
-      seeked.value = true
-    })
-  }
-})
-
-// Watchers
-watch(() => playerStore.progress_hover, () => {
-  getImg()
+onBeforeUnmount(() => {
+  throttledSeek.cancel()
 })
 </script>

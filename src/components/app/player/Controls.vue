@@ -789,12 +789,24 @@ const saveEvent = (e) => {
   preview_event_target.value = e.currentTarget
 }
 
+let previewRafId = null
+let previewPendingX = null
+
 const showPreview = (e) => {
-  if (preview_show.value && preview_event_target.value) {
+  if (!preview_show.value || !preview_event_target.value || !controls_width.value) return
+
+  previewPendingX = e.pageX
+  if (previewRafId) return
+
+  previewRafId = requestAnimationFrame(() => {
+    previewRafId = null
+    const pageX = previewPendingX
+    if (pageX == null || !preview_event_target.value) return
+
     const currentTargetRect = preview_event_target.value.getBoundingClientRect()
-    const left = e.pageX - currentTargetRect.left
+    const left = pageX - currentTargetRect.left
     playerStore.progress_hover = left / controls_width.value * 100
-  }
+  })
 }
 
 const editVideo = async () => {
@@ -908,6 +920,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", resize)
+  if (previewRafId) {
+    cancelAnimationFrame(previewRafId)
+  }
 })
 
 // Watchers
