@@ -24,6 +24,10 @@
     .video-wrapper {
       max-height: 100%;
       min-height: 0;
+      &.playback-error {
+        min-height: 400px;
+        padding-bottom: var(--player-controls-offset, 120px);
+      }
     }
     .marks-wrapper,
     .playlist-wrapper {
@@ -81,6 +85,28 @@
     background-color: #000;
     &.system-title-bar {
       max-height: 100%;
+    }
+    &.playback-error {
+      --player-controls-offset: 120px;
+      box-sizing: border-box;
+      min-height: 400px;
+      padding-bottom: var(--player-controls-offset);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      video {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .video-error {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin: 0;
+        z-index: 2;
+        flex-shrink: 0;
+      }
     }
   }
   .reg-block {

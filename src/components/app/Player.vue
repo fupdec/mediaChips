@@ -40,12 +40,13 @@
           @mousedown="clickOnVideo($event)"
           @wheel="changeVolume"
           tabindex="-1"
+          :class="{ 'playback-error': showPlaybackError }"
           class="video-wrapper"
         >
           <video ref="videoPlayer"
             autoplay/>
 
-          <div v-if="isReady && player.playbackError && reg"
+          <div v-if="showPlaybackError"
             class="video-error">
             <v-alert color="error"
               text>
@@ -167,6 +168,7 @@ const SETTINGS = computed(() => settingsStore)
 const reg = computed(() => registrationStore)
 const video = computed(() => playerStore.playlist[playerStore.nowPlaying])
 const currentPlaying = computed(() => video.value ? video.value.name : "")
+const showPlaybackError = computed(() => isReady.value && playerStore.playbackError && reg.value)
 const apiUrl = computed(() => appStore.localhost)
 const os = computed(() => window.os ? window.os.type() : false)
 
@@ -246,6 +248,7 @@ const loadSrc = async (video, start_time) => {
     console.error('Player: No playable video found in playlist:', video?.path)
     playerStore.is_file_exists = false
     playerStore.playbackError = true
+    isReady.value = true
     return
   }
 
