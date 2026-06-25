@@ -80,6 +80,10 @@ const ru = {
     loading: 'Загрузка...',
     noResult: 'Ничего не найдено',
     showMore: 'Показать еще...',
+    resultsCount: 'Найдено: {count}',
+    hintEsc: 'закрыть',
+    hintArrows: 'навигация',
+    hintEnter: 'открыть',
   },
   settings: {
     tabs: {

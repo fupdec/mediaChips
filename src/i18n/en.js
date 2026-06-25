@@ -80,6 +80,10 @@ const en = {
     loading: 'Loading...',
     noResult: 'Nothing found',
     showMore: 'Show more...',
+    resultsCount: '{count} found',
+    hintEsc: 'close',
+    hintArrows: 'navigate',
+    hintEnter: 'open',
   },
   settings: {
     tabs: {

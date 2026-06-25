@@ -80,6 +80,10 @@ const es = {
     loading: 'Cargando...',
     noResult: 'No se encontró nada',
     showMore: 'Mostrar más...',
+    resultsCount: '{count} encontrados',
+    hintEsc: 'cerrar',
+    hintArrows: 'navegar',
+    hintEnter: 'abrir',
   },
   settings: {
     tabs: {

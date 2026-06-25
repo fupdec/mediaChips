@@ -80,6 +80,10 @@ const cn = {
     loading: '加载中...',
     noResult: '未找到结果',
     showMore: '显示更多...',
+    resultsCount: '找到 {count} 条',
+    hintEsc: '关闭',
+    hintArrows: '导航',
+    hintEnter: '打开',
   },
   settings: {
     tabs: {
