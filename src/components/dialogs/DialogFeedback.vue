@@ -99,6 +99,12 @@
             hide-details="auto"
           />
 
+          <p class="text-caption text-medium-emphasis mt-4 mb-0">
+            {{ t('home.feedback_system_info', {version: store.appVersion, os: feedbackOs}) }}
+            <br>
+            {{ t('home.feedback_system_info_privacy') }}
+          </p>
+
           <v-alert
             v-if="feedbackError"
             type="error"
@@ -163,6 +169,23 @@ const feedbackError = ref("")
 const maxScreenshotFiles = 3
 const maxScreenshotSize = 5 * 1024 * 1024
 const allowedScreenshotTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"]
+const platformLabels = {
+  darwin: "macOS",
+  win32: "Windows",
+  linux: "Linux",
+}
+
+function getFeedbackOs() {
+  if (window.osAPI) {
+    const {platform, version, arch} = window.osAPI
+    const name = platformLabels[platform] || platform
+    return `${name} ${version} (${arch})`
+  }
+
+  return navigator.userAgentData?.platform || navigator.platform || "Unknown"
+}
+
+const feedbackOs = computed(() => getFeedbackOs())
 const isFeedbackValid = computed(() => {
   const email = feedback.email.trim()
   return feedback.name.trim() && /^\S+@\S+\.\S+$/.test(email) && feedback.message.trim()
@@ -210,6 +233,7 @@ async function sendFeedback() {
     formData.append("subject", feedback.subject.trim())
     formData.append("message", feedback.message.trim())
     formData.append("appVersion", store.appVersion)
+    formData.append("os", feedbackOs.value)
 
     for (const screenshot of feedback.screenshots || []) {
       formData.append("screenshots[]", screenshot, screenshot.name)

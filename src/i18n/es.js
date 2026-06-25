@@ -258,6 +258,8 @@ const es = {
     feedback_email: 'Su email *',
     feedback_subject: 'Asunto',
     feedback_message: 'Mensaje *',
+    feedback_system_info: 'Versión de la app: {version} · SO: {os}',
+    feedback_system_info_privacy: 'Esta información solo la verá el desarrollador.',
     feedback_screenshots: 'Capturas de pantalla',
     feedback_screenshots_hint: 'Opcional. Hasta 3 imágenes, 5 MB cada una.',
     feedback_send: 'Enviar comentarios',
