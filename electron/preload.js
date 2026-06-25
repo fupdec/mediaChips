@@ -27,6 +27,7 @@ const validInvokeChannels = [
   'showOpenDialog',
   'getDateForDB',
   'get-config',
+  'get-machine-id',
   'dialog:openFile',
   'dialog:saveFile',
   'deleteLocalFile',

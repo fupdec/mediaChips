@@ -538,6 +538,17 @@ app.get('/api/ping', (req, res) => {
   });
 });
 
+app.get('/api/getMachineId', async (req, res) => {
+  try {
+    const {machineId} = require('node-machine-id')
+    const id = await machineId()
+    res.status(200).send(id)
+  } catch (error) {
+    console.error('getMachineId failed:', error)
+    res.status(500).json({message: 'Failed to get machine id'})
+  }
+});
+
 app.get('/api/config', (req, res) => {
   console.log('Config request from:', req.headers.origin || 'unknown origin');
 

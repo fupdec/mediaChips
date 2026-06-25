@@ -3,8 +3,11 @@ import axios from 'axios'
 import useSettingsStore from './settings'
 import {useAppStore} from './app'
 import {useNotificationsStore} from './notifications'
+import {resolveApiBaseUrl} from '@/utils/apiBaseUrl'
 
 const LICENSE_API_BASE_URL = import.meta.env.VITE_LICENSE_API_URL || 'https://mediachips.app/wp-json/mediachips/v1/license'
+
+const MACHINE_ID_PATHS = ['/api/getMachineId', '/api/Task/getMachineId']
 
 function calculateActivations(data) {
   const fingerprints = [data.fingerprint_1, data.fingerprint_2, data.fingerprint_3]
@@ -20,7 +23,72 @@ function calculateActivations(data) {
 }
 
 function getErrorMessage(error, fallback) {
+  if (error.response?.status === 404) {
+    const url = error.config?.url || ''
+    if (url.includes('mediachips.app')) {
+      return 'License service is unavailable (404). Check your internet connection.'
+    }
+    return 'Device ID service is unavailable (404). Restart the application and try again.'
+  }
+
   return error.response?.data?.message || error.message || fallback
+}
+
+function collectMachineIdApiBases() {
+  const appStore = useAppStore()
+  const bases = new Set()
+
+  if (typeof window !== 'undefined' && ['http:', 'https:'].includes(window.location.protocol)) {
+    bases.add(window.location.origin.replace(/\/$/, ''))
+  }
+
+  const resolved = resolveApiBaseUrl(
+    appStore.config || {},
+    appStore.localhost ? {url: appStore.localhost} : null,
+  )
+  if (resolved) bases.add(resolved.replace(/\/$/, ''))
+
+  if (appStore.localhost) {
+    bases.add(appStore.localhost.replace(/\/$/, ''))
+  }
+
+  return [...bases]
+}
+
+async function fetchMachineIdViaElectron() {
+  if (typeof window === 'undefined' || !window.electronAPI?.invoke) {
+    return null
+  }
+
+  try {
+    const id = await window.electronAPI.invoke('get-machine-id')
+    return typeof id === 'string' && id.length > 0 ? id : null
+  } catch (error) {
+    console.warn('Failed to fetch machine id via Electron IPC:', error.message)
+    return null
+  }
+}
+
+async function fetchMachineIdViaHttp() {
+  const bases = collectMachineIdApiBases()
+  if (bases.length === 0) return null
+
+  for (const base of bases) {
+    for (const machineIdPath of MACHINE_ID_PATHS) {
+      try {
+        const response = await axios.get(`${base}${machineIdPath}`)
+        if (typeof response.data === 'string' && response.data.length > 0) {
+          return response.data
+        }
+      } catch (error) {
+        if (error.response?.status !== 404) {
+          console.warn(`Failed to fetch machine id from ${base}${machineIdPath}:`, error.message)
+        }
+      }
+    }
+  }
+
+  return null
 }
 
 export const useRegistrationStore = defineStore('useRegistrationStore', {
@@ -53,17 +121,12 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
     async ensureMachineId() {
       if (this.machineId) return this.machineId
 
-      const appStore = useAppStore()
-      if (!appStore.localhost) {
+      const machineId = await fetchMachineIdViaElectron() || await fetchMachineIdViaHttp()
+      if (!machineId) {
         throw new Error('Device id is not available')
       }
 
-      const response = await axios.get(`${appStore.localhost}/api/Task/getMachineId`)
-      if (!response.data) {
-        throw new Error('Device id is not available')
-      }
-
-      this.machineId = response.data
+      this.machineId = machineId
       return this.machineId
     },
 

@@ -141,6 +141,11 @@ const createWindow = () => {
 
 ipcMain.handle('get-config', () => server.config)
 
+ipcMain.handle('get-machine-id', async () => {
+  const {machineId} = require('node-machine-id')
+  return machineId()
+})
+
 ipcMain.handle('setZoomFactor', (event, factor) => {
   const browserWindow = BrowserWindow.fromWebContents(event.sender)
   if (!browserWindow || browserWindow.isDestroyed()) return 1
