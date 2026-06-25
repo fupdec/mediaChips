@@ -974,18 +974,24 @@ module.exports = function (db) {
   };
 
   const createTimeline = async function (req, res) {
-    const timelinesPath = path.join(dbPath, "/media/videos/timelines/");
+    const timelinesPath = path.join(dbPath, 'media', 'videos', 'timelines')
+    if (!fs.existsSync(timelinesPath)) {
+      fs.mkdirSync(timelinesPath, {recursive: true})
+    }
 
-    if (!fs.existsSync(req.body.path)) {
+    const resolvedVideoPath = await resolveExistingPath(req.body.path)
+    if (!resolvedVideoPath) {
       res.status(400).send({
         message: "The video does not exist."
       })
       return
     }
 
+    const video = {...req.body, path: resolvedVideoPath}
+
     class Timeline {
-      constructor(video) {
-        this.video = video
+      constructor(videoItem) {
+        this.video = videoItem
       }
 
       getVideoDuration(pathToFile) {
@@ -1033,9 +1039,9 @@ module.exports = function (db) {
       }
     }
 
-    const lastFrame = path.join(timelinesPath, req.body.id + "_95.jpg");
+    const lastFrame = path.join(timelinesPath, `${video.id}_95.jpg`);
     if (!fs.existsSync(lastFrame)) {
-      const timeline = new Timeline(req.body)
+      const timeline = new Timeline(video)
       let result
       try {
         result = await timeline.generate()

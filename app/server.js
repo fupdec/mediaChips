@@ -425,11 +425,21 @@ const routeFiles = [
   "WatchedFolder.routes"
 ];
 
+const routeLoadErrors = [];
+
 routeFiles.forEach(routeFile => {
   try {
     require(`../api/routes/${routeFile}`)(app, db);
   } catch (err) {
-    console.log('\x1b[33m%s\x1b[0m', `⚠️ Route ${routeFile} not found:`, err.message);
+    routeLoadErrors.push({
+      routeFile,
+      message: err.message,
+    });
+    console.error(
+      '\x1b[31m%s\x1b[0m',
+      `Failed to register route ${routeFile}:`,
+      err.stack || err.message,
+    );
   }
 });
 
@@ -457,8 +467,8 @@ function resolveFilePath(filePath) {
       return normalizedPath;
     }
 
-    // Look for database ID in the path
-    const dbIdRegex = /databases\/([a-f0-9]{12})/;
+    // Look for database ID in the path (legacy databases/ or app_storage/)
+    const dbIdRegex = /(?:databases|app_storage)[\\/]+([a-f0-9]{12})/i;
     const match = normalizedPath.match(dbIdRegex);
 
     if (match) {
@@ -477,7 +487,9 @@ function resolveFilePath(filePath) {
   const activeDb = config.databases.find(db => db.active);
   if (activeDb) {
     // Remove possible path prefixes
-    const cleanPath = normalizedPath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
+    const cleanPath = normalizedPath
+      .replace(/^\/+/, '')
+      .replace(/^.*(?:databases|app_storage)[\\/]+[a-f0-9]{12}[\\/]+/i, '');
 
     const possiblePaths = [
       path.join(databasesPath, activeDb.id, 'media', cleanPath),
@@ -495,7 +507,9 @@ function resolveFilePath(filePath) {
 
   // Try to find the file in all databases
   for (const db of config.databases) {
-    const cleanPath = normalizedPath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
+    const cleanPath = normalizedPath
+      .replace(/^\/+/, '')
+      .replace(/^.*(?:databases|app_storage)[\\/]+[a-f0-9]{12}[\\/]+/i, '');
 
     const possiblePaths = [
       path.join(databasesPath, db.id, 'media', cleanPath),
@@ -525,7 +539,9 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     ip: 'localhost',
-    port: config.port
+    port: config.port,
+    taskRoutesLoaded: !routeLoadErrors.some((entry) => entry.routeFile === 'Task.routes'),
+    routeLoadErrors,
   });
 });
 
@@ -722,7 +738,9 @@ app.post('/api/resolve-path', (req, res) => {
   // Check all databases
   const results = [];
   for (const db of config.databases) {
-    const cleanPath = normalizedPath.replace(/^\/+/, '').replace(/^.*databases\/[a-f0-9]+\//, '');
+    const cleanPath = normalizedPath
+      .replace(/^\/+/, '')
+      .replace(/^.*(?:databases|app_storage)[\\/]+[a-f0-9]{12}[\\/]+/i, '');
 
     const possiblePaths = [
       path.join(databasesPath, db.id, 'media', cleanPath),

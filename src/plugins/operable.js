@@ -12,6 +12,8 @@ export default {
   install(app, options = {}) {
     const {router, store} = options
 
+    const getApiBase = () => resolveApiBaseUrl(store.config) || store.localhost
+
     const operable = {
 
       async initConfig() {
@@ -55,7 +57,7 @@ export default {
           }
         }
 
-        const apiBase = store.localhost
+        const apiBase = getApiBase()
         if (!apiBase) return false
 
         try {
@@ -78,7 +80,7 @@ export default {
       async getLocalImage(imgPath, outside) {
         try {
           const res = await axios.post(
-            store.localhost + "/api/get-file",
+            getApiBase() + "/api/get-file",
             {url: imgPath, outside},
             {responseType: "blob"}
           );
@@ -89,7 +91,7 @@ export default {
       },
 
       async updateConfig(data) {
-        return axios.post(store.localhost + "/api/update-config", data);
+        return axios.post(getApiBase() + "/api/update-config", data);
       },
 
       async createImage(image, outputPath, sizes) {
@@ -103,7 +105,7 @@ export default {
           url = image;
         }
 
-        return axios.post(store.localhost + "/api/Task/createImage", {
+        return axios.post(getApiBase() + "/api/Task/createImage", {
           image,
           outputPath,
           url,
@@ -112,13 +114,13 @@ export default {
       },
 
       async deleteLocalFile(filePath) {
-        return axios.post(store.localhost + "/api/Task/deleteFile", {
+        return axios.post(getApiBase() + "/api/Task/deleteFile", {
           path: filePath,
         });
       },
 
       async createThumb(timestamp, inputPath, outputPath, width, overwrite) {
-        return axios.post(store.localhost + "/api/Task/createThumb", {
+        return axios.post(getApiBase() + "/api/Task/createThumb", {
           timestamp,
           inputPath,
           outputPath,
@@ -128,7 +130,7 @@ export default {
       },
 
       async getOption(option) {
-        return axios.get(store.localhost + `/api/Setting/${option}`);
+        return axios.get(getApiBase() + `/api/Setting/${option}`);
       },
       /*
       @param {Array} properties - array of options for the Electron dialog window
@@ -204,16 +206,16 @@ export default {
       setOption: _.debounce(async function(value, option) {
         let settings = useSettingsStore()
         settings[option] = value;
-        return await axios.put(store.localhost + `/api/Setting/${option}`, {value});
+        return await axios.put(getApiBase() + `/api/Setting/${option}`, {value});
       }, 10),
 
       async createDbEntry(value, model) {
-        return await axios.post(store.localhost + `/api/${model}`, value);
+        return await axios.post(getApiBase() + `/api/${model}`, value);
       },
 
       async openPath(entryPath, isDirectory) {
         try {
-          return await axios.post(store.localhost + "/api/Task/openPath", {
+          return await axios.post(getApiBase() + "/api/Task/openPath", {
             path: entryPath,
             isDir: isDirectory,
           });
@@ -230,7 +232,7 @@ export default {
 
       async getWatchedFolders() {
         try {
-          const res = await axios.get(`${store.localhost}/api/MediaTypesInWatchedFolders`)
+          const res = await axios.get(`${getApiBase()}/api/MediaTypesInWatchedFolders`)
           const watchedFolders = res.data
 
           const types = {}
@@ -269,7 +271,7 @@ export default {
           // Request saved filters from the server
           const response = await axios({
             method: 'post',
-            url: `${store.localhost}/api/SavedFilter/findAll`,
+            url: `${getApiBase()}/api/SavedFilter/findAll`,
             data: {
               mediaTypeId: ENV.media_type_id || null,
               metaId: ENV.meta_id || null,
@@ -327,7 +329,7 @@ export default {
         try {
           // Request filter rows
           const response = await axios.get(
-            `${store.localhost}/api/FilterRowsInSavedFilter?filterId=${savedFilterId}`
+            `${getApiBase()}/api/FilterRowsInSavedFilter?filterId=${savedFilterId}`
           );
 
           let filters = response.data || [];
@@ -351,7 +353,7 @@ export default {
               if (filterRow.type === 'array' && filterRow.param !== 'country') {
                 try {
                   const tagsResponse = await axios.get(
-                    `${store.localhost}/api/TagsInFilterRow?rowId=${filterRow.id}`
+                    `${getApiBase()}/api/TagsInFilterRow?rowId=${filterRow.id}`
                   );
 
                   const tags = tagsResponse.data || [];

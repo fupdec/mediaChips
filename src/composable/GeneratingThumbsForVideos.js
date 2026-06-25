@@ -1,14 +1,13 @@
 import {ref, watch, onBeforeUnmount, computed} from 'vue'
-import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
+import {useApiBaseUrl} from '@/composables/useApiBaseUrl'
 import axios from 'axios'
 
 export default function useVideoImageGenerator() {
 
-  const appStore = useAppStore()
   const tasksStore = useTasksStore()
   const itemsStore = useItemsStore()
   const settingsStore = useSettingsStore()
@@ -30,7 +29,7 @@ export default function useVideoImageGenerator() {
   const lastItemsCount = ref(0)
 
 // Computed свойства
-  const apiUrl = computed(() => appStore.localhost)
+  const apiUrl = useApiBaseUrl()
 
   const ITEMS = computed(() => itemsStore)
 
