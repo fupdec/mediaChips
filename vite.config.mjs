@@ -42,11 +42,20 @@ export default defineConfig({
 
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'vuetify-vendor': ['vuetify', 'vuetify/styles']
-        }
-      }
-    }
+        manualChunks(id) {
+          if (id.includes('node_modules/vuetify')) {
+            return 'vuetify-vendor'
+          }
+          if (
+            id.includes('node_modules/vue/') ||
+            id.includes('node_modules/@vue/') ||
+            id.includes('node_modules/vue-router/') ||
+            id.includes('node_modules/pinia/')
+          ) {
+            return 'vue-vendor'
+          }
+        },
+      },
+    },
   },
 })

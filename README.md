@@ -258,9 +258,9 @@ scripts/        Build and utility scripts
 
 ## Troubleshooting
 
-### `better-sqlite3` и Electron 39
+### `better-sqlite3` и Electron
 
-Нужна **better-sqlite3 12.4.2+** — в 11.x сборка под Electron 39 падает (`Context::GetIsolate` удалён из V8).
+Нужна **better-sqlite3 12.4.2+** — в 11.x сборка под современный Electron падает (`Context::GetIsolate` удалён из V8).
 
 Модуль нативный и собирается под **один** runtime за раз:
 
