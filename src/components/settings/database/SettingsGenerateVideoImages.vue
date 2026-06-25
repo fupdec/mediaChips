@@ -113,13 +113,13 @@
 <script setup>
 import {ref, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
+import {useApiBaseUrl} from '@/composables/useApiBaseUrl'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 
 const {t} = useI18n()
-const appStore = useAppStore()
 const tasksStore = useTasksStore()
+const apiBaseUrl = useApiBaseUrl()
 
 const imageTypes = [
   {id: 'preview', titleKey: 'settings_labels.database.generate_video_images_preview'},
@@ -161,15 +161,19 @@ const activeTypeLabel = computed(() => {
 })
 
 const fetchStatus = async () => {
-  if (!appStore.localhost) return
+  const baseUrl = apiBaseUrl.value
+  if (!baseUrl) return
 
   statusLoading.value = true
   statusError.value = ''
 
   try {
-    const response = await fetch(`${appStore.localhost}/api/Task/videoImagesGenerationStatus`)
+    const response = await fetch(`${baseUrl}/api/Task/videoImagesGenerationStatus`)
 
     if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(t('settings_labels.database.generate_video_images_api_unavailable'))
+      }
       throw new Error(response.statusText || 'Failed to load video images generation status')
     }
 
@@ -209,6 +213,7 @@ const startGeneration = async (imageType, force = false) => {
   abortController = new AbortController()
 
   const typeItem = imageTypes.find((type) => type.id === imageType)
+  const baseUrl = apiBaseUrl.value
 
   taskId = tasksStore.setTask({
     title: t(typeItem.titleKey),
@@ -220,7 +225,7 @@ const startGeneration = async (imageType, force = false) => {
 
   try {
     const response = await fetch(
-      `${appStore.localhost}/api/Task/streamVideoImagesGeneration?type=${imageType}&force=${force ? 'true' : 'false'}`,
+      `${baseUrl}/api/Task/streamVideoImagesGeneration?type=${imageType}&force=${force ? 'true' : 'false'}`,
       {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -346,8 +351,8 @@ const startGeneration = async (imageType, force = false) => {
   }
 }
 
-watch(() => appStore.localhost, (localhost) => {
-  if (!localhost) return
+watch(apiBaseUrl, (baseUrl) => {
+  if (!baseUrl) return
 
   fetchStatus().catch((error) => {
     console.error('Failed to load video images generation status:', error)

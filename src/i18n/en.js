@@ -681,6 +681,7 @@ const en = {
       generate_video_images_regenerate: 'Regenerate all',
       generate_video_images_progress: 'Processed: {processed}/{total} · created: {created} · skipped: {skipped} · missing: {missing} · failed: {failed}',
       generate_video_images_complete: 'Done: {created} created, {skipped} skipped, {missing} missing, {failed} failed',
+      generate_video_images_api_unavailable: 'Server API unavailable. Restart MediaChips or install the latest version.',
       content_hash_backfill: 'Content hash backfill',
       content_hash_backfill_hint: 'Compute SHA-256 hashes for media added before duplicate detection was enabled. This improves content-based deduplication and moved-file detection.',
       content_hash_backfill_status: '{hashed} of {total} files hashed ({pending} pending)',

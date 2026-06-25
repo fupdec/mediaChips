@@ -3,9 +3,10 @@ const {readdir} = require('fs/promises')
 const os = require('os')
 const path = require('path')
 const ffmpeg = require('fluent-ffmpeg')
-const pathToFfmpeg = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
-const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
+const {configureFfmpeg} = require('../utils/ffmpegPaths')
 const {resolveExistingPath} = require('./contentHash')
+
+configureFfmpeg()
 
 async function getVideoMediaTypeId(db) {
   const videoType = await db.MediaType.findOne({
@@ -14,9 +15,6 @@ async function getVideoMediaTypeId(db) {
   })
   return videoType?.id || null
 }
-
-ffmpeg.setFfmpegPath(pathToFfmpeg)
-ffmpeg.setFfprobePath(pathToFfprobe)
 
 const IMAGE_TYPES = ['preview', 'grid', 'timeline', 'marks']
 
@@ -170,7 +168,7 @@ class VideoGrid {
     const streams = []
     const layouts = []
     for (let l = 0; l < this.tileCount; l++) {
-      inputFiles.push(`${this.tmpDir}/thumb${l}.png`)
+      inputFiles.push(path.join(this.tmpDir, `thumb${l}.png`))
       streams.push(`[${l}:v]`)
       layouts.push(this.makeLayout(l))
     }

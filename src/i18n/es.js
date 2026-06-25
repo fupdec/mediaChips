@@ -681,6 +681,7 @@ const es = {
       generate_video_images_regenerate: 'Regenerar todas',
       generate_video_images_progress: 'Procesados: {processed}/{total} · creados: {created} · omitidos: {skipped} · faltantes: {missing} · fallidos: {failed}',
       generate_video_images_complete: 'Listo: {created} creados, {skipped} omitidos, {missing} faltantes, {failed} fallidos',
+      generate_video_images_api_unavailable: 'API del servidor no disponible. Reinicie MediaChips o instale la última versión.',
       content_hash_backfill: 'Relleno de hash de contenido',
       content_hash_backfill_hint: 'Calcula hashes SHA-256 para medios añadidos antes de activar la detección de duplicados. Mejora la deduplicación por contenido y la detección de archivos movidos.',
       content_hash_backfill_status: '{hashed} de {total} archivos con hash ({pending} pendientes)',

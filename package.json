@@ -107,6 +107,10 @@
       "!app_storage",
       "!src"
     ],
+    "asarUnpack": [
+      "**/node_modules/ffmpeg-static/**",
+      "**/node_modules/ffprobe-static/**"
+    ],
     "extraResources": [
       {
         "from": "models",

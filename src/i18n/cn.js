@@ -681,6 +681,7 @@ const cn = {
       generate_video_images_regenerate: '重新生成全部',
       generate_video_images_progress: '已处理：{processed}/{total} · 已创建：{created} · 已跳过：{skipped} · 缺失：{missing} · 失败：{failed}',
       generate_video_images_complete: '完成：创建 {created}，跳过 {skipped}，缺失 {missing}，失败 {failed}',
+      generate_video_images_api_unavailable: '服务器 API 不可用。请重启 MediaChips 或安装最新版本。',
       content_hash_backfill: '内容哈希回填',
       content_hash_backfill_hint: '为在启用重复检测之前添加的媒体计算 SHA-256 哈希。可改善基于内容的去重和移动文件检测。',
       content_hash_backfill_status: '已哈希 {hashed}/{total}（待处理 {pending}）',

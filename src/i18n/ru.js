@@ -681,6 +681,7 @@ const ru = {
       generate_video_images_regenerate: 'Пересоздать все',
       generate_video_images_progress: 'Обработано: {processed}/{total} · создано: {created} · пропущено: {skipped} · нет файла: {missing} · ошибки: {failed}',
       generate_video_images_complete: 'Готово: {created} создано, {skipped} пропущено, {missing} без файла, {failed} ошибок',
+      generate_video_images_api_unavailable: 'API сервера недоступен. Перезапустите MediaChips или установите последнюю версию.',
       content_hash_backfill: 'Заполнение хэшей содержимого',
       content_hash_backfill_hint: 'Вычислить SHA-256 для медиа, добавленных до включения проверки дубликатов. Улучшает дедупликацию по содержимому и поиск перемещённых файлов.',
       content_hash_backfill_status: 'Хэшировано: {hashed} из {total} ({pending} ожидают)',

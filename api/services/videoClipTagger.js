@@ -2,8 +2,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const ffmpeg = require('fluent-ffmpeg')
-const pathToFfmpeg = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
-const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
+const {configureFfmpeg} = require('../utils/ffmpegPaths')
 const {
   getLocalizedLabel,
   getPromptEntries,
@@ -12,8 +11,7 @@ const {
 
 const CLIP_MODEL = 'Xenova/clip-vit-base-patch32'
 
-ffmpeg.setFfmpegPath(pathToFfmpeg)
-ffmpeg.setFfprobePath(pathToFfprobe)
+configureFfmpeg()
 
 let classifier = null
 let loadingPromise = null

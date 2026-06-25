@@ -5,10 +5,8 @@ const path = require('path')
 const rimraf = require("rimraf")
 // FFMPEG
 const ffmpeg = require('fluent-ffmpeg')
-const pathToFfmpeg = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
-const pathToFfprobe = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
-ffmpeg.setFfmpegPath(pathToFfmpeg)
-ffmpeg.setFfprobePath(pathToFfprobe)
+const {configureFfmpeg} = require('../utils/ffmpegPaths')
+configureFfmpeg()
 const {
   readdir,
   lstat,
@@ -66,13 +64,20 @@ module.exports = function (db) {
     }),
   ])
 
-  const createStreamAbortSignal = (req) => {
+  const createStreamAbortSignal = (req, res) => {
     let stopped = false
     const stop = () => {
       stopped = true
     }
 
+    // Do not use req 'close': on Windows it fires once the POST body is read,
+    // which cancels long-running stream tasks before any work starts.
     req.on('aborted', stop)
+    res.on('close', () => {
+      if (!res.writableFinished) {
+        stop()
+      }
+    })
 
     return () => stopped
   }
@@ -1604,7 +1609,7 @@ module.exports = function (db) {
       res.setHeader('Cache-Control', 'no-cache')
       res.setHeader('X-Accel-Buffering', 'no')
 
-      const shouldStop = createStreamAbortSignal(req)
+      const shouldStop = createStreamAbortSignal(req, res)
 
       for await (const event of iterateVideoImagesGeneration(db, dbPath, imageType, {
         shouldStop,
@@ -1633,7 +1638,7 @@ module.exports = function (db) {
       res.setHeader('Cache-Control', 'no-cache')
       res.setHeader('X-Accel-Buffering', 'no')
 
-      const shouldStop = createStreamAbortSignal(req)
+      const shouldStop = createStreamAbortSignal(req, res)
 
       for await (const event of iterateContentHashBackfill(db, {
         shouldStop,
@@ -1674,7 +1679,7 @@ module.exports = function (db) {
       res.setHeader('X-Accel-Buffering', 'no')
 
       const folders = Array.isArray(req.body?.folders) ? req.body.folders : []
-      const shouldStop = createStreamAbortSignal(req)
+      const shouldStop = createStreamAbortSignal(req, res)
 
       for await (const event of iterateMissingMediaSearch(db, {
         folders,
