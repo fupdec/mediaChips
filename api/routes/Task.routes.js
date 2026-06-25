@@ -1,19 +1,30 @@
 module.exports = (app, db) => {
   const Task = require("../controllers/Task.controller")(db);
-  const TasksMigrateFromLowDb = require("../controllers/tasks/TasksMigrateFromLowDb.controller")(db);
   const router = require("express").Router();
 
-  // проверяем есть ли старая БД
-  router.post("/checkDataForMigrateFromLowDb", TasksMigrateFromLowDb.checkDataForMigrateFromLowDb);
+  let TasksMigrateFromLowDb = null;
+  try {
+    TasksMigrateFromLowDb = require("../controllers/tasks/TasksMigrateFromLowDb.controller")(db);
+  } catch (err) {
+    console.error(
+      'Migration Task routes unavailable:',
+      err.stack || err.message,
+    );
+  }
 
-  // удалить все данные со старой версией БД
-  router.post("/cleanLowDb", TasksMigrateFromLowDb.cleanDataLowDb);
+  if (TasksMigrateFromLowDb) {
+    // проверяем есть ли старая БД
+    router.post("/checkDataForMigrateFromLowDb", TasksMigrateFromLowDb.checkDataForMigrateFromLowDb);
 
-  // создать бэкап со старой БД
-  router.post("/createBackupLowDb", TasksMigrateFromLowDb.createBackupLowDb);
+    // удалить все данные со старой версией БД
+    router.post("/cleanLowDb", TasksMigrateFromLowDb.cleanDataLowDb);
 
-  // ...и мигрируем
-  router.post("/migrateFromLowDb", TasksMigrateFromLowDb.migrateFromLowDb);
+    // создать бэкап со старой БД
+    router.post("/createBackupLowDb", TasksMigrateFromLowDb.createBackupLowDb);
+
+    // ...и мигрируем
+    router.post("/migrateFromLowDb", TasksMigrateFromLowDb.migrateFromLowDb);
+  }
 
   // check if file exists on local machine
   router.post("/checkFileExists", Task.checkFileExists);

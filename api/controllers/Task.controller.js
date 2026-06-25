@@ -17,11 +17,8 @@ const {machineId} = require("node-machine-id");
 const {tokenizeFilePath} = require('../services/pathTokenizer')
 const {matchPathToTags} = require('../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../services/tagSuggester')
-const videoClipTagger = require('../services/videoClipTagger')
-const embeddingModel = require('../services/embeddingModel')
 const {getAppConfigPath} = require('../utils/appConfigPath')
 const {isVideoMediaType, isImageMediaType, isAudioMediaType} = require('../utils/mediaType')
-const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
 const {computeContentHashForPath, fileExists, verifyContentHashMatch, resolveExistingPath} = require('../services/contentHash')
 const {normalizeMediaPath, pathsEquivalent, buildPathLookupVariants} = require('../utils/normalizeUserPath')
 const {
@@ -32,10 +29,19 @@ const {
   getMissingMediaStatus,
   iterateMissingMediaSearch,
 } = require('../services/missingMediaFinder')
-const {
-  getVideoImagesGenerationStatus,
-  iterateVideoImagesGeneration,
-} = require('../services/videoImagesGeneration')
+
+function lazyService(modulePath) {
+  let cached
+  return () => {
+    if (!cached) cached = require(modulePath)
+    return cached
+  }
+}
+
+const getVideoClipTagger = lazyService('../services/videoClipTagger')
+const getEmbeddingModel = lazyService('../services/embeddingModel')
+const getImageMedia = lazyService('../services/imageMedia')
+const getVideoImagesGeneration = lazyService('../services/videoImagesGeneration')
 
 const GENERATED_MEDIA_FOLDERS = {
   timelines: 'media/videos/timelines',
@@ -622,7 +628,7 @@ module.exports = function (db) {
 
     if (isCreated) {
       const metadata = await withTimeout(
-        getImageMetadata(pathToFile),
+        getImageMedia().getImageMetadata(pathToFile),
         60000,
         'image metadata'
       ).catch(error => {
@@ -641,7 +647,7 @@ module.exports = function (db) {
 
       try {
         await withTimeout(
-          createImageThumb(pathToFile, media.id, dbPath),
+          getImageMedia().createImageThumb(pathToFile, media.id, dbPath),
           120000,
           'image thumbnail'
         )
@@ -755,7 +761,7 @@ module.exports = function (db) {
             })
           }
         } else if (isImageMediaType(mediaType)) {
-          const metadata = await getImageMetadata(media.dataValues.path)
+          const metadata = await getImageMedia().getImageMetadata(media.dataValues.path)
 
           if (metadata) {
             await db.ImageMetadata.upsert({
@@ -767,7 +773,7 @@ module.exports = function (db) {
           }
 
           try {
-            await createImageThumb(media.dataValues.path, media_id, dbPath)
+            await getImageMedia().createImageThumb(media.dataValues.path, media_id, dbPath)
           } catch (error) {
             console.error(`Thumbnail regeneration failed for media ${media_id}:`, error.message)
           }
@@ -1078,9 +1084,8 @@ module.exports = function (db) {
   };
 
 
-  const Jimp = require('jimp');
-
   const createImage = async function (req, res) {
+    const Jimp = require('jimp');
     const outputPath = req.body.outputPath
     let buf = Buffer.from(req.body.image, 'base64');
     const url = req.body.url;
@@ -1386,7 +1391,7 @@ module.exports = function (db) {
           raw: true,
         })
 
-      const result = await videoClipTagger.suggestTagsFromVideoFrames(db, media, {
+      const result = await getVideoClipTagger().suggestTagsFromVideoFrames(db, media, {
         locale,
         framesPerVideo: req.body?.framesPerVideo || 4,
         frameWidth: req.body?.frameWidth || 384,
@@ -1453,7 +1458,7 @@ module.exports = function (db) {
       })
 
       for (const item of media) {
-        const result = await videoClipTagger.classifyMedia(db, item, {
+        const result = await getVideoClipTagger().classifyMedia(db, item, {
           locale,
           framesPerVideo: req.body?.framesPerVideo || 4,
           frameWidth: req.body?.frameWidth || 384,
@@ -1465,7 +1470,7 @@ module.exports = function (db) {
         })
 
         frames += result.frames
-        suggestions = videoClipTagger.aggregateFrameResults([
+        suggestions = getVideoClipTagger().aggregateFrameResults([
           ...suggestions.flatMap(item => item.samples.map(sample => ({
             key: item.key,
             score: sample.score || item.confidence,
@@ -1496,7 +1501,7 @@ module.exports = function (db) {
         suggestions,
         frames,
         media: total,
-        model: videoClipTagger.CLIP_MODEL,
+        model: getVideoClipTagger().CLIP_MODEL,
       })
       res.end()
     } catch (err) {
@@ -1542,7 +1547,7 @@ module.exports = function (db) {
   const parserStatus = async (req, res) => {
     try {
       const settings = await getParserSettings()
-      res.status(201).send(embeddingModel.getStatus(db, settings.useML))
+      res.status(201).send(getEmbeddingModel().getStatus(db, settings.useML))
     } catch (err) {
       res.status(500).send({
         message: err.message || "Some error occurred while checking parser status."
@@ -1552,8 +1557,8 @@ module.exports = function (db) {
 
   const downloadParserModel = async (req, res) => {
     try {
-      await embeddingModel.loadModel(db)
-      res.status(201).send(embeddingModel.getStatus(db, true))
+      await getEmbeddingModel().loadModel(db)
+      res.status(201).send(getEmbeddingModel().getStatus(db, true))
     } catch (err) {
       res.status(500).send({
         message: err.message || "Some error occurred while downloading parser model."
@@ -1563,7 +1568,7 @@ module.exports = function (db) {
 
   const clipModelStatus = async (req, res) => {
     try {
-      res.status(201).send(videoClipTagger.getStatus(db))
+      res.status(201).send(getVideoClipTagger().getStatus(db))
     } catch (err) {
       res.status(500).send({
         message: err.message || "Some error occurred while checking CLIP model status."
@@ -1573,8 +1578,8 @@ module.exports = function (db) {
 
   const downloadClipModel = async (req, res) => {
     try {
-      await videoClipTagger.loadModel(db)
-      res.status(201).send(videoClipTagger.getStatus(db))
+      await getVideoClipTagger().loadModel(db)
+      res.status(201).send(getVideoClipTagger().getStatus(db))
     } catch (err) {
       res.status(500).send({
         message: err.message || "Some error occurred while downloading CLIP model."
@@ -1595,7 +1600,7 @@ module.exports = function (db) {
 
   const videoImagesGenerationStatus = async (req, res) => {
     try {
-      const status = await getVideoImagesGenerationStatus(db, dbPath)
+      const status = await getVideoImagesGeneration().getVideoImagesGenerationStatus(db, dbPath)
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
@@ -1617,7 +1622,7 @@ module.exports = function (db) {
 
       const shouldStop = createStreamAbortSignal(req, res)
 
-      for await (const event of iterateVideoImagesGeneration(db, dbPath, imageType, {
+      for await (const event of getVideoImagesGeneration().iterateVideoImagesGeneration(db, dbPath, imageType, {
         shouldStop,
         force: String(req.query.force || '').toLowerCase() === 'true',
       })) {
