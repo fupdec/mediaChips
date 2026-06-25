@@ -2,7 +2,7 @@ const os = require('os')
 const fs = require("fs")
 const axios = require('axios')
 const path = require('path')
-const rimraf = require("rimraf")
+const { rimraf } = require("rimraf")
 // FFMPEG
 const ffmpeg = require('fluent-ffmpeg')
 const {configureFfmpeg} = require('../utils/ffmpegPaths')
@@ -1174,17 +1174,7 @@ module.exports = function (db) {
     })
   };
 
-  const rmrf = (folder) => {
-    return new Promise((resolve, reject) => {
-      rimraf(folder, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      })
-    })
-  }
+  const rmrf = (folder) => rimraf(folder)
 
   const deleteDb = async function (req, res) {
     const dbDir = path.join(db.path_databases, req.body.id)

@@ -1,6 +1,6 @@
 const fs = require("fs")
 const path = require('path')
-const rimraf = require("rimraf")
+const { rimraf } = require("rimraf")
 const StreamZip = require('node-stream-zip')
 const fse = require("fs-extra");
 
@@ -117,17 +117,7 @@ module.exports = function (app, db) {
         }
       })
 
-      const rmrf = (folder) => {
-        return new Promise((resolve, reject) => {
-          rimraf(folder, (err) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(true);
-            }
-          })
-        })
-      }
+      const rmrf = (folder) => rimraf(folder)
 
       // console.log('remove', mediaFiles)
       await rmrf(mediaFiles)

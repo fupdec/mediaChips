@@ -1,7 +1,7 @@
 const fs = require("fs")
 const fse = require("fs-extra")
 const path = require('path')
-const rimraf = require("rimraf")
+const { rimraf } = require("rimraf")
 const StreamZip = require('node-stream-zip')
 const {Umzug, SequelizeStorage} = require("umzug");
 const _ = require("lodash");
@@ -17,17 +17,7 @@ module.exports = function (db) {
     pathUserData = path.join(pathApp, 'userfiles')
   }
 
-  const rmrf = (folder) => {
-    return new Promise((resolve, reject) => {
-      rimraf(folder, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      })
-    })
-  }
+  const rmrf = (folder) => rimraf(folder)
 
   // ДЛЯ ПОДДЕРЖКИ СТАРОЙ ВЕРСИИ ПРИЛОЖЕНИЯ (<= 0.11.3)
   const checkDataForMigrateFromLowDb = async (req, res) => {
