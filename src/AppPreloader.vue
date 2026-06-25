@@ -362,9 +362,14 @@ body {
 
 .main-scroll-inner--settings {
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+
+  > * {
+    min-height: 0;
+  }
 }
 
 .added-top {
