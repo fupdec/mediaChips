@@ -124,16 +124,24 @@ export const docs = [
           { id: 'sets.tools.bulk_paths', name: 'Bulk path editing', icon: 'mdi-find-replace' },
           { id: 'sets.tools.watched_folders', name: 'Watched folders', icon: 'mdi-folder-eye-outline' },
           {
-            id: 'sets.tools.video_preview',
-            name: 'Video preview',
-            icon: 'mdi-image-area',
-            selector: ['[href="/settings"]', '[href="#tools"]', '#video_preview'],
-          },
-          {
             id: 'data_scraper',
             name: 'Data scraper',
             icon: 'mdi-search-web',
             selector: ['[href="/settings"]', '[href="#tools"]', '#data_scraper_checkbox'],
+          },
+        ],
+      },
+      {
+        id: 'settings.video',
+        name: 'Video',
+        icon: 'mdi-video-outline',
+        selector: ['[href="/settings"]', '[href="#video"]'],
+        children: [
+          {
+            id: 'sets.tools.video_preview',
+            name: 'Video preview',
+            icon: 'mdi-image-area',
+            selector: ['[href="/settings"]', '[href="#video"]', '#video_preview'],
           },
         ],
       },
