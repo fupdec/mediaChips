@@ -41,18 +41,20 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
   })
 
   const getContextMenu = () => {
+    const locale = settingsStore.locale
+    const t = (key, params = {}) => translate(key, params, locale)
     let contextMenu = []
 
     if (!itemsStore.isSelect) {
       contextMenu.push({
-        name: `Edit`,
+        name: t('common.edit'),
         type: "item",
         icon: "pencil",
         action: editItem,
       })
     } else {
       contextMenu.push({
-        name: `Bulk Edit`,
+        name: t('context_menu.bulk_edit'),
         type: "item",
         icon: "pencil-plus",
         disabled: itemsStore.selection.length === 0,
@@ -67,7 +69,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       if (!itemsStore.isSelect) {
         contextMenu.push({type: "divider"})
         contextMenu.push({
-          name: "Open in new tab",
+          name: t('context_menu.open_in_new_tab'),
           type: "item",
           icon: "tab",
           action: openNewTab,
@@ -76,7 +78,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       }
     } else if (type === 'media') {
       contextMenu.push({
-        name: `Parse Tags in path`,
+        name: t('context_menu.parse_tags_in_path'),
         type: "item",
         icon: "text-box-search",
         disabled: itemsStore.isSelect && itemsStore.selection.length === 0,
@@ -84,7 +86,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       })
 
       contextMenu.push({
-        name: `Update File Info`,
+        name: t('context_menu.update_file_info'),
         type: "item",
         icon: "file-sync-outline",
         disabled: !is_file_exists || (itemsStore.isSelect && itemsStore.selection.length === 0),
@@ -95,20 +97,20 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
       if (!itemsStore.isSelect && isVideoMediaType(currentMediaType.value)) {
         contextMenu.push({
-          name: `Play video in`,
+          name: t('context_menu.play_video_in'),
           type: "menu",
           icon: "play-circle",
           disabled: !is_file_exists || (!store.reg && store.x > 14),
           menu: [
             {
-              name: `MediaChips Player`,
+              name: t('context_menu.mediachips_player'),
               type: "item",
               icon: "open-in-app",
               disabled: !is_file_exists,
               action: play,
             },
             {
-              name: `External Player`,
+              name: t('context_menu.external_player'),
               type: "item",
               icon: "open-in-new",
               disabled: !is_file_exists,
@@ -122,20 +124,20 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
       if (!itemsStore.isSelect && isAudioMediaType(currentMediaType.value)) {
         contextMenu.push({
-          name: `Play audio in`,
+          name: t('context_menu.play_audio_in'),
           type: "menu",
           icon: "play-circle",
           disabled: !is_file_exists || (!store.reg && store.x > 14),
           menu: [
             {
-              name: `MediaChips Player`,
+              name: t('context_menu.mediachips_player'),
               type: "item",
               icon: "open-in-app",
               disabled: !is_file_exists,
               action: play,
             },
             {
-              name: `External Player`,
+              name: t('context_menu.external_player'),
               type: "item",
               icon: "open-in-new",
               disabled: !is_file_exists,
@@ -149,7 +151,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
       if (!itemsStore.isSelect && isImageMediaType(currentMediaType.value)) {
         contextMenu.push({
-          name: `View image`,
+          name: t('context_menu.view_image'),
           type: "item",
           icon: "image-search",
           disabled: !is_file_exists,
@@ -158,7 +160,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
           },
         })
         contextMenu.push({
-          name: `Open image file`,
+          name: t('context_menu.open_image_file'),
           type: "item",
           icon: "file-image",
           disabled: !is_file_exists,
@@ -172,7 +174,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
       if (!itemsStore.isSelect && isTextMediaType(currentMediaType.value)) {
         contextMenu.push({
-          name: `Open text file`,
+          name: t('context_menu.open_text_file'),
           type: "item",
           icon: "file-document-outline",
           disabled: !is_file_exists,
@@ -186,7 +188,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
       if (!itemsStore.isSelect) {
         contextMenu.push({
-          name: `Open file's folder`,
+          name: t('context_menu.open_files_folder'),
           type: "item",
           icon: "folder-open",
           disabled: !is_file_exists,
@@ -199,7 +201,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       }
 
       contextMenu.push({
-        name: `Move file to...`,
+        name: t('context_menu.move_file_to'),
         type: "item",
         icon: "file-move",
         disabled: (itemsStore.isSelect && itemsStore.selection.length === 0) || !is_file_exists || operationsStore.moving.active,
@@ -207,7 +209,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       })
 
       contextMenu.push({
-        name: `Organize by tag...`,
+        name: t('context_menu.organize_by_tag'),
         type: "item",
         icon: "folder-plus",
         disabled: (itemsStore.isSelect && itemsStore.selection.length === 0) || !is_file_exists,
@@ -221,7 +223,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
       let menuPlaylists = [
         {
-          name: translate('playlists.create_playlist', {}, settingsStore.locale),
+          name: t('playlists.create_playlist'),
           type: "item",
           icon: "playlist-plus",
           action: () => {
@@ -243,7 +245,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       }
 
       contextMenu.push({
-        name: translate('playlists.add_to_playlist', {}, settingsStore.locale),
+        name: t('playlists.add_to_playlist'),
         type: "menu",
         icon: "playlist-plus",
         menu: menuPlaylists,
@@ -255,7 +257,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
     const is_selected = itemsStore.selection.includes(item.id)
     contextMenu.push({
-      name: is_selected ? 'Unselect' : 'Select',
+      name: is_selected ? t('appbar.buttons.unselect') : t('appbar.buttons.select'),
       icon: is_selected ? "checkbox-blank-outline" : "checkbox-marked-outline",
       type: "item",
       action: toggleSelect,
@@ -264,7 +266,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
     contextMenu.push({type: "divider"})
 
     contextMenu.push({
-      name: `Delete`,
+      name: t('common.delete'),
       type: "item",
       icon: "delete",
       color: "red",
@@ -308,7 +310,6 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
     }
   }
 
-  // методы видео
   const parseMetadata = async () => {
     let videos = [];
     if (itemsStore.isSelect) {
