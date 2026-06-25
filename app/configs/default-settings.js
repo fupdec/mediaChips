@@ -151,6 +151,10 @@ const Settings = [{
     "value": 1
   },
   {
+    "option": "sfwMode",
+    "value": 0
+  },
+  {
     "option": "registration",
     "value": ""
   },

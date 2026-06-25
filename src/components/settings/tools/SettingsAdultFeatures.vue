@@ -10,6 +10,13 @@
     </settings-category-divider>
 
     <settings-switch
+      :title="$t('settings_labels.tools.sfw_mode')"
+      :hint="$t('settings_labels.tools.sfw_mode_hint')"
+      option="sfwMode"
+      icon-text="eye-off"
+    ></settings-switch>
+
+    <settings-switch
       :title="$t('settings_labels.tools.data_scraper')"
       :hint="$t('settings_labels.tools.data_scraper_hint')"
       option="showAdultContent"

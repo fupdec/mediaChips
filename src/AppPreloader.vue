@@ -4,6 +4,7 @@
       'not-macos': !isMac,
       'player-active': player.active,
       'electron-win': isWin && isElectron,
+      'sfw-mode': settingsStore.sfwMode === '1',
     }"
   >
     <template v-if="!isPlayerWindow">

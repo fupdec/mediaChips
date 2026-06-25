@@ -617,6 +617,8 @@ const en = {
       adult_features: 'Adult features',
       data_scraper: 'Data Scraper',
       data_scraper_hint: 'Parsing info about performer from the Internet',
+      sfw_mode: 'SFW mode',
+      sfw_mode_hint: 'Blurs all images in the main content area',
       scraper_no_meta_warning: 'No metadata fields have been added for scraper.',
       scraper_configure_hint: 'This can be configured in "Settings" -> "Tools" -> "Data scraper" -> "Configure scraper".',
       performers_meta: 'Performer metadata fields',

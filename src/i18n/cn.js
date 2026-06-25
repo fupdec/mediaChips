@@ -617,6 +617,8 @@ const cn = {
       adult_features: '成人功能',
       data_scraper: '数据抓取器',
       data_scraper_hint: '从互联网解析表演者信息',
+      sfw_mode: 'SFW 模式',
+      sfw_mode_hint: '模糊主内容区域中的所有图片',
       scraper_no_meta_warning: '尚未为抓取器添加元数据字段。',
       scraper_configure_hint: '可在“设置” -> “工具” -> “数据抓取器” -> “配置抓取器”中配置。',
       performers_meta: '表演者元数据字段',

@@ -40,6 +40,7 @@ export const useSettingsStore = defineStore('useSettingsStore', {
     "showExperimentalFeatures": "0",
     "showSavedFilters": "1",
     "showAdultContent": "1",
+    "sfwMode": "0",
     "registration": "",
     "databaseVersion": "",
     "restorePlaybackTime": "1",

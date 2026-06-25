@@ -1,0 +1,11 @@
+.sfw-mode .v-main {
+  img,
+  video,
+  .v-img__img {
+    filter: blur(50px) !important;
+  }
+}
+
+.sfw-mode .hover-image img {
+  filter: blur(50px) !important;
+}

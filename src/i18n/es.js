@@ -617,6 +617,8 @@ const es = {
       adult_features: 'Funciones para adultos',
       data_scraper: 'Extractor de datos',
       data_scraper_hint: 'Extracción de información sobre el intérprete desde Internet',
+      sfw_mode: 'Modo SFW',
+      sfw_mode_hint: 'Difumina todas las imágenes del área de contenido principal',
       scraper_no_meta_warning: 'No se han agregado campos de metadatos para el extractor.',
       scraper_configure_hint: 'Esto se puede configurar en "Configuración" -> "Herramientas" -> "Extractor de datos" -> "Configurar extractor".',
       performers_meta: 'Campos de metadatos de intérpretes',
