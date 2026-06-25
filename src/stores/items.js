@@ -9,6 +9,8 @@ import _ from "lodash"
 
 const eventBus = useEventBus()
 
+export const THUMB_BROADCAST_CHANNEL = 'mediachips-thumb-update'
+
 const sameItemId = (left, right) => Number(left) === Number(right)
 
 export const useItemsStore = defineStore('items', {
@@ -47,6 +49,7 @@ export const useItemsStore = defineStore('items', {
     assigned: [],
     isFiltersLoaded: false,
     find_duplicates: false,
+    thumbRefreshKeys: {},
   }),
 
   // Геттеры (Getters) - опциональные, но полезные
@@ -406,6 +409,21 @@ export const useItemsStore = defineStore('items', {
       // Если удалили последний выбранный элемент
       if (this.selected_last === id) {
         this.selected_last = null
+      }
+    },
+
+    refreshThumb(id, {broadcast = true} = {}) {
+      if (id == null) return
+
+      const key = Number(id)
+      this.thumbRefreshKeys[key] = Date.now()
+
+      if (broadcast && typeof BroadcastChannel !== 'undefined') {
+        try {
+          const channel = new BroadcastChannel(THUMB_BROADCAST_CHANNEL)
+          channel.postMessage({id: key})
+          channel.close()
+        } catch (_) {}
       }
     },
 

@@ -80,6 +80,7 @@ import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {usePlayerStore} from "@/stores/player"
 import {useSettingsStore} from "@/stores/settings"
+import {useItemsStore, THUMB_BROADCAST_CHANNEL} from "@/stores/items"
 import {useContextMenu} from "@/stores/contextMenu"
 import {useRegistrationStore} from "@/stores/registration"
 import {useWatcherStore} from "@/stores/watcher"
@@ -108,6 +109,7 @@ import {useAppTheme} from '@/composable/useAppTheme'
 const settingsStore = useSettingsStore()
 const store = useAppStore()
 const player = usePlayerStore()
+const itemsStore = useItemsStore()
 const watcherStore = useWatcherStore()
 const registrationStore = useRegistrationStore()
 const contextMenuStore = useContextMenu()
@@ -228,9 +230,21 @@ const handleLockApp = () => {
   store.isLocked = true
 }
 
+const handleThumbBroadcast = (event) => {
+  const id = event?.data?.id
+  if (id != null) {
+    itemsStore.refreshThumb(id, {broadcast: false})
+  }
+}
+
+const handleUpdateVideoFrames = (id) => {
+  itemsStore.refreshThumb(id, {broadcast: false})
+}
+
 let unsubscribeAboutApp
 let unsubscribeLockApp
 let unsubscribeZoomChanged
+let thumbBroadcastChannel
 
 /* ------------------------- MOUNTED ------------------------- */
 
@@ -287,6 +301,12 @@ onMounted(async () => {
 
   eventBus.on('update:watcher', handleUpdateWatcher)
   eventBus.on('addMedia', handleAddMedia)
+  eventBus.on('updateVideoFrames', handleUpdateVideoFrames)
+
+  if (typeof BroadcastChannel !== 'undefined') {
+    thumbBroadcastChannel = new BroadcastChannel(THUMB_BROADCAST_CHANNEL)
+    thumbBroadcastChannel.addEventListener('message', handleThumbBroadcast)
+  }
 
   isAppReady.value = true
   runAutoRegistration()
@@ -296,6 +316,9 @@ onMounted(async () => {
   if (store.isElectron) {
     window.electronAPI.on("getItemsFromDb", (event, data) => {
       eventBus.emit("getItemsFromDb", data)
+    })
+    window.electronAPI.on("updateVideoFrames", (event, id) => {
+      itemsStore.refreshThumb(id, {broadcast: false})
     })
     window.electronAPI.on("removeEntitiesFromState", (event, data) => {
       eventBus.emit("removeEntitiesFromState", data)
@@ -310,6 +333,10 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   cleanupEventListeners()
+  eventBus.off('updateVideoFrames', handleUpdateVideoFrames)
+  thumbBroadcastChannel?.removeEventListener('message', handleThumbBroadcast)
+  thumbBroadcastChannel?.close()
+  thumbBroadcastChannel = null
   window.removeEventListener('resize', saveWindowSize)
   unsubscribeAboutApp?.()
   unsubscribeLockApp?.()

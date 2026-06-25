@@ -9,6 +9,7 @@ const os = require('os');
 const validSendChannels = [
   'open-player',
   'getItemsFromDb',
+  'updateVideoFrames',
   'removeEntitiesFromState',
   'stop-playing-video',
   'setFullScreen',
@@ -52,6 +53,7 @@ const validInvokeChannels = [
 const validOnChannels = [
   'play-video',
   'getItemsFromDb',
+  'updateVideoFrames',
   'removeEntitiesFromState',
   'stop-playing-video',
   'config',

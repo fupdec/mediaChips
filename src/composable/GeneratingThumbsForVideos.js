@@ -65,7 +65,7 @@ export default function useVideoImageGenerator() {
         data: video,
       })
         .then((res) => {
-          eventBus.emit('updateVideoFrames', video.id)
+          itemsStore.refreshThumb(video.id, {broadcast: false})
           resolve(res);
         })
         .catch((e) => {

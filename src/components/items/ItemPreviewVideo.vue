@@ -14,6 +14,7 @@
       @mouseenter="handleMouseEnter"
     >
       <v-img
+        :key="thumbVersion"
         :aspect-ratio="16 / 9"
         :src="thumb"
         class="thumb"
@@ -207,6 +208,7 @@ const storyWrapperRef = ref(null)
 // state
 const isHovered = ref(false)
 const thumb = ref(null)
+const thumbVersion = ref(0)
 const frame = ref(null)
 const frames = ref([])
 const progress = ref(0)
@@ -316,6 +318,8 @@ const toggleFullScreen = () => {
 
 // Модифицированные методы
 const getImg = async () => {
+  const previousThumb = thumb.value
+
   const getThumb = async (videos_folder) => {
     let imgPath = path.join(
       store.mediaPath,
@@ -323,6 +327,7 @@ const getImg = async () => {
       props.media.id + ".jpg"
     )
     thumb.value = await $operable.getLocalImage(imgPath)
+    thumbVersion.value += 1
     return imgPath
   }
 
@@ -338,6 +343,10 @@ const getImg = async () => {
     if (props.isFileExists && thumb.value.includes("unavailable.png")) {
       await createThumb(imgPath)
     }
+  }
+
+  if (previousThumb?.startsWith?.('blob:')) {
+    URL.revokeObjectURL(previousThumb)
   }
 }
 
@@ -581,6 +590,14 @@ const initFrames = async () => {
 }
 
 // Наблюдатели
+watch(() => itemsStore.thumbRefreshKeys[Number(props.media.id)], (version) => {
+  if (version == null) return
+  getImg()
+  if (isViewTimeline.value) {
+    initFrames()
+  }
+})
+
 watch(() => ITEMS.value.view, (value) => {
   if (value === '2' || value === 2) {
     initFrames()
@@ -604,7 +621,7 @@ watch(() => is_window_focused.value, (value) => {
 
 // Обработчики событий
 const handleUpdateVideoFrames = (id) => {
-  if (props.media.id === id) {
+  if (Number(props.media.id) === Number(id) && isViewTimeline.value) {
     initFrames()
   }
 }

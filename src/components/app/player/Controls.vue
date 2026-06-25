@@ -433,9 +433,11 @@
 <script setup>
 import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRoute} from 'vue-router'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
+import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
 import {useDisplay} from 'vuetify'
 import axios from 'axios'
@@ -471,9 +473,11 @@ const emit = defineEmits([
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
 const dialogsStore = useDialogsStore()
+const itemsStore = useItemsStore()
 const eventBus = useEventBus()
 const {xs, xl, mdAndDown, smAndDown} = useDisplay()
 const {t} = useI18n()
+const route = useRoute()
 
 // Refs
 const slider_progress = ref(null)
@@ -489,7 +493,7 @@ const preview_show = ref(true)
 // Computed
 const player = computed(() => playerStore)
 const apiUrl = computed(() => appStore.localhost)
-const is_separate_window = computed(() => props.routeQuery.player !== undefined)
+const is_separate_window = computed(() => !!route.query.player)
 const video = computed(() => player.value.playlist[player.value.nowPlaying])
 
 const density = computed(() => {
@@ -767,6 +771,10 @@ const setAsThumb = async () => {
   try {
     await $operable.createThumb(time, video.value.path, imgPath, 320, true)
     emit('updateVideo', video.value.id)
+    itemsStore.refreshThumb(video.value.id)
+    if (is_separate_window.value && window.electronAPI?.send) {
+      window.electronAPI.send('updateVideoFrames', video.value.id)
+    }
     $operable.setNotification({
       title: t('player.video_thumb_updated'),
       text: video.value.path,

@@ -561,6 +561,9 @@ ipcMain.on('open-player', async (event, data) => {
 ipcMain.on('getItemsFromDb', async (event, data) => {
   win.webContents.send('getItemsFromDb', data)
 })
+ipcMain.on('updateVideoFrames', async (event, id) => {
+  win.webContents.send('updateVideoFrames', id)
+})
 ipcMain.on('removeEntitiesFromState', async (event, data) => {
   win.webContents.send('removeEntitiesFromState', data)
 })
