@@ -32,7 +32,10 @@
     "dist:linux": "npm run predist && electron-builder --linux --publish always",
     "dist:win:ci": "npm run predist && electron-builder --win --publish never",
     "dist:mac:ci": "npm run predist && electron-builder --mac --publish never",
-    "dist:linux:ci": "npm run predist && electron-builder --linux --publish never"
+    "dist:linux:ci": "npm run predist && electron-builder --linux --publish never",
+    "rebuild:node": "npm rebuild better-sqlite3",
+    "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "npm run rebuild:node"
   },
   "main": "main.js",
   "dependencies": {
@@ -67,7 +70,7 @@
     "rimraf": "^3.0.2",
     "sequelize": "^6.37.7",
     "sharp": "^0.34.5",
-    "sqlite3": "^5.1.7",
+    "better-sqlite3": "^12.4.2",
     "string-crypto": "^3.0.2",
     "umzug": "^3.8.2",
     "v-viewer": "^3.0.22",
@@ -113,7 +116,8 @@
       "**/node_modules/ffmpeg-static/**",
       "**/node_modules/ffprobe-static/**",
       "**/node_modules/sharp/**",
-      "**/node_modules/@img/**"
+      "**/node_modules/@img/**",
+      "**/node_modules/better-sqlite3/**"
     ],
     "extraResources": [
       {

@@ -321,9 +321,11 @@ if (!dbConfig) {
 console.log('\x1b[36m%s\x1b[0m', `Connecting to database: ${dbConfig.name} (${dbConfig.id})`);
 
 const Sequelize = require('sequelize');
+const sqlite3 = require('../api/utils/sqlite3-compat');
 const sequelize = new Sequelize({
   storage: path.join(databasesPath, dbConfig.id, 'db.sqlite'),
   dialect: 'sqlite',
+  dialectModule: sqlite3,
   dialectOptions: {
     multipleStatements: true
   },

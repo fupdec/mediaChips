@@ -103,7 +103,7 @@ For macOS installation notes (Gatekeeper / quarantine), see [INSTALLATION.md](./
 
 - **Node.js** 18 or newer (LTS recommended)
 - **npm** 9+
-- Platform build tools for native modules (`sqlite3`, `ffmpeg-static`)
+- Platform build tools for native modules (`better-sqlite3`, `ffmpeg-static`)
 
 ### Install dependencies
 
@@ -258,22 +258,18 @@ scripts/        Build and utility scripts
 
 ## Troubleshooting
 
-### `sqlite3` on Apple Silicon (M1/M2/M3)
+### `better-sqlite3` и Electron 39
 
-If `sqlite3` fails to compile for `arm64`, rebuild it for Electron:
+Нужна **better-sqlite3 12.4.2+** — в 11.x сборка под Electron 39 падает (`Context::GetIsolate` удалён из V8).
 
-```bash
-npm install sqlite3 --build-from-source --target_arch=arm64 --fallback-to-build
-```
+Модуль нативный и собирается под **один** runtime за раз:
 
-For regular Node.js development, reinstall normally:
+| Задача | Команда |
+|--------|---------|
+| `npm run server` / `server-dev` | `npm run rebuild:node` (выполняется автоматически после `npm install`) |
+| `npm run electron` / `dist` | `npm run rebuild:electron` |
 
-```bash
-npm install sqlite3
-```
-
-`sqlite3` **5.1.6+** works well on macOS and Windows 11.  
-To avoid rebuilding separately for Electron and for development, run dev scripts and Electron in parallel against the same `node_modules` install.
+`electron-builder` при `pack`/`dist` пересобирает нативные модули сам; в CI отдельный `electron-rebuild` не нужен.
 
 ### Electron and the `databases` folder
 
