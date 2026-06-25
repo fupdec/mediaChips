@@ -78,7 +78,6 @@
     "vue": "^3.5.0",
     "vue-advanced-cropper": "^2.8.9",
     "vue-country-flag-next": "^2.3.2",
-    "vue-drag-drop": "^1.1.4",
     "vue-filepond": "^7.0.4",
     "vue-i18n": "^11.2.2",
     "vue-router": "^4.3.0",
