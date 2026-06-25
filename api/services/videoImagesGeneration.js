@@ -2,11 +2,13 @@ const fs = require('fs')
 const {readdir} = require('fs/promises')
 const os = require('os')
 const path = require('path')
-const ffmpeg = require('fluent-ffmpeg')
-const {configureFfmpeg} = require('../utils/ffmpegPaths')
+const {
+  combineVideoFrames,
+  extractVideoFrame,
+  extractVideoThumbnail,
+  ffprobe,
+} = require('../utils/ffmpeg')
 const {resolveExistingPath} = require('./contentHash')
-
-configureFfmpeg()
 
 async function getVideoMediaTypeId(db) {
   const videoType = await db.MediaType.findOne({
@@ -57,30 +59,19 @@ function createPreviewImage(pathToFile, id, dbPath) {
   const thumbsDir = path.join(dbPath, 'media/videos/thumbs')
   ensureDir(thumbsDir)
   const outputPath = getPreviewPath(dbPath, id)
-  return withTimeout(new Promise((resolve, reject) => {
-    ffmpeg()
-      .input(pathToFile)
-      .screenshots({
-        count: 1,
-        filename: `${id}.jpg`,
-        folder: path.join(dbPath, 'media/videos/thumbs'),
-        size: '?x320',
-      })
-      .on('end', () => resolve(outputPath))
-      .on('error', (err) => reject(err))
-  }), 120000, 'ffmpeg thumbnail')
+  return withTimeout(
+    extractVideoThumbnail({input: pathToFile, outputPath, height: 320}),
+    120000,
+    'ffmpeg thumbnail',
+  )
 }
 
 function createMarkImage(timestamp, inputPath, outputPath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg()
-      .addOption('-ss', timestamp)
-      .addOption('-i', inputPath)
-      .addOption('-frames:v', '1')
-      .addOption('-vf', 'scale=-1:180')
-      .save(outputPath)
-      .on('end', () => resolve(outputPath))
-      .on('error', (err) => reject(err))
+  return extractVideoFrame({
+    input: inputPath,
+    output: outputPath,
+    timestamp,
+    vf: 'scale=-1:180',
   })
 }
 
@@ -99,12 +90,7 @@ class VideoGrid {
   }
 
   getVideoDuration(pathToFile) {
-    return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(pathToFile, (error, info) => {
-        if (error) return reject(error)
-        return resolve(info.format.duration)
-      })
-    })
+    return ffprobe(pathToFile).then((info) => info.format.duration)
   }
 
   makeLayout(i) {
@@ -120,33 +106,20 @@ class VideoGrid {
   }
 
   ffmpegSeekP(timestamp, intermediateOutput) {
-    return new Promise((resolve, reject) => {
-      ffmpeg()
-        .addOption('-ss', timestamp)
-        .addOption('-i', this.input)
-        .addOption('-frames:v', '1')
-        .save(intermediateOutput)
-        .on('end', () => {
-          setTimeout(() => resolve(intermediateOutput), 500)
-        })
-        .on('error', (err) => reject(err))
-    })
+    return extractVideoFrame({
+      input: this.input,
+      output: intermediateOutput,
+      timestamp,
+    }).then((output) => new Promise((resolve) => {
+      setTimeout(() => resolve(output), 500)
+    }))
   }
 
   ffmpegCombineP(inputFiles, streams, layouts) {
-    return new Promise((resolve, reject) => {
-      const command = ffmpeg()
-      inputFiles.forEach((inputFile) => command.input(inputFile))
-      command
-        .addOption('-y')
-        .addOption(
-          '-filter_complex',
-          `${streams.join('')}xstack=inputs=${this.tileCount}:layout=${layouts.join('|')}[v];[v]scale=${Math.floor(this.width * this.cols)}:-1[scaled]`,
-        )
-        .addOption('-map', '[scaled]')
-        .save(path.join(this.gridsPath, this.output))
-        .on('end', () => resolve())
-        .on('error', (err) => reject(err))
+    return combineVideoFrames({
+      inputs: inputFiles,
+      filterComplex: `${streams.join('')}xstack=inputs=${this.tileCount}:layout=${layouts.join('|')}[v];[v]scale=${Math.floor(this.width * this.cols)}:-1[scaled]`,
+      output: path.join(this.gridsPath, this.output),
     })
   }
 
@@ -186,27 +159,18 @@ class VideoTimeline {
   }
 
   getVideoDuration(pathToFile) {
-    return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(pathToFile, (error, info) => {
-        if (error) return reject(error)
-        return resolve(info.format.duration)
-      })
-    })
+    return ffprobe(pathToFile).then((info) => info.format.duration)
   }
 
   createFrame(timestamp, output) {
-    return new Promise((resolve, reject) => {
-      ffmpeg()
-        .addOption('-ss', timestamp)
-        .addOption('-i', this.video.path)
-        .addOption('-frames:v', '1')
-        .addOption('-vf', 'scale=-1:180')
-        .save(output)
-        .on('end', () => {
-          setTimeout(() => resolve(output), 500)
-        })
-        .on('error', (err) => reject(err))
-    })
+    return extractVideoFrame({
+      input: this.video.path,
+      output,
+      timestamp,
+      vf: 'scale=-1:180',
+    }).then((frameOutput) => new Promise((resolve) => {
+      setTimeout(() => resolve(frameOutput), 500)
+    }))
   }
 
   async generate() {

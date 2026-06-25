@@ -266,8 +266,10 @@ scripts/        Build and utility scripts
 
 | Задача | Команда |
 |--------|---------|
-| `npm run server` / `server-dev` | `npm run rebuild:node` (выполняется автоматически после `npm install`) |
-| `npm run electron` / `dist` | `npm run rebuild:electron` |
+| `npm run server` / `server-dev` | `rebuild:node` — автоматически через `preserver` / `postinstall` |
+| `npm run electron` | `rebuild:electron` — автоматически через `preelectron` |
+
+Если после `npm install` видите `NODE_MODULE_VERSION` mismatch — пересоберите вручную: `npm run rebuild:electron` или `npm run rebuild:node`.
 
 `electron-builder` при `pack`/`dist` пересобирает нативные модули сам; в CI отдельный `electron-rebuild` не нужен.
 

@@ -1,8 +1,7 @@
 const fs = require('fs')
 const path = require('path')
-const ffmpeg = require('fluent-ffmpeg')
 const {machineId} = require('node-machine-id')
-const {configureFfmpeg} = require('../utils/ffmpegPaths')
+const {extractVideoFrame, ffprobe} = require('../utils/ffmpeg')
 const {resolveExistingPath} = require('../services/contentHash')
 const {normalizeMediaPath} = require('../utils/normalizeUserPath')
 const {getAppConfigPath} = require('../utils/appConfigPath')
@@ -10,8 +9,6 @@ const {
   getVideoImagesGenerationStatus,
   iterateVideoImagesGeneration,
 } = require('../services/videoImagesGeneration')
-
-configureFfmpeg()
 
 module.exports = function taskVideoCoreController(db) {
   const dbPath = db.path
@@ -79,27 +76,18 @@ module.exports = function taskVideoCoreController(db) {
       }
 
       getVideoDuration(pathToFile) {
-        return new Promise((resolve, reject) => {
-          ffmpeg.ffprobe(pathToFile, (error, info) => {
-            if (error) return reject(error)
-            return resolve(info.format.duration)
-          })
-        })
+        return ffprobe(pathToFile).then((info) => info.format.duration)
       }
 
       createFrame(timestamp, output) {
-        return new Promise((resolve, reject) => {
-          ffmpeg()
-            .addOption('-ss', timestamp)
-            .addOption('-i', this.video.path)
-            .addOption('-frames:v', '1')
-            .addOption('-vf', 'scale=-1:180')
-            .save(output)
-            .on('end', () => {
-              setTimeout(() => resolve(output), 500)
-            })
-            .on('error', reject)
-        })
+        return extractVideoFrame({
+          input: this.video.path,
+          output,
+          timestamp,
+          vf: 'scale=-1:180',
+        }).then((frameOutput) => new Promise((resolve) => {
+          setTimeout(() => resolve(frameOutput), 500)
+        }))
       }
 
       async generate() {

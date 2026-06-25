@@ -1,9 +1,9 @@
 import packageJson from '../../package.json'
 
 const BUILD_ONLY = new Set([
+  '@electron/rebuild',
   '@vitejs/plugin-vue',
   'vite-plugin-vuetify',
-  'sass',
   'sass-embedded',
   'vite',
   'nodemon',

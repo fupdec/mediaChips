@@ -1,8 +1,7 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const ffmpeg = require('fluent-ffmpeg')
-const {configureFfmpeg} = require('../utils/ffmpegPaths')
+const {extractVideoFrame, ffprobe} = require('../utils/ffmpeg')
 const {
   getLocalizedLabel,
   getPromptEntries,
@@ -10,8 +9,6 @@ const {
 } = require('./videoClipTagDictionary')
 
 const CLIP_MODEL = 'Xenova/clip-vit-base-patch32'
-
-configureFfmpeg()
 
 let classifier = null
 let loadingPromise = null
@@ -111,29 +108,21 @@ function getStatus(db, enabled = true) {
   }
 }
 
-function getVideoDuration(filePath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(filePath, (error, info) => {
-      if (error) return reject(error)
-
-      const duration = Number(info?.format?.duration || 0)
-      if (!duration) return reject(new Error('Video duration is unavailable.'))
-
-      return resolve(duration)
-    })
-  })
+async function getVideoDuration(filePath) {
+  const info = await ffprobe(filePath)
+  const duration = Number(info?.format?.duration || 0)
+  if (!duration) {
+    throw new Error('Video duration is unavailable.')
+  }
+  return duration
 }
 
 function createFrame(input, output, timestamp, width = 384) {
-  return new Promise((resolve, reject) => {
-    ffmpeg()
-      .addOption('-ss', timestamp)
-      .addOption('-i', input)
-      .addOption('-frames:v', '1')
-      .addOption('-vf', `scale=${width}:-1`)
-      .save(output)
-      .on('end', () => resolve(output))
-      .on('error', reject)
+  return extractVideoFrame({
+    input,
+    output,
+    timestamp,
+    vf: `scale=${width}:-1`,
   })
 }
 

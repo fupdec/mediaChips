@@ -3,10 +3,12 @@ const fs = require("fs")
 const axios = require('axios')
 const path = require('path')
 const { rimraf } = require("rimraf")
-// FFMPEG
-const ffmpeg = require('fluent-ffmpeg')
-const {configureFfmpeg} = require('../utils/ffmpegPaths')
-configureFfmpeg()
+const {
+  combineVideoFrames,
+  extractVideoFrame,
+  extractVideoThumbnail,
+  ffprobe,
+} = require('../utils/ffmpeg')
 const {
   readdir,
   lstat,
@@ -441,39 +443,20 @@ module.exports = function (db) {
   }
 
   function createThumbMiddle(pathToFile, id) {
-    return withTimeout(new Promise((resolve, reject) => {
-      let outputPathThumbs = path.join(dbPath, 'media/videos/thumbs')
-      ffmpeg()
-        .input(pathToFile)
-        .screenshots({
-          count: 1,
-          filename: `${id}.jpg`,
-          folder: outputPathThumbs,
-          size: '?x320'
-        })
-        .on('end', () => {
-          resolve('success')
-        })
-        .on('error', (err) => {
-          reject(err.message)
-        })
-    }), 120000, 'ffmpeg thumbnail')
+    const outputPath = path.join(dbPath, 'media/videos/thumbs', `${id}.jpg`)
+    return withTimeout(
+      extractVideoThumbnail({input: pathToFile, outputPath, height: 320}),
+      120000,
+      'ffmpeg thumbnail',
+    ).then(() => 'success')
   }
 
   function createThumbCustom(timestamp, inputPath, outputPath, width) {
-    return new Promise((resolve, reject) => {
-      ffmpeg()
-        .addOption('-ss', timestamp)
-        .addOption('-i', inputPath)
-        .addOption('-frames:v', '1')
-        .addOption('-vf', `scale=-1:${width}`)
-        .save(outputPath)
-        .on('end', (e) => {
-          resolve(e)
-        })
-        .on('error', (e) => {
-          reject(e)
-        })
+    return extractVideoFrame({
+      input: inputPath,
+      output: outputPath,
+      timestamp,
+      vf: `scale=-1:${width}`,
     })
   }
 
@@ -488,23 +471,13 @@ module.exports = function (db) {
   }
 
   const getVideoMetadata = async (pathToFile) => {
-    function getMetadata(pathToFile) {
-      return new Promise((resolve, reject) => {
-        return ffmpeg.ffprobe(pathToFile, (error, info) => {
-          if (error) {
-            reject(error)
-          } else if (info.format.duration < 1) {
-            reject('duration less than 1 sec.')
-          } else {
-            resolve(info)
-          }
-        })
-      })
-    }
-
     try {
-      let info = await withTimeout(getMetadata(pathToFile), 60000, 'ffprobe')
-      let duration = Math.floor(info.format.duration)
+      const info = await withTimeout(ffprobe(pathToFile), 60000, 'ffprobe')
+      if (info.format.duration < 1) {
+        throw new Error('duration less than 1 sec.')
+      }
+
+      const duration = Math.floor(info.format.duration)
 
       let width, height, codec, fps
       for (let stream of info.streams) {
@@ -531,22 +504,12 @@ module.exports = function (db) {
   }
 
   const getAudioMetadata = async (pathToFile) => {
-    function getMetadata(pathToFile) {
-      return new Promise((resolve, reject) => {
-        return ffmpeg.ffprobe(pathToFile, (error, info) => {
-          if (error) {
-            reject(error)
-          } else if (!info?.format?.duration || info.format.duration < 1) {
-            reject('duration less than 1 sec.')
-          } else {
-            resolve(info)
-          }
-        })
-      })
-    }
-
     try {
-      const info = await withTimeout(getMetadata(pathToFile), 60000, 'ffprobe')
+      const info = await withTimeout(ffprobe(pathToFile), 60000, 'ffprobe')
+      if (!info?.format?.duration || info.format.duration < 1) {
+        throw new Error('duration less than 1 sec.')
+      }
+
       const duration = Math.floor(info.format.duration)
 
       let codec
@@ -863,12 +826,7 @@ module.exports = function (db) {
       }
 
       getVideoDuration(pathToFile) {
-        return new Promise((resolve, reject) => {
-          return ffmpeg.ffprobe(pathToFile, (error, info) => {
-            if (error) return reject(error)
-            return resolve(info.format.duration)
-          })
-        })
+        return ffprobe(pathToFile).then((info) => info.format.duration)
       }
 
       makeLayout(i) {
@@ -887,40 +845,22 @@ module.exports = function (db) {
       }
 
       async ffmpegSeekP(timestamp, intermediateOutput) {
-        return new Promise((resolve, reject) => {
-          ffmpeg()
-            .addOption('-ss', timestamp)
-            .addOption('-i', this.input)
-            .addOption('-frames:v', '1')
-            .save(intermediateOutput)
-            .on('end', function () {
-              setTimeout(() => {
-                resolve(intermediateOutput)
-              }, 500)
-            })
-            .on('error', function (e) {
-              reject(e)
-            })
-        })
+        return extractVideoFrame({
+          input: this.input,
+          output: intermediateOutput,
+          timestamp,
+        }).then((output) => new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(output)
+          }, 500)
+        }))
       }
 
       async ffmpegCombineP(inputFiles, streams, layouts) {
-        return new Promise((resolve, reject) => {
-          const command = ffmpeg()
-          inputFiles.forEach((inputFile) => {
-            command.input(inputFile)
-          })
-          command
-            .addOption('-y')
-            .addOption('-filter_complex', `${streams.join('')}xstack=inputs=${this.tileCount}:layout=${layouts.join('|')}[v];[v]scale=${Math.floor(this.width * this.cols)}:-1[scaled]`)
-            .addOption('-map', '[scaled]')
-            .save(path.join(gridsPath, this.output))
-            .on('end', function () {
-              resolve()
-            })
-            .on('error', function (e) {
-              reject(e)
-            })
+        return combineVideoFrames({
+          inputs: inputFiles,
+          filterComplex: `${streams.join('')}xstack=inputs=${this.tileCount}:layout=${layouts.join('|')}[v];[v]scale=${Math.floor(this.width * this.cols)}:-1[scaled]`,
+          output: path.join(gridsPath, this.output),
         })
       }
 
@@ -1001,31 +941,20 @@ module.exports = function (db) {
       }
 
       getVideoDuration(pathToFile) {
-        return new Promise((resolve, reject) => {
-          return ffmpeg.ffprobe(pathToFile, (error, info) => {
-            if (error) return reject(error)
-            return resolve(info.format.duration)
-          })
-        })
+        return ffprobe(pathToFile).then((info) => info.format.duration)
       }
 
       createFrame(timestamp, output) {
-        return new Promise((resolve, reject) => {
-          ffmpeg()
-            .addOption('-ss', timestamp)
-            .addOption('-i', this.video.path)
-            .addOption('-frames:v', '1')
-            .addOption('-vf', `scale=-1:180`)
-            .save(output)
-            .on('end', () => {
-              setTimeout(() => {
-                resolve(output)
-              }, 500)
-            })
-            .on('error', (e) => {
-              reject(e)
-            })
-        })
+        return extractVideoFrame({
+          input: this.video.path,
+          output,
+          timestamp,
+          vf: 'scale=-1:180',
+        }).then((frameOutput) => new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(frameOutput)
+          }, 500)
+        }))
       }
 
       async generate() {
@@ -1085,81 +1014,25 @@ module.exports = function (db) {
 
 
   const createImage = async function (req, res) {
-    const Jimp = require('jimp');
-    const outputPath = req.body.outputPath
-    let buf = Buffer.from(req.body.image, 'base64');
-    const url = req.body.url;
-    const sizes = req.body.sizes;
+    try {
+      let buf = Buffer.from(req.body.image, 'base64')
+      const {outputPath, url, sizes} = req.body
 
-    if (url) {
-      buf = await axios
-        .get(url, {
-          responseType: 'arraybuffer'
-        })
-        .then(response => Buffer.from(response.data, 'base64'))
-        .catch(err => res.status(400).send(err))
-    }
+      if (url) {
+        const response = await axios.get(url, {responseType: 'arraybuffer'})
+        buf = Buffer.from(response.data)
+      }
 
-    Jimp.read(buf)
-      .then(async image => {
-        const w = image.bitmap.width; //  width of the image
-        const h = image.bitmap.height; // height of the image
-        const ar = w / h; // aspect ratio
-
-        if (sizes && sizes.width && sizes.height) {
-          const min_width = sizes.width // minimal width;
-          const min_height = sizes.height // minimal height;
-          const min_ar = min_width / min_height // minimal aspect ratio;
-
-          // обрезаем изображение если оно не соответствует пропорциям
-          if (Math.abs(min_ar - ar) > 0.01) {
-            let calc_height, calc_width, x, y;
-            if (1 > min_ar) {
-              // если изображение вертикальное
-              calc_height = h;  // оставляем высоту такой же
-              calc_width = h * min_ar; //а ширину высчитываем
-              x = (w - calc_width) / 2;
-              if (x < 0) {
-                x = 0;
-              }
-              y = 0;
-            } else {
-              calc_width = w;
-              calc_height = w / min_ar;
-              x = 0;
-              y = (h - calc_height) / 2;
-              if (y < 0) {
-                y = 0;
-              }
-            }
-
-            try {
-              await image.crop(x, y, Math.floor(calc_width), Math.floor(calc_height));
-            } catch (e) {
-              console.error(e);
-              res.status(202).send(e)
-            }
-          }
-          if (min_width < w || min_height < h) {
-            try {
-              await image.resize(min_width, min_height);
-            } catch (e) {
-              console.error(e);
-              res.status(202).send(e)
-            }
-          }
-        }
-
-        return image
-          .quality(85)
-          .write(outputPath)
-      }).then(image => {
-      res.status(201).send(image)
-    })
-      .catch(e => {
-        console.log(e)
-        res.status(202).send(e)
+      const result = await getImageMedia().processAndSaveImage({
+        buffer: buf,
+        outputPath,
+        sizes,
       })
+      res.status(201).send({outputPath: result})
+    } catch (e) {
+      console.log(e)
+      res.status(202).send(e)
+    }
   };
 
   const deleteFile = async function (req, res) {
