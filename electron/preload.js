@@ -1,6 +1,7 @@
 const {
   contextBridge,
-  ipcRenderer
+  ipcRenderer,
+  webUtils,
 } = require('electron');
 const os = require('os');
 
@@ -79,6 +80,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.send(channel, data);
     } else {
       console.warn(`[IPC] Blocked attempt to send to channel: ${channel}`);
+    }
+  },
+
+  getPathForFile: (file) => {
+    if (!file) return ''
+
+    try {
+      return webUtils.getPathForFile(file)
+    } catch (error) {
+      console.warn('[IPC] getPathForFile failed:', error)
+      return file.path || ''
     }
   },
 

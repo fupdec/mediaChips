@@ -27,6 +27,7 @@
     <v-main
       v-if="isAppReady && !isPlayerWindow"
       class="reduced-top app-main-layout"
+      :class="mainLayoutClasses"
       app
     >
       <div
@@ -47,6 +48,8 @@
           ></div>
         </div>
       </div>
+
+      <div id="main-drop-target" class="main-drop-target"></div>
     </v-main>
 
     <HoverImage/>
@@ -135,6 +138,11 @@ const contextMenu = computed(() => contextMenuStore)
 const addedTopClasses = computed(() => ({
   'windows-os-added-top': isWin && isElectron,
   'added-top-tabs': store.tabs.length,
+}))
+
+const mainLayoutClasses = computed(() => ({
+  ...addedTopClasses.value,
+  'has-bottom-bar': settingsStore.bottomBar === '1' || mobile.value,
 }))
 
 const isSettingsPage = computed(() => route.path === '/settings')
@@ -332,9 +340,39 @@ body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden !important;
+  --app-content-offset-top: 48px;
+  --app-content-offset-bottom: 0px;
+
+  &.added-top-tabs {
+    --app-content-offset-top: calc(48px + 28px);
+  }
+
+  &.windows-os-added-top {
+    --app-content-offset-top: calc(48px + 32px);
+
+    &.added-top-tabs {
+      --app-content-offset-top: calc(48px + 32px + 28px);
+    }
+  }
+
+  &.has-bottom-bar {
+    --app-content-offset-bottom: 56px;
+  }
+}
+
+.main-drop-target {
+  position: absolute;
+  top: var(--app-content-offset-top);
+  right: 0;
+  bottom: var(--app-content-offset-bottom);
+  left: 0;
+  pointer-events: none;
+  z-index: 15;
+  overflow: hidden;
 }
 
 .main-scroll {
+  position: relative;
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -342,19 +380,7 @@ body {
 }
 
 .main-scroll-inner {
-  padding-top: 48px;
-
-  &.added-top-tabs {
-    padding-top: calc(48px + 28px);
-  }
-
-  &.windows-os-added-top {
-    padding-top: calc(48px + 32px);
-
-    &.added-top-tabs {
-      padding-top: calc(48px + 32px + 28px);
-    }
-  }
+  padding-top: var(--app-content-offset-top);
 }
 
 .main-scroll--settings {

@@ -148,16 +148,18 @@
       />
     </div>
 
-    <v-card
-      v-show="dropzone"
-      @dragleave="dropzone = false"
-      @drop.prevent="catchDrop($event)"
-      @dragenter.prevent
-      @dragover.prevent
-      class="dropzone"
-    >
-      <div class="text">{{ t('items.drop_video_or_folder') }}</div>
-    </v-card>
+    <Teleport to="#main-drop-target">
+      <v-card
+        v-show="dropzone"
+        @dragleave="onDropzoneDragLeave"
+        @drop.prevent="catchDrop($event)"
+        @dragenter.prevent="onDropzoneDragEnter"
+        @dragover.prevent="onDropzoneDragOver"
+        class="dropzone"
+      >
+        <div class="text">{{ t('items.drop_video_or_folder') }}</div>
+      </v-card>
+    </Teleport>
 
     <QuickActionButton v-if="SETTINGS.show_quick_action_button == '1'"/>
   </v-container>
@@ -242,6 +244,7 @@ const loader = ref({
 const is_not_full_height = ref(false)
 const isLoadingMore = ref(false)
 const dropzone = ref(false)
+const dropzoneDragDepth = ref(0)
 const container = ref(null)
 const scrollRoot = ref(null)
 const INFINITE_PAGE_SIZE = 25
@@ -884,27 +887,40 @@ const jumpToPage = (value = ITEMS.value.jumpPage) => {
   changePage(val);
 }
 
+const containsDroppedFiles = (event) =>
+  Array.from(event?.dataTransfer?.types || []).includes('Files')
+
 const showDrop = (e) => {
-  const containsFiles = (event) => {
-    if (event.dataTransfer.types) {
-      for (let i = 0; i < event.dataTransfer.types.length; i++) {
-        if (event.dataTransfer.types[i] == "Files") {
-          return true;
-        }
-      }
-    }
-    return false;
+  if (!containsDroppedFiles(e)) return
+
+  e.preventDefault()
+  if (isElectron.value && props.items_type === 'media') {
+    dropzone.value = true
   }
-  if (containsFiles(e)) {
-    e.preventDefault()
-    if (isElectron.value && props.items_type === 'media' && dropzone.value == false) {
-      dropzone.value = true;
-    }
+}
+
+const onDropzoneDragEnter = (event) => {
+  if (!containsDroppedFiles(event)) return
+  dropzoneDragDepth.value += 1
+  dropzone.value = true
+}
+
+const onDropzoneDragOver = (event) => {
+  if (!containsDroppedFiles(event)) return
+  event.preventDefault()
+  dropzone.value = true
+}
+
+const onDropzoneDragLeave = () => {
+  dropzoneDragDepth.value = Math.max(0, dropzoneDragDepth.value - 1)
+  if (dropzoneDragDepth.value === 0) {
+    dropzone.value = false
   }
 }
 
 const catchDrop = (e) => {
   dropzone.value = false
+  dropzoneDragDepth.value = 0
   if (!isElectron.value || props.items_type !== 'media' || !mediaType.value) return
 
   const paths = collectDroppedPaths(e)

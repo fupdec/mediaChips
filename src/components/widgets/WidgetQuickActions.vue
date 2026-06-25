@@ -76,6 +76,7 @@ import {useEventBus} from '@/utils/eventBus'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getMetaName} from '@/utils/metaI18n'
+import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 import DialogMediaAdding from '@/components/dialogs/DialogMediaAdding.vue'
 
 const {t} = useI18n()
@@ -133,23 +134,9 @@ function onDrop(event) {
   if (!appStore.isElectron) return
 
   const mediaTypeId = getDefaultMediaTypeId(appStore.mediaTypes)
-  const mediaType = appStore.mediaTypes.find((item) => item.id === Number(mediaTypeId))
-  if (!mediaType) return
+  const paths = collectDroppedPaths(event)
 
-  const extensions = String(mediaType.extensions || '')
-    .split(',')
-    .map((ext) => ext.trim().toLowerCase())
-    .filter(Boolean)
-
-  const files = Array.from(event.dataTransfer.files || [])
-    .map((file) => file.path)
-    .filter(Boolean)
-    .filter((filePath) => {
-      const ext = String(filePath).split('.').pop()?.toLowerCase()
-      return ext && extensions.includes(ext)
-    })
-
-  if (!files.length) {
+  if (!paths.length) {
     $operable.setNotification({
       type: 'warning',
       title: t('media.adding.files'),
@@ -158,13 +145,12 @@ function onDrop(event) {
     return
   }
 
-  tasksStore.mediaAdding.media_type_id = Number(mediaTypeId)
-  tasksStore.mediaAdding.directFiles = files
-  tasksStore.mediaAdding.skipFileScan = true
-  tasksStore.mediaAdding.paths = files.join('\n')
-  tasksStore.mediaAdding.dialogProcess = true
-  tasksStore.mediaAdding.active = true
-  eventBus.emit('addMedia')
+  startDroppedMediaAdding({
+    paths,
+    mediaTypeId,
+    tasksStore,
+    eventBus,
+  })
 }
 </script>
 

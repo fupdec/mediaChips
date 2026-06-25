@@ -146,6 +146,7 @@ import AppBarButton from "@/components/app/appbar/AppBarButton.vue"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import {useMediaAdding} from '@/composable/AddingMedia'
 import {normalizePastedFilePathsText} from '@/utils/filePathInput'
+import {collectDroppedPaths} from '@/utils/mediaDrop'
 
 
 // Хуки
@@ -336,21 +337,13 @@ const startMediaAddingProcess = async () => {
 const handleFileDrop = (event) => {
   if (!isElectron.value) return
 
-  const files = event.dataTransfer.files
-  let existingPaths = tasksStore.mediaAdding.paths || ''
+  const existingPaths = tasksStore.mediaAdding.paths || ''
+  const newPaths = collectDroppedPaths(event).join('\n')
 
-  // Добавляем пути новых файлов
-  const newPaths = Array.from(files)
-    .map(file => normalizePastedFilePathsText(file.path || ''))
-    .filter(Boolean)
-    .join('\n')
+  if (!newPaths) return
 
-  if (newPaths) {
-    const updatedPaths = existingPaths
-      ? normalizePastedFilePathsText(`${existingPaths}\n${newPaths}`)
-      : newPaths
-
-    tasksStore.mediaAdding.paths = updatedPaths
-  }
+  tasksStore.mediaAdding.paths = existingPaths
+    ? normalizePastedFilePathsText(`${existingPaths}\n${newPaths}`)
+    : normalizePastedFilePathsText(newPaths)
 }
 </script>
