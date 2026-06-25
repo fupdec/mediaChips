@@ -1,13 +1,15 @@
 <template>
-  <div class="settings-meta-assignment">
+  <div id="settings-meta-assignment" class="settings-meta-assignment">
     <div class="settings-meta-assignment__intro mb-4">
-      <div class="d-flex align-center flex-wrap ga-2 mb-1">
-        <h2 class="text-h6">{{ t('settings_labels.field_pinning.title') }}</h2>
-        <button-documentation id="meta.assign"/>
-      </div>
-      <p class="text-body-2 text-medium-emphasis mb-3">
-        {{ t('settings_labels.field_pinning.subtitle') }}
-      </p>
+      <SettingsCategoryDivider
+        :title="t('settings_labels.field_pinning.title')"
+        icon="pin-outline"
+      >
+        <template #actions>
+          <button-documentation id="meta.assign"/>
+        </template>
+      </SettingsCategoryDivider>
+
       <v-alert
         color="info"
         icon="mdi-content-save-alert"
@@ -54,30 +56,29 @@
           select-strategy="single-independent"
           class="settings-meta-assignment__list"
           color="primary"
+          density="compact"
           nav
         >
           <v-list-item
             v-for="item in listItems"
             :key="item.id"
             :value="item.id"
-            rounded="lg"
+            rounded="md"
             class="settings-meta-assignment__list-item"
           >
             <template #prepend>
-              <v-icon size="20">mdi-{{ item.icon }}</v-icon>
+              <v-icon size="16">mdi-{{ item.icon }}</v-icon>
             </template>
 
-            <v-list-item-title class="text-body-2">{{ item.title }}</v-list-item-title>
+            <v-list-item-title class="text-caption">{{ item.title }}</v-list-item-title>
 
             <template #append>
-              <v-chip
-                size="x-small"
-                variant="tonal"
-                :color="item.pinnedCount ? 'primary' : undefined"
+              <span
+                class="text-caption text-medium-emphasis settings-meta-assignment__count"
                 :title="item.pinnedCountHint"
               >
                 {{ item.pinnedCount }}
-              </v-chip>
+              </span>
             </template>
           </v-list-item>
         </v-list>
@@ -128,6 +129,7 @@ import {useAppStore} from '@/stores/app'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import MetaAssignmentPanel from '@/components/meta/assignment/MetaAssignmentPanel.vue'
 import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
+import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 
 const {t} = useI18n()
 const route = useRoute()

@@ -49,11 +49,11 @@
       <template #item="{element}">
         <div class="meta-to-meta-board__slot">
           <v-icon size="14" class="meta-to-meta-board__drag text-medium-emphasis">mdi-drag</v-icon>
-          <v-icon size="16" color="primary">mdi-{{ element.meta?.icon }}</v-icon>
-          <span class="text-body-2">{{ element.meta?.name }}</span>
-          <v-icon size="12" class="text-medium-emphasis">{{ $readable.getIconDataType(element.meta?.type) }}</v-icon>
-          <v-spacer/>
+          <v-icon size="16" color="primary" class="meta-to-meta-board__icon">mdi-{{ element.meta?.icon }}</v-icon>
+          <span class="meta-to-meta-board__name text-body-2">{{ element.meta?.name }}</span>
+          <v-icon size="12" class="meta-to-meta-board__type text-medium-emphasis">{{ $readable.getIconDataType(element.meta?.type) }}</v-icon>
           <v-btn
+            class="meta-to-meta-board__unpin"
             icon
             size="x-small"
             variant="text"
@@ -80,13 +80,14 @@
       {{ t('meta.settings.available_fields') }}
     </div>
 
-    <MetaFieldPool
-      :items="allMeta"
-      :exclude-ids="pinnedMetaIds"
-      :empty-icon="'mdi-database-check'"
-      :empty-text="t('meta.settings.all_meta_pinned')"
-      @select="requestPinMeta"
-    />
+        <MetaFieldPool
+          :items="allMeta"
+          :exclude-ids="pinnedMetaIds"
+          :compact="true"
+          :empty-icon="'mdi-database-check'"
+          :empty-text="t('meta.settings.all_meta_pinned')"
+          @select="requestPinMeta"
+        />
   </template>
   </div>
 </template>

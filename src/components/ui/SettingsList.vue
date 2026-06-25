@@ -12,6 +12,7 @@
 }
 
 .settings-list > :slotted(*) {
-  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 </style>

@@ -1,26 +1,26 @@
 <template>
   <div class="mx-4">
-    <div class="tool-action mb-4">
-      <div class="tool-action__hint text-caption text-medium-emphasis">
-        {{ t('settings_labels.tools.open_app_data_folder') }}
-      </div>
-      <v-btn
-        @click="openFolder"
-        color="primary"
-        rounded
-        variant="flat"
-      >
-        <v-icon icon="mdi-folder-open" start/>
-        {{ t('settings_labels.tools.open_data_folder_btn') }}
-      </v-btn>
-    </div>
+    <SettingsCategoryDivider
+      :title="t('settings_labels.tools.bulk_edit_paths')"
+      icon="find-replace"
+    />
 
-    <ToolQuickAddTags class="mb-4"/>
+    <v-alert
+      type="info"
+      variant="tonal"
+      density="compact"
+      rounded="xl"
+      class="mb-4"
+    >
+      <span class="text-caption d-block">
+        {{ t('settings_labels.tools.replace_paths_hint') }}
+      </span>
+      <span class="text-caption d-block mt-1">
+        {{ t('settings_labels.tools.replace_paths_hint_use_case') }}
+      </span>
+    </v-alert>
 
     <div class="tool-action">
-      <div class="tool-action__hint text-caption text-medium-emphasis">
-        {{ t('settings_labels.tools.replace_paths_hint') }}
-      </div>
       <v-dialog
         v-model="dialog"
         :fullscreen="xs"
@@ -105,30 +105,29 @@
 </template>
 
 <script setup>
-import axios from "axios";
-import path from "path-browserify";
-import {ref, computed} from "vue";
-import {useI18n} from "vue-i18n";
-import {useAppStore} from "@/stores/app";
-import {useDialogsStore} from "@/stores/dialogs";
+import axios from "axios"
+import path from "path-browserify"
+import {ref, computed} from "vue"
+import {useI18n} from "vue-i18n"
+import {useAppStore} from "@/stores/app"
+import {useDialogsStore} from "@/stores/dialogs"
 import {useDisplay} from "vuetify"
-import DialogHeader from "@/components/elements/DialogHeader.vue";
-import ToolQuickAddTags from "@/tools/ToolQuickAddTags.vue";
+import DialogHeader from "@/components/elements/DialogHeader.vue"
+import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
 
-const store = useAppStore();
-const dialogsStore = useDialogsStore();
-const {xs, xl} = useDisplay();
-const {t} = useI18n();
+const store = useAppStore()
+const dialogsStore = useDialogsStore()
+const {xs, xl} = useDisplay()
+const {t} = useI18n()
 
-const dialog = ref(false);
+const dialog = ref(false)
 
-const query = ref("");
-const replacement = ref("");
-const found = ref("");
-const files = ref([]);
+const query = ref("")
+const replacement = ref("")
+const found = ref("")
+const files = ref([])
 
-const apiUrl = computed(() => store.localhost);
-const isElectron = computed(() => store.isElectron);
+const apiUrl = computed(() => store.localhost)
 
 const buttons = computed(() => [
   {
@@ -137,75 +136,66 @@ const buttons = computed(() => [
     color: "success",
     function: () => replaceFiles(),
   },
-]);
+])
 
 const searchMedia = async () => {
   try {
     const res = await axios.post(apiUrl.value + "/api/task/searchMediaByPath", {
       query: query.value,
-    });
+    })
 
-    found.value = query.value;
+    found.value = query.value
     files.value = res.data.filter((i) =>
       i.path.includes(query.value)
-    );
+    )
   } catch (e) {
   }
-};
+}
 
 const highlightPath = (filePath) => {
-  if (!found.value) return filePath;
+  if (!found.value) return filePath
 
-  const searchStr = found.value;
-  const repl = replacement.value;
+  const searchStr = found.value
+  const repl = replacement.value
 
-  const foundStr = filePath.replace(searchStr, `<b style="color:red">${searchStr}</b>`);
-  const replacedStr = filePath.replace(searchStr, `<b style="color:blue">${repl}</b>`);
+  const foundStr = filePath.replace(searchStr, `<b style="color:red">${searchStr}</b>`)
+  const replacedStr = filePath.replace(searchStr, `<b style="color:blue">${repl}</b>`)
 
-  return `${foundStr} <b>→</b> ${replacedStr}`;
-};
+  return `${foundStr} <b>→</b> ${replacedStr}`
+}
 
 const replaceFiles = async () => {
-  const str = found.value;
-  const repl = replacement.value;
+  const str = found.value
+  const repl = replacement.value
 
   const replaced = files.value.map((i) => {
-    const newPath = i.path.replace(str, repl);
+    const newPath = i.path.replace(str, repl)
     return {
       id: i.id,
       path: newPath,
       ext: path.extname(newPath),
       basename: path.basename(newPath),
       name: path.basename(newPath).replace(/\.[^/.]+$/, ""),
-    };
-  });
+    }
+  })
 
-  dialogsStore.process.show = true;
+  dialogsStore.process.show = true
 
   try {
     await axios.post(apiUrl.value + "/api/task/updateMediaMultiple", {
       mediaFiles: replaced,
-    });
+    })
 
-    query.value = "";
-    replacement.value = "";
-    found.value = "";
-    files.value = [];
+    query.value = ""
+    replacement.value = ""
+    found.value = ""
+    files.value = []
 
-    dialog.value = false;
+    dialog.value = false
   } finally {
-    dialogsStore.process.show = false;
+    dialogsStore.process.show = false
   }
-};
-
-const openFolder = () => {
-  if (!store.dbPath) return
-
-  const folder = path.dirname(store.dbPath)
-
-  $operable.openPath(folder, false)
-};
-
+}
 </script>
 
 <style scoped>
@@ -214,11 +204,6 @@ const openFolder = () => {
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-}
-
-.tool-action__hint {
-  max-width: 640px;
-  line-height: 1.4;
 }
 
 .path-string {

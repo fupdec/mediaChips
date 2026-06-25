@@ -1,39 +1,32 @@
 <template>
   <div class="mx-4">
     <settings-category-divider
-      :title="$t('settings_labels.tools.adult_features')"
-      icon="fruit-cherries"
+      :title="t('settings_labels.library.data_scraper')"
+      icon="search-web"
     >
       <template #actions>
-        <button-documentation id="data_scraper"></button-documentation>
+        <button-documentation id="data_scraper"/>
       </template>
     </settings-category-divider>
 
     <settings-switch
-      :title="$t('settings_labels.tools.sfw_mode')"
-      :hint="$t('settings_labels.tools.sfw_mode_hint')"
-      option="sfwMode"
-      icon-text="eye-off"
-    ></settings-switch>
-
-    <settings-switch
-      :title="$t('settings_labels.tools.data_scraper')"
-      :hint="$t('settings_labels.tools.data_scraper_hint')"
+      :title="t('settings_labels.tools.data_scraper')"
+      :hint="t('settings_labels.tools.data_scraper_hint')"
       option="showAdultContent"
-    ></settings-switch>
+      id="data_scraper_checkbox"
+    />
 
     <div v-if="settingsStore.showAdultContent == '1'">
       <v-row>
-        <v-col cols="12"
-          sm="6">
+        <v-col cols="12" sm="6">
           <v-autocomplete
             :model-value="selected_meta"
             @update:model-value="updateSettings"
             :items="meta_tags"
             item-value="id"
             item-text="name"
-            :label="$t('settings_labels.tools.performers_meta')"
-            :placeholder="$t('settings_labels.tools.select_meta')"
+            :label="t('settings_labels.tools.performers_meta')"
+            :placeholder="t('settings_labels.tools.select_meta')"
             return-object
             variant="filled"
           >
@@ -51,8 +44,7 @@
             </template>
           </v-autocomplete>
         </v-col>
-        <v-col cols="12"
-          sm="6">
+        <v-col cols="12" sm="6">
           <v-btn
             @click="dialogsStore.scraperConfig.show = true"
             :disabled="!selected_meta"
@@ -61,12 +53,10 @@
             rounded
             variant="flat"
           >
-            <DialogScraperConfig
-              :meta="selected_meta"
-            ></DialogScraperConfig>
+            <DialogScraperConfig :meta="selected_meta"/>
 
             <v-icon start>mdi-search-web</v-icon>
-            {{ $t('settings_labels.tools.configure_scraper') }}
+            {{ t('settings_labels.tools.configure_scraper') }}
           </v-btn>
         </v-col>
       </v-row>
@@ -75,63 +65,63 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, defineAsyncComponent} from 'vue'
-import {useAppStore} from '@/stores/app'
-import {useSettingsStore} from '@/stores/settings'
-import {useDialogsStore} from '@/stores/dialogs'
-import axios from 'axios'
-import _ from 'lodash'
-import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue";
-import SettingsCategoryDivider
-  from "@/components/ui/SettingsCategoryDivider.vue";
-import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
-import {useEventBus} from "@/utils/eventBus";
+import {ref, computed, onMounted, defineAsyncComponent} from "vue"
+import {useI18n} from "vue-i18n"
+import {useAppStore} from "@/stores/app"
+import {useSettingsStore} from "@/stores/settings"
+import {useDialogsStore} from "@/stores/dialogs"
+import axios from "axios"
+import _ from "lodash"
+import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
+import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
+import SettingsSwitch from "@/components/ui/SettingsSwitch.vue"
+import {useEventBus} from "@/utils/eventBus"
 
-const DialogScraperConfig = defineAsyncComponent(() => import("@/components/dialogs/DialogScraperConfig.vue"))
+const DialogScraperConfig = defineAsyncComponent(() =>
+  import("@/components/dialogs/DialogScraperConfig.vue")
+)
 
 const store = useAppStore()
 const settingsStore = useSettingsStore()
 const dialogsStore = useDialogsStore()
-
 const eventBus = useEventBus()
+const {t} = useI18n()
 
 const selected_meta = ref(null)
 
 const apiUrl = computed(() => store.localhost)
 
 const meta_tags = computed(() => {
-  const metas = store.meta?.filter(i => i.type === 'array') || []
-  return _.sortBy(metas, 'name')
+  const metas = store.meta?.filter(i => i.type === "array") || []
+  return _.sortBy(metas, "name")
 })
 
 async function updateSettings(meta) {
   if (!meta) return
 
-  // Сбросить scraper для всех мета
   const allMeta = store.meta || []
-  for (let i of allMeta) {
+  for (const item of allMeta) {
     try {
       await axios({
         method: "put",
-        url: `${apiUrl.value}/api/Meta/${i.id}`,
-        data: {scraper: false}
+        url: `${apiUrl.value}/api/Meta/${item.id}`,
+        data: {scraper: false},
       })
     } catch (error) {
-      console.error('Error updating meta setting:', error)
+      console.error("Error updating meta setting:", error)
     }
   }
 
-  // Установить scraper для выбранной мета
   try {
     await axios({
       method: "put",
       url: `${apiUrl.value}/api/Meta/${meta.id}`,
-      data: {scraper: true}
+      data: {scraper: true},
     })
 
-    eventBus.emit('getMeta')
+    eventBus.emit("getMeta")
   } catch (error) {
-    console.error('Error updating selected meta:', error)
+    console.error("Error updating selected meta:", error)
   }
 }
 

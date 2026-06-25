@@ -18,29 +18,19 @@
           {{ t("settings.tabs.appearance") }}
         </v-tab>
 
-        <v-tab value="tools">
-          <v-icon start>mdi-tools</v-icon>
-          {{ t("settings.tabs.tools") }}
+        <v-tab value="library">
+          <v-icon start>mdi-bookshelf</v-icon>
+          {{ t("settings.tabs.library") }}
+        </v-tab>
+
+        <v-tab value="files">
+          <v-icon start>mdi-file-cog-outline</v-icon>
+          {{ t("settings.tabs.files") }}
         </v-tab>
 
         <v-tab value="video">
           <v-icon start>mdi-video-outline</v-icon>
           {{ t("settings.tabs.video") }}
-        </v-tab>
-
-        <v-tab value="meta">
-          <v-icon start>mdi-shape-outline</v-icon>
-          {{ t("settings.tabs.meta") }}
-        </v-tab>
-
-        <v-tab value="media">
-          <v-icon start>mdi-file-outline</v-icon>
-          {{ t("settings.tabs.media") }}
-        </v-tab>
-
-        <v-tab value="assignment">
-          <v-icon start>mdi-pin-outline</v-icon>
-          {{ t("settings.tabs.field_pinning") }}
         </v-tab>
 
         <v-tab value="database">
@@ -87,21 +77,51 @@
             <SettingsSection padded>
               <SettingsAppearancePage/>
             </SettingsSection>
+
+            <SettingsSection>
+              <SettingsSfwMode/>
+            </SettingsSection>
           </SettingsList>
         </div>
 
-        <div v-else-if="tab === 'tools'">
+        <div v-else-if="tab === 'files'">
           <SettingsList>
-            <SettingsSection>
-              <SettingsTools/>
-            </SettingsSection>
-
             <SettingsSection>
               <SettingsWatchedFolders/>
             </SettingsSection>
 
             <SettingsSection>
-              <SettingsAdultFeatures/>
+              <SettingsBulkPathEditing/>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsContentHashBackfill/>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsFindMissingMedia/>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsGenerateVideoImages/>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsClearGeneratedImages/>
+            </SettingsSection>
+          </SettingsList>
+        </div>
+
+        <div v-else-if="tab === 'library'">
+          <SettingsList>
+            <SettingsMeta/>
+
+            <SettingsMediaTypes/>
+
+            <SettingsMetaAssignment/>
+
+            <SettingsSection>
+              <SettingsDataScraper/>
             </SettingsSection>
           </SettingsList>
         </div>
@@ -115,41 +135,17 @@
             <SettingsSection>
               <SettingsVideoPreview/>
             </SettingsSection>
-
-            <SettingsSection>
-              <SettingsGenerateVideoImages/>
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsClearGeneratedImages/>
-            </SettingsSection>
           </SettingsList>
-        </div>
-
-        <div v-else-if="tab === 'meta'">
-          <SettingsMeta/>
-        </div>
-
-        <div v-else-if="tab === 'media'">
-          <SettingsMediaTypes/>
-        </div>
-
-        <div v-else-if="tab === 'assignment'">
-          <SettingsMetaAssignment/>
         </div>
 
         <div v-else-if="tab === 'database'">
           <SettingsList>
             <SettingsSection>
+              <SettingsOpenDataFolder/>
+            </SettingsSection>
+
+            <SettingsSection>
               <SettingsDatabases/>
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsContentHashBackfill/>
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsFindMissingMedia/>
             </SettingsSection>
           </SettingsList>
         </div>
@@ -187,9 +183,14 @@ import SettingsAppearanceZoom
   from "@/components/settings/appearance/SettingsAppearanceZoom.vue"
 import SettingsAppearancePage
   from "@/components/settings/appearance/SettingsAppearancePage.vue"
+import SettingsSfwMode
+  from "@/components/settings/appearance/SettingsSfwMode.vue"
 
 const SettingsWatchedFolders = defineAsyncComponent(() =>
   import("@/components/settings/tools/SettingsWatchedFolders.vue")
+)
+const SettingsBulkPathEditing = defineAsyncComponent(() =>
+  import("@/components/settings/files/SettingsBulkPathEditing.vue")
 )
 const SettingsMeta = defineAsyncComponent(() =>
   import("@/components/settings/SettingsMeta.vue")
@@ -200,6 +201,9 @@ const SettingsMetaAssignment = defineAsyncComponent(() =>
 const SettingsMediaTypes = defineAsyncComponent(() =>
   import("@/components/settings/SettingsMediaTypes.vue")
 )
+const SettingsDataScraper = defineAsyncComponent(() =>
+  import("@/components/settings/library/SettingsDataScraper.vue")
+)
 const SettingsVideoPreview = defineAsyncComponent(() =>
   import("@/components/settings/tools/SettingsVideoPreview.vue")
 )
@@ -208,6 +212,9 @@ const SettingsVideoPlayer = defineAsyncComponent(() =>
 )
 const SettingsLogin = defineAsyncComponent(() =>
   import("@/components/settings/general/SettingsLogin.vue")
+)
+const SettingsOpenDataFolder = defineAsyncComponent(() =>
+  import("@/components/settings/database/SettingsOpenDataFolder.vue")
 )
 const SettingsDatabases = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsDatabases.vue")
@@ -227,18 +234,19 @@ const SettingsFindMissingMedia = defineAsyncComponent(() =>
 const SettingsGeneral = defineAsyncComponent(() =>
   import("@/components/settings/general/SettingsGeneral.vue")
 )
-const SettingsTools = defineAsyncComponent(() =>
-  import("@/components/settings/tools/SettingsTools.vue")
-)
 const SettingsRegistration = defineAsyncComponent(() =>
   import("@/components/settings/about/SettingsRegistration.vue")
-)
-const SettingsAdultFeatures = defineAsyncComponent(() =>
-  import("@/components/settings/tools/SettingsAdultFeatures.vue")
 )
 const About = defineAsyncComponent(() =>
   import("@/components/app/About.vue")
 )
+
+const TAB_ALIASES = {
+  tools: "general",
+  meta: "library",
+  media: "library",
+  assignment: "library",
+}
 
 const tab = ref("general")
 const contentRef = ref(null)
@@ -246,7 +254,13 @@ const route = useRoute()
 const {t} = useI18n()
 
 const SETTINGS_SECTION_IDS = {
-  generate_video_images: 'settings-generate-video-images',
+  generate_video_images: "settings-generate-video-images",
+  field_pinning: "settings-meta-assignment",
+  video_preview: "video_preview",
+}
+
+function resolveTab(routeTab) {
+  return TAB_ALIASES[routeTab] || routeTab
 }
 
 function scrollToSettingsSection(sectionId, attempts = 12) {
@@ -259,7 +273,7 @@ function scrollToSettingsSection(sectionId, attempts = 12) {
 
     scrollContainer.scrollTo({
       top: Math.max(0, top - 8),
-      behavior: 'smooth',
+      behavior: "smooth",
     })
     return
   }
@@ -272,8 +286,14 @@ function scrollToSettingsSection(sectionId, attempts = 12) {
 }
 
 function applyRouteSettings() {
-  if (route.query.tab) {
-    tab.value = String(route.query.tab)
+  const section = String(route.query.section || "")
+
+  if (section === "generate_video_images") {
+    tab.value = "files"
+  } else if (section === "field_pinning") {
+    tab.value = "library"
+  } else if (route.query.tab) {
+    tab.value = resolveTab(String(route.query.tab))
   }
 
   const sectionId = SETTINGS_SECTION_IDS[route.query.section]

@@ -28,7 +28,7 @@ const props = defineProps({
 const {t} = useI18n()
 
 const link = computed(() => {
-  const query = {tab: 'assignment', view: props.view}
+  const query = {tab: 'library', view: props.view}
   if (props.mediaTypeId) query.mediaTypeId = props.mediaTypeId
   if (props.metaId) query.metaId = props.metaId
   return {path: '/settings', query}

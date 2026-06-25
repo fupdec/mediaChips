@@ -199,12 +199,25 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+
+    > * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
   }
 
   &__slot {
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 8px 10px;
     border-radius: 10px;
     background: rgba(var(--v-theme-surface-bright), 0.6);
@@ -217,6 +230,25 @@
 
   &__drag {
     cursor: grab;
+    flex-shrink: 0;
+  }
+
+  &__icon,
+  &__type {
+    flex-shrink: 0;
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__unpin {
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   &__empty-slot {
@@ -226,6 +258,9 @@
 }
 
 .settings-meta-assignment {
+  max-width: 100%;
+  box-sizing: border-box;
+
   &__intro {
     max-width: 720px;
   }
@@ -236,9 +271,11 @@
 
   &__layout {
     display: grid;
-    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
-    gap: 16px;
+    grid-template-columns: minmax(156px, 188px) minmax(0, 1fr);
+    gap: 12px;
     align-items: start;
+    width: 100%;
+    max-width: 100%;
   }
 
   &__sidebar {
@@ -249,17 +286,80 @@
   &__list {
     background: transparent !important;
     box-shadow: none !important;
-    max-height: min(70vh, 640px);
+    max-height: min(60vh, 520px);
     overflow-y: auto;
-    padding: 4px;
+    padding: 0;
   }
 
   &__list-item {
     margin-inline: 0;
+    min-height: 30px !important;
+    padding-inline: 8px !important;
+
+    .v-list-item__prepend {
+      width: 24px;
+      padding-inline-end: 6px !important;
+    }
+
+    .v-list-item__append {
+      padding-inline-start: 4px !important;
+    }
+  }
+
+  &__count {
+    min-width: 1.25rem;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
   }
 
   &__panel {
     min-width: 0;
+
+    .meta-assignment-panel__board .v-card-text {
+      padding: 12px !important;
+    }
+
+    .meta-assignment-panel__segments {
+      padding: 8px 12px 0 !important;
+    }
+
+    .meta-to-media-board > .text-caption.mb-3 {
+      margin-bottom: 8px !important;
+    }
+
+    .meta-assignment-panel__toggle .v-btn {
+      min-height: 28px;
+      padding-inline: 8px;
+      font-size: 0.75rem;
+    }
+
+    .media-type-preview-card--hero {
+      max-width: 100%;
+      box-sizing: border-box;
+
+      &.media-type-preview-card--pinned {
+        box-shadow: none;
+        border: 2px solid rgba(var(--v-theme-primary), 0.35);
+      }
+    }
+
+    .meta-to-meta-board__slot {
+      padding: 5px 10px;
+      gap: 6px;
+      border-radius: 8px;
+    }
+
+    .meta-to-meta-board__slots {
+      gap: 4px;
+    }
+
+    .meta-field-pool__group + .meta-field-pool__group {
+      margin-top: 8px;
+    }
+
+    .meta-field-pool__items {
+      gap: 4px;
+    }
   }
 
   &__placeholder {
@@ -285,6 +385,6 @@
   }
 
   .settings-meta-assignment__list {
-    max-height: 240px;
+    max-height: 200px;
   }
 }

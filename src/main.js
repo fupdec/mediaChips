@@ -161,7 +161,7 @@ router.beforeEach((to, from, next) => {
 
 // Use custom plugins
 app.use(operable, { router, store })
-app.use(readable, { router, store })
+app.use(readable, { router, store, i18n })
 
 // Mount app
 app.mount('#app')

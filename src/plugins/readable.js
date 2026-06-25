@@ -3,7 +3,7 @@ import useItemsStore from "@/stores/items";
 
 export default {
   install(app, options = {}) {
-    const {router, store} = options
+    const {router, store, i18n} = options
 
     const readable = {
       checkCurrentPage(page) {
@@ -102,7 +102,11 @@ export default {
       },
 
       getTextDataType(type) {
-        return MetaTypes.find(i => i.value === type)?.text
+        const key = `meta.types.${type}`
+        if (i18n?.global?.te(key)) {
+          return i18n.global.t(key)
+        }
+        return MetaTypes.find(i => i.value === type)?.text || type
       },
 
       getIconDataType(type) {

@@ -11,7 +11,7 @@
             v-for="item in group.items"
             :key="item.id"
             variant="outlined"
-            size="small"
+            :size="compact ? 'x-small' : 'small'"
             class="meta-field-pool__chip"
             :disabled="item.disabled"
             :title="item.hint || item.name"
@@ -39,6 +39,7 @@ const props = defineProps({
   items: {type: Array, default: () => []},
   excludeIds: {type: Array, default: () => []},
   disabledIds: {type: Array, default: () => []},
+  compact: {type: Boolean, default: false},
   emptyIcon: {type: String, default: 'mdi-database-check'},
   emptyText: {type: String, default: ''},
 })

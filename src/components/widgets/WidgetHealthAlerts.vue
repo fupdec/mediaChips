@@ -160,7 +160,7 @@ const visibleAlerts = computed(() => {
       icon: 'mdi-file-remove-outline',
       text: t('home.widgets.health_missing', {count: missingCount.value}),
       actionLabel: t('home.widgets.health_open_settings'),
-      action: openDatabaseSettings,
+      action: openFilesSettings,
     })
   }
 
@@ -199,7 +199,7 @@ const visibleAlerts = computed(() => {
         count: health.value.contentHash.pending,
       }),
       actionLabel: t('home.widgets.health_open_settings'),
-      action: openDatabaseSettings,
+      action: openFilesSettings,
     })
   }
 
@@ -239,11 +239,18 @@ function openDatabaseSettings() {
   })
 }
 
+function openFilesSettings() {
+  router.push({
+    path: '/settings',
+    query: {tab: 'files'},
+  })
+}
+
 function openImageGenerationSettings() {
   router.push({
     path: '/settings',
     query: {
-      tab: 'video',
+      tab: 'files',
       section: 'generate_video_images',
     },
   })
