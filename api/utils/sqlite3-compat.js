@@ -29,32 +29,54 @@ function parseArgs(args) {
   return {params, callback};
 }
 
+function sanitizeBindValue(value) {
+  if (value == null) {
+    return null;
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? 1 : 0;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  const type = typeof value;
+  if (type === 'number' || type === 'string' || type === 'bigint' || Buffer.isBuffer(value)) {
+    return value;
+  }
+
+  return String(value);
+}
+
 function normalizeParams(params) {
   if (params == null) {
     return [];
   }
 
   if (Array.isArray(params)) {
-    return params;
+    return params.map(sanitizeBindValue);
   }
 
   if (typeof params !== 'object') {
-    return [params];
+    return [sanitizeBindValue(params)];
   }
 
   const keys = Object.keys(params);
   if (keys.length > 0 && keys.every((key) => /^\$\d+$/.test(key))) {
     const normalized = {};
     for (const key of keys) {
-      normalized[key] = params[key];
-      normalized[key.slice(1)] = params[key];
+      const value = sanitizeBindValue(params[key]);
+      normalized[key] = value;
+      normalized[key.slice(1)] = value;
     }
     return normalized;
   }
 
   const normalized = {};
   for (const key of keys) {
-    const value = params[key];
+    const value = sanitizeBindValue(params[key]);
     if (/^[:@$]/.test(key)) {
       normalized[key] = value;
     } else {
