@@ -1,5 +1,48 @@
 export const history = [
   {
+    id: '0.14.0-beta',
+    version: 'v0.14.0-beta',
+    name: 'Home widgets and settings overhaul',
+    content: `
+      <p><strong>MediaChips v0.14.0-beta</strong> redesigns the home page and settings, adds audio and text media types, and fixes a critical production-build bug where tags and media did not load from packaged installers.</p>
+      <h3>Added:</h3>
+      <ul>
+        <li><strong>Redesigned home page</strong> with configurable widgets (stats, extended stats, continue watching, favorites, top views, markers, health alerts, top tags, quick actions)</li>
+        <li><strong>Audio</strong> and <strong>text</strong> media types with full backend and UI support</li>
+        <li><strong>SFW mode</strong> — optional blur for images in the main content area</li>
+        <li><strong>Persistent interface zoom</strong> with keyboard shortcuts and settings</li>
+        <li><strong>Markers page</strong> — filtering, sorting, infinite scroll, and thumbnail generation</li>
+        <li><strong>Settings → Video</strong> tab; <strong>field pinning</strong> with drag-reorder</li>
+        <li><strong>Database maintenance tools</strong> and batch video image generation</li>
+        <li><strong>Mute toggle</strong> on fullscreen video hover preview</li>
+      </ul>
+      <h3>Changed:</h3>
+      <ul>
+        <li><strong>Settings</strong> reorganized into General, Appearance, Library, Files, Video, and About tabs</li>
+        <li>Improved <strong>items pagination</strong>, infinite scroll, smart playlists, and saved filters UI</li>
+        <li>Settings lists show <strong>database sizes</strong>; filters drawer readability improved</li>
+        <li><strong>Item context menu</strong> labels localized across all locales</li>
+      </ul>
+      <h3>Fixed:</h3>
+      <ul>
+        <li><strong>Production builds (DMG/installers)</strong> — tags and media lists empty because server code imported from excluded <code>src/</code></li>
+        <li>API routing gaps; macOS auto-update for unsigned builds</li>
+        <li>License activation, tag page tabs, player error layout, import duplicates</li>
+        <li>System player on Windows 11; country flags with commas in names</li>
+        <li>Image viewer, list pagination regressions, settings scroll layout</li>
+      </ul>
+      <h3>Notes:</h3>
+      <ul>
+        <li><strong>From v0.13.1:</strong> in-app auto-update should deliver this beta</li>
+        <li><strong>From v0.13.0 or older:</strong> install v0.13.1 or v0.14.0-beta manually once</li>
+        <li><strong>macOS (unsigned):</strong> use <strong>Download DMG</strong> in the update notification</li>
+        <li><strong>Portable</strong> Windows builds still require a manual download</li>
+        <li>This is a <strong>beta</strong> — report issues on GitHub before stable v0.14.0</li>
+        <li>Full changelog: <a href="https://github.com/fupdec/MediaChips/blob/master/CHANGELOG.md" target="_blank">CHANGELOG.md</a></li>
+      </ul>
+    `,
+  },
+  {
     id: '0.13.1',
     version: 'v0.13.1',
     name: 'In-app auto-update',
