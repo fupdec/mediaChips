@@ -1,5 +1,28 @@
 export const history = [
   {
+    id: '0.14.2-beta',
+    version: 'v0.14.2-beta',
+    name: 'Windows drag-and-drop and database fixes',
+    content: `
+      <p><strong>MediaChips v0.14.2-beta</strong> fixes Windows folder drag-and-drop, confines the drop overlay to the main content area, and resolves media insert failures with <code>better-sqlite3</code>.</p>
+      <h3>Fixed:</h3>
+      <ul>
+        <li><strong>Windows folder drag-and-drop</strong> — <code>webUtils.getPathForFile</code> in preload for correct folder paths</li>
+        <li><strong>Drag-and-drop overlay</strong> — limited to the main content area below the app bar</li>
+        <li><strong>Media insert failures</strong> — normalized SQLite bind values for <code>better-sqlite3</code></li>
+      </ul>
+      <h3>Notes:</h3>
+      <ul>
+        <li><strong>From v0.14.1-beta:</strong> in-app auto-update should deliver this beta</li>
+        <li><strong>From v0.14.0-beta or older:</strong> install the latest v0.14.x-beta manually once</li>
+        <li><strong>macOS (unsigned):</strong> use <strong>Download DMG</strong> in the update notification</li>
+        <li><strong>Portable</strong> Windows builds still require a manual download</li>
+        <li>This is a <strong>beta</strong> — report issues on GitHub before stable v0.14.0</li>
+        <li>Full changelog: <a href="https://github.com/fupdec/MediaChips/blob/master/CHANGELOG.md" target="_blank">CHANGELOG.md</a></li>
+      </ul>
+    `,
+  },
+  {
     id: '0.14.1-beta',
     version: 'v0.14.1-beta',
     name: 'Electron 42 and Windows build fixes',

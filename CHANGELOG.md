@@ -5,6 +5,22 @@ All notable changes to MediaChips are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.2-beta] - 2026-06-26
+
+### Fixed
+
+- **Windows folder drag-and-drop** — use `webUtils.getPathForFile` in preload so dropped folders resolve correctly in Electron
+- **Drag-and-drop overlay** — confined to the main content area below the app bar instead of covering the entire window
+- **Media insert failures** — normalize SQLite bind values for `better-sqlite3` so new media records save reliably
+
+### Upgrade notes
+
+- **From v0.14.1-beta:** in-app auto-update should deliver this beta; otherwise install manually once
+- **From v0.14.0-beta or older:** install the latest v0.14.x-beta manually first
+- **Portable Windows** builds do not support in-app auto-update
+- **macOS** builds are unsigned; see [INSTALLATION.md](./INSTALLATION.md) for Gatekeeper steps and manual DMG update flow
+- This is a **beta** — report issues on GitHub before the stable v0.14.0 release
+
 ## [0.14.1-beta] - 2026-06-26
 
 ### Added
