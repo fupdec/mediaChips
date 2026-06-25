@@ -704,6 +704,14 @@
         background-color: transparent;
       }
     }
+    .preview-mute-btn {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1011;
+      pointer-events: auto;
+      background-color: rgba(0, 0, 0, 0.45);
+    }
   }
   .thumb {
     width: 100%;

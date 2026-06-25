@@ -61,6 +61,19 @@
         </div>
       </div>
 
+      <v-btn
+        v-if="bigPreview && !playbackError"
+        @click.stop="togglePreviewMute"
+        class="preview-mute-btn"
+        :title="muted ? t('media.preview.unmute') : t('media.preview.mute')"
+        icon
+        variant="text"
+        color="white"
+        size="small"
+      >
+        <v-icon>{{ muted ? 'mdi-volume-off' : 'mdi-volume-high' }}</v-icon>
+      </v-btn>
+
       <!-- TIMELINE PREVIEW -->
       <div
         v-if="showTimelinePreview"
@@ -343,6 +356,11 @@ const createThumb = async (imgPath) => {
     .catch((e) => {
       console.log(e)
     });
+}
+
+const togglePreviewMute = () => {
+  const nextValue = SETTINGS.value.play_sound_on_video_preview === '1' ? '0' : '1'
+  $operable.setOption(nextValue, 'play_sound_on_video_preview')
 }
 
 const play = (inApp) => {
