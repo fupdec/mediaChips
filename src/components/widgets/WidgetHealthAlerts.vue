@@ -39,6 +39,30 @@
 
     <template v-else-if="checked">
       <v-alert
+        v-if="databaseSize != null"
+        type="info"
+        icon="mdi-database-outline"
+        variant="tonal"
+        rounded="lg"
+        density="compact"
+        class="mb-2"
+      >
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+          <span class="text-body-2">{{ databaseSizeLabel }}</span>
+
+          <v-btn
+            @click="openDatabaseSettings"
+            color="primary"
+            size="small"
+            variant="text"
+            rounded
+          >
+            {{ t('home.widgets.health_open_settings') }}
+          </v-btn>
+        </div>
+      </v-alert>
+
+      <v-alert
         v-if="!visibleAlerts.length"
         type="success"
         icon="mdi-check-circle-outline"
@@ -103,10 +127,28 @@ const loading = ref(false)
 const health = ref({
   duplicates: {byFilesize: 0, byContentHash: 0},
   contentHash: {total: 0, pending: 0, hashed: 0},
+  generatedImages: {byType: {}, totalPending: 0},
+  database: {id: null, name: null, bytes: null},
 })
 const missingCount = ref(0)
 
 const activeTasksCount = computed(() => tasksStore.list.length)
+
+const databaseSize = computed(() => {
+  const bytes = health.value.database?.bytes
+  return bytes == null ? null : Number(bytes)
+})
+
+const databaseSizeLabel = computed(() => {
+  const size = $readable.getReadableFileSize(databaseSize.value)
+  const name = health.value.database?.name
+
+  if (name) {
+    return t('home.widgets.health_database_size_named', {name, size})
+  }
+
+  return t('home.widgets.health_database_size', {size})
+})
 
 const visibleAlerts = computed(() => {
   const alerts = []
@@ -161,6 +203,19 @@ const visibleAlerts = computed(() => {
     })
   }
 
+  if (health.value.generatedImages.totalPending > 0) {
+    alerts.push({
+      id: 'generated-images',
+      type: 'info',
+      icon: 'mdi-image-off-outline',
+      text: t('home.widgets.health_generated_images_pending', {
+        count: health.value.generatedImages.totalPending,
+      }),
+      actionLabel: t('home.widgets.health_open_image_generation'),
+      action: openImageGenerationSettings,
+    })
+  }
+
   if (activeTasksCount.value > 0) {
     alerts.push({
       id: 'tasks',
@@ -178,7 +233,20 @@ const visibleAlerts = computed(() => {
 })
 
 function openDatabaseSettings() {
-  router.push('/settings')
+  router.push({
+    path: '/settings',
+    query: {tab: 'database'},
+  })
+}
+
+function openImageGenerationSettings() {
+  router.push({
+    path: '/settings',
+    query: {
+      tab: 'video',
+      section: 'generate_video_images',
+    },
+  })
 }
 
 function openTasks() {
@@ -196,6 +264,8 @@ async function loadHealth() {
   health.value = {
     duplicates: response.data?.duplicates || {byFilesize: 0, byContentHash: 0},
     contentHash: response.data?.contentHash || {total: 0, pending: 0, hashed: 0},
+    generatedImages: response.data?.generatedImages || {byType: {}, totalPending: 0},
+    database: response.data?.database || {id: null, name: null, bytes: null},
   }
 }
 
@@ -213,6 +283,8 @@ async function runCheck() {
   health.value = {
     duplicates: {byFilesize: 0, byContentHash: 0},
     contentHash: {total: 0, pending: 0, hashed: 0},
+    generatedImages: {byType: {}, totalPending: 0},
+    database: {id: null, name: null, bytes: null},
   }
 
   try {

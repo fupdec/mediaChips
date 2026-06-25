@@ -82,14 +82,17 @@ const animatedFilesize = computed(() => tweenedFilesize.value.toFixed(2))
 
 async function getStats() {
   try {
-    const res = await axios.get(apiUrl.value + "/api/media/get-stats")
+    const [mediaRes, tagsRes] = await Promise.all([
+      axios.get(apiUrl.value + "/api/media/get-stats"),
+      axios.get(apiUrl.value + "/api/tag/count"),
+    ])
 
-    numberFiles.value = res.data.total
+    numberFiles.value = mediaRes.data.total
+    numberTags.value = tagsRes.data.count
 
-    const readable = $readable.getReadableFileSize(res.data.filesize, true)
+    const readable = $readable.getReadableFileSize(mediaRes.data.filesize, true)
     numberFilesize.value = readable.number
     filesizeText.value = readable.text
-
   } catch (e) {
     console.error(e)
   }
@@ -108,11 +111,12 @@ watch(numberFilesize, () => animate(numberFilesize, tweenedFilesize))
 
 /* ---------------------- Mounted ---------------------- */
 
+watch(() => store.meta.length, (value) => {
+  numberMetas.value = value
+}, {immediate: true})
+
 onMounted(async () => {
   await getStats()
-
-  numberTags.value = store.tags.length
-  numberMetas.value = store.meta.length
 })
 </script>
 

@@ -96,25 +96,25 @@ module.exports = function (db) {
     }
   }
 
-  // Retrieve all Media from the database.
-  const getStats = function (req, res) {
-    db.Media.findAll({
-      raw: true
-    })
-      .then(data => {
-        let bytes = 0;
-        data.forEach(i => bytes += i.filesize);
-        const summary = {
-          total: data.length,
-          filesize: bytes,
-        }
-        res.status(201).send(summary)
-      }).catch(err => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+  const getStats = async function (req, res) {
+    try {
+      const [[row]] = await db.sequelize.query(`
+        SELECT
+          COUNT(*) AS total,
+          COALESCE(SUM(filesize), 0) AS filesize
+        FROM media
+      `)
+
+      res.status(200).send({
+        total: Number(row?.total || 0),
+        filesize: Number(row?.filesize || 0),
       })
-    })
-  };
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while performing query.',
+      })
+    }
+  }
 
   // Retrieve all Media from the database.
   const findAll = function (req, res) {

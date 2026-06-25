@@ -1,4 +1,45 @@
+const fs = require('fs')
+const path = require('path')
+const {readdir, stat} = require('fs/promises')
 const {getContentHashBackfillStatus} = require('./contentHashBackfill')
+const {getVideoImagesGenerationStatus} = require('./videoImagesGeneration')
+
+async function getDirectorySize(directory) {
+  if (!fs.existsSync(directory)) return 0
+
+  const entries = await readdir(directory, {withFileTypes: true})
+  const sizes = await Promise.all(entries.map(async (entry) => {
+    const entryPath = path.join(directory, entry.name)
+    if (entry.isDirectory()) return getDirectorySize(entryPath)
+    if (entry.isFile()) {
+      const {size} = await stat(entryPath)
+      return size
+    }
+    return 0
+  }))
+
+  return sizes.reduce((sum, size) => sum + size, 0)
+}
+
+async function getActiveDatabaseSize(db) {
+  const bytes = await getDirectorySize(db.path)
+
+  return {
+    id: db.config?.id || null,
+    name: db.config?.name || null,
+    bytes,
+  }
+}
+
+function summarizeGeneratedImagesStatus(status) {
+  const byType = status || {}
+  const totalPending = Object.values(byType).reduce(
+    (sum, item) => sum + Number(item?.pending || 0),
+    0,
+  )
+
+  return {byType, totalPending}
+}
 
 async function getDuplicateCounts(db) {
   const [[byFilesize]] = await db.sequelize.query(`
@@ -33,14 +74,19 @@ async function getDuplicateCounts(db) {
 }
 
 async function getHomeHealth(db) {
-  const [duplicates, contentHash] = await Promise.all([
+  const dbPath = db.path
+  const [duplicates, contentHash, generatedImages, database] = await Promise.all([
     getDuplicateCounts(db),
     getContentHashBackfillStatus(db),
+    getVideoImagesGenerationStatus(db, dbPath).then(summarizeGeneratedImagesStatus),
+    getActiveDatabaseSize(db),
   ])
 
   return {
     duplicates,
     contentHash,
+    generatedImages,
+    database,
   }
 }
 

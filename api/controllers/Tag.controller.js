@@ -84,6 +84,17 @@ module.exports = function (db) {
     })
   };
 
+  const getCount = async function (req, res) {
+    try {
+      const count = await db.Tag.count()
+      res.status(200).send({count})
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while performing query.',
+      })
+    }
+  }
+
   // Retrieve all Tag from the database.
   const getAll = function (req, res) {
     db.Tag.findAll({
@@ -156,6 +167,7 @@ module.exports = function (db) {
 
   return {
     create,
+    getCount,
     getAllForItems,
     getAll,
     findAll,

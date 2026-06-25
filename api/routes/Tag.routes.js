@@ -8,6 +8,9 @@ module.exports = (app, db) => {
   // Retrieve all Tags that match the filter
   router.post("/filter", Tag.findAll);
 
+  // Retrieve tag count
+  router.get("/count", Tag.getCount);
+
   // Retrieve a single Tag with id
   router.get("/:id", Tag.findOne);
 
