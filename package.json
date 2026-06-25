@@ -36,7 +36,7 @@
     "dist:mac:ci": "npm run predist && electron-builder --mac --publish never",
     "dist:linux:ci": "npm run predist && electron-builder --linux --publish never",
     "rebuild:node": "npm rebuild better-sqlite3",
-    "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
+    "rebuild:electron": "electron-rebuild -f -w better-sqlite3 && node scripts/sign-native-modules.js",
     "preserver": "npm run rebuild:node",
     "preserver-dev": "npm run rebuild:node",
     "postinstall": "npm run rebuild:node"

@@ -271,6 +271,8 @@ scripts/        Build and utility scripts
 
 Если после `npm install` видите `NODE_MODULE_VERSION` mismatch — пересоберите вручную: `npm run rebuild:electron` или `npm run rebuild:node`.
 
+На macOS 15+ (особенно macOS 26) Electron может падать с `CODESIGNING / Invalid Page` при загрузке `better-sqlite3`: `electron-rebuild` оставляет `linker-signed` бинарник, который AMFI отклоняет. `rebuild:electron` после сборки автоматически переподписывает `.node` файлы ad-hoc (`codesign --sign -`). Если запускали `electron-rebuild` вручную — выполните `node scripts/sign-native-modules.js`.
+
 `electron-builder` при `pack`/`dist` пересобирает нативные модули сам; в CI отдельный `electron-rebuild` не нужен.
 
 ### Electron and the `databases` folder
