@@ -116,8 +116,9 @@
 
       <v-window v-if="is_init" v-model="tab" class="fullwidth-tabs transparent-tabs-only">
         <template v-for="i in pinnedMedia" :key="'media_type_tab_item'+i.mediaType.id">
-          <v-window-item v-if="ITEMS.type.includes('media')" :value="`media_${i.mediaType.id}`">
+          <v-window-item :value="`media_${i.mediaType.id}`">
             <LayoutItems
+              v-if="tab === `media_${i.mediaType.id}`"
               :key="'media_type_' + upd + '_' + i.mediaType.id"
               :items_type="'media'"
               :mediaTypeId="i.mediaType.id"
@@ -129,8 +130,9 @@
         </template>
 
         <template v-for="i in pinnedParentMeta" :key="'meta_tab_item'+i.id">
-          <v-window-item v-if="ITEMS.type.includes('tag')" :value="`tag_${i.id}`">
+          <v-window-item :value="`tag_${i.id}`">
             <LayoutItems
+              v-if="tab === `tag_${i.id}`"
               :key="'meta_' + upd + '_' + i.id"
               :items_type="'tag'"
               :mediaTypeId="ENV.media_type_id"
@@ -178,6 +180,7 @@ import {useEventBus} from '@/utils/eventBus'
 import path from 'path-browserify';
 import LayoutItems from "@/layouts/LayoutItems.vue";
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {sortByMenuMediaTypeOrder} from '@/utils/mediaType'
 
 const route = useRoute()
 const router = useRouter()
@@ -245,6 +248,37 @@ const is_avatar_exists = computed(() => {
     return false
   }
 })
+const resolveInitialTab = () => {
+  const urlMediaTypeId = Number(getUrlParam('mediaTypeId'))
+
+  if (urlMediaTypeId) {
+    const mediaEntry = pinnedMedia.value.find(
+      entry => Number(entry.mediaType?.id) === urlMediaTypeId,
+    )
+    if (mediaEntry) {
+      itemsStore.type = 'media'
+      itemsStore.environment.media_type_id = mediaEntry.mediaType.id
+      return `media_${mediaEntry.mediaType.id}`
+    }
+  }
+
+  if (pinnedMedia.value.length > 0) {
+    const mediaEntry = pinnedMedia.value[0]
+    itemsStore.type = 'media'
+    itemsStore.environment.media_type_id = mediaEntry.mediaType.id
+    return `media_${mediaEntry.mediaType.id}`
+  }
+
+  if (pinnedParentMeta.value.length > 0) {
+    const childMeta = pinnedParentMeta.value[0]
+    itemsStore.type = 'tag'
+    itemsStore.environment.meta_id = childMeta.id
+    return `tag_${childMeta.id}`
+  }
+
+  return null
+}
+
 // Methods
 const init = async () => {
   await getMeta()
@@ -253,6 +287,7 @@ const init = async () => {
   await getPinnedMedia()
   await getPinnedParentMeta()
   await getCompletionStatus()
+  tab.value = resolveInitialTab()
   is_init.value = true
 
   cropperOps.value.aspectRatio = meta.value?.imageAspectRatio
@@ -313,7 +348,7 @@ const getPinnedMedia = async () => {
     const res = await axios.get(
       apiUrl.value + `/api/MetaInMediaType?metaId=${ENV.value.meta_id}`
     )
-    pinnedMedia.value = res.data || []
+    pinnedMedia.value = sortByMenuMediaTypeOrder(res.data || [], appStore.mediaTypes)
   } catch (e) {
     console.log(e)
   }

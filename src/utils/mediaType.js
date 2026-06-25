@@ -61,3 +61,27 @@ export const matchesMediaTypeFilter = (param, mediaType) => {
 
   return true
 }
+
+export function getMenuOrderedMediaTypes(mediaTypes) {
+  return [...(mediaTypes || [])]
+    .filter(item => !item.hidden)
+    .sort((a, b) => {
+      const orderDiff = (a.order ?? 0) - (b.order ?? 0)
+      if (orderDiff !== 0) return orderDiff
+      return String(a.name || '').localeCompare(String(b.name || ''))
+    })
+}
+
+export function sortByMenuMediaTypeOrder(items, mediaTypes, getMediaTypeId = (item) => (
+  item.mediaType?.id ?? item.mediaTypeId
+)) {
+  const orderById = new Map(
+    getMenuOrderedMediaTypes(mediaTypes).map((mediaType, index) => [mediaType.id, index])
+  )
+
+  return [...items].sort((a, b) => {
+    const aOrder = orderById.get(Number(getMediaTypeId(a))) ?? Number.MAX_SAFE_INTEGER
+    const bOrder = orderById.get(Number(getMediaTypeId(b))) ?? Number.MAX_SAFE_INTEGER
+    return aOrder - bOrder
+  })
+}

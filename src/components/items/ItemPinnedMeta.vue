@@ -185,6 +185,7 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
 
 import {useEventBus} from "@/utils/eventBus"
+import translate from '@/utils/translate'
 import {useRouter} from "vue-router";
 import {usePresetMeta} from "@/composable/ItemPresetMeta"
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
@@ -400,12 +401,20 @@ const removeTag = (tag) => {
     url: appStore.localhost + url,
     data,
   })
-    .then((res) => {
-      // Эмит события для обновления элементов
+    .then(() => {
+      itemsStore.removeTagFromItem({
+        itemId: props.item.id,
+        tagId: tag.id,
+      })
+
       eventBus.emit('getItemsFromDb', {
         ids: [props.item.id],
         type: props.type,
-      });
+      })
+
+      if (props.type === 'tag') {
+        eventBus.emit('getTag')
+      }
     })
     .catch((e) => {
       console.error(e)
@@ -431,9 +440,12 @@ const filterByTag = (tag) => {
 const showMenu = (e, tag) => {
   $readable.hideHoverImage()
 
+  const locale = settingsStore.locale
+  const t = (key, params = {}) => translate(key, params, locale)
+
   const contextMenu = [
     {
-      name: "Edit tag",
+      name: t('context_menu.edit_tag'),
       type: "item",
       icon: "pencil",
       action: () => {
@@ -445,7 +457,7 @@ const showMenu = (e, tag) => {
       type: "divider"
     },
     {
-      name: "Filter by tag",
+      name: t('context_menu.filter_by_tag'),
       type: "item",
       icon: "filter",
       action: () => {
@@ -455,7 +467,7 @@ const showMenu = (e, tag) => {
       type: "divider"
     },
     {
-      name: "Open page",
+      name: t('context_menu.open_page'),
       type: "item",
       icon: "open-in-app",
       disabled: getPath(tag) == router.currentRoute.value.fullPath,
@@ -464,7 +476,7 @@ const showMenu = (e, tag) => {
         router.push(url)
       },
     }, {
-      name: "Open in new tab",
+      name: t('context_menu.open_in_new_tab'),
       type: "item",
       icon: "tab",
       action: () => {
@@ -473,7 +485,7 @@ const showMenu = (e, tag) => {
     }, {
       type: "divider"
     }, {
-      name: "Remove",
+      name: t('common.remove'),
       type: "item",
       icon: "close",
       color: "error",
