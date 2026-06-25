@@ -12,7 +12,8 @@ import {ref, onMounted, provide, watch} from "vue"
 import AppPreloader from "@/AppPreloader.vue"
 import path from "path-browserify"
 import {useAppStore} from "@/stores/app"
-import AutoConnect from "@/AutoConnect.vue";
+import AutoConnect from "@/AutoConnect.vue"
+import {resolveApiBaseUrl} from "@/utils/apiBaseUrl"
 
 const isConfigLoaded = ref(false)
 const app = useAppStore()
@@ -178,7 +179,7 @@ async function fetchConfigFromServer() {
 }
 
 function applyConfig(config) {
-  app.localhost = `http://${config.ip}:${config.port}`
+  app.localhost = resolveApiBaseUrl(config, currentServer.value)
   app.appVersion = config.appVersion
   app.dbPath = config.path
   app.mediaPath = path.join(config.path, "media")

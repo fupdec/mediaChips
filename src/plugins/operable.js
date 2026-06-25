@@ -6,6 +6,7 @@ import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
 import {useNotificationsStore} from '@/stores/notifications'
 import {normalizePastedFilePath} from '@/utils/filePathInput'
+import {resolveApiBaseUrl} from '@/utils/apiBaseUrl'
 
 export default {
   install(app, options = {}) {
@@ -28,7 +29,7 @@ export default {
           const remote = await axios.get(window.location.origin + "/api/task/getConfig");
           config = remote.data;
         }
-        store.localhost = `http://${config.ip}:${config.port}`;
+        store.localhost = resolveApiBaseUrl(config);
         store.appVersion = config.appVersion;
         store.dbPath = config.path;
 
