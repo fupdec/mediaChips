@@ -1,36 +1,17 @@
 const fs = require('fs')
 const path = require('path')
+const Jimp = require('jimp')
 
 const THUMB_HEIGHT = 320
 const THUMB_JPEG_QUALITY = 85
 
-function loadSharp() {
-  try {
-    return require('sharp')
-  } catch (error) {
-    const wrapped = new Error(
-      `Image processing is unavailable: ${error.message}`,
-    )
-    wrapped.cause = error
-    throw wrapped
-  }
-}
-
 const getImageMetadata = async (pathToFile) => {
   try {
-    const sharp = loadSharp()
-    const metadata = await sharp(pathToFile).metadata()
-    const width = metadata.width || 0
-    const height = metadata.height || 0
-
-    if (!width || !height) {
-      return null
-    }
-
+    const image = await Jimp.read(pathToFile)
     return {
-      width,
-      height,
-      orientation: metadata.orientation || 1,
+      width: image.bitmap.width,
+      height: image.bitmap.height,
+      orientation: 1,
     }
   } catch (error) {
     console.error(`Image metadata extraction failed for ${pathToFile}:`, error.message)
@@ -45,19 +26,14 @@ const ensureImageThumbDir = (dbPath) => {
 }
 
 const createImageThumb = async (pathToFile, id, dbPath) => {
-  const sharp = loadSharp()
   const outputDir = ensureImageThumbDir(dbPath)
   const outputPath = path.join(outputDir, `${id}.jpg`)
 
-  await sharp(pathToFile)
-    .rotate()
-    .resize({
-      height: THUMB_HEIGHT,
-      fit: 'inside',
-      withoutEnlargement: true,
-    })
-    .jpeg({quality: THUMB_JPEG_QUALITY})
-    .toFile(outputPath)
+  const image = await Jimp.read(pathToFile)
+  if (image.bitmap.height > THUMB_HEIGHT) {
+    image.scaleToHeight(THUMB_HEIGHT)
+  }
+  await image.quality(THUMB_JPEG_QUALITY).writeAsync(outputPath)
 
   return outputPath
 }

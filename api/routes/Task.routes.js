@@ -1,6 +1,16 @@
 module.exports = (app, db) => {
-  const Task = require("../controllers/Task.controller")(db);
   const router = require("express").Router();
+
+  let Task;
+  try {
+    Task = require("../controllers/Task.controller")(db);
+  } catch (err) {
+    console.error(
+      'Task.controller unavailable, using video core fallback:',
+      err.stack || err.message,
+    );
+    Task = require("../controllers/taskVideoCore.controller")(db);
+  }
 
   let TasksMigrateFromLowDb = null;
   try {
@@ -26,116 +36,122 @@ module.exports = (app, db) => {
     router.post("/migrateFromLowDb", TasksMigrateFromLowDb.migrateFromLowDb);
   }
 
+  const register = (method, route, handler) => {
+    if (typeof Task?.[handler] === 'function') {
+      router[method](route, Task[handler]);
+    }
+  };
+
   // check if file exists on local machine
-  router.post("/checkFileExists", Task.checkFileExists);
+  register('post', "/checkFileExists", 'checkFileExists');
 
   // rename File
-  router.post("/renameFile", Task.renameFile);
+  register('post', "/renameFile", 'renameFile');
 
   // open folder in file explorer
-  router.post("/openPath", Task.openPath);
+  register('post', "/openPath", 'openPath');
 
   // getting file list with specific extension in directory
-  router.post("/getFileList", Task.getFileList);
+  register('post', "/getFileList", 'getFileList');
 
   // adding video with metadata to database
-  router.post("/addMediaVideo", Task.addMediaVideo);
+  register('post', "/addMediaVideo", 'addMediaVideo');
 
   // adding image with metadata to database
-  router.post("/addMediaImage", Task.addMediaImage);
+  register('post', "/addMediaImage", 'addMediaImage');
 
   // adding media with type audio to database
-  router.post("/addMediaAudio", Task.addMediaAudio);
+  register('post', "/addMediaAudio", 'addMediaAudio');
 
   // adding media with type text to database
-  router.post("/addMediaText", Task.addMediaText);
+  register('post', "/addMediaText", 'addMediaText');
 
   // adding other type of media with metadata to database
-  router.post("/addMedia", Task.addMedia);
+  register('post', "/addMedia", 'addMedia');
 
   // обновить информацию о файле
-  router.post("/updateMediaInfo", Task.updateMediaInfo);
+  register('post', "/updateMediaInfo", 'updateMediaInfo');
 
   // creating default thumbnail for video
-  router.post("/createThumbForVideo", Task.createThumbForVideo);
+  register('post', "/createThumbForVideo", 'createThumbForVideo');
 
   // creating thumbnail for video
-  router.post("/createThumb", Task.createThumb);
+  register('post', "/createThumb", 'createThumb');
 
   // creating frames grid for video
-  router.post("/createGrid", Task.createGrid);
+  register('post', "/createGrid", 'createGrid');
 
   // creating frames timeline for video
-  router.post("/createTimeline", Task.createTimeline);
+  register('post', "/createTimeline", 'createTimeline');
 
   // check serial key
-  router.get("/getConfig", Task.getConfig);
+  register('get', "/getConfig", 'getConfig');
 
   // check serial key
-  router.get("/getMachineId", Task.getMachineId);
+  register('get', "/getMachineId", 'getMachineId');
 
   // creating image that recived from cropper
-  router.post("/createImage", Task.createImage);
+  register('post', "/createImage", 'createImage');
 
   // deleting file from database
-  router.post("/deleteFile", Task.deleteFile);
+  register('post', "/deleteFile", 'deleteFile');
 
   // deleting database
-  router.post("/deleteDb", Task.deleteDb);
+  register('post', "/deleteDb", 'deleteDb');
 
   // get database sizes
-  router.post("/getDatabaseSizes", Task.getDatabaseSizes);
+  register('post', "/getDatabaseSizes", 'getDatabaseSizes');
 
   // get folder Size
-  router.post("/getFolderSize", Task.getFolderSize);
+  register('post', "/getFolderSize", 'getFolderSize');
 
   // clear images, tables
-  router.post("/clearData", Task.clearData);
+  register('post', "/clearData", 'clearData');
 
   // search media file by path
-  router.post("/searchMediaByPath", Task.searchMediaByPath);
+  register('post', "/searchMediaByPath", 'searchMediaByPath');
 
   // update multiple media files
-  router.post("/updateMediaMultiple", Task.updateMediaMultiple);
+  register('post', "/updateMediaMultiple", 'updateMediaMultiple');
 
   // получить список популярных слов
-  router.get("/getMostPopularWordsFromMedia", Task.getMostPopularWordsFromMedia);
+  register('get', "/getMostPopularWordsFromMedia", 'getMostPopularWordsFromMedia');
 
   // suggest tags from tokenized media paths
-  router.get("/suggestTagsFromPaths", Task.suggestTagsFromPaths);
-  router.post("/suggestTagsFromPaths", Task.suggestTagsFromPaths);
+  register('get', "/suggestTagsFromPaths", 'suggestTagsFromPaths');
+  register('post', "/suggestTagsFromPaths", 'suggestTagsFromPaths');
 
   // suggest localized tags by classifying extracted video frames with local CLIP
-  router.post("/suggestTagsFromVideoFrames", Task.suggestTagsFromVideoFrames);
-  router.post("/streamVideoObjectRecognition", Task.streamVideoObjectRecognition);
+  register('post', "/suggestTagsFromVideoFrames", 'suggestTagsFromVideoFrames');
+  register('post', "/streamVideoObjectRecognition", 'streamVideoObjectRecognition');
 
   // check local CLIP model state for video object recognition
-  router.get("/clipModelStatus", Task.clipModelStatus);
+  register('get', "/clipModelStatus", 'clipModelStatus');
 
   // download and warm up the local CLIP model
-  router.post("/downloadClipModel", Task.downloadClipModel);
+  register('post', "/downloadClipModel", 'downloadClipModel');
 
   // parse tags from one or more file paths
-  router.post("/parsePathTags", Task.parsePathTags);
+  register('post', "/parsePathTags", 'parsePathTags');
 
   // check local parser model state
-  router.get("/parserStatus", Task.parserStatus);
+  register('get', "/parserStatus", 'parserStatus');
 
   // download and warm up the local parser model
-  router.post("/downloadParserModel", Task.downloadParserModel);
+  register('post', "/downloadParserModel", 'downloadParserModel');
 
   // content hash backfill for existing media
-  router.get("/contentHashBackfillStatus", Task.contentHashBackfillStatus);
-  router.post("/streamContentHashBackfill", Task.streamContentHashBackfill);
+  register('get', "/contentHashBackfillStatus", 'contentHashBackfillStatus');
+  register('post', "/streamContentHashBackfill", 'streamContentHashBackfill');
 
   // batch generation of video preview images
-  router.get("/videoImagesGenerationStatus", Task.videoImagesGenerationStatus);
-  router.post("/streamVideoImagesGeneration", Task.streamVideoImagesGeneration);
+  register('get', "/videoImagesGenerationStatus", 'videoImagesGenerationStatus');
+  register('post', "/streamVideoImagesGeneration", 'streamVideoImagesGeneration');
 
   // find and relink missing media files on disk
-  router.get("/missingMediaStatus", Task.missingMediaStatus);
-  router.post("/streamFindMissingMedia", Task.streamFindMissingMedia);
-  router.post("/relinkMissingMedia", Task.relinkMissingMedia);
+  register('get', "/missingMediaStatus", 'missingMediaStatus');
+  register('post', "/streamFindMissingMedia", 'streamFindMissingMedia');
+  register('post', "/relinkMissingMedia", 'relinkMissingMedia');
 
   app.use('/api/Task', router);
 };
