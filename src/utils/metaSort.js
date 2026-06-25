@@ -1,4 +1,4 @@
-import orderBy from 'lodash-es/orderBy'
+import orderBy from 'lodash/orderBy'
 
 export const META_SORT_MODES = {
   popularity: 'popularity',

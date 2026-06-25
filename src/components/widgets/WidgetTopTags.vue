@@ -80,8 +80,8 @@ import {useRouter} from "vue-router"
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
 import {useI18n} from 'vue-i18n'
-import _groupBy from "lodash-es/groupBy"
-import _cloneDeep from "lodash-es/cloneDeep"
+import groupBy from 'lodash/groupBy'
+import cloneDeep from 'lodash/cloneDeep'
 import path from "path-browserify"
 import {getMetaName} from '@/utils/metaI18n'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
@@ -114,8 +114,8 @@ const subtitleKey = computed(() => getTopTagsSubtitleKey(sortMode.value))
 async function getTagsTop(activeGroup = null) {
   if (!metas.value.length) return
 
-  const grouped = _groupBy(tags.value, "metaId")
-  const reservedCopy = _cloneDeep(grouped)
+  const grouped = groupBy(tags.value, "metaId")
+  const reservedCopy = cloneDeep(grouped)
   const groups = []
   const visibleMetas = sortMetaItems(
     metas.value.filter((meta) => meta.type === 'array' && !meta.hidden),

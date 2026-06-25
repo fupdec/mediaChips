@@ -166,7 +166,7 @@ import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import draggable from 'vuedraggable' // vuedraggable@next
 import axios from 'axios'
-import orderBy from 'lodash-es/orderBy'
+import orderBy from 'lodash/orderBy'
 
 /* Pinia stores — adjust names to your stores */
 import {useAppStore} from '@/stores/app' // optional, or read from central store

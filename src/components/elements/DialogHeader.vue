@@ -70,7 +70,7 @@
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
-import {sortBy} from 'lodash-es'
+import {sortBy} from 'lodash'
 
 const emit = defineEmits(['close'])
 
