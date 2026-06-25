@@ -8,37 +8,37 @@
           direction="vertical"
           class="settings-page-layout__tabs"
         >
-        <v-tab value="general">
+        <v-tab value="general" id="settings-doc-tab-general">
           <v-icon start>mdi-application-cog-outline</v-icon>
           {{ t("settings.tabs.general") }}
         </v-tab>
 
-        <v-tab value="appearance">
+        <v-tab value="appearance" id="settings-doc-tab-appearance">
           <v-icon start>mdi-brush-variant</v-icon>
           {{ t("settings.tabs.appearance") }}
         </v-tab>
 
-        <v-tab value="library">
+        <v-tab value="library" id="settings-doc-tab-library">
           <v-icon start>mdi-bookshelf</v-icon>
           {{ t("settings.tabs.library") }}
         </v-tab>
 
-        <v-tab value="files">
+        <v-tab value="files" id="settings-doc-tab-files">
           <v-icon start>mdi-file-cog-outline</v-icon>
           {{ t("settings.tabs.files") }}
         </v-tab>
 
-        <v-tab value="video">
+        <v-tab value="video" id="settings-doc-tab-video">
           <v-icon start>mdi-video-outline</v-icon>
           {{ t("settings.tabs.video") }}
         </v-tab>
 
-        <v-tab value="database">
+        <v-tab value="database" id="settings-doc-tab-database">
           <v-icon start>mdi-database-outline</v-icon>
           {{ t("settings.tabs.database") }}
         </v-tab>
 
-        <v-tab value="about">
+        <v-tab value="about" id="settings-doc-tab-about">
           <v-icon start>mdi-information-variant</v-icon>
           {{ t("settings.tabs.about") }}
         </v-tab>
@@ -123,6 +123,10 @@
             <SettingsSection>
               <SettingsDataScraper/>
             </SettingsSection>
+
+            <SettingsSection>
+              <SettingsQuickTags/>
+            </SettingsSection>
           </SettingsList>
         </div>
 
@@ -203,6 +207,9 @@ const SettingsMediaTypes = defineAsyncComponent(() =>
 )
 const SettingsDataScraper = defineAsyncComponent(() =>
   import("@/components/settings/library/SettingsDataScraper.vue")
+)
+const SettingsQuickTags = defineAsyncComponent(() =>
+  import("@/components/settings/library/SettingsQuickTags.vue")
 )
 const SettingsVideoPreview = defineAsyncComponent(() =>
   import("@/components/settings/tools/SettingsVideoPreview.vue")
@@ -292,6 +299,8 @@ function applyRouteSettings() {
     tab.value = "files"
   } else if (section === "field_pinning") {
     tab.value = "library"
+  } else if (section === "video_preview") {
+    tab.value = "video"
   } else if (route.query.tab) {
     tab.value = resolveTab(String(route.query.tab))
   }

@@ -112,7 +112,8 @@
         "from": "models",
         "to": "models",
         "filter": [
-          "**/*"
+          "**/*",
+          "!**/clip-vit-base-patch32/**"
         ]
       }
     ],

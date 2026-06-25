@@ -122,12 +122,17 @@ export const docs = [
         id: 'settings.library',
         name: 'Library',
         icon: 'mdi-bookshelf',
-        selector: ['[href="/settings"]', '[href="#library"]'],
+        selector: ['[href="/settings"]', '#settings-doc-tab-library'],
         children: [
           { id: 'meta', name: 'Custom metadata', icon: 'mdi-shape-outline' },
           { id: 'media.types', name: 'Media types', icon: 'mdi-file-multiple-outline' },
           { id: 'meta.assign', name: 'Field pinning', icon: 'mdi-pin-outline' },
-          { id: 'sets.tools.quick_tags', name: 'Quick tags', icon: 'mdi-tag-plus-outline' },
+          {
+            id: 'sets.tools.quick_tags',
+            name: 'Quick tags',
+            icon: 'mdi-tag-plus-outline',
+            selector: ['[href="/settings"]', '#settings-quick-tags'],
+          },
           {
             id: 'data_scraper',
             name: 'Data scraper',
@@ -140,7 +145,7 @@ export const docs = [
         id: 'settings.files',
         name: 'Files',
         icon: 'mdi-file-cog-outline',
-        selector: ['[href="/settings"]', '[href="#files"]'],
+        selector: ['[href="/settings"]', '#settings-doc-tab-files'],
         children: [
           { id: 'sets.tools.watched_folders', name: 'Watched folders', icon: 'mdi-folder-eye-outline' },
           { id: 'sets.tools.bulk_paths', name: 'Bulk path editing', icon: 'mdi-find-replace' },
@@ -158,7 +163,7 @@ export const docs = [
         id: 'settings.video',
         name: 'Video',
         icon: 'mdi-video-outline',
-        selector: ['[href="/settings"]', '[href="#video"]'],
+        selector: ['[href="/settings"]', '#settings-doc-tab-video'],
         children: [
           { id: 'player.formats', name: 'Player', icon: 'mdi-play-circle' },
           {
@@ -173,7 +178,7 @@ export const docs = [
         id: 'database',
         name: 'Database',
         icon: 'mdi-database-outline',
-        selector: ['[href*="#database"]', '[href="/settings"]'],
+        selector: ['[href="/settings"]', '#settings-doc-tab-database'],
         children: [
           {
             id: 'database.add',

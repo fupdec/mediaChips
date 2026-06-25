@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-4">
+  <div id="settings-quick-tags" class="mx-4">
     <SettingsCategoryDivider
       :title="t('settings_labels.library.quick_tags')"
       icon="tag-plus-outline"

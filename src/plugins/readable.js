@@ -278,7 +278,7 @@ export default {
       validateName(str) {
         str = str.trim().toLowerCase()
         if (str.length === 0) return 'Name is required'
-        if (str.length > 50) return 'Name must be less than 99 characters'
+        if (str.length > 50) return 'Name must be 50 characters or fewer'
         if (/[\\\/\%"?<>{}\[\]]/g.test(str))
           return 'Name must not content \\/\%\"<>{}\[\]'
         return true

@@ -175,7 +175,7 @@ async function apply() {
   try {
     await axios({
       method: 'put',
-      url: `${apiUrl.value}/api/Mediatype/${props.media.id}`,
+      url: `${apiUrl.value}/api/MediaType/${props.media.id}`,
       data: {
         name: name.value,
         nameSingular: name.value, // или singular если он у вас есть

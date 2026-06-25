@@ -24,7 +24,7 @@
             @update:model-value="updateSettings"
             :items="meta_tags"
             item-value="id"
-            item-text="name"
+            item-title="name"
             :label="t('settings_labels.tools.performers_meta')"
             :placeholder="t('settings_labels.tools.select_meta')"
             return-object
@@ -46,7 +46,6 @@
         </v-col>
         <v-col cols="12" sm="6">
           <v-btn
-            @click="dialogsStore.scraperConfig.show = true"
             :disabled="!selected_meta"
             class="mb-4"
             color="primary"
@@ -69,7 +68,6 @@ import {ref, computed, onMounted, defineAsyncComponent} from "vue"
 import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
-import {useDialogsStore} from "@/stores/dialogs"
 import axios from "axios"
 import _ from "lodash"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
@@ -83,7 +81,6 @@ const DialogScraperConfig = defineAsyncComponent(() =>
 
 const store = useAppStore()
 const settingsStore = useSettingsStore()
-const dialogsStore = useDialogsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 

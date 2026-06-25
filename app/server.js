@@ -11,6 +11,7 @@ const {
   SequelizeStorage
 } = require('umzug');
 const package_json = require('../package.json');
+const {normalizeApiPath} = require('../api/utils/normalizeApiPath');
 
 // ==================== FIXED PORT 12321 ====================
 const FIXED_PORT = 12321;
@@ -70,6 +71,16 @@ app.use(express.json({
 }));
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api/')) {
+    const normalized = normalizeApiPath(req.url)
+    if (normalized !== req.url) {
+      req.url = normalized
+    }
+  }
+  next()
+})
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -406,6 +417,7 @@ const routeFiles = [
   "Setting.routes",
   "Tab.routes",
   "Task.routes",
+  "BulkMeta.routes",
   "tasks/TasksBackups.routes",
   "ValuesInTag.routes",
   "ValuesInMedia.routes",

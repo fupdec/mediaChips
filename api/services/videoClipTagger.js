@@ -19,7 +19,12 @@ let classifier = null
 let loadingPromise = null
 let lastError = null
 
-function getModelsRoot(db) {
+function getWritableModelCacheDir(db) {
+  const base = db?.path_databases || process.app_folder || path.join(__dirname, '../../app_storage')
+  return path.join(base, 'models')
+}
+
+function getBundledModelsDir() {
   if (process.resourcesPath) {
     const bundled = path.join(process.resourcesPath, 'models')
     if (fs.existsSync(bundled)) return bundled
@@ -28,12 +33,11 @@ function getModelsRoot(db) {
   const projectModels = path.join(__dirname, '..', '..', 'models')
   if (fs.existsSync(projectModels)) return projectModels
 
-  const base = db?.path_databases || process.app_folder || path.join(__dirname, '../../app_storage')
-  return path.join(base, 'models')
+  return null
 }
 
 function getModelCacheDir(db) {
-  return getModelsRoot(db)
+  return getWritableModelCacheDir(db)
 }
 
 function hasDownloadedModel(db) {
@@ -61,14 +65,15 @@ async function loadModel(db) {
   if (loadingPromise) return loadingPromise
 
   loadingPromise = (async () => {
-    const cacheDir = getModelCacheDir(db)
+    const cacheDir = getWritableModelCacheDir(db)
+    const bundledDir = getBundledModelsDir()
     fs.mkdirSync(cacheDir, {recursive: true})
 
     try {
       const {pipeline, env} = require('@xenova/transformers')
 
       env.cacheDir = cacheDir
-      env.localModelPath = cacheDir
+      env.localModelPath = bundledDir || cacheDir
       env.allowRemoteModels = true
       env.allowLocalModels = true
 

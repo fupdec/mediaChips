@@ -111,12 +111,14 @@ import {ref, computed} from "vue"
 import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"
 import {useDialogsStore} from "@/stores/dialogs"
+import {useNotificationsStore} from "@/stores/notifications"
 import {useDisplay} from "vuetify"
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
 
 const store = useAppStore()
 const dialogsStore = useDialogsStore()
+const notificationsStore = useNotificationsStore()
 const {xs, xl} = useDisplay()
 const {t} = useI18n()
 
@@ -149,6 +151,11 @@ const searchMedia = async () => {
       i.path.includes(query.value)
     )
   } catch (e) {
+    console.error(e)
+    notificationsStore.setNotification({
+      type: "error",
+      text: t("settings_labels.tools.search_paths_failed"),
+    })
   }
 }
 

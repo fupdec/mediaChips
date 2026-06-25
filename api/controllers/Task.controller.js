@@ -21,6 +21,7 @@ const {matchPathToTags} = require('../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../services/tagSuggester')
 const videoClipTagger = require('../services/videoClipTagger')
 const embeddingModel = require('../services/embeddingModel')
+const {getAppConfigPath} = require('../utils/appConfigPath')
 const {isVideoMediaType, isImageMediaType, isAudioMediaType} = require('../utils/mediaType')
 const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
 const {computeContentHashForPath, fileExists, verifyContentHashMatch, resolveExistingPath} = require('../services/contentHash')
@@ -1283,9 +1284,13 @@ module.exports = function (db) {
   };
 
   const getConfig = async (req, res) => {
-    const configPath = path.join(process.app_folder, '/config.json')
-    const config_json = require(configPath);
-    res.status(200).send(JSON.stringify(config_json))
+    try {
+      const configPath = getAppConfigPath()
+      const config_json = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+      res.status(200).json(config_json)
+    } catch (error) {
+      res.status(500).json({message: error.message || 'Failed to read config'})
+    }
   };
 
   const getMostPopularWordsFromMedia = async (req, res) => {
