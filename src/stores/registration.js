@@ -9,6 +9,16 @@ const LICENSE_API_BASE_URL = import.meta.env.VITE_LICENSE_API_URL || 'https://me
 
 const MACHINE_ID_PATHS = ['/api/getMachineId', '/api/Task/getMachineId']
 
+function isValidMachineId(value) {
+  if (typeof value !== 'string') return false
+
+  const id = value.trim()
+  if (id.length < 16 || id.length > 128) return false
+  if (/[<]/.test(id)) return false
+
+  return /^[a-f0-9-]+$/i.test(id)
+}
+
 function calculateActivations(data) {
   const fingerprints = [data.fingerprint_1, data.fingerprint_2, data.fingerprint_3]
   let count = 0
@@ -38,10 +48,6 @@ function collectMachineIdApiBases() {
   const appStore = useAppStore()
   const bases = new Set()
 
-  if (typeof window !== 'undefined' && ['http:', 'https:'].includes(window.location.protocol)) {
-    bases.add(window.location.origin.replace(/\/$/, ''))
-  }
-
   const resolved = resolveApiBaseUrl(
     appStore.config || {},
     appStore.localhost ? {url: appStore.localhost} : null,
@@ -62,7 +68,7 @@ async function fetchMachineIdViaElectron() {
 
   try {
     const id = await window.electronAPI.invoke('get-machine-id')
-    return typeof id === 'string' && id.length > 0 ? id : null
+    return isValidMachineId(id) ? id.trim() : null
   } catch (error) {
     console.warn('Failed to fetch machine id via Electron IPC:', error.message)
     return null
@@ -77,8 +83,8 @@ async function fetchMachineIdViaHttp() {
     for (const machineIdPath of MACHINE_ID_PATHS) {
       try {
         const response = await axios.get(`${base}${machineIdPath}`)
-        if (typeof response.data === 'string' && response.data.length > 0) {
-          return response.data
+        if (isValidMachineId(response.data)) {
+          return response.data.trim()
         }
       } catch (error) {
         if (error.response?.status !== 404) {
