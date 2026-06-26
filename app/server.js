@@ -870,9 +870,7 @@ router.get('/api/video/:id', (req, res) => {
 
 // ==================== STATIC FILES ====================
 const src = path.join(__dirname, '../dist');
-app.use(express.static(src));
-
-app.use(history({
+const spaHistory = history({
   disableDotRule: true,
   verbose: false,
   rewrites: [
@@ -889,7 +887,12 @@ app.use(history({
       }
     }
   ]
-}));
+});
+
+// Static first: serve built assets (/assets/*.js, etc.) as files.
+// History fallback after: deep links like /media have no matching file and get index.html.
+app.use(express.static(src));
+app.use(spaHistory);
 
 // ==================== WEB SOCKETS ====================
 try {

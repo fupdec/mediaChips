@@ -17,6 +17,12 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:12321',
+        changeOrigin: true,
+      },
+    },
 
     // Middleware для обработки некорректных URL
     middleware: (req, res, next) => {
