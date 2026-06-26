@@ -744,7 +744,9 @@ const changeSpeed = (e) => {
 
 const addMark = () => {
   if (dialogsStore.markAdding.show) {
-    dialogsStore.markAdding.show = false
+    if (!dialogsStore.markAdding.submitting) {
+      dialogsStore.closeMarkAdding()
+    }
   } else {
     emit("addMark")
   }

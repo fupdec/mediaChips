@@ -2,201 +2,211 @@
   <v-dialog
     v-model="markAdding.show"
     :attach="playerStore.fullscreen ? '#player' : false"
-    content-class="dialog-overflow-visible dialog-position-start"
+    content-class="dialog-overflow-visible dialog-position-start mark-adding-dialog"
     hide-overlay
-    width="500"
+    width="520"
     scrollable
     persistent
     no-click-animation
     :scrim="false"
+    @keydown.enter.prevent="submitIfReady"
   >
-    <v-card>
+    <v-card class="mark-adding-card" rounded="xl">
       <DialogHeader
-        @close="markAdding.show = false"
+        @close="close"
         :header="t('player.mark_dialog.adding_marker')"
+        :subheader="positionLabel"
+        :icon="selectedTypeIcon"
         :buttons="buttons"
         closable
       />
 
-      <v-card-text class="pa-2 pa-sm-4 mark-adding">
-        <v-row>
-          <v-col cols="12"
-            md="4">
-            <v-select
-              v-model="markAdding.type"
-              @update:model-value="changeType"
-              :items="mark_types"
-              :label="t('player.mark_dialog.mark_type')"
-              :menu-props="{attach:'.mark-adding'}"
+      <v-card-text class="mark-adding pa-3 pa-sm-4">
+        <section class="mark-adding__section">
+          <div class="mark-adding__section-label">{{ t('player.mark_dialog.mark_type') }}</div>
+          <v-chip-group
+            v-model="markAdding.type"
+            @update:model-value="changeType"
+            mandatory
+            column
+            class="mark-adding__types"
+          >
+            <v-chip
+              v-for="item in mark_types"
+              :key="item.value"
+              :value="item.value"
+              filter
+              variant="tonal"
+              :color="markAdding.type == item.value ? 'primary' : undefined"
             >
-              <template v-slot:selection="{ item }">
-                <v-icon size="16"
-                  class="mr-1">
-                  mdi-{{ item.raw.icon }}
-                </v-icon>
-                <span class="text-body-2">{{ getMarkTypeText(item.raw) }}</span>
-              </template>
+              <v-icon start size="small">mdi-{{ item.icon }}</v-icon>
+              {{ getMarkTypeText(item) }}
+            </v-chip>
+          </v-chip-group>
+        </section>
 
-              <template v-slot:item="{ props, item }">
-                <v-list-item
-                  v-bind="props"
-                  :prepend-icon="'mdi-'+item.raw.icon"
-                  :title="getMarkTypeText(item.raw)"
-                  density="compact"
-                ></v-list-item>
-              </template>
-            </v-select>
-          </v-col>
-          <v-col cols="12"
-            md="8">
-            <MetaInputArray
-              v-if="is_meta"
-              :key="markAdding.meta.id"
-              @update:model-value="setVal"
-              :model-value="val"
-              :meta-id="markAdding.meta.id"
-              :multiple="false"
-              :autofocus="true"
-              :return-object="false"
-              :menu-props="{attach:'.mark-adding',contentClass: 'custom-list'}"
-              :attach="playerStore.fullscreen ? '.mark-adding' : false"
-              :label="t('player.mark_dialog.selected_tag')"
+        <section v-if="is_bookmark" class="mark-adding__section">
+          <v-form ref="form" v-model="valid">
+            <v-textarea
+              v-model="text"
+              :rules="[(v) => !!v?.trim() || t('validation.value_required')]"
+              :label="t('common.text')"
+              rows="1"
+              required
+              auto-grow
+              autofocus
+              variant="outlined"
+              rounded="xl"
+              hide-details="auto"
             />
-          </v-col>
-        </v-row>
+          </v-form>
+        </section>
 
-        <v-form v-if="is_bookmark"
-          ref="form"
-          v-model="valid"
-          class="mb-4">
-          <v-textarea
-            v-model="text"
-            :rules="[(v) => !!v || t('validation.value_required')]"
-            :label="t('common.text')"
-            rows="1"
-            required
-            auto-grow
-            autofocus
-            filled
+        <section v-else-if="is_meta" class="mark-adding__section">
+          <MetaInputArray
+            v-if="markAdding.meta?.id"
+            :key="markAdding.meta.id"
+            @update:model-value="setVal"
+            :model-value="val"
+            :meta-id="markAdding.meta.id"
+            :multiple="false"
+            :autofocus="!is_bookmark"
+            :return-object="false"
+            :menu-props="{attach:'.mark-adding', contentClass: 'custom-list'}"
+            :attach="playerStore.fullscreen ? '.mark-adding' : false"
+            :label="t('player.mark_dialog.selected_tag')"
           />
-        </v-form>
+          <v-alert
+            v-else
+            type="warning"
+            variant="tonal"
+            density="compact"
+            rounded="xl"
+            class="text-caption"
+          >
+            {{ t('player.mark_dialog.meta_not_loaded') }}
+          </v-alert>
+        </section>
 
-        <!--        <div v-if="markAdding.is_end_time_active"-->
-        <!--          class="mb-4">-->
-        <!--          <v-chip variant="outlined"-->
-        <!--            v-text="msToTime(markAdding.time)"/>-->
-        <!--          <span class="mx-4">—</span>-->
-        <!--          <v-chip variant="outlined"-->
-        <!--            v-text="msToTime(markAdding.end)"/>-->
-        <!--        </div>-->
+        <section class="mark-adding__section">
+          <div class="mark-adding__time-row">
+            <div class="mark-adding__time-head">
+              <span class="mark-adding__field-label">{{ t('player.mark_dialog.start_time') }}</span>
+              <v-chip size="x-small" variant="tonal" class="mark-adding__readable">
+                {{ formatTime(markAdding.time) }}
+              </v-chip>
+            </div>
 
-        <v-card class="rounded-xl mb-4"
-          variant="tonal"
-          color="primary">
-
-          <v-card-text
-            class="d-flex align-center justify-space-between py-2 px-3">
-            <div class="text-caption mr-4">{{ t('player.mark_dialog.start_time') }}</div>
-
-            <div class="d-flex align-center">
+            <div class="mark-adding__time-controls">
               <v-number-input
-                v-model=" markAdding.time"
-                @update:model-value="changeEndTime"
+                v-model="markAdding.time"
+                @update:model-value="onStartTimeChange"
                 :min="0"
-                :max="player.duration"
+                :max="playerDuration"
                 :step="1"
                 density="compact"
                 variant="outlined"
-                width="150"
                 rounded="xl"
                 hide-details
-              ></v-number-input>
-
+                class="mark-adding__number-input"
+              />
               <v-btn
                 @click="getCurrentTime('time')"
-                size="x-small"
-                variant="outlined"
-                class="ml-2"
+                size="small"
+                variant="tonal"
                 :title="t('player.mark_dialog.sync_with_player')"
-                icon>
+                icon
+              >
                 <v-icon>mdi-sync</v-icon>
               </v-btn>
               <v-btn
                 @click="jumpTo(markAdding.time)"
-                size="x-small"
-                class="ml-2"
-                variant="outlined"
+                size="small"
+                variant="tonal"
                 :title="t('player.mark_dialog.jump_to_time')"
-                icon>
+                icon
+              >
                 <v-icon>mdi-redo</v-icon>
               </v-btn>
             </div>
+          </div>
 
-            <!--            <v-chip v-if="!markAdding.is_end_time_active"-->
-            <!--              variant="outlined"-->
-            <!--              size="small"-->
-            <!--              v-text="msToTime(markAdding.time)"/>-->
-          </v-card-text>
-        </v-card>
-
-        <v-card class="rounded-xl"
-          :variant="markAdding.is_end_time_active ? 'tonal' : 'text'"
-          color="primary">
-
-          <v-card-text :class="{'pa-0':!markAdding.is_end_time_active}"
-            class="d-flex align-center justify-space-between py-2 px-3">
-
-            <div class="d-flex align-center">
-              <div class="text-caption mr-4">{{ t('player.mark_dialog.end_time') }}</div>
-              <v-switch v-model="markAdding.is_end_time_active"
-                @update:model-value="changeEndTime"
+          <div class="mark-adding__time-row mark-adding__time-row--end">
+            <div class="mark-adding__time-head">
+              <span class="mark-adding__field-label">{{ t('player.mark_dialog.end_time') }}</span>
+              <v-switch
+                v-model="markAdding.is_end_time_active"
+                @update:model-value="toggleEndTime"
                 density="compact"
                 hide-details
                 inset
-              ></v-switch>
+                color="primary"
+                class="mark-adding__switch"
+              />
             </div>
 
-            <div v-if="markAdding.is_end_time_active"
-              class="d-flex align-center justify-center">
+            <div v-if="markAdding.is_end_time_active" class="mark-adding__time-controls">
               <v-number-input
                 v-model="markAdding.end"
-                :min="dialogsStore.markAdding.start"
-                :max="player.duration"
+                @update:model-value="onEndTimeChange"
+                :min="markAdding.time || 0"
+                :max="playerDuration"
                 :step="1"
                 density="compact"
                 variant="outlined"
                 rounded="xl"
-                width="150"
                 hide-details
-              ></v-number-input>
-
+                class="mark-adding__number-input"
+              />
               <v-btn
                 @click="getCurrentTime('end')"
-                size="x-small"
-                class="ml-2"
-                variant="outlined"
-                icon>
+                size="small"
+                variant="tonal"
+                :title="t('player.mark_dialog.sync_with_player')"
+                icon
+              >
                 <v-icon>mdi-sync</v-icon>
               </v-btn>
               <v-btn
                 @click="jumpTo(markAdding.end)"
-                size="x-small"
-                class="ml-2"
-                variant="outlined"
-                icon>
+                size="small"
+                variant="tonal"
+                :title="t('player.mark_dialog.jump_to_time')"
+                icon
+              >
                 <v-icon>mdi-redo</v-icon>
               </v-btn>
             </div>
-          </v-card-text>
-        </v-card>
+          </div>
 
-        <v-alert v-if="markAdding.is_end_time_active && markAdding.end - markAdding.time < 0"
+          <div
+            v-if="markAdding.is_end_time_active && segmentDuration != null"
+            class="mark-adding__duration text-caption text-medium-emphasis"
+          >
+            {{ t('player.mark_dialog.segment_duration', {duration: formatTime(segmentDuration)}) }}
+          </div>
+
+          <v-alert
+            v-if="hasInvalidRange"
+            type="error"
+            variant="tonal"
+            density="compact"
+            class="mt-3 text-caption"
+            rounded="xl"
+          >
+            {{ t('player.mark_dialog.end_time_must_be_greater') }}
+          </v-alert>
+        </section>
+
+        <v-alert
+          v-if="validationError"
           type="error"
           variant="tonal"
           density="compact"
-          class="mt-4 text-caption"
+          class="mt-1 text-caption"
           rounded="xl"
-        > {{ t('player.mark_dialog.end_time_must_be_greater') }}
+        >
+          {{ validationError }}
         </v-alert>
       </v-card-text>
     </v-card>
@@ -204,7 +214,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
@@ -212,158 +222,312 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import MetaInputArray from '@/components/meta/input/MetaInputArray.vue'
+import {
+  BASE_MARK_TYPES,
+  buildMarkTypes,
+  findAssignedMeta,
+  isMetaMarkType,
+  normalizeMarkTime,
+} from '@/utils/markAdding'
 
-const props = defineProps({
-  dialog: Boolean,
-  meta: Object,
-})
+const emit = defineEmits(['addMark'])
 
-const emit = defineEmits(['togglePause', 'addMark'])
-
-// Stores
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
 const dialogsStore = useDialogsStore()
 const itemsStore = useItemsStore()
 const {t} = useI18n()
 
-// Refs
 const form = ref(null)
 const val = ref(null)
-const text = ref(null)
+const text = ref('')
 const valid = ref(false)
-const buttons = ref([])
+const validationError = ref(null)
+const mark_types = ref([...BASE_MARK_TYPES])
 
-const mark_types = ref([
-  {
-    value: 'favorite',
-    textKey: 'meta.default_names.favorite',
-    icon: 'heart',
-  },
-  {
-    value: 'bookmark',
-    textKey: 'meta.default_names.bookmark',
-    icon: 'bookmark',
-  },
-])
-
-// Computed
 const player = computed(() => playerStore.player)
 const markAdding = computed(() => dialogsStore.markAdding)
+const playerDuration = computed(() => Math.floor(playerStore.duration || 0))
 
-const is_bookmark = computed(() => {
-  return markAdding.value.type === 'bookmark'
+const is_bookmark = computed(() => markAdding.value.type === 'bookmark')
+const is_meta = computed(() => isMetaMarkType(markAdding.value.type))
+
+const hasInvalidRange = computed(() => {
+  if (!markAdding.value.is_end_time_active) return false
+  return (markAdding.value.end ?? 0) - (markAdding.value.time ?? 0) < 0
 })
 
-const is_meta = computed(() => {
-  return typeof markAdding.value.type === 'number'
+const segmentDuration = computed(() => {
+  if (!markAdding.value.is_end_time_active) return null
+  const duration = (markAdding.value.end ?? 0) - (markAdding.value.time ?? 0)
+  return duration > 0 ? duration : null
 })
 
-// Methods
-const initButtons = () => {
-  buttons.value = [{
-    icon: "plus",
-    text: t('common.add'),
-    color: "success",
-    outlined: false,
-    action: add,
-  }]
-}
+const canSubmit = computed(() => {
+  if (markAdding.value.submitting || hasInvalidRange.value) return false
+  if (is_bookmark.value) return Boolean(text.value?.trim())
+  if (is_meta.value) return Boolean(val.value)
+  return true
+})
+
+const selectedTypeIcon = computed(() => {
+  const current = mark_types.value.find((item) => item.value == markAdding.value.type)
+  return current?.icon || 'tooltip-plus'
+})
+
+const positionLabel = computed(() => t('player.mark_dialog.at_position', {
+  time: formatTime(markAdding.value.time ?? playerStore.currentTime ?? 0),
+}))
+
+const buttons = computed(() => [{
+  icon: 'plus',
+  text: markAdding.value.submitting
+    ? t('player.mark_dialog.adding')
+    : t('common.add'),
+  color: 'success',
+  outlined: false,
+  disabled: !canSubmit.value,
+  action: add,
+}])
+
+const formatTime = (seconds) => $readable.getReadableDuration(seconds || 0)
 
 const initMarkTypes = () => {
-  let pinned = itemsStore.assigned || []
-  pinned = pinned.filter((i) => i.meta?.marks)
-  pinned = pinned.map((i) => ({
-    value: i.meta.id,
-    text: i.meta.name,
-    icon: i.meta.icon,
-  }))
-
-  mark_types.value = [...mark_types.value, ...pinned]
+  mark_types.value = buildMarkTypes(itemsStore.assigned || [])
 }
 
 const getMarkTypeText = (item) => item.textKey ? t(item.textKey) : item.text
 
+const applyTypeColor = (type) => {
+  const preset = BASE_MARK_TYPES.find((item) => item.value === type)
+  if (preset) {
+    dialogsStore.markAdding.color = preset.color
+    return
+  }
+
+  const found = findAssignedMeta(itemsStore.assigned, type)
+  dialogsStore.markAdding.color = found?.meta?.color ? '#fff' : '#fff'
+}
+
 const changeType = (type) => {
-  getSliderColor()
-  if (typeof type === 'number') {
-    const found = (itemsStore.assigned || []).find(i => i.metaId === type)
-    if (found) {
-      dialogsStore.markAdding.meta = found.meta
+  validationError.value = null
+  applyTypeColor(type)
+
+  if (!isMetaMarkType(type)) {
+    dialogsStore.markAdding.meta = {}
+    val.value = null
+    return
+  }
+
+  const found = findAssignedMeta(itemsStore.assigned, type)
+  dialogsStore.markAdding.meta = found?.meta || {}
+  val.value = null
+}
+
+const onStartTimeChange = (time) => {
+  dialogsStore.markAdding.time = normalizeMarkTime(time)
+  if (
+    markAdding.value.is_end_time_active &&
+    (markAdding.value.end ?? 0) < dialogsStore.markAdding.time
+  ) {
+    dialogsStore.markAdding.end = dialogsStore.markAdding.time
+  }
+}
+
+const onEndTimeChange = (time) => {
+  dialogsStore.markAdding.end = normalizeMarkTime(time, markAdding.value.time || 0)
+}
+
+const toggleEndTime = (active) => {
+  if (!active) {
+    dialogsStore.markAdding.end = null
+    return
+  }
+
+  const start = normalizeMarkTime(markAdding.value.time)
+  const defaultEnd = Math.min(start + 30, playerDuration.value || start + 30)
+  dialogsStore.markAdding.end = Math.max(start, defaultEnd)
+}
+
+const getCurrentTime = (field) => {
+  const current = normalizeMarkTime(player.value?.currentTime ?? playerStore.currentTime ?? 0)
+  if (field === 'time') {
+    dialogsStore.markAdding.time = current
+    if (markAdding.value.is_end_time_active && (markAdding.value.end ?? 0) < current) {
+      dialogsStore.markAdding.end = current
     }
-  }
-}
-
-const getSliderColor = () => {
-  const type = dialogsStore.markAdding.type
-  if (type == 'favorite') {
-    dialogsStore.markAdding.color = '#e91e63'
-  } else if (type == 'bookmark') {
-    dialogsStore.markAdding.color = '#f44336'
   } else {
-    dialogsStore.markAdding.color = '#fff'
-  }
-}
-
-const changeEndTime = () => {
-  if (dialogsStore.markAdding.end < dialogsStore.markAdding.time) {
-    dialogsStore.markAdding.end = markAdding.value.time
-  }
-}
-
-const getCurrentTime = (type) => {
-  if (type === 'time') {
-    dialogsStore.markAdding.time = player.value.currentTime
-  } else if (type === 'end') {
-    dialogsStore.markAdding.end = player.value.currentTime
+    dialogsStore.markAdding.end = Math.max(current, normalizeMarkTime(markAdding.value.time))
   }
 }
 
 const jumpTo = (seconds) => {
-  let time = seconds || 0
   if (playerStore.player) {
-    playerStore.player.currentTime = time
+    playerStore.player.currentTime = normalizeMarkTime(seconds)
   }
 }
 
 const setVal = (newVal) => {
-  val.value = newVal
-  const tag = appStore.getTagById(newVal)
-  dialogsStore.markAdding.color = tag?.color || '#fff'
+  val.value = Array.isArray(newVal) ? newVal[0] : newVal
+  const tag = appStore.getTagById(val.value)
+  if (tag?.color) {
+    dialogsStore.markAdding.color = tag.color
+  }
+}
+
+const resetForm = () => {
+  val.value = null
+  text.value = ''
+  valid.value = false
+  validationError.value = null
+  form.value?.resetValidation?.()
+}
+
+const close = () => {
+  if (markAdding.value.submitting) return
+  dialogsStore.closeMarkAdding()
 }
 
 const add = () => {
-  if (is_bookmark.value) {
-    if (!form.value) return
-    form.value.validate()
-    if (!valid.value) return
-  } else if (is_meta.value && !val.value) return
+  validationError.value = null
 
-  // если время конца отметки меньше время начала
-  if (markAdding.value.is_end_time_active) {
-    if (markAdding.value.end - markAdding.value.time < 0) return
+  if (!canSubmit.value) {
+    if (is_meta.value && !val.value) {
+      validationError.value = t('player.mark_dialog.select_tag_required')
+    }
+    return
+  }
+
+  if (is_bookmark.value) {
+    form.value?.validate()
+    if (!valid.value || !text.value?.trim()) return
   }
 
   let data = {}
-  if (markAdding.value.is_end_time_active === false) {
+  if (!markAdding.value.is_end_time_active) {
     dialogsStore.markAdding.end = null
   }
 
   if (is_bookmark.value) {
-    data.text = text.value
+    data.text = text.value.trim()
   } else if (is_meta.value) {
-    dialogsStore.markAdding.type = 'meta'
     data.tagId = val.value
   }
 
-  emit("addMark", data)
-  dialogsStore.markAdding.show = false
+  emit('addMark', data)
 }
 
-// Lifecycle
-onMounted(() => {
-  initButtons()
+const submitIfReady = () => {
+  if (canSubmit.value) add()
+}
+
+watch(() => itemsStore.assigned, () => {
   initMarkTypes()
-  getSliderColor()
-})
+  if (isMetaMarkType(markAdding.value.type)) {
+    changeType(markAdding.value.type)
+  }
+}, {deep: true})
+
+watch(() => markAdding.value.show, (show) => {
+  if (!show) {
+    resetForm()
+    return
+  }
+
+  initMarkTypes()
+  resetForm()
+  applyTypeColor(markAdding.value.type)
+
+  if (isMetaMarkType(markAdding.value.type)) {
+    changeType(markAdding.value.type)
+  }
+
+  dialogsStore.markAdding.time = normalizeMarkTime(
+    markAdding.value.time ?? playerStore.currentTime ?? 0
+  )
+}, {immediate: true})
 </script>
+
+<style scoped lang="scss">
+.mark-adding-card {
+  overflow: visible;
+}
+
+.mark-adding__section + .mark-adding__section {
+  margin-top: 20px;
+}
+
+.mark-adding__section-label {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: rgba(var(--v-theme-on-surface), 0.7);
+  margin-bottom: 10px;
+}
+
+.mark-adding__field-label {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(var(--v-theme-on-surface), 0.8);
+  white-space: nowrap;
+}
+
+.mark-adding__types {
+  :deep(.v-chip) {
+    margin: 2px;
+  }
+}
+
+.mark-adding__time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+
+  & + & {
+    margin-top: 12px;
+  }
+}
+
+.mark-adding__time-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 40px;
+}
+
+.mark-adding__time-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.mark-adding__switch {
+  flex: 0 0 auto;
+}
+
+.mark-adding__number-input {
+  width: 132px;
+  max-width: 132px;
+
+  :deep(.v-field) {
+    align-items: center;
+  }
+}
+
+.mark-adding__readable {
+  font-variant-numeric: tabular-nums;
+}
+
+.mark-adding__duration {
+  margin-top: 12px;
+  padding-left: 0;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+</style>
