@@ -151,6 +151,7 @@ import DialogSmartPlaylistEdit from "@/components/dialogs/DialogSmartPlaylistEdi
 import PlaylistCard from "@/components/playlists/PlaylistCard.vue"
 import DynamicPlaylistRow from "@/components/playlists/DynamicPlaylistRow.vue"
 import {loadPlaylistThumbs} from '@/utils/playlistThumbs'
+import {openSeparatePlayer} from '@/utils/playerWindow'
 import {useEventBus} from '@/utils/eventBus'
 
 const appStore = useAppStore()
@@ -214,8 +215,7 @@ const applyFullPlaylist = async (videos) => {
 
   if (!firstPlayable) return false
 
-  const isSeparatePlayer = settingsStore.open_player_in_separate_window == '1'
-    && window.electronAPI?.send
+  const useSeparatePlayer = settingsStore.open_player_in_separate_window == '1'
 
   if (playerStore.active) {
     playerStore.setPlaylistItems(videos, {host: apiUrl.value})
@@ -236,13 +236,14 @@ const applyFullPlaylist = async (videos) => {
     return true
   }
 
-  if (isSeparatePlayer) {
-    window.electronAPI.send('open-player', {
+  if (useSeparatePlayer) {
+    if (openSeparatePlayer({
       video: firstPlayable,
       videos,
       time: 0,
-    })
-    return true
+    })) {
+      return true
+    }
   }
 
   return false

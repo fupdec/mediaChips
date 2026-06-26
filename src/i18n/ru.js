@@ -592,7 +592,7 @@ const ru = {
       open_system_player: 'Открывать видео в системном плеере',
       open_system_player_hint: 'Встроенный плеер интегрирован в приложение и имеет собственные функции',
       open_separate_window: 'Открывать плеер в отдельном окне',
-      open_separate_window_hint: 'Не работает при запуске из браузера',
+      open_separate_window_hint: 'В браузере открывает отдельное всплывающее окно',
       restore_playback_time: 'Восстанавливать время воспроизведения',
       restore_playback_time_hint: 'Начинать просмотр видео с предыдущей позиции',
     },

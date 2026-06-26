@@ -592,7 +592,7 @@ const cn = {
       open_system_player: '在系统播放器中打开视频',
       open_system_player_hint: '内置播放器已集成到应用中，并具有自己的功能',
       open_separate_window: '在单独窗口中打开播放器',
-      open_separate_window_hint: '从浏览器启动时不起作用',
+      open_separate_window_hint: '在浏览器中打开单独的弹出窗口',
       restore_playback_time: '恢复播放时间',
       restore_playback_time_hint: '从上次位置开始观看视频',
     },

@@ -592,7 +592,7 @@ const en = {
       open_system_player: 'Open video in system player',
       open_system_player_hint: 'The built-in player is integrated into the application and has its own functions',
       open_separate_window: 'Open player in separate window',
-      open_separate_window_hint: 'Doesn’t work when launched from a browser',
+      open_separate_window_hint: 'Opens a separate popup window in the browser',
       restore_playback_time: 'Restore playback time',
       restore_playback_time_hint: 'Start watching the video from the previous position',
     },

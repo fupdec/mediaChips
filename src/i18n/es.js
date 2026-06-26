@@ -592,7 +592,7 @@ const es = {
       open_system_player: 'Abrir video en el reproductor del sistema',
       open_system_player_hint: 'El reproductor integrado está integrado en la aplicación y tiene sus propias funciones',
       open_separate_window: 'Abrir reproductor en una ventana separada',
-      open_separate_window_hint: 'No funciona cuando se inicia desde un navegador',
+      open_separate_window_hint: 'Abre una ventana emergente separada en el navegador',
       restore_playback_time: 'Restaurar tiempo de reproducción',
       restore_playback_time_hint: 'Comenzar a ver el video desde la posición anterior',
     },

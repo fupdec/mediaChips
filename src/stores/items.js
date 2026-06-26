@@ -4,6 +4,7 @@ import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import {getDuplicatesGroupKey} from '@/utils/mediaSortFilter'
+import {openSeparatePlayer} from '@/utils/playerWindow'
 import axios from "axios"
 import _ from "lodash"
 
@@ -271,11 +272,13 @@ export const useItemsStore = defineStore('items', {
         time: time || 0
       };
 
-      if (settingsStore.open_player_in_separate_window == '1' && window.electronAPI?.send) {
-        window.electronAPI.send("open-player", data);
-      } else {
-        eventBus.emit("playVideo", data);
+      if (settingsStore.open_player_in_separate_window == '1') {
+        if (openSeparatePlayer(data)) {
+          return true
+        }
       }
+
+      eventBus.emit("playVideo", data);
 
       return true
     },
