@@ -665,6 +665,8 @@
     align-items: center;
     justify-content: center;
     animation: go-full-screen 350ms forwards ease-out;
+    pointer-events: auto;
+    cursor: default;
     video {
       pointer-events: none;
       border-radius: 16px;

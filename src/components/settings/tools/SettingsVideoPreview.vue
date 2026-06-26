@@ -179,6 +179,16 @@
         rounded="xl">
         {{ $t('settings_labels.appearance.big_preview_delay_warning') }}
       </v-alert>
+
+      <v-alert
+        type="info"
+        variant="tonal"
+        class="text-caption mt-4"
+        rounded="xl"
+        density="compact"
+      >
+        {{ $t('settings_labels.appearance.big_preview_set_thumb_hint') }}
+      </v-alert>
     </div>
   </div>
 </template>

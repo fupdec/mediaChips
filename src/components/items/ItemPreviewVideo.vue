@@ -7,8 +7,9 @@
       v-ripple="bigPreview ? false : { class: `text-primary` }"
       :aspect-ratio="16 / 9"
       class="video-preview-container"
-      @blur="stopPlayingPreview"
-      @click="stopPlayingPreview"
+      @blur="handlePreviewBlur"
+      @click="handlePreviewClick"
+      @contextmenu="handlePreviewContextMenu"
       @mouseleave="handleMouseLeave"
       @mousemove="changePreviewTime"
       @mouseenter="handleMouseEnter"
@@ -61,19 +62,6 @@
           ERROR: format not supported
         </div>
       </div>
-
-      <v-btn
-        v-if="bigPreview && !playbackError"
-        @click.stop="togglePreviewMute"
-        class="preview-mute-btn"
-        :title="muted ? t('media.preview.unmute') : t('media.preview.mute')"
-        icon
-        variant="text"
-        color="white"
-        size="small"
-      >
-        <v-icon>{{ muted ? 'mdi-volume-off' : 'mdi-volume-high' }}</v-icon>
-      </v-btn>
 
       <!-- TIMELINE PREVIEW -->
       <div
@@ -179,6 +167,7 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useTasksStore} from '@/stores/tasks'
+import {useContextMenu} from '@/stores/contextMenu'
 import {useEventBus} from '@/utils/eventBus'
 import _ from 'lodash'
 import axios from "axios";
@@ -196,6 +185,7 @@ const store = useAppStore()
 const itemsStore = useItemsStore()
 const settingsStore = useSettingsStore()
 const tasksStore = useTasksStore()
+const contextMenuStore = useContextMenu()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
@@ -219,6 +209,10 @@ const bigPreview = ref(false)
 const bigPreviewAnimation = ref(false)
 const playbackError = ref(false)
 const isProcessingHover = ref(false) // Новый флаг для отслеживания обработки наведения
+const isSettingThumb = ref(false)
+const bigPreviewMenuActive = ref(false)
+const menuClosedByAction = ref(false)
+const previewPausedForMenu = ref(false)
 
 // computed
 const ITEMS = computed(() => itemsStore)
@@ -372,8 +366,127 @@ const togglePreviewMute = () => {
   $operable.setOption(nextValue, 'play_sound_on_video_preview')
 }
 
-const play = (inApp) => {
+const pausePreviewForMenu = () => {
+  const video = videoRef.value
+  if (!video || video.paused) {
+    previewPausedForMenu.value = false
+    return
+  }
+
+  video.pause()
+  previewPausedForMenu.value = true
+}
+
+const resumePreviewAfterMenu = () => {
+  if (!previewPausedForMenu.value || !bigPreview.value) {
+    previewPausedForMenu.value = false
+    return
+  }
+
+  const video = videoRef.value
+  previewPausedForMenu.value = false
+
+  if (!video || playbackError.value) return
+
+  video.play().catch((error) => {
+    console.error('Video playback error:', error)
+    playbackError.value = true
+  })
+}
+
+const shouldKeepBigPreviewOpen = () => {
+  return bigPreview.value && (contextMenuStore.show || bigPreviewMenuActive.value)
+}
+
+const handlePreviewClick = () => {
   stopPlayingPreview()
+}
+
+const handlePreviewBlur = () => {
+  stopPlayingPreview()
+}
+
+const setAsThumbFromPreview = async () => {
+  if (!props.isFileExists || isSettingThumb.value) return
+
+  const video = videoRef.value
+  if (!video) return
+
+  const currentTime = Number.isFinite(video.currentTime)
+    ? video.currentTime
+    : progress.value
+
+  const imgPath = path.join(
+    store.mediaPath || '',
+    'videos/thumbs',
+    `${props.media.id}.jpg`,
+  )
+
+  const time = new Date(currentTime * 1000).toISOString().substr(11, 8)
+
+  isSettingThumb.value = true
+  try {
+    await $operable.createThumb(time, props.media.path, imgPath, 320, true)
+    itemsStore.refreshThumb(props.media.id)
+    eventBus.emit('getItemsFromDb', {ids: [props.media.id], type: 'media'})
+    $operable.setNotification({
+      title: t('player.video_thumb_updated'),
+      text: props.media.path,
+      icon: 'image',
+      type: 'success',
+    })
+  } catch (e) {
+    console.log(e)
+    $operable.setNotification({
+      title: t('player.video_thumb_not_updated'),
+      text: String(e),
+      icon: 'image',
+      type: 'error',
+    })
+  } finally {
+    isSettingThumb.value = false
+  }
+}
+
+const handlePreviewContextMenu = (e) => {
+  if (!bigPreview.value || !props.isFileExists || playbackError.value) return
+
+  e.preventDefault()
+  e.stopPropagation()
+
+  bigPreviewMenuActive.value = true
+  pausePreviewForMenu()
+
+  contextMenuStore.showContextMenu({
+    x: e.clientX,
+    y: e.clientY,
+    content: [
+      {
+        name: muted.value ? t('media.preview.unmute') : t('media.preview.mute'),
+        type: 'item',
+        icon: muted.value ? 'volume-off' : 'volume-high',
+        action: () => {
+          menuClosedByAction.value = true
+          togglePreviewMute()
+        },
+      },
+      {type: 'divider'},
+      {
+        name: t('player.controls.set_frame_as_thumb'),
+        type: 'item',
+        icon: 'image',
+        disabled: isSettingThumb.value,
+        action: () => {
+          menuClosedByAction.value = true
+          setAsThumbFromPreview()
+        },
+      },
+    ],
+  })
+}
+
+const play = (inApp) => {
+  stopPlayingPreview({force: true})
   itemsStore.playVideo({
     video: props.media,
   })
@@ -505,8 +618,13 @@ const handleMouseEnter = () => {
   })
 }
 
-const stopPlayingPreview = () => {
+const stopPlayingPreview = ({force = false} = {}) => {
   if (!props.isFileExists || isProcessingHover.value) return
+  if (!force && shouldKeepBigPreviewOpen()) return
+
+  bigPreviewMenuActive.value = false
+  menuClosedByAction.value = false
+  previewPausedForMenu.value = false
 
   // Сбрасываем состояние предпросмотра
   isHovered.value = false
@@ -590,6 +708,20 @@ const initFrames = async () => {
 }
 
 // Наблюдатели
+watch(() => contextMenuStore.show, (show) => {
+  if (show || !bigPreviewMenuActive.value) return
+
+  nextTick(() => {
+    const closedByAction = menuClosedByAction.value
+    bigPreviewMenuActive.value = false
+    menuClosedByAction.value = false
+
+    if (!closedByAction) {
+      resumePreviewAfterMenu()
+    }
+  })
+})
+
 watch(() => itemsStore.thumbRefreshKeys[Number(props.media.id)], (version) => {
   if (version == null) return
   getImg()
@@ -642,7 +774,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  stopPlayingPreview()
+  stopPlayingPreview({force: true})
   eventBus.off('updateVideoFrames', handleUpdateVideoFrames)
 
   for (const timeout in timeouts) {
