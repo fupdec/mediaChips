@@ -1,8 +1,9 @@
 export function getMarkIcon(mark, {variant = 'list'} = {}) {
   if (mark.type === 'favorite') return 'heart'
   if (mark.type === 'bookmark') return 'bookmark'
+  if (variant === 'timeline') return 'tooltip'
   if (mark.type === 'meta') return mark.meta?.icon || mark['tag.icon'] || 'tag'
-  return variant === 'timeline' ? 'tooltip' : 'marker'
+  return 'marker'
 }
 
 export function getMarkColor(mark, {variant = 'list'} = {}) {

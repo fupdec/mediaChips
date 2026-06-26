@@ -97,31 +97,25 @@ export function useItemsPageEvents({
   }
 
   const handleSetItemsSortDir = (event) => {
-    const val = event
-    if (val === ITEMS.value.sortDir) return
-
     itemsStore.updateState({
       key: 'page',
       value: 1,
     })
     updatePageSetting({
       page: 1,
-      sortDir: val,
+      sortDir: event,
     })
     getItemsFromDb()
   }
 
   const handleSetItemsSortBy = (event) => {
-    const val = event
-    if (val === ITEMS.value.sortBy) return
-
     itemsStore.updateState({
       key: 'page',
       value: 1,
     })
     updatePageSetting({
       page: 1,
-      sortBy: val,
+      sortBy: event,
     })
     getItemsFromDb()
   }

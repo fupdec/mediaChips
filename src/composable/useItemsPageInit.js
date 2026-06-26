@@ -209,6 +209,8 @@ export function useItemsPageInit({
       return
     }
 
+    itemsStore.updateState({key: 'type', value: props.items_type})
+
     disposeListFetching()
 
     if (props.items_type === 'media') {

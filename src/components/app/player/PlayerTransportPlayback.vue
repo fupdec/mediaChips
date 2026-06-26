@@ -1,6 +1,5 @@
 <template>
-  <div class="d-flex align-center">
-    <v-btn @click="togglePause"
+  <v-btn @click="togglePause"
       icon
       variant="tonal"
       :density="density"
@@ -109,7 +108,6 @@
         </v-list>
       </v-menu>
     </div>
-  </div>
 </template>
 
 <script setup>

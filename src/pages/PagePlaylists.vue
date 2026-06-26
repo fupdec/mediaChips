@@ -154,6 +154,7 @@ import {loadPlaylistThumbs} from '@/utils/playlistThumbs'
 import {openSeparatePlayer, canOpenSeparatePlayer} from '@/utils/playerWindow'
 import {setNotification} from '@/services/notificationService'
 import {getFilters} from '@/services/filterService'
+import {useEventBus} from '@/utils/eventBus'
 
 const appStore = useAppStore()
 const itemsStore = useItemsStore()

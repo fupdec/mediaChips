@@ -209,9 +209,10 @@ function toggleDir() {
 function sort(param) {
   if (items.value.sortBy === param) {
     toggleDir()
-  } else {
-    itemsStore.setSortBy(param)
+    return
   }
+
+  itemsStore.setSortBy(param)
   eventBus.emit("setItemsSortBy", param);
 }
 </script>

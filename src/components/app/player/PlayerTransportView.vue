@@ -1,6 +1,5 @@
 <template>
-  <div class="d-flex align-center">
-    <v-btn-group variant="tonal"
+  <v-btn-group variant="tonal"
       :density="density"
       rounded="xl"
       style="overflow: visible"
@@ -57,7 +56,6 @@
         hide-details
       />
     </v-btn-group>
-  </div>
 </template>
 
 <script setup>

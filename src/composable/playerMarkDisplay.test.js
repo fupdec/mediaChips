@@ -20,6 +20,7 @@ describe('playerMarkDisplay', () => {
 
   it('resolves timeline icon defaults', () => {
     expect(getMarkTimelineIcon({type: 'note'})).toBe('tooltip')
+    expect(getMarkTimelineIcon({type: 'meta', meta: {icon: 'star'}})).toBe('tooltip')
   })
 
   it('resolves list color by mark type', () => {
