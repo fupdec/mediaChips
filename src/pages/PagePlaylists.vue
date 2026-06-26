@@ -151,7 +151,7 @@ import DialogSmartPlaylistEdit from "@/components/dialogs/DialogSmartPlaylistEdi
 import PlaylistCard from "@/components/playlists/PlaylistCard.vue"
 import DynamicPlaylistRow from "@/components/playlists/DynamicPlaylistRow.vue"
 import {loadPlaylistThumbs} from '@/utils/playlistThumbs'
-import {openSeparatePlayer} from '@/utils/playerWindow'
+import {openSeparatePlayer, canOpenSeparatePlayer} from '@/utils/playerWindow'
 import {useEventBus} from '@/utils/eventBus'
 
 const appStore = useAppStore()
@@ -216,6 +216,7 @@ const applyFullPlaylist = async (videos) => {
   if (!firstPlayable) return false
 
   const useSeparatePlayer = settingsStore.open_player_in_separate_window == '1'
+    && canOpenSeparatePlayer()
 
   if (playerStore.active) {
     playerStore.setPlaylistItems(videos, {host: apiUrl.value})

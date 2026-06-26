@@ -136,9 +136,7 @@ const isWin = userAgent.includes('windows')
 
 store.isElectron = isElectron
 
-const isPlayerWindow = computed(() =>
-  isStandalonePlayerRoute(route, settingsStore.open_player_in_separate_window)
-)
+const isPlayerWindow = computed(() => isStandalonePlayerRoute(route))
 const appZoom = route.query.player ? null : useAppZoom()
 const contextMenu = computed(() => contextMenuStore)
 
@@ -162,11 +160,7 @@ const {handleAddMedia, cleanupEventListeners} = useMediaAdding()
 /* ------------------------- API LOADERS ------------------------- */
 
 function cleanupStalePlayerRoute() {
-  if (
-    route.query.player &&
-    !store.isElectron &&
-    settingsStore.open_player_in_separate_window !== '1'
-  ) {
+  if (route.query.player && !store.isElectron) {
     const query = {...route.query}
     delete query.player
     router.replace({query})

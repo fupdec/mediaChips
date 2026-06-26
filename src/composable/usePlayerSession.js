@@ -1,21 +1,18 @@
 import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRoute} from 'vue-router'
 import axios from 'axios'
 import _ from 'lodash'
 import path from 'path-browserify'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
-import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useRegistrationStore} from '@/stores/registration'
-import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
-import {getDefaultMediaTypeId, findMediaTypeById, isAudioMediaType, isAudioFilePath} from '@/utils/mediaType'
 import {buildMarkPayload} from '@/utils/markAdding'
-import {isStandalonePlayerRoute, consumePendingPlay, subscribePlayerWindowMessages} from '@/utils/playerWindow'
 import {isWinElectronUi} from '@/utils/debugWinElectronUi'
 import {usePlayerHotkeys} from '@/composable/usePlayerHotkeys'
+import {usePlayerWindowBridge} from '@/composable/usePlayerWindowBridge'
+import {usePlayerPlayback} from '@/composable/usePlayerPlayback'
 import {handlePlayerVideoWheel} from '@/utils/playerHotkeys'
 
 export const PLAYER_SESSION_KEY = Symbol('playerSession')
@@ -23,13 +20,28 @@ export const PLAYER_SESSION_KEY = Symbol('playerSession')
 export function usePlayerSession() {
   const appStore = useAppStore()
   const playerStore = usePlayerStore()
-  const settingsStore = useSettingsStore()
   const dialogsStore = useDialogsStore()
   const registrationStore = useRegistrationStore()
-  const itemsStore = useItemsStore()
   const eventBus = useEventBus()
-  const route = useRoute()
   const {t} = useI18n()
+
+  const {
+    isPlayerWindow,
+    updateItemVideo,
+    updatePlayerWindowTitle,
+    resetPlayerWindowTitle,
+    exitElectronFullscreenIfNeeded,
+    attach: attachPlayerWindowBridge,
+    detach: detachPlayerWindowBridge,
+  } = usePlayerWindowBridge({
+    onInvalidPlayData: () => {
+      $operable.setNotification({
+        type: 'error',
+        title: t('player.error_title'),
+        text: t('player.invalid_video_data'),
+      })
+    },
+  })
 
   const isReady = ref(null)
   const videoPlayer = ref(null)
@@ -37,16 +49,29 @@ export function usePlayerSession() {
   const marks = ref(null)
   const timeoutControls = ref(-1)
 
+  const {
+    bindVideoElement,
+    getMarks,
+    loadSrc,
+    updatePlaybackTime,
+    initPlayingVideo,
+  } = usePlayerPlayback({
+    isReady,
+    videoPlayer,
+    controls,
+    marks,
+    isPlayerWindow,
+    updateItemVideo,
+    updatePlayerWindowTitle,
+  })
+
   const player = computed(() => playerStore)
-  const isPlayerWindow = computed(() =>
-    isStandalonePlayerRoute(route, settingsStore.open_player_in_separate_window)
-  )
   const isActive = computed(() => isPlayerWindow.value || playerStore.active)
   const playerDialogClass = computed(() => {
     if (!isPlayerWindow.value) return 'dialog-player'
     return isWinElectronUi() ? 'player-standalone--win' : ''
   })
-  const reg = computed(() => registrationStore)
+  const reg = computed(() => registrationStore.reg)
   const video = computed(() => playerStore.playlist[playerStore.nowPlaying])
   const currentPlaying = computed(() => video.value ? video.value.name : '')
   const isAudioMode = computed(() => playerStore.isAudioMode)
@@ -62,36 +87,9 @@ export function usePlayerSession() {
       : t('player.video_format_not_supported')
   })
   const showPlaybackError = computed(() =>
-    playerStore.active && isReady.value && playerStore.playbackError && reg.value
+    playerStore.active && isReady.value && playerStore.playbackError
   )
   const apiUrl = computed(() => appStore.localhost)
-  const settings = computed(() => settingsStore)
-
-  const buildPlayerWindowTitle = (item) => {
-    const base = appStore.app_title || 'MediaChips'
-    const fileName = item?.basename || item?.name
-    return fileName ? `${base} - ${fileName}` : base
-  }
-
-  const updatePlayerWindowTitle = (item) => {
-    if (!isPlayerWindow.value) return
-    const title = buildPlayerWindowTitle(item)
-    playerStore.mediaWindowTitle = title
-    document.title = title
-  }
-
-  const updateItemVideo = (id) => {
-    const data = {
-      ids: [id],
-      type: 'media',
-    }
-
-    if (isPlayerWindow.value && window.electronAPI?.send) {
-      window.electronAPI.send('getItemsFromDb', data)
-    } else {
-      eventBus.emit('getItemsFromDb', data)
-    }
-  }
 
   const closePlayer = async () => {
     if (video.value) {
@@ -113,10 +111,7 @@ export function usePlayerSession() {
     playerStore.paused = false
     detachHotkeys()
 
-    if (isPlayerWindow.value) {
-      playerStore.mediaWindowTitle = ''
-      document.title = appStore.app_title || 'MediaChips'
-    }
+    resetPlayerWindowTitle()
   }
 
   const playerWrapperProps = computed(() => {
@@ -147,180 +142,6 @@ export function usePlayerSession() {
     closePlayer,
   }))
 
-  const initPlayer = () => {
-    if (!playerStore.player) return
-    isReady.value = false
-
-    playerStore.player.addEventListener('loadedmetadata', () => {
-      playerStore.duration = playerStore.player.duration
-    })
-
-    playerStore.player.addEventListener('ended', () => {
-      if (playerStore.playlistMode.includes('autoplay') && controls.value) {
-        controls.value.next()
-      }
-    })
-
-    playerStore.player.addEventListener('error', () => {
-      if (!playerStore.active || !playerStore.player?.src) return
-      playerStore.playbackError = true
-    })
-  }
-
-  const resolvePlayableVideo = async (initialVideo) => {
-    const playlist = playerStore.playlist
-    const candidates = []
-
-    if (playlist.length > 0) {
-      const foundIndex = _.findIndex(playlist, (i) => i.id == initialVideo.id)
-
-      if (foundIndex >= 0) {
-        for (let offset = 0; offset < playlist.length; offset++) {
-          const index = (foundIndex + offset) % playlist.length
-          candidates.push({video: playlist[index], index})
-        }
-      } else if (initialVideo?.path || initialVideo?.id) {
-        candidates.push({video: initialVideo, index: 0})
-      }
-    } else if (initialVideo?.path) {
-      candidates.push({video: initialVideo, index: 0})
-    }
-
-    for (const {video: candidate, index} of candidates) {
-      if (!candidate?.path) continue
-
-      if (await $operable.checkFileExists(candidate.path)) {
-        return {video: candidate, index}
-      }
-    }
-
-    if (initialVideo?.id) {
-      const index = playlist.length > 0
-        ? Math.max(0, _.findIndex(playlist, (i) => i.id == initialVideo.id))
-        : 0
-      return {video: initialVideo, index}
-    }
-
-    return null
-  }
-
-  const getMarks = async (media) => {
-    try {
-      const res = await axios.get(apiUrl.value + '/api/Mark/video/' + media.id)
-      playerStore.marks = res.data
-
-      if (playerStore.is_file_exists) {
-        for (const mark of playerStore.marks) {
-          const time = new Date(1000 * mark.time).toISOString().substr(11, 12)
-          const imgPath = path.join(
-            appStore.mediaPath || '',
-            'videos/marks',
-            `${mark.id}.jpg`
-          )
-          const exists = await $operable.checkFileExists(imgPath, true)
-          if (exists) {
-            eventBus.emit('updateMarkImage', mark.id)
-            continue
-          }
-
-          try {
-            await $operable.createThumb(time, media.path, imgPath, 180)
-            eventBus.emit('updateMarkImage', mark.id)
-          } catch (e) {
-            console.log(e)
-          }
-        }
-
-        if (marks.value?.getThumbs) {
-          await marks.value.getThumbs()
-        }
-      }
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
-  const getMetadata = (media) => {
-    return new Promise((resolve, reject) => {
-      axios
-        .get(apiUrl.value + '/api/videoMetadata/' + media.id)
-        .then((res) => {
-          playerStore.metadata = res.data
-          playerStore.media = media
-          resolve()
-        })
-        .catch((e) => {
-          reject(e)
-        })
-    })
-  }
-
-  const loadSrc = async (media, start_time) => {
-    isReady.value = false
-    playerStore.playbackError = false
-
-    const resolved = await resolvePlayableVideo(media)
-
-    if (!resolved) {
-      console.error('Player: No playable video found in playlist:', media?.path)
-      playerStore.is_file_exists = false
-      playerStore.playbackError = true
-      isReady.value = true
-      return
-    }
-
-    media = resolved.video
-    const mediaType = findMediaTypeById(appStore.mediaTypes, media.mediaTypeId)
-    playerStore.isAudioMode = isAudioMediaType(mediaType) || isAudioFilePath(media.path)
-    playerStore.is_file_exists = await $operable.checkFileExists(media.path)
-
-    if (playerStore.playlist.length > 0) {
-      playerStore.nowPlaying = resolved.index
-    }
-
-    playerStore.player.src = apiUrl.value + '/api/video/' + media.id + '?time=' + Math.random()
-    await getMarks(media)
-    await getMetadata(media)
-    playerStore.trackCurrentTime()
-
-    playerStore.player.playbackRate = playerStore.speed
-
-    if (start_time) {
-      playerStore.player.currentTime = start_time
-    } else {
-      start_time = 0
-      if (settings.value.restorePlaybackTime == '1') {
-        if (playerStore.metadata.time && playerStore.metadata.duration) {
-          if (!(playerStore.metadata.duration - playerStore.metadata.time < 5)) {
-            start_time = playerStore.metadata.time
-          }
-        }
-        playerStore.player.currentTime = start_time
-      }
-    }
-
-    await itemsStore.countViewNumber(media, 'media')
-    updateItemVideo(media.id)
-
-    playerStore.playbackError = false
-    dialogsStore.closeMarkAdding()
-
-    if (!reg.value && playerStore.nowPlaying > 14) {
-      playerStore.player.src = ''
-    }
-
-    if (isPlayerWindow.value) {
-      updatePlayerWindowTitle(media)
-    }
-
-    playerStore.changePlayerStatusText({
-      text: `${playerStore.nowPlaying + 1}. ${media.name}`,
-      icon: 'format-list-bulleted',
-    })
-
-    isReady.value = true
-  }
-
   const openPath = () => {
     $operable.openPath(video.value.path, false)
   }
@@ -345,10 +166,7 @@ export function usePlayerSession() {
         screen.orientation.unlock()
         await document.exitFullscreen()
       } catch (e) {
-        const is_macos = navigator.platform.indexOf('Mac') > -1
-        if (window.os && is_macos && window.electronAPI) {
-          window.electronAPI.send('setFullScreen', false)
-        }
+        exitElectronFullscreenIfNeeded()
         console.log(e)
       }
     } else {
@@ -509,66 +327,8 @@ export function usePlayerSession() {
     }
   }
 
-  const updatePlaybackTime = (media) => {
-    return new Promise((resolve, reject) => {
-      axios({
-        method: 'put',
-        url: apiUrl.value + '/api/videoMetadata/' + media.id,
-        data: {
-          time: playerStore.currentTime,
-        },
-      })
-        .then(() => {
-          updateItemVideo(media.id)
-          resolve()
-        })
-        .catch((e) => {
-          reject(e)
-        })
-    })
-  }
-
   const nextVideo = () => {
     controls.value?.next?.()
-  }
-
-  const initPlayingVideo = (media, videos, time) => {
-    if (!media || !videos) {
-      $operable.setNotification({
-        type: 'error',
-        title: t('player.invalid_video_data'),
-        text: t('player.could_not_play_video'),
-      })
-      return
-    }
-
-    playerStore.playlist = videos.map((i) => {
-      const thumbUrl = i.thumb
-        ? (i.thumb.startsWith('http') ? i.thumb : `${appStore.localhost}${i.thumb}`)
-        : '/images/unavailable.png'
-
-      return {
-        ...i,
-        thumb: thumbUrl,
-      }
-    })
-
-    isReady.value = false
-    playerStore.playbackError = false
-    updatePlayerWindowTitle(media)
-    loadSrc(media, time)
-    playerStore.active = true
-
-    const mediaTypeId = media.mediaTypeId || getDefaultMediaTypeId(appStore.mediaTypes)
-    const url = `/api/MetaInMediaType?mediaTypeId=${mediaTypeId}`
-    axios
-      .get(apiUrl.value + url)
-      .then((res) => {
-        itemsStore.assigned = res.data
-      })
-      .catch((e) => {
-        console.log('Error loading metadata:', e)
-      })
   }
 
   const handlePlayVideoEvent = (event) => {
@@ -584,46 +344,16 @@ export function usePlayerSession() {
     }
   }
 
-  let unsubscribePlayerWindow = null
-
   onMounted(async () => {
     await nextTick()
-
-    if (videoPlayer.value) {
-      playerStore.player = videoPlayer.value
-      initPlayer()
-    }
+    bindVideoElement(videoPlayer.value)
 
     eventBus.on('playVideo', handlePlayVideoEvent)
 
-    if (window.electronAPI) {
-      window.electronAPI.on('play-video', (event, data) => {
-        if (data?.video) {
-          initPlayingVideo(data.video, data.videos, data.time)
-        } else {
-          $operable.setNotification({
-            type: 'error',
-            title: t('player.error_title'),
-            text: t('player.invalid_video_data'),
-          })
-        }
-      })
-
-      window.electronAPI.on('stop-playing-video', () => {
-        closePlayer()
-      })
-    } else if (isPlayerWindow.value) {
-      const pending = consumePendingPlay()
-      if (pending?.video) {
-        initPlayingVideo(pending.video, pending.videos, pending.time)
-      }
-
-      unsubscribePlayerWindow = subscribePlayerWindowMessages((message) => {
-        if (message?.type === 'play-video' && message.data?.video) {
-          initPlayingVideo(message.data.video, message.data.videos, message.data.time)
-        }
-      })
-    }
+    attachPlayerWindowBridge({
+      onPlayVideo: initPlayingVideo,
+      onStopPlaying: closePlayer,
+    })
 
     if (document.addEventListener) {
       document.addEventListener('fullscreenchange', exitHandler, false)
@@ -635,7 +365,7 @@ export function usePlayerSession() {
 
   onBeforeUnmount(() => {
     eventBus.off('playVideo', handlePlayVideoEvent)
-    unsubscribePlayerWindow?.()
+    detachPlayerWindowBridge()
     clearTimeout(timeoutControls.value)
     document.removeEventListener('fullscreenchange', exitHandler)
     document.removeEventListener('mozfullscreenchange', exitHandler)
@@ -663,6 +393,7 @@ export function usePlayerSession() {
     playerWrapperProps,
     reg,
     videoPlayer,
+    bindVideoElement,
     controls,
     marks,
     currentPlaying,

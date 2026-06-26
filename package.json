@@ -13,6 +13,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "server": "node app/server.js",
     "server-lan": "node -e \"process.env.MEDIA_CHIPS_ALLOW_LAN='1'; require('./app/server.js')\"",
@@ -92,10 +94,12 @@
     "@vitejs/plugin-vue": "^6.0.2",
     "electron": "^42.5.0",
     "electron-builder": "^26.0.12",
+    "jsdom": "^29.1.1",
     "nodemon": "^3.1.14",
     "sass-embedded": "^1.95.1",
     "vite": "^8.1.0",
-    "vite-plugin-vuetify": "^2.1.2"
+    "vite-plugin-vuetify": "^2.1.2",
+    "vitest": "^4.1.9"
   },
   "browserslist": [
     "> 1%",

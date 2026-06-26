@@ -25,7 +25,7 @@
     >
       <Marks
         @removeMark="removeMark"
-        :ref="marks"
+        :ref="setMarksRef"
       />
 
       <div class="player-main">
@@ -55,7 +55,7 @@
           class="video-wrapper"
         >
           <video
-            :ref="videoPlayer"
+            :ref="setVideoPlayerRef"
             :class="{ 'audio-hidden': isAudioMode }"
             autoplay
           />
@@ -127,7 +127,7 @@
           @removeMark="removeMark"
           @close="closePlayer"
           @updateVideo="updateItemVideo"
-          :ref="controls"
+          :ref="setControlsRef"
         />
       </div>
 
@@ -163,6 +163,7 @@ const {
   videoPlayer,
   controls,
   marks,
+  bindVideoElement,
   currentPlaying,
   isAudioMode,
   audioThumb,
@@ -187,4 +188,17 @@ const {
   nextVideo,
   updateItemVideo,
 } = session
+
+const setVideoPlayerRef = (el) => {
+  videoPlayer.value = el
+  bindVideoElement(el)
+}
+
+const setControlsRef = (el) => {
+  controls.value = el
+}
+
+const setMarksRef = (el) => {
+  marks.value = el
+}
 </script>

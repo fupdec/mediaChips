@@ -3,7 +3,7 @@ import {useTasksStore} from '@/stores/tasks'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
-import {useApiBaseUrl} from '@/composables/useApiBaseUrl'
+import {useApiBaseUrl} from '@/composable/useApiBaseUrl'
 import axios from 'axios'
 
 export default function useVideoImageGenerator() {

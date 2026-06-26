@@ -22,8 +22,10 @@ const isConnected = ref(false);
 const currentServer = ref(null);
 const showManual = ref(false);
 
-// Check if we are in player window
-const isPlayerWindow = ref(window.location.search.includes('player=true'));
+// Dedicated player window is Electron-only.
+const isPlayerWindow = ref(
+  window.location.search.includes('player=true') && Boolean(window.electronAPI)
+)
 
 // Make current server available to all components
 provide('currentServer', currentServer);

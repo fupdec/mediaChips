@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import _ from 'lodash'
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -48,21 +47,6 @@ export const useAppStore = defineStore('app', {
     },
     addLog({ text, type, color }) {
       this.log.push({ type, text, color, time: Date.now() })
-    },
-    showContextMenu(contextMenuObj) {
-      const parseMenu = (entry) => {
-        for (let i of entry) {
-          i.id = $readable.getReadableDuration()
-          i.show = false
-          if (i.type === 'menu' && i.menu) parseMenu(i.menu)
-        }
-      }
-      const contextMenu = _.cloneDeep(contextMenuObj)
-      const contextMenuState = _.cloneDeep(this.contextMenu)
-      if (contextMenu.content) parseMenu(contextMenu.content)
-      setTimeout(() => {
-        this.contextMenu = { ...contextMenuState, ...contextMenu, show: true }
-      }, 200)
     },
 
     // getters-as-actions (useful for stores without direct access to state)

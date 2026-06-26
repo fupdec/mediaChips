@@ -32,7 +32,6 @@ export const usePlayerStore = defineStore('player', {
     is_file_exists: false,
     isAudioMode: false,
 
-    isPlaylistVisible: false,
     nowPlaying: 0,
     playlist: [],
     playlistShuffle: [],

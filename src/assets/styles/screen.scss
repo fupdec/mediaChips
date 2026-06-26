@@ -50,24 +50,6 @@
   }
 }
 
-@media (max-width: 960px) {
-  .filter-row {
-    flex-direction: column;
-    .by {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    .cond {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    .val {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-  }
-}
-
 @media (max-width: 480px) {
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

@@ -4,9 +4,9 @@ import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import {getDuplicatesGroupKey} from '@/utils/mediaSortFilter'
-import {openSeparatePlayer} from '@/utils/playerWindow'
-import axios from "axios"
-import _ from "lodash"
+import {openSeparatePlayer, canOpenSeparatePlayer} from '@/utils/playerWindow'
+import {apiClient} from '@/services/apiClient'
+import _ from 'lodash'
 
 const eventBus = useEventBus()
 
@@ -272,7 +272,10 @@ export const useItemsStore = defineStore('items', {
         time: time || 0
       };
 
-      if (settingsStore.open_player_in_separate_window == '1') {
+      if (
+        settingsStore.open_player_in_separate_window == '1' &&
+        canOpenSeparatePlayer()
+      ) {
         if (openSeparatePlayer(data)) {
           return true
         }
@@ -304,11 +307,7 @@ export const useItemsStore = defineStore('items', {
         data.viewedAt = $readable.getDateForDB()
       }
 
-      await axios({
-        method: 'put',
-        url: `${appStore.localhost}/api/${model}/${item.id}`,
-        data,
-      })
+      await apiClient.put(`/api/${model}/${item.id}`, data)
 
       if (itemType === 'meta') {
         eventBus.emit('getMeta')
@@ -531,7 +530,7 @@ export const useItemsStore = defineStore('items', {
         const mediaTypeId = this.environment.media_type_id
         const mediaType = appStore.mediaTypes?.find((item) => item.id === mediaTypeId)
 
-        const response = await axios.post(`${appStore.localhost}/api/media/ids`, {
+        const response = await apiClient.post('/api/media/ids', {
           mediaTypeId,
           filters: this.filters,
           sortBy: this.sortBy,

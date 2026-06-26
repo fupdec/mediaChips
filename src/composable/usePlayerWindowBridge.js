@@ -1,0 +1,97 @@
+import {computed} from 'vue'
+import {useRoute} from 'vue-router'
+import {useAppStore} from '@/stores/app'
+import {usePlayerStore} from '@/stores/player'
+import {useEventBus} from '@/utils/eventBus'
+import {isStandalonePlayerRoute} from '@/utils/playerWindow'
+
+export function usePlayerWindowBridge({onInvalidPlayData} = {}) {
+  const route = useRoute()
+  const appStore = useAppStore()
+  const playerStore = usePlayerStore()
+  const eventBus = useEventBus()
+
+  const isPlayerWindow = computed(() => isStandalonePlayerRoute(route))
+
+  const buildPlayerWindowTitle = (item) => {
+    const base = appStore.app_title || 'MediaChips'
+    const fileName = item?.basename || item?.name
+    return fileName ? `${base} - ${fileName}` : base
+  }
+
+  const updatePlayerWindowTitle = (item) => {
+    if (!isPlayerWindow.value) return
+    const title = buildPlayerWindowTitle(item)
+    playerStore.mediaWindowTitle = title
+    document.title = title
+  }
+
+  const resetPlayerWindowTitle = () => {
+    if (!isPlayerWindow.value) return
+    playerStore.mediaWindowTitle = ''
+    document.title = appStore.app_title || 'MediaChips'
+  }
+
+  const updateItemVideo = (id) => {
+    const data = {
+      ids: [id],
+      type: 'media',
+    }
+
+    if (isPlayerWindow.value && window.electronAPI?.send) {
+      window.electronAPI.send('getItemsFromDb', data)
+    } else {
+      eventBus.emit('getItemsFromDb', data)
+    }
+  }
+
+  const exitElectronFullscreenIfNeeded = () => {
+    const isMacos = navigator.platform.indexOf('Mac') > -1
+    if (window.os && isMacos && window.electronAPI?.send) {
+      window.electronAPI.send('setFullScreen', false)
+    }
+  }
+
+  let cleanups = []
+
+  const detach = () => {
+    cleanups.forEach((cleanup) => cleanup())
+    cleanups = []
+  }
+
+  const attach = ({onPlayVideo, onStopPlaying}) => {
+    detach()
+
+    if (window.electronAPI?.on) {
+      const handlePlayVideo = (event, data) => {
+        if (data?.video) {
+          onPlayVideo(data.video, data.videos, data.time)
+          return
+        }
+        onInvalidPlayData?.()
+      }
+
+      const handleStopPlaying = () => {
+        onStopPlaying()
+      }
+
+      window.electronAPI.on('play-video', handlePlayVideo)
+      window.electronAPI.on('stop-playing-video', handleStopPlaying)
+
+      cleanups.push(() => {
+        window.electronAPI.removeListener?.('play-video', handlePlayVideo)
+        window.electronAPI.removeListener?.('stop-playing-video', handleStopPlaying)
+      })
+    }
+  }
+
+  return {
+    isPlayerWindow,
+    updateItemVideo,
+    updatePlayerWindowTitle,
+    resetPlayerWindowTitle,
+    exitElectronFullscreenIfNeeded,
+    attach,
+    detach,
+  }
+}
