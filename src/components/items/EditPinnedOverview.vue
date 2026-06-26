@@ -30,7 +30,7 @@
     </v-card>
 
     <div v-if="isMedia" class="edit-pinned-overview__block">
-      <FilePathEditing :media="item"/>
+      <FilePathEditing :media="item" @update="onMediaPathUpdate"/>
     </div>
 
     <v-card class="edit-pinned-overview__block rounded-xl" color="rgba(150, 150, 150, 0.09)" variant="flat">
@@ -72,6 +72,12 @@ const props = defineProps({
     default: () => [],
   },
 })
+
+const emit = defineEmits(['media-path-update'])
+
+const onMediaPathUpdate = (media) => {
+  emit('media-path-update', media)
+}
 
 const settingsStore = useSettingsStore()
 const {t} = useI18n()

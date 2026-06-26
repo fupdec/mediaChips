@@ -5,7 +5,7 @@
         <div class="text-medium-emphasis text-caption">{{ t('media.file_path.operations') }}</div>
         <div>
           <span>{{ t('media.file_path.full_path') }} </span>
-          <span>{{ media.path }}</span>
+          <span>{{ display_path }}</span>
         </div>
 
         <v-alert
@@ -128,12 +128,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import path from 'path-browserify'
 import axios from "axios"
 import { useAppStore } from '@/stores/app'
 import { useOperationsStore } from '@/stores/operations'
+import { useItemsStore } from '@/stores/items'
+import { useDialogsStore } from '@/stores/dialogs'
+import { useEventBus } from '@/utils/eventBus'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import {normalizePastedFilePath} from '@/utils/filePathInput'
 
@@ -159,8 +162,40 @@ const form = ref(null)
 
 const appStore = useAppStore()
 const operationsStore = useOperationsStore()
+const itemsStore = useItemsStore()
+const dialogsStore = useDialogsStore()
+const eventBus = useEventBus()
 
 const apiUrl = computed(() => appStore.localhost)
+const display_path = ref('')
+
+watch(() => props.media?.path, (value) => {
+  display_path.value = value || ''
+}, { immediate: true })
+
+const buildPathFields = (filePath) => ({
+  path: filePath,
+  basename: path.basename(filePath),
+  name: path.parse(filePath).name,
+  ext: path.extname(filePath),
+})
+
+const applyPathUpdate = (filePath) => {
+  const updated = buildPathFields(filePath)
+  display_path.value = filePath
+  is_different_path.value = false
+  emit('update', { ...props.media, ...updated })
+
+  if (props.media?.id == null) return
+
+  itemsStore.updateItem({ id: props.media.id, item: updated })
+  eventBus.emit('getItemsFromDb', { ids: [props.media.id], type: 'media' })
+
+  const editingMedia = dialogsStore.mediaEditing.media
+  if (dialogsStore.mediaEditing.show && editingMedia?.id === props.media.id) {
+    dialogsStore.mediaEditing.media = { ...editingMedia, ...updated }
+  }
+}
 
 const isAnotherMoveActive = computed(() => operationsStore.moving.active && !is_file_moving.value)
 
@@ -178,7 +213,7 @@ const onPathInput = (value) => {
     file_path.value = normalized
     value = normalized
   }
-  is_different_path.value = path.normalize(props.media.path) !== path.normalize(value || '')
+  is_different_path.value = path.normalize(display_path.value || props.media?.path || '') !== path.normalize(value || '')
 }
 
 const resetMoveState = () => {
@@ -194,8 +229,9 @@ const closeDialog = () => {
 }
 
 const openFolder = () => {
-  if (!props.media?.path) return
-  $operable.openPath(props.media.path, true)
+  const filePath = display_path.value || props.media?.path
+  if (!filePath) return
+  $operable.openPath(filePath, true)
 }
 
 const savePathToDb = async (filePath, { notify = true } = {}) => {
@@ -211,8 +247,7 @@ const savePathToDb = async (filePath, { notify = true } = {}) => {
       },
     })
 
-    is_different_path.value = false
-    emit('update', { ...props.media, path: filePath })
+    applyPathUpdate(filePath)
 
     if (notify) {
       $operable.setNotification({
@@ -272,7 +307,7 @@ const updateFilePath = async () => {
 
     try {
       const result = await operationsStore.renameFilePath({
-        oldPath: props.media.path,
+        oldPath: display_path.value || props.media.path,
         newPath: filePath,
         onProgress: handleMoveProgress,
         notifyOnComplete: false,
@@ -321,7 +356,7 @@ const checkFileExists = async (filePath) => {
 }
 
 const openDialogEdit = async () => {
-  file_path.value = props.media.path
+  file_path.value = display_path.value || props.media?.path || ''
   is_different_path.value = false
   resetMoveState()
   dialog_edit.value = true
@@ -331,6 +366,12 @@ const openDialogEdit = async () => {
 }
 
 onMounted(async () => {
-  await checkFileExists(props.media.path)
+  await checkFileExists(display_path.value || props.media?.path)
+})
+
+watch(display_path, async (filePath) => {
+  if (filePath) {
+    await checkFileExists(filePath)
+  }
 })
 </script>

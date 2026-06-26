@@ -10,6 +10,7 @@
           :is-media="isMedia"
           :completion-status="completionStatus"
           :preset-meta="preset_meta"
+          @media-path-update="onMediaPathUpdate"
         />
       </div>
     </div>
@@ -21,6 +22,7 @@
           :is-media="isMedia"
           :completion-status="completionStatus"
           :preset-meta="preset_meta"
+          @media-path-update="onMediaPathUpdate"
         />
       </v-col>
     </template>
@@ -372,7 +374,11 @@ const emit = defineEmits(['close'])
 // Определяем тип редактируемого объекта (приоритет первому файлу)
 const isTag = computed(() => !!props.tag)
 const isMedia = computed(() => !props.tag && !!props.media)
-const currentItem = computed(() => isTag.value ? props.tag : props.media)
+const mediaOverride = ref(null)
+const currentItem = computed(() => {
+  if (isTag.value) return props.tag
+  return mediaOverride.value || props.media
+})
 const currentItemId = computed(() => currentItem.value?.id)
 const currentItemType = computed(() => isTag.value ? 'tag' : 'media')
 
@@ -494,6 +500,11 @@ const equalOld = (metaId, metaType) => {
 
 const restore = (key) => {
   vals.value[key] = _.cloneDeep(old.value[key])
+}
+
+const onMediaPathUpdate = (updatedMedia) => {
+  if (!isMedia.value) return
+  mediaOverride.value = updatedMedia
 }
 
 const setMetaInputRef = (el, metaId) => {
@@ -779,7 +790,6 @@ onMounted(async () => {
     }
   } else if (isMedia.value) {
     vals.value = {
-      path: props.media.path || null,
       rating: props.media.rating || 0,
       favorite: props.media.favorite || 0,
       views: props.media.views || 0,
