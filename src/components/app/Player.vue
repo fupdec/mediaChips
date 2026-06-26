@@ -51,11 +51,30 @@
             @mousedown="clickOnVideo($event)"
             @wheel="changeVolume"
             tabindex="-1"
-            :class="{ 'playback-error': showPlaybackError }"
+            :class="{
+              'playback-error': showPlaybackError,
+              'audio-mode': isAudioMode,
+            }"
             class="video-wrapper"
           >
-          <video ref="videoPlayer"
-            autoplay/>
+            <video
+              ref="videoPlayer"
+              :class="{ 'audio-hidden': isAudioMode }"
+              autoplay
+            />
+
+            <div v-if="isAudioMode && !showPlaybackError"
+              class="audio-overlay">
+              <v-img
+                :src="audioThumb"
+                class="audio-cover"
+                cover
+              />
+              <div class="audio-info">
+                <v-icon class="audio-icon" size="48">mdi-music-circle</v-icon>
+                <div class="audio-title" :title="currentPlaying">{{ currentPlaying }}</div>
+              </div>
+            </div>
 
           <div v-if="showPlaybackError"
             class="video-error">
@@ -68,7 +87,14 @@
               {{ t('common.error') }}:
               <div class="filename"
                 v-text="t('player.file') + ' ' + currentPlaying"></div>
-              <div v-if="player.is_file_exists">{{ t('player.video_format_not_supported') }}
+              <div v-if="player.is_file_exists">
+                {{ formatErrorMessage }}
+                <div v-if="fileExtension" class="error-detail">
+                  {{ t('player.error_extension', { ext: fileExtension }) }}
+                </div>
+                <div v-if="player.metadata.codec" class="error-detail">
+                  {{ t('player.error_codec', { codec: player.metadata.codec }) }}
+                </div>
               </div>
               <div v-else>{{ t('player.file_is_missing') }}</div>
             </v-alert>
@@ -81,7 +107,7 @@
               <span>{{ t('actions.open_system_player') }}</span>
             </v-btn>
             <v-btn @click.stop="nextVideo"
-              class="mt-4"
+              class="mt-4 ml-2"
               color="primary"
               rounded>
               <v-icon left>mdi-skip-next</v-icon>
@@ -150,7 +176,7 @@ import DialogMarkAdding from '@/components/dialogs/DialogMarkAdding.vue'
 import {useEventBus} from '@/utils/eventBus'
 import path from "path-browserify"
 import {useRoute} from "vue-router";
-import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {getDefaultMediaTypeId, findMediaTypeById, isAudioMediaType, isAudioFilePath} from '@/utils/mediaType'
 import {buildMarkPayload} from '@/utils/markAdding'
 import {isWinElectronUi} from '@/utils/debugWinElectronUi'
 
@@ -205,6 +231,18 @@ const SETTINGS = computed(() => settingsStore)
 const reg = computed(() => registrationStore)
 const video = computed(() => playerStore.playlist[playerStore.nowPlaying])
 const currentPlaying = computed(() => video.value ? video.value.name : "")
+const isAudioMode = computed(() => playerStore.isAudioMode)
+const audioThumb = computed(() => video.value?.thumb || '/images/unavailable.png')
+const fileExtension = computed(() => {
+  if (!video.value?.path) return ''
+  const ext = path.extname(video.value.path)
+  return ext ? ext.slice(1).toUpperCase() : ''
+})
+const formatErrorMessage = computed(() => {
+  return isAudioMode.value
+    ? t('player.audio_format_not_supported')
+    : t('player.video_format_not_supported')
+})
 const showPlaybackError = computed(() => isReady.value && playerStore.playbackError && reg.value)
 const apiUrl = computed(() => appStore.localhost)
 const os = computed(() => window.os ? window.os.type() : false)
@@ -236,6 +274,7 @@ const closePlayer = async () => {
   clearInterval(playerStore.currentTimeTimeout)
   playerStore.currentTime = 0
   playerStore.active = false
+  playerStore.isAudioMode = false
   playerStore.paused = false
   window.removeEventListener("keydown", handleKey)
 
@@ -313,6 +352,8 @@ const loadSrc = async (video, start_time) => {
   }
 
   video = resolved.video
+  const mediaType = findMediaTypeById(appStore.mediaTypes, video.mediaTypeId)
+  playerStore.isAudioMode = isAudioMediaType(mediaType) || isAudioFilePath(video.path)
   playerStore.is_file_exists = await $operable.checkFileExists(video.path)
 
   if (playerStore.playlist.length > 0) {
@@ -430,14 +471,11 @@ const toggleFullscreen = async () => {
     }
   } else {
     document.getElementById("player").requestFullscreen()
-    screen.orientation
-      .lock("landscape")
-      .then(() => {
-        // alert("Locked")
-      })
-      .catch((error) => {
-        // alert(error)
-      })
+    if (!playerStore.isAudioMode && screen.orientation?.lock) {
+      screen.orientation
+        .lock("landscape")
+        .catch(() => {})
+    }
   }
   playerStore.fullscreen = !playerStore.fullscreen
 }
@@ -600,7 +638,7 @@ const togglePause = () => {
 
 const moveOverPlayer = _.debounce((e) => {
   if (!playerStore.active) return
-  if (!e.movementX > 0 || !e.movementY > 0) return
+  if (!e.movementX && !e.movementY) return
   showControls()
   if (!playerStore.fullscreen || playerStore.mouseOverControls) return
   if (playerStore.paused) return
@@ -748,14 +786,7 @@ const updateItemVideo = (id) => {
 }
 
 const initPlayingVideo = (video, videos, time) => {
-  console.log('initPlayingVideo called:', {
-    videoId: video?.id,
-    videosCount: videos?.length,
-    time: time
-  });
-
   if (!video || !videos) {
-    console.error('Invalid video data received');
     $operable.setNotification({
       type: 'error',
       title: t('player.invalid_video_data'),
@@ -798,45 +829,34 @@ const initPlayingVideo = (video, videos, time) => {
     })
 }
 
+const handlePlayVideoEvent = (event) => {
+  if (event && event.video) {
+    const {video, videos, time} = event
+    initPlayingVideo(video, videos, time)
+  }
+}
+
 const exitHandler = () => {
   if (!document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement) {
     playerStore.fullscreen = false
   }
 }
 
-// Lifecycle
-// В Player.vue добавьте в onMounted:
 onMounted(async () => {
   await nextTick()
-
-  console.log('Player mounted, mode:', isPlayerWindow.value ? 'player window' : 'embedded')
-  console.log('window.electronAPI:', window.electronAPI ? 'Exists' : 'Missing')
-  console.log('window.$operable:', window.$operable ? 'Exists' : 'Missing')
 
   if (videoPlayer.value) {
     playerStore.player = videoPlayer.value
     initPlayer()
   }
 
-  // Listen for play video events from eventBus (embedded mode)
-  eventBus.on('playVideo', (event) => {
-    console.log('Player: Received playVideo from eventBus:', event?.video?.id);
-    if (event && event.video) {
-      const {video, videos, time} = event
-      initPlayingVideo(video, videos, time)
-    } else {
-      console.error('Invalid event data from eventBus:', event);
-    }
-  })
+  eventBus.on('playVideo', handlePlayVideoEvent)
 
   if (window.electronAPI) {
-    // Устанавливаем обработчик для play-video
     window.electronAPI.on("play-video", (event, data) => {
-      console.log('Player: Received play-video from electronAPI:', data);
       if (data && data.video) {
         initPlayingVideo(data.video, data.videos, data.time)
       } else {
-        console.error('Invalid data received from electronAPI:', data);
         $operable.setNotification({
           type: 'error',
           title: t('player.error_title'),
@@ -846,7 +866,6 @@ onMounted(async () => {
     })
 
     window.electronAPI.on('stop-playing-video', () => {
-      console.log('Player: Received stop-playing-video');
       closePlayer()
     })
   }
@@ -860,7 +879,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  eventBus.off('playVideo', initPlayingVideo)
+  eventBus.off('playVideo', handlePlayVideoEvent)
+  clearTimeout(timeoutControls.value)
   document.removeEventListener('fullscreenchange', exitHandler)
   document.removeEventListener('mozfullscreenchange', exitHandler)
   document.removeEventListener('MSFullscreenChange', exitHandler)

@@ -229,7 +229,6 @@ watch(assigned, (arr) => {
 
 onMounted(() => {
   eventBus.on('updateMarkImage', handleUpdateMarkImage)
-
   getThumbs()
 })
 

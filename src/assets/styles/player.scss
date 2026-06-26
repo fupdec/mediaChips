@@ -162,6 +162,57 @@
     min-width: 100%;
     min-height: 100%;
     object-fit: contain;
+    &.audio-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+  .video-wrapper.audio-mode {
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    video {
+      position: absolute;
+      width: 0;
+      height: 0;
+    }
+    .audio-overlay {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      padding: 32px;
+      z-index: 1;
+    }
+    .audio-cover {
+      width: min(280px, 60vw);
+      height: min(280px, 60vw);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      flex-shrink: 0;
+    }
+    .audio-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 24px;
+      max-width: 80%;
+      text-align: center;
+    }
+    .audio-icon {
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .audio-title {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
   }
 }
 
@@ -203,6 +254,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .error-detail {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 6px;
   }
 }
 

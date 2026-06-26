@@ -31,7 +31,7 @@
 
       <controls-set-mark-time v-if="dialogsStore.markAdding.show"/>
 
-      <Preview></Preview>
+      <Preview v-if="!isAudioMode"></Preview>
 
       <Mark
         v-for="mark in player.marks"
@@ -257,7 +257,8 @@
         style="overflow: visible"
         dark
         class="btn-edit-video px-0">
-        <v-btn @click="setAsThumb"
+        <v-btn v-if="!isAudioMode"
+          @click="setAsThumb"
           class="action-buttons"
           icon
           dark>
@@ -385,6 +386,7 @@
         </v-btn>
 
         <v-btn
+          v-if="!isAudioMode"
           @click="$emit('togglePictureInPicture')"
           class="toggle-picture-in-picture"
           icon
@@ -443,6 +445,7 @@ import {useDisplay} from 'vuetify'
 import axios from 'axios'
 import _ from 'lodash'
 import path from "path-browserify"
+import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import EditPinnedMetaValues from "@/components/items/EditPinnedMetaValues.vue";
 import Preview from "@/components/app/player/Preview.vue";
@@ -495,6 +498,7 @@ const player = computed(() => playerStore)
 const apiUrl = computed(() => appStore.localhost)
 const is_separate_window = computed(() => !!route.query.player)
 const video = computed(() => player.value.playlist[player.value.nowPlaying])
+const isAudioMode = computed(() => playerStore.isAudioMode)
 
 const density = computed(() => {
   let density = 'default'
@@ -753,7 +757,6 @@ const addMark = () => {
 }
 
 const removeMark = (mark) => {
-  console.log(mark)
   emit("removeMark", mark)
 }
 
@@ -830,7 +833,7 @@ const getVideo = async () => {
 
   let videoData = null
   let query = {
-    mediaTypeId: 1,
+    mediaTypeId: video.value.mediaTypeId || getDefaultMediaTypeId(appStore.mediaTypes),
     filters: [],
     sortBy: 'createdAt',
     direction: 'asc',
