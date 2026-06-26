@@ -54,20 +54,14 @@ module.exports = (app, db) => {
   // getting file list with specific extension in directory
   register('post', "/getFileList", 'getFileList');
 
-  // adding video with metadata to database
-  register('post', "/addMediaVideo", 'addMediaVideo');
-
-  // adding image with metadata to database
-  register('post', "/addMediaImage", 'addMediaImage');
-
-  // adding media with type audio to database
-  register('post', "/addMediaAudio", 'addMediaAudio');
-
-  // adding media with type text to database
-  register('post', "/addMediaText", 'addMediaText');
-
-  // adding other type of media with metadata to database
+  // adding media to database (type-specific post-processing is resolved from req.body.type)
   register('post', "/addMedia", 'addMedia');
+
+  // legacy aliases — delegate to addMedia
+  register('post', "/addMediaVideo", 'addMediaVideo');
+  register('post', "/addMediaImage", 'addMediaImage');
+  register('post', "/addMediaAudio", 'addMediaAudio');
+  register('post', "/addMediaText", 'addMediaText');
 
   // обновить информацию о файле
   register('post', "/updateMediaInfo", 'updateMediaInfo');

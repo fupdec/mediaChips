@@ -1,6 +1,9 @@
-const fs = require("fs")
+const fs = require('fs')
 const path = require('path')
-const {getMediaDeleteAssetFolder} = require('../utils/mediaType')
+const {
+  deleteMediaGeneratedAssets,
+  unlinkResolvedPath,
+} = require('../services/localAssetCleanup')
 const {
   loadMediaItems,
   loadFilteredMediaIds,
@@ -231,64 +234,50 @@ module.exports = function (db) {
 
   // Delete a media with the specified id in the request
   const deleteOne = async function (req, res) {
-    const type = req.body.type
     const id = req.body.id
-    const mediaPath = path.join(dbPath, 'media/' + type)
 
-    if (type === 'videos') {
-      // удаляем все картинки сделанные для видео
-      const thumbPath = path.join(mediaPath, 'thumbs', id + '.jpg')
-      if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath)
-      const gridPath = path.join(mediaPath, 'grids', id + '.jpg')
-      if (fs.existsSync(gridPath)) fs.unlinkSync(gridPath)
-      const parts = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
-      const arrPath = parts.map(i => path.join(mediaPath, 'timelines', id + '_' + i + '.jpg'))
-      if (fs.existsSync(arrPath[0])) {
-        for (const i of arrPath) {
-          if (fs.existsSync(i)) fs.unlinkSync(i)
+    try {
+      const media = await db.Media.findOne({
+        where: {id},
+        include: [{
+          model: db.MediaType,
+          attributes: ['id', 'type'],
+        }],
+      })
+
+      if (!media) {
+        return res.status(404).send({
+          message: 'Media not found.',
+        })
+      }
+
+      const mediaType = media.MediaType || await db.MediaType.findOne({
+        where: {id: media.mediaTypeId},
+        raw: true,
+      })
+
+      await deleteMediaGeneratedAssets(db, dbPath, media, mediaType)
+
+      if (req.body.with_file) {
+        const filePath = media.path || req.body.path
+
+        try {
+          const deleted = await unlinkResolvedPath(filePath)
+          if (!deleted) {
+            console.log(`${filePath} is unavailable.`)
+          }
+        } catch (error) {
+          console.error(`Failed to delete media file ${filePath}:`, error.message)
         }
       }
-      await db.Mark.findAll({
-        where: {
-          mediaId: id
-        }
-      }).then(marks => {
-        for (const mark of marks) {
-          const markPath = path.join(mediaPath, 'marks', mark.id + '.jpg')
-          if (fs.existsSync(markPath)) fs.unlinkSync(markPath)
-        }
-      })
-    } else if (type === getMediaDeleteAssetFolder({type: 'image'})) {
-      const thumbPath = path.join(mediaPath, 'thumbs', `${id}.jpg`)
-      if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath)
-    }
 
-    // удалить вместе с файлом?
-    if (req.body.with_file) {
-      const file_path = req.body.path
-      if (fs.existsSync(file_path)) {
-        fs.unlink(file_path, (err) => {
-          console.log(err)
-        })
-      } else {
-        console.log(file_path + 'is unavailable.')
-      }
+      await db.Media.destroy({where: {id}})
+      res.sendStatus(201)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while performing query.',
+      })
     }
-
-    await db.Media
-      .destroy({
-        where: {
-          id: id
-        }
-      })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
-        })
-      })
   };
 
   return {

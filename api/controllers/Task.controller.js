@@ -20,7 +20,7 @@ const {tokenizeFilePath} = require('../services/pathTokenizer')
 const {matchPathToTags} = require('../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../services/tagSuggester')
 const {getAppConfigPath} = require('../utils/appConfigPath')
-const {isVideoMediaType, isImageMediaType, isAudioMediaType} = require('../utils/mediaType')
+const {unlinkResolvedPath} = require('../services/localAssetCleanup')
 const {computeContentHashForPath, fileExists, verifyContentHashMatch, resolveExistingPath} = require('../services/contentHash')
 const {normalizeMediaPath, pathsEquivalent, buildPathLookupVariants} = require('../utils/normalizeUserPath')
 const {
@@ -530,172 +530,57 @@ module.exports = function (db) {
     }
   }
 
-  const addMediaVideo = async function (req, res) {
+  const {createMediaPostProcessor} = require('../services/mediaPostProcess')
+  const mediaPostProcess = createMediaPostProcessor({
+    db,
+    dbPath,
+    getVideoMetadata,
+    getAudioMetadata,
+    getImageMedia,
+    createThumbMiddle,
+    withTimeout,
+  })
+
+  const sendAddMediaResponse = (res, {media, isCreated, duplicate}) => {
+    if (isCreated) {
+      res.status(201).send(media)
+      return
+    }
+
+    res.status(202).send({
+      message: 'Media already added.',
+      duplicate,
+    })
+  }
+
+  const addMedia = async function (req, res) {
     try {
       const pathToFile = req.body.path
       const mediaType = req.body.type
       const is_check_duplicates = req.body.is_check_duplicates
 
-      const {
-        media,
-        isCreated,
-        duplicate,
-      } = await addMediaToDb(pathToFile, mediaType, is_check_duplicates)
+      const result = await addMediaToDb(pathToFile, mediaType, is_check_duplicates)
 
-      if (isCreated) {
-        const videoPath = media.path
-        const metadata = await getVideoMetadata(videoPath)
-
-        if (metadata) {
-          await db.VideoMetadata.create({
-            mediaId: media.id,
-            duration: metadata.duration,
-            bitrate: metadata.bitrate,
-            width: metadata.width,
-            height: metadata.height,
-            codec: metadata.codec,
-            fps: metadata.fps,
-          })
-        }
-
-        try {
-          await createThumbMiddle(videoPath, media.id)
-        } catch (error) {
-          console.error(`Thumbnail generation failed for ${videoPath}:`, error)
-        }
-
-        res.status(201).send(media)
-      } else {
-        res.status(202).send({
-          message: "Media already added.",
-          duplicate,
-        })
+      if (result.isCreated) {
+        await mediaPostProcess.processNewMedia(result.media, mediaType)
       }
+
+      sendAddMediaResponse(res, result)
     } catch (error) {
-      console.error('addMediaVideo failed:', error)
+      console.error('addMedia failed:', error)
       res.status(400).send({
         message: error.message || String(error),
       })
     }
-  };
+  }
 
-  const addMediaImage = async function (req, res) {
-    const pathToFile = req.body.path
-    const mediaType = req.body.type
+  const addMediaVideo = addMedia
+  const addMediaImage = addMedia
+  const addMediaAudio = addMedia
+  const addMediaText = addMedia
 
-    const {
-      media,
-      isCreated,
-      duplicate,
-    } = await addMediaToDb(pathToFile, mediaType, req.body.is_check_duplicates)
-
-    if (isCreated) {
-      const metadata = await withTimeout(
-        getImageMedia().getImageMetadata(pathToFile),
-        60000,
-        'image metadata'
-      ).catch(error => {
-        console.error(`Image metadata extraction failed for ${pathToFile}:`, error.message)
-        return null
-      })
-
-      if (metadata) {
-        await db.ImageMetadata.create({
-          mediaId: media.id,
-          width: metadata.width,
-          height: metadata.height,
-          orientation: metadata.orientation,
-        })
-      }
-
-      try {
-        await withTimeout(
-          getImageMedia().createImageThumb(pathToFile, media.id, dbPath),
-          120000,
-          'image thumbnail'
-        )
-      } catch (error) {
-        console.error(`Thumbnail generation failed for ${pathToFile}:`, error.message)
-      }
-
-      res.status(201).send(media)
-    } else {
-      res.status(202).send({
-        message: "Media already added.",
-        duplicate,
-      })
-    }
-  };
-
-  const addMediaAudio = async function (req, res) {
-    const pathToFile = req.body.path
-    const mediaType = req.body.type
-
-    const {
-      media,
-      isCreated,
-      duplicate,
-    } = await addMediaToDb(pathToFile, mediaType, req.body.is_check_duplicates)
-
-    if (isCreated) {
-      const metadata = await getAudioMetadata(pathToFile)
-
-      if (metadata) {
-        await db.VideoMetadata.create({
-          mediaId: media.id,
-          duration: metadata.duration,
-          bitrate: metadata.bitrate,
-          codec: metadata.codec,
-        })
-      }
-
-      res.status(201).send(media)
-    } else {
-      res.status(202).send({
-        message: "Media already added.",
-        duplicate,
-      })
-    }
-  };
-
-  const addMediaText = async function (req, res) {
-    const {
-      media,
-      isCreated,
-      duplicate,
-    } = await addMediaToDb(req.body.path, req.body.type, req.body.is_check_duplicates)
-
-    if (isCreated) {
-      res.status(201).send(media)
-    } else {
-      res.status(202).send({
-        message: "Media already added.",
-        duplicate,
-      })
-    }
-  };
-
-  // TODO Рефакторинг: объединить методы добавления медиа в один
-  const addMedia = async function (req, res) {
-    const {
-      media,
-      isCreated,
-      duplicate,
-    } = await addMediaToDb(req.body.path, req.body.type, req.body.is_check_duplicates)
-
-    if (isCreated) {
-      res.status(201).send(media)
-    } else {
-      res.status(202).send({
-        message: "Media already added.",
-        duplicate,
-      })
-    }
-  };
-
-  // TODO Рефакторинг: объединить методы добавления медиа в один
   const updateMediaInfo = async (req, res) => {
-    const media_id = req.body.id;
+    const media_id = req.body.id
 
     try {
       const media = await db.Media.findOne({where: {id: media_id}})
@@ -706,62 +591,15 @@ module.exports = function (db) {
           raw: true,
         })
 
-        if (isVideoMediaType(mediaType)) {
-          const metadata = await getVideoMetadata(media.dataValues.path)
+        await mediaPostProcess.refreshMediaInfo(media, mediaType)
 
-          if (metadata) {
-            await db.VideoMetadata.update({
-              duration: metadata.duration,
-              bitrate: metadata.bitrate,
-              width: metadata.width,
-              height: metadata.height,
-              codec: metadata.codec,
-              fps: metadata.fps,
-            }, {
-              where: {
-                mediaId: media_id,
-              },
-            })
-          }
-        } else if (isImageMediaType(mediaType)) {
-          const metadata = await getImageMedia().getImageMetadata(media.dataValues.path)
+        const stats = fs.statSync(media.dataValues.path)
+        const filesize = stats.size
 
-          if (metadata) {
-            await db.ImageMetadata.upsert({
-              mediaId: media_id,
-              width: metadata.width,
-              height: metadata.height,
-              orientation: metadata.orientation,
-            })
-          }
-
-          try {
-            await getImageMedia().createImageThumb(media.dataValues.path, media_id, dbPath)
-          } catch (error) {
-            console.error(`Thumbnail regeneration failed for media ${media_id}:`, error.message)
-          }
-        } else if (isAudioMediaType(mediaType)) {
-          const metadata = await getAudioMetadata(media.dataValues.path)
-
-          if (metadata) {
-            await db.VideoMetadata.upsert({
-              mediaId: media_id,
-              duration: metadata.duration,
-              bitrate: metadata.bitrate,
-              codec: metadata.codec,
-            })
-          }
-        }
-
-        let stats = fs.statSync(media.dataValues.path)
-        let filesize = stats.size;
-
-        db.Media.update({
-          filesize: filesize,
+        await db.Media.update({
+          filesize,
         }, {
-          where: {
-            id: media_id,
-          },
+          where: {id: media_id},
         })
       }
 
@@ -769,7 +607,7 @@ module.exports = function (db) {
     } catch (error) {
       res.status(202).send(error)
     }
-  };
+  }
 
   const createThumb = async function (req, res) {
     /**
@@ -1036,15 +874,21 @@ module.exports = function (db) {
   };
 
   const deleteFile = async function (req, res) {
-    fs.unlink(req.body.path, (err) => {
-      if (err) {
-        res.status(400).send(err)
-      } else {
-        res.status(201).send({
-          message: 'successfully deleted local file'
+    try {
+      const deleted = await unlinkResolvedPath(req.body.path)
+
+      if (!deleted) {
+        return res.status(404).send({
+          message: 'File not found.',
         })
       }
-    })
+
+      res.status(201).send({
+        message: 'successfully deleted local file',
+      })
+    } catch (err) {
+      res.status(400).send(err)
+    }
   };
 
   const rmrf = (folder) => rimraf(folder)

@@ -479,12 +479,6 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
         ids = itemsStore.selection
       }
 
-      let data = {
-        metaId: meta?.id,
-        with_file: is_checked,
-        type: getMediaDeleteAssetFolder(currentMediaType.value),
-      }
-
       let deleted_items_names = []
       const itemsToDelete = type === 'media' && itemsStore.isSelect
         ? await resolveSelectedMedia(ids)
@@ -495,13 +489,23 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
       for (const found of itemsToDelete) {
         deleted_items_names.push(found.name)
 
-        data = {...data, ...{id: found.id, path: found.path}}
+        const itemData = {
+          metaId: type === 'tag' ? (found.metaId || meta?.id) : meta?.id,
+          with_file: is_checked,
+          id: found.id,
+          path: found.path,
+        }
+
+        if (type === 'media') {
+          const mediaType = getCurrentMediaType(store.mediaTypes, found.mediaTypeId)
+          itemData.type = getMediaDeleteAssetFolder(mediaType)
+        }
 
         try {
           await axios({
             method: "post",
             url: apiUrl.value + `/api/${type}/deleteOne`,
-            data,
+            data: itemData,
           })
         } catch (e) {
           console.error(e)

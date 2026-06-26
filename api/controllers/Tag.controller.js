@@ -1,6 +1,8 @@
-const fs = require("fs")
-const path = require('path')
 const {parseItemsFromDb, filterItems} = require('../../app/tasks/items.js')
+const {
+  deleteMarkGeneratedAsset,
+  deleteTagGeneratedAssets,
+} = require('../services/localAssetCleanup')
 
 module.exports = function (db) {
   const dbPath = db.path
@@ -161,30 +163,46 @@ module.exports = function (db) {
 
   // delete an Tag by the id
   const deleteOne = async function (req, res) {
-    const metaId = req.body.metaId
     const id = req.body.id
-    const metaPath = path.join(dbPath, 'meta/' + metaId)
-    // TODO переименовать изображения в 1.jpg, 2.jpg ... n.jpg, за исключением header, avatar
-    const parts = ['main', 'avatar', 'alt', 'header', 'custom1', 'custom2']
-    const arrPath = parts.map(i => path.join(metaPath, id + '_' + i + '.jpg'))
-    for (const i of arrPath) {
-      if (fs.existsSync(i)) fs.unlinkSync(i)
-    }
 
-    await db.Tag
-      .destroy({
-        where: {
-          id: id
-        }
+    try {
+      const tag = await db.Tag.findOne({
+        where: {id},
+        raw: true,
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+
+      if (!tag) {
+        return res.status(404).send({
+          message: 'Tag not found.',
         })
+      }
+
+      const metaId = req.body.metaId || tag.metaId
+      if (!metaId) {
+        return res.status(400).send({
+          message: 'metaId is required to delete tag assets.',
+        })
+      }
+
+      const marks = await db.Mark.findAll({
+        where: {tagId: id},
+        attributes: ['id'],
+        raw: true,
       })
+
+      for (const mark of marks) {
+        deleteMarkGeneratedAsset(dbPath, mark.id)
+      }
+
+      await deleteTagGeneratedAssets(dbPath, metaId, id)
+
+      await db.Tag.destroy({where: {id}})
+      res.sendStatus(201)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while performing query.',
+      })
+    }
   };
 
   return {

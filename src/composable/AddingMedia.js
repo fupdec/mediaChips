@@ -6,17 +6,7 @@ import {useItemsStore} from '@/stores/items'
 import {useTasksStore} from '@/stores/tasks'
 import {useEventBus} from '@/utils/eventBus'
 
-const ADD_MEDIA_ENDPOINTS = {
-  video: 'addMediaVideo',
-  image: 'addMediaImage',
-  audio: 'addMediaAudio',
-  text: 'addMediaText',
-}
-
-const getAddMediaEndpoint = (type) => {
-  const normalized = String(type || '').toLowerCase()
-  return ADD_MEDIA_ENDPOINTS[normalized] || 'addMedia'
-}
+const ADD_MEDIA_ENDPOINT = 'addMedia'
 
 const filterPathsByExtensions = (paths, extensions) => {
   const allowed = extensions
@@ -155,8 +145,6 @@ export const useMediaAdding = () => {
     let files = []
 
     try {
-      const addMediaEndpoint = getAddMediaEndpoint(mediaType.type)
-
       if (skipFileScan && directFiles.length > 0) {
         files = filterPathsByExtensions(directFiles, mediaType.extensions)
         task.value.status = t('media.adding.preparing_files', {count: files.length})
@@ -227,7 +215,7 @@ export const useMediaAdding = () => {
         try {
           const response = await axios({
             method: "post",
-            url: `${apiUrl.value}/api/Task/${addMediaEndpoint}`,
+            url: `${apiUrl.value}/api/Task/${ADD_MEDIA_ENDPOINT}`,
             data: {
               path: filePath,
               type: mediaType,

@@ -717,15 +717,8 @@ const addMark = async (data = {}) => {
 }
 
 const removeMark = async (mark) => {
-  const imgPath = path.join(
-    appStore.mediaPath || '',
-    "videos/marks",
-    `${mark.id}.jpg`
-  )
-
   try {
     await axios.delete(apiUrl.value + "/api/mark/" + mark.id)
-    await $operable.deleteLocalFile(imgPath)
     await getMarks(video.value)
   } catch (e) {
     console.log(e)

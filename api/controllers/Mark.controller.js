@@ -1,6 +1,8 @@
 const {getMarkFilterMetas, loadMarkItems} = require('../services/markItemsLoader')
+const {deleteMarkGeneratedAsset} = require('../services/localAssetCleanup')
 
 module.exports = function (db) {
+  const dbPath = db.path
   // Create and Save a new Mark
   const create = function (req, res) {
     db.Mark.create(req.body).then(data => {
@@ -87,11 +89,15 @@ module.exports = function (db) {
 
   // Delete a Mark with the specified id in the request
   const deleteOne = function (req, res) {
+    const markId = req.params.id
+
+    deleteMarkGeneratedAsset(dbPath, markId)
+
     db.Mark
       .destroy({
         where: {
-          id: req.params.id
-        }
+          id: markId,
+        },
       })
       .then(() => {
         res.sendStatus(201)
