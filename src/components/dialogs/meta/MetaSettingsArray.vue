@@ -263,7 +263,7 @@ import {ref, computed, onMounted, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {isVideoMediaType, isImageMediaType, isAudioMediaType, isTextMediaType} from '@/utils/mediaType'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import SettingsSection from '@/components/ui/SettingsSection.vue'
 import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
@@ -319,9 +319,6 @@ const isPinnedForMediaParser = ref(false)
 const chipKey = ref(0)
 const randomColor = ref('#000000')
 
-// Computed
-const apiUrl = computed(() => appStore.localhost)
-
 // Methods
 const initSettings = () => {
   if (!props.meta) return
@@ -346,8 +343,8 @@ const generateRandomColor = () => {
 
 const checkPinnedMediaTypes = async () => {
   try {
-    const response = await axios.get(
-      `${apiUrl.value}/api/MetaInMediaType?metaId=${props.meta.id}`
+    const response = await apiClient.get(
+      `/api/MetaInMediaType?metaId=${props.meta.id}`
     )
     const pinnedMedia = response.data || []
 

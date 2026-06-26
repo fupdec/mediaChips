@@ -3,7 +3,7 @@ import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {useHotkey} from 'vuetify'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import {useEventBus} from '@/utils/eventBus'
 import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
@@ -12,6 +12,9 @@ import {useItemsStore} from '@/stores/items'
 import {usePlayerStore} from '@/stores/player'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getDefaultMediaTypeId, isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
+import {highlightChars} from '@/services/formatUtils'
+import {hideHoverImage, showHoverImage} from '@/services/hoverService'
+import {openPath} from '@/services/shellService'
 
 const {t} = useI18n()
 const eventBus = useEventBus()
@@ -27,7 +30,6 @@ const itemsStore = useItemsStore()
 const playerStore = usePlayerStore()
 const meta = computed(() => app.meta)
 const mediaTypes = computed(() => app.mediaTypes)
-const apiUrl = computed(() => app.localhost)
 
 const dialog = ref(false)
 const query = ref('')
@@ -207,8 +209,8 @@ async function search() {
 
   try {
     const [mediaRes, tagRes] = await Promise.all([
-      axios.post(
-        `${apiUrl.value}/api/media/search`,
+      apiClient.post(
+        '/api/media/search',
         {
           query: `
             SELECT media.*,
@@ -223,8 +225,8 @@ async function search() {
         },
         {signal},
       ),
-      axios.post(
-        `${apiUrl.value}/api/tag/search`,
+      apiClient.post(
+        '/api/tag/search',
         {
           query: `
             SELECT *
@@ -244,7 +246,7 @@ async function search() {
     const tagGroups = buildTagGroups(tagRes.data[0] || [])
     results.value = sortGroups([...mediaGroups, ...tagGroups])
   } catch (e) {
-    if (axios.isCancel(e) || e?.code === 'ERR_CANCELED') return
+    if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError') return
     console.error(e)
   } finally {
     if (!signal.aborted) loading.value = false
@@ -285,7 +287,7 @@ function openMedia(media, mediaTypeId) {
   } else if (isVideoMediaType(type) || isAudioMediaType(type)) {
     itemsStore.playVideo({video: media})
   } else if (isTextMediaType(type) && media.path) {
-    $operable.openPath(media.path)
+    openPath(media.path)
   } else {
     router.push(`/media?mediaTypeId=${mediaTypeId || media.mediaTypeId}`)
   }
@@ -304,7 +306,7 @@ function openMediaPage(mediaTypeId) {
 }
 
 function openTag(tag) {
-  $readable.hideHoverImage()
+  hideHoverImage()
   router.push(`/tag?metaId=${tag.metaId}&tagId=${tag.id}&mediaTypeId=${getDefaultMediaTypeId(mediaTypes.value)}`)
   hide()
 }
@@ -375,7 +377,7 @@ function onItemMouseenter(row, index) {
 function showResultHover(event, row) {
   if (row.group.is_media) {
     const type = mediaTypes.value.find(item => item.id === row.group.mediaTypeId)
-    $readable.showHoverImage(event, row.group.mediaTypeId, row.item.id, 'media', {
+    showHoverImage(event, row.group.mediaTypeId, row.item.id, 'media', {
       width: row.item.width,
       height: row.item.height,
       isVideo: isVideoMediaType(type),
@@ -383,11 +385,11 @@ function showResultHover(event, row) {
     return
   }
 
-  $readable.showHoverImage(event, row.item.metaId, row.item.id)
+  showHoverImage(event, row.item.metaId, row.item.id)
 }
 
 function getNameHighlighted(text) {
-  return $readable.highlightChars(text, query.value.trim(), true)
+  return highlightChars(text, query.value.trim(), true)
 }
 </script>
 
@@ -494,7 +496,7 @@ function getNameHighlighted(text) {
               class="global-search__item d-flex align-center px-3 text-caption"
               :class="{'global-search__item--active': index === selectedIndex}"
               @mouseenter="onItemMouseenter(row, index); showResultHover($event, row)"
-              @mouseleave.stop="$readable.hideHoverImage"
+              @mouseleave.stop="hideHoverImage"
               @click="row.group.is_media
                 ? openMedia(row.item, row.group.mediaTypeId)
                 : openTag(row.item)"

@@ -118,6 +118,7 @@ import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import {setNotification} from '@/services/notificationService'
 
 const {t} = useI18n()
 const appStore = useAppStore()
@@ -251,7 +252,7 @@ const startBackfill = async (force = false) => {
 
         if (!event.stopped) {
           const summary = lastSummary.value
-          $operable.setNotification({
+          setNotification({
             type: summary.hashed > 0 ? 'success' : 'info',
             title: force
               ? t('settings_labels.database.content_hash_backfill_recalculate')
@@ -289,7 +290,7 @@ const startBackfill = async (force = false) => {
   } catch (error) {
     if (error.name !== 'AbortError') {
       console.error('Content hash backfill failed:', error)
-      $operable.setNotification({
+      setNotification({
         type: 'error',
         title: t('settings_labels.database.content_hash_backfill'),
         text: error.message,

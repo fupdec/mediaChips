@@ -48,10 +48,10 @@ const itemsType = computed(() => {
 })
 
 function applyRouteContext() {
-  env.value.media_type_id = $readable.getUrlParam('mediaTypeId')
-  env.value.meta_id = $readable.getUrlParam('metaId')
-  env.value.tag_id = $readable.getUrlParam('tagId')
-  env.value.tab_id = $readable.getUrlParam('tabId')
+  env.value.media_type_id = readQueryId('mediaTypeId')
+  env.value.meta_id = readQueryId('metaId')
+  env.value.tag_id = readQueryId('tagId')
+  env.value.tab_id = readQueryId('tabId')
 
   if (route.query.mediaTypeId) {
     itemsStore.type = 'media'

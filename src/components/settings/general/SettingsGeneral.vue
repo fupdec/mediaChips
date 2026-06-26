@@ -58,7 +58,7 @@
     <!--
     <v-checkbox
       v-model="SETTINGS.experimentalFeaturesModel"
-      @update:modelValue="val => $operable.setOption(val, 'experimentalFeaturesModel')"
+      @update:modelValue="val => setOption(val, 'experimentalFeaturesModel')"
       color="primary"
       false-value="0"
       true-value="1"
@@ -89,6 +89,7 @@ import {useSettingsStore} from '@/stores/settings'
 
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import SettingsLocale from "@/components/settings/general/SettingsLocale.vue";
+import {setOption} from '@/services/settingsService'
 
 // Хуки
 const {locale, t} = useI18n({useScope: 'global'})
@@ -105,7 +106,7 @@ const frontendUrl = computed(() => appStore.localhost)
 // Модели для v-model с watcher'ами
 const typingFiltersDefaultModel = computed({
   get: () => SETTINGS.value.typingFiltersDefault || '0',
-  set: (value) => $operable.setOption(value, 'typingFiltersDefault')
+  set: (value) => setOption(value, 'typingFiltersDefault')
 })
 
 // const experimentalFeaturesModel = computed({
@@ -131,7 +132,7 @@ const setLang = async (newLocale) => {
     locale.value = newLocale
 
     // Сохраняем в настройках
-    await $operable.setOption(newLocale, "locale")
+    await setOption(newLocale, "locale")
 
   } catch (error) {
     console.error('Failed to change language:', error)

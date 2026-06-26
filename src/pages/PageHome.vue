@@ -94,7 +94,7 @@
 
 <script setup>
 import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue"
-import axios from "axios"
+import {apiClient} from "@/services/apiClient"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
@@ -105,7 +105,8 @@ import {loadHomeMediaThumbs} from "@/utils/homeMediaThumbs"
 import {useOpenMediaList} from "@/utils/openMediaList"
 import {findMediaTypeById, isAudioMediaType, isTextMediaType, isVideoMediaType} from "@/utils/mediaType"
 import HomeWidgetRenderer from '@/components/widgets/HomeWidgetRenderer.vue'
-import DialogHomeWidgets from '@/components/dialogs/DialogHomeWidgets.vue'
+import {openPath} from '@/services/shellService'
+import {setOption} from '@/services/settingsService'
 
 const store = useAppStore()
 const settingsStore = useSettingsStore()
@@ -120,8 +121,6 @@ const favorites = ref([])
 const topViews = ref([])
 const showWidgetsDialog = ref(false)
 
-const apiUrl = computed(() => store.localhost)
-
 const shouldLoadMedia = computed(() =>
   isWidgetEnabled('continue') || isWidgetEnabled('favorites') || isWidgetEnabled('topViews'),
 )
@@ -135,7 +134,7 @@ async function loadHomeMedia() {
   }
 
   try {
-    const response = await axios.get(`${apiUrl.value}/api/home/media`, {
+    const response = await apiClient.get('/api/home/media', {
       params: {
         continueLimit: limits.value.continue,
         favoritesLimit: limits.value.favorites,
@@ -172,7 +171,7 @@ async function openMediaItem(item) {
   }
 
   if (isTextMediaType(mediaType) && item.path) {
-    await $operable.openPath(item.path)
+    await openPath(item.path)
     return
   }
 
@@ -215,7 +214,7 @@ function copy() {
 }
 
 async function hideAlert() {
-  await $operable.setOption(0, "show_ip_at_home_screen")
+  await setOption(0, "show_ip_at_home_screen")
 }
 
 watch(
@@ -228,6 +227,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  $operable.setOption(0, "show_salutation")
+  setOption(0, "show_salutation")
 })
 </script>

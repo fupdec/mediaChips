@@ -28,6 +28,7 @@ import { useI18n } from 'vue-i18n'
 import { useItemsStore } from '@/stores/items'
 
 import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
+import {getReadableFileSize} from '@/services/formatUtils'
 
 /* ---------------------- STORE ---------------------- */
 
@@ -40,7 +41,7 @@ const filesizes = computed(() => {
   if (itemsStore.type !== 'media') return ''
 
   if (itemsStore.isAllFilteredSelected) {
-    return $readable.getReadableFileSize(itemsStore.totalFilesize)
+    return getReadableFileSize(itemsStore.totalFilesize)
   }
 
   const selectedFiles = itemsStore.entities.filter(i =>
@@ -49,7 +50,7 @@ const filesizes = computed(() => {
 
   const sum = selectedFiles.reduce((a, b) => a + (b.filesize || 0), 0)
 
-  return $readable.getReadableFileSize(sum)
+  return getReadableFileSize(sum)
 })
 
 const selectedText = computed(() => {

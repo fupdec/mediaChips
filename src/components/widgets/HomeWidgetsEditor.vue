@@ -63,6 +63,7 @@ import {
   parseHomeWidgetsConfig,
   serializeHomeWidgetsConfig,
 } from '@/utils/homeWidgets'
+import {setOption} from '@/services/settingsService'
 
 const {t} = useI18n()
 const settingsStore = useSettingsStore()
@@ -154,6 +155,6 @@ async function saveConfig() {
 
   const serialized = serializeHomeWidgetsConfig(config)
   settingsStore.home_widgets_config = serialized
-  await $operable.setOption(serialized, 'home_widgets_config')
+  await setOption(serialized, 'home_widgets_config')
 }
 </script>

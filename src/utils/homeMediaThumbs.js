@@ -1,5 +1,4 @@
-import axios from 'axios'
-import {useAppStore} from '@/stores/app'
+import {apiClient} from '@/services/apiClient'
 import {getMediaDeleteAssetFolder} from '@/utils/mediaType'
 
 function getThumbMediaType(mediaTypes, mediaTypeId) {
@@ -18,12 +17,11 @@ export async function loadHomeMediaThumbs(items, mediaTypes) {
     idsByFolder.get(folder).push(item.id)
   }
 
-  const appStore = useAppStore()
   const thumbsById = {}
 
   await Promise.all([...idsByFolder.entries()].map(async ([mediaType, ids]) => {
     try {
-      const response = await axios.post(`${appStore.localhost}/api/media/thumbs`, {
+      const response = await apiClient.post('/api/media/thumbs', {
         ids,
         mediaType,
       })

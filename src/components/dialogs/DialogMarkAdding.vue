@@ -220,6 +220,7 @@ import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
+import {getReadableDuration} from '@/services/formatUtils'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import MetaInputArray from '@/components/meta/input/MetaInputArray.vue'
 import {
@@ -290,7 +291,7 @@ const buttons = computed(() => [{
   action: add,
 }])
 
-const formatTime = (seconds) => $readable.getReadableDuration(seconds || 0)
+const formatTime = (seconds) => getReadableDuration(seconds || 0)
 
 const initMarkTypes = () => {
   mark_types.value = buildMarkTypes(itemsStore.assigned || [])

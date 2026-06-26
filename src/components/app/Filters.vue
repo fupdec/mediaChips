@@ -189,7 +189,13 @@ import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
 import _ from 'lodash'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {getSavedFilters} from '@/services/filterService'
+import {
+  getFilterObject,
+  getListCond,
+  validateName,
+} from '@/services/formatUtils'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
@@ -261,7 +267,6 @@ const filtersVisible = computed(() => filtersStore.visible)
 
 const ITEMS = computed(() => itemsStore)
 const ENV = computed(() => ITEMS.value.environment)
-const apiUrl = computed(() => appStore.localhost)
 
 const currentMediaType = computed(() =>
   getCurrentMediaType(appStore.mediaTypes, ENV.value.media_type_id)
@@ -372,9 +377,9 @@ const init = () => {
 
 const add = (params) => {
   for (let i of params) {
-    let cond = $readable.getListCond(i.type)
+    let cond = getListCond(i.type)
     if (cond) cond = cond[0].cond
-    let filter_obj = $readable.getFilterObject({
+    let filter_obj = getFilterObject({
       param: i.param,
       type: i.type,
       cond: cond
@@ -466,7 +471,7 @@ const apply = async () => {
   const removed_filters = filters.value.filter(i => i.removed)
   for (let f of removed_filters) {
     if (f.id) {
-      await axios.delete(`${apiUrl.value}/api/FilterRow/${f.id}`)
+      await apiClient.delete(`/api/FilterRow/${f.id}`)
     }
   }
 
@@ -479,14 +484,10 @@ const addFilterRows = async (filterId, isSavedFilter = false) => {
   for (let f of filterRows) {
     if (isSavedFilter) f.id = null
     try {
-      await axios({
-        method: "post",
-        url: `${apiUrl.value}/api/FilterRow`,
-        data: {
-          filter: f,
-          filterId: filterId,
-          rowId: isSavedFilter ? null : f.id
-        }
+      await apiClient.post('/api/FilterRow', {
+        filter: f,
+        filterId: filterId,
+        rowId: isSavedFilter ? null : f.id
       })
     } catch (error) {
       console.error('Error adding filter row:', error)
@@ -503,16 +504,12 @@ const save = async () => {
   let savedFilter = {}
 
   try {
-    const response = await axios({
-      method: "post",
-      url: `${apiUrl.value}/api/SavedFilter`,
-      data: {
-        name: filterName.value,
-        mediaTypeId: ENV.value.media_type_id ?? null,
-        metaId: ENV.value.meta_id ?? null,
-        tagId: ENV.value.tag_id ?? null,
-        tabId: ENV.value.tab_id ?? null,
-      }
+    const response = await apiClient.post('/api/SavedFilter', {
+      name: filterName.value,
+      mediaTypeId: ENV.value.media_type_id ?? null,
+      metaId: ENV.value.meta_id ?? null,
+      tagId: ENV.value.tag_id ?? null,
+      tabId: ENV.value.tab_id ?? null,
     })
     savedFilter = response.data?.[0] || response.data
   } catch (error) {
@@ -528,7 +525,7 @@ const save = async () => {
   filterName.value = ''
 
   // получаем актуальные сохраненные наборы фильтров
-  await $operable.getSavedFilters()
+  await getSavedFilters()
 }
 
 const loadSavedFilter = (loadedFilters) => {
@@ -555,7 +552,7 @@ const validate = (val) => {
 }
 
 const nameRules = (string) => {
-  return $readable.validateName(string)
+  return validateName(string)
 }
 
 const toggleDuplicates = () => {

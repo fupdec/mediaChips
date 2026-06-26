@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { translate } from '@/utils/translate'
 import { useSettingsStore } from '@/stores/settings'
+import {getReadableDuration, getReadableFileSize} from '@/services/formatUtils'
 
 export const useOperationsStore = defineStore('useOperationsStore', {
   state: () => ({
@@ -22,18 +23,12 @@ export const useOperationsStore = defineStore('useOperationsStore', {
     },
 
     formatSize(bytes) {
-      if (typeof window !== 'undefined' && window.$readable?.getReadableFileSize) {
-        return window.$readable.getReadableFileSize(bytes)
-      }
-      return `${bytes} B`
+      return getReadableFileSize(bytes)
     },
 
     formatEta(seconds) {
       if (!seconds || seconds <= 0) return ''
-      if (typeof window !== 'undefined' && window.$readable?.getReadableDuration) {
-        return window.$readable.getReadableDuration(seconds)
-      }
-      return `${seconds}s`
+      return getReadableDuration(seconds)
     },
 
     getMoveErrorText(msg) {

@@ -108,12 +108,12 @@
 import {computed, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useTasksStore} from '@/stores/tasks'
 import {useEventBus} from '@/utils/eventBus'
-import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {getReadableFileSize} from '@/services/formatUtils'
 
 const {t} = useI18n()
 const router = useRouter()
@@ -140,7 +140,7 @@ const databaseSize = computed(() => {
 })
 
 const databaseSizeLabel = computed(() => {
-  const size = $readable.getReadableFileSize(databaseSize.value)
+  const size = getReadableFileSize(databaseSize.value)
   const name = health.value.database?.name
 
   if (name) {
@@ -267,7 +267,7 @@ function openDuplicates() {
 }
 
 async function loadHealth() {
-  const response = await axios.get(`${appStore.localhost}/api/home/health`)
+  const response = await apiClient.get('/api/home/health')
   health.value = {
     duplicates: response.data?.duplicates || {byFilesize: 0, byContentHash: 0},
     contentHash: response.data?.contentHash || {total: 0, pending: 0, hashed: 0},
@@ -277,7 +277,7 @@ async function loadHealth() {
 }
 
 async function loadMissingStatus() {
-  const response = await axios.get(`${appStore.localhost}/api/Task/missingMediaStatus`)
+  const response = await apiClient.get('/api/Task/missingMediaStatus')
   missingCount.value = Number(response.data?.missing || 0)
 }
 

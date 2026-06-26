@@ -5,6 +5,7 @@ import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import {useMarksStore} from '@/stores/marks'
 import {useEventBus} from '@/utils/eventBus'
+import {checkFileExists, createThumb} from '@/services/fileService'
 
 function formatMarkTimestamp(time) {
   return new Date(1000 * time).toISOString().substr(11, 12)
@@ -47,7 +48,7 @@ export default function useMarkImageGenerator() {
 
   const ensureMarkThumb = async (mark) => {
     const imgPath = getMarkImagePath(mark.id)
-    const thumbExists = await $operable.checkFileExists(imgPath)
+    const thumbExists = await checkFileExists(imgPath)
 
     if (thumbExists) {
       eventBus.emit('updateMarkImage', mark.id)
@@ -57,10 +58,10 @@ export default function useMarkImageGenerator() {
     const videoPath = mark.medium?.path
     if (!videoPath) return 'skipped'
 
-    const videoExists = await $operable.checkFileExists(videoPath)
+    const videoExists = await checkFileExists(videoPath)
     if (!videoExists) return 'skipped'
 
-    await $operable.createThumb(
+    await createThumb(
       formatMarkTimestamp(mark.time),
       videoPath,
       imgPath,
@@ -77,7 +78,7 @@ export default function useMarkImageGenerator() {
 
     for (const mark of marks) {
       const imgPath = getMarkImagePath(mark.id)
-      const thumbExists = await $operable.checkFileExists(imgPath)
+      const thumbExists = await checkFileExists(imgPath)
 
       if (thumbExists) {
         eventBus.emit('updateMarkImage', mark.id)
@@ -86,7 +87,7 @@ export default function useMarkImageGenerator() {
 
       if (!mark.medium?.path) continue
 
-      const videoExists = await $operable.checkFileExists(mark.medium.path)
+      const videoExists = await checkFileExists(mark.medium.path)
       if (!videoExists) continue
 
       marksToGenerate.push(mark)

@@ -47,114 +47,31 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onBeforeUnmount} from 'vue'
-import {useAppStore} from '@/stores/app'
-import {usePlayerStore} from '@/stores/player'
-import {useEventBus} from '@/utils/eventBus'
-import path from "path-browserify"
+import {usePlayerMark} from '@/composable/usePlayerMark'
 
 const props = defineProps({
   mark: {
     type: Object,
-    required: true
+    required: true,
   },
   controls_width: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const emit = defineEmits(['removeMark'])
 
-// Stores
-const appStore = useAppStore()
-const playerStore = usePlayerStore()
-const eventBus = useEventBus()
-
-// Refs
-const thumb = ref(null)
-
-// Computed
-const icon = computed(() => {
-  let icon = "tooltip"
-  if (props.mark.type == "favorite") icon = "heart"
-  else if (props.mark.type == "bookmark") icon = "bookmark"
-  return icon
-})
-
-const color = computed(() => {
-  let color = "#ffffff"
-  if (props.mark.type == "favorite") color = "#e91e63"
-  else if (props.mark.type == "bookmark") color = "#f44336"
-  else if (props.mark.type == "meta") color = props.mark["tag.color"] || props.mark.tag?.color || "#2196f3"
-  return color
-})
-
-const colorMetaIcon = computed(() => {
-  const isDark = $readable.checkColorForDarkText(color.value)
-  return isDark ? "white" : "black"
-})
-
-const time = computed(() => {
-  let time = $readable.getReadableDuration(props.mark.time)
-  if (props.mark.end) {
-    time += " – " + $readable.getReadableDuration(props.mark.end)
-  }
-  return time
-})
-
-const position = computed(() => {
-  if (!playerStore.duration) return ''
-  return `left: ${props.mark.time / playerStore.duration * 100}%;`
-})
-
-const timeline_width = computed(() => {
-  if (!playerStore.duration || !props.controls_width) return ''
-
-  let start = props.mark.time
-  let end = props.mark.end || props.mark.time
-  let width_percentage = (end - start) / playerStore.duration * 100
-  return `width: ${props.controls_width / 100 * width_percentage}px;`
-})
-
-// Methods
-const getImg = async () => {
-  const imgPath = path.join(
-    appStore.mediaPath,
-    "videos/marks",
-    `${props.mark.id}.jpg`
-  )
-
-  thumb.value = await $operable.getLocalImage(imgPath)
-}
-
-const jumpTo = () => {
-  if (playerStore.player) {
-    playerStore.player.currentTime = props.mark.time
-  }
-}
-
-const remove = () => {
-  emit("removeMark", props.mark)
-}
-
-// Event handler for updating mark image
-const handleUpdateMarkImage = (id) => {
-  if (props.mark.id === id) {
-    getImg()
-  }
-}
-
-// Lifecycle
-onMounted(() => {
-  eventBus.on('updateMarkImage', (event) => {
-    handleUpdateMarkImage(event)
-  })
-
-  getImg()
-})
-
-onBeforeUnmount(() => {
-  eventBus.off('updateMarkImage', handleUpdateMarkImage)
-})
+const {
+  playerStore,
+  thumb,
+  icon,
+  color,
+  colorMetaIcon,
+  time,
+  position,
+  timeline_width,
+  jumpTo,
+  remove,
+} = usePlayerMark(props, emit)
 </script>

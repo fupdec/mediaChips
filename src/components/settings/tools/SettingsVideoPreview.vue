@@ -33,7 +33,7 @@
 
       <v-radio-group
         :model-value="SETTINGS.videoPreviewStatic"
-        @update:model-value="(val) => $operable.setOption(val, 'videoPreviewStatic')"
+        @update:model-value="(val) => setOption(val, 'videoPreviewStatic')"
         color="primary"
         class="mt-0 pt-0"
         hide-details
@@ -71,7 +71,7 @@
 
       <v-radio-group
         :model-value="SETTINGS.videoPreviewHover"
-        @update:model-value="(val) => $operable.setOption(val, 'videoPreviewHover')"
+        @update:model-value="(val) => setOption(val, 'videoPreviewHover')"
         class="mt-0 pt-0"
         color="primary"
         hide-details
@@ -136,7 +136,7 @@
       </div>
       <v-slider
         :model-value="SETTINGS.delayVideoPreview"
-        @update:model-value="(val) => $operable.setOption(val, 'delayVideoPreview')"
+        @update:model-value="(val) => setOption(val, 'delayVideoPreview')"
         min="0"
         max="9999"
         step="100"
@@ -161,7 +161,7 @@
       </div>
       <v-slider
         :model-value="SETTINGS.big_video_preview_delay"
-        @update:model-value="(val) => $operable.setOption(val, 'big_video_preview_delay')"
+        @update:model-value="(val) => setOption(val, 'big_video_preview_delay')"
         min="0"
         max="9999"
         step="100"
@@ -200,6 +200,7 @@ import SettingsCategoryDivider
 import {computed} from "vue";
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue";
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
+import {setOption} from '@/services/settingsService'
 
 // Stores and Composables
 const settingsStore = useSettingsStore()

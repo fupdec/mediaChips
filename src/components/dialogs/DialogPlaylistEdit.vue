@@ -124,7 +124,10 @@ import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify';
 import {storeToRefs} from 'pinia';
 import draggable from 'vuedraggable';
-import axios from 'axios';
+import {apiClient} from '@/services/apiClient';
+import {getLocalImage} from '@/services/fileService';
+import {validateName} from '@/services/formatUtils';
+import {setNotification} from '@/services/notificationService';
 import path from 'path-browserify';
 import {useAppStore} from '@/stores/app';
 import DialogHeader from '@/components/elements/DialogHeader.vue';
@@ -141,7 +144,7 @@ const emit = defineEmits(['close', 'updatePlaylist', 'delete']);
 
 const {smAndDown} = useDisplay();
 const appStore = useAppStore();
-const {localhost: apiUrl, mediaPath} = storeToRefs(appStore);
+const {mediaPath} = storeToRefs(appStore);
 const {t} = useI18n()
 
 const listView = ref(false);
@@ -200,7 +203,7 @@ const initButtons = () => {
 };
 
 const nameRules = (value) => {
-  return $readable.validateName(value)
+  return validateName(value)
 };
 
 const apply = async () => {
@@ -208,12 +211,8 @@ const apply = async () => {
   if (!valid.value) return;
 
   try {
-    await axios({
-      method: "put",
-      url: apiUrl.value + "/api/playlist/" + props.playlist.id,
-      data: {
-        name: name.value,
-      },
+    await apiClient.put(`/api/playlist/${props.playlist.id}`, {
+      name: name.value,
     });
     emit("updatePlaylist");
   } catch (e) {
@@ -232,7 +231,7 @@ const deletePlaylist = () => {
 
 const exportPlaylist = async () => {
   if (videos.value.length === 0) {
-    $operable.setNotification({
+    setNotification({
       type: 'warning',
       title: t('playlists.export'),
       text: t('playlists.export_empty'),
@@ -254,7 +253,7 @@ const exportPlaylist = async () => {
 
       if (result?.canceled) return
 
-      $operable.setNotification({
+      setNotification({
         type: 'success',
         title: t('playlists.export'),
         text: t('playlists.export_success', {path: result.filePath}),
@@ -263,14 +262,14 @@ const exportPlaylist = async () => {
     }
 
     downloadTextFile(content, defaultPath)
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('playlists.export'),
       text: t('playlists.export_success', {path: defaultPath}),
     })
   } catch (error) {
     console.error(error)
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('playlists.export'),
       text: error.message,
@@ -281,10 +280,7 @@ const exportPlaylist = async () => {
 const getVideos = async () => {
   is_thumbs_loaded.value = false;
   try {
-    const res = await axios({
-      method: "get",
-      url: apiUrl.value + "/api/mediaInPlaylists/" + props.playlist.id,
-    });
+    const res = await apiClient.get(`/api/mediaInPlaylists/${props.playlist.id}`);
 
     videos.value = sortBy(res.data, "order");
 
@@ -305,13 +301,11 @@ const getVideos = async () => {
 
 const removeVideo = async (video) => {
   try {
-    await axios({
-      method: "delete",
-      url: apiUrl.value + "/api/mediaInPlaylists/",
+    await apiClient.delete('/api/mediaInPlaylists/', {
       data: {
         mediaId: video.mediaId,
         playlistId: props.playlist.id,
-      }
+      },
     });
     await getVideos();
   } catch (error) {
@@ -329,20 +323,11 @@ const reorderVideos = async () => {
   }));
 
   try {
-    await axios({
-      method: "post",
-      url: apiUrl.value + "/api/mediaInPlaylists/update",
-      data: reorderedVideos,
-    });
+    await apiClient.post('/api/mediaInPlaylists/update', reorderedVideos);
     emit("updatePlaylist");
   } catch (error) {
     console.error(error);
   }
-};
-
-// Функция для получения локального изображения (нужно реализовать)
-const getLocalImage = async (imgPath) => {
-  return $operable.getLocalImage(imgPath);
 };
 
 onMounted(() => {

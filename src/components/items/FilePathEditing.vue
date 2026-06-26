@@ -131,7 +131,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import path from 'path-browserify'
-import axios from "axios"
+import {apiClient} from '@/services/apiClient'
 import { useAppStore } from '@/stores/app'
 import { useOperationsStore } from '@/stores/operations'
 import { useItemsStore } from '@/stores/items'
@@ -139,6 +139,9 @@ import { useDialogsStore } from '@/stores/dialogs'
 import { useEventBus } from '@/utils/eventBus'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import {normalizePastedFilePath} from '@/utils/filePathInput'
+import {checkFileExists as checkPathExists} from '@/services/fileService'
+import {setNotification} from '@/services/notificationService'
+import {openPath} from '@/services/shellService'
 
 const props = defineProps({
   media: Object,
@@ -166,7 +169,6 @@ const itemsStore = useItemsStore()
 const dialogsStore = useDialogsStore()
 const eventBus = useEventBus()
 
-const apiUrl = computed(() => appStore.localhost)
 const display_path = ref('')
 
 watch(() => props.media?.path, (value) => {
@@ -231,26 +233,22 @@ const closeDialog = () => {
 const openFolder = () => {
   const filePath = display_path.value || props.media?.path
   if (!filePath) return
-  $operable.openPath(filePath, true)
+  openPath(filePath, true)
 }
 
 const savePathToDb = async (filePath, { notify = true } = {}) => {
   const basename = path.basename(filePath)
 
   try {
-    await axios({
-      method: "post",
-      url: `${apiUrl.value}/api/media/updatePath`,
-      data: {
-        id: props.media.id,
-        path: filePath,
-      },
+    await apiClient.post('/api/media/updatePath', {
+      id: props.media.id,
+      path: filePath,
     })
 
     applyPathUpdate(filePath)
 
     if (notify) {
-      $operable.setNotification({
+      setNotification({
         type: "success",
         title: t("media.file_path.updated"),
         text: basename,
@@ -261,7 +259,7 @@ const savePathToDb = async (filePath, { notify = true } = {}) => {
     return true
   } catch (error) {
     if (notify) {
-      $operable.setNotification({
+      setNotification({
         type: "error",
         title: t("media.file_path.already_exists"),
         text: basename,
@@ -315,7 +313,7 @@ const updateFilePath = async () => {
 
       if (!result?.success) {
         if (!result?.aborted && result?.failed === 0) {
-          $operable.setNotification({
+          setNotification({
             type: "error",
             title: t("media.file_path.renaming_failed"),
             text: basename,
@@ -328,14 +326,14 @@ const updateFilePath = async () => {
       const saved = await savePathToDb(filePath, { notify: false })
 
       if (saved) {
-        $operable.setNotification({
+        setNotification({
           type: "success",
           title: t("media.file_path.moved_renamed"),
           text: basename,
           icon: 'folder-edit',
         })
         dialog_edit.value = false
-        await checkFileExists(filePath)
+        await refreshFileExists(filePath)
       }
     } finally {
       is_file_moving.value = false
@@ -347,12 +345,12 @@ const updateFilePath = async () => {
   const saved = await savePathToDb(filePath)
   if (saved) {
     dialog_edit.value = false
-    await checkFileExists(filePath)
+    await refreshFileExists(filePath)
   }
 }
 
-const checkFileExists = async (filePath) => {
-  is_file_exists.value = await $operable.checkFileExists(filePath)
+const refreshFileExists = async (filePath) => {
+  is_file_exists.value = await checkPathExists(filePath)
 }
 
 const openDialogEdit = async () => {
@@ -366,12 +364,12 @@ const openDialogEdit = async () => {
 }
 
 onMounted(async () => {
-  await checkFileExists(display_path.value || props.media?.path)
+  await refreshFileExists(display_path.value || props.media?.path)
 })
 
 watch(display_path, async (filePath) => {
   if (filePath) {
-    await checkFileExists(filePath)
+    await refreshFileExists(filePath)
   }
 })
 </script>

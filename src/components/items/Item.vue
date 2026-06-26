@@ -123,8 +123,8 @@
       v-else-if="itemsStore.view == '2' && type == 'tag'"
       @contextmenu.stop="showContextMenu"
       @mousedown="stopSmoothScroll($event)"
-      @mouseover.stop="$readable.showHoverImage($event, item.metaId, item.id)"
-      @mouseleave.stop="$readable.hideHoverImage"
+      @mouseover.stop="showHoverImage($event, item.metaId, item.id)"
+      @mouseleave.stop="hideHoverImage"
       :variant="meta?.chipVariant"
       :color="meta?.color ? item.color || '' : ''"
       :size="getChipSize"
@@ -171,6 +171,9 @@ import ItemRating from '@/components/items/ItemRating.vue'
 import ItemFavorite from '@/components/items/ItemFavorite.vue'
 import useItemContextMenu from '@/composable/ItemContextMenu'
 import {isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
+import {checkFileExists as checkPathExists} from '@/services/fileService'
+import {hexToRgba} from '@/services/formatUtils'
+import {hideHoverImage, showHoverImage} from '@/services/hoverService'
 
 const props = defineProps({
   item: Object,
@@ -212,7 +215,7 @@ const is_selected = computed(() => {
 const card_color = computed(() => {
   const default_color = ''
   if (props.meta?.color) {
-    return props.item.color ? $readable.hexToRgba(props.item.color, 9) : default_color
+    return props.item.color ? hexToRgba(props.item.color, 9) : default_color
   } else {
     return default_color
   }
@@ -282,19 +285,19 @@ const toggleSelect = (e) => {
   itemsStore.toggleSelect(e, props.item)
 }
 
-const checkFileExists = async () => {
-  is_file_exists.value = await $operable.checkFileExists(props.item.path)
+const checkVideoFileExists = async () => {
+  is_file_exists.value = await checkPathExists(props.item.path)
 }
 
 onMounted(() => {
   if (props.type === 'media') {
-    checkFileExists()
+    checkVideoFileExists()
   }
 })
 
 watch(() => props.item?.path, () => {
   if (props.type === 'media') {
-    checkFileExists()
+    checkVideoFileExists()
   }
 })
 </script>

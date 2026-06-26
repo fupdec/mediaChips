@@ -67,6 +67,7 @@ import {storeToRefs} from 'pinia'
 import {useAppStore} from '@/stores/app'
 import {useOperationsStore} from '@/stores/operations'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
+import {checkFileExists} from '@/services/fileService'
 import {normalizePastedFilePath} from '@/utils/filePathInput'
 
 const emit = defineEmits(['select'])
@@ -97,7 +98,7 @@ const validateFolderPath = async () => {
     return
   }
   try {
-    isFolderExists.value = await $operable.checkFileExists(path)
+    isFolderExists.value = await checkFileExists(path)
   } catch (error) {
     console.error('Error checking folder:', error)
     isFolderExists.value = false
@@ -143,7 +144,7 @@ const select = async () => {
 
   if (isValid) {
     try {
-      isFolderExists.value = await $operable.checkFileExists(folderPath.value)
+      isFolderExists.value = await checkFileExists(folderPath.value)
 
       if (isFolderExists.value) {
         emit('select', folderPath.value)

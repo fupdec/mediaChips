@@ -31,10 +31,14 @@
 
 <script setup>
 import {ref, computed, watch, onMounted, onBeforeUnmount} from 'vue'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {loadImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
+import {
+  getReadableVideoHeight,
+  getReadableVideoQuality,
+} from '@/services/formatUtils'
 
 const props = defineProps({
   media: Object,
@@ -72,12 +76,12 @@ const aspectRatio = computed(() => {
 })
 
 const quality = computed(() =>
-  $readable.getReadableVideoQuality(props.media?.width, props.media?.height)
+  getReadableVideoQuality(props.media?.width, props.media?.height)
 )
 
 const resolutionLabel = computed(() => {
   if (!props.media?.width || !props.media?.height) return ''
-  return $readable.getReadableVideoHeight(props.media.width, props.media.height)
+  return getReadableVideoHeight(props.media.width, props.media.height)
 })
 
 const clearThumbUrl = () => {
@@ -91,7 +95,7 @@ const stopThumbObserver = () => {
 }
 
 const regenerateThumb = async () => {
-  await axios.post(`${store.localhost}/api/Task/updateMediaInfo`, {
+  await apiClient.post('/api/Task/updateMediaInfo', {
     id: props.media.id,
   })
 }

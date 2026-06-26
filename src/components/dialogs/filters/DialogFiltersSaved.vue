@@ -55,7 +55,7 @@
             <v-text-field
               v-model="filterName"
               :label="t('filters.filter_name')"
-              :rules="[v => $readable.validateName(v) || t('validation.name_required')]"
+              :rules="[v => validateName(v) || t('validation.name_required')]"
               autofocus
               variant="filled"
             />
@@ -78,14 +78,15 @@
 import {ref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {getSavedFilters} from '@/services/filterService'
+import {validateName} from '@/services/formatUtils'
 
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import SavedFiltersList from '@/components/elements/SavedFiltersList.vue'
 
 import {useItemsStore} from '@/stores/items'
-import {useAppStore} from '@/stores/app'
 
 const props = defineProps({
   dialog: Boolean,
@@ -94,7 +95,6 @@ const props = defineProps({
 const emit = defineEmits(['close', 'apply'])
 
 const itemsStore = useItemsStore()
-const appStore = useAppStore()
 const {t} = useI18n()
 const {xs} = useDisplay()
 
@@ -112,7 +112,6 @@ const filterName = ref('')
 const formRef = ref(null)
 
 const savedFilters = computed(() => itemsStore.filters_saved)
-const apiUrl = computed(() => appStore.localhost)
 
 const close = () => emit('close')
 
@@ -125,13 +124,13 @@ const deleteSavedFilter = async () => {
   const savedFilter = selected.value
   if (!savedFilter) return
 
-  await axios.delete(`${apiUrl.value}/api/SavedFilter/${savedFilter.id}`)
+  await apiClient.delete(`/api/SavedFilter/${savedFilter.id}`)
 
   for (const row of savedFilter.filters) {
-    await axios.delete(`${apiUrl.value}/api/FilterRow/${row.id}`)
+    await apiClient.delete(`/api/FilterRow/${row.id}`)
   }
 
-  await $operable.getSavedFilters()
+  await getSavedFilters()
   dialogDel.value = false
 }
 
@@ -147,13 +146,13 @@ const updateFilterName = async () => {
 
   const savedFilter = selected.value
 
-  await axios.put(
-    `${apiUrl.value}/api/SavedFilter/${savedFilter.id}`,
+  await apiClient.put(
+    `/api/SavedFilter/${savedFilter.id}`,
     {name: filterName.value},
   )
     .then(() => {
       dialogEditing.value = false
-      $operable.getSavedFilters()
+      getSavedFilters()
     })
     .catch((e) => {
       dialogEditing.value = false

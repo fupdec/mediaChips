@@ -144,7 +144,7 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {usePlayerStore} from '@/stores/player'
 import {useSettingsStore} from '@/stores/settings'
-import axios from "axios"
+import {apiClient} from '@/services/apiClient'
 import DialogPlaylistAdd from "@/components/dialogs/DialogPlaylistAdd.vue"
 import DialogPlaylistEdit from "@/components/dialogs/DialogPlaylistEdit.vue"
 import DialogSmartPlaylistEdit from "@/components/dialogs/DialogSmartPlaylistEdit.vue"
@@ -152,7 +152,8 @@ import PlaylistCard from "@/components/playlists/PlaylistCard.vue"
 import DynamicPlaylistRow from "@/components/playlists/DynamicPlaylistRow.vue"
 import {loadPlaylistThumbs} from '@/utils/playlistThumbs'
 import {openSeparatePlayer, canOpenSeparatePlayer} from '@/utils/playerWindow'
-import {useEventBus} from '@/utils/eventBus'
+import {setNotification} from '@/services/notificationService'
+import {getFilters} from '@/services/filterService'
 
 const appStore = useAppStore()
 const itemsStore = useItemsStore()
@@ -273,7 +274,7 @@ const playDynamic = async (playlist) => {
 
     if (firstId) {
       try {
-        const basicsRes = await axios.post(`${apiUrl.value}/api/Media/basics`, {
+        const basicsRes = await apiClient.post('/api/Media/basics', {
           ids: [firstId],
         })
         const firstVideo = basicsRes.data?.items?.[0]
@@ -286,7 +287,7 @@ const playDynamic = async (playlist) => {
       }
     }
 
-    const res = await axios.get(`${apiUrl.value}/api/SavedFilter/${playlist.id}/media`, {
+    const res = await apiClient.get(`/api/SavedFilter/${playlist.id}/media`, {
       params: {mode: 'play'},
     })
     const videos = (res.data.items || []).map(enrichMediaItem)
@@ -294,7 +295,7 @@ const playDynamic = async (playlist) => {
 
     if (!videos.length) {
       if (!started) {
-        $operable.setNotification({
+        setNotification({
           type: 'error',
           title: t('playlists.no_videos_added'),
         })
@@ -315,14 +316,14 @@ const playDynamic = async (playlist) => {
     const played = await playVideos(videos)
 
     if (!played && !started) {
-      $operable.setNotification({
+      setNotification({
         type: 'error',
         title: t('playlists.preparing_playback_failed'),
       })
     }
   } catch (e) {
     console.log('Error loading dynamic playlist videos:', e)
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('playlists.preparing_playback_failed'),
     })
@@ -341,7 +342,7 @@ const loadDynamicPlaylistSummaries = async () => {
 
   const applySummary = async (playlist) => {
     try {
-      const res = await axios.get(`${apiUrl.value}/api/SavedFilter/${playlist.id}/summary`)
+      const res = await apiClient.get(`/api/SavedFilter/${playlist.id}/summary`)
       playlist.count = Number(res.data?.count) || 0
       playlist.previewIds = res.data?.previewIds || []
       return
@@ -356,7 +357,7 @@ const loadDynamicPlaylistSummaries = async () => {
 
     try {
       if (!legacySummaries) {
-        const res = await axios.get(`${apiUrl.value}/api/SavedFilter/dynamicPlaylists`)
+        const res = await apiClient.get('/api/SavedFilter/dynamicPlaylists')
         legacySummaries = new Map((res.data || []).map((item) => [item.id, item]))
       }
       const match = legacySummaries.get(playlist.id)
@@ -388,7 +389,7 @@ const loadDynamicPlaylists = async () => {
   is_dynamic_thumbs_loaded.value = false
 
   try {
-    const res = await axios.get(`${apiUrl.value}/api/SavedFilter/dynamicPlaylists/basic`)
+    const res = await apiClient.get('/api/SavedFilter/dynamicPlaylists/basic')
     dynamicPlaylists.value = (res.data || []).map((playlist) => ({
       ...playlist,
       count: null,
@@ -399,7 +400,7 @@ const loadDynamicPlaylists = async () => {
   } catch (e) {
     if (e.response?.status === 404) {
       try {
-        const res = await axios.get(`${apiUrl.value}/api/SavedFilter/dynamicPlaylists`)
+        const res = await apiClient.get('/api/SavedFilter/dynamicPlaylists')
         dynamicPlaylists.value = (res.data || []).map((playlist) => ({
           ...playlist,
           count: Number(playlist.count) || 0,
@@ -438,7 +439,7 @@ const getPlaylists = async () => {
   is_thumbs_loaded.value = false
 
   try {
-    const res = await axios.get(`${apiUrl.value}/api/Playlist/summary`)
+    const res = await apiClient.get('/api/Playlist/summary')
     playlists.value = (res.data || []).map((playlist) => ({
       ...playlist,
       thumbs: [],
@@ -463,10 +464,7 @@ const deletePlaylist = async () => {
   dialogPlaylistEdit.value = false
 
   try {
-    await axios({
-      method: "delete",
-      url: apiUrl.value + "/api/playlist/" + playlist_edit.value.id,
-    })
+    await apiClient.delete(`/api/playlist/${playlist_edit.value.id}`)
   } catch (e) {
     console.log(e)
   }
@@ -505,13 +503,13 @@ const deleteSmartPlaylist = async () => {
 
   try {
     const savedFilter = smart_playlist_edit.value
-    const filters = await $operable.getFilters(savedFilter.id)
+    const filters = await getFilters(savedFilter.id)
 
-    await axios.delete(`${apiUrl.value}/api/SavedFilter/${savedFilter.id}`)
+    await apiClient.delete(`/api/SavedFilter/${savedFilter.id}`)
 
     for (const row of filters) {
       if (row?.id) {
-        await axios.delete(`${apiUrl.value}/api/FilterRow/${row.id}`)
+        await apiClient.delete(`/api/FilterRow/${row.id}`)
       }
     }
   } catch (e) {

@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { useSettingsStore } from "@/stores/settings";
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";
+import {setOption} from '@/services/settingsService'
 
 const settingsStore = useSettingsStore();
 const SETTINGS = computed(() => settingsStore);
@@ -87,7 +88,7 @@ const {t} = useI18n();
 
     <v-btn-toggle
       v-model="SETTINGS.gapSize"
-      @update:model-value="$operable.setOption($event, 'gapSize')"
+      @update:model-value="setOption($event, 'gapSize')"
       color="primary"
       class="mb-2"
       rounded="xl"
@@ -109,7 +110,7 @@ const {t} = useI18n();
 
     <v-btn-toggle
       v-model="SETTINGS.numberOfPagesLimit"
-      @update:model-value="$operable.setOption($event, 'numberOfPagesLimit')"
+      @update:model-value="setOption($event, 'numberOfPagesLimit')"
       color="primary"
       class="mb-2"
       rounded="xl"

@@ -1,0 +1,155 @@
+@import "@/assets/styles/app.scss";
+
+html,
+body {
+  overflow: hidden;
+  height: 100%;
+}
+
+.player-window-app {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+
+  .v-application__wrap {
+    min-height: 100%;
+    height: 100%;
+  }
+}
+
+.reduced-top {
+  padding-top: 0 !important;
+}
+
+.app-main-layout {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden !important;
+  --app-content-offset-top: 48px;
+  --app-content-offset-bottom: 0px;
+
+  &.added-top-tabs {
+    --app-content-offset-top: calc(48px + 28px);
+  }
+
+  &.windows-os-added-top {
+    --app-content-offset-top: calc(48px + 32px);
+
+    &.added-top-tabs {
+      --app-content-offset-top: calc(48px + 32px + 28px);
+    }
+  }
+
+  &.has-bottom-bar {
+    --app-content-offset-bottom: 56px;
+  }
+}
+
+.main-drop-target {
+  position: absolute;
+  top: var(--app-content-offset-top);
+  right: 0;
+  bottom: var(--app-content-offset-bottom);
+  left: 0;
+  pointer-events: none;
+  z-index: 15;
+  overflow: hidden;
+}
+
+.main-scroll {
+  position: relative;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-scroll-inner {
+  padding-top: var(--app-content-offset-top);
+}
+
+.main-scroll--settings {
+  overflow: hidden;
+}
+
+.main-scroll-inner--settings {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  > * {
+    min-height: 0;
+  }
+}
+
+.added-top {
+  &.blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-top: 48px;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    background-color: rgba(var(--v-theme-background), 0.7);
+    z-index: 10;
+
+    &.windows-os-added-top {
+      padding-top: calc(48px + 32px);
+    }
+
+    &.added-top-tabs {
+      padding-bottom: 28px;
+    }
+  }
+}
+
+// Windows Electron header chrome (macOS-like transparency + blur)
+.electron-win {
+  .system-bar-custom.v-system-bar {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: none !important;
+    border-bottom: none !important;
+    overflow: visible;
+    z-index: 1010 !important;
+  }
+
+  .v-app-bar.os-windows-electron {
+    border-top: none !important;
+
+    .v-toolbar__underlay {
+      opacity: 0;
+    }
+
+    // macOS-style: bar is semi-transparent, blur only on toolbar buttons
+    .v-toolbar__content .v-btn {
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+
+      &:not(.v-btn--variant-flat) {
+        background: transparent !important;
+
+        .v-btn__overlay,
+        .v-btn__underlay {
+          opacity: 0;
+        }
+
+        &:hover .v-btn__overlay {
+          opacity: var(--v-hover-opacity);
+        }
+      }
+    }
+  }
+
+  .added-top.blur {
+    backdrop-filter: blur(10px);
+  }
+
+  .filters-drawer .filter-block {
+    backdrop-filter: blur(20px);
+  }
+}

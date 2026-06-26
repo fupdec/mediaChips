@@ -1,6 +1,9 @@
 import {computed, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {setNotification} from '@/services/notificationService'
+import {parseFilePath} from '@/services/pathTagParser'
+import {transformTextToArray} from '@/services/formatUtils'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useTasksStore} from '@/stores/tasks'
@@ -31,7 +34,6 @@ export const useMediaAdding = () => {
   const {t, locale} = useI18n()
 
   // Computed properties
-  const apiUrl = computed(() => appStore.localhost)
   const ENV = computed(() => itemsStore.environment)
   const mediaTypes = computed(() => appStore.mediaTypes)
 
@@ -123,7 +125,7 @@ export const useMediaAdding = () => {
       console.error('Media type not found')
       task.value.finished = true
       task.value.active = false
-      $operable.setNotification({
+      setNotification({
         title: 'Error',
         text: 'Media type not found',
       })
@@ -139,8 +141,8 @@ export const useMediaAdding = () => {
     const regexString = JSON.stringify(regex)
 
     // Преобразование путей
-    const paths = $readable.transformTextToArray(task.value.paths)
-    const excluded = $readable.transformTextToArray(task.value.excluded)
+    const paths = transformTextToArray(task.value.paths)
+    const excluded = transformTextToArray(task.value.excluded)
 
     let files = []
 
@@ -160,14 +162,10 @@ export const useMediaAdding = () => {
             total: paths.length,
           })
 
-          const response = await axios({
-            method: "post",
-            url: `${apiUrl.value}/api/Task/getFileList`,
-            data: {
-              path: entryPath,
-              filter: regexString,
-              excluded: task.value.is_exclude ? excluded : []
-            }
+          const response = await apiClient.post('/api/Task/getFileList', {
+            path: entryPath,
+            filter: regexString,
+            excluded: task.value.is_exclude ? excluded : []
           })
 
           files = files.concat(response.data)
@@ -213,14 +211,10 @@ export const useMediaAdding = () => {
         if (task.value.stopped) break
 
         try {
-          const response = await axios({
-            method: "post",
-            url: `${apiUrl.value}/api/Task/${ADD_MEDIA_ENDPOINT}`,
-            data: {
-              path: filePath,
-              type: mediaType,
-              is_check_duplicates: task.value.is_check_duplicates
-            }
+          const response = await apiClient.post(`/api/Task/${ADD_MEDIA_ENDPOINT}`, {
+            path: filePath,
+            type: mediaType,
+            is_check_duplicates: task.value.is_check_duplicates
           })
 
           if (response.status === 202) {
@@ -282,7 +276,7 @@ export const useMediaAdding = () => {
           })
         }
 
-        $operable.setNotification({
+        setNotification({
           type: "success",
           title: t('media.adding.complete'),
           text: t('media.adding.added_count', {count: task.value.added.length}),
@@ -295,7 +289,7 @@ export const useMediaAdding = () => {
         task.value.media_type_id = null
         task.value.status = t('media.adding.complete')
 
-        $operable.setNotification({
+        setNotification({
           type: "info",
           title: t('media.adding.complete'),
           text: t('media.adding.no_new_media'),
@@ -318,7 +312,7 @@ export const useMediaAdding = () => {
 
     } catch (error) {
       console.error('Error in addMedia process:', error)
-      $operable.setNotification({
+      setNotification({
         title: 'Error adding files',
         text: error.message
       })
@@ -352,17 +346,16 @@ export const useMediaAdding = () => {
 
       let vals = []
       try {
-        const parseResponse = await axios({
-          method: "post",
-          url: `${apiUrl.value}/api/Task/parsePathTags`,
-          data: {
-            paths: chunk
-          }
+        const parseResponse = await apiClient.post('/api/Task/parsePathTags', {
+          paths: chunk
         })
         vals = parseResponse.data || []
       } catch (error) {
         console.error('Error parsing tags for added media:', error)
-        vals = chunk.flatMap(item => $readable.parseFilePath(item.path, item.mediaId))
+        vals = chunk.flatMap((item) => parseFilePath(item.path, item.mediaId, {
+          tags: appStore.tags,
+          assigned: itemsStore.assigned,
+        }))
       }
 
       for (const valsChunk of chunkArray(vals, onlyNew ? 50 : 500)) {
@@ -370,19 +363,11 @@ export const useMediaAdding = () => {
 
         if (onlyNew) {
           for (const item of valsChunk) {
-            const response = await axios({
-              method: "post",
-              url: `${apiUrl.value}/api/TagsInMedia/createOne`,
-              data: {data: item},
-            })
+            const response = await apiClient.post('/api/TagsInMedia/createOne', {data: item})
             if (response.data?.[1]) parsedCount += 1
           }
         } else {
-          await axios({
-            method: "post",
-            url: `${apiUrl.value}/api/TagsInMedia`,
-            data: valsChunk
-          })
+          await apiClient.post('/api/TagsInMedia', valsChunk)
           parsedCount += valsChunk.length
         }
       }
@@ -410,7 +395,7 @@ export const useMediaAdding = () => {
         })
       }
 
-      $operable.setNotification({
+      setNotification({
         type: parsedCount > 0 ? 'success' : 'info',
         title: t('media.adding.reparse_tags'),
         text: parsedCount > 0
@@ -441,15 +426,11 @@ export const useMediaAdding = () => {
 
     try {
       task.value.status = t('media.adding.suggesting_tags_from_paths')
-      const response = await axios({
-        method: "post",
-        url: `${apiUrl.value}/api/Task/suggestTagsFromPaths`,
-        data: {
-          paths: task.value.added,
-          limit: 30,
-          maxWords: 3,
-          excludeExisting: true,
-        }
+      const response = await apiClient.post('/api/Task/suggestTagsFromPaths', {
+        paths: task.value.added,
+        limit: 30,
+        maxWords: 3,
+        excludeExisting: true,
       })
 
       const suggestions = response.data?.suggestions || []

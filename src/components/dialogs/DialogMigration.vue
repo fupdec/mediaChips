@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import {apiClient} from "@/services/apiClient";
 
 export default {
   name: "DialogMigration",
@@ -74,9 +74,6 @@ export default {
     importStatus: "",
   }),
   computed: {
-    apiUrl() {
-      return this.$store.state.localhost;
-    },
     isElectron() {
       return this.$store.state.isElectron;
     },
@@ -91,12 +88,12 @@ export default {
     },
     async cleanLowDb() {
       this.$store.state.Operations.migrationLowDb.dialog = false;
-      await axios.post(this.apiUrl + "/api/Task/cleanLowDb")
+      await apiClient.post("/api/Task/cleanLowDb")
     },
     async createBackupLowDb() {
       this.step = 2;
-      await axios
-        .post(this.apiUrl + "/api/Task/createBackupLowDb", {
+      await apiClient
+        .post("/api/Task/createBackupLowDb", {
           is_copy_backups: this.is_copy_backups,
         })
         .then(async (res) => {
@@ -109,12 +106,8 @@ export default {
     async restoreBackup(backupName) {
       this.step = 3;
 
-      await axios({
-        method: "post",
-        url: this.apiUrl + "/api/TasksBackups/restoreBackup",
-        data: {
-          name: backupName,
-        },
+      await apiClient.post("/api/TasksBackups/restoreBackup", {
+        name: backupName,
       }).then(() => {
         this.dialogRestoreFinished = true;
       });

@@ -133,6 +133,9 @@ import {useItemsStore} from '@/stores/items'
 import {useImageViewerStore} from '@/stores/imageViewer'
 import {useEventBus} from '@/utils/eventBus'
 import {loadThumbDisplayUrl, loadFullImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
+import {checkFileExists} from '@/services/fileService'
+import {getReadableFileSize} from '@/services/formatUtils'
+import {openPath} from '@/services/shellService'
 
 const appStore = useAppStore()
 const dialogsStore = useDialogsStore()
@@ -173,7 +176,7 @@ const infoLine = computed(() => {
   }
 
   if (image.filesize) {
-    parts.push($readable.getReadableFileSize(image.filesize))
+    parts.push(getReadableFileSize(image.filesize))
   }
 
   if (image.path) {
@@ -221,7 +224,7 @@ const loadCurrentImage = async () => {
     viewer.setLoading(false)
   }
 
-  const existsPromise = $operable.checkFileExists(image.path)
+  const existsPromise = checkFileExists(image.path)
 
   if (!previewSrc) {
     try {
@@ -324,7 +327,7 @@ const editImage = () => {
 const openInSystem = () => {
   const image = viewer.currentImage
   if (!image?.path || !viewer.isFileExists) return
-  $operable.openPath(image.path)
+  openPath(image.path)
 }
 
 const onKeyDown = (event) => {

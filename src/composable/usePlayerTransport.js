@@ -2,9 +2,9 @@ import {ref, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 import {useDisplay} from 'vuetify'
-import axios from 'axios'
 import _ from 'lodash'
 import path from 'path-browserify'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -12,10 +12,17 @@ import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import {isStandalonePlayerRoute} from '@/utils/playerWindow'
+import {createThumb} from '@/services/fileService'
+import {getReadableDuration} from '@/services/formatUtils'
+import {setNotification} from '@/services/notificationService'
 import {
   getVolumeDeltaFromWheel,
   preventWheelDefault,
 } from '@/utils/playerWheel'
+import {
+  isPlaylistNavDisabled,
+  resolvePlaylistIndex,
+} from '@/composable/usePlayerTransportPlayback'
 
 export function usePlayerTransport({emit, jumpToMark}) {
   const appStore = useAppStore()
@@ -33,7 +40,6 @@ export function usePlayerTransport({emit, jumpToMark}) {
   const dialog_video_edit = ref(false)
 
   const player = computed(() => playerStore)
-  const apiUrl = computed(() => appStore.localhost)
   const is_separate_window = computed(() => isStandalonePlayerRoute(route))
   const video = computed(() => player.value.playlist[player.value.nowPlaying])
   const isAudioMode = computed(() => playerStore.isAudioMode)
@@ -44,27 +50,21 @@ export function usePlayerTransport({emit, jumpToMark}) {
     return 'default'
   })
 
-  const isPrevDisabled = computed(() => {
-    if (player.value.playlistMode.includes('shuffle')) {
-      const shuffleIndex = player.value.playlistShuffle.indexOf(player.value.nowPlaying)
-      return shuffleIndex === 0 && !player.value.playlistMode.includes('loop')
-    }
-    return player.value.nowPlaying === 0 && !player.value.playlistMode.includes('loop')
-  })
+  const isPrevDisabled = computed(() => isPlaylistNavDisabled({
+    playlistMode: player.value.playlistMode,
+    playlistShuffle: player.value.playlistShuffle,
+    nowPlaying: player.value.nowPlaying,
+    playlistLength: player.value.playlist.length,
+    direction: 'prev',
+  }))
 
-  const isNextDisabled = computed(() => {
-    if (player.value.playlistMode.includes('shuffle')) {
-      const shuffleIndex = player.value.playlistShuffle.indexOf(player.value.nowPlaying)
-      return (
-        shuffleIndex + 1 >= player.value.playlist.length &&
-        !player.value.playlistMode.includes('loop')
-      )
-    }
-    return (
-      player.value.nowPlaying + 1 >= player.value.playlist.length &&
-      !player.value.playlistMode.includes('loop')
-    )
-  })
+  const isNextDisabled = computed(() => isPlaylistNavDisabled({
+    playlistMode: player.value.playlistMode,
+    playlistShuffle: player.value.playlistShuffle,
+    nowPlaying: player.value.nowPlaying,
+    playlistLength: player.value.playlist.length,
+    direction: 'next',
+  }))
 
   const volumeIcon = computed(() => {
     if (player.value.muted) return 'volume-mute'
@@ -73,7 +73,7 @@ export function usePlayerTransport({emit, jumpToMark}) {
     return 'volume-low'
   })
 
-  const msToTime = (time) => $readable.getReadableDuration(time)
+  const msToTime = (time) => getReadableDuration(time)
 
   const play = () => {
     emit('showControls')
@@ -95,25 +95,20 @@ export function usePlayerTransport({emit, jumpToMark}) {
     player.value.paused ? play() : pause()
   }
 
-  const prev = async () => {
-    if (isPrevDisabled.value) return
+  const navigatePlaylist = async (direction) => {
+    const disabled = direction === 'prev' ? isPrevDisabled.value : isNextDisabled.value
+    if (disabled) return
+
     playerStore.paused = false
-    const isLoopMode = player.value.playlistMode.includes('loop')
     const current = video.value
 
-    if (player.value.playlistMode.includes('shuffle')) {
-      let shuffleIndex = player.value.playlistShuffle.indexOf(player.value.nowPlaying)
-      shuffleIndex -= 1
-      if (isLoopMode && shuffleIndex < 0) {
-        shuffleIndex = player.value.playlist.length - 1
-      }
-      playerStore.nowPlaying = player.value.playlistShuffle[shuffleIndex]
-    } else {
-      playerStore.nowPlaying = player.value.nowPlaying - 1
-      if (isLoopMode && player.value.nowPlaying < 0) {
-        playerStore.nowPlaying = player.value.playlist.length - 1
-      }
-    }
+    playerStore.nowPlaying = resolvePlaylistIndex({
+      playlistMode: player.value.playlistMode,
+      playlistShuffle: player.value.playlistShuffle,
+      nowPlaying: player.value.nowPlaying,
+      playlistLength: player.value.playlist.length,
+      direction,
+    })
 
     emit('play', {n: video.value, o: current})
     if (player.value.playlistVisible) {
@@ -121,31 +116,8 @@ export function usePlayerTransport({emit, jumpToMark}) {
     }
   }
 
-  const next = async () => {
-    if (isNextDisabled.value) return
-    playerStore.paused = false
-    const isLoopMode = player.value.playlistMode.includes('loop')
-    const current = video.value
-
-    if (player.value.playlistMode.includes('shuffle')) {
-      let shuffleIndex = player.value.playlistShuffle.indexOf(player.value.nowPlaying)
-      shuffleIndex += 1
-      if (isLoopMode && shuffleIndex === player.value.playlist.length) {
-        shuffleIndex = 0
-      }
-      playerStore.nowPlaying = player.value.playlistShuffle[shuffleIndex]
-    } else {
-      playerStore.nowPlaying = player.value.nowPlaying + 1
-      if (isLoopMode && player.value.nowPlaying > player.value.playlist.length - 1) {
-        playerStore.nowPlaying = 0
-      }
-    }
-
-    emit('play', {n: video.value, o: current})
-    if (player.value.playlistVisible) {
-      eventBus.emit('scrollToNowPlaying')
-    }
-  }
+  const prev = () => navigatePlaylist('prev')
+  const next = () => navigatePlaylist('next')
 
   const togglePlaylist = () => {
     player.value.playlistVisible = !player.value.playlistVisible
@@ -231,13 +203,13 @@ export function usePlayerTransport({emit, jumpToMark}) {
       .substr(11, 8)
 
     try {
-      await $operable.createThumb(time, video.value.path, imgPath, 320, true)
+      await createThumb(time, video.value.path, imgPath, 320, true)
       emit('updateVideo', video.value.id)
       itemsStore.refreshThumb(video.value.id)
       if (is_separate_window.value && window.electronAPI?.send) {
         window.electronAPI.send('updateVideoFrames', video.value.id)
       }
-      $operable.setNotification({
+      setNotification({
         title: t('player.video_thumb_updated'),
         text: video.value.path,
         icon: 'image',
@@ -245,7 +217,7 @@ export function usePlayerTransport({emit, jumpToMark}) {
       })
     } catch (e) {
       console.log(e)
-      $operable.setNotification({
+      setNotification({
         title: t('player.video_thumb_not_updated'),
         text: e,
         icon: 'image',
@@ -267,7 +239,7 @@ export function usePlayerTransport({emit, jumpToMark}) {
     }
 
     try {
-      const res = await axios.post(`${apiUrl.value}/api/media/items`, query)
+      const res = await apiClient.post('/api/media/items', query)
       return res.data.items[0]
     } catch (e) {
       console.log(e)
@@ -316,15 +288,11 @@ export function usePlayerTransport({emit, jumpToMark}) {
 
     setTimeout(async () => {
       try {
-        await axios({
-          method: 'post',
-          url: `${apiUrl.value}/api/media/deleteOne`,
-          data: {
-            type: 'videos',
-            id: video_edit.id,
-            with_file,
-            path: video_edit.path,
-          },
+        await apiClient.post('/api/media/deleteOne', {
+          type: 'videos',
+          id: video_edit.id,
+          with_file,
+          path: video_edit.path,
         })
 
         if (is_separate_window.value && window.electronAPI) {

@@ -16,9 +16,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import axios from 'axios'
-import { useAppStore } from '@/stores/app'
+import {apiClient} from '@/services/apiClient'
 import { useItemsStore } from '@/stores/items'
 
 // Определяем пропсы
@@ -36,18 +34,11 @@ const props = defineProps({
 // Используем хранилища
 const itemsStore = useItemsStore()
 
-// Компьютеды
-const apiUrl = computed(() => useAppStore().localhost)
-
 // Методы
 const setVal = async (val, key) => {
   try {
-    await axios({
-      method: "put",
-      url: `${apiUrl.value}/api/${props.type}/${props.item.id}`,
-      data: {
-        [key]: val,
-      },
+    await apiClient.put(`/api/${props.type}/${props.item.id}`, {
+      [key]: val,
     })
 
     // Обновляем элемент в хранилище Pinia

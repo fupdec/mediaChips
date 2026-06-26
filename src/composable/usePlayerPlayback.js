@@ -16,6 +16,8 @@ import {
   isAudioFilePath,
 } from '@/utils/mediaType'
 import {apiClient, buildApiUrl} from '@/services/apiClient'
+import {checkFileExists, createThumb} from '@/services/fileService'
+import {setNotification} from '@/services/notificationService'
 
 export async function resolvePlayableVideo(playlist, initialVideo, checkFileExists) {
   const candidates = []
@@ -123,14 +125,14 @@ export function usePlayerPlayback({
           'videos/marks',
           `${mark.id}.jpg`
         )
-        const exists = await $operable.checkFileExists(imgPath, true)
+        const exists = await checkFileExists(imgPath, true)
         if (exists) {
           eventBus.emit('updateMarkImage', mark.id)
           continue
         }
 
         try {
-          await $operable.createThumb(time, media.path, imgPath, 180)
+          await createThumb(time, media.path, imgPath, 180)
           eventBus.emit('updateMarkImage', mark.id)
         } catch (e) {
           console.log(e)
@@ -158,7 +160,7 @@ export function usePlayerPlayback({
     const resolved = await resolvePlayableVideo(
       playerStore.playlist,
       media,
-      (filePath) => $operable.checkFileExists(filePath),
+      (filePath) => checkFileExists(filePath),
     )
 
     if (!resolved) {
@@ -180,7 +182,7 @@ export function usePlayerPlayback({
     media = resolved.video
     const mediaType = findMediaTypeById(appStore.mediaTypes, media.mediaTypeId)
     playerStore.isAudioMode = isAudioMediaType(mediaType) || isAudioFilePath(media.path)
-    playerStore.is_file_exists = await $operable.checkFileExists(media.path)
+    playerStore.is_file_exists = await checkFileExists(media.path)
 
     if (playerStore.playlist.length > 0) {
       playerStore.nowPlaying = resolved.index
@@ -244,7 +246,7 @@ export function usePlayerPlayback({
 
   const initPlayingVideo = async (media, videos, time) => {
     if (!media || !videos) {
-      $operable.setNotification({
+      setNotification({
         type: 'error',
         title: t('player.invalid_video_data'),
         text: t('player.could_not_play_video'),

@@ -1,43 +1,39 @@
-import {computed} from 'vue'
-import axios from 'axios'
-import {useAppStore} from '@/stores/app'
+import {apiClient} from '@/services/apiClient'
 import {sortPinnedAssignmentItems} from '@/utils/pinnedMetaOrder'
 
 export function useMetaAssignment() {
-  const apiUrl = computed(() => useAppStore().localhost)
-
   const fetchPinnedMediaForMeta = async (metaId) => {
-    const response = await axios.get(`${apiUrl.value}/api/MetaInMediaType?metaId=${metaId}`)
+    const response = await apiClient.get(`/api/MetaInMediaType?metaId=${metaId}`)
     return sortPinnedAssignmentItems(response.data || [])
   }
 
   const fetchPinnedMetaForMediaType = async (mediaTypeId) => {
-    const response = await axios.get(`${apiUrl.value}/api/MetaInMediaType?mediaTypeId=${mediaTypeId}`)
+    const response = await apiClient.get(`/api/MetaInMediaType?mediaTypeId=${mediaTypeId}`)
     return sortPinnedAssignmentItems(response.data || [])
   }
 
   const fetchPinnedChildMeta = async (metaId) => {
-    const response = await axios.get(`${apiUrl.value}/api/PinnedMeta?metaId=${metaId}`)
+    const response = await apiClient.get(`/api/PinnedMeta?metaId=${metaId}`)
     return sortPinnedAssignmentItems(response.data || [])
   }
 
   const fetchAllMeta = async () => {
-    const response = await axios.get(`${apiUrl.value}/api/Meta`)
+    const response = await apiClient.get('/api/Meta')
     return response.data || []
   }
 
   const pinMetaToMediaType = async (metaId, mediaTypeId, order = 0) => {
-    await axios.post(`${apiUrl.value}/api/MetaInMediaType`, {metaId, mediaTypeId, order})
+    await apiClient.post('/api/MetaInMediaType', {metaId, mediaTypeId, order})
   }
 
   const unpinMetaFromMediaType = async (metaId, mediaTypeId) => {
-    await axios.delete(
-      `${apiUrl.value}/api/MetaInMediaType?mediaTypeId=${mediaTypeId}&metaId=${metaId}`
+    await apiClient.delete(
+      `/api/MetaInMediaType?mediaTypeId=${mediaTypeId}&metaId=${metaId}`
     )
   }
 
   const updateMetaInMediaTypeOrder = async (metaId, mediaTypeId, order) => {
-    await axios.put(`${apiUrl.value}/api/MetaInMediaType`, {
+    await apiClient.put('/api/MetaInMediaType', {
       metaId,
       mediaTypeId,
       data: {order},
@@ -45,15 +41,15 @@ export function useMetaAssignment() {
   }
 
   const pinChildMeta = async (metaId, pinnedMetaId, order = 0) => {
-    await axios.post(`${apiUrl.value}/api/PinnedMeta`, {metaId, pinnedMetaId, order})
+    await apiClient.post('/api/PinnedMeta', {metaId, pinnedMetaId, order})
   }
 
   const unpinChildMeta = async (metaId, pinnedMetaId) => {
-    await axios.delete(`${apiUrl.value}/api/PinnedMeta/${pinnedMetaId}?metaId=${metaId}`)
+    await apiClient.delete(`/api/PinnedMeta/${pinnedMetaId}?metaId=${metaId}`)
   }
 
   const updateChildMetaOrder = async (metaId, pinnedMetaId, order) => {
-    await axios.put(`${apiUrl.value}/api/PinnedMeta`, {
+    await apiClient.put('/api/PinnedMeta', {
       metaId,
       pinnedMetaId,
       data: {order},

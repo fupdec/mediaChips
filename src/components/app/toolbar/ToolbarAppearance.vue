@@ -156,7 +156,7 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useToolbarStore} from '@/stores/toolbar'
 import {useEventBus} from '@/utils/eventBus'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 
 // Components
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -177,8 +177,6 @@ const {t} = useI18n()
 const dialogEditingPinnedMeta = ref(false)
 
 // Computed properties
-const apiUrl = computed(() => useAppStore().localhost)
-
 const ENV = computed(() => itemsStore.environment || {})
 
 const media_type = computed(() => {
@@ -194,22 +192,22 @@ const meta = computed(() => {
 // Methods
 const toggleMetaVisibility = async (metaItem) => {
   try {
-    let url = `${apiUrl.value}/api/`
+    let urlPath = '/api/'
     let data = {
       data: {show: !metaItem.show}
     }
 
     if (itemsStore.type === 'tag') {
-      url += 'PinnedMeta'
+      urlPath += 'PinnedMeta'
       data.metaId = ENV.value.meta_id
       data.pinnedMetaId = metaItem.pinnedMetaId
     } else if (itemsStore.type === 'media') {
-      url += 'MetaInMediaType'
+      urlPath += 'MetaInMediaType'
       data.metaId = metaItem.metaId
       data.mediaTypeId = ENV.value.media_type_id
     }
 
-    await axios.put(url, data)
+    await apiClient.put(urlPath, data)
 
     // Emit event or update store
     eventBus.emit('updateAssignedMeta')

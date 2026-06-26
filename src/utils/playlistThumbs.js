@@ -1,8 +1,6 @@
-import axios from 'axios'
-import {useAppStore} from '@/stores/app'
+import {apiClient} from '@/services/apiClient'
 
 export async function loadPlaylistThumbs(playlists, {mediaType = 'videos'} = {}) {
-  const appStore = useAppStore()
   const previewIds = [...new Set(
     playlists.flatMap((playlist) => (playlist.previewIds || []).slice(0, 4)),
   )]
@@ -15,7 +13,7 @@ export async function loadPlaylistThumbs(playlists, {mediaType = 'videos'} = {})
   }
 
   try {
-    const response = await axios.post(`${appStore.localhost}/api/Media/thumbs`, {
+    const response = await apiClient.post('/api/Media/thumbs', {
       ids: previewIds,
       mediaType,
     })

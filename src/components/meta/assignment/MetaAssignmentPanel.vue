@@ -90,8 +90,9 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, getCurrentInstance} from 'vue'
+import {ref, computed, watch, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {getTextDataType} from '@/services/metaTypeUtils'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {useMetaAssignment} from '@/composable/useMetaAssignment'
 import MetaAssignmentAnchor from './MetaAssignmentAnchor.vue'
@@ -113,7 +114,7 @@ const props = defineProps({
 
 const emit = defineEmits(['pinned-meta-updated', 'pinned-media-updated', 'meta-updated'])
 
-const {t} = useI18n()
+const {t, te} = useI18n()
 const {
   fetchPinnedMediaForMeta,
   fetchPinnedMetaForMediaType,
@@ -162,13 +163,11 @@ const anchorSubtitle = computed(() => {
   return props.meta?.hint || t('meta.settings.assignment_anchor_field')
 })
 
-const instance = getCurrentInstance()
-
 const anchorTypeLabel = computed(() => {
   if (props.mode === 'from-media-type') return ''
   const type = props.meta?.type
   if (!type) return ''
-  return instance?.proxy?.$readable?.getTextDataType(type) || ''
+  return getTextDataType(type, {te, t}) || ''
 })
 
 const loadAllMeta = async () => {

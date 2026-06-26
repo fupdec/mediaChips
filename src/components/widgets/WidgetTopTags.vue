@@ -83,6 +83,7 @@ import {useI18n} from 'vue-i18n'
 import groupBy from 'lodash/groupBy'
 import cloneDeep from 'lodash/cloneDeep'
 import path from "path-browserify"
+import {getLocalImage} from '@/services/fileService'
 import {getMetaName} from '@/utils/metaI18n'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import {
@@ -142,7 +143,7 @@ async function getTagsTop(activeGroup = null) {
         `${metaId}`,
         `${tag.id}_main.jpg`,
       )
-      tag.image = await $operable.getLocalImage(imgPath)
+      tag.image = await getLocalImage(imgPath)
     }
 
     const total = reservedCopy[metaId].length

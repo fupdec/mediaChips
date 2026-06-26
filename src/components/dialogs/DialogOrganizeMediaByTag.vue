@@ -132,6 +132,8 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useOperationsStore} from '@/stores/operations'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
+import {checkFileExists} from '@/services/fileService'
+import {setNotification} from '@/services/notificationService'
 import {useEventBus} from '@/utils/eventBus'
 import {normalizePastedFilePath} from '@/utils/filePathInput'
 
@@ -218,7 +220,7 @@ const chooseDir = async () => {
 
 const organizeFiles = async () => {
   if (!root_folder.value) {
-    await $operable.setNotification({
+    await setNotification({
       type: "error",
       text: t('media.organize.select_root_folder'),
     })
@@ -226,9 +228,9 @@ const organizeFiles = async () => {
   }
 
   try {
-    const exists = await $operable.checkFileExists(root_folder.value)
+    const exists = await checkFileExists(root_folder.value)
     if (!exists) {
-      await $operable.setNotification({
+      await setNotification({
         type: "error",
         title: t('media.organize.root_folder_missing'),
         text: root_folder.value,
@@ -276,7 +278,7 @@ const organizeFiles = async () => {
     operationsStore.create_folder_move_media.dialog = false
   } catch (error) {
     console.error('Error organizing files:', error)
-    await $operable.setNotification({
+    await setNotification({
       type: "error",
       text: t('media.organize.error', {message: error.message}),
     })

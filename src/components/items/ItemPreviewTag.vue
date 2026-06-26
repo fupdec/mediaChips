@@ -72,6 +72,8 @@ import path from 'path-browserify'
 import { useAppStore } from '@/stores/app'
 import { useItemsStore } from '@/stores/items'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {getLocalImage} from '@/services/fileService'
+import {hideHoverImage} from '@/services/hoverService'
 
 // props
 const props = defineProps({
@@ -129,7 +131,7 @@ const getImages = async () => {
       `${props.tag.id}_${type}.jpg`
     )
 
-    const src = await $operable.getLocalImage(imgPath)
+    const src = await getLocalImage(imgPath)
 
     if (type !== 'main' && src.includes('unavailable.png')) {
       images[type] = null
@@ -148,7 +150,7 @@ const openTagPage = () => {
       mediaTypeId: getDefaultMediaTypeId(appStore.mediaTypes),
     },
   })
-  $readable.hideHoverImage()
+  hideHoverImage()
 }
 
 const getFlag = (name) => getCountryCode(name)

@@ -6,6 +6,7 @@ import {useI18n} from "vue-i18n";
 import {useSettingsStore} from "@/stores/settings";
 import SettingsCategoryDivider
   from "@/components/ui/SettingsCategoryDivider.vue";
+import {setOption} from '@/services/settingsService'
 
 const SETTINGS = useSettingsStore();
 const {t} = useI18n();
@@ -40,7 +41,7 @@ onMounted(() => {
         sm="6">
         <v-text-field
           v-model="password"
-          @blur="$operable.setOption(password, 'phrase')"
+          @blur="setOption(password, 'phrase')"
           :type="showPassword ? 'text' : 'password'"
           :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
           @click:append-inner="showPassword = !showPassword"
@@ -55,7 +56,7 @@ onMounted(() => {
         sm="6">
         <v-text-field
           v-model="hint"
-          @blur="$operable.setOption(hint, 'passwordHint')"
+          @blur="setOption(hint, 'passwordHint')"
           :label="t('common.hint')"
           rounded
           variant="outlined"

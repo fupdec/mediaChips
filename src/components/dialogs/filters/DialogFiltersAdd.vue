@@ -100,7 +100,8 @@ import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import _ from 'lodash'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
-import MetaTypes from '@/assets/MetaTypes.js'
+import {highlightChars} from '@/services/formatUtils'
+import {getIconDataType} from '@/services/metaTypeUtils'
 
 const props = defineProps({
   dialog: Boolean,
@@ -157,11 +158,11 @@ const close = () => {
 }
 
 const getIcon = (type) => {
-  return $readable.getIconDataType(type)
+  return getIconDataType(type)
 }
 
 const getNameHighlighted = (name) => {
-  return $readable.highlightChars(name, search.value, true)
+  return highlightChars(name, search.value, true)
 }
 
 const getGroupIcon = (type) => {

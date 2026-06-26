@@ -47,7 +47,8 @@
 
 <script setup>
 import {ref, computed, onMounted, watch} from "vue"
-import axios from "axios"
+import {apiClient} from '@/services/apiClient'
+import {getReadableFileSize} from '@/services/formatUtils'
 import {gsap} from "gsap"
 import {useAppStore} from "@/stores/app"
 import {useI18n} from 'vue-i18n'
@@ -71,8 +72,6 @@ const filesizeText = ref("")
 
 /* ---------------------- Computed ---------------------- */
 
-const apiUrl = computed(() => store.localhost)
-
 const animatedTags = computed(() => tweenedTags.value.toFixed(0))
 const animatedMetas = computed(() => tweenedMetas.value.toFixed(0))
 const animatedFiles = computed(() => tweenedFiles.value.toFixed(0))
@@ -83,14 +82,14 @@ const animatedFilesize = computed(() => tweenedFilesize.value.toFixed(2))
 async function getStats() {
   try {
     const [mediaRes, tagsRes] = await Promise.all([
-      axios.get(apiUrl.value + "/api/media/get-stats"),
-      axios.get(apiUrl.value + "/api/tag/count"),
+      apiClient.get('/api/media/get-stats'),
+      apiClient.get('/api/tag/count'),
     ])
 
     numberFiles.value = mediaRes.data.total
     numberTags.value = tagsRes.data.count
 
-    const readable = $readable.getReadableFileSize(mediaRes.data.filesize, true)
+    const readable = getReadableFileSize(mediaRes.data.filesize, true)
     numberFilesize.value = readable.number
     filesizeText.value = readable.text
   } catch (e) {

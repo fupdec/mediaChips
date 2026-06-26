@@ -323,7 +323,9 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useScraperStore} from '@/stores/scraper'
 import {useEventBus} from '@/utils/eventBus'
 import {parseCountries, serializeCountries} from '@/utils/country'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {createImage} from '@/services/fileService'
+import {setNotification} from '@/services/notificationService'
 import _ from 'lodash'
 import path from 'path-browserify'
 import dayjs from 'dayjs'
@@ -425,7 +427,6 @@ const datePicker = ref({
 })
 
 // Computed (из первого файла с дополнениями)
-const apiUrl = computed(() => appStore.localhost)
 const settings = computed(() => settingsStore)
 const showIcons = computed(() => settings.value.showIconsOfMetaInEditingDialog === '1')
 
@@ -524,23 +525,23 @@ const getMetaValues = async () => {
     // Выбираем правильные endpoints в зависимости от типа
     if (isTag.value) {
       // Для тегов (из первого файла)
-      const tagsResponse = await axios.get(`${apiUrl.value}/api/TagsInTag?tagId=${currentItemId.value}`)
+      const tagsResponse = await apiClient.get(`/api/TagsInTag?tagId=${currentItemId.value}`)
       tags = tagsResponse.data
 
-      const valuesResponse = await axios.get(`${apiUrl.value}/api/ValuesInTag?tagId=${currentItemId.value}`)
+      const valuesResponse = await apiClient.get(`/api/ValuesInTag?tagId=${currentItemId.value}`)
       values = valuesResponse.data
 
       // Получаем закрепленные метаданные (только для тегов)
-      const pinnedResponse = await axios.get(`${apiUrl.value}/api/PinnedMeta?metaId=${props.meta.id}`)
+      const pinnedResponse = await apiClient.get(`/api/PinnedMeta?metaId=${props.meta.id}`)
       assignedItems.value = sortPinnedAssignmentItems(pinnedResponse.data)
       scraperStore.pinned = assignedItems.value
 
     } else if (isMedia.value) {
       // Для медиа (адаптировано из второго файла)
-      const tagsResponse = await axios.get(`${apiUrl.value}/api/TagsInMedia?mediaId=${currentItemId.value}`)
+      const tagsResponse = await apiClient.get(`/api/TagsInMedia?mediaId=${currentItemId.value}`)
       tags = tagsResponse.data
 
-      const valuesResponse = await axios.get(`${apiUrl.value}/api/ValuesInMedia?mediaId=${currentItemId.value}`)
+      const valuesResponse = await apiClient.get(`/api/ValuesInMedia?mediaId=${currentItemId.value}`)
       values = valuesResponse.data
 
       assignedItems.value = sortPinnedAssignmentItems(itemsStore.assigned || [])
@@ -663,24 +664,24 @@ const save = async () => {
   try {
     // Обновляем основной объект
     const endpoint = isTag.value ? 'tag' : 'media'
-    await axios.put(`${apiUrl.value}/api/${endpoint}/${currentItemId.value}`, updateData)
+    await apiClient.put(`/api/${endpoint}/${currentItemId.value}`, updateData)
 
     // Удаляем существующие теги
     const tagsEndpoint = isTag.value ? 'TagsInTag' : 'TagsInMedia'
-    await axios.delete(`${apiUrl.value}/api/${tagsEndpoint}/${currentItemId.value}`)
+    await apiClient.delete(`/api/${tagsEndpoint}/${currentItemId.value}`)
 
     // Добавляем новые теги
     if (tags.length > 0) {
-      await axios.post(`${apiUrl.value}/api/${tagsEndpoint}`, tags)
+      await apiClient.post(`/api/${tagsEndpoint}`, tags)
     }
 
     // Удаляем существующие значения
     const valuesEndpoint = isTag.value ? 'ValuesInTag' : 'ValuesInMedia'
-    await axios.delete(`${apiUrl.value}/api/${valuesEndpoint}/${currentItemId.value}`)
+    await apiClient.delete(`/api/${valuesEndpoint}/${currentItemId.value}`)
 
     // Добавляем новые значения
     if (values.length > 0) {
-      await axios.post(`${apiUrl.value}/api/${valuesEndpoint}`, values)
+      await apiClient.post(`/api/${valuesEndpoint}`, values)
     }
 
     emit('close')
@@ -721,10 +722,9 @@ const transferScrapedInfo = async () => {
       const sizes = {width: 300, height: 300 / ar}
 
       // Вызов функции создания изображения
-      const res = await $operable.createImage(url, imagePath, sizes)
+      const res = await createImage(url, imagePath, sizes)
       if (res.status != 201) {
-        // Показать уведомление об ошибке
-        $operable.setNotification({
+        setNotification({
           type: "error",
           title: t('scraper.error'),
           text: t('scraper.image_cannot_be_obtained'),

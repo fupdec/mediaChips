@@ -76,7 +76,7 @@
 import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 
 /* ---------------- COMPONENTS ---------------- */
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -87,6 +87,7 @@ import {useAppStore} from '@/stores/app'
 import {useNotificationsStore} from "@/stores/notifications"
 
 import {useEventBus} from '@/utils/eventBus'
+import {transformTextToArray, validateName} from '@/services/formatUtils'
 
 /* ---------------- INIT ---------------- */
 
@@ -140,7 +141,6 @@ const buttons = computed(() => [
 
 /* ---------------- COMPUTED ---------------- */
 
-const apiUrl = app.localhost
 const metas = computed(() => app.meta?.filter(i => i.type === 'array') || [])
 const fixedMetaId = computed(() => props.meta_id || (route.query.metaId ? Number(route.query.metaId) : null))
 
@@ -150,7 +150,7 @@ async function add() {
   await form.value?.validate()
   if (!valid.value) return
 
-  const arr = $readable.transformTextToArray(names.value)
+  const arr = transformTextToArray(names.value)
   dups.value = []
   added.value = []
 
@@ -178,7 +178,7 @@ async function add() {
   // отправляем на сервер только уникальные
   if (added.value.length > 0) {
     try {
-      await axios.post(apiUrl + '/api/tag',
+      await apiClient.post('/api/tag',
         added.value.map(i => ({
           name: i,
           metaId
@@ -233,10 +233,10 @@ function resetForm() {
 }
 
 function nameRules(string) {
-  const arr = $readable.transformTextToArray(string)
+  const arr = transformTextToArray(string)
 
   for (const name of arr) {
-    const valid = $readable.validateName(name)
+    const valid = validateName(name)
     if (valid !== true) return valid
   }
 

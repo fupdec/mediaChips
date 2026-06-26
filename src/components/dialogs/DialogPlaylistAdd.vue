@@ -37,10 +37,10 @@
 import {ref, computed, watch, defineEmits, defineProps} from 'vue';
 import {useI18n} from 'vue-i18n';
 import {useDisplay} from 'vuetify';
-import {storeToRefs} from 'pinia';
-import axios from 'axios';
+import {apiClient} from '@/services/apiClient';
+import {validateName} from '@/services/formatUtils';
+import {setNotification} from '@/services/notificationService';
 import DialogHeader from '@/components/elements/DialogHeader.vue';
-import {useAppStore} from '@/stores/app';
 import {useItemsStore} from '@/stores/items';
 import {useEventBus} from '@/utils/eventBus';
 
@@ -55,9 +55,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'add']);
 
 const {smAndDown} = useDisplay()
-const appStore = useAppStore()
 const itemsStore = useItemsStore()
-const {localhost: apiUrl} = storeToRefs(appStore);
 const {t} = useI18n()
 const eventBus = useEventBus()
 
@@ -94,12 +92,8 @@ const addPlaylist = async () => {
   if (!valid.value) return;
 
   try {
-    const res = await axios({
-      method: "post",
-      url: apiUrl.value + "/api/playlist/",
-      data: {
-        name: name.value,
-      },
+    const res = await apiClient.post('/api/playlist/', {
+      name: name.value,
     });
 
     const playlistName = name.value
@@ -107,13 +101,9 @@ const addPlaylist = async () => {
 
     if (playlistId && props.mediaIds.length > 0) {
       for (const mediaId of props.mediaIds) {
-        await axios({
-          method: "post",
-          url: apiUrl.value + "/api/mediaInPlaylists/",
-          data: {
-            mediaId,
-            playlistId,
-          },
+        await apiClient.post('/api/mediaInPlaylists/', {
+          mediaId,
+          playlistId,
         })
       }
       itemsStore.isSelect = false
@@ -123,7 +113,7 @@ const addPlaylist = async () => {
     eventBus.emit('getPlaylists')
 
     if (props.mediaIds.length > 0) {
-      $operable.setNotification({
+      setNotification({
         type: 'success',
         title: t('playlists.create_playlist'),
         text: t('playlists.created_and_added', {
@@ -140,7 +130,7 @@ const addPlaylist = async () => {
 };
 
 const nameRules = (value) => {
-  return $readable.validateName(value)
+  return validateName(value)
 };
 
 const close = () => {

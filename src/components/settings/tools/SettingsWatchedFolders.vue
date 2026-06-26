@@ -192,7 +192,7 @@
 
 <script setup>
 import {ref, computed, onMounted, nextTick} from 'vue'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useWatcherStore} from '@/stores/watcher'
@@ -203,13 +203,14 @@ import SettingsCategoryDivider
   from "@/components/ui/SettingsCategoryDivider.vue"
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import {normalizePastedFilePath} from '@/utils/filePathInput'
+import {getWatchedFolders as fetchWatchedFolders} from '@/services/watcherService'
+import {setNotification} from '@/services/notificationService'
 
 const appStore = useAppStore()
 const watcherStore = useWatcherStore()
 const {t} = useI18n()
 
 const isElectron = appStore.isElectron
-const apiUrl = appStore.localhost
 
 // Refs
 const folderForm = ref(null)
@@ -251,12 +252,12 @@ const dialogButtons = computed(() => [{
 }])
 
 const getWatchedFolders = async () => {
-  watcherStore.folders = await $operable.getWatchedFolders()
+  watcherStore.folders = await fetchWatchedFolders()
 }
 
 const updateWatchedFolder = async (id, data) => {
   try {
-    const response = await axios.put(`${apiUrl}/api/WatchedFolder/${id}`, data)
+    const response = await apiClient.put(`/api/WatchedFolder/${id}`, data)
     return response.data
   } catch (error) {
     console.error('Error updating watched folder:', error)
@@ -266,7 +267,7 @@ const updateWatchedFolder = async (id, data) => {
 
 const toggleFolderWatchStatus = async (id, watch) => {
   try {
-    const response = await axios.put(`${apiUrl}/api/WatchedFolder/${id}`, {watch})
+    const response = await apiClient.put(`/api/WatchedFolder/${id}`, {watch})
     return response.data
   } catch (error) {
     console.error('Error toggling folder watch:', error)
@@ -289,7 +290,7 @@ const chooseDirectory = async () => {
     }
   } catch (error) {
     console.error('Error choosing directory:', error)
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       text: t('notifications_text.select_directory_failed'),
     })
@@ -321,7 +322,7 @@ const addNewFolder = async () => {
   // }
   const folderName = folderData.value.name || folderData.value.path
 
-  await axios.post(`${apiUrl}/api/WatchedFolder`, {
+  await apiClient.post('/api/WatchedFolder', {
     folder: {
       path: folderData.value.path,
       name: folderName,
@@ -329,7 +330,7 @@ const addNewFolder = async () => {
     types: [1]
     // types: folderData.value.selectedTypes.map(index => mediaTypes.value[index].id)
   }).then(async (res) => {
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('notifications_text.folder_added'),
       text: folderName,
@@ -337,7 +338,7 @@ const addNewFolder = async () => {
     await getWatchedFolders()
   }).catch(error => {
     console.error('Error adding watched folder:', error)
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('notifications_text.folder_add_failed'),
       text: folderName,
@@ -379,12 +380,12 @@ const saveFolder = async () => {
     showFolderDialog.value = false
     await getWatchedFolders()
 
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       text: t('notifications_text.folder_updated'),
     })
   } catch (error) {
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       text: t('notifications_text.folder_update_failed'),
     })
@@ -403,14 +404,14 @@ const removeFolder = async () => {
 
   watcherBusy.value = true
   try {
-    await axios.delete(`${apiUrl}/api/WatchedFolder/${currentFolder.value.id}`)
+    await apiClient.delete(`/api/WatchedFolder/${currentFolder.value.id}`)
     await getWatchedFolders()
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       text: t('notifications_text.folder_removed'),
     })
   } catch (error) {
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       text: t('notifications_text.folder_remove_failed'),
     })
@@ -426,7 +427,7 @@ const toggleFolderWatch = async (folder) => {
     await toggleFolderWatchStatus(folder.id, !folder.watch)
     await getWatchedFolders()
   } catch (error) {
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       text: t('notifications_text.folder_toggle_failed'),
     })

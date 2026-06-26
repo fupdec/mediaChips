@@ -147,6 +147,7 @@ import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import {useMediaAdding} from '@/composable/AddingMedia'
 import {normalizePastedFilePathsText} from '@/utils/filePathInput'
 import {collectDroppedPaths} from '@/utils/mediaDrop'
+import {showOpenDialog} from '@/services/electronDialogService'
 
 
 // Хуки
@@ -299,12 +300,12 @@ const syncMediaTypeFromContext = () => {
  * Выбирает несколько директорий через системный диалог (только Electron)
  */
 const selectMultipleDirectories = async () => {
-  const paths = await $operable.showOpenDialog(['openDirectory', 'multiSelections'])
+  const paths = await showOpenDialog(['openDirectory', 'multiSelections'])
   tasksStore.mediaAdding.paths = normalizePastedFilePathsText(paths || '')
 }
 
 const selectMultipleDirectoriesExcluded = async () => {
-  const paths = await $operable.showOpenDialog(['openDirectory', 'multiSelections'])
+  const paths = await showOpenDialog(['openDirectory', 'multiSelections'])
   tasksStore.mediaAdding.excluded = normalizePastedFilePathsText(paths || '')
 }
 

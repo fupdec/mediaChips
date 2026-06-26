@@ -14,6 +14,7 @@ import path from 'path-browserify'
 
 /* store */
 import { useAppStore } from '@/stores/app'
+import {getLocalImage} from '@/services/fileService'
 
 const appStore = useAppStore()
 const hover = useAppStore().hover
@@ -48,7 +49,7 @@ async function getHoveredImage () {
       `${hover.tagId}.jpg`
     )
 
-    src.value = await $operable.getLocalImage(imgPath)
+    src.value = await getLocalImage(imgPath)
     return
   }
 
@@ -65,7 +66,7 @@ async function getHoveredImage () {
   )
 
   for (const imgPath of paths) {
-    const image = await $operable.getLocalImage(imgPath)
+    const image = await getLocalImage(imgPath)
     const isEmpty = image?.includes('unavailable.png')
 
     src.value = image

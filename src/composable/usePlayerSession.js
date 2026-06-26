@@ -1,8 +1,8 @@
 import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
 import _ from 'lodash'
 import path from 'path-browserify'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -14,6 +14,8 @@ import {usePlayerHotkeys} from '@/composable/usePlayerHotkeys'
 import {usePlayerWindowBridge} from '@/composable/usePlayerWindowBridge'
 import {usePlayerPlayback} from '@/composable/usePlayerPlayback'
 import {handlePlayerVideoWheel} from '@/utils/playerHotkeys'
+import {setNotification} from '@/services/notificationService'
+import {openPath as openFilePath} from '@/services/shellService'
 
 export const PLAYER_SESSION_KEY = Symbol('playerSession')
 
@@ -35,7 +37,7 @@ export function usePlayerSession() {
     detach: detachPlayerWindowBridge,
   } = usePlayerWindowBridge({
     onInvalidPlayData: () => {
-      $operable.setNotification({
+      setNotification({
         type: 'error',
         title: t('player.error_title'),
         text: t('player.invalid_video_data'),
@@ -89,7 +91,6 @@ export function usePlayerSession() {
   const showPlaybackError = computed(() =>
     playerStore.active && isReady.value && playerStore.playbackError
   )
-  const apiUrl = computed(() => appStore.localhost)
 
   const closePlayer = async () => {
     if (video.value) {
@@ -143,7 +144,7 @@ export function usePlayerSession() {
   }))
 
   const openPath = () => {
-    $operable.openPath(video.value.path, false)
+    openFilePath(video.value.path, false)
   }
 
   const stopSmoothScroll = (event) => {
@@ -263,14 +264,14 @@ export function usePlayerSession() {
   }
 
   const addTagToMedia = async (tagId, metaId) => {
-    const response = await axios.post(apiUrl.value + '/api/TagsInMedia/createOne', {
+    const response = await apiClient.post('/api/TagsInMedia/createOne', {
       mediaId: video.value.id,
       tagId,
       metaId: metaId || appStore.getTagById(tagId)?.metaId,
     })
 
     if (response.data?.[1]) {
-      $operable.setNotification({
+      setNotification({
         title: t('player.tag_added_to_video'),
         type: 'success',
         icon: 'tag',
@@ -293,7 +294,7 @@ export function usePlayerSession() {
     })
 
     try {
-      await axios.post(apiUrl.value + '/api/mark', mark)
+      await apiClient.post('/api/mark', mark)
 
       if (mark.tagId) {
         await addTagToMedia(mark.tagId, adding.meta?.id)
@@ -308,7 +309,7 @@ export function usePlayerSession() {
       dialogsStore.closeMarkAdding()
     } catch (e) {
       console.error(e)
-      $operable.setNotification({
+      setNotification({
         type: 'error',
         title: t('player.mark_dialog.add_failed'),
         text: e?.response?.data?.message || e?.message,
@@ -320,7 +321,7 @@ export function usePlayerSession() {
 
   const removeMark = async (mark) => {
     try {
-      await axios.delete(apiUrl.value + '/api/mark/' + mark.id)
+      await apiClient.delete(`/api/mark/${mark.id}`)
       await getMarks(video.value)
     } catch (e) {
       console.log(e)

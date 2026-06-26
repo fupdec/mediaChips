@@ -14,7 +14,7 @@
     @wheel.prevent.stop="onMarkRangeWheel"
   >
     <template v-slot:thumb-label="{ modelValue }">
-      {{ $readable.getReadableDuration(modelValue) }}
+      {{ getReadableDuration(modelValue) }}
     </template>
   </v-range-slider>
 </template>
@@ -23,6 +23,7 @@
 import {computed} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
+import {getReadableDuration} from '@/services/formatUtils'
 import {getMarkRangeDeltaFromWheel, preventWheelDefault} from '@/utils/playerWheel'
 
 const dialogsStore = useDialogsStore()

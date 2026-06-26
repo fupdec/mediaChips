@@ -52,6 +52,7 @@
 
 <script setup>
 import {ref, computed, onMounted, watch, useAttrs} from 'vue'
+import {foundByChars} from '@/services/formatUtils'
 import {useSettingsStore} from '@/stores/settings'
 import CountryFlag from 'vue-country-flag-next'
 import Countries from '@/assets/Countries.js'
@@ -133,7 +134,7 @@ const filterCountry = (title, queryText, item) => {
   if (typingFiltersDefault.value) {
     return country.includes(query) || code.includes(query)
   } else {
-    return $readable.foundByChars(country, query) || $readable.foundByChars(code, query)
+    return foundByChars(country, query) || foundByChars(code, query)
   }
 }
 

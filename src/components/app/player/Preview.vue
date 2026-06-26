@@ -37,6 +37,7 @@
 <script setup>
 import {ref, computed, watch, onBeforeUnmount} from 'vue'
 import {usePlayerStore} from '@/stores/player'
+import {getReadableDuration} from '@/services/formatUtils'
 import _ from 'lodash'
 
 const SEEK_MIN_DELTA = 0.25
@@ -60,7 +61,7 @@ const formattedTime = computed(() => {
   if (playerStore.progress_hover < 0) {
     time = 0
   }
-  return $readable.getReadableDuration(time)
+  return getReadableDuration(time)
 })
 
 const throttledSeek = _.throttle((time) => {

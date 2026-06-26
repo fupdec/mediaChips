@@ -1,9 +1,11 @@
 import {defineStore} from 'pinia'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import useSettingsStore from './settings'
 import {useAppStore} from './app'
 import {useNotificationsStore} from './notifications'
 import {resolveApiBaseUrl} from '@/utils/apiBaseUrl'
+import {setOption} from '@/services/settingsService'
+import {updateConfig} from '@/services/configService'
 
 const LICENSE_API_BASE_URL = import.meta.env.VITE_LICENSE_API_URL || 'https://mediachips.app/wp-json/mediachips/v1/license'
 
@@ -82,7 +84,7 @@ async function fetchMachineIdViaHttp() {
   for (const base of bases) {
     for (const machineIdPath of MACHINE_ID_PATHS) {
       try {
-        const response = await axios.get(`${base}${machineIdPath}`)
+        const response = await apiClient.get(machineIdPath, {baseURL: base})
         if (isValidMachineId(response.data)) {
           return response.data.trim()
         }
@@ -112,11 +114,8 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
         this._regInfoCache = JSON.parse(registration)
         useSettingsStore().registration = registration
 
-        // Вызываем внешние методы если они существуют
-        if (typeof $operable !== 'undefined' && $operable) {
-          await $operable.setOption(registration, 'registration')
-          await $operable.updateConfig({registration: ''})
-        }
+        await setOption(registration, 'registration')
+        await updateConfig({registration: ''})
 
       } catch (error) {
         console.error('Failed to update registration info:', error)
@@ -137,7 +136,7 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
     },
 
     async checkLicense(licenseCode) {
-      const response = await axios.post(`${this.licenseApiBaseUrl}/check`, {
+      const response = await apiClient.post(`${this.licenseApiBaseUrl}/check`, {
         license_code: licenseCode,
       })
 
@@ -147,7 +146,7 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
     async activateLicense(licenseCode, fingerprint) {
       const resolvedFingerprint = fingerprint || await this.ensureMachineId()
 
-      const response = await axios.post(`${this.licenseApiBaseUrl}/activate`, {
+      const response = await apiClient.post(`${this.licenseApiBaseUrl}/activate`, {
         license_code: licenseCode,
         fingerprint: resolvedFingerprint,
       })
@@ -158,7 +157,7 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
     async deactivateLicense(licenseCode, fingerprint) {
       const resolvedFingerprint = fingerprint || await this.ensureMachineId()
 
-      const response = await axios.post(`${this.licenseApiBaseUrl}/deactivate`, {
+      const response = await apiClient.post(`${this.licenseApiBaseUrl}/deactivate`, {
         license_code: licenseCode,
         fingerprint: resolvedFingerprint,
       })

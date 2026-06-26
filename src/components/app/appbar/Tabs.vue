@@ -16,7 +16,7 @@
       <template #item="{ element, index }">
         <v-tab
           :value="element.id"
-          :to="$readable.getTabUrl(element)"
+          :to="getTabUrl(element)"
           @click.middle.prevent="closeTab($event, element.id)"
           @contextmenu.prevent.stop="showContextMenu($event, element.id, index)"
           :ripple="false"
@@ -50,10 +50,11 @@ import {useContextMenu} from '@/stores/contextMenu'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useRouter, useRoute} from 'vue-router'
 import draggable from 'vuedraggable'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import {useEventBus} from '@/utils/eventBus'
 import {useI18n} from 'vue-i18n'
+import {getTabUrl} from '@/services/routeService'
 
 const router = useRouter()
 const route = useRoute()
@@ -102,7 +103,7 @@ function startDrag(tab) {
 
 const deleteTabs = async (tabs) => {
   for (let tab of tabs) {
-    await axios.delete(appStore.localhost + "/api/tab/" + tab.id)
+    await apiClient.delete(`/api/tab/${tab.id}`)
   }
 
   eventBus.emit('getTabs')
@@ -114,7 +115,7 @@ const closeTab = async (e, tabId) => {
   if (route.query.tabId == tabId) {
     router.push('/')
   }
-  await axios.delete(appStore.localhost + '/api/tab/' + tabId)
+  await apiClient.delete(`/api/tab/${tabId}`)
   eventBus.emit('getTabs')
 }
 
@@ -134,7 +135,7 @@ const endDrag = async () => {
 
   try {
     const updatePromises = tabsWithOrder.map(tab =>
-      axios.put(appStore.localhost + '/api/tab/' + tab.id, tab)
+      apiClient.put(`/api/tab/${tab.id}`, tab)
     )
 
     await Promise.all(updatePromises)
@@ -177,7 +178,7 @@ const closeTabsAll = async () => {
 const changeRoute = (tabIndex) => {
   const tab = tabs.value[tabIndex]
   if (tab) {
-    const url = $readable.getTabUrl(tab)
+    const url = getTabUrl(tab)
     router.push(url)
   }
 }

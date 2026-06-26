@@ -47,7 +47,7 @@
 <script setup>
 import {onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import ItemMarker from '@/components/items/ItemMarker.vue'
 
@@ -68,7 +68,7 @@ async function loadMarks() {
   loading.value = true
 
   try {
-    const response = await axios.get(`${appStore.localhost}/api/home/markers`, {
+    const response = await apiClient.get('/api/home/markers', {
       params: {limit: props.limit},
     })
     marks.value = response.data?.marks || []

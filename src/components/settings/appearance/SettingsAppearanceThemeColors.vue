@@ -6,6 +6,7 @@ import SettingsHeaderGradient from "@/components/settings/appearance/SettingsHea
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import {useAppTheme} from "@/composable/useAppTheme";
+import {setOption} from '@/services/settingsService'
 
 const {t} = useI18n();
 const {applyTheme} = useAppTheme();
@@ -36,7 +37,7 @@ function applyColor() {
   const option = colorType.value;
   SETTINGS[option] = value;
   applyTheme();
-  $operable.setOption(value, option);
+  setOption(value, option);
 }
 
 function openDialogHeaderGradientLight() {
@@ -53,7 +54,7 @@ function saveHeaderGradient(values) {
   const key = "headerGradient" + (values.themeDark ? "Dark" : "Light");
   SETTINGS[key] = values.gradient;
   applyTheme();
-  $operable.setOption(values.gradient, key);
+  setOption(values.gradient, key);
 }
 </script>
 

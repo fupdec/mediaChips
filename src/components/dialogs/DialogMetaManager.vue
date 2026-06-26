@@ -137,7 +137,6 @@
 import {ref, computed, onMounted, watch, nextTick} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
-import {useAppStore} from '@/stores/app'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
@@ -146,7 +145,9 @@ import MetaSettingsRating from '@/components/dialogs/meta/MetaSettingsRating.vue
 import SettingsSection from '@/components/ui/SettingsSection.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import MetaTypes from '@/assets/MetaTypes.js'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {validateName} from '@/services/formatUtils'
+import {setNotification} from '@/services/notificationService'
 import _ from 'lodash'
 
 // Props
@@ -171,7 +172,6 @@ const props = defineProps({
 const emit = defineEmits(['updated', 'close', 'delete'])
 
 // Stores
-const appStore = useAppStore()
 const {xs} = useDisplay()
 const {t} = useI18n()
 
@@ -236,8 +236,6 @@ const metaKey = ref(0)
 const buttons = ref([])
 
 // Computed
-const apiUrl = computed(() => appStore.localhost)
-
 const hasOptions = computed(() => ['array', 'rating', 'string'].includes(metaSettings.value.type))
 
 const dialogHeader = computed(() => {
@@ -295,7 +293,7 @@ const changeIcon = (icon) => {
 }
 
 const nameRules = (value) => {
-  return $readable.validateName(value)
+  return validateName(value)
 }
 
 const sendForm = async () => {
@@ -309,14 +307,14 @@ const sendForm = async () => {
     let response = {}
 
     if (props.editMode && props.meta.id) {
-      response = await axios.put(`${apiUrl.value}/api/Meta/${props.meta.id}`, metaSettings.value)
+      response = await apiClient.put(`/api/Meta/${props.meta.id}`, metaSettings.value)
     } else {
-      response = await axios.post(`${apiUrl.value}/api/Meta`, metaSettings.value)
+      response = await apiClient.post('/api/Meta', metaSettings.value)
     }
 
     if (response.data) {
       if (!props.editMode) {
-        $operable.setNotification({
+        setNotification({
           type: 'success',
           title: t('meta.dialogs.meta_added', {name: metaSettings.value.name})
         })
@@ -333,7 +331,7 @@ const sendForm = async () => {
       errorMessage = error.response.data.message
     }
 
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       text: errorMessage
     })
@@ -371,9 +369,9 @@ const deleteMeta = async () => {
   if (!props.meta?.id) return
 
   try {
-    await axios.delete(`${apiUrl.value}/api/Meta/${props.meta.id}`)
+    await apiClient.delete(`/api/Meta/${props.meta.id}`)
 
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('meta.dialogs.meta_deleted', {name: metaSettings.value.name})
     })
@@ -385,7 +383,7 @@ const deleteMeta = async () => {
   } catch (error) {
     console.error('Error deleting meta:', error)
 
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       text: t('meta.dialogs.failed_delete')
     })

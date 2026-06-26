@@ -6,6 +6,7 @@ import {
   parseZoom,
   snapZoom,
 } from '@/utils/appZoom'
+import {setOption} from '@/services/settingsService'
 
 let suppressExternalSync = false
 
@@ -46,7 +47,7 @@ export function useAppZoom() {
     settingsStore.zoom = String(clamped)
 
     if (persist) {
-      await $operable.setOption(clamped, 'zoom')
+      await setOption(clamped, 'zoom')
     }
 
     return clamped
@@ -78,7 +79,7 @@ export function useAppZoom() {
 
     const clamped = snapZoom(factor)
     settingsStore.zoom = String(clamped)
-    await $operable.setOption(clamped, 'zoom')
+    await setOption(clamped, 'zoom')
   }
 
   function shouldHandleZoomShortcut(event) {

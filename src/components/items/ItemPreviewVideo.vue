@@ -170,7 +170,15 @@ import {useTasksStore} from '@/stores/tasks'
 import {useContextMenu} from '@/stores/contextMenu'
 import {useEventBus} from '@/utils/eventBus'
 import _ from 'lodash'
-import axios from "axios";
+import {apiClient} from '@/services/apiClient'
+import {createThumb as createVideoThumb, getLocalImage} from '@/services/fileService'
+import {
+  getReadableDuration,
+  getReadableVideoHeight,
+  getReadableVideoQuality,
+} from '@/services/formatUtils'
+import {setNotification} from '@/services/notificationService'
+import {setOption} from '@/services/settingsService'
 
 // props
 const props = defineProps({
@@ -221,7 +229,7 @@ const SETTINGS = computed(() => settingsStore)
 const muted = computed(() => SETTINGS.value.play_sound_on_video_preview !== '1')
 
 const quality = computed(() =>
-  $readable.getReadableVideoQuality(props.media.width, props.media.height)
+  getReadableVideoQuality(props.media.width, props.media.height)
 )
 
 const isTaskRunning = computed(() =>
@@ -229,11 +237,11 @@ const isTaskRunning = computed(() =>
 )
 
 const height = computed(() =>
-  $readable.getReadableVideoHeight(props.media.width, props.media.height)
+  getReadableVideoHeight(props.media.width, props.media.height)
 )
 
 const duration = computed(() =>
-  $readable.getReadableDuration(props.media.duration)
+  getReadableDuration(props.media.duration)
 )
 
 const isFrameLost = computed(() =>
@@ -320,7 +328,7 @@ const getImg = async () => {
       videos_folder,
       props.media.id + ".jpg"
     )
-    thumb.value = await $operable.getLocalImage(imgPath)
+    thumb.value = await getLocalImage(imgPath)
     thumbVersion.value += 1
     return imgPath
   }
@@ -345,16 +353,12 @@ const getImg = async () => {
 }
 
 const createThumb = async (imgPath) => {
-  await axios({
-    method: "post",
-    url: `${store.localhost}/api/task/createThumbForVideo`,
-    data: {
-      path: props.media.path,
-      id: props.media.id,
-    },
+  await apiClient.post('/api/task/createThumbForVideo', {
+    path: props.media.path,
+    id: props.media.id,
   })
     .then(async (res) => {
-      thumb.value = await $operable.getLocalImage(imgPath)
+      thumb.value = await getLocalImage(imgPath)
     })
     .catch((e) => {
       console.log(e)
@@ -363,7 +367,7 @@ const createThumb = async (imgPath) => {
 
 const togglePreviewMute = () => {
   const nextValue = SETTINGS.value.play_sound_on_video_preview === '1' ? '0' : '1'
-  $operable.setOption(nextValue, 'play_sound_on_video_preview')
+  setOption(nextValue, 'play_sound_on_video_preview')
 }
 
 const pausePreviewForMenu = () => {
@@ -426,10 +430,10 @@ const setAsThumbFromPreview = async () => {
 
   isSettingThumb.value = true
   try {
-    await $operable.createThumb(time, props.media.path, imgPath, 320, true)
+    await createVideoThumb(time, props.media.path, imgPath, 320, true)
     itemsStore.refreshThumb(props.media.id)
     eventBus.emit('getItemsFromDb', {ids: [props.media.id], type: 'media'})
-    $operable.setNotification({
+    setNotification({
       title: t('player.video_thumb_updated'),
       text: props.media.path,
       icon: 'image',
@@ -437,7 +441,7 @@ const setAsThumbFromPreview = async () => {
     })
   } catch (e) {
     console.log(e)
-    $operable.setNotification({
+    setNotification({
       title: t('player.video_thumb_not_updated'),
       text: String(e),
       icon: 'image',
@@ -665,7 +669,7 @@ const getFrameImg = async (progressValue) => {
     "videos/timelines",
     `${props.media.id}_${progressValue}.jpg`
   )
-  frame.value = await $operable.getLocalImage(imgPath)
+  frame.value = await getLocalImage(imgPath)
 }
 
 const scrollStory = (e) => {
@@ -696,7 +700,7 @@ const initFrames = async () => {
       "videos/timelines",
       `${props.media.id}_${progressValue}.jpg`
     )
-    let img = await $operable.getLocalImage(imgPath)
+    let img = await getLocalImage(imgPath)
     if (i == 0 && img.includes("unavailable.png")) {
       frames.value = []
       for (let j of timelines) frames.value.push(thumb.value)

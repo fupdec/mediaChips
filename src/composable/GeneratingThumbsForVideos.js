@@ -3,8 +3,7 @@ import {useTasksStore} from '@/stores/tasks'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
-import {useApiBaseUrl} from '@/composable/useApiBaseUrl'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 
 export default function useVideoImageGenerator() {
 
@@ -29,23 +28,17 @@ export default function useVideoImageGenerator() {
   const lastItemsCount = ref(0)
 
 // Computed свойства
-  const apiUrl = useApiBaseUrl()
-
   const ITEMS = computed(() => itemsStore)
 
 // Методы
   const createVideoGrid = (input, output) => {
     return new Promise((resolve, reject) => {
-      axios({
-        method: "post",
-        url: `${apiUrl.value}/api/Task/createGrid`,
-        data: {
-          input: input,
-          output: output,
-          width: 180,
-          cols: 3,
-          rows: 3,
-        },
+      apiClient.post('/api/Task/createGrid', {
+        input: input,
+        output: output,
+        width: 180,
+        cols: 3,
+        rows: 3,
       })
         .then((res) => {
           resolve(res);
@@ -59,11 +52,7 @@ export default function useVideoImageGenerator() {
 
   const createVideoTimeline = (video) => {
     return new Promise((resolve, reject) => {
-      axios({
-        method: "post",
-        url: `${apiUrl.value}/api/Task/createTimeline`,
-        data: video,
-      })
+      apiClient.post('/api/Task/createTimeline', video)
         .then((res) => {
           itemsStore.refreshThumb(video.id, {broadcast: false})
           resolve(res);

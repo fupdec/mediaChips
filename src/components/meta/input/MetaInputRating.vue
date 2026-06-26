@@ -20,7 +20,7 @@
 
 <script setup>
 import {ref, computed, onMounted} from 'vue'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 
@@ -87,7 +87,7 @@ const getMeta = async () => {
       meta.value = metaFromStore
     } else {
       // Если нет в store, запрашиваем с сервера
-      const response = await axios.get(appStore.localhost + "/api/meta/" + props.meta_id)
+      const response = await apiClient.get(`/api/meta/${props.meta_id}`)
       meta.value = response.data
     }
   } catch (error) {

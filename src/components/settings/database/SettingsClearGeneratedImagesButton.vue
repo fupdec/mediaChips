@@ -31,7 +31,7 @@
 <script setup>
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
@@ -57,15 +57,12 @@ const {t} = useI18n()
 const dialogDelete = ref(false)
 const folderSize = ref('0 MB')
 
-/* computed */
-const apiUrl = computed(() => appStore.localhost)
-
 const confirmText = computed(() => t('settings_labels.database.clear_generated_images_confirm'))
 
 /* methods */
 const getFolderSize = async () => {
-  const {data} = await axios.post(
-    `${apiUrl.value}/api/task/getFolderSize`,
+  const {data} = await apiClient.post(
+    '/api/task/getFolderSize',
     {folder: props.imageType}
   )
 
@@ -77,7 +74,7 @@ const clearData = async () => {
   dialogsStore.process.show = true
   dialogsStore.process.show = false
 
-  await axios.post(`${apiUrl.value}/api/task/clearData`, {
+  await apiClient.post('/api/task/clearData', {
     imageType: props.imageType,
   })
 

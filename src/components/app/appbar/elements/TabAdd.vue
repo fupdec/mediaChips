@@ -15,7 +15,8 @@ import { useAppStore } from '@/stores/app'
 import { useItemsStore } from '@/stores/items'
 
 import AppbarButton from '@/components/app/appbar/AppBarButton.vue'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {getTabUrl} from '@/services/routeService'
 
 /* ---------------- STORES ---------------- */
 
@@ -28,14 +29,13 @@ const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
 
-const apiUrl = app.localhost
 const ENV = items.environment
 
 /* ---------------- METHODS ---------------- */
 
 async function add() {
   try {
-    const { data } = await axios.post(apiUrl + '/api/tab', {
+    const { data } = await apiClient.post('/api/tab', {
       name: items.name,
       icon: items.icon,
       url: route.path,
@@ -45,7 +45,7 @@ async function add() {
     })
 
     // заменяет Vue.prototype.$getTabUrl
-    const url = $readable.getTabUrl(data)
+    const url = getTabUrl(data)
 
     router.push(url)
 

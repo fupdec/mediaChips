@@ -15,8 +15,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import axios from 'axios'
-import { useAppStore } from '@/stores/app'
+import {apiClient} from '@/services/apiClient'
 import { useItemsStore } from '@/stores/items'
 
 const props = defineProps({
@@ -30,16 +29,12 @@ const props = defineProps({
   },
 })
 
-const appStore = useAppStore()
 const itemsStore = useItemsStore()
 
 const rating = ref(props.item.rating)
 
 watch(rating, async (val) => {
-  await axios.put(
-    `${appStore.apiUrl}/api/${props.type}/${props.item.id}`,
-    { rating: val }
-  )
+  await apiClient.put(`/api/${props.type}/${props.item.id}`, { rating: val })
 
   await itemsStore.reload([props.item.id], props.type)
 })

@@ -116,6 +116,7 @@ import {useI18n} from 'vue-i18n'
 import {useTasksStore} from '@/stores/tasks'
 import {useApiBaseUrl} from '@/composable/useApiBaseUrl'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import {setNotification} from '@/services/notificationService'
 
 const {t} = useI18n()
 const tasksStore = useTasksStore()
@@ -285,7 +286,7 @@ const startGeneration = async (imageType, force = false) => {
         })
 
         if (!event.stopped) {
-          $operable.setNotification({
+          setNotification({
             type: summary.created > 0 ? 'success' : 'info',
             title: t(typeItem.titleKey),
             text: t('settings_labels.database.generate_video_images_complete', summary),
@@ -321,7 +322,7 @@ const startGeneration = async (imageType, force = false) => {
   } catch (error) {
     if (error.name !== 'AbortError') {
       console.error('Video images generation failed:', error)
-      $operable.setNotification({
+      setNotification({
         type: 'error',
         title: t(typeItem.titleKey),
         text: error.message,

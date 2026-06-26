@@ -4,145 +4,78 @@
       v-show="playerStore.playlistVisible"
       class="player-sidebar player-sidebar--playlist"
     >
-    <div class="player-sidebar__header">
-      <v-icon size="small" class="player-sidebar__header-icon">mdi-format-list-bulleted</v-icon>
-      <div class="player-sidebar__header-text">
-        <span class="player-sidebar__title">{{ t('player.playlist') }}</span>
-        <span class="player-sidebar__subtitle" v-text="title"/>
+      <div class="player-sidebar__header">
+        <v-icon size="small" class="player-sidebar__header-icon">mdi-format-list-bulleted</v-icon>
+        <div class="player-sidebar__header-text">
+          <span class="player-sidebar__title">{{ t('player.playlist') }}</span>
+          <span class="player-sidebar__subtitle" v-text="title"/>
+        </div>
+        <v-spacer/>
+        <v-btn
+          @click="player.playlistVisible = false"
+          variant="text"
+          icon
+          size="small"
+          density="comfortable"
+        >
+          <v-icon size="small">mdi-close</v-icon>
+        </v-btn>
       </div>
-      <v-spacer/>
-      <v-btn
-        @click="player.playlistVisible = false"
-        variant="text"
-        icon
-        size="small"
-        density="comfortable"
-      >
-        <v-icon size="small">mdi-close</v-icon>
-      </v-btn>
-    </div>
 
-    <div class="player-sidebar__modes">
-      <v-btn-toggle
-        v-model="player.playlistMode"
-        color="primary"
-        class="player-sidebar__mode-toggle"
-        multiple
-        rounded="pill"
-        density="compact"
-        variant="outlined"
-      >
-        <v-btn value="loop" :title="t('player.playlist_modes.loop')" size="small">
-          <v-icon size="small">mdi-sync</v-icon>
-        </v-btn>
-        <v-btn value="autoplay" :title="t('player.playlist_modes.autoplay')" size="small">
-          <v-icon size="small">mdi-play-pause</v-icon>
-        </v-btn>
-        <v-btn value="shuffle" :title="t('player.playlist_modes.shuffle')" size="small">
-          <v-icon size="small">mdi-shuffle-variant</v-icon>
-        </v-btn>
-      </v-btn-toggle>
-    </div>
-
-    <div class="player-sidebar__body" id="scroller">
-      <template v-if="player.playlist.length > 0">
-        <PlaylistItem
-          v-for="(item, index) in player.playlist"
-          @play="play(index)"
-          :video="item"
-          :index="index"
-          :key="item.id"
-        />
-      </template>
-
-      <div v-else class="player-sidebar__empty">
-        <v-icon size="40" color="medium-emphasis">mdi-playlist-remove</v-icon>
-        <span>{{ t('playlists.no_videos_added') }}</span>
+      <div class="player-sidebar__modes">
+        <v-btn-toggle
+          v-model="player.playlistMode"
+          color="primary"
+          class="player-sidebar__mode-toggle"
+          multiple
+          rounded="pill"
+          density="compact"
+          variant="outlined"
+        >
+          <v-btn value="loop" :title="t('player.playlist_modes.loop')" size="small">
+            <v-icon size="small">mdi-sync</v-icon>
+          </v-btn>
+          <v-btn value="autoplay" :title="t('player.playlist_modes.autoplay')" size="small">
+            <v-icon size="small">mdi-play-pause</v-icon>
+          </v-btn>
+          <v-btn value="shuffle" :title="t('player.playlist_modes.shuffle')" size="small">
+            <v-icon size="small">mdi-shuffle-variant</v-icon>
+          </v-btn>
+        </v-btn-toggle>
       </div>
-    </div>
+
+      <div class="player-sidebar__body" id="scroller">
+        <template v-if="player.playlist.length > 0">
+          <PlaylistItem
+            v-for="(item, index) in player.playlist"
+            @play="play(index)"
+            :video="item"
+            :index="index"
+            :key="item.id"
+          />
+        </template>
+
+        <div v-else class="player-sidebar__empty">
+          <v-icon size="40" color="medium-emphasis">mdi-playlist-remove</v-icon>
+          <span>{{ t('playlists.no_videos_added') }}</span>
+        </div>
+      </div>
     </aside>
   </v-theme-provider>
 </template>
 
 <script setup>
-import {computed, onMounted, onBeforeUnmount, watch} from 'vue'
-import {usePlayerStore} from '@/stores/player'
-import {useEventBus} from '@/utils/eventBus'
 import {useI18n} from 'vue-i18n'
+import {usePlayerPlaylist} from '@/composable/usePlayerPlaylist'
 import PlaylistItem from '@/components/app/player/PlaylistItem.vue'
-import _ from 'lodash'
 
 const emit = defineEmits(['play'])
-
-const playerStore = usePlayerStore()
-const eventBus = useEventBus()
 const {t} = useI18n()
 
-const player = computed(() => playerStore)
-
-const video = computed(() => {
-  return player.value.playlist[player.value.nowPlaying]
-})
-
-const title = computed(() => {
-  return t('player.playlist_count', {
-    current: player.value.nowPlaying + 1,
-    total: player.value.playlist.length
-  })
-})
-
-const play = (index) => {
-  playerStore.paused = false
-  let current = video.value
-
-  if (player.value.playlistMode.includes("shuffle")) {
-    let indexes = []
-    for (let i = 0; i < player.value.playlist.length; i++) indexes.push(i)
-    playerStore.playlistShuffle = _.shuffle(indexes)
-    const i = playerStore.playlistShuffle.indexOf(index)
-    playerStore.playlistShuffle.splice(i, 1)
-    playerStore.playlistShuffle.unshift(index)
-    emit("play", {n: player.value.playlist[index], o: current})
-    if (player.value.playlistVisible) scrollToNowPlaying()
-  } else {
-    emit("play", {n: player.value.playlist[index], o: current})
-  }
-}
-
-const scrollToNowPlaying = () => {
-  setTimeout(() => {
-    const scroller = document.getElementById("scroller")
-    if (!scroller) return
-
-    const item = scroller.children[player.value.nowPlaying]
-    if (item) {
-      item.scrollIntoView({block: 'nearest'})
-    }
-  }, 0)
-}
-
-const handleScrollToNowPlaying = () => {
-  scrollToNowPlaying()
-}
-
-watch(() => player.value.playlistMode, (mode, oldMode) => {
-  if (!mode.includes("shuffle") && oldMode.includes("shuffle")) return
-
-  let index = []
-  let current = video.value
-  for (let i = 0; i < player.value.playlist.length; i++) index.push(i)
-
-  playerStore.playlistShuffle = _.shuffle(index)
-  const nextIndex = playerStore.playlistShuffle[0]
-  emit("play", {n: player.value.playlist[nextIndex], o: current})
-  if (player.value.playlistVisible) scrollToNowPlaying()
-}, {deep: true})
-
-onMounted(() => {
-  eventBus.on('scrollToNowPlaying', handleScrollToNowPlaying)
-})
-
-onBeforeUnmount(() => {
-  eventBus.off('scrollToNowPlaying', handleScrollToNowPlaying)
-})
+const {
+  playerStore,
+  player,
+  title,
+  play,
+} = usePlayerPlaylist({emit})
 </script>

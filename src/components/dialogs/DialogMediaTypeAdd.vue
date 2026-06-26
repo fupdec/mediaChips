@@ -83,7 +83,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useAppStore } from '@/stores/app'
-import axios from 'axios'
+import {validateName} from '@/services/formatUtils'
 import DialogIcons from "@/components/dialogs/DialogIcons.vue";
 
 const props = defineProps({
@@ -103,8 +103,6 @@ const extensions = ref([])
 const search = ref('')
 const icon = ref('shape')
 
-const apiUrl = computed(() => store.localhost)
-
 function addExt() {
   if (search.value && !extensions.value.includes(search.value)) {
     extensions.value.push(search.value)
@@ -118,7 +116,7 @@ function changeIcon(selectedIcon) {
 }
 
 function nameRules(string) {
-  return $readable.validateName(string)
+  return validateName(string)
 }
 
 async function addMeta() {
@@ -128,15 +126,11 @@ async function addMeta() {
   }
 
   try {
-    await axios({
-      method: "post",
-      url: `${apiUrl.value}/api/MediaType`,
-      data: {
-        name: name.value,
-        nameSingular: singular.value,
-        extensions: [...extensions.value].sort().join(','),
-        icon: icon.value,
-      },
+    await apiClient.post('/api/MediaType', {
+      name: name.value,
+      nameSingular: singular.value,
+      extensions: [...extensions.value].sort().join(','),
+      icon: icon.value,
     })
 
     emit('added')

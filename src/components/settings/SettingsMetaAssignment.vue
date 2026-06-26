@@ -123,7 +123,7 @@
 import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import orderBy from 'lodash/orderBy'
 import {useAppStore} from '@/stores/app'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
@@ -133,7 +133,6 @@ import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue
 
 const {t} = useI18n()
 const route = useRoute()
-const apiUrl = computed(() => useAppStore().localhost)
 
 const viewMode = ref('media')
 const selectedIds = ref([])
@@ -195,8 +194,8 @@ const selectedItem = computed(() => {
 const loadAssignmentCounts = async () => {
   try {
     const [mediaTypeRows, pinnedMetaRows] = await Promise.all([
-      axios.get(`${apiUrl.value}/api/MetaInMediaType`),
-      axios.get(`${apiUrl.value}/api/PinnedMeta`),
+      apiClient.get('/api/MetaInMediaType'),
+      apiClient.get('/api/PinnedMeta'),
     ])
 
     const fieldsByMedia = {}

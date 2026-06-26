@@ -93,6 +93,8 @@ import {useItemsStore} from '@/stores/items'
 import {useI18n} from 'vue-i18n'
 import {useEventBus} from '@/utils/eventBus'
 import path from 'path-browserify'
+import {checkFileExists as checkPathExists, getLocalImage} from '@/services/fileService'
+import {getReadableDuration} from '@/services/formatUtils'
 
 const props = defineProps({
   mark: {
@@ -127,9 +129,9 @@ const SETTINGS = computed(() => settingsStore)
 const muted = computed(() => SETTINGS.value.play_sound_on_video_preview !== "1")
 
 const time = computed(() => {
-  const startTime = $readable.getReadableDuration(props.mark.time)
+  const startTime = getReadableDuration(props.mark.time)
   if (props.mark.end) {
-    return startTime + " – " + $readable.getReadableDuration(props.mark.end)
+    return startTime + " – " + getReadableDuration(props.mark.end)
   }
   return startTime
 })
@@ -186,7 +188,7 @@ const getImg = async () => {
       `${props.mark.id}.jpg`
     )
 
-    let thumbImg = await $operable.getLocalImage(image_path_mark)
+    let thumbImg = await getLocalImage(image_path_mark)
 
     if (thumbImg && thumbImg.includes("unavailable.png")) {
       const image_path_thumb = path.join(
@@ -194,7 +196,7 @@ const getImg = async () => {
         'videos/thumbs',
         `${props.mark.medium?.id || props.mark.mediumId}.jpg`
       )
-      thumb.value = await $operable.getLocalImage(image_path_thumb)
+      thumb.value = await getLocalImage(image_path_thumb)
     } else {
       thumb.value = thumbImg
     }
@@ -203,8 +205,8 @@ const getImg = async () => {
   }
 }
 
-const checkFileExists = async () => {
-  is_file_exists.value = await $operable.checkFileExists(props.mark.medium.path)
+const checkMarkFileExists = async () => {
+  is_file_exists.value = await checkPathExists(props.mark.medium.path)
 }
 
 const playPreview = () => {
@@ -322,7 +324,7 @@ const handleUpdateMarkImage = (id) => {
 onMounted(() => {
   eventBus.on('updateMarkImage', handleUpdateMarkImage)
   getImg()
-  checkFileExists()
+  checkMarkFileExists()
 })
 
 onUnmounted(() => {

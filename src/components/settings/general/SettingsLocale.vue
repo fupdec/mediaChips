@@ -65,6 +65,7 @@ import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import CountryFlag from 'vue-country-flag-next'
 import {useSettingsStore} from '@/stores/settings'
+import {setOption} from '@/services/settingsService'
 
 const settingsStore = useSettingsStore()
 
@@ -103,7 +104,7 @@ const selectedLocale = computed(() => locales.find(i => i.code === settingsStore
 const changeLanguage = (langCode) => {
   locale.value = langCode
 
-  $operable.setOption(langCode, "locale")
+  setOption(langCode, "locale")
 
   document.documentElement.lang = langCode
 }

@@ -51,7 +51,7 @@
           <v-icon size="14" class="meta-to-meta-board__drag text-medium-emphasis">mdi-drag</v-icon>
           <v-icon size="16" color="primary" class="meta-to-meta-board__icon">mdi-{{ element.meta?.icon }}</v-icon>
           <span class="meta-to-meta-board__name text-body-2">{{ element.meta?.name }}</span>
-          <v-icon size="12" class="meta-to-meta-board__type text-medium-emphasis">{{ $readable.getIconDataType(element.meta?.type) }}</v-icon>
+          <v-icon size="12" class="meta-to-meta-board__type text-medium-emphasis">{{ getIconDataType(element.meta?.type) }}</v-icon>
           <v-btn
             class="meta-to-meta-board__unpin"
             icon
@@ -95,6 +95,7 @@
 <script setup>
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {getIconDataType} from '@/services/metaTypeUtils'
 import draggable from 'vuedraggable'
 import {useAppStore} from '@/stores/app'
 import MediaTypePreviewCard from './MediaTypePreviewCard.vue'

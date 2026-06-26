@@ -165,7 +165,7 @@ import {useTasksStore} from '@/stores/tasks'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useNotificationsStore} from '@/stores/notifications'
 import {useEventBus} from '@/utils/eventBus'
-import axios from "axios"
+import {apiClient} from "@/services/apiClient"
 import useAppStore from "@/stores/app"
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getMediaDeleteAssetFolder, isManagedMediaType} from '@/utils/mediaType'
@@ -231,11 +231,7 @@ const removeFiles = async (lost, fileType) => {
     const deletePromises = lost.map(async (item) => {
       const deleteData = {...data, ...{id: item.id, path: item.path}}
 
-      return axios({
-        method: "post",
-        url: useAppStore().localhost + `/api/media/deleteOne`,
-        data: deleteData,
-      })
+      return apiClient.post('/api/media/deleteOne', deleteData)
     })
 
     await Promise.all(deletePromises)

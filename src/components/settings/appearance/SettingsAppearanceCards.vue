@@ -4,6 +4,7 @@ import { useSettingsStore } from "@/stores/settings";
 import { useI18n } from "vue-i18n";
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";
+import {setOption} from '@/services/settingsService'
 
 const settingsStore = useSettingsStore();
 const SETTINGS = computed(() => settingsStore);
@@ -61,7 +62,7 @@ const chips_default_data = [
       <v-chip
         v-for="chip in chips_default_data"
         :key="chip.value"
-        @click="$operable.setOption(SETTINGS[chip.value] == '1' ? '0' : '1', chip.value)"
+        @click="setOption(SETTINGS[chip.value] == '1' ? '0' : '1', chip.value)"
         :variant="SETTINGS.default_meta_chip_variant"
         :base-color="SETTINGS[chip.value] == '1' ? 'primary' : ''"
         :label="SETTINGS.show_default_meta_label == '1'"
@@ -83,7 +84,7 @@ const chips_default_data = [
         <v-chip
           v-for="variant in chipVariants"
           :key="variant"
-          @click="$operable.setOption(variant, 'default_meta_chip_variant')"
+          @click="setOption(variant, 'default_meta_chip_variant')"
           :variant="variant"
           base-color="primary"
           :label="SETTINGS.show_default_meta_label == '1'"

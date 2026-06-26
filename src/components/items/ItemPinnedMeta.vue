@@ -60,8 +60,8 @@
               v-for="tag in category.items"
               :key="`${tag.id}_${item.id}`"
               @click.stop.prevent="showMenu($event, tag)"
-              @mouseenter="$readable.showHoverImage($event, tag.metaId, tag.id)"
-              @mouseleave="$readable.hideHoverImage"
+              @mouseenter="showHoverImage($event, tag.metaId, tag.id)"
+              @mouseleave="hideHoverImage"
             >
               {{ tag.name }}
             </v-chip>
@@ -123,8 +123,8 @@
             :label="tag.meta?.chipLabel"
             :text="tag.name"
             @click.stop.prevent="showMenu($event, tag)"
-            @mouseenter="$readable.showHoverImage($event, tag.metaId, tag.id)"
-            @mouseleave="$readable.hideHoverImage"
+            @mouseenter="showHoverImage($event, tag.metaId, tag.id)"
+            @mouseleave="hideHoverImage"
           ></v-chip>
         </template>
 
@@ -176,7 +176,7 @@
 <script setup>
 import {computed, onBeforeMount} from 'vue'
 import _ from 'lodash'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
@@ -189,6 +189,8 @@ import translate from '@/utils/translate'
 import {useRouter} from "vue-router";
 import {usePresetMeta} from "@/composable/ItemPresetMeta"
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {getFilterObject} from '@/services/formatUtils'
+import {hideHoverImage, showHoverImage} from '@/services/hoverService'
 import {
   groupByPinnedAssignmentOrder,
   sortByPinnedAssignmentOrder,
@@ -364,17 +366,13 @@ const getPath = (tag) => {
 }
 
 const openNewTab = (tag) => {
-  axios({
-    method: "post",
-    url: appStore.localhost + "/api/tab",
-    data: {
-      name: tag.name,
-      icon: tag.meta.icon,
-      url: '/tag',
-      tagId: tag.id,
-      mediaTypeId: itemsStore.environment?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes),
-      metaId: tag.metaId,
-    },
+  apiClient.post('/api/tab', {
+    name: tag.name,
+    icon: tag.meta.icon,
+    url: '/tag',
+    tagId: tag.id,
+    mediaTypeId: itemsStore.environment?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes),
+    metaId: tag.metaId,
   })
     .then((res) => {
       eventBus.emit('getTabs')
@@ -396,11 +394,7 @@ const removeTag = (tag) => {
     data.parentTagId = props.item.id
   } else return
 
-  axios({
-    method: "post",
-    url: appStore.localhost + url,
-    data,
-  })
+  apiClient.post(url, data)
     .then(() => {
       itemsStore.removeTagFromItem({
         itemId: props.item.id,
@@ -422,7 +416,7 @@ const removeTag = (tag) => {
 }
 
 const filterByTag = (tag) => {
-  const filter_new = $readable.getFilterObject({
+  const filter_new = getFilterObject({
     param: tag.metaId,
     type: "array",
     cond: "in all",
@@ -433,12 +427,12 @@ const filterByTag = (tag) => {
   itemsStore.filters.push(filter_new)
 
   setTimeout(() => {
-    $readable.emit('applyFilters');
+    eventBus.emit('applyFilters')
   }, 0)
 }
 
 const showMenu = (e, tag) => {
-  $readable.hideHoverImage()
+  hideHoverImage()
 
   const locale = settingsStore.locale
   const t = (key, params = {}) => translate(key, params, locale)

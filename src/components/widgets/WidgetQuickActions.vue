@@ -78,6 +78,7 @@ import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getMetaName} from '@/utils/metaI18n'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 import DialogMediaAdding from '@/components/dialogs/DialogMediaAdding.vue'
+import {setNotification} from '@/services/notificationService'
 
 const {t} = useI18n()
 const appStore = useAppStore()
@@ -137,7 +138,7 @@ function onDrop(event) {
   const paths = collectDroppedPaths(event)
 
   if (!paths.length) {
-    $operable.setNotification({
+    setNotification({
       type: 'warning',
       title: t('media.adding.files'),
       text: t('media.adding.no_matching_files'),

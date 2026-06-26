@@ -28,12 +28,12 @@
       <v-chip
         v-if="item.raw"
         @click:close="removeTag(item.value)"
-        @mouseover.stop="$readable.showHoverImage($event, meta.id, item.value)"
-        @mouseleave.stop="$readable.hideHoverImage"
+        @mouseover.stop="showHoverImage($event, meta.id, item.value)"
+        @mouseleave.stop="hideHoverImage"
         :label="meta?.chipLabel"
         :variant="meta?.chipVariant"
         :color="meta?.color ? item.raw.color : ''"
-        :text-color="meta?.color ? $readable.getTextColor(item.raw.color,meta?.chipVariant) : ''"
+        :text-color="meta?.color ? getTextColor(item.raw.color,meta?.chipVariant) : ''"
         closable
         class="ma-1"
         size="small"
@@ -54,9 +54,9 @@
     <template v-slot:item="{ props, item }">
       <v-list-item
         v-bind="props"
-        @click="$readable.hideHoverImage"
-        @mouseover.stop="$readable.showHoverImage($event, meta.id, item.value)"
-        @mouseleave.stop="$readable.hideHoverImage"
+        @click="hideHoverImage"
+        @mouseover.stop="showHoverImage($event, meta.id, item.value)"
+        @mouseleave.stop="hideHoverImage"
         class="list-item"
       >
         <!-- Убираем v-list-item-title и используем свой контент -->
@@ -136,11 +136,16 @@
 import {ref, reactive, computed, onMounted, watch, nextTick, useAttrs} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import axios from "axios"
+import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
-import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from "@/utils/eventBus"
+import {
+  foundByChars,
+  getTextColor,
+  highlightChars,
+} from '@/services/formatUtils'
+import {hideHoverImage, showHoverImage} from '@/services/hoverService'
 
 const attrs = useAttrs()
 
@@ -163,7 +168,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 // Stores
-const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 const eventBus = useEventBus()
 const router = useRouter()
@@ -200,8 +204,6 @@ const sortBy = computed(() => [
 ])
 
 // Computed properties
-const apiUrl = computed(() => appStore.localhost)
-
 const showIcons = computed(() =>
   settingsStore.showIconsOfMetaInEditingDialog === '1'
 )
@@ -211,14 +213,14 @@ const filterTags = (title, queryText, tagObj) => {
   let query = queryText.toLowerCase();
 
   const foundByChars = (text, query) => {
-    return $readable.foundByChars(text, query);
+    return foundByChars(text, query);
   };
 
   const is_default = settingsStore.typingFiltersDefault == "1";
   const is_name_found = is_default ? tag.name.toLowerCase().indexOf(query) > -1 : foundByChars(tag.name, query);
 
   if (is_name_found) {
-    tagObj.raw.name_parsed = $readable.highlightChars(tag.name, queryText, is_default);
+    tagObj.raw.name_parsed = highlightChars(tag.name, queryText, is_default);
     tagObj.raw.synonyms_parsed = tagObj.raw.synonyms;
     return true;
   } else {
@@ -236,7 +238,7 @@ const filterTags = (title, queryText, tagObj) => {
 
       // для отображения строки с подчеркнутыми символами
       if (val) {
-        let text = $readable.highlightChars(i, queryText, is_default);
+        let text = highlightChars(i, queryText, is_default);
         synonyms_parsed.push(text);
       } else {
         synonyms_parsed.push(i);
@@ -271,7 +273,7 @@ const getTags = async () => {
   }
 
   try {
-    const res = await axios.post(apiUrl.value + "/api/tag/filter", sets)
+    const res = await apiClient.post('/api/tag/filter', sets)
     const tags = res.data.items
     listTags.value = sortTags(tags)
   } catch (e) {
@@ -284,7 +286,7 @@ const changeSortDir = async () => {
   const sortDir = meta.value.sortDir === 'asc' ? 'desc' : 'asc'
 
   try {
-    await axios.put(apiUrl.value + "/api/Meta/" + meta.value.id, {
+    await apiClient.put(`/api/Meta/${meta.value.id}`, {
       sortDir: sortDir,
     })
     await getMeta()
@@ -296,7 +298,7 @@ const changeSortDir = async () => {
 
 const changeSortBy = async (param) => {
   try {
-    await axios.put(apiUrl.value + "/api/Meta/" + meta.value.id, {
+    await apiClient.put(`/api/Meta/${meta.value.id}`, {
       sortBy: param,
     })
     await getMeta()
@@ -328,7 +330,7 @@ const create = async () => {
   if (isExists) return
 
   try {
-    const res = await axios.post(apiUrl.value + "/api/tag", [{
+    const res = await apiClient.post('/api/tag', [{
       name: searchText,
       metaId: props.metaId,
     }])
@@ -394,7 +396,7 @@ const removeTag = (tagId) => {
   } else if (String(val.value) === String(tagId)) {
     setVal(null)
   }
-  $readable.hideHoverImage()
+  hideHoverImage()
 }
 
 const rules = () => {
@@ -406,7 +408,7 @@ const rules = () => {
 
 const getMeta = async () => {
   try {
-    const res = await axios.get(apiUrl.value + "/api/meta/" + props.metaId)
+    const res = await apiClient.get(`/api/meta/${props.metaId}`)
     meta.value = res.data
   } catch (e) {
     console.error(e)

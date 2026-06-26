@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia'
 import _ from 'lodash'
+import {getRandomId} from '@/services/formatUtils'
 
 export const useContextMenu = defineStore('contextMenu', {
   state: () => ({
@@ -13,7 +14,7 @@ export const useContextMenu = defineStore('contextMenu', {
     showContextMenu(contextMenuObj) {
       const parseMenu = (entry) => {
         for (let i of entry) {
-          i.id = $readable.getReadableDuration()
+          i.id = getRandomId()
           i.show = false
           if (i.type === 'menu' && i.menu) parseMenu(i.menu)
         }

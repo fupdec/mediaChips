@@ -211,7 +211,7 @@
 import {ref, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 
@@ -219,6 +219,8 @@ import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import {normalizePastedFilePath} from '@/utils/filePathInput'
+import {checkFileExists} from '@/services/fileService'
+import {setNotification} from '@/services/notificationService'
 
 /* ---------- UI ---------- */
 
@@ -258,7 +260,7 @@ const validateFilePath = async () => {
     isFileExists.value = null
     return
   }
-  isFileExists.value = await $operable.checkFileExists(path)
+  isFileExists.value = await checkFileExists(path)
 }
 
 const validateFolderPath = async () => {
@@ -268,7 +270,7 @@ const validateFolderPath = async () => {
     isFolderExists.value = null
     return
   }
-  isFolderExists.value = await $operable.checkFileExists(path)
+  isFolderExists.value = await checkFileExists(path)
 }
 
 const isFileExists = ref(null)
@@ -279,7 +281,6 @@ const isFolderExists = ref(null)
 const appStore = useAppStore()
 const dialogsStore = useDialogsStore()
 
-const apiUrl = computed(() => appStore.localhost)
 const isElectron = computed(() => appStore.isElectron)
 const dialogProcess = computed({
   get: () => dialogsStore.process,
@@ -314,7 +315,7 @@ function manageBackups() {
 async function getBackups() {
   isLoaded.value = false
   try {
-    const {data} = await axios.get(`${apiUrl.value}/api/TasksBackups/getBackups`)
+    const {data} = await apiClient.get('/api/TasksBackups/getBackups')
     backups.value = data
   } catch {
     backups.value = []
@@ -325,7 +326,7 @@ async function getBackups() {
 
 async function createBackup() {
   dialogsStore.process.show = true
-  await axios.get(`${apiUrl.value}/api/TasksBackups/createBackup`)
+  await apiClient.get('/api/TasksBackups/createBackup')
   await getBackups()
   dialogsStore.process.show = false
 }
@@ -333,7 +334,7 @@ async function createBackup() {
 async function deleteBackups() {
   dialogsStore.process.show = true
   for (const i of selected.value) {
-    await axios.post(`${apiUrl.value}/api/TasksBackups/deleteBackup`, {
+    await apiClient.post('/api/TasksBackups/deleteBackup', {
       name: i.date,
     })
   }
@@ -344,7 +345,7 @@ async function deleteBackups() {
 
 async function restoreBackup() {
   dialogsStore.process.show = true
-  await axios.post(`${apiUrl.value}/api/TasksBackups/restoreBackup`, {
+  await apiClient.post('/api/TasksBackups/restoreBackup', {
     name: selected.value[0].date,
   })
   dialogsStore.process.show = false
@@ -356,21 +357,21 @@ async function importBackup() {
   filePath.value = path
   if (!path) return
 
-  isFileExists.value = await $operable.checkFileExists(path)
+  isFileExists.value = await checkFileExists(path)
   if (isFileExists.value === false) return
 
-  $operable.setNotification({
+  setNotification({
     type: 'info',
     title: t('settings_labels.database.import_backup'),
     text: t('settings_labels.database.import_backup_started'),
   })
 
   try {
-    await axios.post(`${apiUrl.value}/api/TasksBackups/importBackup`, {path})
+    await apiClient.post('/api/TasksBackups/importBackup', {path})
     await getBackups()
     dialogImport.value = false
     filePath.value = ''
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('settings_labels.database.import_backup'),
       text: t('settings_labels.database.import_backup_success'),
@@ -380,7 +381,7 @@ async function importBackup() {
     const message = error.response?.data?.message
       || (typeof error.response?.data === 'string' ? error.response.data : null)
       || t('settings_labels.database.failed_import_backup')
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('settings_labels.database.import_backup'),
       text: message,
@@ -393,7 +394,7 @@ async function exportBackup() {
   folderPath.value = path
   if (!path) return
 
-  isFolderExists.value = await $operable.checkFileExists(path)
+  isFolderExists.value = await checkFileExists(path)
   if (isFolderExists.value === false) return
 
   dialogExport.value = false
@@ -401,14 +402,14 @@ async function exportBackup() {
 
   try {
     for (const i of selected.value) {
-      await axios.post(`${apiUrl.value}/api/TasksBackups/exportBackup`, {
+      await apiClient.post('/api/TasksBackups/exportBackup', {
         archive: i.date,
         path,
       })
     }
   } catch (error) {
     console.error('Export backup failed:', error)
-    $operable.setNotification({
+    setNotification({
       text: error.response?.data?.message || t('settings_labels.database.failed_export_backup'),
       type: 'error',
     })

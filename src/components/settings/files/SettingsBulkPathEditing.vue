@@ -105,7 +105,7 @@
 </template>
 
 <script setup>
-import axios from "axios"
+import {apiClient} from "@/services/apiClient"
 import path from "path-browserify"
 import {ref, computed} from "vue"
 import {useI18n} from "vue-i18n"
@@ -129,8 +129,6 @@ const replacement = ref("")
 const found = ref("")
 const files = ref([])
 
-const apiUrl = computed(() => store.localhost)
-
 const buttons = computed(() => [
   {
     icon: "check",
@@ -142,7 +140,7 @@ const buttons = computed(() => [
 
 const searchMedia = async () => {
   try {
-    const res = await axios.post(apiUrl.value + "/api/task/searchMediaByPath", {
+    const res = await apiClient.post('/api/task/searchMediaByPath', {
       query: query.value,
     })
 
@@ -189,7 +187,7 @@ const replaceFiles = async () => {
   dialogsStore.process.show = true
 
   try {
-    await axios.post(apiUrl.value + "/api/task/updateMediaMultiple", {
+    await apiClient.post('/api/task/updateMediaMultiple', {
       mediaFiles: replaced,
     })
 

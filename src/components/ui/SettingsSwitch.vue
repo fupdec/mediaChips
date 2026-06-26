@@ -5,6 +5,7 @@ const emit = defineEmits([
   'update',     // Кастомное событие
 ])
 import {useSettingsStore} from "@/stores/settings";
+import {setOption as persistSetting} from '@/services/settingsService'
 
 const attrs = useAttrs()
 
@@ -23,7 +24,7 @@ const props = defineProps({
 })
 
 const setOption = (value) => {
-  $operable.setOption(value, props.option)
+  persistSetting(value, props.option)
   emit('update', value)
 }
 </script>

@@ -1,6 +1,7 @@
 import { watch, ref, onBeforeUnmount } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useWatcherStore } from '@/stores/watcher'
+import {getWatchedFoldersExtensions} from '@/services/watcherUtils'
 import _ from 'lodash'
 
 export function useWatcher(apiUrl) {
@@ -37,7 +38,7 @@ export function useWatcher(apiUrl) {
         wsRetryCount.value = 0
 
         const watchedFolders = watcherStore.folders.filter((x) => x.watch)
-        const extensions = $readable.getWatchedFoldersExtensions(watchedFolders)
+        const extensions = getWatchedFoldersExtensions(watchedFolders)
 
         if (watchedFolders.length > 0) {
           sendMessage({
@@ -119,14 +120,14 @@ export function useWatcher(apiUrl) {
           sendMessage({
             type: 'update',
             folders: foldersToWatch,
-            extensions: $readable.getWatchedFoldersExtensions(foldersToWatch),
+            extensions: getWatchedFoldersExtensions(foldersToWatch),
           })
         }
       }, 1000)
       return
     }
 
-    const extensions = $readable.getWatchedFoldersExtensions(foldersToWatch)
+    const extensions = getWatchedFoldersExtensions(foldersToWatch)
     sendMessage({
       type: 'update',
       folders: foldersToWatch,

@@ -2,6 +2,11 @@ import {computed} from 'vue'
 import {useTheme} from 'vuetify'
 import {useSettingsStore} from '@/stores/settings'
 import {isRealWinElectron} from '@/utils/debugWinElectronUi'
+import {
+  addTransparencyToGradient,
+  checkColorForDarkText,
+  hexToRgba,
+} from '@/services/formatUtils'
 
 export function useHeaderBarStyle(variant = 'app') {
   const theme = useTheme()
@@ -25,7 +30,7 @@ export function useHeaderBarStyle(variant = 'app') {
   const colorRGBA = computed(() => {
     // Windows Electron: same semi-transparent header as macOS AppBar
     const opacity = isWinElectron ? 60 : (variant === 'system' ? 80 : 60)
-    return $readable.hexToRgba(color.value, opacity)
+    return hexToRgba(color.value, opacity)
   })
 
   const gradient = computed(() => {
@@ -39,12 +44,12 @@ export function useHeaderBarStyle(variant = 'app') {
 
     const alpha = isWinElectron ? 0.6 : (variant === 'system' ? 0.8 : 0.6)
 
-    return 'background:' + $readable.addTransparencyToGradient(g, alpha)
+    return 'background:' + addTransparencyToGradient(g, alpha)
   })
 
   const barTheme = computed(() => {
     if (color.value) {
-      return $readable.checkColorForDarkText(color.value) ? 'dark' : 'light'
+      return checkColorForDarkText(color.value) ? 'dark' : 'light'
     }
     return 'dark'
   })

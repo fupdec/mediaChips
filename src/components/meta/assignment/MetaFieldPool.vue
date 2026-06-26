@@ -3,8 +3,8 @@
     <div v-if="groupedItems.length" class="meta-field-pool__groups">
       <div v-for="group in groupedItems" :key="group.type" class="meta-field-pool__group">
         <div class="meta-field-pool__group-label text-caption text-medium-emphasis mb-1">
-          <v-icon size="14" start>{{ $readable.getIconDataType(group.type) }}</v-icon>
-          {{ $readable.getTextDataType(group.type) }}
+          <v-icon size="14" start>{{ getIconDataType(group.type) }}</v-icon>
+          {{ formatDataType(group.type) }}
         </div>
         <div class="meta-field-pool__items">
           <v-chip
@@ -33,6 +33,8 @@
 
 <script setup>
 import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {getIconDataType, getTextDataType} from '@/services/metaTypeUtils'
 import {groupMetaByType} from '@/utils/metaSort'
 
 const props = defineProps({
@@ -45,6 +47,9 @@ const props = defineProps({
 })
 
 defineEmits(['select'])
+
+const {te, t} = useI18n()
+const formatDataType = (type) => getTextDataType(type, {te, t})
 
 const availableItems = computed(() => {
   const exclude = new Set(props.excludeIds)

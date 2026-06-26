@@ -19,6 +19,7 @@
 <script setup>
 import {computed} from 'vue'
 import {useItemsStore} from '@/stores/items'
+import {getReadableDuration} from '@/services/formatUtils'
 
 const props = defineProps({
   media: Object,
@@ -34,7 +35,7 @@ const isViewCard = computed(() =>
 const durationLabel = computed(() => {
   const duration = Number(props.media?.duration || 0)
   if (!duration) return ''
-  return $readable.getReadableDuration(duration)
+  return getReadableDuration(duration)
 })
 
 const play = () => {

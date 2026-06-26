@@ -39,7 +39,7 @@
                 size="small"
                 label
                 :prepend-icon="`mdi-${cm.meta.icon}`"
-                :append-icon="$readable.getIconDataType(cm.meta.type)"
+                :append-icon="getIconDataType(cm.meta.type)"
               >
                 {{ getMetaName(cm.meta, t) }}
               </v-chip>
@@ -115,8 +115,9 @@ import {ref, onMounted, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {cloneDeep, sortBy} from 'lodash'
+import {getIconDataType} from '@/services/metaTypeUtils'
 import DialogHeader from "@/components/elements/DialogHeader.vue";
 import ScraperFields from "@/assets/ScraperFields";
 import {getMetaName} from "@/utils/metaI18n";
@@ -136,8 +137,6 @@ const pinnedMetasFree = ref([])
 const dragging = ref(null)
 const scraperFields = ref([])
 const draggedMeta = ref(null)
-
-const apiUrl = computed(() => store.localhost)
 
 const getScraperFieldName = (field) => t(`scraper.fields.${field.key}`, field.name)
 
@@ -169,7 +168,7 @@ async function handleDrop(field, index, event) {
   }
 
   try {
-    await axios.put(`${apiUrl.value}/api/PinnedMeta`, {
+    await apiClient.put('/api/PinnedMeta', {
       data: {scraper: field.key},
       metaId: draggedMeta.value.metaId,
       pinnedMetaId: draggedMeta.value.pinnedMetaId
@@ -195,7 +194,7 @@ async function updateScraperFields() {
 
 async function remove(meta) {
   try {
-    await axios.put(`${apiUrl.value}/api/PinnedMeta`, {
+    await apiClient.put('/api/PinnedMeta', {
       data: {scraper: null},
       metaId: meta.metaId,
       pinnedMetaId: meta.pinnedMetaId
@@ -209,8 +208,8 @@ async function remove(meta) {
 
 async function getPinnedMeta() {
   try {
-    const res = await axios.get(
-      `${apiUrl.value}/api/PinnedMeta?metaId=${props.meta?.id}`
+    const res = await apiClient.get(
+      `/api/PinnedMeta?metaId=${props.meta?.id}`
     )
 
     if (res.data?.length) {

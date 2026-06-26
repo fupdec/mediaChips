@@ -66,8 +66,8 @@
       variant="flat"
     >
       <div class="meta-group__label d-flex align-center text-subtitle-2 text-medium-emphasis ps-2 mb-1">
-        <v-icon color="grey" start>{{ $readable.getIconDataType(param) }}</v-icon>
-        <span>{{ $readable.getTextDataType(param) }}</span>
+        <v-icon color="grey" start>{{ getIconDataType(param) }}</v-icon>
+        <span>{{ formatDataType(param) }}</span>
       </div>
 
       <v-chip-group column>
@@ -78,7 +78,7 @@
           class="ma-1"
         >
           <v-icon size="20" start>mdi-{{ m.icon }}</v-icon>
-          <span v-html="$readable.highlightChars(m.name)"/>
+          <span v-html="highlightChars(m.name)"/>
         </v-chip>
       </v-chip-group>
     </v-card>
@@ -104,16 +104,21 @@ import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import MetaManager from '@/components/dialogs/DialogMetaManager.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import {getMetaSortOptions, groupMetaByType, META_SORT_MODES} from '@/utils/metaSort'
+import {highlightChars} from '@/services/formatUtils'
+import {getIconDataType, getTextDataType} from '@/services/metaTypeUtils'
+import {setOption} from '@/services/settingsService'
 
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 const eventBus = useEventBus()
-const {t} = useI18n()
+const {t, te} = useI18n()
+
+const formatDataType = (type) => getTextDataType(type, {te, t})
 
 const meta = ref([])
 const search = ref('')
@@ -123,7 +128,6 @@ const editDialog = ref(false)
 const editMode = ref(false)
 const metaKey = ref(0)
 
-const apiUrl = computed(() => appStore.localhost)
 const sortMode = computed(() => settingsStore.meta_sort_mode || META_SORT_MODES.menu)
 const sortOptions = computed(() => getMetaSortOptions(t))
 
@@ -139,7 +143,7 @@ const filteredMeta = computed(() => {
 })
 
 const setSortMode = (value) => {
-  $operable.setOption(value, 'meta_sort_mode')
+  setOption(value, 'meta_sort_mode')
 }
 
 const isSearchEmpty = computed(() => _.isEmpty(filteredMeta.value))
@@ -148,7 +152,7 @@ const getMeta = async (type) => {
   try {
     initiated.value = false
 
-    const response = await axios.get(`${apiUrl.value}/api/Meta`)
+    const response = await apiClient.get('/api/Meta')
     meta.value = response.data
 
     if (type === 'array') {

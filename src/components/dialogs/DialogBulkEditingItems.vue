@@ -200,7 +200,7 @@ import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import dayjs from 'dayjs'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import MetaInputArray from "@/components/meta/input/MetaInputArray.vue"
 import {useAppStore} from '@/stores/app'
@@ -297,7 +297,7 @@ const save = async () => {
   saving.value = true
 
   try {
-    await axios.post(`${appStore.localhost}/api/bulk-meta/apply`, {
+    await apiClient.post('/api/bulk-meta/apply', {
       itemType: items_type,
       itemIds: selected_items_ids,
       changes,

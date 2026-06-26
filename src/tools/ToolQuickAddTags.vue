@@ -32,14 +32,12 @@
 </template>
 
 <script setup>
-import {computed, ref} from 'vue'
+import {ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
-import {useAppStore} from '@/stores/app'
+import {apiClient} from '@/services/apiClient'
 import {useEventBus} from '@/utils/eventBus'
 import TagsAdd from '@/components/app/appbar/elements/TagsAdd.vue'
 
-const appStore = useAppStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
@@ -47,14 +45,12 @@ const loading = ref(false)
 const message = ref('')
 const messageType = ref('info')
 
-const apiUrl = computed(() => appStore.localhost)
-
 async function openSuggestedTags() {
   loading.value = true
   message.value = ''
 
   try {
-    const res = await axios.post(`${apiUrl.value}/api/Task/suggestTagsFromPaths`, {
+    const res = await apiClient.post('/api/Task/suggestTagsFromPaths', {
       limit: 150,
       maxWords: 3,
       excludeExisting: true,

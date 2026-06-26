@@ -46,7 +46,7 @@
             v-if="filter.active"
             @update:model-value="setCondition"
             :model-value="condition"
-            :items="$readable.getListCond(filter.type)"
+            :items="getListCond(filter.type)"
             :rules="[(v) => !!v || t('validation.condition_required')]"
             item-value="cond"
             class="filter__cond ml-2 mt-0 pt-0"
@@ -123,13 +123,13 @@
               v-if="parameter === 'filesize'"
               class="mr-2"
               style="white-space: nowrap;"
-              v-html="$readable.getReadableFileSize(filter.val)"
+              v-html="getReadableFileSize(filter.val)"
             ></span>
             <span
               v-if="parameter === 'duration'"
               class="mr-2"
               style="white-space: nowrap;"
-              v-html="$readable.getReadableDuration(filter.val)"
+              v-html="getReadableDuration(filter.val)"
             ></span>
           </template>
         </v-text-field>
@@ -208,10 +208,15 @@
 <script setup>
 import {ref, computed, onMounted, watch, defineAsyncComponent} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
+import {
+  getListCond,
+  getReadableDuration,
+  getReadableFileSize,
+} from '@/services/formatUtils'
 
 // Async components
 const MetaInputArray = defineAsyncComponent(() => import("@/components/meta/input/MetaInputArray.vue"))
@@ -319,12 +324,8 @@ const toggleActivation = async () => {
   emit('setActive', active.value)
 
   try {
-    await axios({
-      method: "put",
-      url: appStore.localhost + "/api/FilterRow/" + modelFilter.value.id,
-      data: {
-        active: active.value,
-      },
+    await apiClient.put(`/api/FilterRow/${modelFilter.value.id}`, {
+      active: active.value,
     })
   } catch (error) {
     console.error('Error toggling filter activation:', error)
@@ -332,7 +333,7 @@ const toggleActivation = async () => {
 }
 
 const getConditionTitle = (type, condition) => {
-  const conditions = $readable.getListCond(type)
+  const conditions = getListCond(type)
   const item = conditions.find(i => i.cond == condition)
   return item ? getConditionText(item.text) : ''
 }

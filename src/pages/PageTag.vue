@@ -173,7 +173,9 @@ import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useRegistrationStore} from '@/stores/registration'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {getLocalImage} from '@/services/fileService'
+import {checkColorForDarkText} from '@/services/formatUtils'
 import _ from 'lodash'
 import ItemPinnedMeta from '@/components/items/ItemPinnedMeta.vue'
 import {useEventBus} from '@/utils/eventBus'
@@ -225,15 +227,12 @@ const values = ref([])
 const completionStatus = ref(0)
 
 // Computed
-const apiUrl = computed(() => appStore.localhost)
 const ITEMS = computed(() => itemsStore)
 const ENV = computed(() => itemsStore.environment)
 const SETTINGS = computed(() => settingsStore)
 const reg = computed(() => registrationStore.reg)
 const is_dark = computed(() => theme.global.current.value.dark)
-const isTextDark = computed(() => {
-  return $readable.checkColorForDarkText(bgc.value)
-})
+const isTextDark = computed(() => checkColorForDarkText(bgc.value))
 const is_header_exists = computed(() => {
   if (images.value.header) {
     return !images.value.header.includes('unavailable.png')
@@ -304,7 +303,7 @@ const init = async () => {
 
 const getMeta = async () => {
   try {
-    const res = await axios.get(apiUrl.value + "/api/meta/" + ENV.value.meta_id)
+    const res = await apiClient.get(`/api/meta/${ENV.value.meta_id}`)
     meta.value = res.data
   } catch (e) {
     console.log(e)
@@ -321,7 +320,7 @@ const getTag = async () => {
   }
 
   try {
-    const res = await axios.post(apiUrl.value + "/api/tag/items", query)
+    const res = await apiClient.post('/api/tag/items', query)
     tag.value = res.data.items[0] || {tags: [], values: []}
   } catch (e) {
     console.log(e)
@@ -338,15 +337,15 @@ const getImages = async () => {
       `${tag.value.id}_${i}.jpg`
     )
 
-    images.value[i] = await $operable.getLocalImage(imgPath)
+    images.value[i] = await getLocalImage(imgPath)
   }
   upd.value = Date.now()
 }
 
 const getPinnedMedia = async () => {
   try {
-    const res = await axios.get(
-      apiUrl.value + `/api/MetaInMediaType?metaId=${ENV.value.meta_id}`
+    const res = await apiClient.get(
+      `/api/MetaInMediaType?metaId=${ENV.value.meta_id}`
     )
     pinnedMedia.value = sortByMenuMediaTypeOrder(res.data || [], appStore.mediaTypes)
   } catch (e) {
@@ -356,7 +355,7 @@ const getPinnedMedia = async () => {
 
 const getPinnedParentMeta = async () => {
   try {
-    const res = await axios.get(apiUrl.value + "/api/PinnedMeta?pinnedMetaId=" + ENV.value.meta_id)
+    const res = await apiClient.get(`/api/PinnedMeta?pinnedMetaId=${ENV.value.meta_id}`)
     let childMetas = res.data || []
     let metas = []
 
@@ -378,21 +377,21 @@ const getCompletionStatus = async () => {
   let pinned = []
 
   try {
-    const tagsRes = await axios.get(apiUrl.value + `/api/TagsInTag?tagId=${tag.value.id}`)
+    const tagsRes = await apiClient.get(`/api/TagsInTag?tagId=${tag.value.id}`)
     tags = tagsRes.data || []
   } catch (e) {
     console.log(e)
   }
 
   try {
-    const valuesRes = await axios.get(apiUrl.value + `/api/ValuesInTag?tagId=${tag.value.id}`)
+    const valuesRes = await apiClient.get(`/api/ValuesInTag?tagId=${tag.value.id}`)
     values = valuesRes.data || []
   } catch (e) {
     console.log(e)
   }
 
   try {
-    const pinnedRes = await axios.get(apiUrl.value + "/api/PinnedMeta?metaId=" + meta.value.id)
+    const pinnedRes = await apiClient.get(`/api/PinnedMeta?metaId=${meta.value.id}`)
     pinned = pinnedRes.data || []
     pinnedMeta.value = pinned
   } catch (e) {
@@ -478,7 +477,7 @@ const getTagsInMedia = async () => {
   }
 
   try {
-    const res = await axios.post(apiUrl.value + "/api/media/items", query)
+    const res = await apiClient.post('/api/media/items', query)
     let medias = res.data.items
     let tags = []
     for (let i of medias) {
@@ -509,25 +508,19 @@ const changeTab = async (tab_value) => {
   itemsStore.environment.meta_id = metaId
 
   try {
-    const filter = await $operable.createDbEntry(
-      {
-        name: null,
-        tagId: ENV.value.tag_id,
-        mediaTypeId: mediaTypeId,
-        metaId: metaId,
-      },
-      "SavedFilter"
-    )
+    const filter = await apiClient.post('/api/SavedFilter', {
+      name: null,
+      tagId: ENV.value.tag_id,
+      mediaTypeId: mediaTypeId,
+      metaId: metaId,
+    })
 
-    await $operable.createDbEntry(
-      {
-        filterId: filter.data[0].id,
-        tagId: ENV.value.tag_id,
-        mediaTypeId: mediaTypeId,
-        metaId: metaId,
-      },
-      "PageSetting"
-    )
+    await apiClient.post('/api/PageSetting', {
+      filterId: filter.data[0].id,
+      tagId: ENV.value.tag_id,
+      mediaTypeId: mediaTypeId,
+      metaId: metaId,
+    })
   } catch (e) {
     console.log(e)
   }

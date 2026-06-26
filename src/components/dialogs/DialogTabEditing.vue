@@ -31,7 +31,7 @@
 
 <script setup>
 import {ref, computed, watch, defineAsyncComponent} from 'vue'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useEventBus} from "@/utils/eventBus"
@@ -93,13 +93,9 @@ const save = async () => {
   }
 
   try {
-    await axios({
-      method: "put",
-      url: appStore.localhost + "/api/tab/" + dialog.value.tab.id,
-      data: {
-        name: tabName.value,
-        icon: icon.value,
-      },
+    await apiClient.put(`/api/tab/${dialog.value.tab.id}`, {
+      name: tabName.value,
+      icon: icon.value,
     })
 
     eventBus.emit('getTabs')

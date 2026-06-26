@@ -74,7 +74,8 @@ import {useDisplay} from 'vuetify'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {getLocalImage} from '@/services/fileService'
 import EditPinnedMetaValues from "@/components/items/EditPinnedMetaValues.vue"
 import EditDialogMediaPanel from "@/components/items/EditDialogMediaPanel.vue"
 import {useEventBus} from "@/utils/eventBus"
@@ -108,8 +109,6 @@ const editingComponent = ref(null)
 const cropperOps = ref({
   aspectRatio: 16 / 9,
 })
-
-const apiUrl = computed(() => appStore.localhost)
 
 const media = computed(() => props.media || dialogsStore.mediaEditing.media)
 
@@ -156,10 +155,10 @@ async function getImage() {
 
   if (isImageMediaType(mediaType)) {
     imgPath.value = path.join(appStore.mediaPath, 'images/thumbs', `${currentMedia.id}.jpg`)
-    thumb.value = await $operable.getLocalImage(imgPath.value)
+    thumb.value = await getLocalImage(imgPath.value)
 
     if (thumb.value.includes('unavailable.png') && currentMedia.path) {
-      thumb.value = await $operable.getLocalImage(currentMedia.path, true)
+      thumb.value = await getLocalImage(currentMedia.path, true)
     }
 
     const width = Number(currentMedia.width) || 1
@@ -175,7 +174,7 @@ async function getImage() {
   }
 
   imgPath.value = path.join(appStore.mediaPath, 'videos/thumbs', `${currentMedia.id}.jpg`)
-  thumb.value = await $operable.getLocalImage(imgPath.value)
+  thumb.value = await getLocalImage(imgPath.value)
   cropperOps.value = {aspectRatio: 16 / 9}
 }
 
@@ -209,15 +208,11 @@ function deleteMedia() {
     dialogsStore.confirm.text = t('media.delete_from_app_confirm')
     dialogsStore.confirm.action = async () => {
       const is_checked = dialogsStore.confirm.checkBox
-      await axios({
-        method: "post",
-        url: apiUrl.value + "/api/media/deleteOne",
-        data: {
-          type: getMediaDeleteAssetFolder(currentMediaType.value),
-          id: media.value.id,
-          with_file: is_checked,
-          path: media.value.path,
-        },
+      await apiClient.post('/api/media/deleteOne', {
+        type: getMediaDeleteAssetFolder(currentMediaType.value),
+        id: media.value.id,
+        with_file: is_checked,
+        path: media.value.path,
       })
 
       eventBus.emit('removeEntitiesFromState', {

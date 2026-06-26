@@ -73,6 +73,8 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import _ from 'lodash'
+import { foundByChars, highlightChars } from '@/services/formatUtils'
+import { getIconDataType } from '@/services/metaTypeUtils'
 import {useSettingsStore} from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
@@ -104,7 +106,7 @@ const filtersGrouped = computed(() => {
   const is_default = settingsStore.typingFiltersDefault == "1"
 
   const params = props.params.filter(i =>
-   is_default ? getFilterText(i).toLowerCase().indexOf(search.value.toLowerCase()) > -1 : $readable.foundByChars(getFilterText(i), search.value)
+   is_default ? getFilterText(i).toLowerCase().indexOf(search.value.toLowerCase()) > -1 : foundByChars(getFilterText(i), search.value)
 
   // {
   //   console.log(i.text)
@@ -137,10 +139,10 @@ const add = () => {
   filtersRef.value?.blur()
 }
 
-const getTypeIcon = type => $readable.getIconDataType(type)
+const getTypeIcon = type => getIconDataType(type)
 
 const highlight = text =>
-  $readable.highlightChars(text, search.value, true)
+  highlightChars(text, search.value, true)
 
 const getFilterText = item =>
   item?.textKey ? t(item.textKey) : item?.text || ''

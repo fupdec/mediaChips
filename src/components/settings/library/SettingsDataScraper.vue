@@ -68,7 +68,7 @@ import {ref, computed, onMounted, defineAsyncComponent} from "vue"
 import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
-import axios from "axios"
+import {apiClient} from "@/services/apiClient"
 import _ from "lodash"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
@@ -86,8 +86,6 @@ const {t} = useI18n()
 
 const selected_meta = ref(null)
 
-const apiUrl = computed(() => store.localhost)
-
 const meta_tags = computed(() => {
   const metas = store.meta?.filter(i => i.type === "array") || []
   return _.sortBy(metas, "name")
@@ -99,22 +97,14 @@ async function updateSettings(meta) {
   const allMeta = store.meta || []
   for (const item of allMeta) {
     try {
-      await axios({
-        method: "put",
-        url: `${apiUrl.value}/api/Meta/${item.id}`,
-        data: {scraper: false},
-      })
+      await apiClient.put(`/api/Meta/${item.id}`, {scraper: false})
     } catch (error) {
       console.error("Error updating meta setting:", error)
     }
   }
 
   try {
-    await axios({
-      method: "put",
-      url: `${apiUrl.value}/api/Meta/${meta.id}`,
-      data: {scraper: true},
-    })
+    await apiClient.put(`/api/Meta/${meta.id}`, {scraper: true})
 
     eventBus.emit("getMeta")
   } catch (error) {

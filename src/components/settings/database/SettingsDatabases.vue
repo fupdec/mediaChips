@@ -49,7 +49,7 @@
           </v-chip>
         </v-list-item-title>
         <v-list-item-subtitle>
-          {{ t('settings_labels.database.created') }} {{ $readable.getDateFromMs(db.createdAt) }}
+          {{ t('settings_labels.database.created') }} {{ getDateFromMs(db.createdAt) }}
           <span class="ml-4">ID: {{ db.id }}</span>
           <span class="ml-4 text-medium-emphasis">{{ formatDbSize(db.id) }}</span>
         </v-list-item-subtitle>
@@ -88,7 +88,7 @@
               v-model="dbName"
               :label="t('common.name')"
               autofocus
-              :rules="[v => $readable.validateName(v)]"
+              :rules="[v => validateName(v)]"
             />
           </v-form>
         </v-card-text>
@@ -127,7 +127,7 @@
 <script setup>
 import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 
@@ -135,6 +135,12 @@ import SettingsBackups from '@/components/settings/database/SettingsBackups.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
+import {updateConfig} from '@/services/configService'
+import {
+  getDateFromMs,
+  getReadableFileSize,
+  validateName,
+} from '@/services/formatUtils'
 
 /* stores */
 const store = useAppStore()
@@ -164,8 +170,6 @@ const databases = computed({
   set: v => (store.databases = v),
 })
 
-const apiUrl = computed(() => store.localhost)
-
 async function loadDatabaseSizes() {
   const ids = databases.value.map(item => item.id)
   if (!ids.length) {
@@ -174,7 +178,7 @@ async function loadDatabaseSizes() {
   }
 
   try {
-    const {data} = await axios.post(`${apiUrl.value}/api/task/getDatabaseSizes`, {ids})
+    const {data} = await apiClient.post('/api/task/getDatabaseSizes', {ids})
     dbSizes.value = data.sizes || {}
   } catch (error) {
     console.error('Error loading database sizes:', error)
@@ -184,7 +188,7 @@ async function loadDatabaseSizes() {
 function formatDbSize(id) {
   const size = dbSizes.value[id]
   if (size == null) return '…'
-  return $readable.getReadableFileSize(size)
+  return getReadableFileSize(size)
 }
 
 /* actions */
@@ -236,7 +240,7 @@ async function addDb() {
     createdAt: Date.now(),
   })
 
-  await $operable.updateConfig({databases: config.databases})
+  await updateConfig({databases: config.databases})
   databases.value = config.databases
 
   db.value = [...databases.value].sort(
@@ -255,7 +259,7 @@ async function updateDb() {
   const target = config.databases.find(i => i.id === db.value.id)
   target.name = dbName.value
 
-  await $operable.updateConfig({databases: config.databases})
+  await updateConfig({databases: config.databases})
   databases.value = config.databases
 
   dialogDb.value = false
@@ -269,7 +273,7 @@ async function activateDb() {
     active: i.id === db.value.id,
   }))
 
-  await $operable.updateConfig({databases: config.databases})
+  await updateConfig({databases: config.databases})
   databases.value = config.databases
 
   dialogActivateConfirm.value = false
@@ -282,14 +286,14 @@ async function confirmRemoving(item) {
   dialogsStore.confirm.text = 'The database will be permanently deleted. \n Are you sure?'
   dialogsStore.confirm.show = true
   dialogsStore.confirm.action = async () => {
-    await axios.post(apiUrl.value + '/api/task/deleteDb', {
+    await apiClient.post('/api/task/deleteDb', {
       id: item.id,
     })
 
     const config = store.config
     config.databases = config.databases.filter(i => i.id !== item.id)
 
-    await $operable.updateConfig({databases: config.databases})
+    await updateConfig({databases: config.databases})
     databases.value = config.databases
   }
 }

@@ -171,6 +171,8 @@ import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import {normalizePastedFilePathsText} from '@/utils/filePathInput'
+import {showOpenDialog} from '@/services/electronDialogService'
+import {setNotification} from '@/services/notificationService'
 
 const {t} = useI18n()
 const appStore = useAppStore()
@@ -236,7 +238,7 @@ const fetchStatus = async () => {
 }
 
 const selectFolders = async () => {
-  const paths = await $operable.showOpenDialog(['openDirectory', 'multiSelections'])
+  const paths = await showOpenDialog(['openDirectory', 'multiSelections'])
   if (!paths?.length) return
 
   const existing = parsePaths()
@@ -389,7 +391,7 @@ const startSearch = async () => {
   } catch (error) {
     if (error.name !== 'AbortError') {
       console.error('Missing media search failed:', error)
-      $operable.setNotification({
+      setNotification({
         type: 'error',
         title: t('settings_labels.database.find_missing_media'),
         text: error.message,
@@ -442,7 +444,7 @@ const relinkSelected = async () => {
     selectedIds.value = matches.value.map((item) => item.id)
     selectAll.value = matches.value.length > 0
 
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('settings_labels.database.find_missing_media_relink_done'),
       text: t('settings_labels.database.find_missing_media_relink_done_text', {
@@ -453,7 +455,7 @@ const relinkSelected = async () => {
     await fetchStatus()
   } catch (error) {
     console.error('Failed to relink missing media:', error)
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('settings_labels.database.find_missing_media_relink_done'),
       text: error.message,

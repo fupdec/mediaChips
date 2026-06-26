@@ -1,5 +1,5 @@
 import {ref, computed} from 'vue'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
@@ -17,6 +17,9 @@ import {
   isTextMediaType,
   isVideoMediaType,
 } from '@/utils/mediaType'
+import {setNotification} from '@/services/notificationService'
+import {openPath} from '@/services/shellService'
+import {parseFilePath} from '@/services/pathTagParser'
 import translate from '@/utils/translate'
 import {resolveSelectedMediaItems} from '@/utils/resolveSelection'
 
@@ -30,8 +33,6 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
   const settingsStore = useSettingsStore()
 
   const eventBus = useEventBus()
-
-  const apiUrl = computed(() => store.localhost)
 
   const currentMediaType = computed(() => {
     if (type === 'media') {
@@ -165,9 +166,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
           icon: "file-image",
           disabled: !is_file_exists,
           action: () => {
-            if (window.$operable?.openPath) {
-              window.$operable.openPath(item.path)
-            }
+            openPath(item.path)
           },
         })
       }
@@ -179,9 +178,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
           icon: "file-document-outline",
           disabled: !is_file_exists,
           action: () => {
-            if (window.$operable?.openPath) {
-              window.$operable.openPath(item.path)
-            }
+            openPath(item.path)
           },
         })
       }
@@ -193,9 +190,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
           icon: "folder-open",
           disabled: !is_file_exists,
           action: () => {
-            if (window.$operable && window.$operable.openPath) {
-              window.$operable.openPath(item.path, true)
-            }
+            openPath(item.path, true)
           },
         })
       }
@@ -292,17 +287,13 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
   // методы тега
   const openNewTab = async () => {
     try {
-      await axios({
-        method: "post",
-        url: apiUrl.value + "/api/tab",
-        data: {
-          name: item.name,
-          icon: meta?.icon,
-          url: "/tag",
-          tagId: item.id,
-          metaId: meta?.id,
-          mediaTypeId: getDefaultMediaTypeId(store.mediaTypes),
-        },
+      await apiClient.post('/api/tab', {
+        name: item.name,
+        icon: meta?.icon,
+        url: "/tag",
+        tagId: item.id,
+        metaId: meta?.id,
+        mediaTypeId: getDefaultMediaTypeId(store.mediaTypes),
       })
       eventBus.emit('getTabs')
     } catch (e) {
@@ -319,18 +310,17 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
     let vals = [];
     let updated = [];
     try {
-      const parseResponse = await axios({
-        method: "post",
-        url: apiUrl.value + "/api/Task/parsePathTags",
-        data: {
-          paths: videos.map(i => ({path: i.path, mediaId: i.id})),
-        },
+      const parseResponse = await apiClient.post('/api/Task/parsePathTags', {
+        paths: videos.map(i => ({path: i.path, mediaId: i.id})),
       });
       vals = parseResponse.data || [];
     } catch (e) {
       console.error(e);
       for (let i of videos) {
-        const v = $readable.parseFilePath(i.path, i.id);
+        const v = parseFilePath(i.path, i.id, {
+          tags: store.tags,
+          assigned: itemsStore.assigned,
+        })
         vals = [...vals, ...v];
       }
     }
@@ -339,11 +329,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
     let added = [];
     for (let i of vals) {
-      await axios({
-        method: "post",
-        url: apiUrl.value + "/api/TagsInMedia/createOne",
-        data: i,
-      })
+      await apiClient.post('/api/TagsInMedia/createOne', i)
         .then((res) => {
           if (res.data[1]) added.push(1);
         })
@@ -351,7 +337,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
           console.log(e);
         });
     }
-    $operable.setNotification({
+    setNotification({
       type: added.length > 0 ? "success" : "info",
       title: `Parsing completed`,
       text: `Tags added: ${added.length}`,
@@ -375,11 +361,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
     let updated = [];
     for (let id of ids) {
-      await axios({
-        method: "post",
-        url: apiUrl.value + "/api/task/updateMediaInfo",
-        data: {id: id},
-      })
+      await apiClient.post('/api/task/updateMediaInfo', {id: id})
         .then((res) => {
           updated.push(id)
         })
@@ -388,7 +370,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
         });
     }
 
-    await $operable.setNotification({
+    await setNotification({
       type: updated.length > 0 ? "success" : "info",
       title: `Update complete`,
       text: `Media updated: ${updated.length}`,
@@ -451,11 +433,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
 
     for (let data of arr) {
       try {
-        await axios({
-          method: "post",
-          url: apiUrl.value + "/api/mediaInPlaylists/",
-          data: data,
-        })
+        await apiClient.post('/api/mediaInPlaylists/', data)
       } catch (e) {
         console.error(e)
       }
@@ -502,11 +480,7 @@ export default function useItemContextMenu(item, type, meta, is_file_exists, emi
         }
 
         try {
-          await axios({
-            method: "post",
-            url: apiUrl.value + `/api/${type}/deleteOne`,
-            data: itemData,
-          })
+          await apiClient.post(`/api/${type}/deleteOne`, itemData)
         } catch (e) {
           console.error(e)
         }

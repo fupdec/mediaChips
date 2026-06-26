@@ -4,7 +4,7 @@
     :class="{
       'playlist-item--active': is_now_playing,
       'playlist-item--missing': !is_file_exists,
-      'playlist-item--locked': !reg && index > 14,
+      'playlist-item--locked': is_locked,
     }"
     class="playlist-item"
   >
@@ -20,7 +20,7 @@
       <div v-if="is_now_playing" class="playlist-item__playing">
         <v-icon size="small" color="white">mdi-equalizer</v-icon>
       </div>
-      <div v-if="!reg && index > 14" class="playlist-item__lock">
+      <div v-if="is_locked" class="playlist-item__lock">
         <v-icon size="x-small">mdi-lock</v-icon>
       </div>
     </div>
@@ -36,74 +36,27 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted} from 'vue'
-import {useAppStore} from '@/stores/app'
-import {usePlayerStore} from '@/stores/player'
-import {useRegistrationStore} from '@/stores/registration'
-import {useItemsStore} from '@/stores/items'
-import path from 'path-browserify'
+import {usePlaylistItem} from '@/composable/usePlaylistItem'
 
 const props = defineProps({
   video: {
     type: Object,
-    required: true
+    required: true,
   },
   index: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const emit = defineEmits(['play'])
 
-const appStore = useAppStore()
-const playerStore = usePlayerStore()
-const registrationStore = useRegistrationStore()
-const itemsStore = useItemsStore()
-
-const thumb = ref(null)
-const is_file_exists = ref(true)
-
-const player = computed(() => playerStore)
-const reg = computed(() => registrationStore)
-
-const is_now_playing = computed(() => {
-  return player.value.nowPlaying === props.index
-})
-
-const getThumb = async () => {
-  const imgPath = path.join(
-    appStore.mediaPath,
-    "videos/thumbs",
-    `${props.video.id}.jpg`
-  )
-
-  thumb.value = await $operable.getLocalImage(imgPath)
-}
-
-const getDuration = (time) => {
-  return $readable.getReadableDuration(time)
-}
-
-const checkFileExists = async () => {
-  is_file_exists.value = await $operable.checkFileExists(props.video.path)
-}
-
-const play = () => {
-  if (is_file_exists.value && !is_now_playing.value && (reg.value || props.index <= 14)) {
-    emit("play", props.index)
-  }
-}
-
-watch(() => itemsStore.thumbRefreshKeys[Number(props.video.id)], (version) => {
-  if (version == null) return
-  getThumb()
-})
-
-onMounted(() => {
-  if (!thumb.value) {
-    getThumb()
-  }
-  checkFileExists()
-})
+const {
+  thumb,
+  is_file_exists,
+  is_now_playing,
+  is_locked,
+  getDuration,
+  play,
+} = usePlaylistItem(props, emit)
 </script>

@@ -132,6 +132,7 @@ import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import {getCurrentMediaType} from '@/utils/mediaType'
+import {getListCond, getReadableFileSize, getReadableDuration} from '@/services/formatUtils'
 import {getDuplicatesModeLabelKey} from '@/utils/mediaSortFilter'
 
 /* =========================
@@ -255,7 +256,7 @@ const getBy = (param, show) => {
 
 const getCond = (type, cond, show) => {
   try {
-    const conds = $readable.getListCond(type)
+    const conds = getListCond(type)
     const found = conds.find(i => i.cond === cond)
     if (show === 'text' && found?.text) {
       const key = found.text.replaceAll(' ', '_')
@@ -279,10 +280,10 @@ const getTagName = (metaId, val) => {
 
 const getValForTypeNumber = (parameter, number) => {
   if (parameter === 'filesize') {
-    return $readable.getReadableFileSize(number)
+    return getReadableFileSize(number)
   }
   if (parameter === 'duration') {
-    return $readable.getReadableDuration(number)
+    return getReadableDuration(number)
   }
   return number
 }

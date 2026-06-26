@@ -89,12 +89,13 @@
 import {ref, computed, watch, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
-import {storeToRefs} from 'pinia'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {getFilters} from '@/services/filterService'
+import {validateName} from '@/services/formatUtils'
+import {setNotification} from '@/services/notificationService'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import FiltersChips from '@/components/elements/FiltersChips.vue'
-import {useAppStore} from '@/stores/app'
 import {buildM3uPlaylist, downloadTextFile, playlistExportFilename} from '@/utils/playlistExport'
 
 const props = defineProps({
@@ -105,8 +106,6 @@ const props = defineProps({
 const emit = defineEmits(['close', 'updatePlaylist', 'delete'])
 
 const {smAndDown} = useDisplay()
-const appStore = useAppStore()
-const {localhost: apiUrl} = storeToRefs(appStore)
 const {t} = useI18n()
 
 const dialogLocal = ref(props.dialog)
@@ -148,7 +147,7 @@ watch(dialogLocal, (newVal) => {
   if (!newVal) close()
 })
 
-const nameRules = (value) => $readable.validateName(value)
+const nameRules = (value) => validateName(value)
 
 const close = () => emit('close')
 
@@ -159,7 +158,7 @@ const loadFilterRows = async () => {
   filterRows.value = []
 
   try {
-    filterRows.value = await $operable.getFilters(props.playlist.id) || []
+    filterRows.value = await getFilters(props.playlist.id) || []
   } catch (error) {
     console.error(error)
   } finally {
@@ -172,7 +171,7 @@ const applyName = async () => {
   if (!valid.value || !props.playlist?.id) return
 
   try {
-    await axios.put(`${apiUrl.value}/api/SavedFilter/${props.playlist.id}`, {
+    await apiClient.put(`/api/SavedFilter/${props.playlist.id}`, {
       name: name.value,
     })
     emit('updatePlaylist')
@@ -192,7 +191,7 @@ const exportPlaylist = async () => {
   exporting.value = true
 
   try {
-    const response = await axios.get(`${apiUrl.value}/api/SavedFilter/${props.playlist.id}/media`, {
+    const response = await apiClient.get(`/api/SavedFilter/${props.playlist.id}/media`, {
       params: {mode: 'play'},
     })
     const videos = (response.data?.items || []).map((item) => ({
@@ -201,7 +200,7 @@ const exportPlaylist = async () => {
     }))
 
     if (!videos.length) {
-      $operable.setNotification({
+      setNotification({
         type: 'warning',
         title: t('playlists.export'),
         text: t('playlists.export_empty'),
@@ -222,7 +221,7 @@ const exportPlaylist = async () => {
 
       if (result?.canceled) return
 
-      $operable.setNotification({
+      setNotification({
         type: 'success',
         title: t('playlists.export'),
         text: t('playlists.export_success', {path: result.filePath}),
@@ -231,14 +230,14 @@ const exportPlaylist = async () => {
     }
 
     downloadTextFile(content, defaultPath)
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('playlists.export'),
       text: t('playlists.export_success', {path: defaultPath}),
     })
   } catch (error) {
     console.error(error)
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('playlists.export'),
       text: error.message,

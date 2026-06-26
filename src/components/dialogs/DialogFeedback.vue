@@ -144,7 +144,7 @@
 </template>
 
 <script setup>
-import axios from "axios"
+import {apiClient} from "@/services/apiClient"
 import {computed, reactive, ref} from "vue"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
@@ -239,7 +239,7 @@ async function sendFeedback() {
       formData.append("screenshots[]", screenshot, screenshot.name)
     }
 
-    await axios.post(feedbackApiUrl, formData)
+    await apiClient.post(feedbackApiUrl, formData)
 
     feedback.name = ""
     feedback.email = ""

@@ -1,6 +1,5 @@
 import {defineStore} from 'pinia'
-import axios from 'axios'
-import {useAppStore} from '@/stores/app'
+import {apiClient} from '@/services/apiClient'
 import {MARKS_PAGE_LIMIT} from '@/utils/markSort'
 
 export const useMarksStore = defineStore('marks', {
@@ -35,8 +34,7 @@ export const useMarksStore = defineStore('marks', {
     },
 
     async loadFilterMetas() {
-      const appStore = useAppStore()
-      const response = await axios.get(`${appStore.localhost}/api/Mark/filter-metas`)
+      const response = await apiClient.get('/api/Mark/filter-metas')
       this.filterMetas = response.data || []
 
       if (!this.selectedTypes.length) {
@@ -45,8 +43,6 @@ export const useMarksStore = defineStore('marks', {
     },
 
     async fetchMarks({append = false} = {}) {
-      const appStore = useAppStore()
-
       if (append) {
         if (this.isLoadingMore || !this.hasMore) return
         this.isLoadingMore = true
@@ -57,7 +53,7 @@ export const useMarksStore = defineStore('marks', {
       }
 
       try {
-        const response = await axios.post(`${appStore.localhost}/api/Mark/items`, {
+        const response = await apiClient.post('/api/Mark/items', {
           types: this.selectedTypes,
           sortBy: this.sortBy,
           sortDir: this.sortDir,

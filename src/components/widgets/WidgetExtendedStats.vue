@@ -78,7 +78,7 @@
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
@@ -86,6 +86,8 @@ import {
   parseHomeWidgetsConfig,
   setHomeWidgetCollapsed,
 } from '@/utils/homeWidgets'
+import {getReadableFileSize} from '@/services/formatUtils'
+import {setOption} from '@/services/settingsService'
 
 const {t} = useI18n()
 const appStore = useAppStore()
@@ -156,7 +158,7 @@ function formatTypeName(typeRow) {
 }
 
 function formatFilesize(bytes) {
-  return $readable.getReadableFileSize(bytes)
+  return getReadableFileSize(bytes)
 }
 
 async function toggleCollapsed() {
@@ -169,12 +171,12 @@ async function toggleCollapsed() {
     nextCollapsed,
   )
   settingsStore.home_widgets_config = serialized
-  await $operable.setOption(serialized, 'home_widgets_config')
+  await setOption(serialized, 'home_widgets_config')
 }
 
 async function loadStats() {
   try {
-    const response = await axios.get(`${appStore.localhost}/api/home/extended-stats`)
+    const response = await apiClient.get('/api/home/extended-stats')
     stats.value = {
       total: 0,
       byType: [],

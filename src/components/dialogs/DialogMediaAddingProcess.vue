@@ -346,12 +346,14 @@ import {useI18n} from 'vue-i18n'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import DuplicatePathRow from "@/components/dialogs/DuplicatePathRow.vue"
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useEventBus} from '@/utils/eventBus'
 import {useMediaAdding} from '@/composable/AddingMedia'
+import {deleteLocalFile} from '@/services/fileService'
+import {setNotification} from '@/services/notificationService'
 
 // Props - dialog state is controlled via tasksStore.mediaAdding.dialogProcess
 
@@ -481,19 +483,15 @@ const deleteDuplicates = async (delete_type) => {
         if (!file_path) continue
 
         try {
-          await $operable.deleteLocalFile(file_path)
+          await deleteLocalFile(file_path)
         } catch (error) {
           console.error('Error deleting local file:', error)
         }
 
         if (delete_type === 'existing' && dupe.duplicate?.id) {
-          await axios({
-            method: "post",
-            url: appStore.localhost + "/api/media/updatePath",
-            data: {
-              id: dupe.duplicate.id,
-              path: dupe.path,
-            },
+          await apiClient.post('/api/media/updatePath', {
+            id: dupe.duplicate.id,
+            path: dupe.path,
           })
         }
       }
@@ -511,7 +509,7 @@ const deleteDuplicates = async (delete_type) => {
 
       emit('close')
 
-      $operable.setNotification({
+      setNotification({
         type: 'success',
         title: t('media.adding.deleting_files'),
         text: t('media.adding.files_deleted')
@@ -534,13 +532,9 @@ const relinkMovedFiles = async () => {
     for (const dupe of dupes) {
       if (!dupe.duplicate?.id || !dupe.path) continue
 
-      await axios({
-        method: "post",
-        url: appStore.localhost + "/api/media/updatePath",
-        data: {
-          id: dupe.duplicate.id,
-          path: dupe.path,
-        },
+      await apiClient.post('/api/media/updatePath', {
+        id: dupe.duplicate.id,
+        path: dupe.path,
       })
     }
 
@@ -553,7 +547,7 @@ const relinkMovedFiles = async () => {
       })
     }
 
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('media.adding.relink_moved_files'),
       text: t('media.adding.paths_relinked', {count: dupes.length}),
@@ -562,7 +556,7 @@ const relinkMovedFiles = async () => {
     eventBus.emit('update:watcher')
   } catch (error) {
     console.error('Error relinking moved files:', error)
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('media.adding.relink_moved_files'),
       text: error.response?.data?.message || error.message,
@@ -601,7 +595,7 @@ const openProcessAction = () => ({
 
 const fetchClipModelStatus = async () => {
   try {
-    const response = await axios.get(`${appStore.localhost}/api/Task/clipModelStatus`)
+    const response = await apiClient.get('/api/Task/clipModelStatus')
     clipModelStatus.value = response.data?.status || 'unknown'
   } catch (error) {
     console.error('Error checking CLIP model status:', error)
@@ -614,9 +608,9 @@ const downloadClipModel = async () => {
   clipModelStatus.value = 'loading'
 
   try {
-    const response = await axios.post(`${appStore.localhost}/api/Task/downloadClipModel`)
+    const response = await apiClient.post('/api/Task/downloadClipModel')
     clipModelStatus.value = response.data?.status || 'downloaded'
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: t('media.adding.download_video_recognition_model'),
       text: t('settings.path_parser.statuses.downloaded'),
@@ -624,7 +618,7 @@ const downloadClipModel = async () => {
   } catch (error) {
     console.error('Error downloading CLIP model:', error)
     clipModelStatus.value = 'error'
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('media.adding.download_video_recognition_model'),
       text: error.response?.data?.message || error.message,
@@ -636,7 +630,7 @@ const downloadClipModel = async () => {
 
 const recognizeVideoObjects = async () => {
   if (!clipModelReady.value) {
-    $operable.setNotification({
+    setNotification({
       type: 'warning',
       title: t('media.adding.recognize_video_objects'),
       text: t('media.adding.download_video_recognition_model_hint'),
@@ -763,14 +757,14 @@ const recognizeVideoObjects = async () => {
     ]).slice(0, 80)
 
     if (names.length > 0) {
-      $operable.setNotification({
+      setNotification({
         type: 'success',
         title: t('media.adding.video_object_recognition_complete'),
         text: t('media.adding.video_object_tags_found', {count: names.length}),
         actions: [openProcessAction()],
       })
     } else {
-      $operable.setNotification({
+      setNotification({
         type: 'info',
         title: t('media.adding.video_object_recognition_complete'),
         text: t('media.adding.video_object_tags_not_found'),
@@ -787,7 +781,7 @@ const recognizeVideoObjects = async () => {
       done: true,
       action: () => {},
     })
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       title: t('media.adding.video_object_recognition_failed'),
       text: error.response?.data?.message || error.message,

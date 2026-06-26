@@ -28,6 +28,7 @@
 import path from "path-browserify"
 import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"
+import {openPath} from '@/services/shellService'
 
 const store = useAppStore()
 const {t} = useI18n()
@@ -35,6 +36,6 @@ const {t} = useI18n()
 const openFolder = () => {
   if (!store.dbPath) return
   const folder = path.dirname(store.dbPath)
-  $operable.openPath(folder, false)
+  openPath(folder, false)
 }
 </script>

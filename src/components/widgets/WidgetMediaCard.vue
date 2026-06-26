@@ -80,6 +80,7 @@ import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useAppStore} from '@/stores/app'
+import {checkFileExists as checkPathExists} from '@/services/fileService'
 import {findMediaTypeById, isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
 
 const props = defineProps({
@@ -102,16 +103,16 @@ const emit = defineEmits(['click'])
 
 const isFileExists = ref(true)
 
-async function checkFileExists() {
+async function verifyFileExists() {
   if (!props.item?.path) {
     isFileExists.value = false
     return
   }
-  isFileExists.value = await $operable.checkFileExists(props.item.path)
+  isFileExists.value = await checkPathExists(props.item.path)
 }
 
-onMounted(checkFileExists)
-watch(() => props.item?.path, checkFileExists)
+onMounted(verifyFileExists)
+watch(() => props.item?.path, verifyFileExists)
 
 dayjs.extend(relativeTime)
 

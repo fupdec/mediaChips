@@ -83,6 +83,7 @@ import {ref, computed, onMounted, watch, nextTick} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useNotificationsStore} from '@/stores/notifications'
+import {createImage, deleteLocalFile} from '@/services/fileService'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 
@@ -204,7 +205,7 @@ const handleFile = () => {
 const deleteFile = async () => {
   try {
     // Delete local file
-    await $operable.deleteLocalFile(props.imagePath)
+    await deleteLocalFile(props.imagePath)
 
     // Reset component
     src.value = ''
@@ -252,7 +253,7 @@ const crop = async () => {
     }
 
     // Create image from buffer
-    const resultStatus = await $operable.createImage(imgBuffer, props.imagePath, sizes);
+    const resultStatus = await createImage(imgBuffer, props.imagePath, sizes);
 
     if (resultStatus === 202 || resultStatus === false) {
       notificationsStore.setNotification({
@@ -289,14 +290,6 @@ const updateSize = ({coordinates}) => {
 const closeDialog = () => {
   emit('close')
   dialog.value = false
-}
-
-// Utility functions (replace with your actual implementations)
-const deleteLocalFile = async (filePath) => {
-  // Implement your file deletion logic here
-  console.log('Deleting file:', filePath)
-  // Example: await window.electron.deleteFile(filePath)
-  return Promise.resolve()
 }
 
 // Lifecycle

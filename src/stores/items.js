@@ -6,6 +6,10 @@ import {useEventBus} from '@/utils/eventBus'
 import {getDuplicatesGroupKey} from '@/utils/mediaSortFilter'
 import {openSeparatePlayer, canOpenSeparatePlayer} from '@/utils/playerWindow'
 import {apiClient} from '@/services/apiClient'
+import {checkFileExists} from '@/services/fileService'
+import {getDateForDB} from '@/services/formatUtils'
+import {setNotification} from '@/services/notificationService'
+import {openPath} from '@/services/shellService'
 import _ from 'lodash'
 
 const eventBus = useEventBus()
@@ -155,9 +159,9 @@ export const useItemsStore = defineStore('items', {
     },
 
     async openImageInSystem(image) {
-      const isFileExists = await $operable.checkFileExists(image.path)
+      const isFileExists = await checkFileExists(image.path)
       if (!isFileExists) {
-        $operable.setNotification({
+        setNotification({
           type: 'error',
           title: 'File not found on path',
           text: image.path,
@@ -165,7 +169,7 @@ export const useItemsStore = defineStore('items', {
         return
       }
 
-      await $operable.openPath(image.path)
+      await openPath(image.path)
       void this.countViewNumber(image, 'media')
     },
 
@@ -199,7 +203,7 @@ export const useItemsStore = defineStore('items', {
         const candidate = toRaw(item)
         if (!candidate?.path) continue
 
-        if (await $operable.checkFileExists(candidate.path)) {
+        if (await checkFileExists(candidate.path)) {
           return candidate
         }
       }
@@ -222,7 +226,7 @@ export const useItemsStore = defineStore('items', {
           || playlistVideos[0]
 
         if (!targetVideo) {
-          $operable.setNotification({
+          setNotification({
             type: 'error',
             title: 'File not found on path',
             text: 'No playable videos found in playlist',
@@ -230,10 +234,10 @@ export const useItemsStore = defineStore('items', {
           return false
         }
       } else if (!trustPath) {
-        const isFileExists = await $operable.checkFileExists(targetVideo.path)
+        const isFileExists = await checkFileExists(targetVideo.path)
 
         if (!isFileExists) {
-          $operable.setNotification({
+          setNotification({
             type: 'error',
             title: 'File not found on path',
             text: targetVideo.path
@@ -243,7 +247,7 @@ export const useItemsStore = defineStore('items', {
       }
 
       if (in_system || settingsStore.isPlayVideoInSystemPlayer === "1") {
-        await $operable.openPath(targetVideo.path)
+        await openPath(targetVideo.path)
 
         await this.countViewNumber(targetVideo, 'media')
         return true
@@ -304,7 +308,7 @@ export const useItemsStore = defineStore('items', {
       }
 
       if (itemType === 'media' || itemType === 'tag') {
-        data.viewedAt = $readable.getDateForDB()
+        data.viewedAt = getDateForDB()
       }
 
       await apiClient.put(`/api/${model}/${item.id}`, data)

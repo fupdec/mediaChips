@@ -108,7 +108,7 @@ import {useNotificationsStore} from '@/stores/notifications'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import MetaTypes from '@/assets/MetaTypes.js'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 
 // Props
 const props = defineProps({
@@ -141,9 +141,6 @@ const isLink = ref(false)
 
 // Buttons for DialogHeader
 const buttons = ref([])
-
-// Computed
-const apiUrl = computed(() => appStore.localhost)
 
 const currentMetaType = computed(() => {
   return metaTypes.value.find((i) => i.value === metaType.value)
@@ -220,7 +217,7 @@ const addMeta = async () => {
       }
     }
 
-    const response = await axios.post(`${apiUrl.value}/api/Meta`, metaData)
+    const response = await apiClient.post('/api/Meta', metaData)
 
     if (response.data) {
       notificationsStore.setNotification({

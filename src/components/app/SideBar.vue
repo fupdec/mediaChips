@@ -165,7 +165,7 @@
 import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import draggable from 'vuedraggable' // vuedraggable@next
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import orderBy from 'lodash/orderBy'
 
 /* Pinia stores — adjust names to your stores */
@@ -264,7 +264,7 @@ async function updateMetaOrder(evt) {
   // send updates sequentially (original did it one-by-one)
   for (const p of payload) {
     try {
-      await axios.put(`${store.localhost}/api/meta/${p.id}`, {
+      await apiClient.put(`/api/meta/${p.id}`, {
         order: p.order,
         hidden: p.hidden,
       })

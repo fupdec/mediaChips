@@ -94,7 +94,8 @@ import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import MetaSettingsArray from '@/components/dialogs/meta/MetaSettingsArray.vue'
 import MetaSettingsRating from '@/components/dialogs/meta/MetaSettingsRating.vue'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {setNotification} from '@/services/notificationService'
 
 // Props
 const props = defineProps({
@@ -140,8 +141,6 @@ const settingsArray = ref({})
 const buttons = ref([])
 
 // Computed
-const apiUrl = computed(() => appStore.localhost)
-
 const textDialogDelete = computed(() => {
   let text = `${t('meta.dialogs.delete_meta_assigned_confirm')}\n`
   if (props.meta.type === 'array') {
@@ -217,9 +216,9 @@ const applyChanges = async () => {
       ...{isLink: isLink.value}
     }
 
-    await axios.put(`${apiUrl.value}/api/Meta/${props.meta.id}`, metaData)
+    await apiClient.put(`/api/Meta/${props.meta.id}`, metaData)
 
-    $operable.setNotification({
+    setNotification({
       type: 'success',
       title: `Meta "${name.value}" updated successfully`
     })
@@ -246,7 +245,7 @@ const applyChanges = async () => {
       errorMessage = error.response.data.message
     }
 
-    $operable.setNotification({
+    setNotification({
       type: 'error',
       text: errorMessage
     })
@@ -255,7 +254,7 @@ const applyChanges = async () => {
 
 const getSettings = async () => {
   try {
-    const response = await axios.get(`${apiUrl.value}/api/MetaSetting/${props.meta.id}`)
+    const response = await apiClient.get(`/api/MetaSetting/${props.meta.id}`)
     const settings = response.data
     isLink.value = settings.isLink || false
   } catch (error) {

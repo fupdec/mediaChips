@@ -21,7 +21,7 @@
             ref="form"
             @submit.prevent
           >
-            <v-text-field v-model="name" :rules="[v => $readable.validateName(v)]" :label="translate('common.name')"/>
+            <v-text-field v-model="name" :rules="[v => validateName(v)]" :label="translate('common.name')"/>
             <v-autocomplete
               v-model="extensions"
               :hide-no-data="!search"
@@ -81,7 +81,8 @@ import {ref, computed, watch, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useDisplay} from 'vuetify'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {validateName} from '@/services/formatUtils'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
@@ -112,8 +113,6 @@ const extensions = ref([])
 const search = ref('')
 const hidden = ref(0)
 const buttons = ref([])
-
-const apiUrl = computed(() => appStore.localhost)
 
 const textDialogDelete = computed(() => {
   return `${translate('media.type.delete_confirm')}\n${translate('common.are_you_sure')}`
@@ -173,16 +172,12 @@ async function apply() {
   if (!valid.value) return
 
   try {
-    await axios({
-      method: 'put',
-      url: `${apiUrl.value}/api/MediaType/${props.media.id}`,
-      data: {
-        name: name.value,
-        nameSingular: name.value, // или singular если он у вас есть
-        icon: icon.value,
-        extensions: extensions.value.sort().join(','),
-        hidden: hidden.value
-      }
+    await apiClient.put(`/api/MediaType/${props.media.id}`, {
+      name: name.value,
+      nameSingular: name.value, // или singular если он у вас есть
+      icon: icon.value,
+      extensions: extensions.value.sort().join(','),
+      hidden: hidden.value
     })
     emit('update')
   } catch (e) {

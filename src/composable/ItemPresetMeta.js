@@ -3,13 +3,18 @@ import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
 import {useI18n} from 'vue-i18n'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 import {
   getCurrentMediaType,
   matchesMediaTypeFilter,
   getDefaultMediaTypeId,
 } from '@/utils/mediaType'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {
+  getReadableBitrate,
+  getReadableDuration,
+  getReadableFileSize,
+} from '@/services/formatUtils'
 
 export function usePresetMeta(props) {
   const appStore = useAppStore()
@@ -44,7 +49,7 @@ export function usePresetMeta(props) {
         icon: 'harddisk',
         types: ['media'],
         show: SETTINGS.value.show_default_meta_filesize === '1',
-        value: $readable.getReadableFileSize(item.filesize),
+        value: getReadableFileSize(item.filesize),
       },
       {
         name: 'duration',
@@ -53,7 +58,7 @@ export function usePresetMeta(props) {
         types: ['media'],
         media_types: ['video'],
         show: SETTINGS.value.show_default_meta_duration === '1',
-        value: $readable.getReadableDuration(item.duration),
+        value: getReadableDuration(item.duration),
       },
       {
         name: 'resolution',
@@ -86,7 +91,7 @@ export function usePresetMeta(props) {
         types: ['media'],
         media_types: ['video'],
         show: SETTINGS.value.show_default_meta_bitrate === '1',
-        value: $readable.getReadableBitrate(item.bitrate),
+        value: getReadableBitrate(item.bitrate),
       },
       {
         name: 'fps',
@@ -134,8 +139,8 @@ export function usePresetMeta(props) {
     if (!mediaTypeId) return
 
     let url = `/api/media/numberOfMediaWithTag?mediaTypeId=${mediaTypeId}&tagId=${props.item?.id}`
-    axios
-      .get(appStore.localhost + url)
+    apiClient
+      .get(url)
       .then((res) => {
         numberOfMedia.value = res.data.count
       })

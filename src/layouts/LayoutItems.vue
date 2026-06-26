@@ -166,21 +166,20 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
+import {ref, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
-import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useTasksStore} from '@/stores/tasks'
 import {useRegistrationStore} from '@/stores/registration'
 import {useToolbarStore} from '@/stores/toolbar'
-import {useRouter} from 'vue-router'
 import {useEventBus} from '@/utils/eventBus'
-import {apiClient} from '@/services/apiClient'
-import useVideoImageGenerator from '@/composable/GeneratingThumbsForVideos'
 import {useItemsPage} from '@/composable/useItemsPage'
+import {useItemsPageInit} from '@/composable/useItemsPageInit'
+import {useItemsPageEvents} from '@/composable/useItemsPageEvents'
+import useVideoImageGenerator from '@/composable/GeneratingThumbsForVideos'
 
 // Компоненты
 import Item from '@/components/items/Item.vue'
@@ -195,11 +194,9 @@ import ToolbarAppearance from "@/components/app/toolbar/ToolbarAppearance.vue";
 import DialogMediaAdding from '@/components/dialogs/DialogMediaAdding.vue'
 import TagsAdd from '@/components/app/appbar/elements/TagsAdd.vue'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
-import {isVideoMediaType, getDefaultMediaTypeId, isImageMediaType, isAudioMediaType, isTextMediaType} from '@/utils/mediaType'
+import {isVideoMediaType, isImageMediaType} from '@/utils/mediaType'
+import {getReadableFileSize} from '@/services/formatUtils'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
-import {
-  normalizeSortBy,
-} from '@/utils/mediaSortFilter'
 
 // Пропсы
 const props = defineProps({
@@ -219,7 +216,6 @@ const toolbarStore = useToolbarStore()
 const registrationStore = useRegistrationStore()
 
 const eventBus = useEventBus()
-const router = useRouter()
 const {t} = useI18n()
 
 // Константы из Vuetify
@@ -231,22 +227,22 @@ useVideoImageGenerator()
 // Реактивные переменные
 const mediaType = ref(null)
 const meta = ref(null)
-const isFiltersReady = ref(false)
 const dropzone = ref(false)
 const dropzoneDragDepth = ref(0)
 const container = ref(null)
 
-const updatePageSetting = async (data) => {
-  await apiClient.put('/api/PageSetting', {
-    data,
-    query: {
-      tagId: props.tagId,
-      mediaTypeId: props.mediaTypeId,
-      metaId: props.metaId,
-      tabId: props.tabId,
-    },
-  })
-}
+const {
+  isFiltersReady,
+  updatePageSetting,
+  init: runInit,
+  loadSavedFilters,
+  getFilters,
+  getPinnedMeta,
+} = useItemsPageInit({
+  props,
+  mediaType,
+  meta,
+})
 
 const {
   total,
@@ -276,6 +272,34 @@ const {
   mediaType,
   container,
   updatePageSetting,
+})
+
+const init = () => runInit({
+  disposeListFetching,
+  resetMediaListState,
+  getItemsFromDb,
+})
+
+useItemsPageEvents({
+  props,
+  mediaType,
+  meta,
+  loader,
+  total,
+  totalInDb,
+  is_infinite_scroll,
+  init,
+  loadSavedFilters,
+  updatePageSetting,
+  getFilters,
+  getPinnedMeta,
+  getItemsFromDb,
+  getEntitiesOnPage,
+  bindMediaInfiniteScroll,
+  unbindMediaInfiniteScroll,
+  disposeListFetching,
+  maybeLoadMoreIfNearBottom,
+  refreshScrollRoot,
 })
 
 // Компьютеды
@@ -308,14 +332,13 @@ const itemsGridClasses = computed(() => [
 ])
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
-const apiUrl = computed(() => appStore.localhost)
 const ENV = computed(() => ITEMS.value.environment)
 
 const filesize_all = computed(() => {
   if (props.items_type !== 'media') return ""
   const sum = ITEMS.value.totalFilesize
   if (!sum) return ""
-  return $readable.getReadableFileSize(sum)
+  return getReadableFileSize(sum)
 })
 
 const pageTitle = computed(() => {
@@ -341,193 +364,6 @@ const image_filters_no_results = computed(() => {
 })
 
 // Методы
-const init = async () => {
-  if (!apiUrl.value) {
-    return
-  }
-  if (props.items_type === 'media' && !props.mediaTypeId) {
-    return
-  }
-  if (props.items_type === 'tag' && !props.metaId) {
-    return
-  }
-
-  disposeListFetching()
-
-  if (props.items_type === 'media') {
-    resetMediaListState()
-  }
-
-  if (props.items_type === 'tag') {
-    await getMeta();
-    if (!props.tagId && meta.value?.id) {
-      await itemsStore.countViewNumber(meta.value, 'meta')
-    }
-  } else if (props.items_type === 'media') {
-    await getMediaType();
-  }
-  await getFilters();
-  await getPageSettings();
-  await getPinnedMeta();
-  await getItemsFromDb();
-}
-
-const loadSavedFilters = () => {
-  $operable.getSavedFilters().catch((error) => {
-    console.error('Failed to load saved filters:', error)
-  })
-}
-
-const getFilters = async () => {
-  // набор сохраненных фильтров
-  let savedFilter = {};
-
-  // получаем набор сохраненных фильтров
-  await apiClient.post('/api/SavedFilter', {
-    name: null,
-    mediaTypeId: ENV.value.media_type_id,
-    metaId: ENV.value.meta_id,
-    tagId: ENV.value.tag_id,
-    tabId: ENV.value.tab_id,
-  })
-    .then((res) => {
-      savedFilter = res.data[0];
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-
-  if (_.isEmpty(savedFilter)) {
-    return;
-  }
-
-  let filters = await $operable.getFilters(savedFilter.id);
-
-  itemsStore.updateState({key: "filters", value: filters});
-  itemsStore.updateState({key: "savedFilter", value: savedFilter});
-
-  if (props.tagId) {
-    initFilterForTagPage();
-  }
-
-  itemsStore.updateState({key: "isFiltersLoaded", value: true});
-}
-
-const initFilterForTagPage = () => {
-  const index = ITEMS.value.filters.findIndex(
-    i => i.param == meta.value?.id && i.lock == true
-  );
-
-  if (index < 0) {
-    let fltr = $readable.getFilterObject({
-      param: $readable.getUrlParam("metaId"),
-      type: "array",
-      cond: "in all",
-      lock: true,
-      val: [Number(props.tagId)],
-    });
-    itemsStore.updateState({
-      key: "filters",
-      value: [...ITEMS.value.filters, fltr]
-    });
-  }
-}
-
-const getPageSettings = async () => {
-  await apiClient.post('/api/PageSetting', {
-    tagId: props.tagId,
-    mediaTypeId: props.mediaTypeId,
-    metaId: props.metaId,
-    tabId: props.tabId,
-  })
-    .then((res) => {
-      if (!res.data?.[0]) return
-
-      let vals = ["page", "limit", "size", "view", "sortBy", "sortDir"];
-
-      for (let i of vals) {
-        let value = res.data[0][i]
-        if (value === undefined || value === null) continue
-
-        if (i === 'page' && props.items_type === 'media' && Number(res.data[0].limit) === 101) {
-          value = 1
-        }
-
-        if (i === 'sortBy' && props.items_type === 'media') {
-          value = normalizeSortBy(value, props.items_type, mediaType.value, 'createdAt')
-        }
-        itemsStore.updateState({
-          key: i,
-          value,
-        });
-      }
-
-      if (
-        props.items_type === 'media' &&
-        res.data[0].sortBy &&
-        res.data[0].sortBy !== itemsStore.sortBy
-      ) {
-        updatePageSetting({sortBy: itemsStore.sortBy});
-      }
-
-      // if page settings created then update filter id for it
-      if (res.data[1])
-        updatePageSetting({filterId: ITEMS.value.savedFilter?.id});
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-}
-
-const getMeta = async () => {
-  await apiClient
-    .get(`/api/meta/${props.metaId}`)
-    .then((res) => {
-      const metaData = _.cloneDeep(res.data);
-      meta.value = metaData;
-      itemsStore.updateState({key: "meta", value: metaData});
-      itemsStore.updateState({key: "name", value: metaData.name});
-      itemsStore.updateState({key: "icon", value: metaData.icon});
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-}
-
-const getMediaType = async () => {
-  await apiClient
-    .get(`/api/MediaType/${props.mediaTypeId}`)
-    .then((res) => {
-      mediaType.value = res.data;
-      itemsStore.updateState({key: "name", value: getMediaTypeName(res.data, t)});
-      itemsStore.updateState({key: "icon", value: res.data.icon});
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-}
-
-const getPinnedMeta = async () => {
-  let url = "/api/";
-  if (props.items_type === 'media') {
-    url += "MetaInMediaType?mediaTypeId=" + props.mediaTypeId;
-  } else if (props.items_type === 'tag') {
-    url += "PinnedMeta?metaId=" + props.metaId;
-  }
-  await apiClient
-    .get(url)
-    .then((res) => {
-      itemsStore.updateState({
-        key: "assigned",
-        value: res.data,
-      });
-      isFiltersReady.value = true;
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-}
-
 const toggleCustomization = () => {
   const toolbarStore = useToolbarStore()
   toolbarStore.appearance.show = !toolbarStore.appearance.show
@@ -582,216 +418,6 @@ const catchDrop = (e) => {
 
 // События
 const emit = defineEmits(['addMedia', 'playVideo'])
-
-// Хуки жизненного цикла
-onMounted(async () => {
-  itemsStore.updateState({key: "isSelect", value: false});
-  itemsStore.updateState({key: "selection", value: []});
-
-  if (props.items_type === 'media' && ITEMS.value.limit === 101) {
-    itemsStore.updateState({key: 'page', value: 1});
-  }
-
-  eventBus.on('getItemsFromDb', handleGetItemsFromDb);
-  eventBus.on('setItemsFilters', handleSetItemsFilters);
-  eventBus.on('setItemsLimit', handleSetItemsLimit);
-  eventBus.on('removeEntitiesFromState', handleRemoveEntitiesFromState);
-  eventBus.on('setItemsSortDir', handleSetItemsSortDir);
-  eventBus.on('setItemsSortBy', handleSetItemsSortBy);
-  eventBus.on('setItemsView', handleSetItemsView);
-  eventBus.on('updateAssignedMeta', handleUpdateAssignedMeta);
-  eventBus.on('openRandomItem', handleOpenRandomItem);
-
-  try {
-    await init();
-    loadSavedFilters();
-  } catch (error) {
-    console.error('Failed to initialize items page:', error);
-  } finally {
-    loader.value.is_busy = false;
-  }
-
-  refreshScrollRoot();
-
-  if (props.items_type === 'media' && is_infinite_scroll.value) {
-    await nextTick();
-    maybeLoadMoreIfNearBottom();
-  }
-
-  bindMediaInfiniteScroll();
-})
-
-onBeforeUnmount(() => {
-  disposeListFetching()
-  unbindMediaInfiniteScroll();
-  if (is_infinite_scroll.value) updatePageSetting({page: 1});
-  itemsStore.updateState({
-    key: "isFiltersLoaded",
-    value: false,
-  });
-
-  itemsStore.find_duplicates = false
-
-  // Удаляем слушатели
-  eventBus.off('getItemsFromDb', handleGetItemsFromDb);
-  eventBus.off('setItemsFilters', handleSetItemsFilters);
-  eventBus.off('setItemsLimit', handleSetItemsLimit);
-  eventBus.off('removeEntitiesFromState', handleRemoveEntitiesFromState);
-  eventBus.off('setItemsSortDir', handleSetItemsSortDir);
-  eventBus.off('setItemsSortBy', handleSetItemsSortBy);
-  eventBus.off('setItemsView', handleSetItemsView);
-  eventBus.off('updateAssignedMeta', handleUpdateAssignedMeta);
-  eventBus.off('openRandomItem', handleOpenRandomItem);
-})
-
-// Обработчики событий
-const handleGetItemsFromDb = (event) => {
-  const {ids, type} = event;
-  if (props.items_type !== type) return
-  if (Array.isArray(ids) && ids.length === 0 && loader.value.is_busy) {
-    return
-  }
-  getItemsFromDb(ids);
-}
-
-const handleSetItemsFilters = async (event) => {
-  const val = event;
-  itemsStore.updateState({key: 'page', value: 1});
-  await updatePageSetting({
-    page: 1,
-    query: val,
-  });
-  await getFilters();
-  await getItemsFromDb();
-}
-
-const handleSetItemsLimit = (event) => {
-  const val = event;
-  itemsStore.updateState({
-    key: "page",
-    value: 1,
-  });
-  if (val == 101) itemsStore.updateState({key: "itemsOnPage", value: []});
-  updatePageSetting({
-    page: 1,
-    limit: val,
-  });
-
-  if (props.items_type === 'media') {
-    getItemsFromDb();
-    return
-  }
-
-  getEntitiesOnPage();
-}
-
-const handleRemoveEntitiesFromState = (event) => {
-  const {ids, type} = event;
-  if (type !== props.items_type) return
-
-  if (props.items_type === 'media') {
-    for (const id of ids) {
-      itemsStore.removeItem(id)
-    }
-    total.value = ITEMS.value.totalFiltered
-    totalInDb.value = Math.max(0, totalInDb.value - ids.length)
-    return
-  }
-
-  getEntitiesOnPage(ids);
-}
-
-const handleSetItemsSortDir = (event) => {
-  const val = event;
-  if (val === ITEMS.value.sortDir) return
-
-  itemsStore.updateState({
-    key: "page",
-    value: 1,
-  });
-  updatePageSetting({
-    page: 1,
-    sortDir: val,
-  });
-  getItemsFromDb();
-}
-
-const handleSetItemsSortBy = (event) => {
-  const val = event;
-  if (val === ITEMS.value.sortBy) return
-
-  itemsStore.updateState({
-    key: "page",
-    value: 1,
-  });
-  updatePageSetting({
-    page: 1,
-    sortBy: val,
-  });
-  getItemsFromDb();
-}
-
-const handleSetItemsView = (event) => {
-  const val = event;
-  updatePageSetting({
-    view: val,
-  });
-}
-
-const handleUpdateAssignedMeta = async () => {
-  await getPinnedMeta();
-}
-
-const handleOpenRandomItem = (event) => {
-  const id = event;
-  const navigationPool = ITEMS.value.navigationItems.length
-    ? ITEMS.value.navigationItems
-    : ITEMS.value.entities
-
-  if (props.items_type === 'tag') {
-    let url = "/tag?metaId=" + meta.value.id + "&tagId=" + id + "&mediaTypeId=" + getDefaultMediaTypeId(appStore.mediaTypes);
-    router.push(url);
-  } else if (props.items_type === 'media') {
-    const media = navigationPool.find(i => i.id === id);
-    if (isImageMediaType(mediaType.value)) {
-      itemsStore.viewImage({image: media})
-    } else if (isVideoMediaType(mediaType.value) || isAudioMediaType(mediaType.value)) {
-      itemsStore.playVideo({
-        video: media,
-      })
-    } else if (isTextMediaType(mediaType.value) && media?.path) {
-      $operable.openPath(media.path)
-    }
-  }
-}
-
-// Watchers
-watch(() => ITEMS.size, (val, old) => {
-  if (val === old) return;
-  updatePageSetting({size: val});
-})
-
-watch(is_infinite_scroll, () => {
-  bindMediaInfiniteScroll();
-})
-
-watch(
-  () => [props.items_type, props.mediaTypeId, props.metaId, props.tagId, props.tabId],
-  async (next, prev) => {
-    if (prev && JSON.stringify(next) === JSON.stringify(prev)) return
-    if (props.items_type === 'media' && !props.mediaTypeId) return
-    if (props.items_type === 'tag' && !props.metaId) return
-
-    try {
-      await init()
-      loadSavedFilters()
-    } catch (error) {
-      console.error('Failed to reinitialize items page:', error)
-    } finally {
-      loader.value.is_busy = false
-    }
-  },
-)
 </script>
 
 <style lang="scss">

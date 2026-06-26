@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import _ from 'lodash'
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
 
 const SCRAPER_API_BASE_URL = import.meta.env.VITE_SCRAPER_API_URL || 'https://mediachips.app/wp-json/mediachips/v1/scraper'
 
@@ -17,7 +17,7 @@ export const useScraperStore = defineStore('useScraperStore', {
       const q = query || this.query
 
       try {
-        const res = await axios.get(`${this.scraperApiBaseUrl}/performers`, {
+        const res = await apiClient.get(`${this.scraperApiBaseUrl}/performers`, {
           params: {
             gender: 'Female',
             page,

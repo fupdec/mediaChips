@@ -60,7 +60,9 @@ import {useSettingsStore} from '@/stores/settings'
 import {useAppStore} from '@/stores/app'
 import {useScraperStore} from "@/stores/scraper"
 import {useNotificationsStore} from "@/stores/notifications"
-import axios from 'axios'
+import {apiClient} from '@/services/apiClient'
+import {getLocalImage} from '@/services/fileService'
+import {checkCurrentPage} from '@/services/routeService'
 import path from 'path-browserify'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import EditPinnedMetaValues from '@/components/items/EditPinnedMetaValues.vue'
@@ -89,7 +91,7 @@ const currentIndex = shallowRef(0)
 const tag = computed(() => dialogsStore.tagEditing.tag)
 const meta = computed(() => dialogsStore.tagEditing.meta)
 
-const isTagPage = computed(() => $readable.checkCurrentPage('tag'))
+const isTagPage = computed(() => checkCurrentPage(router.currentRoute.value, 'tag'))
 
 const initButtons = () => {
   buttons.value = [
@@ -146,7 +148,7 @@ const getImages = async () => {
     )
 
     try {
-      const src = await $operable.getLocalImage(imgPath)
+      const src = await getLocalImage(imgPath)
       if (src) {
         images.value.push({
           type: imgType.type,
@@ -180,13 +182,9 @@ const deleteTag = async () => {
   if (!tag.value || !meta.value) return
 
   try {
-    await axios({
-      method: 'post',
-      url: `${store.localhost}/api/tag/deleteOne`,
-      data: {
-        metaId: meta.value.id,
-        id: tag.value.id
-      }
+    await apiClient.post('/api/tag/deleteOne', {
+      metaId: meta.value.id,
+      id: tag.value.id
     })
 
     if (itemsStore.type === 'media') {

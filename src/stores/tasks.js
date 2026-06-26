@@ -1,4 +1,5 @@
 import {defineStore} from 'pinia'
+import {getRandomId} from '@/services/formatUtils'
 
 export const useTasksStore = defineStore('useTasksStore', {
   state: () => ({
@@ -39,7 +40,7 @@ export const useTasksStore = defineStore('useTasksStore', {
   }),
   actions: {
     setTask({title, subtitle, icon, click, action, progress} = {}) {
-      const id = $readable.getRandomId('task_')
+      const id = `task_${getRandomId()}`
       this.list.push({id, title, subtitle, icon, click, action, progress})
       return id
     },

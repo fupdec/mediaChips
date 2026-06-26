@@ -17,6 +17,7 @@
 <script setup>
 import {computed} from 'vue'
 import {useItemsStore} from '@/stores/items'
+import {openPath} from '@/services/shellService'
 
 const props = defineProps({
   media: Object,
@@ -35,7 +36,7 @@ const isViewTimeline = computed(() =>
 
 const open = () => {
   if (!props.isFileExists || !props.media?.path) return
-  $operable.openPath(props.media.path)
+  openPath(props.media.path)
 }
 </script>
 

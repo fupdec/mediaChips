@@ -1,5 +1,4 @@
 import {ref, computed, nextTick} from 'vue'
-import axios from 'axios'
 import _ from 'lodash'
 import {useI18n} from 'vue-i18n'
 import {useItemsStore} from '@/stores/items'
@@ -20,7 +19,6 @@ export function getNextInfiniteMediaPage(itemCount, pageSize = INFINITE_PAGE_SIZ
 export function isAbortError(error) {
   return error?.code === 'ERR_CANCELED'
     || error?.name === 'CanceledError'
-    || axios.isCancel?.(error)
 }
 
 export function useItemsPage({

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import {getReadableDuration} from '@/services/formatUtils'
 
 export const usePlayerStore = defineStore('player', {
   state: () => ({
@@ -91,8 +92,8 @@ export const usePlayerStore = defineStore('player', {
       else if (time > this.duration) time = this.duration
       this.player.currentTime = time
       this.currentTime = time
-      const current = $readable.getReadableDuration(time)
-      const duration = $readable.getReadableDuration(this.duration)
+      const current = getReadableDuration(time)
+      const duration = getReadableDuration(this.duration)
       this.changePlayerStatusText({ text: `${current} / ${duration}`, icon: 'arrow-u-down-right' })
     },
     changePlayerStatusText({ text, icon }) {
