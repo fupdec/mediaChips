@@ -44,6 +44,7 @@ const getVideoClipTagger = lazyService('../services/videoClipTagger')
 const getEmbeddingModel = lazyService('../services/embeddingModel')
 const getImageMedia = lazyService('../services/imageMedia')
 const getVideoImagesGeneration = lazyService('../services/videoImagesGeneration')
+const getImageThumbsGeneration = lazyService('../services/imageThumbsGeneration')
 
 const GENERATED_MEDIA_FOLDERS = {
   timelines: 'media/videos/timelines',
@@ -1502,6 +1503,51 @@ module.exports = function (db) {
     }
   }
 
+  const imageThumbsGenerationStatus = async (req, res) => {
+    try {
+      const status = await getImageThumbsGeneration().getImageThumbsGenerationStatus(db, dbPath)
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while checking image thumbnails generation status.',
+      })
+    }
+  }
+
+  const streamImageThumbsGeneration = async (req, res) => {
+    const writeEvent = (event) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const shouldStop = createStreamAbortSignal(req, res)
+
+      for await (const event of getImageThumbsGeneration().iterateImageThumbsGeneration(
+        db,
+        dbPath,
+        getImageMedia(),
+        {
+          shouldStop,
+          force: String(req.query.force || '').toLowerCase() === 'true',
+        },
+      )) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: err.message || 'Some error occurred while generating image thumbnails.',
+      })
+      res.end()
+    }
+  }
+
   const streamContentHashBackfill = async (req, res) => {
     const writeEvent = (event) => {
       res.write(`${JSON.stringify(event)}\n`)
@@ -1649,6 +1695,8 @@ module.exports = function (db) {
     streamContentHashBackfill,
     videoImagesGenerationStatus,
     streamVideoImagesGeneration,
+    imageThumbsGenerationStatus,
+    streamImageThumbsGeneration,
     missingMediaStatus,
     streamFindMissingMedia,
     relinkMissingMedia,
