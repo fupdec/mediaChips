@@ -1,6 +1,6 @@
 <template>
   <LayoutItems
-    v-if="appStore.localhost"
+    v-if="appStore.localhost && appStore.is_app_ready"
     :items_type="itemsType"
     :mediaTypeId="mediaTypeId"
     :metaId="metaId"
@@ -52,14 +52,6 @@ function applyRouteContext() {
   env.value.meta_id = readQueryId('metaId')
   env.value.tag_id = readQueryId('tagId')
   env.value.tab_id = readQueryId('tabId')
-
-  if (route.query.mediaTypeId) {
-    itemsStore.type = 'media'
-  } else if (route.query.metaId || route.path.startsWith('/meta')) {
-    itemsStore.type = 'tag'
-  } else if (route.path.startsWith('/media')) {
-    itemsStore.type = 'media'
-  }
 }
 
 function updateLayout() {

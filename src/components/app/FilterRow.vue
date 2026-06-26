@@ -206,7 +206,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, watch, defineAsyncComponent} from 'vue'
+import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
@@ -217,11 +217,9 @@ import {
   getReadableDuration,
   getReadableFileSize,
 } from '@/services/formatUtils'
-
-// Async components
-const MetaInputArray = defineAsyncComponent(() => import("@/components/meta/input/MetaInputArray.vue"))
-const MetaInputCountry = defineAsyncComponent(() => import("@/components/meta/input/MetaInputCountry.vue"))
-const MetaInputRating = defineAsyncComponent(() => import("@/components/meta/input/MetaInputRating.vue"))
+import MetaInputArray from '@/components/meta/input/MetaInputArray.vue'
+import MetaInputCountry from '@/components/meta/input/MetaInputCountry.vue'
+import MetaInputRating from '@/components/meta/input/MetaInputRating.vue'
 
 // Props
 const props = defineProps({

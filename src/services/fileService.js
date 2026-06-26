@@ -44,11 +44,15 @@ export async function checkFileExists(filePath) {
   }
 }
 
-export async function getLocalImage(imgPath, outside) {
+export async function getLocalImage(imgPath, outside, cacheBust = false) {
   try {
     const res = await apiClient.post(
       '/api/get-file',
-      {url: imgPath, outside},
+      {
+        url: imgPath,
+        outside,
+        ...(cacheBust ? {_t: Date.now()} : {}),
+      },
       {responseType: 'blob'},
     )
     return URL.createObjectURL(res.data)

@@ -155,10 +155,10 @@ async function getImage() {
 
   if (isImageMediaType(mediaType)) {
     imgPath.value = path.join(appStore.mediaPath, 'images/thumbs', `${currentMedia.id}.jpg`)
-    thumb.value = await getLocalImage(imgPath.value)
+    thumb.value = await getLocalImage(imgPath.value, false, true)
 
     if (thumb.value.includes('unavailable.png') && currentMedia.path) {
-      thumb.value = await getLocalImage(currentMedia.path, true)
+      thumb.value = await getLocalImage(currentMedia.path, true, true)
     }
 
     const width = Number(currentMedia.width) || 1
@@ -174,14 +174,18 @@ async function getImage() {
   }
 
   imgPath.value = path.join(appStore.mediaPath, 'videos/thumbs', `${currentMedia.id}.jpg`)
-  thumb.value = await getLocalImage(imgPath.value)
+  thumb.value = await getLocalImage(imgPath.value, false, true)
   cropperOps.value = {aspectRatio: 16 / 9}
 }
 
 async function onImageEdited() {
   await getImage()
+  const mediaId = media.value?.id
+  if (mediaId != null) {
+    itemsStore.refreshThumb(mediaId, {regenerate: true})
+  }
   eventBus.emit('getItemsFromDb', {
-    ids: [media.value.id],
+    ids: [mediaId],
     type: 'media'
   })
 }

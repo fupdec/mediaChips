@@ -15,9 +15,8 @@
       @mouseenter="handleMouseEnter"
     >
       <v-img
-        :key="thumbVersion"
         :aspect-ratio="16 / 9"
-        :src="thumb"
+        :src="thumb || undefined"
         class="thumb"
         contain
         @click.stop="play"
@@ -206,7 +205,6 @@ const storyWrapperRef = ref(null)
 // state
 const isHovered = ref(false)
 const thumb = ref(null)
-const thumbVersion = ref(0)
 const frame = ref(null)
 const frames = ref([])
 const progress = ref(0)
@@ -218,9 +216,15 @@ const bigPreviewAnimation = ref(false)
 const playbackError = ref(false)
 const isProcessingHover = ref(false) // Новый флаг для отслеживания обработки наведения
 const isSettingThumb = ref(false)
+const isCreatingThumb = ref(false)
+const thumbCreateAttempted = ref(false)
 const bigPreviewMenuActive = ref(false)
 const menuClosedByAction = ref(false)
 const previewPausedForMenu = ref(false)
+const isMounted = ref(false)
+
+const isThumbUnavailable = (src) =>
+  !src || (typeof src === 'string' && src.includes('unavailable.png'))
 
 // computed
 const ITEMS = computed(() => itemsStore)
@@ -319,17 +323,49 @@ const toggleFullScreen = () => {
 }
 
 // Модифицированные методы
-const getImg = async () => {
-  const previousThumb = thumb.value
+const loadThumb = async (imgPath, {bust = false} = {}) => {
+  const previous = thumb.value
+  const src = await getLocalImage(imgPath, false, bust)
+
+  if (!isMounted.value) {
+    if (src?.startsWith?.('blob:')) {
+      URL.revokeObjectURL(src)
+    }
+    return imgPath
+  }
+
+  thumb.value = src
+
+  if (previous?.startsWith?.('blob:') && previous !== src) {
+    URL.revokeObjectURL(previous)
+  }
+
+  return imgPath
+}
+
+const maybeCreateMissingThumb = async (imgPath) => {
+  if (!props.isFileExists || !isThumbUnavailable(thumb.value)) return
+  if (isCreatingThumb.value || thumbCreateAttempted.value) return
+
+  isCreatingThumb.value = true
+  thumbCreateAttempted.value = true
+  try {
+    await createThumb(imgPath)
+  } finally {
+    isCreatingThumb.value = false
+  }
+}
+
+const getImg = async ({bust = false, allowCreate = true} = {}) => {
+  if (!isMounted.value || !props.media?.id) return
 
   const getThumb = async (videos_folder) => {
-    let imgPath = path.join(
+    const imgPath = path.join(
       store.mediaPath,
       videos_folder,
       props.media.id + ".jpg"
     )
-    thumb.value = await getLocalImage(imgPath)
-    thumbVersion.value += 1
+    await loadThumb(imgPath, {bust})
     return imgPath
   }
 
@@ -337,32 +373,28 @@ const getImg = async () => {
 
   if (is_grid && isViewCard.value) {
     await getThumb("videos/grids")
-    if (thumb.value.includes("unavailable.png")) {
-      await getThumb("videos/thumbs")
+    if (allowCreate && isThumbUnavailable(thumb.value)) {
+      const imgPath = await getThumb("videos/thumbs")
+      await maybeCreateMissingThumb(imgPath)
     }
   } else {
-    let imgPath = await getThumb("videos/thumbs")
-    if (props.isFileExists && thumb.value.includes("unavailable.png")) {
-      await createThumb(imgPath)
+    const imgPath = await getThumb("videos/thumbs")
+    if (allowCreate) {
+      await maybeCreateMissingThumb(imgPath)
     }
-  }
-
-  if (previousThumb?.startsWith?.('blob:')) {
-    URL.revokeObjectURL(previousThumb)
   }
 }
 
 const createThumb = async (imgPath) => {
-  await apiClient.post('/api/task/createThumbForVideo', {
-    path: props.media.path,
-    id: props.media.id,
-  })
-    .then(async (res) => {
-      thumb.value = await getLocalImage(imgPath)
+  try {
+    await apiClient.post('/api/Task/createThumbForVideo', {
+      path: props.media.path,
+      id: props.media.id,
     })
-    .catch((e) => {
-      console.log(e)
-    });
+    await loadThumb(imgPath, {bust: true})
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 const togglePreviewMute = () => {
@@ -726,9 +758,19 @@ watch(() => contextMenuStore.show, (show) => {
   })
 })
 
+watch(() => props.isFileExists, (exists) => {
+  if (exists && isThumbUnavailable(thumb.value)) {
+    getImg()
+  }
+})
+
 watch(() => itemsStore.thumbRefreshKeys[Number(props.media.id)], (version) => {
   if (version == null) return
-  getImg()
+  const shouldRegenerate = itemsStore.consumeThumbRegenerate(props.media.id)
+  if (shouldRegenerate) {
+    thumbCreateAttempted.value = false
+  }
+  getImg({bust: true, allowCreate: shouldRegenerate})
   if (isViewTimeline.value) {
     initFrames()
   }
@@ -764,7 +806,10 @@ const handleUpdateVideoFrames = (id) => {
 
 // init
 onMounted(async () => {
+  isMounted.value = true
   await getImg()
+
+  if (!isMounted.value) return
 
   if (props.isFileExists) {
     await checkVideoFormat()
@@ -778,6 +823,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  isMounted.value = false
   stopPlayingPreview({force: true})
   eventBus.off('updateVideoFrames', handleUpdateVideoFrames)
 

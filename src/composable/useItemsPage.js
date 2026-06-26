@@ -70,10 +70,12 @@ export function useItemsPage({
   }
 
   const resetMediaListState = () => {
-    itemsStore.updateState({key: 'itemsOnPage', value: []})
-    itemsStore.updateState({key: 'entities', value: []})
-    itemsStore.updateState({key: 'navigationItems', value: []})
-    itemsStore.updateState({key: 'totalFiltered', value: 0})
+    itemsStore.updateMultiple({
+      itemsOnPage: [],
+      entities: [],
+      navigationItems: [],
+      totalFiltered: 0,
+    })
     total.value = 0
     totalInDb.value = 0
   }
@@ -132,9 +134,11 @@ export function useItemsPage({
       ? _.uniqBy([...ITEMS.value.itemsOnPage, ...pageItems], 'id')
       : pageItems
 
-    itemsStore.updateState({key: 'entities', value: nextItems})
-    itemsStore.updateState({key: 'itemsOnPage', value: nextItems})
-    itemsStore.updateState({key: 'isFiltersLoaded', value: true})
+    itemsStore.updateMultiple({
+      entities: nextItems,
+      itemsOnPage: nextItems,
+      isFiltersLoaded: true,
+    })
     return true
   }
 

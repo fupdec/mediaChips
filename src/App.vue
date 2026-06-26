@@ -1,10 +1,16 @@
 <template>
   <AutoConnect
-    v-if="!isConnected"
+    v-if="!isConnected && !isDevBrowser"
     @connected="handleServerConnected"
     @manual-mode="showManual = true"
   ></AutoConnect>
-  <app-preloader v-else-if="isConfigLoaded"/>
+  <div
+    v-else-if="!isConfigLoaded"
+    class="dev-connecting"
+  >
+    <v-progress-circular indeterminate size="64" width="2"/>
+  </div>
+  <app-preloader v-else/>
 </template>
 
 <script setup>
@@ -21,6 +27,8 @@ const app = useAppStore()
 const isConnected = ref(false);
 const currentServer = ref(null);
 const showManual = ref(false);
+const isDevBrowser = import.meta.env.DEV && !window.electronAPI;
+let connectInFlight = null;
 
 // Dedicated player window is Electron-only.
 const isPlayerWindow = ref(
@@ -123,27 +131,42 @@ async function checkServerAvailability(server) {
 }
 
 function handleServerConnected(serverInfo) {
-  currentServer.value = serverInfo;
-  isConnected.value = true;
+  const serverUrl = serverInfo?.url
+    || `http://${serverInfo?.ip || 'localhost'}:${import.meta.env.VITE_PORT || 12321}`
 
-  // Save connection for main window
-  if (!isPlayerWindow.value) {
-    localStorage.setItem('lastServer', JSON.stringify(serverInfo));
+  if (
+    connectInFlight
+    || (isConnected.value && currentServer.value?.url === serverUrl && isConfigLoaded.value)
+  ) {
+    return connectInFlight
   }
 
-  // Initialize app with this server
-  initializeApp(serverInfo);
+  connectInFlight = (async () => {
+    currentServer.value = {...serverInfo, url: serverUrl}
+    isConnected.value = true
+
+    if (!isPlayerWindow.value) {
+      localStorage.setItem('lastServer', JSON.stringify(currentServer.value))
+    }
+
+    await initializeApp(currentServer.value)
+  })()
+
+  return connectInFlight.finally(() => {
+    connectInFlight = null
+  })
 }
 
-function initializeApp(server) {
+async function initializeApp(server) {
   console.log('🚀 Initializing app with server:', server.ip);
 
   if (isPlayerWindow.value) {
     app.localhost = resolveApiBaseUrl({}, server)
     isConfigLoaded.value = true
+    return
   }
 
-  loadConfig();
+  await loadConfig()
 }
 
 async function loadConfig() {
@@ -181,11 +204,15 @@ async function loadConfig() {
     // --- Browser mode ---
   } else {
     console.log('🌐 Browser mode: loading config from server');
-    fetchConfigFromServer();
+    await fetchConfigFromServer();
   }
 }
 
 async function fetchConfigFromServer() {
+  if (isConfigLoaded.value) {
+    return
+  }
+
   try {
     console.log('🔄 Requesting config from server...');
     // Use current server URL or localhost for player
@@ -212,6 +239,10 @@ async function fetchConfigFromServer() {
 }
 
 function applyConfig(config) {
+  if (isConfigLoaded.value) {
+    return
+  }
+
   app.localhost = resolveApiBaseUrl(config, currentServer.value)
   app.appVersion = config.appVersion
   app.dbPath = config.path
@@ -227,6 +258,8 @@ function reconnect() {
   isConnected.value = false;
   currentServer.value = null;
   isConfigLoaded.value = false;
+  connectInFlight = null;
+  app.is_app_ready = false;
 }
 
 // Periodic connection check (main window only)
@@ -259,3 +292,12 @@ if (!isPlayerWindow.value) {
   }, 30000);
 }
 </script>
+
+<style scoped>
+.dev-connecting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+</style>

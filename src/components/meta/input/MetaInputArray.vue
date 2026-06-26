@@ -111,21 +111,19 @@
 
           <v-list-subheader>{{ t('meta.sorting.sort_tags_by') }}</v-list-subheader>
 
-          <v-list-item-group density="compact" mandatory>
-            <v-list-item
-              v-for="(s, x) in sortBy"
-              @click="changeSortBy(s.value)"
-              :value="s.value"
-              :key="x"
-              :active="s.value == meta.sortBy"
-              color="primary"
-            >
-              <v-list-item-title>
-                <v-icon start>mdi-{{ s.icon }}</v-icon>
-                {{ s.title }}
-              </v-list-item-title>
-            </v-list-item>
-          </v-list-item-group>
+          <v-list-item
+            v-for="s in sortBy"
+            :key="s.value"
+            :value="s.value"
+            :active="s.value == meta.sortBy"
+            color="primary"
+            @click="changeSortBy(s.value)"
+          >
+            <v-list-item-title>
+              <v-icon start>mdi-{{ s.icon }}</v-icon>
+              {{ s.title }}
+            </v-list-item-title>
+          </v-list-item>
         </v-list>
       </v-menu>
     </template>

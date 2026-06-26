@@ -94,17 +94,16 @@
         </template>
 
         <v-list density="compact" class="py-1">
-          <v-list-item-group
-            :model-value="player.speed"
-            @update:model-value="changeSpeed"
+          <v-list-item
+            v-for="speed in speeds"
+            :key="speed"
+            :value="speed"
+            :active="player.speed === speed"
             color="primary"
+            @click="changeSpeed(speed)"
           >
-            <v-list-item v-for="speed in speeds"
-              :key="speed"
-              :value="speed">
-              <v-list-item-title v-text="speed == 1 ? t('common.normal') : speed"/>
-            </v-list-item>
-          </v-list-item-group>
+            <v-list-item-title v-text="speed == 1 ? t('common.normal') : speed"/>
+          </v-list-item>
         </v-list>
       </v-menu>
     </div>

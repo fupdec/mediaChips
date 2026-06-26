@@ -55,6 +55,7 @@ export const useItemsStore = defineStore('items', {
     isFiltersLoaded: false,
     find_duplicates: false,
     thumbRefreshKeys: {},
+    thumbRegenerateKeys: {},
   }),
 
   // Геттеры (Getters) - опциональные, но полезные
@@ -423,11 +424,15 @@ export const useItemsStore = defineStore('items', {
       }
     },
 
-    refreshThumb(id, {broadcast = true} = {}) {
+    refreshThumb(id, {broadcast = true, regenerate = false} = {}) {
       if (id == null) return
 
       const key = Number(id)
       this.thumbRefreshKeys[key] = Date.now()
+
+      if (regenerate) {
+        this.thumbRegenerateKeys[key] = Date.now()
+      }
 
       if (broadcast && typeof BroadcastChannel !== 'undefined') {
         try {
@@ -436,6 +441,16 @@ export const useItemsStore = defineStore('items', {
           channel.close()
         } catch (_) {}
       }
+    },
+
+    consumeThumbRegenerate(id) {
+      const key = Number(id)
+      if (!this.thumbRegenerateKeys[key]) return false
+
+      const next = {...this.thumbRegenerateKeys}
+      delete next[key]
+      this.thumbRegenerateKeys = next
+      return true
     },
 
     // Обновить элемент по ID

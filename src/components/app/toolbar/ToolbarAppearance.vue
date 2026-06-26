@@ -36,7 +36,7 @@
       <v-row>
         <!-- Items Per Page -->
         <v-col cols="12" sm="4">
-          <v-subheader>{{ t('settings_labels.appearance.items_per_page') }}</v-subheader>
+          <div class="text-overline px-4 py-2">{{ t('settings_labels.appearance.items_per_page') }}</div>
 
           <v-chip-group column>
             <v-chip
@@ -54,7 +54,7 @@
 
         <!-- Item Size -->
         <v-col cols="12" sm="4">
-          <v-subheader>{{ t('settings_labels.appearance.item_size') }}</v-subheader>
+          <div class="text-overline px-4 py-2">{{ t('settings_labels.appearance.item_size') }}</div>
 
           <v-chip-group column>
             <v-chip
@@ -71,14 +71,14 @@
 
         <!-- View -->
         <v-col cols="12" sm="4">
-          <v-subheader>{{ t('items.view_type') }}</v-subheader>
+          <div class="text-overline px-4 py-2">{{ t('items.view_type') }}</div>
 
           <ItemsView/>
         </v-col>
 
         <!-- Visibility of Pinned Meta -->
         <v-col cols="12">
-          <v-subheader class="px-0">
+          <div class="text-overline px-4 py-2 d-flex align-center">
             <span>{{ t('meta.settings.pinned_meta_visibility') }}</span>
             <v-btn
               @click="dialogEditingPinnedMeta = true"
@@ -91,7 +91,7 @@
               <v-icon start>mdi-pencil-outline</v-icon>
               {{ t('meta.settings.edit_pinned_meta') }}
             </v-btn>
-          </v-subheader>
+          </div>
 
           <v-chip-group v-if="itemsStore.assigned?.length" column class="pb-0 mt-2">
             <v-chip

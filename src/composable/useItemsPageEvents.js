@@ -1,4 +1,4 @@
-import {computed, watch, onMounted, onBeforeUnmount, nextTick} from 'vue'
+import {computed, watch, onMounted, onBeforeUnmount, nextTick, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
@@ -39,6 +39,31 @@ export function useItemsPageEvents({
   const eventBus = useEventBus()
 
   const ITEMS = computed(() => itemsStore)
+  let initPromise = null
+  const pageInitialized = ref(false)
+
+  const runInitSafely = async () => {
+    if (initPromise) {
+      return initPromise
+    }
+
+    pageInitialized.value = false
+
+    initPromise = (async () => {
+      try {
+        await init()
+        loadSavedFilters()
+      } catch (error) {
+        console.error('Failed to initialize items page:', error)
+      } finally {
+        loader.value.is_busy = false
+        pageInitialized.value = true
+        initPromise = null
+      }
+    })()
+
+    return initPromise
+  }
 
   const handleGetItemsFromDb = (event) => {
     const {ids, type} = event
@@ -188,14 +213,9 @@ export function useItemsPageEvents({
 
     bindEvents()
 
-    try {
-      await init()
-      loadSavedFilters()
-    } catch (error) {
-      console.error('Failed to initialize items page:', error)
-    } finally {
-      loader.value.is_busy = false
-    }
+    await nextTick()
+    await nextTick()
+    await runInitSafely()
 
     refreshScrollRoot()
 
@@ -208,6 +228,7 @@ export function useItemsPageEvents({
   })
 
   onBeforeUnmount(() => {
+    pageInitialized.value = false
     disposeListFetching()
     unbindMediaInfiniteScroll()
     if (is_infinite_scroll.value) updatePageSetting({page: 1})
@@ -233,18 +254,16 @@ export function useItemsPageEvents({
   watch(
     () => [props.items_type, props.mediaTypeId, props.metaId, props.tagId, props.tabId],
     async (next, prev) => {
-      if (prev && JSON.stringify(next) === JSON.stringify(prev)) return
+      if (!prev) return
+      if (JSON.stringify(next) === JSON.stringify(prev)) return
       if (props.items_type === 'media' && !props.mediaTypeId) return
       if (props.items_type === 'tag' && !props.metaId) return
 
-      try {
-        await init()
-        loadSavedFilters()
-      } catch (error) {
-        console.error('Failed to reinitialize items page:', error)
-      } finally {
-        loader.value.is_busy = false
-      }
+      await runInitSafely()
     },
   )
+
+  return {
+    pageInitialized,
+  }
 }

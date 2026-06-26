@@ -50,6 +50,7 @@ const itemsStore = useItemsStore()
 
 const containerRef = ref(null)
 const thumb = ref(null)
+const isMounted = ref(false)
 let thumbObjectUrl = null
 let thumbObserver = null
 let thumbLoadStarted = false
@@ -100,13 +101,19 @@ const regenerateThumb = async () => {
   })
 }
 
-const loadThumb = async () => {
-  if (thumbLoadStarted || !props.media?.id) return
+const loadThumb = async ({cacheBust = false} = {}) => {
+  if (!props.media?.id) return
+  if (thumbLoadStarted && !cacheBust) return
   thumbLoadStarted = true
   stopThumbObserver()
   clearThumbUrl()
 
-  const src = await loadImageDisplayUrl(props.media, store.mediaPath)
+  const src = await loadImageDisplayUrl(props.media, store.mediaPath, {cacheBust})
+
+  if (!isMounted.value) {
+    revokeImageObjectUrl(src?.startsWith?.('blob:') ? src : null)
+    return
+  }
 
   if (src) {
     thumbObjectUrl = src.startsWith('blob:') ? src : null
@@ -117,7 +124,11 @@ const loadThumb = async () => {
   if (props.isFileExists) {
     try {
       await regenerateThumb()
-      const regenerated = await loadImageDisplayUrl(props.media, store.mediaPath)
+      const regenerated = await loadImageDisplayUrl(props.media, store.mediaPath, {cacheBust: true})
+      if (!isMounted.value) {
+        revokeImageObjectUrl(regenerated?.startsWith?.('blob:') ? regenerated : null)
+        return
+      }
       if (regenerated) {
         thumbObjectUrl = regenerated.startsWith('blob:') ? regenerated : null
         thumb.value = regenerated
@@ -152,9 +163,13 @@ const openViewer = () => {
   })
 }
 
-onMounted(scheduleThumbLoad)
+onMounted(() => {
+  isMounted.value = true
+  scheduleThumbLoad()
+})
 
 onBeforeUnmount(() => {
+  isMounted.value = false
   stopThumbObserver()
   clearThumbUrl()
 })
@@ -166,4 +181,12 @@ watch(
     scheduleThumbLoad()
   }
 )
+
+watch(() => itemsStore.thumbRefreshKeys[Number(props.media?.id)], (version) => {
+  if (version == null) return
+  thumb.value = null
+  clearThumbUrl()
+  thumbLoadStarted = false
+  void loadThumb({cacheBust: true})
+})
 </script>

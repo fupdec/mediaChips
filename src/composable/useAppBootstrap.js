@@ -1,4 +1,4 @@
-import {ref, onMounted, onBeforeUnmount} from 'vue'
+import {ref, onMounted, onBeforeUnmount, nextTick} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import _ from 'lodash'
@@ -183,8 +183,21 @@ export function useAppBootstrap({isPlayerWindow, appZoom}) {
     eventBus.on('updateVideoFrames', handleUpdateVideoFrames)
   }
 
+  async function markAppReady() {
+    await nextTick()
+    isAppReady.value = true
+
+    await nextTick()
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+    await nextTick()
+
+    store.is_app_ready = true
+    runAutoRegistration()
+  }
+
   async function bootstrapPlayerWindow() {
     setupPlayerElectronListeners()
+    store.is_app_ready = true
     isAppReady.value = true
     notifyPlayerReady()
 
@@ -202,6 +215,9 @@ export function useAppBootstrap({isPlayerWindow, appZoom}) {
   }
 
   async function bootstrapMainApp() {
+    store.is_app_ready = false
+    isAppReady.value = false
+
     await initSettings()
 
     if (store.isElectron && window.electronAPI?.updater) {
@@ -240,8 +256,8 @@ export function useAppBootstrap({isPlayerWindow, appZoom}) {
       thumbBroadcastChannel.addEventListener('message', handleThumbBroadcast)
     }
 
-    isAppReady.value = true
-    runAutoRegistration()
+    await nextTick()
+    await markAppReady()
 
     if (store.isElectron) {
       setupPlayerElectronListeners()
@@ -261,6 +277,8 @@ export function useAppBootstrap({isPlayerWindow, appZoom}) {
   })
 
   onBeforeUnmount(() => {
+    store.is_app_ready = false
+    isAppReady.value = false
     cleanupEventListeners()
     eventBus.off('updateVideoFrames', handleUpdateVideoFrames)
     thumbBroadcastChannel?.removeEventListener('message', handleThumbBroadcast)

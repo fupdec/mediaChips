@@ -76,8 +76,33 @@ async function extractVideoFrame({input, output, timestamp, vf}) {
   return output
 }
 
-async function extractVideoThumbnail({input, outputPath, height = 320}) {
+function resolveThumbnailSeekSeconds(duration, seekRatio = 0.5) {
+  const normalizedDuration = Number(duration || 0)
+
+  if (!Number.isFinite(normalizedDuration) || normalizedDuration <= 0.1) {
+    return 1
+  }
+
+  const seekSeconds = normalizedDuration * seekRatio
+  return Math.min(
+    Math.max(seekSeconds, 0),
+    Math.max(normalizedDuration - 0.1, 0),
+  )
+}
+
+async function extractVideoThumbnail({input, outputPath, height = 320, seekRatio = 0.5}) {
+  let seekSeconds = 1
+
+  try {
+    const {format} = await ffprobe(input)
+    seekSeconds = resolveThumbnailSeekSeconds(format.duration, seekRatio)
+  } catch {
+    // Skip the common all-black first frame when metadata is unavailable.
+  }
+
   await runFfmpeg([
+    '-ss',
+    String(seekSeconds),
     '-i',
     input,
     '-vf',
@@ -107,4 +132,5 @@ module.exports = {
   extractVideoFrame,
   extractVideoThumbnail,
   combineVideoFrames,
+  resolveThumbnailSeekSeconds,
 }

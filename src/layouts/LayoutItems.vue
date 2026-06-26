@@ -35,13 +35,13 @@
       <ToolbarAppearance v-if="toolbarStore.appearance.show"></ToolbarAppearance>
     </v-expand-transition>
 
-    <SavedFilters v-if="settingsStore.showSavedFilters == '1'"/>
+    <SavedFilters v-if="pageInitialized && settingsStore.showSavedFilters == '1'"/>
 
     <!-- боковая панель -->
-    <Filters :isReady="isFiltersReady"/>
+    <Filters v-if="pageInitialized" :isReady="isFiltersReady"/>
 
     <FiltersChips
-      v-if="activeFilters.length > 0 || (ENV.media_type_id ? ITEMS.find_duplicates : false)"
+      v-if="pageInitialized && (activeFilters.length > 0 || (ENV.media_type_id ? ITEMS.find_duplicates : false))"
       :filters="ITEMS.filters"
       class="my-4"
     />
@@ -59,7 +59,7 @@
     />
 
     <div
-      v-if="ITEMS.itemsOnPage.length"
+      v-if="pageInitialized && ITEMS.itemsOnPage.length"
       :class="itemsGridClasses"
     >
       <Item
@@ -76,7 +76,7 @@
     <!-- TODO запоминать номер страницы и сохранять в БД -->
 
     <div
-      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length >= ITEMS.totalFiltered && ITEMS.totalFiltered > 0"
+      v-if="pageInitialized && ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length >= ITEMS.totalFiltered && ITEMS.totalFiltered > 0"
       class="scroll-top-after-items"
     >
       <v-btn
@@ -100,7 +100,7 @@
       @jump="jumpToPage"
     />
 
-    <div v-if="0 == total && total == totalInDb"
+    <div v-if="pageInitialized && 0 == total && total == totalInDb"
       class="layout-img">
       <v-img src="/images/no-data.svg"
         max-height="40vh"
@@ -124,7 +124,7 @@
       </div>
     </div>
 
-    <div v-if="0 == total && total !== totalInDb"
+    <div v-if="pageInitialized && 0 == total && total !== totalInDb"
       class="layout-img">
       <v-img :src="image_filters_no_results"
         max-height="40vh"
@@ -135,7 +135,7 @@
     </div>
 
     <div
-      v-if="ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length < ITEMS.totalFiltered"
+      v-if="pageInitialized && ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length < ITEMS.totalFiltered"
       :class="{ 'infinite-loader': is_not_full_height && items_type !== 'media' }"
       class="infinite-loader-full-height"
     >
@@ -280,7 +280,7 @@ const init = () => runInit({
   getItemsFromDb,
 })
 
-useItemsPageEvents({
+const {pageInitialized} = useItemsPageEvents({
   props,
   mediaType,
   meta,
