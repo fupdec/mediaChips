@@ -98,7 +98,10 @@ function buildMissingIndexes(missingMedia) {
     targetSizes.add(size)
 
     if (item.contentHash) {
-      byHash.set(item.contentHash, item)
+      if (!byHash.has(item.contentHash)) {
+        byHash.set(item.contentHash, [])
+      }
+      byHash.get(item.contentHash).push(item)
       continue
     }
 
@@ -276,8 +279,18 @@ async function* iterateMissingMediaSearch(db, options = {}) {
     let confidence = null
 
     if (byHash.has(contentHash)) {
-      match = byHash.get(contentHash)
-      confidence = 'hash'
+      const candidates = byHash.get(contentHash)
+        .filter((item) => !matchedMediaIds.has(item.id))
+      if (candidates.length === 1) {
+        match = candidates[0]
+        confidence = 'hash'
+      } else if (candidates.length > 1) {
+        const weak = pickWeakCandidate(candidates, filePath)
+        if (weak) {
+          match = weak
+          confidence = 'hash'
+        }
+      }
     } else {
       const candidates = (bySizeNoHash.get(filesize) || [])
         .filter((item) => !matchedMediaIds.has(item.id))

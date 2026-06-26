@@ -112,7 +112,6 @@
           @set-condition="setCondition($event, i)"
           @set-value="setValue($event, i)"
           @set-active="setActive($event, i)"
-          @set-union="setUnion($event, i)"
           @remove="remove(i)"
           @pick-date="pickDate(i)"
           @valid="validate"
@@ -403,10 +402,6 @@ const setValue = (value, index) => {
 
 const setActive = (value, index) => {
   filters.value[index].active = value
-}
-
-const setUnion = (value, index) => {
-  filters.value[index].union = value
 }
 
 const remove = (index) => {

@@ -588,11 +588,8 @@ export const useItemsStore = defineStore('items', {
               end = index_current;
             }
 
-            let section = this.entities.slice(start + 1, end + 1);
+            let section = this.entities.slice(start, end + 1);
             let ids = section.map(i => i.id);
-            if (!ids.includes(id)) {
-              ids.push(id);
-            }
 
             for (let i of ids) {
               if (selection.includes(i)) {
@@ -611,7 +608,7 @@ export const useItemsStore = defineStore('items', {
         } else selection.push(id);
       }
 
-      selection.sort();
+      selection.sort((a, b) => Number(a) - Number(b));
       this.selected_last = id;
     },
 

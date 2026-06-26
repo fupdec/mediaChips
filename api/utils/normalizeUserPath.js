@@ -62,9 +62,22 @@ function buildPathLookupVariants(value) {
   return [...variants]
 }
 
+function isPathInsideFolder(filePath, folderPath) {
+  if (!filePath || !folderPath) return false
+
+  const normalizedFile = path.resolve(normalizeMediaPath(filePath))
+  const normalizedFolder = path.resolve(normalizeMediaPath(folderPath))
+  const relative = path.relative(normalizedFolder, normalizedFile)
+
+  if (!relative || relative === '.') return false
+
+  return !relative.startsWith('..') && !path.isAbsolute(relative)
+}
+
 module.exports = {
   normalizeUserPath,
   normalizeMediaPath,
   pathsEquivalent,
   buildPathLookupVariants,
+  isPathInsideFolder,
 }

@@ -114,13 +114,6 @@ function compareNumberSql(columnExpr, cond, valueKey) {
   }
 }
 
-function compareDateSql(columnExpr, cond, valueKey) {
-  const valueExpr = `CAST(strftime('%s', ${columnExpr}) AS INTEGER)`
-  const filterExpr = `CAST(strftime('%s', ${valueKey}) AS INTEGER)`
-  return compareNumberSql(valueExpr, cond, filterExpr)
-    ?.replace(/CAST\(CAST\(strftime\('%s', :p\d+\) AS INTEGER\) AS REAL\)/g, filterExpr)
-}
-
 function buildDateComparison(columnExpr, cond, value, nextParam) {
   const valueKey = nextParam(value)
   const columnTime = `CAST(strftime('%s', ${columnExpr}) AS INTEGER)`
@@ -181,9 +174,9 @@ function buildMetaValueClause(metaId, filter, nextParam) {
 
   if (type === 'boolean') {
     if (cond === '!=') {
-      return `NOT (COALESCE(${valueColumn}, '') IN ('1', 1))`
+      return `NOT (COALESCE(${valueColumn}, '') IN ('1', 1, 'true', 'TRUE'))`
     }
-    return `COALESCE(${valueColumn}, '') IN ('1', 1)`
+    return `COALESCE(${valueColumn}, '') IN ('1', 1, 'true', 'TRUE')`
   }
 
   if (type === 'date') {
@@ -306,9 +299,9 @@ function buildFilterClause(filter, nextParam) {
 
   if (type === 'boolean') {
     if (cond === '!=') {
-      return `NOT (COALESCE(${columnExpr}, 0) IN (1, '1'))`
+      return `NOT (COALESCE(${columnExpr}, 0) IN (1, '1', 'true', 'TRUE'))`
     }
-    return `COALESCE(${columnExpr}, 0) IN (1, '1')`
+    return `COALESCE(${columnExpr}, 0) IN (1, '1', 'true', 'TRUE')`
   }
 
   if (type === 'date') {

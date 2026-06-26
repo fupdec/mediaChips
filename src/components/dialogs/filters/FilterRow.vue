@@ -1,9 +1,5 @@
 <template>
   <v-form ref="form" v-model="valid">
-    <v-btn v-show="index != 0" @click="toggleUnion" rounded plain small>
-      {{ filter.union === "AND" ? "AND" : "OR" }}
-    </v-btn>
-
     <div class="filter-row">
       <v-autocomplete
         @input="setBy($event)"
@@ -201,10 +197,6 @@ export default {
     },
     setVal(val) {
       this.$emit("setVal", val);
-    },
-    toggleUnion() {
-      const val = this.filter.union === "AND" ? "OR" : "AND";
-      this.$emit("setUnion", val);
     },
     duplicate() {
       this.$emit("duplicate");

@@ -6,7 +6,19 @@ module.exports = function (db) {
   const dbPath = db.path
 
   // Retrieve all Tags from the database.
-  const getAllForItems = function (req, res) {
+  const getAllForItems = async function (req, res) {
+    const metaId = Number(req.body.metaId)
+    if (!Number.isFinite(metaId)) {
+      return res.status(400).send({
+        message: 'metaId is required',
+      })
+    }
+
+    const ids = Array.isArray(req.body.ids)
+      ? req.body.ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+      : []
+
+    const replacements = {metaId}
     let query = `SELECT tags.*, tags_in_tags.tag_tags, values_in_tags.tag_values
                  FROM tags
                           LEFT JOIN (SELECT tagsInTags.parentTagId                                     id,
@@ -17,22 +29,32 @@ module.exports = function (db) {
                                             GROUP_CONCAT(valuesInTags.value || '^' || valuesInTags.metaId) tag_values
                                      FROM valuesInTags
                                      GROUP BY id) AS values_in_tags ON tags.id = values_in_tags.id
-                 WHERE tags.metaId = ${req.body.metaId}`
-    let ids = req.body.ids
-    if (ids && ids.length) {
-      query += ` AND tags.id in (${ids.join()})`
+                 WHERE tags.metaId = :metaId`
+
+    if (ids.length) {
+      replacements.ids = ids
+      query += ' AND tags.id IN (:ids)'
     }
-    db.sequelize.query(query).then(data => {
-      let items_all = parseItemsFromDb(data[0])
-      let items_filtered = filterItems(req.body.filters, 'tags', items_all, req.body.sortBy, req.body.direction, req.body.find_duplicates)
+
+    try {
+      const data = await db.sequelize.query(query, {replacements})
+      const items_all = parseItemsFromDb(data[0])
+      const items_filtered = filterItems(
+        req.body.filters,
+        'tags',
+        items_all,
+        req.body.sortBy,
+        req.body.direction,
+        req.body.find_duplicates,
+      )
       res.status(201).send({items: items_filtered, total: items_all.length})
-    }).catch(err => {
+    } catch (err) {
       console.log(err)
 
       res.status(500).send({
         message: err.message || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
   // Create and Save a new Tag

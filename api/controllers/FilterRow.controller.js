@@ -15,7 +15,7 @@ module.exports = function (db) {
         filterObj.val = serializeCountries(val)
       }
 
-      const allowedFields = ['param', 'type', 'cond', 'val', 'active', 'note', 'lock', 'union']
+      const allowedFields = ['param', 'type', 'cond', 'val', 'active', 'note', 'lock']
       const payload = {}
       for (const key of allowedFields) {
         if (Object.prototype.hasOwnProperty.call(filterObj, key)) {

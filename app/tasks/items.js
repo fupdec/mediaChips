@@ -70,6 +70,10 @@ const resolveMetaId = (param) => {
   return null
 }
 
+const isTruthyValue = (value) => (
+  value === '1' || value === 1 || value === true || value === 'true' || value === 'TRUE'
+)
+
 const filterItems = (filters_all, type, items, sortBy, direction, find_duplicates, duplicates_by = 'filesize') => {
   // отсеиваем неактивные и без условий (в случае бага)
   let filters = filters_all.filter(i => {
@@ -134,7 +138,7 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
 
       if (type == 'string' && val) val = val.toLowerCase().trim()
       if (type === 'boolean') {
-        is_match = item_val === '1' || item_val === 1
+        is_match = isTruthyValue(item_val)
         if (cond === '!=') {
           is_match = !is_match;
         }
@@ -165,7 +169,7 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
           if (item_val) {
             is_match = !item_val.toLowerCase().includes(val);
           } else {
-            is_match = false;
+            is_match = true;
           }
         } else if (cond == 'is null') {
           is_match = !item_val;

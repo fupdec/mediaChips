@@ -2,6 +2,9 @@ const path = require("path");
 const _ = require("lodash");
 const chokidar = require("chokidar");
 const fs = require('fs').promises;
+const {isPathInsideFolder, pathsEquivalent} = require('../../api/utils/normalizeUserPath');
+
+const pathsMatch = (left, right) => pathsEquivalent(left, right)
 
 module.exports = function (app, db) {
   const expressWs = require('express-ws')(app)
@@ -15,6 +18,7 @@ module.exports = function (app, db) {
 
     // Флаг для предотвращения многократной обработки
     let isProcessing = false;
+    let pendingRefresh = false;
     let debounceTimer = null;
 
     // Рекурсивная функция для поиска файлов
@@ -54,11 +58,17 @@ module.exports = function (app, db) {
     };
 
     const getFilesList = async () => {
-      if (!watcher || isProcessing) {
+      if (!watcher) {
+        return;
+      }
+
+      if (isProcessing) {
+        pendingRefresh = true;
         return;
       }
 
       isProcessing = true;
+      pendingRefresh = false;
 
       try {
         console.log('Getting files list for folders:', watchedFolders.map(f => f.path));
@@ -100,7 +110,7 @@ module.exports = function (app, db) {
 
               // Получаем файлы из базы данных для этой папки
               const filesInDb = media
-                .filter(x => x.path && x.path.includes(folderPath))
+                .filter(x => x.path && isPathInsideFolder(x.path, folderPath))
                 .map(x => ({path: x.path, id: x.id}));
 
               console.log(`Found ${filesInDb.length} files in database for folder ${folderPath}`);
@@ -112,14 +122,14 @@ module.exports = function (app, db) {
 
               // Находим потерянные файлы (в БД, но не в файловой системе)
               const lostFiles = filesInDb
-                .filter(x => !filesInFolder.includes(x.path))
+                .filter(x => !filesInFolder.some(fsPath => pathsMatch(x.path, fsPath)))
                 .sort((a, b) => a.path.localeCompare(b.path));
 
               console.log(`Lost files: ${lostFiles.length}`);
 
               // Находим новые файлы (в файловой системе, но не в БД)
               const newFiles = filesInFolder
-                .filter(x => !filesInDb.some(dbFile => dbFile.path === x))
+                .filter(x => !filesInDb.some(dbFile => pathsMatch(dbFile.path, x)))
                 .sort((a, b) => a.localeCompare(b));
 
               console.log(`New files: ${newFiles.length}`);
@@ -162,6 +172,10 @@ module.exports = function (app, db) {
         console.error('Error in getFilesList:', error);
       } finally {
         isProcessing = false;
+        if (pendingRefresh) {
+          pendingRefresh = false;
+          debouncedGetFilesList();
+        }
       }
     };
 
@@ -445,7 +459,28 @@ module.exports = function (app, db) {
 
           bytesCopied += item.size
 
-          await db.Media.update({ path: item.newPath }, { where: { id: item.id } })
+          try {
+            await db.Media.update({ path: item.newPath }, { where: { id: item.id } })
+          } catch (dbError) {
+            try {
+              await moveFile(item.newPath, item.oldPath)
+            } catch (rollbackError) {
+              console.error(`Rollback failed for ${item.fileName}:`, rollbackError.message)
+            }
+
+            failed += 1
+            console.error(`Error updating database for ${item.fileName}:`, dbError.message)
+            send({
+              type: 'error',
+              id: item.id,
+              fileName: item.fileName,
+              folder: item.folder,
+              code: 'DB_UPDATE',
+              message: dbError.message,
+            })
+            continue
+          }
+
           moved += 1
 
           send({
