@@ -1,6 +1,6 @@
 <template>
   <component
-    :is="isPlayerWindow ? 'div' : 'v-dialog'"
+    :is="isPlayerWindow ? 'div' : VDialog"
     v-bind="playerWrapperProps"
   >
     <div
@@ -159,6 +159,7 @@
 
 <script setup>
 import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
+import {VDialog} from 'vuetify/components/VDialog'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
@@ -179,6 +180,7 @@ import {useRoute} from "vue-router";
 import {getDefaultMediaTypeId, findMediaTypeById, isAudioMediaType, isAudioFilePath} from '@/utils/mediaType'
 import {buildMarkPayload} from '@/utils/markAdding'
 import {isWinElectronUi} from '@/utils/debugWinElectronUi'
+import {isStandalonePlayerRoute, consumePendingPlay, subscribePlayerWindowMessages} from '@/utils/playerWindow'
 
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
@@ -201,7 +203,9 @@ const timeoutControls = ref(-1)
 
 // Computed
 const player = computed(() => playerStore)
-const isPlayerWindow = computed(() => !!route.query.player)
+const isPlayerWindow = computed(() =>
+  isStandalonePlayerRoute(route, settingsStore.open_player_in_separate_window)
+)
 const isActive = computed(() => isPlayerWindow.value || playerStore.active)
 const playerDialogClass = computed(() => {
   if (!isPlayerWindow.value) return 'dialog-player'
@@ -835,6 +839,8 @@ const exitHandler = () => {
   }
 }
 
+let unsubscribePlayerWindow = null
+
 onMounted(async () => {
   await nextTick()
 
@@ -861,6 +867,17 @@ onMounted(async () => {
     window.electronAPI.on('stop-playing-video', () => {
       closePlayer()
     })
+  } else if (isPlayerWindow.value) {
+    const pending = consumePendingPlay()
+    if (pending?.video) {
+      initPlayingVideo(pending.video, pending.videos, pending.time)
+    }
+
+    unsubscribePlayerWindow = subscribePlayerWindowMessages((message) => {
+      if (message?.type === 'play-video' && message.data?.video) {
+        initPlayingVideo(message.data.video, message.data.videos, message.data.time)
+      }
+    })
   }
 
   if (document.addEventListener) {
@@ -873,6 +890,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   eventBus.off('playVideo', handlePlayVideoEvent)
+  unsubscribePlayerWindow?.()
   clearTimeout(timeoutControls.value)
   document.removeEventListener('fullscreenchange', exitHandler)
   document.removeEventListener('mozfullscreenchange', exitHandler)

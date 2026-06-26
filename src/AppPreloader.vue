@@ -22,7 +22,7 @@
       <SideBar v-else/>
     </template>
 
-    <Player v-show="isPlayerShow"/>
+    <Player/>
     <ImageViewer v-if="!isPlayerWindow"/>
 
     <v-main
@@ -75,7 +75,7 @@
 
 <script setup>
 import {ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent} from "vue"
-import {useRoute} from "vue-router"
+import {useRoute, useRouter} from "vue-router"
 import {useDisplay} from "vuetify"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
@@ -103,6 +103,7 @@ import AutoUpdater from "@/components/app/AutoUpdater.vue"
 import {useAppUpdater} from '@/composable/useAppUpdater'
 import {useAppZoom} from '@/composable/useAppZoom'
 import {useAppTheme} from '@/composable/useAppTheme'
+import {isStandalonePlayerRoute} from '@/utils/playerWindow'
 
 const Dialogs = defineAsyncComponent(() => import('@/components/app/Dialogs.vue'))
 const ImageViewer = defineAsyncComponent(() => import('@/components/app/ImageViewer.vue'))
@@ -117,6 +118,7 @@ const registrationStore = useRegistrationStore()
 const contextMenuStore = useContextMenu()
 const dialogsStore = useDialogsStore()
 const route = useRoute()
+const router = useRouter()
 const {mobile} = useDisplay()
 const {locale} = useI18n()
 
@@ -134,9 +136,10 @@ const isWin = userAgent.includes('windows')
 
 store.isElectron = isElectron
 
-const isPlayerWindow = computed(() => !!route.query.player)
+const isPlayerWindow = computed(() =>
+  isStandalonePlayerRoute(route, settingsStore.open_player_in_separate_window)
+)
 const appZoom = route.query.player ? null : useAppZoom()
-const isPlayerShow = computed(() => isPlayerWindow.value || player.active)
 const contextMenu = computed(() => contextMenuStore)
 
 const addedTopClasses = computed(() => ({
@@ -158,6 +161,18 @@ const {handleAddMedia, cleanupEventListeners} = useMediaAdding()
 
 /* ------------------------- API LOADERS ------------------------- */
 
+function cleanupStalePlayerRoute() {
+  if (
+    route.query.player &&
+    !store.isElectron &&
+    settingsStore.open_player_in_separate_window !== '1'
+  ) {
+    const query = {...route.query}
+    delete query.player
+    router.replace({query})
+  }
+}
+
 async function initSettings() {
   try {
     const res = await axios.get(apiUrl.value + "/api/Setting")
@@ -167,6 +182,7 @@ async function initSettings() {
     }, {})
 
     settingsStore.updateMultiple(sets)
+    cleanupStalePlayerRoute()
   } catch {
     store.isServerError = true
   }
