@@ -269,11 +269,15 @@ const resolvePlayableVideo = async (initialVideo) => {
   const candidates = []
 
   if (playlist.length > 0) {
-    const startIndex = Math.max(0, _.findIndex(playlist, (i) => i.id == initialVideo.id))
+    const foundIndex = _.findIndex(playlist, (i) => i.id == initialVideo.id)
 
-    for (let offset = 0; offset < playlist.length; offset++) {
-      const index = (startIndex + offset) % playlist.length
-      candidates.push({video: playlist[index], index})
+    if (foundIndex >= 0) {
+      for (let offset = 0; offset < playlist.length; offset++) {
+        const index = (foundIndex + offset) % playlist.length
+        candidates.push({video: playlist[index], index})
+      }
+    } else if (initialVideo?.path || initialVideo?.id) {
+      candidates.push({video: initialVideo, index: 0})
     }
   } else if (initialVideo?.path) {
     candidates.push({video: initialVideo, index: 0})

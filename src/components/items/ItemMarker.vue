@@ -306,6 +306,7 @@ const play = () => {
   const videoItem = props.mark.medium
   itemsStore.playVideo({
     video: videoItem,
+    videos: [videoItem],
     time: props.mark.time,
   })
   stopPlayingPreview()

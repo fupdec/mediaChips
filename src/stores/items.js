@@ -255,7 +255,12 @@ export const useItemsStore = defineStore('items', {
           ? this.navigationItems
           : this.entities
 
-        if (playlistSource.length > 0) {
+        const targetId = Number(targetVideo?.id)
+        const targetInSource = targetId > 0 && playlistSource.some(
+          (item) => Number(item?.id) === targetId
+        )
+
+        if (playlistSource.length > 0 && targetInSource) {
           playlistVideos = playlistSource.map(item => toRaw(item))
         }
       }
