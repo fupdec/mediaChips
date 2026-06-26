@@ -188,7 +188,10 @@ const deleteTag = async () => {
     })
 
     if (itemsStore.type === 'media') {
-      eventBus.emit('getItemsFromDb', {ids: [], type: 'media'})
+      const visibleIds = itemsStore.itemsOnPage.map((item) => item.id)
+      for (const itemId of visibleIds) {
+        itemsStore.removeTagFromItem({itemId, tagId: tag.value.id})
+      }
     }
 
     eventBus.emit('removeEntitiesFromState', {
@@ -227,7 +230,6 @@ const save = () => {
 
   if (itemsStore.type === 'media') {
     eventBus.emit('getTags')
-    eventBus.emit('getItemsFromDb', {ids: [], type: 'media'})
   } else {
     eventBus.emit('getItemsFromDb', {ids: [tag.value.id], type: 'tag'})
   }

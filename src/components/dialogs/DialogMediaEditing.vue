@@ -195,7 +195,6 @@ function save() {
 
   if (itemsStore.type === 'media') {
     eventBus.emit('getTags')
-    eventBus.emit('getItemsFromDb', {ids: [], type: 'media'})
   }
 
   dialogsStore.mediaEditing.show = false

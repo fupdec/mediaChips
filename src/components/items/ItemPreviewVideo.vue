@@ -505,7 +505,7 @@ const handleVideoError = () => {
 }
 
 const restartImageGeneration = () => {
-  eventBus.emit('getItemsFromDb', {ids: [], type: 'media'})
+  eventBus.emit('getItemsFromDb', {ids: [props.media.id], type: 'media'})
 }
 
 const handleVideoLoaded = () => {
