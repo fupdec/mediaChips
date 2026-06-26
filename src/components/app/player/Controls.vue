@@ -7,7 +7,7 @@
     theme="dark"
   >
     <v-card-actions
-      @wheel="wheelSeek"
+      @wheel.prevent="wheelSeek"
       @mousemove="saveEvent($event); showPreview($event)"
       @mouseleave="player.progress_hover = null; preview_show = false"
       class="timeline pa-0"
@@ -19,6 +19,7 @@
         @start="startSeeking"
         @end="seek"
         @mousedown="handleMouseSeek($event)"
+        @wheel.prevent.stop="wheelSeek"
         :disabled="!player.is_file_exists || player.playbackError"
         :track-size="2"
         class="timeline-slider pt-4"
@@ -399,7 +400,7 @@
       </v-btn-group>
 
       <!-- VOLUME -->
-      <v-btn-group @wheel="changeVolume"
+      <v-btn-group @wheel.prevent="handleVolumeWheel"
         variant="tonal"
         :density="density"
         rounded="xl"
@@ -418,6 +419,7 @@
         </v-btn>
         <v-slider
           v-model="playerStore.volume"
+          @wheel.prevent.stop="handleVolumeSliderWheel"
           class="volume-slider ma-0 pl-2 pr-6"
           color="white"
           width="100"
@@ -438,6 +440,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
+import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
@@ -452,6 +455,13 @@ import Preview from "@/components/app/player/Preview.vue";
 import Mark from '@/components/app/player/Mark.vue'
 import ControlsSetMarkTime
   from "@/components/app/player/ControlsSetMarkTime.vue";
+import {
+  getPrimaryWheelDelta,
+  getSeekSecondsFromWheel,
+  getVolumeDeltaFromWheel,
+  preventWheelDefault,
+} from '@/utils/playerWheel'
+import {isStandalonePlayerRoute} from '@/utils/playerWindow'
 
 const props = defineProps({
   routeQuery: {
@@ -475,6 +485,7 @@ const emit = defineEmits([
 // Stores
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
+const settingsStore = useSettingsStore()
 const dialogsStore = useDialogsStore()
 const itemsStore = useItemsStore()
 const eventBus = useEventBus()
@@ -496,7 +507,9 @@ const preview_show = ref(true)
 // Computed
 const player = computed(() => playerStore)
 const apiUrl = computed(() => appStore.localhost)
-const is_separate_window = computed(() => !!route.query.player)
+const is_separate_window = computed(() =>
+  isStandalonePlayerRoute(route, settingsStore.open_player_in_separate_window)
+)
 const video = computed(() => player.value.playlist[player.value.nowPlaying])
 const isAudioMode = computed(() => playerStore.isAudioMode)
 
@@ -646,14 +659,35 @@ const handleSliderChange = (value) => {
 }
 
 const wheelSeek = (e) => {
+  if (!player.value.is_file_exists || player.value.playbackError) return
+
+  preventWheelDefault(e)
+  emit('showControls')
+
   if (e.altKey) {
-    e.deltaY > 0 ? jumpToMark("prev") : jumpToMark("next")
+    getPrimaryWheelDelta(e) > 0 ? jumpToMark('prev') : jumpToMark('next')
     return
   }
-  let s = e.deltaY / -20
-  if (e.shiftKey) s = s * 4
-  else if (e.ctrlKey) s = s / 2
-  jumpToSeconds(s)
+
+  const seconds = getSeekSecondsFromWheel(e)
+  if (!seconds) return
+
+  jumpToSeconds(seconds)
+}
+
+const handleVolumeWheel = (e, {slider = false} = {}) => {
+  if (e.altKey) return
+
+  preventWheelDefault(e)
+  emit('showControls')
+
+  changeVolume({
+    deltaY: getVolumeDeltaFromWheel(e, {slider}),
+  })
+}
+
+const handleVolumeSliderWheel = (e) => {
+  handleVolumeWheel(e, {slider: true})
 }
 
 const jumpTo = (time) => {
@@ -806,7 +840,7 @@ let previewRafId = null
 let previewPendingX = null
 
 const showPreview = (e) => {
-  if (!preview_show.value || !preview_event_target.value || !controls_width.value) return
+  if (!preview_show.value || !preview_event_target.value) return
 
   previewPendingX = e.pageX
   if (previewRafId) return
@@ -817,8 +851,11 @@ const showPreview = (e) => {
     if (pageX == null || !preview_event_target.value) return
 
     const currentTargetRect = preview_event_target.value.getBoundingClientRect()
+    const width = currentTargetRect.width
+    if (!width) return
+
     const left = pageX - currentTargetRect.left
-    playerStore.progress_hover = left / controls_width.value * 100
+    playerStore.progress_hover = left / width * 100
   })
 }
 
@@ -921,18 +958,34 @@ const deleteVideo = async (with_file) => {
   }, 1000)
 }
 
+let timelineResizeObserver = null
+
 const resize = () => {
   ++resized.value
+}
+
+const observeTimelineResize = () => {
+  const el = slider_progress.value?.$el || slider_progress.value
+  if (!el || typeof ResizeObserver === 'undefined') return
+
+  timelineResizeObserver?.disconnect()
+  timelineResizeObserver = new ResizeObserver(() => {
+    resize()
+  })
+  timelineResizeObserver.observe(el)
 }
 
 // Lifecycle
 onMounted(() => {
   is_mounted.value = true
   window.addEventListener("resize", resize)
+  nextTick(observeTimelineResize)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", resize)
+  timelineResizeObserver?.disconnect()
+  timelineResizeObserver = null
   if (previewRafId) {
     cancelAnimationFrame(previewRafId)
   }
@@ -940,12 +993,17 @@ onBeforeUnmount(() => {
 
 // Watchers
 watch(dialog_video_edit, (value) => {
-  playerStore.stop_listen_keyboard_events = value
+  playerStore.setKeyboardBlocked('edit', value)
 })
 
 watch(() => dialogsStore.markAdding.show, (value) => {
-  playerStore.stop_listen_keyboard_events = value
+  playerStore.setKeyboardBlocked('mark', value)
 })
+
+watch(
+  () => [playerStore.marksVisible, playerStore.playlistVisible],
+  () => nextTick(resize),
+)
 
 defineExpose({
   togglePause,
@@ -958,6 +1016,7 @@ defineExpose({
   togglePlaylist,
   toggleMarks,
   jumpToMark,
+  wheelSeek,
   editVideo,
   deleteVideo,
   resize,

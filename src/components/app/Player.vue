@@ -49,7 +49,7 @@
             @dblclick="toggleFullscreen"
             @click.middle="toggleFullscreen"
             @mousedown="clickOnVideo($event)"
-            @wheel="changeVolume"
+            @wheel="onVideoWheel"
             tabindex="-1"
             :class="{
               'playback-error': showPlaybackError,
@@ -181,6 +181,8 @@ import {getDefaultMediaTypeId, findMediaTypeById, isAudioMediaType, isAudioFileP
 import {buildMarkPayload} from '@/utils/markAdding'
 import {isWinElectronUi} from '@/utils/debugWinElectronUi'
 import {isStandalonePlayerRoute, consumePendingPlay, subscribePlayerWindowMessages} from '@/utils/playerWindow'
+import {usePlayerHotkeys} from '@/composable/usePlayerHotkeys'
+import {handlePlayerVideoWheel} from '@/utils/playerHotkeys'
 
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
@@ -200,6 +202,16 @@ const videoPlayer = ref(null)
 const controls = ref(null)
 const marks = ref(null)
 const timeoutControls = ref(-1)
+
+const {attach: attachHotkeys, detach: detachHotkeys} = usePlayerHotkeys(() => ({
+  playerStore,
+  controls: controls.value,
+  togglePause,
+  toggleFullscreen,
+  changeVolume,
+  openAddingMark,
+  closePlayer,
+}))
 
 // Computed
 const player = computed(() => playerStore)
@@ -247,7 +259,9 @@ const formatErrorMessage = computed(() => {
     ? t('player.audio_format_not_supported')
     : t('player.video_format_not_supported')
 })
-const showPlaybackError = computed(() => isReady.value && playerStore.playbackError && reg.value)
+const showPlaybackError = computed(() =>
+  playerStore.active && isReady.value && playerStore.playbackError && reg.value
+)
 const apiUrl = computed(() => appStore.localhost)
 const os = computed(() => window.os ? window.os.type() : false)
 
@@ -270,6 +284,10 @@ const closePlayer = async () => {
     await updatePlaybackTime(video.value)
   }
 
+  playerStore.active = false
+  playerStore.playbackError = false
+  isReady.value = false
+
   if (playerStore.player) {
     playerStore.player.pause()
     playerStore.player.src = null
@@ -277,10 +295,9 @@ const closePlayer = async () => {
 
   clearInterval(playerStore.currentTimeTimeout)
   playerStore.currentTime = 0
-  playerStore.active = false
   playerStore.isAudioMode = false
   playerStore.paused = false
-  window.removeEventListener("keydown", handleKey)
+  detachHotkeys()
 
   if (isPlayerWindow.value) {
     playerStore.mediaWindowTitle = ''
@@ -303,6 +320,7 @@ const initPlayer = () => {
   })
 
   playerStore.player.addEventListener("error", () => {
+    if (!playerStore.active || !playerStore.player?.src) return
     playerStore.playbackError = true
   })
 }
@@ -345,6 +363,9 @@ const resolvePlayableVideo = async (initialVideo) => {
 }
 
 const loadSrc = async (video, start_time) => {
+  isReady.value = false
+  playerStore.playbackError = false
+
   const resolved = await resolvePlayableVideo(video)
 
   if (!resolved) {
@@ -520,95 +541,12 @@ const changeVolume = (e) => {
   })
 }
 
-const handleKey = (e) => {
-  if (playerStore.stop_listen_keyboard_events) return false
-
-  let step = 10
-
-  switch (true) {
-    case e.code === "KeyZ" || (e.altKey && e.code === "ArrowLeft"):
-      if (controls.value && controls.value.prev) {
-        controls.value.prev()
-      }
-      break
-    case e.code === "KeyC" || (e.altKey && e.code === "ArrowRight"):
-      if (controls.value && controls.value.next) {
-        controls.value.next()
-      }
-      break
-    case e.code === "Space":
-      togglePause()
-      break
-    case e.code === "ArrowRight":
-      if (e.shiftKey) step = step * 3
-      playerStore.playerJumpTo(playerStore.player.currentTime + step)
-      break
-    case e.code === "ArrowLeft":
-      if (e.shiftKey) step = step * 3
-      playerStore.playerJumpTo(playerStore.player.currentTime - step)
-      break
-    case e.code === "ArrowUp":
-      changeVolume({deltaY: +100})
-      break
-    case e.code === "ArrowDown":
-      changeVolume({deltaY: -100})
-      break
-    case e.code === "KeyF":
-      toggleFullscreen()
-      break
-    case e.code === "KeyM":
-      if (controls.value && controls.value.toggleMute) {
-        controls.value.toggleMute()
-      }
-      break
-    case e.code === "KeyP":
-      if (controls.value && controls.value.togglePlaylist) {
-        controls.value.togglePlaylist()
-      }
-      break
-    case e.code === "KeyI":
-      if (controls.value && controls.value.toggleMarks) {
-        controls.value.toggleMarks()
-      }
-      break
-    case e.code === "Comma":
-      if (controls.value && controls.value.jumpToMark) {
-        controls.value.jumpToMark('prev')
-      }
-      break
-    case e.code === "Period":
-      if (controls.value && controls.value.jumpToMark) {
-        controls.value.jumpToMark('next')
-      }
-      break
-    case e.code === "KeyX":
-      if (controls.value && controls.value.stop) {
-        controls.value.stop()
-      }
-      break
-    case e.code === "Digit1":
-      openAddingMark("favorite")
-      break
-    case e.code === "Digit2":
-      openAddingMark("bookmark")
-      break
-    case e.code === "KeyE":
-      if (controls.value && controls.value.editVideo) {
-        controls.value.editVideo()
-      }
-      break
-    case e.code === "Backspace" || e.code === "Delete":
-      if (e.shiftKey && (e.ctrlKey || e.altKey)) {
-        if (controls.value && controls.value.deleteVideo) {
-          controls.value.deleteVideo(true)
-        }
-      } else if (e.ctrlKey || e.altKey) {
-        if (controls.value && controls.value.deleteVideo) {
-          controls.value.deleteVideo()
-        }
-      }
-      break
-  }
+const onVideoWheel = (event) => {
+  if (!playerStore.active) return
+  handlePlayerVideoWheel(event, {
+    controls: controls.value,
+    changeVolume,
+  })
 }
 
 const clickOnVideo = (e) => {
@@ -806,12 +744,11 @@ const initPlayingVideo = (video, videos, time) => {
   });
 
   // Загружаем и воспроизводим видео
+  isReady.value = false
+  playerStore.playbackError = false
   updatePlayerWindowTitle(video)
   loadSrc(video, time);
   playerStore.active = true;
-
-  // Добавляем обработчик клавиш
-  window.addEventListener("keydown", handleKey);
 
   // Загружаем метаданные
   const mediaTypeId = video.mediaTypeId || getDefaultMediaTypeId(appStore.mediaTypes)
@@ -899,6 +836,11 @@ onBeforeUnmount(() => {
 })
 
 // Watchers
+watch(() => playerStore.active, (active) => {
+  if (active) attachHotkeys()
+  else detachHotkeys()
+}, {immediate: true})
+
 watch(() => playerStore.volume, (newValue, oldValue) => {
   if (newValue !== oldValue && playerStore.player) {
     playerStore.player.volume = newValue

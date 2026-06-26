@@ -11,6 +11,7 @@
     thumb-label="always"
     track-size="1"
     thumb-size="10"
+    @wheel.prevent.stop="onMarkRangeWheel"
   >
     <template v-slot:thumb-label="{ modelValue }">
       {{ $readable.getReadableDuration(modelValue) }}
@@ -22,6 +23,7 @@
 import {computed} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
+import {getMarkRangeDeltaFromWheel, preventWheelDefault} from '@/utils/playerWheel'
 
 const dialogsStore = useDialogsStore()
 const playerStore = usePlayerStore()
@@ -37,4 +39,29 @@ const markTimeRange = computed({
     }
   }
 })
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+
+const onMarkRangeWheel = (event) => {
+  preventWheelDefault(event)
+
+  const delta = getMarkRangeDeltaFromWheel(event)
+  if (!delta) return
+
+  if (event.shiftKey) {
+    marks.value.end = clamp(
+      (marks.value.end || 0) + delta,
+      marks.value.time || 0,
+      playerStore.duration,
+    )
+    return
+  }
+
+  const nextTime = clamp(
+    (marks.value.time || 0) + delta,
+    0,
+    marks.value.end || playerStore.duration,
+  )
+  marks.value.time = nextTime
+}
 </script>

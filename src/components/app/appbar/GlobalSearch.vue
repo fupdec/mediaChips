@@ -9,6 +9,7 @@ import {useEventBus} from '@/utils/eventBus'
 import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
+import {usePlayerStore} from '@/stores/player'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getDefaultMediaTypeId, isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
 
@@ -17,11 +18,13 @@ const eventBus = useEventBus()
 const router = useRouter()
 
 useHotkey('slash', () => {
+  if (playerStore.active) return
   showSearch()
 })
 
 const app = useAppStore()
 const itemsStore = useItemsStore()
+const playerStore = usePlayerStore()
 const meta = computed(() => app.meta)
 const mediaTypes = computed(() => app.mediaTypes)
 const apiUrl = computed(() => app.localhost)

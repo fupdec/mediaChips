@@ -12,7 +12,7 @@ export const usePlayerStore = defineStore('player', {
     marksVisible: false,
     mouseOverControls: false,
     isControlsVisible: true,
-    stop_listen_keyboard_events: false,
+    keyboardBlockers: {},
 
     duration: 1,
     volume: 1,
@@ -41,7 +41,21 @@ export const usePlayerStore = defineStore('player', {
     marks: [],
     mediaWindowTitle: '',
   }),
+  getters: {
+    isKeyboardBlocked(state) {
+      return Object.keys(state.keyboardBlockers).length > 0
+    },
+  },
   actions: {
+    setKeyboardBlocked(reason, blocked) {
+      if (blocked) {
+        this.keyboardBlockers = {...this.keyboardBlockers, [reason]: true}
+      } else {
+        const next = {...this.keyboardBlockers}
+        delete next[reason]
+        this.keyboardBlockers = next
+      }
+    },
     trackCurrentTime() {
       clearInterval(this.currentTimeTimeout)
       let timeout = 100

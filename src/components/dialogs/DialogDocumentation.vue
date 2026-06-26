@@ -249,12 +249,25 @@
                       <td>Open video editing/metadata dialog</td>
                     </tr>
                     <tr>
-                      <td><v-hotkey keys="alt+del"/></td>
+                      <td><v-hotkey keys="esc"/></td>
+                      <td>Close Player</td>
+                      <td>Close the player when no dialog is open</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <v-hotkey keys="ctrl+del"/>
+                        <span class="mx-1">or</span>
+                        <v-hotkey keys="alt+del"/>
+                      </td>
                       <td>Delete Video</td>
                       <td>Delete current video</td>
                     </tr>
                     <tr>
-                      <td><v-hotkey keys="alt+shift+del"/></td>
+                      <td>
+                        <v-hotkey keys="ctrl+shift+del"/>
+                        <span class="mx-1">or</span>
+                        <v-hotkey keys="alt+shift+del"/>
+                      </td>
                       <td>Delete with File</td>
                       <td>Delete video including file from disk</td>
                     </tr>
@@ -293,7 +306,7 @@
                         </tr>
                         <tr>
                           <td>Wheel Scroll</td>
-                          <td>Volume control</td>
+                          <td>Volume control on video or timeline</td>
                         </tr>
                         <tr>
                           <td>

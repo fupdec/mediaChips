@@ -13,15 +13,16 @@ const playerHotkeys = {
       <tr><td>F / M</td><td>Display and sound</td><td>Toggle fullscreen or mute.</td></tr>
       <tr><td>P / I</td><td>Panels</td><td>Show or hide the playlist and marks panels.</td></tr>
       <tr><td>E</td><td>Edit video</td><td>Open the video editing dialog.</td></tr>
-      <tr><td>Alt+Del</td><td>Delete video</td><td>Delete the current video from the app.</td></tr>
-      <tr><td>Alt+Shift+Del</td><td>Delete with file</td><td>Delete the current video and its file from disk.</td></tr>
+      <tr><td>Esc</td><td>Close player</td><td>Close the player when no dialog is open.</td></tr>
+      <tr><td>Ctrl+Del or Alt+Del</td><td>Delete video</td><td>Delete the current video from the app.</td></tr>
+      <tr><td>Ctrl+Shift+Del or Alt+Shift+Del</td><td>Delete with file</td><td>Delete the current video and its file from disk.</td></tr>
     </tbody></table>
     <h2>Mouse controls</h2>
     <table><thead><tr><th>Mouse action</th><th>Behavior</th></tr></thead><tbody>
       <tr><td>Left click</td><td>Toggle play or pause.</td></tr>
       <tr><td>Double click / middle click</td><td>Toggle fullscreen.</td></tr>
       <tr><td>Back / forward mouse buttons</td><td>Previous or next video.</td></tr>
-      <tr><td>Wheel scroll</td><td>Control volume.</td></tr>
+      <tr><td>Wheel scroll</td><td>Control volume on video or timeline.</td></tr>
       <tr><td>Alt + wheel</td><td>Navigate marks.</td></tr>
       <tr><td>Ctrl + wheel</td><td>Fine seek adjustment.</td></tr>
       <tr><td>Shift + wheel</td><td>Coarse seek adjustment.</td></tr>
@@ -40,15 +41,16 @@ const playerHotkeys = {
       <tr><td>F / M</td><td>Экран и звук</td><td>Переключает полный экран или звук.</td></tr>
       <tr><td>P / I</td><td>Панели</td><td>Показывает или скрывает плейлист и список меток.</td></tr>
       <tr><td>E</td><td>Редактировать видео</td><td>Открывает диалог редактирования видео.</td></tr>
-      <tr><td>Alt+Del</td><td>Удалить видео</td><td>Удаляет текущее видео из приложения.</td></tr>
-      <tr><td>Alt+Shift+Del</td><td>Удалить с файлом</td><td>Удаляет текущее видео и файл с диска.</td></tr>
+      <tr><td>Esc</td><td>Закрыть плеер</td><td>Закрывает плеер, если не открыт диалог.</td></tr>
+      <tr><td>Ctrl+Del или Alt+Del</td><td>Удалить видео</td><td>Удаляет текущее видео из приложения.</td></tr>
+      <tr><td>Ctrl+Shift+Del или Alt+Shift+Del</td><td>Удалить с файлом</td><td>Удаляет текущее видео и файл с диска.</td></tr>
     </tbody></table>
     <h2>Управление мышью</h2>
     <table><thead><tr><th>Действие мышью</th><th>Поведение</th></tr></thead><tbody>
       <tr><td>Левый клик</td><td>Воспроизведение или пауза.</td></tr>
       <tr><td>Двойной клик / средняя кнопка</td><td>Полноэкранный режим.</td></tr>
       <tr><td>Кнопки назад / вперед</td><td>Предыдущее или следующее видео.</td></tr>
-      <tr><td>Колесо мыши</td><td>Управление громкостью.</td></tr>
+      <tr><td>Колесо мыши</td><td>Управление громкостью на видео или таймлайне.</td></tr>
       <tr><td>Alt + колесо</td><td>Переход по меткам.</td></tr>
       <tr><td>Ctrl + колесо</td><td>Точная перемотка.</td></tr>
       <tr><td>Shift + колесо</td><td>Быстрая перемотка.</td></tr>
@@ -67,15 +69,16 @@ const playerHotkeys = {
       <tr><td>F / M</td><td>Pantalla y sonido</td><td>Alterna pantalla completa o silencio.</td></tr>
       <tr><td>P / I</td><td>Paneles</td><td>Muestra u oculta la lista y el panel de marcas.</td></tr>
       <tr><td>E</td><td>Editar video</td><td>Abre el diálogo de edición de video.</td></tr>
-      <tr><td>Alt+Del</td><td>Eliminar video</td><td>Elimina el video actual de la aplicación.</td></tr>
-      <tr><td>Alt+Shift+Del</td><td>Eliminar con archivo</td><td>Elimina el video y su archivo del disco.</td></tr>
+      <tr><td>Esc</td><td>Cerrar reproductor</td><td>Cierra el reproductor si no hay un diálogo abierto.</td></tr>
+      <tr><td>Ctrl+Del o Alt+Del</td><td>Eliminar video</td><td>Elimina el video actual de la aplicación.</td></tr>
+      <tr><td>Ctrl+Shift+Del o Alt+Shift+Del</td><td>Eliminar con archivo</td><td>Elimina el video y su archivo del disco.</td></tr>
     </tbody></table>
     <h2>Controles del mouse</h2>
     <table><thead><tr><th>Acción del mouse</th><th>Comportamiento</th></tr></thead><tbody>
       <tr><td>Clic izquierdo</td><td>Reproducir o pausar.</td></tr>
       <tr><td>Doble clic / clic central</td><td>Alternar pantalla completa.</td></tr>
       <tr><td>Botones atrás / adelante</td><td>Video anterior o siguiente.</td></tr>
-      <tr><td>Rueda del mouse</td><td>Control de volumen.</td></tr>
+      <tr><td>Rueda del mouse</td><td>Control de volumen en el video o la línea de tiempo.</td></tr>
       <tr><td>Alt + rueda</td><td>Navegar marcas.</td></tr>
       <tr><td>Ctrl + rueda</td><td>Búsqueda precisa.</td></tr>
       <tr><td>Shift + rueda</td><td>Búsqueda rápida.</td></tr>
@@ -94,15 +97,16 @@ const playerHotkeys = {
       <tr><td>F / M</td><td>显示和声音</td><td>切换全屏或静音。</td></tr>
       <tr><td>P / I</td><td>面板</td><td>显示或隐藏播放列表和标记面板。</td></tr>
       <tr><td>E</td><td>编辑视频</td><td>打开视频编辑对话框。</td></tr>
-      <tr><td>Alt+Del</td><td>删除视频</td><td>从应用中删除当前视频。</td></tr>
-      <tr><td>Alt+Shift+Del</td><td>连同文件删除</td><td>删除当前视频和磁盘上的文件。</td></tr>
+      <tr><td>Esc</td><td>关闭播放器</td><td>在没有打开对话框时关闭播放器。</td></tr>
+      <tr><td>Ctrl+Del 或 Alt+Del</td><td>删除视频</td><td>从应用中删除当前视频。</td></tr>
+      <tr><td>Ctrl+Shift+Del 或 Alt+Shift+Del</td><td>连同文件删除</td><td>删除当前视频和磁盘上的文件。</td></tr>
     </tbody></table>
     <h2>鼠标控制</h2>
     <table><thead><tr><th>鼠标操作</th><th>行为</th></tr></thead><tbody>
       <tr><td>左键单击</td><td>播放或暂停。</td></tr>
       <tr><td>双击 / 中键单击</td><td>切换全屏。</td></tr>
       <tr><td>后退 / 前进按钮</td><td>上一个或下一个视频。</td></tr>
-      <tr><td>滚轮</td><td>控制音量。</td></tr>
+      <tr><td>滚轮</td><td>在视频或时间轴上控制音量。</td></tr>
       <tr><td>Alt + 滚轮</td><td>导航标记。</td></tr>
       <tr><td>Ctrl + 滚轮</td><td>精细跳转。</td></tr>
       <tr><td>Shift + 滚轮</td><td>快速跳转。</td></tr>
