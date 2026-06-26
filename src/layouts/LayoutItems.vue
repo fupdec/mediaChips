@@ -239,7 +239,7 @@ const isFiltersReady = ref(false)
 const loader = ref({
   show: false,
   timeout: 0,
-  is_busy: true,
+  is_busy: false,
 })
 const is_not_full_height = ref(false)
 const isLoadingMore = ref(false)
@@ -249,6 +249,27 @@ const container = ref(null)
 const scrollRoot = ref(null)
 const INFINITE_PAGE_SIZE = 25
 let mediaScrollEl = null
+let listFetchSeq = 0
+let listAbortController = null
+
+const isAbortError = (error) =>
+  error?.code === 'ERR_CANCELED'
+  || error?.name === 'CanceledError'
+  || axios.isCancel?.(error)
+
+const abortPendingListFetch = () => {
+  listAbortController?.abort()
+  listAbortController = null
+}
+
+const resetMediaListState = () => {
+  itemsStore.updateState({key: 'itemsOnPage', value: []})
+  itemsStore.updateState({key: 'entities', value: []})
+  itemsStore.updateState({key: 'navigationItems', value: []})
+  itemsStore.updateState({key: 'totalFiltered', value: 0})
+  total.value = 0
+  totalInDb.value = 0
+}
 
 // Компьютеды
 const ITEMS = computed(() => itemsStore)
@@ -338,6 +359,23 @@ const image_filters_no_results = computed(() => {
 
 // Методы
 const init = async () => {
+  if (!apiUrl.value) {
+    return
+  }
+  if (props.items_type === 'media' && !props.mediaTypeId) {
+    return
+  }
+  if (props.items_type === 'tag' && !props.metaId) {
+    return
+  }
+
+  abortPendingListFetch()
+  listFetchSeq += 1
+
+  if (props.items_type === 'media') {
+    resetMediaListState()
+  }
+
   if (props.items_type === 'tag') {
     await getMeta();
     if (!props.tagId && meta.value?.id) {
@@ -350,7 +388,12 @@ const init = async () => {
   await getPageSettings();
   await getPinnedMeta();
   await getItemsFromDb();
-  await $operable.getSavedFilters();
+}
+
+const loadSavedFilters = () => {
+  $operable.getSavedFilters().catch((error) => {
+    console.error('Failed to load saved filters:', error)
+  })
 }
 
 const getFilters = async () => {
@@ -506,8 +549,19 @@ const getMediaType = async () => {
     });
 }
 
-const applyMediaListResponse = (response, {append = false} = {}) => {
+const applyMediaListResponse = (response, {append = false, requestedPage = 1} = {}) => {
   const pageItems = response.data.items || []
+  const responseTotalFiltered = response.data.totalFiltered
+
+  if (
+    !append
+    && pageItems.length === 0
+    && responseTotalFiltered != null
+    && responseTotalFiltered > 0
+    && requestedPage <= 1
+  ) {
+    return false
+  }
 
   if (response.data.navigation) {
     itemsStore.updateState({
@@ -552,6 +606,7 @@ const applyMediaListResponse = (response, {append = false} = {}) => {
   itemsStore.updateState({key: 'entities', value: nextItems})
   itemsStore.updateState({key: 'itemsOnPage', value: nextItems})
   itemsStore.updateState({key: 'isFiltersLoaded', value: true})
+  return true
 }
 
 const getItemsFromDb = async (ids) => {
@@ -586,121 +641,158 @@ const getItemsFromDb = async (ids) => {
     && ITEMS.value.itemsOnPage.length > 0
     && (!ids || !ids.length)
 
-  if (props.items_type === 'media' && is_infinite_scroll.value && !appendMediaPage && (!ids || !ids.length)) {
-    itemsStore.updateState({key: 'page', value: 1})
-    query.page = 1
-  }
-
   if (props.items_type === 'media') {
     query.includeNavigation = false
     const pageLimit = is_infinite_scroll.value ? INFINITE_PAGE_SIZE : ITEMS.value.limit
-    query.page = ITEMS.value.page || 1
+
+    if (is_infinite_scroll.value && !appendMediaPage && (!ids || !ids.length)) {
+      itemsStore.updateState({key: 'page', value: 1})
+      query.page = 1
+    } else {
+      query.page = ITEMS.value.page || 1
+    }
+
     query.limit = pageLimit
     query.skipTotals = appendMediaPage
   }
 
   if (ids && ids.length > 0) {
     query.filters = []
-    await axios.post(apiUrl.value + url, query)
-      .then((res) => {
-        for (let id of ids) {
-          let item = res.data.items.find(i => Number(i.id) === Number(id))
-          itemsStore.updateItem({id, item})
-        }
-      })
-      .catch((e) => {
-        console.error('Error fetching specific items:', e);
-      });
-    loader.value.is_busy = false;
-  } else {
-    if (!appendMediaPage) {
-      itemsStore.updateState({
-        key: "isFiltersLoaded",
-        value: false,
-      });
+    try {
+      const res = await axios.post(apiUrl.value + url, query)
 
-      itemsStore.updateState({
-        key: "itemsOnPage",
-        value: [],
-      });
-      loader.value.is_busy = true;
-      loader.value.show = false;
+      for (let id of ids) {
+        let item = res.data.items.find(i => Number(i.id) === Number(id))
+        itemsStore.updateItem({id, item})
+      }
+    } catch (e) {
+      console.error('Error fetching specific items:', e);
+    } finally {
+      loader.value.is_busy = false
+    }
+    return
+  }
+
+  abortPendingListFetch()
+  const requestSeq = ++listFetchSeq
+  const abortController = new AbortController()
+  listAbortController = abortController
+
+  if (!appendMediaPage) {
+    itemsStore.updateState({
+      key: "isFiltersLoaded",
+      value: false,
+    });
+    loader.value.is_busy = true;
+    loader.value.show = false;
+  }
+
+  const postListQuery = (payload, signal) =>
+    axios.post(apiUrl.value + url, payload, {signal})
+
+  try {
+    let response = await postListQuery(query, abortController.signal);
+
+    if (requestSeq !== listFetchSeq) {
+      return
     }
 
-    try {
-      const response = await axios.post(apiUrl.value + url, query);
+    if (!appendMediaPage) {
+      clearTimeout(loader.value.timeout);
+      loader.value.timeout = setTimeout(() => {
+        loader.value.show = true;
+      }, 500);
+    }
 
-      if (!appendMediaPage) {
-        clearTimeout(loader.value.timeout);
-        loader.value.is_busy = false;
-        loader.value.timeout = setTimeout(() => {
-          loader.value.show = true;
-        }, 500);
+    if (props.items_type === 'media') {
+      const previousCount = appendMediaPage ? ITEMS.value.itemsOnPage.length : 0
+      let applied = applyMediaListResponse(response, {
+        append: appendMediaPage,
+        requestedPage: query.page,
+      })
+
+      if (
+        !applied
+        && !appendMediaPage
+        && query.page === 1
+        && requestSeq === listFetchSeq
+      ) {
+        query.page = 1
+        itemsStore.updateState({key: 'page', value: 1})
+        response = await postListQuery(query, abortController.signal)
+        if (requestSeq === listFetchSeq) {
+          applied = applyMediaListResponse(response, {
+            append: false,
+            requestedPage: 1,
+          })
+        }
       }
 
-      if (props.items_type === 'media') {
-        const previousCount = appendMediaPage ? ITEMS.value.itemsOnPage.length : 0
-        applyMediaListResponse(response, {append: appendMediaPage})
+      if (!applied && requestSeq === listFetchSeq) {
+        return
+      }
 
-        if (response.data.page != null) {
-          itemsStore.updateState({key: 'page', value: response.data.page})
-        }
+      if (response.data.page != null) {
+        itemsStore.updateState({key: 'page', value: response.data.page})
+      }
 
-        if (appendMediaPage && response.data.items?.length === 0) {
-          itemsStore.updateState({
-            key: 'totalFiltered',
-            value: ITEMS.value.itemsOnPage.length,
-          })
-          total.value = ITEMS.value.itemsOnPage.length
-        } else if (appendMediaPage && ITEMS.value.itemsOnPage.length === previousCount) {
-          itemsStore.updateState({
-            key: 'totalFiltered',
-            value: ITEMS.value.itemsOnPage.length,
-          })
-          total.value = ITEMS.value.itemsOnPage.length
-        } else if (appendMediaPage) {
-          await nextTick()
-          maybeLoadMoreIfNearBottom()
-        } else if (is_infinite_scroll.value) {
-          await nextTick()
-          maybeLoadMoreIfNearBottom()
-        }
-      } else {
+      if (appendMediaPage && response.data.items?.length === 0) {
         itemsStore.updateState({
-          key: "entities",
-          value: response.data.items || []
-        });
-        totalInDb.value = response.data.total || 0;
-        itemsStore.updateState({key: "itemsOnPage", value: []});
+          key: 'totalFiltered',
+          value: ITEMS.value.itemsOnPage.length,
+        })
+        total.value = ITEMS.value.itemsOnPage.length
+      } else if (appendMediaPage && ITEMS.value.itemsOnPage.length === previousCount) {
+        itemsStore.updateState({
+          key: 'totalFiltered',
+          value: ITEMS.value.itemsOnPage.length,
+        })
+        total.value = ITEMS.value.itemsOnPage.length
+      } else if (appendMediaPage) {
+        await nextTick()
+        maybeLoadMoreIfNearBottom()
+      } else if (is_infinite_scroll.value) {
+        await nextTick()
+        maybeLoadMoreIfNearBottom()
+      }
+    } else {
+      itemsStore.updateState({
+        key: "entities",
+        value: response.data.items || []
+      });
+      totalInDb.value = response.data.total || 0;
+      itemsStore.updateState({key: "itemsOnPage", value: []});
 
-        if (is_infinite_scroll.value) {
-          itemsStore.updateState({key: "page", value: 1});
-        }
-
-        getEntitiesOnPage();
+      if (is_infinite_scroll.value) {
+        itemsStore.updateState({key: "page", value: 1});
       }
 
-    } catch (error) {
-      loader.value.is_busy = false;
-      itemsStore.updateState({key: "isFiltersLoaded", value: true});
+      getEntitiesOnPage();
+    }
 
-      if (typeof window !== 'undefined' && window.showNotification) {
-        window.showNotification(t('notifications_text.server_error_logs'), 'error');
-      }
+  } catch (error) {
+    if (isAbortError(error) || requestSeq !== listFetchSeq) {
+      return
+    }
 
-      if (props.items_type === 'media') {
-        itemsStore.updateState({key: "itemsOnPage", value: []});
-        itemsStore.updateState({key: "entities", value: []});
-        itemsStore.updateState({key: "navigationItems", value: []});
-        total.value = 0;
-        totalInDb.value = 0;
-      } else {
-        itemsStore.updateState({key: "entities", value: []});
-        totalInDb.value = 0;
-        getEntitiesOnPage();
-      }
+    itemsStore.updateState({key: "isFiltersLoaded", value: true});
 
-      throw error;
+    if (typeof window !== 'undefined' && window.showNotification) {
+      window.showNotification(t('notifications_text.server_error_logs'), 'error');
+    }
+
+    if (props.items_type === 'media') {
+      resetMediaListState()
+    } else {
+      itemsStore.updateState({key: "entities", value: []});
+      totalInDb.value = 0;
+      getEntitiesOnPage();
+    }
+
+    throw error;
+  } finally {
+    if (requestSeq === listFetchSeq) {
+      loader.value.is_busy = false
     }
   }
 }
@@ -939,30 +1031,13 @@ const emit = defineEmits(['addMedia', 'playVideo'])
 
 // Хуки жизненного цикла
 onMounted(async () => {
-  // clearing previous values
-  itemsStore.updateState({key: "itemsOnPage", value: []});
-  itemsStore.updateState({key: "navigationItems", value: []});
-  itemsStore.updateState({key: "totalFiltered", value: 0});
-  itemsStore.updateState({key: "totalFilesize", value: 0});
   itemsStore.updateState({key: "isSelect", value: false});
   itemsStore.updateState({key: "selection", value: []});
-  itemsStore.updateState({key: "filters", value: []});
 
   if (props.items_type === 'media' && ITEMS.value.limit === 101) {
     itemsStore.updateState({key: 'page', value: 1});
   }
 
-  await init();
-
-  refreshScrollRoot();
-
-  if (props.items_type === 'media' && is_infinite_scroll.value) {
-    await nextTick();
-    maybeLoadMoreIfNearBottom();
-  }
-
-  // Слушатели событий (нужно будет перенести на provide/inject или event bus в Vue 3)
-  // Временное решение:
   eventBus.on('getItemsFromDb', handleGetItemsFromDb);
   eventBus.on('setItemsFilters', handleSetItemsFilters);
   eventBus.on('setItemsLimit', handleSetItemsLimit);
@@ -973,10 +1048,28 @@ onMounted(async () => {
   eventBus.on('updateAssignedMeta', handleUpdateAssignedMeta);
   eventBus.on('openRandomItem', handleOpenRandomItem);
 
+  try {
+    await init();
+    loadSavedFilters();
+  } catch (error) {
+    console.error('Failed to initialize items page:', error);
+  } finally {
+    loader.value.is_busy = false;
+  }
+
+  refreshScrollRoot();
+
+  if (props.items_type === 'media' && is_infinite_scroll.value) {
+    await nextTick();
+    maybeLoadMoreIfNearBottom();
+  }
+
   bindMediaInfiniteScroll();
 })
 
 onBeforeUnmount(() => {
+  abortPendingListFetch()
+  listFetchSeq += 1
   unbindMediaInfiniteScroll();
   if (is_infinite_scroll.value) updatePageSetting({page: 1});
   itemsStore.updateState({
@@ -1001,9 +1094,11 @@ onBeforeUnmount(() => {
 // Обработчики событий
 const handleGetItemsFromDb = (event) => {
   const {ids, type} = event;
-  if (props.items_type === type) {
-    getItemsFromDb(ids);
+  if (props.items_type !== type) return
+  if (Array.isArray(ids) && ids.length === 0 && loader.value.is_busy) {
+    return
   }
+  getItemsFromDb(ids);
 }
 
 const handleSetItemsFilters = async (event) => {
@@ -1055,6 +1150,8 @@ const handleRemoveEntitiesFromState = (event) => {
 
 const handleSetItemsSortDir = (event) => {
   const val = event;
+  if (val === ITEMS.value.sortDir) return
+
   itemsStore.updateState({
     key: "page",
     value: 1,
@@ -1068,6 +1165,8 @@ const handleSetItemsSortDir = (event) => {
 
 const handleSetItemsSortBy = (event) => {
   const val = event;
+  if (val === ITEMS.value.sortBy) return
+
   itemsStore.updateState({
     key: "page",
     value: 1,
@@ -1122,6 +1221,24 @@ watch(() => ITEMS.size, (val, old) => {
 watch(is_infinite_scroll, () => {
   bindMediaInfiniteScroll();
 })
+
+watch(
+  () => [props.items_type, props.mediaTypeId, props.metaId, props.tagId, props.tabId],
+  async (next, prev) => {
+    if (prev && JSON.stringify(next) === JSON.stringify(prev)) return
+    if (props.items_type === 'media' && !props.mediaTypeId) return
+    if (props.items_type === 'tag' && !props.metaId) return
+
+    try {
+      await init()
+      loadSavedFilters()
+    } catch (error) {
+      console.error('Failed to reinitialize items page:', error)
+    } finally {
+      loader.value.is_busy = false
+    }
+  },
+)
 </script>
 
 <style lang="scss">

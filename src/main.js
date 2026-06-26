@@ -154,7 +154,6 @@ router.beforeEach((to, from, next) => {
   itemsStore.selection = []
   itemsStore.selected_last = null
   itemsStore.type = ''
-  itemsStore.itemsOnPage = [];
   itemsStore.find_duplicates = false;
   next()
 })
@@ -163,5 +162,6 @@ router.beforeEach((to, from, next) => {
 app.use(operable, { router, store })
 app.use(readable, { router, store, i18n })
 
-// Mount app
-app.mount('#app')
+router.isReady().then(() => {
+  app.mount('#app')
+})

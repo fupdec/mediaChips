@@ -180,18 +180,23 @@ const selectionLabel = computed(() => {
   return current ? t(current.textKey) : t('filters.sort_by')
 })
 
-watch(sortParams, (nextParams) => {
-  const allowed = nextParams.map((param) => String(param.param))
+const normalizeSortBy = () => {
+  if (!items.value.isFiltersLoaded) return
+
+  const allowed = sortParams.value.map((param) => String(param.param))
   const currentSortBy = items.value.sortBy == null ? '' : String(items.value.sortBy)
 
   if (currentSortBy && currentSortBy !== 'shuffle' && !allowed.includes(currentSortBy)) {
     const fallback = allowed.includes('createdAt') ? 'createdAt' : allowed[0]
-    if (fallback) {
+    if (fallback && fallback !== currentSortBy) {
       itemsStore.setSortBy(fallback)
       eventBus.emit('setItemsSortBy', fallback)
     }
   }
-}, {immediate: true})
+}
+
+watch(sortParams, normalizeSortBy)
+watch(() => items.value.isFiltersLoaded, normalizeSortBy)
 
 /* ================= METHODS ================= */
 

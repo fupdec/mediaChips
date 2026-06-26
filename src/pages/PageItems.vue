@@ -1,11 +1,11 @@
 <template>
   <LayoutItems
+    v-if="appStore.localhost"
     :items_type="itemsType"
-    :mediaTypeId="env.media_type_id"
-    :metaId="env.meta_id"
-    :tagId="env.tag_id"
-    :tabId="env.tab_id"
-    :key="route.fullPath + upd"
+    :mediaTypeId="mediaTypeId"
+    :metaId="metaId"
+    :tagId="tagId"
+    :tabId="tabId"
   />
 </template>
 
@@ -16,14 +16,27 @@ import LayoutItems from '@/layouts/LayoutItems.vue'
 import {useEventBus} from "@/utils/eventBus"
 
 import {useItemsStore} from '@/stores/items'
+import {useAppStore} from '@/stores/app'
 
 const itemsStore = useItemsStore()
+const appStore = useAppStore()
 const eventBus = useEventBus()
 const route = useRoute()
 
 const upd = ref(0)
 
 const env = computed(() => itemsStore.environment)
+
+const readQueryId = (key) => {
+  const value = route.query[key]
+  return value ? Number(value) : null
+}
+
+const mediaTypeId = computed(() => readQueryId('mediaTypeId'))
+const metaId = computed(() => readQueryId('metaId'))
+const tagId = computed(() => readQueryId('tagId'))
+const tabId = computed(() => readQueryId('tabId'))
+
 const itemsType = computed(() => {
   if (route.query.mediaTypeId || route.path.startsWith('/media')) {
     return 'media'
