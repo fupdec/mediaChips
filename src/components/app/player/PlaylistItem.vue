@@ -1,44 +1,46 @@
 <template>
-  <v-card :disabled="!is_file_exists || is_now_playing">
-    <div :class="{ 'no-file': !is_file_exists }">
-    <v-img
-      @click="play"
-      :key="video.id"
-      :src="thumb"
-      :aspect-ratio="16 / 9"
-      :id="'video_'+video.id"
-      class="thumb"
-      contain
-    >
-      <span class="name"
-        :title="video.name">
-        <b class="pr-1">{{ index + 1 }}.</b>
-        <span v-text="video.name"/>
-      </span>
-      <div v-if="!reg && index > 14"
-        v-text="t('player.application_not_registered')"
-        class="reg-playlist"/>
-      <span v-if="video.duration"
-        class="time"
-        v-text="getDuration(video.duration)"/>
-    </v-img>
+  <div
+    @click="play"
+    :class="{
+      'playlist-item--active': is_now_playing,
+      'playlist-item--missing': !is_file_exists,
+      'playlist-item--locked': !reg && index > 14,
+    }"
+    class="playlist-item"
+  >
+    <div class="playlist-item__thumb-wrap">
+      <v-img
+        :key="video.id"
+        :src="thumb"
+        :aspect-ratio="16 / 9"
+        :id="'video_'+video.id"
+        class="playlist-item__thumb"
+        cover
+      />
+      <div v-if="is_now_playing" class="playlist-item__playing">
+        <v-icon size="small" color="white">mdi-equalizer</v-icon>
+      </div>
+      <div v-if="!reg && index > 14" class="playlist-item__lock">
+        <v-icon size="x-small">mdi-lock</v-icon>
+      </div>
     </div>
 
-    <div v-if="is_now_playing" class="playing-overlay">
-      <v-chip size="small" variant="flat" color="primary">
-        <v-icon start>mdi-play</v-icon>
-        <span>{{ t('player.controls.now_playing') }}</span>
-      </v-chip>
+    <div class="playlist-item__info">
+      <span class="playlist-item__index">{{ index + 1 }}</span>
+      <div class="playlist-item__text">
+        <span class="playlist-item__name" :title="video.name" v-text="video.name"/>
+        <span v-if="video.duration" class="playlist-item__duration" v-text="getDuration(video.duration)"/>
+      </div>
     </div>
-  </v-card>
+  </div>
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue'
+import {ref, computed, watch, onMounted} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useRegistrationStore} from '@/stores/registration'
-import {useI18n} from 'vue-i18n'
+import {useItemsStore} from '@/stores/items'
 import path from 'path-browserify'
 
 const props = defineProps({
@@ -52,19 +54,16 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['play', 'goTo'])
+const emit = defineEmits(['play'])
 
-// Stores
 const appStore = useAppStore()
 const playerStore = usePlayerStore()
 const registrationStore = useRegistrationStore()
-const {t} = useI18n()
+const itemsStore = useItemsStore()
 
-// Refs
 const thumb = ref(null)
 const is_file_exists = ref(true)
 
-// Computed
 const player = computed(() => playerStore)
 const reg = computed(() => registrationStore)
 
@@ -72,7 +71,6 @@ const is_now_playing = computed(() => {
   return player.value.nowPlaying === props.index
 })
 
-// Methods
 const getThumb = async () => {
   const imgPath = path.join(
     appStore.mediaPath,
@@ -92,16 +90,16 @@ const checkFileExists = async () => {
 }
 
 const play = () => {
-  if (is_file_exists.value && !is_now_playing.value) {
+  if (is_file_exists.value && !is_now_playing.value && (reg.value || props.index <= 14)) {
     emit("play", props.index)
   }
 }
 
-const scrollToNowPlaying = () => {
-  emit('goTo', props.index)
-}
+watch(() => itemsStore.thumbRefreshKeys[Number(props.video.id)], (version) => {
+  if (version == null) return
+  getThumb()
+})
 
-// Lifecycle
 onMounted(() => {
   if (!thumb.value) {
     getThumb()
@@ -109,18 +107,3 @@ onMounted(() => {
   checkFileExists()
 })
 </script>
-
-<style>
-.playing-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(var(--v-theme-primary), 50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
-</style>

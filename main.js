@@ -133,6 +133,7 @@ const createWindow = () => {
     // Renderer may mount after the first paint; resend config for late listeners.
     setTimeout(() => sendConfigToWindow(win), 500)
     setTimeout(() => sendConfigToWindow(win), 2000)
+    setTimeout(warmupPlayerWindow, 1500)
     if (isDevelopment) {
       // win.webContents.openDevTools();
     }
@@ -268,6 +269,10 @@ app.on("activate", () => {
 });
 
 function quitApp() {
+  if (playerWarmupTimer) {
+    clearTimeout(playerWarmupTimer)
+    playerWarmupTimer = null
+  }
   if (player && !player.isDestroyed()) {
     player.destroy()
     player = null
@@ -492,10 +497,15 @@ ipcMain.handle('showOpenDialog', async (event, properties) => {
 });
 
 // player window
-const startPlayer = (videos_data) => {
-  player = new BrowserWindow({
+let pendingPlayerPayload = null
+let isPlayerRendererReady = false
+let playerWarmupTimer = null
+
+function getPlayerWindowOptions() {
+  return {
     frame: false,
     thickFrame: isWindows,
+    show: false,
     height: server.config.player?.height || 720,
     width: server.config.player?.width || 1280,
     titleBarStyle: 'hidden',
@@ -506,57 +516,110 @@ const startPlayer = (videos_data) => {
       preload: path.join(__dirname, './electron/preload.js'),
       contextIsolation: true,
       sandbox: false,
+      backgroundThrottling: false,
     },
+  }
+}
+
+function setupPlayerWindowEvents(browserWindow) {
+  browserWindow.on('maximize', () => {
+    browserWindow.webContents.send('maximize')
   })
 
-  player.loadURL(`http://localhost:${server.config.port}/?player=true`)
-
-  player.on('maximize', () => {
-    player.webContents.send('maximize')
+  browserWindow.on('unmaximize', () => {
+    browserWindow.webContents.send('unmaximize')
   })
 
-  player.on('unmaximize', () => {
-    player.webContents.send('unmaximize')
-  })
-
-  player.on('close', () => {
+  browserWindow.on('close', () => {
     stopPlayerPlayback()
   })
 
-  player.on('closed', (e) => {
+  browserWindow.on('closed', () => {
     player = null
+    isPlayerRendererReady = false
+    pendingPlayerPayload = null
+    schedulePlayerWarmup()
   })
 
-  player.on('enter-full-screen', (e) => {
-    player.webContents.send('enter-full-screen')
+  browserWindow.on('enter-full-screen', () => {
+    browserWindow.webContents.send('enter-full-screen')
   })
 
-  player.on('leave-full-screen', (e) => {
-    player.webContents.send('leave-full-screen')
+  browserWindow.on('leave-full-screen', () => {
+    browserWindow.webContents.send('leave-full-screen')
   })
 
-  player.webContents.on('did-finish-load', (e) => {
-    // IMPORTANT: Send configuration to player window
-    player.webContents.send('config', server.config);
-    player.webContents.send('play-video', videos_data);
+  browserWindow.webContents.on('did-finish-load', () => {
+    sendConfigToWindow(browserWindow)
   })
 
-  bindZoomChangedListener(player)
+  bindZoomChangedListener(browserWindow)
 }
+
+function createPlayerWindow() {
+  if (player && !player.isDestroyed()) return player
+
+  isPlayerRendererReady = false
+  player = new BrowserWindow(getPlayerWindowOptions())
+  setupPlayerWindowEvents(player)
+  player.loadURL(`http://localhost:${server.config.port}/?player=true`)
+  return player
+}
+
+function deliverPlayerPayload(data) {
+  if (!player || player.isDestroyed()) return
+
+  sendConfigToWindow(player)
+  player.webContents.send('play-video', data)
+  if (!player.isVisible()) player.show()
+  player.focus()
+}
+
+function schedulePlayerWarmup() {
+  if (playerWarmupTimer) return
+
+  playerWarmupTimer = setTimeout(() => {
+    playerWarmupTimer = null
+    if (!player || player.isDestroyed()) {
+      createPlayerWindow()
+    }
+  }, 1500)
+}
+
+function warmupPlayerWindow() {
+  if (player && !player.isDestroyed()) return
+  createPlayerWindow()
+}
+
+ipcMain.on('player-ready', (event) => {
+  if (!player || player.isDestroyed() || event.sender !== player.webContents) return
+
+  isPlayerRendererReady = true
+
+  if (pendingPlayerPayload) {
+    deliverPlayerPayload(pendingPlayerPayload)
+    pendingPlayerPayload = null
+  }
+})
 
 // for passing state between windows
 let temporaryStore
 ipcMain.on('open-player', async (event, data) => {
   temporaryStore = data.store
-  const play = () => {
-    player.webContents.send('play-video', data)
-    player.show()
+
+  if (!player || player.isDestroyed()) {
+    pendingPlayerPayload = data
+    createPlayerWindow()
+    return
   }
-  if (player === null) {
-    startPlayer(data)
-  } else {
-    play()
+
+  if (isPlayerRendererReady) {
+    deliverPlayerPayload(data)
+    return
   }
+
+  pendingPlayerPayload = data
+  if (!player.isVisible()) player.show()
 })
 ipcMain.on('getItemsFromDb', async (event, data) => {
   win.webContents.send('getItemsFromDb', data)

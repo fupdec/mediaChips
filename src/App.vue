@@ -36,6 +36,12 @@ onMounted(() => {
     return;
   }
 
+  // Vite dev server (port 3000) serves UI separately from the API backend.
+  if (import.meta.env.DEV && !window.electronAPI) {
+    tryConnectToDevBackend();
+    return;
+  }
+
   // If this is a player window, use simpler connection logic
   if (isPlayerWindow.value) {
     console.log('🔵 Player window: skipping auto-connect');
@@ -48,22 +54,41 @@ onMounted(() => {
     return;
   }
 
-  // Try to restore last connection (main window only)
-  const lastServer = localStorage.getItem('lastServer');
-  if (lastServer) {
-    try {
-      const server = JSON.parse(lastServer);
-      // Quick availability check
-      checkServerAvailability(server).then(available => {
-        if (available) {
-          handleServerConnected(server);
-        }
-      });
-    } catch (e) {
-      console.warn('Failed to restore connection:', e);
-    }
-  }
+  restoreLastServerConnection()
 });
+
+function tryConnectToDevBackend() {
+  const backendPort = import.meta.env.VITE_PORT || 12321
+  const server = {
+    url: `http://localhost:${backendPort}`,
+    ip: 'localhost',
+  }
+
+  checkServerAvailability(server).then((available) => {
+    if (available) {
+      handleServerConnected(server)
+      return
+    }
+
+    restoreLastServerConnection()
+  })
+}
+
+function restoreLastServerConnection() {
+  const lastServer = localStorage.getItem('lastServer')
+  if (!lastServer) return
+
+  try {
+    const server = JSON.parse(lastServer)
+    checkServerAvailability(server).then((available) => {
+      if (available) {
+        handleServerConnected(server)
+      }
+    })
+  } catch (e) {
+    console.warn('Failed to restore connection:', e)
+  }
+}
 
 function getCurrentOriginServer() {
   const fixedPort = String(import.meta.env.VITE_PORT || 12321)
@@ -110,8 +135,12 @@ function handleServerConnected(serverInfo) {
 
 function initializeApp(server) {
   console.log('🚀 Initializing app with server:', server.ip);
-  // Configure axios or other HTTP client
-  // Load configuration
+
+  if (isPlayerWindow.value) {
+    app.localhost = resolveApiBaseUrl({}, server)
+    isConfigLoaded.value = true
+  }
+
   loadConfig();
 }
 
@@ -121,7 +150,7 @@ async function loadConfig() {
     console.log('⏳ Loading config from Electron...');
 
     window.electronAPI.on("config", (config) => {
-      if (!isConfigLoaded.value) {
+      if (!isConfigLoaded.value || isPlayerWindow.value) {
         console.log('✅ Config received from Electron');
         applyConfig(config);
       }
@@ -129,7 +158,7 @@ async function loadConfig() {
 
     try {
       const config = await window.electronAPI.invoke('get-config');
-      if (config && !isConfigLoaded.value) {
+      if (config) {
         console.log('✅ Config received via get-config');
         applyConfig(config);
         return;
@@ -138,12 +167,14 @@ async function loadConfig() {
       console.warn('⚠️ Failed to load config via get-config:', error);
     }
 
-    setTimeout(() => {
-      if (!isConfigLoaded.value) {
-        console.warn('⚠️ Config not received via IPC, falling back to HTTP');
-        fetchConfigFromServer();
-      }
-    }, 1500);
+    if (!isPlayerWindow.value) {
+      setTimeout(() => {
+        if (!isConfigLoaded.value) {
+          console.warn('⚠️ Config not received via IPC, falling back to HTTP');
+          fetchConfigFromServer();
+        }
+      }, 1500);
+    }
 
     // --- Browser mode ---
   } else {

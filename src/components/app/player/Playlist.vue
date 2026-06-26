@@ -1,67 +1,71 @@
 <template>
-  <v-card
-    v-show="playerStore.playlistVisible"
-    :class="{pinned:pinned}"
-    class="playlist-window player-window"
-    elevation="20"
-    outlined
-    rounded="lg"
-  >
-    <div class="player-window_title-bar py-0">
-      <v-icon size="small" start>mdi-format-list-bulleted</v-icon>
-      <span v-text="title" :title="title" class="player-window_title"></span>
-      <v-spacer></v-spacer>
-      <v-btn @click="pinned = !pinned" size="small" variant="text" icon>
-        <v-icon v-if="pinned" size="small">mdi-pin</v-icon>
-        <v-icon v-else size="small">mdi-pin-outline</v-icon>
-      </v-btn>
-      <v-btn @click="player.playlistVisible = false" variant="text" tile icon>
-        <v-icon>mdi-close</v-icon>
-      </v-btn>
-    </div>
-
-    <v-btn-toggle
-      v-model="player.playlistMode"
-      color="primary"
-      class="toggle"
-      multiple
-      dense
-      tile
+  <v-theme-provider theme="dark">
+    <aside
+      v-show="playerStore.playlistVisible"
+      class="player-sidebar player-sidebar--playlist"
     >
-      <v-btn value="loop" :title="t('player.playlist_modes.loop')" small>
-        <v-icon small>mdi-sync</v-icon>
-      </v-btn>
-      <v-btn value="autoplay" :title="t('player.playlist_modes.autoplay')" small>
-        <v-icon small>mdi-play-pause</v-icon>
-      </v-btn>
-      <v-btn value="shuffle" :title="t('player.playlist_modes.shuffle')" small>
-        <v-icon small>mdi-shuffle-variant</v-icon>
-      </v-btn>
-    </v-btn-toggle>
-
-    <div class="items">
-      <v-virtual-scroll
-        :bench="5"
-        :items="player.playlist"
-        :item-height="item_height"
-        height="calc(70vh - 80px)"
-        id="scroller"
+    <div class="player-sidebar__header">
+      <v-icon size="small" class="player-sidebar__header-icon">mdi-format-list-bulleted</v-icon>
+      <div class="player-sidebar__header-text">
+        <span class="player-sidebar__title">{{ t('player.playlist') }}</span>
+        <span class="player-sidebar__subtitle" v-text="title"/>
+      </div>
+      <v-spacer/>
+      <v-btn
+        @click="player.playlistVisible = false"
+        variant="text"
+        icon
+        size="small"
+        density="comfortable"
       >
-        <template v-slot:default="{ item, index }">
-          <PlaylistItem
-            @play="play(index)"
-            :video="item"
-            :index="index"
-            :key="item.id"
-          ></PlaylistItem>
-        </template>
-      </v-virtual-scroll>
+        <v-icon size="small">mdi-close</v-icon>
+      </v-btn>
     </div>
-  </v-card>
+
+    <div class="player-sidebar__modes">
+      <v-btn-toggle
+        v-model="player.playlistMode"
+        color="primary"
+        class="player-sidebar__mode-toggle"
+        multiple
+        rounded="pill"
+        density="compact"
+        variant="outlined"
+      >
+        <v-btn value="loop" :title="t('player.playlist_modes.loop')" size="small">
+          <v-icon size="small">mdi-sync</v-icon>
+        </v-btn>
+        <v-btn value="autoplay" :title="t('player.playlist_modes.autoplay')" size="small">
+          <v-icon size="small">mdi-play-pause</v-icon>
+        </v-btn>
+        <v-btn value="shuffle" :title="t('player.playlist_modes.shuffle')" size="small">
+          <v-icon size="small">mdi-shuffle-variant</v-icon>
+        </v-btn>
+      </v-btn-toggle>
+    </div>
+
+    <div class="player-sidebar__body" id="scroller">
+      <template v-if="player.playlist.length > 0">
+        <PlaylistItem
+          v-for="(item, index) in player.playlist"
+          @play="play(index)"
+          :video="item"
+          :index="index"
+          :key="item.id"
+        />
+      </template>
+
+      <div v-else class="player-sidebar__empty">
+        <v-icon size="40" color="medium-emphasis">mdi-playlist-remove</v-icon>
+        <span>{{ t('playlists.no_videos_added') }}</span>
+      </div>
+    </div>
+    </aside>
+  </v-theme-provider>
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
+import {computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import {useEventBus} from '@/utils/eventBus'
 import {useI18n} from 'vue-i18n'
@@ -70,16 +74,10 @@ import _ from 'lodash'
 
 const emit = defineEmits(['play'])
 
-// Stores
 const playerStore = usePlayerStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-// Refs
-const item_height = ref(100)
-const pinned = ref(true)
-
-// Computed
 const player = computed(() => playerStore)
 
 const video = computed(() => {
@@ -93,7 +91,6 @@ const title = computed(() => {
   })
 })
 
-// Methods
 const play = (index) => {
   playerStore.paused = false
   let current = video.value
@@ -117,28 +114,17 @@ const scrollToNowPlaying = () => {
     const scroller = document.getElementById("scroller")
     if (!scroller) return
 
-    const height = scroller.scrollHeight / player.value.playlist.length * player.value.nowPlaying
-    setTimeout(() => {
-      scroller.scrollTo({
-        top: height,
-        left: 0,
-      })
-    })
+    const item = scroller.children[player.value.nowPlaying]
+    if (item) {
+      item.scrollIntoView({block: 'nearest'})
+    }
   }, 0)
 }
 
-const calcItemHeight = () => {
-  let height = window.innerWidth / 100 * 18 / (16 / 9)
-  if (height > 180) height = 180
-  item_height.value = height
-}
-
-// Event handler for scrollToNowPlaying
 const handleScrollToNowPlaying = () => {
   scrollToNowPlaying()
 }
 
-// Watchers
 watch(() => player.value.playlistMode, (mode, oldMode) => {
   if (!mode.includes("shuffle") && oldMode.includes("shuffle")) return
 
@@ -153,17 +139,11 @@ watch(() => player.value.playlistMode, (mode, oldMode) => {
   if (player.value.playlistVisible) scrollToNowPlaying()
 }, {deep: true})
 
-// Lifecycle
 onMounted(() => {
   eventBus.on('scrollToNowPlaying', handleScrollToNowPlaying)
-  window.addEventListener("resize", calcItemHeight)
-
-  // Initial calculation
-  calcItemHeight()
 })
 
 onBeforeUnmount(() => {
   eventBus.off('scrollToNowPlaying', handleScrollToNowPlaying)
-  window.removeEventListener("resize", calcItemHeight)
 })
 </script>

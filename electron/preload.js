@@ -13,6 +13,7 @@ const validSendChannels = [
   'removeEntitiesFromState',
   'stop-playing-video',
   'setFullScreen',
+  'player-ready',
   'setNotification',
   'maximize',
   'unmaximize',
@@ -72,6 +73,20 @@ const validOnChannels = [
 ];
 
 const listenerSubscriptions = new Map();
+let pendingPlayVideo = null;
+const playVideoListeners = new Set();
+
+ipcRenderer.on('play-video', (event, ...args) => {
+  const data = args.length > 0 ? args[0] : null;
+  if (playVideoListeners.size === 0) {
+    pendingPlayVideo = data;
+    return;
+  }
+
+  for (const callback of playVideoListeners) {
+    callback(event, data);
+  }
+});
 
 // Экспортируем API с разными пространствами имен
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -129,20 +144,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
       // Создаем специальный обработчик для play-video
       if (channel === 'play-video') {
-        const subscription = (event, ...args) => {
-          console.log(`[IPC] Received from ${channel}:`, args);
-          // Для play-video передаем event и первый аргумент как данные
-          if (args.length > 0) {
-            callback(event, args[0]); // Передаем event и данные
-          } else {
-            callback(event, null); // Или event и null если нет данных
-          }
+        const subscription = (event, data) => {
+          callback(event, data);
         };
-        ipcRenderer.on(channel, subscription);
-        listenerSubscriptions.set(callback, {channel, subscription});
+        playVideoListeners.add(subscription);
+        listenerSubscriptions.set(callback, {channel, subscription, isPlayVideo: true});
+
+        if (pendingPlayVideo !== null) {
+          const buffered = pendingPlayVideo;
+          pendingPlayVideo = null;
+          callback(null, buffered);
+        }
 
         return () => {
-          ipcRenderer.removeListener(channel, subscription);
+          playVideoListeners.delete(subscription);
           listenerSubscriptions.delete(callback);
         };
       } else {
@@ -167,7 +182,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeListener: (channel, callback) => {
     const entry = listenerSubscriptions.get(callback);
     if (entry && entry.channel === channel) {
-      ipcRenderer.removeListener(channel, entry.subscription);
+      if (entry.isPlayVideo) {
+        playVideoListeners.delete(entry.subscription);
+      } else {
+        ipcRenderer.removeListener(channel, entry.subscription);
+      }
       listenerSubscriptions.delete(callback);
     }
   },
@@ -178,11 +197,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       // Специальная обработка для play-video
       if (channel === 'play-video') {
         ipcRenderer.once(channel, (event, ...args) => {
-          if (args.length > 0) {
-            callback(event, args[0]);
-          } else {
-            callback(event, null);
-          }
+          callback(event, args.length > 0 ? args[0] : null);
         });
       } else {
         ipcRenderer.once(channel, (event, ...args) => callback(...args));

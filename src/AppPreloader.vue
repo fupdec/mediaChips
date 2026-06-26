@@ -3,6 +3,7 @@
     :class="{
       'not-macos': !isMac,
       'player-active': player.active,
+      'player-window-app': isPlayerWindow,
       'electron-win': isWin && isElectron,
       'sfw-mode': settingsStore.sfwMode === '1',
     }"
@@ -22,7 +23,7 @@
     </template>
 
     <Player v-show="isPlayerShow"/>
-    <ImageViewer/>
+    <ImageViewer v-if="!isPlayerWindow"/>
 
     <v-main
       v-if="isAppReady && !isPlayerWindow"
@@ -40,7 +41,7 @@
           :class="[addedTopClasses, {'main-scroll-inner--settings': isSettingsPage}]"
           class="main-scroll-inner"
         >
-          <router-view :key="route.fullPath + upd"/>
+          <router-view />
 
           <div
             v-if="(settingsStore.bottomBar == '1' || mobile) && !isSettingsPage"
@@ -52,14 +53,14 @@
       <div id="main-drop-target" class="main-drop-target"></div>
     </v-main>
 
-    <HoverImage/>
+    <HoverImage v-if="!isPlayerWindow"/>
 
     <template v-if="!isPlayerWindow">
       <NotificationsPool/>
       <AutoUpdater/>
     </template>
 
-    <Dialogs/>
+    <Dialogs v-if="!isPlayerWindow"/>
 
     <v-overlay :model-value="isPlayerWindow && !isAppReady"
       :opacity="1">
@@ -73,7 +74,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onBeforeUnmount} from "vue"
+import {ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent} from "vue"
 import {useRoute} from "vue-router"
 import {useDisplay} from "vuetify"
 import {useI18n} from 'vue-i18n'
@@ -96,15 +97,16 @@ import AppBar from "@/components/app/AppBar.vue"
 import SideBar from "@/components/app/SideBar.vue"
 import BottomBar from "@/components/app/BottomBar.vue"
 import Player from "@/components/app/Player.vue"
-import ImageViewer from "@/components/app/ImageViewer.vue"
-import HoverImage from "@/components/app/HoverImage.vue"
 import NotificationsPool from "@/components/app/NotificationsPool.vue"
 import ContextMenu from "@/components/app/ContextMenu.vue"
 import AutoUpdater from "@/components/app/AutoUpdater.vue"
-import Dialogs from "@/components/app/Dialogs.vue"
 import {useAppUpdater} from '@/composable/useAppUpdater'
 import {useAppZoom} from '@/composable/useAppZoom'
 import {useAppTheme} from '@/composable/useAppTheme'
+
+const Dialogs = defineAsyncComponent(() => import('@/components/app/Dialogs.vue'))
+const ImageViewer = defineAsyncComponent(() => import('@/components/app/ImageViewer.vue'))
+const HoverImage = defineAsyncComponent(() => import('@/components/app/HoverImage.vue'))
 
 const settingsStore = useSettingsStore()
 const store = useAppStore()
@@ -246,9 +248,55 @@ let unsubscribeLockApp
 let unsubscribeZoomChanged
 let thumbBroadcastChannel
 
+function setupPlayerElectronListeners() {
+  if (!store.isElectron || !window.electronAPI?.on) return
+
+  window.electronAPI.on("getItemsFromDb", (event, data) => {
+    eventBus.emit("getItemsFromDb", data)
+  })
+  window.electronAPI.on("updateVideoFrames", (event, id) => {
+    itemsStore.refreshThumb(id, {broadcast: false})
+  })
+  window.electronAPI.on("removeEntitiesFromState", (event, data) => {
+    eventBus.emit("removeEntitiesFromState", data)
+  })
+
+  window.addEventListener('resize', saveWindowSize)
+}
+
+function notifyPlayerReady() {
+  if (store.isElectron && window.electronAPI?.send) {
+    window.electronAPI.send('player-ready')
+  }
+}
+
+function loadPlayerBackgroundData() {
+  loadList("/api/mediaType", "mediaTypes").catch(() => {})
+  getMachineId().catch(() => {})
+}
+
 /* ------------------------- MOUNTED ------------------------- */
 
 onMounted(async () => {
+  if (isPlayerWindow.value) {
+    setupPlayerElectronListeners()
+    isAppReady.value = true
+    notifyPlayerReady()
+
+    const settingsPromise = initSettings()
+      .then(() => {
+        applyTheme()
+        applyLocale()
+      })
+      .catch(() => {
+        store.isServerError = true
+      })
+
+    loadPlayerBackgroundData()
+    await settingsPromise
+    return
+  }
+
   await initSettings()
 
   if (store.isElectron && window.electronAPI?.updater) {
@@ -314,20 +362,10 @@ onMounted(async () => {
   // setInterval(clearConsole, 1000 * 60 * 5)
 
   if (store.isElectron) {
-    window.electronAPI.on("getItemsFromDb", (event, data) => {
-      eventBus.emit("getItemsFromDb", data)
-    })
-    window.electronAPI.on("updateVideoFrames", (event, id) => {
-      itemsStore.refreshThumb(id, {broadcast: false})
-    })
-    window.electronAPI.on("removeEntitiesFromState", (event, data) => {
-      eventBus.emit("removeEntitiesFromState", data)
-    })
+    setupPlayerElectronListeners()
 
     unsubscribeAboutApp = window.electronAPI.on('aboutApp', handleAboutApp)
     unsubscribeLockApp = window.electronAPI.on('lockApp', handleLockApp)
-
-    window.addEventListener('resize', saveWindowSize)
   }
 })
 
@@ -356,6 +394,17 @@ html,
 body {
   overflow: hidden;
   height: 100%;
+}
+
+.player-window-app {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+
+  .v-application__wrap {
+    min-height: 100%;
+    height: 100%;
+  }
 }
 
 .reduced-top {

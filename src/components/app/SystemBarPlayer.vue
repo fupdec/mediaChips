@@ -96,6 +96,7 @@ onMounted(() => {
   overflow: hidden;
   -webkit-app-region: drag;
   width: 100% !important;
+  position: relative;
 
   .app-system-bar-title {
     position: absolute !important;

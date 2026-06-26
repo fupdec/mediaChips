@@ -1,17 +1,16 @@
 <template>
-  <v-dialog
-    @update:model-value="closePlayer"
-    :model-value="isActive"
-    :persistent="isPlayerWindow"
-    :content-class="playerDialogClass"
-    width="2000"
-    no-click-animation
-    eager
+  <component
+    :is="isPlayerWindow ? 'div' : 'v-dialog'"
+    v-bind="playerWrapperProps"
   >
     <div
       @mousedown="stopSmoothScroll($event)"
       @mousemove="moveOverPlayer"
-      :class="{ fullscreen: player.fullscreen , 'no-cursor':!player.isControlsVisible}"
+      :class="{
+        fullscreen: player.fullscreen,
+        'no-cursor': !player.isControlsVisible,
+        'player--window': isPlayerWindow,
+      }"
       class="player"
       ref="player"
       id="player"
@@ -21,28 +20,40 @@
         v-show="!player.fullscreen"
       ></SystemBarPlayer>
 
-      <div class="player-wrapper">
-        <v-btn v-if="!isPlayerWindow && !player.fullscreen"
-          @click="closePlayer"
-          class="player-close-btn"
-          variant="text"
-          color="white"
-          size="x-small"
-          icon
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+      <div
+        class="player-body"
+        :class="{
+          'player-body--marks': player.marksVisible,
+          'player-body--playlist': player.playlistVisible,
+        }"
+      >
+        <Marks
+          @removeMark="removeMark"
+          ref="marks"
+        />
 
-        <div
-          @click="togglePause"
-          @dblclick="toggleFullscreen"
-          @click.middle="toggleFullscreen"
-          @mousedown="clickOnVideo($event)"
-          @wheel="changeVolume"
-          tabindex="-1"
-          :class="{ 'playback-error': showPlaybackError }"
-          class="video-wrapper"
-        >
+        <div class="player-main">
+          <v-btn v-if="!isPlayerWindow && !player.fullscreen"
+            @click="closePlayer"
+            class="player-close-btn"
+            variant="text"
+            color="white"
+            size="x-small"
+            icon
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+
+          <div
+            @click="togglePause"
+            @dblclick="toggleFullscreen"
+            @click.middle="toggleFullscreen"
+            @mousedown="clickOnVideo($event)"
+            @wheel="changeVolume"
+            tabindex="-1"
+            :class="{ 'playback-error': showPlaybackError }"
+            class="video-wrapper"
+          >
           <video ref="videoPlayer"
             autoplay/>
 
@@ -95,29 +106,29 @@
           </div>
         </div>
 
-        <Controls
-          @toggleFullscreen="toggleFullscreen"
-          @togglePictureInPicture="togglePictureInPicture"
-          @play="playVideoObject($event)"
-          @changeVolume="changeVolume($event)"
-          @showControls="showControls"
-          @addMark="openAddingMark"
-          @removeMark="removeMark"
-          @close="closePlayer"
-          @updateVideo="updateItemVideo"
-          ref="controls"
-        />
+          <Controls
+            @toggleFullscreen="toggleFullscreen"
+            @togglePictureInPicture="togglePictureInPicture"
+            @play="playVideoObject($event)"
+            @changeVolume="changeVolume($event)"
+            @showControls="showControls"
+            @addMark="openAddingMark"
+            @removeMark="removeMark"
+            @close="closePlayer"
+            @updateVideo="updateItemVideo"
+            ref="controls"
+          />
+        </div>
+
+        <Playlist @play="playVideoObject($event)"/>
       </div>
-      <Playlist @play="playVideoObject($event)"/>
-      <Marks @removeMark="removeMark"
-        ref="marks"/>
       <DialogMarkAdding
         v-if="dialogsStore.markAdding.show"
         @togglePause="togglePause"
         @addMark="addMark($event)"
       />
     </div>
-  </v-dialog>
+  </component>
 </template>
 
 <script setup>
@@ -140,6 +151,7 @@ import {useEventBus} from '@/utils/eventBus'
 import path from "path-browserify"
 import {useRoute} from "vue-router";
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {buildMarkPayload} from '@/utils/markAdding'
 import {isWinElectronUi} from '@/utils/debugWinElectronUi'
 
 const appStore = useAppStore()
@@ -168,8 +180,26 @@ const isActive = computed(() => isPlayerWindow.value || playerStore.active)
 const playerDialogClass = computed(() => {
   if (!isPlayerWindow.value) return 'dialog-player'
   return isWinElectronUi()
-    ? 'player-separate-window player-separate-window--win'
-    : 'player-separate-window'
+    ? 'player-standalone--win'
+    : ''
+})
+
+const playerWrapperProps = computed(() => {
+  if (isPlayerWindow.value) {
+    return {
+      class: ['player-standalone', playerDialogClass.value].filter(Boolean),
+    }
+  }
+
+  return {
+    'onUpdate:modelValue': closePlayer,
+    modelValue: isActive.value,
+    persistent: false,
+    contentClass: playerDialogClass.value,
+    width: 2000,
+    noClickAnimation: true,
+    eager: true,
+  }
 })
 const SETTINGS = computed(() => settingsStore)
 const reg = computed(() => registrationStore)
@@ -312,7 +342,7 @@ const loadSrc = async (video, start_time) => {
   updateItemVideo(video.id)
 
   playerStore.playbackError = false // скрываем ошибки
-  dialogsStore.markAdding.show = false // скрываем диалог добавления метки
+  dialogsStore.closeMarkAdding()
 
   if (!reg.value && playerStore.nowPlaying > 14) {
     playerStore.player.src = ""
@@ -582,65 +612,65 @@ const showControls = () => {
 }
 
 const openAddingMark = (type) => {
-  dialogsStore.markAdding.time = playerStore.currentTime
-  dialogsStore.markAdding.type = type || 'favorite'
-  dialogsStore.markAdding.show = true
+  dialogsStore.openMarkAdding({
+    time: playerStore.currentTime,
+    type: type || 'favorite',
+  })
 }
 
-const addMark = async (data) => {
-  let mark = {
-    type: dialogsStore.markAdding.type,
-    time: dialogsStore.markAdding.time,
-    end: dialogsStore.markAdding.end,
+const addTagToMedia = async (tagId, metaId) => {
+  const response = await axios.post(apiUrl.value + '/api/TagsInMedia/createOne', {
     mediaId: video.value.id,
+    tagId,
+    metaId: metaId || appStore.getTagById(tagId)?.metaId,
+  })
+
+  if (response.data?.[1]) {
+    $operable.setNotification({
+      title: t('player.tag_added_to_video'),
+      type: 'success',
+      icon: 'tag',
+    })
   }
 
-  mark = {...mark, ...data}
+  updateItemVideo(video.value.id)
+}
 
-  const addTag = async () => {
-    try {
-      await axios({
-        method: "post",
-        url: apiUrl.value + "/api/tagsInMedia/createOne",
-        data: {
-          mediaId: video.value.id,
-          tagId: data.tagId,
-          metaId: dialogsStore.markAdding.meta?.id,
-        },
-      }).then((res) => {
-        if (res.data[1]) {
-          $operable.setNotification({
-            title: t('player.tag_added_to_video'),
-            type: 'success',
-            icon: 'tag',
-          })
-        }
-      })
-      updateItemVideo(video.value.id)
-    } catch (e) {
-      console.log(e)
-    }
-  }
+const addMark = async (data = {}) => {
+  if (!video.value?.id) return
+
+  const adding = dialogsStore.markAdding
+  dialogsStore.setMarkAddingSubmitting(true)
+
+  const mark = buildMarkPayload({
+    adding,
+    data,
+    mediaId: video.value.id,
+  })
 
   try {
-    await axios({
-      method: "post",
-      url: apiUrl.value + "/api/mark",
-      data: mark,
-    })
+    await axios.post(apiUrl.value + '/api/mark', mark)
+
+    if (mark.tagId) {
+      await addTagToMedia(mark.tagId, adding.meta?.id)
+    }
 
     playerStore.changePlayerStatusText({
       text: t('player.mark_added'),
-      icon: "tooltip-plus",
+      icon: 'tooltip-plus',
     })
 
-    if (data.tagId) {
-      await addTag()
-    }
-
     await getMarks(video.value)
+    dialogsStore.closeMarkAdding()
   } catch (e) {
-    console.log(e)
+    console.error(e)
+    $operable.setNotification({
+      type: 'error',
+      title: t('player.mark_dialog.add_failed'),
+      text: e?.response?.data?.message || e?.message,
+    })
+  } finally {
+    dialogsStore.setMarkAddingSubmitting(false)
   }
 }
 
@@ -752,7 +782,8 @@ const initPlayingVideo = (video, videos, time) => {
   window.addEventListener("keydown", handleKey);
 
   // Загружаем метаданные
-  const url = `/api/MetaInMediaType?mediaTypeId=${getDefaultMediaTypeId(appStore.mediaTypes)}`
+  const mediaTypeId = video.mediaTypeId || getDefaultMediaTypeId(appStore.mediaTypes)
+  const url = `/api/MetaInMediaType?mediaTypeId=${mediaTypeId}`
   axios
     .get(apiUrl.value + url)
     .then((res) => {
@@ -843,30 +874,32 @@ watch(() => playerStore.volume, (newValue, oldValue) => {
 <style lang="scss">
 .dialog-player {
   border-radius: 15px;
-}
-
-.player-separate-window {
-  width: 100% !important;
-  max-height: 100% !important;
-  height: 100%;
-  max-width: 100% !important;
-  overflow-y: visible;
-  margin: 0 !important;
 
   .player {
-    border-radius: 0 !important;
+    min-height: 50vh;
+  }
+}
+
+.player-standalone {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+
+  .player {
+    height: 100%;
+    border-radius: 0;
   }
 
   .player .video-wrapper {
     max-height: 100%;
-  }
-
-  .status-text {
-    top: 28px;
+    min-height: 0;
   }
 }
 
-.player-separate-window--win {
+.player-standalone--win {
   --player-window-radius: 8px;
   overflow: hidden;
   border-radius: var(--player-window-radius);
@@ -879,7 +912,7 @@ watch(() => playerStore.volume, (newValue, oldValue) => {
 }
 
 .not-macos {
-  .player-separate-window {
+  .player-standalone {
     .status-text {
       left: 0;
     }
