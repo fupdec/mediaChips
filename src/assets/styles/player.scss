@@ -707,6 +707,10 @@
   &--missing {
     opacity: 0.45;
     pointer-events: none;
+
+    img {
+      filter: saturate(0.1);
+    }
   }
 
   &--locked {
