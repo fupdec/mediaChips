@@ -30,6 +30,7 @@ export const usePlayerStore = defineStore('player', {
     is_mark_hover: false,
     metadata: {},
     is_file_exists: false,
+    isAudioMode: false,
 
     isPlaylistVisible: false,
     nowPlaying: 0,
@@ -42,6 +43,7 @@ export const usePlayerStore = defineStore('player', {
   }),
   actions: {
     trackCurrentTime() {
+      clearInterval(this.currentTimeTimeout)
       let timeout = 100
       if (this.duration > 200) timeout = 1000
       this.currentTimeTimeout = setInterval(() => {

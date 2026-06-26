@@ -13,6 +13,16 @@ export const isImageMediaType = (mediaType) => getMediaTypeKey(mediaType) === ME
 
 export const isAudioMediaType = (mediaType) => getMediaTypeKey(mediaType) === MEDIA_TYPE_AUDIO
 
+const AUDIO_EXTENSIONS = new Set([
+  '.mp3', '.wav', '.flac', '.ogg', '.m4a', '.aac', '.opus', '.wma',
+])
+
+export const isAudioFilePath = (filePath) => {
+  if (!filePath) return false
+  const ext = String(filePath).slice(String(filePath).lastIndexOf('.')).toLowerCase()
+  return AUDIO_EXTENSIONS.has(ext)
+}
+
 export const isTextMediaType = (mediaType) => getMediaTypeKey(mediaType) === MEDIA_TYPE_TEXT
 
 export const isEditableMediaType = (mediaType) =>

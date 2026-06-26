@@ -101,11 +101,11 @@ const play = (index) => {
   if (player.value.playlistMode.includes("shuffle")) {
     let indexes = []
     for (let i = 0; i < player.value.playlist.length; i++) indexes.push(i)
-    playerStore.player.playlistShuffle = _.shuffle(indexes)
-    const i = player.value.playlistShuffle.indexOf(index)
-    player.value.playlistShuffle.splice(i, 1)
-    player.value.playlistShuffle.unshift(index)
-    emit("play", {n: player.value.playlist[player.value.playlistShuffle[index]], o: current})
+    playerStore.playlistShuffle = _.shuffle(indexes)
+    const i = playerStore.playlistShuffle.indexOf(index)
+    playerStore.playlistShuffle.splice(i, 1)
+    playerStore.playlistShuffle.unshift(index)
+    emit("play", {n: player.value.playlist[index], o: current})
     if (player.value.playlistVisible) scrollToNowPlaying()
   } else {
     emit("play", {n: player.value.playlist[index], o: current})
@@ -146,10 +146,9 @@ watch(() => player.value.playlistMode, (mode, oldMode) => {
   let current = video.value
   for (let i = 0; i < player.value.playlist.length; i++) index.push(i)
 
-  playerStore.player.playlistShuffle = _.shuffle(index)
-  playerStore.player.nowPlaying = player.value.playlistShuffle[0]
-
-  emit("play", {n: video.value, o: current})
+  playerStore.playlistShuffle = _.shuffle(index)
+  const nextIndex = playerStore.playlistShuffle[0]
+  emit("play", {n: player.value.playlist[nextIndex], o: current})
   if (player.value.playlistVisible) scrollToNowPlaying()
 }, {deep: true})
 

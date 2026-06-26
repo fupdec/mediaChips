@@ -194,11 +194,7 @@ watch(assigned, (arr) => {
 
 // Lifecycle
 onMounted(() => {
-  eventBus.on('updateMarkImage', (event) => {
-    handleUpdateMarkImage(event.detail)
-  })
-
-  // Initial load
+  eventBus.on('updateMarkImage', handleUpdateMarkImage)
   getThumbs()
 })
 

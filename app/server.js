@@ -531,6 +531,29 @@ function resolveFilePath(filePath) {
   return null;
 }
 
+const STREAM_MIME_TYPES = {
+  '.mp4': 'video/mp4',
+  '.m4v': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ogv': 'video/ogg',
+  '.ogg': 'audio/ogg',
+  '.mkv': 'video/x-matroska',
+  '.avi': 'video/x-msvideo',
+  '.mov': 'video/quicktime',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.flac': 'audio/flac',
+  '.m4a': 'audio/mp4',
+  '.aac': 'audio/aac',
+  '.opus': 'audio/opus',
+  '.wma': 'audio/x-ms-wma',
+};
+
+function getStreamContentType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return STREAM_MIME_TYPES[ext] || 'application/octet-stream';
+}
+
 // ==================== SPECIAL ENDPOINTS ====================
 app.get('/api/health', (req, res) => {
   console.log('Health check from:', req.headers.origin || 'unknown origin');
@@ -787,6 +810,7 @@ router.get('/api/video/:id', (req, res) => {
     const videoStat = fs.statSync(videoPath);
     const fileSize = videoStat.size;
     const videoRange = req.headers.range;
+    const contentType = getStreamContentType(videoPath);
 
     if (videoRange) {
       const parts = videoRange.replace(/bytes=/, "").split("-");
@@ -799,7 +823,7 @@ router.get('/api/video/:id', (req, res) => {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
-        'Content-Type': 'video/mp4',
+        'Content-Type': contentType,
       };
 
       res.writeHead(206, head);
@@ -807,7 +831,7 @@ router.get('/api/video/:id', (req, res) => {
     } else {
       const head = {
         'Content-Length': fileSize,
-        'Content-Type': 'video/mp4',
+        'Content-Type': contentType,
       };
 
       res.writeHead(200, head);
