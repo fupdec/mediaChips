@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-if="dialog" @input="close" :value="dialog" width="800" scrollable>
     <v-card>
-      <DialogHeader @close="close" :header="$t('items.scrape_info')" closable />
+      <DialogHeader @close="close" :header="$t('actions.scrape_info')" closable />
 
       <v-progress-linear
         v-if="progress < 99"

@@ -7,7 +7,7 @@
     scrollable
   >
     <v-card>
-      <DialogHeader @close="dialogsStore.scraper.show = false" :header="t('items.scrape_info')" closable/>
+      <DialogHeader @close="dialogsStore.scraper.show = false" :header="t('actions.scrape_info')" closable/>
 
       <v-card-text class="py-6">
         <form @submit.prevent="searchPerformer()">
