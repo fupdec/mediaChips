@@ -55,7 +55,7 @@ import {ref, computed, onMounted, watch, useAttrs} from 'vue'
 import {foundByChars} from '@/services/formatUtils'
 import {useSettingsStore} from '@/stores/settings'
 import CountryFlag from 'vue-country-flag-next'
-import Countries from '@/assets/Countries.js'
+import Countries from '@/assets/Countries'
 
 const attrs = useAttrs()
 

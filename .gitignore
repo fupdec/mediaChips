@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
 /dist
+/.electron-build
 /app_storage
 /models
 /databases

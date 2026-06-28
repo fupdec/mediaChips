@@ -12,7 +12,10 @@
   "repository": "github:fupdec/MediaChips",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vue-tsc --noEmit && vite build",
+    "type-check": "vue-tsc --noEmit && npm run type-check:electron",
+    "type-check:electron": "tsc -p tsconfig.electron.json --noEmit",
+    "build:electron": "tsc -p tsconfig.electron.json && cp .electron-build/*.js electron/",
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
@@ -21,7 +24,7 @@
     "server-dev": "nodemon --watch app/server.js --watch api app/server.js",
     "electron": "electron .",
     "electron:gpu-debug": "electron . --in-process-gpu",
-    "preelectron": "npm run rebuild:electron",
+    "preelectron": "npm run build:electron && npm run rebuild:electron",
     "preelectron:gpu-debug": "npm run rebuild:electron",
     "download-parser-model": "node scripts/download-parser-model.js",
     "prepack": "npm run download-parser-model",
@@ -91,15 +94,19 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^26.0.1",
     "@vitejs/plugin-vue": "^6.0.2",
     "electron": "^42.5.0",
     "electron-builder": "^26.0.12",
     "jsdom": "^29.1.1",
     "nodemon": "^3.1.14",
     "sass-embedded": "^1.95.1",
+    "typescript": "^6.0.3",
     "vite": "^8.1.0",
     "vite-plugin-vuetify": "^2.1.2",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "vue-tsc": "^3.3.5"
   },
   "browserslist": [
     "> 1%",

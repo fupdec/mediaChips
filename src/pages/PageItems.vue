@@ -9,7 +9,7 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onBeforeUnmount} from 'vue'
 import {useRoute} from 'vue-router'
 import LayoutItems from '@/layouts/LayoutItems.vue'
@@ -17,6 +17,7 @@ import {useEventBus} from "@/utils/eventBus"
 
 import {useItemsStore} from '@/stores/items'
 import {useAppStore} from '@/stores/app'
+import type {ItemsPageType} from '@/types/itemsPage'
 
 const itemsStore = useItemsStore()
 const appStore = useAppStore()
@@ -27,24 +28,27 @@ const upd = ref(0)
 
 const env = computed(() => itemsStore.environment)
 
-const readQueryId = (key) => {
+const readQueryId = (key: string): number | null => {
   const value = route.query[key]
+  if (Array.isArray(value)) {
+    return value[0] ? Number(value[0]) : null
+  }
   return value ? Number(value) : null
 }
 
-const mediaTypeId = computed(() => readQueryId('mediaTypeId'))
-const metaId = computed(() => readQueryId('metaId'))
-const tagId = computed(() => readQueryId('tagId'))
-const tabId = computed(() => readQueryId('tabId'))
+const mediaTypeId = computed(() => readQueryId('mediaTypeId') ?? undefined)
+const metaId = computed(() => readQueryId('metaId') ?? undefined)
+const tagId = computed(() => readQueryId('tagId') ?? undefined)
+const tabId = computed(() => readQueryId('tabId') ?? undefined)
 
-const itemsType = computed(() => {
+const itemsType = computed((): ItemsPageType => {
   if (route.query.mediaTypeId || route.path.startsWith('/media')) {
     return 'media'
   }
   if (route.query.metaId || route.path.startsWith('/meta')) {
     return 'tag'
   }
-  return itemsStore.type || 'media'
+  return (itemsStore.type as ItemsPageType) || 'media'
 })
 
 function applyRouteContext() {

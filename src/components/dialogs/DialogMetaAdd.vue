@@ -107,7 +107,7 @@ import {useAppStore} from '@/stores/app'
 import {useNotificationsStore} from '@/stores/notifications'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
-import MetaTypes from '@/assets/MetaTypes.js'
+import MetaTypes from '@/assets/MetaTypes'
 import {apiClient} from '@/services/apiClient'
 
 // Props

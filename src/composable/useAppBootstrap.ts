@@ -1,0 +1,339 @@
+import {ref, onMounted, onBeforeUnmount, nextTick} from 'vue'
+import type { Ref } from 'vue'
+import type { Handler } from 'mitt'
+import {useRoute, useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+import _ from 'lodash'
+import {apiClient} from '@/services/apiClient'
+import {updateConfig} from '@/services/configService'
+import {getWatchedFolders} from '@/services/watcherService'
+import type { WatchedFolderEntry } from '@/services/watcherUtils'
+import {useAppStore} from '@/stores/app'
+import {useSettingsStore} from '@/stores/settings'
+import {useItemsStore, THUMB_BROADCAST_CHANNEL} from '@/stores/items'
+import {useWatcherStore} from '@/stores/watcher'
+import {useRegistrationStore} from '@/stores/registration'
+import {useDialogsStore} from '@/stores/dialogs'
+import {useEventBus} from '@/utils/eventBus'
+import {useWatcher} from '@/composable/Watcher'
+import {useMediaAdding} from '@/composable/AddingMedia'
+import {useAppUpdater} from '@/composable/useAppUpdater'
+import {useAppTheme} from '@/composable/useAppTheme'
+import {useAppZoom} from '@/composable/useAppZoom'
+import type { Meta, Playlist, Tab, Tag } from '@/types/stores'
+import type { MediaType } from '@/types/media'
+
+interface UseAppBootstrapOptions {
+  isPlayerWindow: Ref<boolean>
+  appZoom: ReturnType<typeof useAppZoom> | null
+}
+
+type AppListField = 'mediaTypes' | 'tags' | 'meta' | 'tabs' | 'playlists'
+
+export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOptions) {
+  const route = useRoute()
+  const router = useRouter()
+  const {locale} = useI18n()
+  const store = useAppStore()
+  const settingsStore = useSettingsStore()
+  const itemsStore = useItemsStore()
+  const watcherStore = useWatcherStore()
+  const registrationStore = useRegistrationStore()
+  const dialogsStore = useDialogsStore()
+  const eventBus = useEventBus()
+  const {init: initAppUpdater} = useAppUpdater()
+  const {applyTheme} = useAppTheme()
+  const {updateWatcher} = useWatcher(store.localhost)
+  const {handleAddMedia, cleanupEventListeners} = useMediaAdding()
+
+  const isAppReady = ref(false)
+  const upd = ref(0)
+
+  function cleanupStalePlayerRoute(): void {
+    if (route.query.player && !store.isElectron) {
+      const query = {...route.query}
+      delete query.player
+      void router.replace({query})
+    }
+  }
+
+  async function initSettings(): Promise<void> {
+    try {
+      const res = await apiClient.get<Array<{ option: string; value: string }>>('/api/Setting')
+      const sets = res.data.reduce<Record<string, string>>((a, i) => {
+        a[i.option] = i.value
+        return a
+      }, {})
+
+      settingsStore.updateMultiple(sets)
+      cleanupStalePlayerRoute()
+    } catch {
+      store.isServerError = true
+    }
+  }
+
+  async function loadList(url: string, field: AppListField): Promise<void> {
+    try {
+      const res = await apiClient.get<MediaType[] | Tag[] | Meta[] | Tab[] | Playlist[]>(url)
+      switch (field) {
+        case 'mediaTypes':
+          store.mediaTypes = res.data as MediaType[]
+          break
+        case 'tags':
+          store.tags = res.data as Tag[]
+          break
+        case 'meta':
+          store.meta = res.data as Meta[]
+          break
+        case 'tabs':
+          store.tabs = res.data as Tab[]
+          break
+        case 'playlists':
+          store.playlists = res.data as Playlist[]
+          break
+      }
+    } catch {
+    }
+  }
+
+  function handleUpdateWatcher(): void {
+    updateWatcher(watcherStore.folders as unknown as WatchedFolderEntry[])
+  }
+
+  function applyLocale(): void {
+    locale.value = settingsStore.locale
+    document.documentElement.lang = settingsStore.locale
+  }
+
+  function checkLogin(): void {
+    store.isLocked = settingsStore.passwordProtection == '1'
+  }
+
+  async function getFolders(): Promise<void> {
+    watcherStore.folders = await getWatchedFolders() as typeof watcherStore.folders
+  }
+
+  async function getMachineId(): Promise<void> {
+    try {
+      await registrationStore.ensureMachineId()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.warn('Failed to fetch machine id:', message)
+    }
+  }
+
+  function runAutoRegistration(): void {
+    registrationStore.tryAutoRegisterOnStartup().catch((error) => {
+      console.error('Auto registration failed:', error)
+    })
+  }
+
+  const saveWindowSize = _.debounce(() => {
+    const app_window = isPlayerWindow.value ? 'player' : 'win'
+    const data = {
+      [app_window]: {
+        height: window.outerHeight,
+        width: window.outerWidth,
+      },
+    }
+    void updateConfig(data)
+  }, 500)
+
+  const handleAboutApp = (): void => {
+    dialogsStore.showAbout()
+  }
+
+  const handleLockApp = (): void => {
+    store.isLocked = true
+  }
+
+  const handleThumbBroadcast = (event: MessageEvent<{ id?: number }>): void => {
+    const id = event?.data?.id
+    if (id != null) {
+      itemsStore.refreshThumb(id, {broadcast: false})
+    }
+  }
+
+  const handleUpdateVideoFramesImpl = (id: number): void => {
+    itemsStore.refreshThumb(id, {broadcast: false})
+  }
+
+  const handleUpdateVideoFrames: Handler = (event) => {
+    handleUpdateVideoFramesImpl(Number(event))
+  }
+
+  let unsubscribeAboutApp: (() => void) | void | undefined
+  let unsubscribeLockApp: (() => void) | void | undefined
+  let unsubscribeZoomChanged: (() => void) | void | undefined
+  let thumbBroadcastChannel: BroadcastChannel | null = null
+
+  function setupPlayerElectronListeners(): void {
+    if (!store.isElectron || !window.electronAPI?.on) return
+
+    window.electronAPI.on('getItemsFromDb', (_event, data) => {
+      eventBus.emit('getItemsFromDb', data)
+    })
+    window.electronAPI.on('updateVideoFrames', (_event, id) => {
+      itemsStore.refreshThumb(id as number, {broadcast: false})
+    })
+    window.electronAPI.on('removeEntitiesFromState', (_event, data) => {
+      eventBus.emit('removeEntitiesFromState', data)
+    })
+
+    window.addEventListener('resize', saveWindowSize)
+  }
+
+  function notifyPlayerReady(): void {
+    if (store.isElectron && window.electronAPI?.send) {
+      window.electronAPI.send('player-ready')
+    }
+  }
+
+  function loadPlayerBackgroundData(): void {
+    void loadList('/api/mediaType', 'mediaTypes')
+    void getMachineId()
+  }
+
+  function bindMainAppEventBus(): void {
+    eventBus.on('getMediaTypes', async () => {
+      await loadList('/api/mediaType', 'mediaTypes')
+    })
+    eventBus.on('getTags', async () => {
+      await loadList('/api/tag', 'tags')
+    })
+    eventBus.on('getMeta', async () => {
+      await loadList('/api/meta', 'meta')
+    })
+    eventBus.on('getTabs', async () => {
+      await loadList('/api/tab', 'tabs')
+    })
+    eventBus.on('getPlaylists', async () => {
+      await loadList('/api/playlist', 'playlists')
+    })
+    eventBus.on('updatePage', () => ++upd.value)
+
+    eventBus.on('update:watcher', handleUpdateWatcher)
+    eventBus.on('addMedia', (event) => {
+      void handleAddMedia(typeof event === 'function' ? event as () => void : undefined)
+    })
+    eventBus.on('updateVideoFrames', handleUpdateVideoFrames)
+  }
+
+  async function markAppReady(): Promise<void> {
+    await nextTick()
+    isAppReady.value = true
+
+    await nextTick()
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    await nextTick()
+
+    store.is_app_ready = true
+    runAutoRegistration()
+  }
+
+  async function bootstrapPlayerWindow(): Promise<void> {
+    setupPlayerElectronListeners()
+    store.is_app_ready = true
+    isAppReady.value = true
+    notifyPlayerReady()
+
+    const settingsPromise = initSettings()
+      .then(() => {
+        applyTheme()
+        applyLocale()
+      })
+      .catch(() => {
+        store.isServerError = true
+      })
+
+    loadPlayerBackgroundData()
+    await settingsPromise
+  }
+
+  async function bootstrapMainApp(): Promise<void> {
+    store.is_app_ready = false
+    isAppReady.value = false
+
+    await initSettings()
+
+    if (store.isElectron && window.electronAPI?.updater) {
+      await initAppUpdater({
+        checkAtStartup: settingsStore.checkForUpdatesAtStartup === '1',
+      })
+    }
+
+    applyTheme()
+    applyLocale()
+    checkLogin()
+
+    if (appZoom) {
+      await appZoom.initFromSettings()
+      window.addEventListener('keydown', appZoom.handleKeydown)
+      window.addEventListener('wheel', appZoom.blockPinchZoom, {passive: false})
+
+      if (store.isElectron && window.electronAPI?.on) {
+        unsubscribeZoomChanged = window.electronAPI.on('zoom-changed', (...args: unknown[]) => {
+          void appZoom.syncFromElectron(Number(args[0]))
+        })
+      }
+    }
+
+    await getMachineId()
+    await getFolders()
+
+    await loadList('/api/mediaType', 'mediaTypes')
+    await loadList('/api/tag', 'tags')
+    await loadList('/api/meta', 'meta')
+    await loadList('/api/tab', 'tabs')
+    await loadList('/api/playlist', 'playlists')
+
+    bindMainAppEventBus()
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      thumbBroadcastChannel = new BroadcastChannel(THUMB_BROADCAST_CHANNEL)
+      thumbBroadcastChannel.addEventListener('message', handleThumbBroadcast)
+    }
+
+    await nextTick()
+    await markAppReady()
+
+    if (store.isElectron) {
+      setupPlayerElectronListeners()
+
+      unsubscribeAboutApp = window.electronAPI?.on?.('aboutApp', handleAboutApp)
+      unsubscribeLockApp = window.electronAPI?.on?.('lockApp', handleLockApp)
+    }
+  }
+
+  onMounted(async () => {
+    if (isPlayerWindow.value) {
+      await bootstrapPlayerWindow()
+      return
+    }
+
+    await bootstrapMainApp()
+  })
+
+  onBeforeUnmount(() => {
+    store.is_app_ready = false
+    isAppReady.value = false
+    cleanupEventListeners()
+    eventBus.off('updateVideoFrames', handleUpdateVideoFrames)
+    thumbBroadcastChannel?.removeEventListener('message', handleThumbBroadcast)
+    thumbBroadcastChannel?.close()
+    thumbBroadcastChannel = null
+    window.removeEventListener('resize', saveWindowSize)
+    unsubscribeAboutApp?.()
+    unsubscribeLockApp?.()
+    unsubscribeZoomChanged?.()
+
+    if (appZoom) {
+      window.removeEventListener('keydown', appZoom.handleKeydown)
+      window.removeEventListener('wheel', appZoom.blockPinchZoom)
+    }
+  })
+
+  return {
+    isAppReady,
+  }
+}

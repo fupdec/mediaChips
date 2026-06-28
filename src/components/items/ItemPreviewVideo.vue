@@ -200,7 +200,7 @@ import {setOption} from '@/services/settingsService'
 import {isLikelyBrowserDirectVideo} from '@/utils/transcodeCompatibility'
 import {usePlayerStore} from '@/stores/player'
 import {buildApiUrl} from '@/services/apiClient'
-import {getChunkStart} from '@/utils/liveStreamChunk.js'
+import {getChunkStart} from '@/utils/liveStreamChunk'
 import {resolvePreviewVideoUrl, stopLiveTranscode} from '@/services/transcodeService'
 
 // props

@@ -88,7 +88,7 @@ import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useScraperStore} from '@/stores/scraper'
 import {useAppStore} from '@/stores/app'
-import Countries from "@/assets/Countries.js"
+import Countries from "@/assets/Countries"
 import {cloneDeep} from 'lodash'
 import ScraperSelectImages from "@/components/scraper/ScraperSelectImages.vue";
 import {getMetaName} from "@/utils/metaI18n";

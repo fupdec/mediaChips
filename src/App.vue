@@ -13,22 +13,23 @@
   <app-preloader v-else/>
 </template>
 
-<script setup>
-import {ref, onMounted, provide, watch} from "vue"
+<script setup lang="ts">
+import {ref, onMounted, provide, type Ref} from "vue"
 import AppPreloader from "@/AppPreloader.vue"
 import path from "path-browserify"
 import {useAppStore} from "@/stores/app"
 import AutoConnect from "@/AutoConnect.vue"
 import {resolveApiBaseUrl} from "@/utils/apiBaseUrl"
+import type {AppConfig, ServerConfigPayload, ServerInfo} from "@/types/common"
 
 const isConfigLoaded = ref(false)
 const app = useAppStore()
 
-const isConnected = ref(false);
-const currentServer = ref(null);
-const showManual = ref(false);
-const isDevBrowser = import.meta.env.DEV && !window.electronAPI;
-let connectInFlight = null;
+const isConnected = ref(false)
+const currentServer: Ref<ServerInfo | null> = ref(null)
+const showManual = ref(false)
+const isDevBrowser = import.meta.env.DEV && !window.electronAPI
+let connectInFlight: Promise<void> | null = null
 
 // Dedicated player window is Electron-only.
 const isPlayerWindow = ref(
@@ -118,7 +119,7 @@ function getCurrentOriginServer() {
   }
 }
 
-async function checkServerAvailability(server) {
+async function checkServerAvailability(server: ServerInfo) {
   try {
     const response = await fetch(`${server.url}/api/ping`, {
       signal: AbortSignal.timeout(3000)
@@ -130,7 +131,7 @@ async function checkServerAvailability(server) {
   }
 }
 
-function handleServerConnected(serverInfo) {
+function handleServerConnected(serverInfo: ServerInfo) {
   const serverUrl = serverInfo?.url
     || `http://${serverInfo?.ip || 'localhost'}:${import.meta.env.VITE_PORT || 12321}`
 
@@ -157,7 +158,7 @@ function handleServerConnected(serverInfo) {
   })
 }
 
-async function initializeApp(server) {
+async function initializeApp(server: ServerInfo) {
   console.log('🚀 Initializing app with server:', server.ip);
 
   if (isPlayerWindow.value) {
@@ -177,18 +178,18 @@ async function loadConfig() {
   if (window.electronAPI) {
     console.log('⏳ Loading config from Electron...');
 
-    window.electronAPI.on("config", (config) => {
+    window.electronAPI?.on?.("config", (config: unknown) => {
       if (!isConfigLoaded.value || isPlayerWindow.value) {
         console.log('✅ Config received from Electron');
-        applyConfig(config);
+        applyConfig(config as ServerConfigPayload);
       }
     });
 
     try {
-      const config = await window.electronAPI.invoke('get-config');
+      const config = await window.electronAPI?.invoke?.('get-config');
       if (config) {
         console.log('✅ Config received via get-config');
-        applyConfig(config);
+        applyConfig(config as ServerConfigPayload);
         return;
       }
     } catch (error) {
@@ -241,14 +242,14 @@ async function fetchConfigFromServer() {
   }
 }
 
-function applyConfig(config) {
+function applyConfig(config: ServerConfigPayload) {
   const wasLoaded = isConfigLoaded.value
 
-  app.localhost = resolveApiBaseUrl(config, currentServer.value)
-  app.appVersion = config.appVersion
-  app.dbPath = config.path
-  app.mediaPath = path.join(config.path, 'media')
-  app.databases = config.databases
+  app.localhost = resolveApiBaseUrl(config as AppConfig, currentServer.value)
+  app.appVersion = config.appVersion ?? ''
+  app.dbPath = config.path ?? ''
+  app.mediaPath = path.join(config.path ?? '', 'media')
+  app.databases = config.databases ?? []
   app.config = config
 
   if (!wasLoaded) {

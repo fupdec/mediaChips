@@ -7,7 +7,7 @@
   </component>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {provide} from 'vue'
 import {VDialog} from 'vuetify/components/VDialog'
 import PlayerSurface from '@/components/app/player/PlayerSurface.vue'

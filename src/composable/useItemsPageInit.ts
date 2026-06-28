@@ -1,0 +1,299 @@
+import {ref, computed} from 'vue'
+import {useRoute} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+import _ from 'lodash'
+import {useAppStore} from '@/stores/app'
+import {useItemsStore} from '@/stores/items'
+import {apiClient} from '@/services/apiClient'
+import {getFilterObject} from '@/services/formatUtils'
+import {getFilters as loadSavedFilterRows, getSavedFilters} from '@/services/filterService'
+import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {normalizeSortBy} from '@/utils/mediaSortFilter'
+import type { FilterObject } from '@/types/common'
+import type { MediaType } from '@/types/media'
+import type { AssignedMeta, Meta, SavedFilter } from '@/types/stores'
+import type {
+  ItemsPageInitDeps,
+  ItemsPageStoreUpdates,
+  PageSettingData,
+  PageSettingsRecord,
+  UseItemsPageInitOptions,
+} from '@/types/itemsPage'
+
+export function useItemsPageInit({
+  props,
+  mediaType,
+  meta,
+}: UseItemsPageInitOptions) {
+  const appStore = useAppStore()
+  const itemsStore = useItemsStore()
+  const {t} = useI18n()
+  const route = useRoute()
+
+  const isFiltersReady = ref(false)
+
+  const ITEMS = computed(() => itemsStore)
+  const ENV = computed(() => ITEMS.value.environment)
+  const apiUrl = computed(() => appStore.localhost)
+
+  const updatePageSetting = async (data: PageSettingData): Promise<void> => {
+    await apiClient.put('/api/PageSetting', {
+      data,
+      query: {
+        tagId: props.tagId,
+        mediaTypeId: props.mediaTypeId,
+        metaId: props.metaId,
+        tabId: props.tabId,
+      },
+    })
+  }
+
+  const buildTagPageFilter = (): FilterObject | null => {
+    const index = ITEMS.value.filters.findIndex(
+      (i) => String(i.param) === String(meta.value?.id) && i.lock == true
+    )
+
+    if (index >= 0) {
+      return null
+    }
+
+    const metaIdParam = route.query.metaId ? String(route.query.metaId) : null
+    return getFilterObject({
+      param: metaIdParam,
+      type: 'array',
+      cond: 'in all',
+      lock: true,
+      val: [Number(props.tagId)],
+    })
+  }
+
+  const fetchMeta = async (): Promise<Meta> => {
+    const res = await apiClient.get<Meta>(`/api/meta/${props.metaId}`)
+    return _.cloneDeep(res.data)
+  }
+
+  const fetchMediaType = async (): Promise<MediaType> => {
+    const res = await apiClient.get<MediaType>(`/api/MediaType/${props.mediaTypeId}`)
+    return res.data
+  }
+
+  const fetchSavedFilterBundle = async () => {
+    const res = await apiClient.post<Array<Record<string, unknown>>>('/api/SavedFilter', {
+      name: null,
+      mediaTypeId: ENV.value.media_type_id,
+      metaId: ENV.value.meta_id,
+      tagId: ENV.value.tag_id,
+      tabId: ENV.value.tab_id,
+    })
+
+    const savedFilter = res.data?.[0] as SavedFilter | undefined
+    if (_.isEmpty(savedFilter)) {
+      return {filters: [] as FilterObject[], savedFilter: {} as SavedFilter}
+    }
+
+    const filters = await loadSavedFilterRows(savedFilter.id!)
+    return {filters, savedFilter}
+  }
+
+  const fetchPageSettings = async () => {
+    const res = await apiClient.post<[PageSettingsRecord | null, boolean?]>('/api/PageSetting', {
+      tagId: props.tagId,
+      mediaTypeId: props.mediaTypeId,
+      metaId: props.metaId,
+      tabId: props.tabId,
+    })
+
+    return {
+      settings: res.data?.[0] || null,
+      shouldLinkFilter: Boolean(res.data?.[1]),
+    }
+  }
+
+  const fetchPinnedMeta = async (): Promise<AssignedMeta[]> => {
+    let url = '/api/'
+    if (props.items_type === 'media') {
+      url += `MetaInMediaType?mediaTypeId=${props.mediaTypeId}`
+    } else if (props.items_type === 'tag') {
+      url += `PinnedMeta?metaId=${props.metaId}`
+    }
+
+    const res = await apiClient.get<AssignedMeta[]>(url)
+    return res.data
+  }
+
+  const applyPageSettings = (pageSettings: PageSettingsRecord | null): Partial<ItemsPageStoreUpdates> => {
+    if (!pageSettings) return {}
+
+    const vals = ['page', 'limit', 'size', 'view', 'sortBy', 'sortDir'] as const
+    const updates: Partial<ItemsPageStoreUpdates> = {}
+
+    for (const i of vals) {
+      let value = pageSettings[i]
+      if (value === undefined || value === null) continue
+
+      if (i === 'page' && props.items_type === 'media' && Number(pageSettings.limit) === 101) {
+        value = 1
+      }
+
+      if (i === 'sortBy' && props.items_type === 'media') {
+        value = normalizeSortBy(
+          String(value),
+          props.items_type,
+          mediaType.value,
+          'createdAt',
+        )
+      }
+
+      updates[i] = value as never
+    }
+
+    return updates
+  }
+
+  const getFilters = async (): Promise<void> => {
+    const {filters, savedFilter} = await fetchSavedFilterBundle()
+
+    itemsStore.updateMultiple({
+      filters,
+      savedFilter,
+    })
+
+    if (props.tagId) {
+      const tagFilter = buildTagPageFilter()
+      if (tagFilter) {
+        itemsStore.updateState({
+          key: 'filters',
+          value: [...ITEMS.value.filters, tagFilter],
+        })
+      }
+    }
+
+    itemsStore.updateState({key: 'isFiltersLoaded', value: true})
+  }
+
+  const getPinnedMeta = async (): Promise<void> => {
+    const assigned = await fetchPinnedMeta()
+    itemsStore.updateState({
+      key: 'assigned',
+      value: assigned,
+    })
+    isFiltersReady.value = true
+  }
+
+  const loadSavedFilters = (): void => {
+    getSavedFilters().catch((error) => {
+      console.error('Failed to load saved filters:', error)
+    })
+  }
+
+  const init = async ({
+    disposeListFetching,
+    resetMediaListState: _resetMediaListState,
+    getItemsFromDb,
+  }: ItemsPageInitDeps): Promise<void> => {
+    if (!apiUrl.value) {
+      return
+    }
+    if (props.items_type === 'media' && !props.mediaTypeId) {
+      return
+    }
+    if (props.items_type === 'tag' && !props.metaId) {
+      return
+    }
+
+    disposeListFetching()
+    isFiltersReady.value = false
+
+    const storeUpdates: ItemsPageStoreUpdates = {
+      type: props.items_type,
+      isFiltersLoaded: false,
+    }
+
+    if (props.items_type === 'media') {
+      Object.assign(storeUpdates, {
+        itemsOnPage: [],
+        entities: [],
+        navigationItems: [],
+        totalFiltered: 0,
+      })
+    }
+
+    if (props.items_type === 'tag') {
+      const metaData = await fetchMeta()
+      meta.value = metaData
+      Object.assign(storeUpdates, {
+        meta: metaData,
+        name: metaData.name,
+        icon: metaData.icon,
+      })
+
+      if (!props.tagId && metaData?.id) {
+        await itemsStore.countViewNumber(metaData, 'meta')
+      }
+    } else if (props.items_type === 'media') {
+      const mediaTypeData = await fetchMediaType()
+      mediaType.value = mediaTypeData
+      Object.assign(storeUpdates, {
+        name: getMediaTypeName(mediaTypeData, t),
+        icon: mediaTypeData.icon,
+      })
+    }
+
+    const {filters, savedFilter} = await fetchSavedFilterBundle()
+    Object.assign(storeUpdates, {filters, savedFilter})
+
+    if (props.tagId) {
+      const existingFilters = storeUpdates.filters || []
+      const alreadyLocked = existingFilters.some(
+        (i) => String(i.param) === String(meta.value?.id) && i.lock === true
+      )
+
+      if (!alreadyLocked) {
+        const metaIdParam = route.query.metaId ? String(route.query.metaId) : null
+        storeUpdates.filters = [
+          ...existingFilters,
+          getFilterObject({
+            param: metaIdParam,
+            type: 'array',
+            cond: 'in all',
+            lock: true,
+            val: [Number(props.tagId)],
+          }),
+        ]
+      }
+    }
+
+    const {settings: pageSettings, shouldLinkFilter} = await fetchPageSettings()
+    Object.assign(storeUpdates, applyPageSettings(pageSettings))
+
+    const assigned = await fetchPinnedMeta()
+    storeUpdates.assigned = assigned
+    storeUpdates.isFiltersLoaded = true
+
+    itemsStore.updateMultiple(storeUpdates)
+    isFiltersReady.value = true
+
+    if (
+      props.items_type === 'media' &&
+      pageSettings?.sortBy &&
+      pageSettings.sortBy !== itemsStore.sortBy
+    ) {
+      await updatePageSetting({sortBy: itemsStore.sortBy})
+    }
+
+    if (shouldLinkFilter) {
+      await updatePageSetting({filterId: ITEMS.value.savedFilter?.id})
+    }
+
+    await getItemsFromDb()
+  }
+
+  return {
+    isFiltersReady,
+    updatePageSetting,
+    init,
+    loadSavedFilters,
+    getFilters,
+    getPinnedMeta,
+  }
+}
