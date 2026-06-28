@@ -300,6 +300,7 @@ const filterTextKeys = {
   color: 'settings_labels.appearance.colors',
   path: 'filters.sort.file_path',
   filesize: 'filters.sort.filesize',
+  ext: 'filters.sort.file_format',
   duration: 'filters.sort.duration',
   width: 'filters.sort.width',
   height: 'filters.sort.height',

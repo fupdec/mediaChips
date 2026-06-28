@@ -3,6 +3,7 @@
 import _ from "lodash";
 import * as FilterCols from '../configs/filter-cols.mjs';
 import { parseCountries } from '../../api/utils/country.js'
+import { normalizeExt, parseExtList } from '../../api/utils/ext.js'
 
 const parseItemsFromDb = (items) => {
   const parseTagsAndValues = (item) => {
@@ -66,7 +67,13 @@ const parseItemsFromDb = (items) => {
 
 const resolveMetaId = (param) => {
   if (typeof param === 'number' && Number.isFinite(param)) return param
-  if (typeof param === 'string' && /^\d+$/.test(param)) return Number(param)
+  if (typeof param === 'string') {
+    const trimmed = param.trim()
+    if (!trimmed) return null
+    if (/^\d+$/.test(trimmed)) return Number(trimmed)
+    const num = Number(trimmed)
+    if (Number.isFinite(num) && Number.isInteger(num)) return num
+  }
   return null
 }
 
@@ -185,6 +192,10 @@ const filterItems = (filters_all, type, items, sortBy, direction, find_duplicate
           if (!_.isEmpty(item.country)) {
             tags = parseCountries(item.country)
           }
+        } else if (by === 'ext') {
+          const normalizedExt = normalizeExt(item_val)
+          if (normalizedExt) tags = [normalizedExt]
+          val = parseExtList(val)
         } else if (metaId !== null) {
           tags = item.tags.filter(i => Number(i.metaId) === metaId)
           tags = tags.map(i => i.tagId)

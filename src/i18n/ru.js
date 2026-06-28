@@ -1067,6 +1067,7 @@ const ru = {
       number_of_views: 'Просмотры',
       filesize: 'Размер файла',
       file_path: 'Путь к файлу',
+      file_format: 'Формат файла',
       duration: 'Длительность',
       bitrate: 'Битрейт',
       framerate: 'Частота кадров',

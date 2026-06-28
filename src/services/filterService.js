@@ -1,7 +1,22 @@
 import _ from 'lodash'
 import {parseCountries} from '@/utils/country'
+import {parseExtList} from '@/utils/ext'
 import {useItemsStore} from '@/stores/items'
 import {apiClient} from '@/services/apiClient'
+
+function normalizeFilterParam(param) {
+  if (param === null || param === undefined) return param
+  if (typeof param === 'number' && Number.isFinite(param)) return param
+
+  const trimmed = String(param).trim()
+  if (!trimmed) return param
+  if (/^\d+$/.test(trimmed)) return Number(trimmed)
+
+  const num = Number(trimmed)
+  if (Number.isFinite(num) && Number.isInteger(num)) return num
+
+  return param
+}
 
 export async function getFilters(savedFilterId) {
   if (!savedFilterId) {
@@ -29,7 +44,12 @@ export async function getFilters(savedFilterId) {
           return filterRow
         }
 
-        if (filterRow.type === 'array' && filterRow.param !== 'country') {
+        if (filterRow.param === 'ext') {
+          filterRow.val = parseExtList(filterRow.val)
+          return filterRow
+        }
+
+        if (filterRow.type === 'array' && filterRow.param !== 'country' && filterRow.param !== 'ext') {
           try {
             const tagsResponse = await apiClient.get(
               `/api/TagsInFilterRow?rowId=${filterRow.id}`,
@@ -43,8 +63,8 @@ export async function getFilters(savedFilterId) {
           }
         }
 
-        if (filterRow.param != null && /^\d+$/.test(String(filterRow.param))) {
-          filterRow.param = Number(filterRow.param)
+        if (filterRow.param != null) {
+          filterRow.param = normalizeFilterParam(filterRow.param)
         }
 
         const {createdAt, updatedAt, ...cleanedFilter} = filterRow

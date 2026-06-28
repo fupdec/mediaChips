@@ -105,6 +105,9 @@
           <template v-if="filter.param === 'country'">
             "{{ filter.val ? filter.val.join(', ') : '' }}"
           </template>
+          <template v-else-if="filter.param === 'ext'">
+            "{{ filter.val ? filter.val.join(', ') : '' }}"
+          </template>
           <template v-else>
             "{{ getTagName(filter.param, filter.val) }}"
           </template>

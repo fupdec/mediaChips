@@ -1067,6 +1067,7 @@ const cn = {
       number_of_views: '观看',
       filesize: '文件大小',
       file_path: '文件路径',
+      file_format: '文件格式',
       duration: '时长',
       bitrate: '比特率',
       framerate: '帧率',

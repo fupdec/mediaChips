@@ -1,3 +1,6 @@
+const {resolveMetaId} = require('../utils/metaId')
+const {normalizeExt, parseExtList} = require('../utils/ext')
+
 const MEDIA_COLUMNS = new Set([
   'rating',
   'favorite',
@@ -62,12 +65,6 @@ const NAVIGATION_SELECT = `SELECT
   media.views,
   media.viewedAt,
   videoMetadata.time`
-
-function resolveMetaId(param) {
-  if (typeof param === 'number' && Number.isFinite(param)) return param
-  if (typeof param === 'string' && /^\d+$/.test(param)) return Number(param)
-  return null
-}
 
 function isActiveFilter(filter) {
   const active = filter.active === true || filter.active === 1 || filter.active === '1'
@@ -205,6 +202,84 @@ function buildMetaValueClause(metaId, filter, nextParam) {
   return null
 }
 
+function isTagArrayFilter(filter) {
+  return (filter.type === 'array' || filter.type === 'select')
+    && filter.param !== 'country'
+    && filter.param !== 'ext'
+    && resolveMetaId(filter.param) !== null
+}
+
+function buildExtArrayClause(filter, nextParam) {
+  const {cond, val} = filter
+  const exts = parseExtList(val)
+
+  if (cond === 'is null') {
+    return `(media.ext IS NULL OR media.ext = '')`
+  }
+  if (cond === 'not null') {
+    return `(media.ext IS NOT NULL AND media.ext != '')`
+  }
+  if (!exts.length) return null
+
+  const extKeys = exts.map((ext) => nextParam(ext))
+  const listExpr = extKeys.join(', ')
+  const columnExpr = `LOWER(media.ext)`
+
+  switch (cond) {
+    case 'in':
+      return `${columnExpr} IN (${listExpr})`
+    case 'not in':
+      return `(${columnExpr} NOT IN (${listExpr}) OR media.ext IS NULL OR media.ext = '')`
+    case 'in all':
+      if (exts.length === 1) return `${columnExpr} IN (${listExpr})`
+      return '0 = 1'
+    case 'not in all':
+      if (exts.length === 1) {
+        return `(${columnExpr} != ${extKeys[0]} OR media.ext IS NULL OR media.ext = '')`
+      }
+      return `(${columnExpr} NOT IN (${listExpr}) OR media.ext IS NULL OR media.ext = '')`
+    default:
+      return null
+  }
+}
+
+function canUseTagArrayJoin(filter) {
+  if (!isTagArrayFilter(filter)) return false
+
+  const tagIds = Array.isArray(filter.val)
+    ? filter.val.filter((id) => id !== null && id !== undefined && id !== '')
+    : []
+
+  return (filter.cond === 'in' || filter.cond === 'in all') && tagIds.length > 0
+}
+
+function buildTagArrayJoin(filter, alias, nextParam) {
+  if (!canUseTagArrayJoin(filter)) return null
+
+  const metaId = resolveMetaId(filter.param)
+  const {cond, val} = filter
+  const tagIds = Array.isArray(val) ? val.filter((id) => id !== null && id !== undefined && id !== '') : []
+  const metaKey = nextParam(metaId)
+
+  if (cond === 'in all' && tagIds.length > 1) {
+    const tagsKey = nextParam(tagIds)
+    const countKey = nextParam(tagIds.length)
+    return `INNER JOIN (
+      SELECT mediaId FROM tagsInMedia
+      WHERE metaId = ${metaKey} AND tagId IN (${tagsKey})
+      GROUP BY mediaId
+      HAVING COUNT(DISTINCT tagId) = ${countKey}
+    ) ${alias} ON ${alias}.mediaId = media.id`
+  }
+
+  const tagsKey = nextParam(tagIds.length === 1 ? tagIds[0] : tagIds)
+  if (tagIds.length === 1) {
+    return `INNER JOIN tagsInMedia ${alias} ON ${alias}.mediaId = media.id AND ${alias}.metaId = ${metaKey} AND ${alias}.tagId = ${tagsKey}`
+  }
+
+  return `INNER JOIN tagsInMedia ${alias} ON ${alias}.mediaId = media.id AND ${alias}.metaId = ${metaKey} AND ${alias}.tagId IN (${tagsKey})`
+}
+
 function buildTagArrayClause(metaId, filter, nextParam) {
   const {cond, val} = filter
   const metaKey = nextParam(metaId)
@@ -286,6 +361,7 @@ function buildFilterClause(filter, nextParam) {
 
   if (type === 'array' || type === 'select') {
     if (param === 'country') return null
+    if (param === 'ext') return buildExtArrayClause(filter, nextParam)
     if (metaId === null) return null
     return buildTagArrayClause(metaId, filter, nextParam)
   }
@@ -334,6 +410,10 @@ function canUseSqlMediaFilters(options = {}) {
   for (const filter of filters) {
     if (filter.type === 'string' && filter.cond === 'regex') return false
     if (filter.param === 'country') return false
+    if (canUseTagArrayJoin(filter)) {
+      if (!buildTagArrayJoin(filter, 'tf0', () => ':p0')) return false
+      continue
+    }
     if (!buildFilterClause(filter, () => ':p0')) return false
   }
 
@@ -352,6 +432,9 @@ function buildMediaFilterQuery(filters = [], {mediaTypeId, ids = []} = {}) {
   }
 
   const clauses = ['media.mediaTypeId = :mediaTypeId']
+  const joins = []
+  let joinIndex = 0
+  let needsDistinct = false
 
   if (ids.length) {
     replacements.ids = ids
@@ -359,6 +442,21 @@ function buildMediaFilterQuery(filters = [], {mediaTypeId, ids = []} = {}) {
   }
 
   for (const filter of normalizeActiveFilters(filters)) {
+    const join = buildTagArrayJoin(filter, `tf${joinIndex}`, nextParam)
+    if (join) {
+      joins.push(join)
+      joinIndex += 1
+      if (filter.cond === 'in') {
+        const tagIds = Array.isArray(filter.val)
+          ? filter.val.filter((id) => id !== null && id !== undefined && id !== '')
+          : []
+        if (tagIds.length > 1) {
+          needsDistinct = true
+        }
+      }
+      continue
+    }
+
     const clause = buildFilterClause(filter, nextParam)
     if (!clause) {
       return {ok: false}
@@ -369,6 +467,8 @@ function buildMediaFilterQuery(filters = [], {mediaTypeId, ids = []} = {}) {
   return {
     ok: true,
     whereSql: clauses.join(' AND '),
+    joinSql: joins.join('\n'),
+    needsDistinct,
     replacements,
   }
 }
@@ -393,8 +493,16 @@ function requiresMetadataJoinForFilters(filters = []) {
   return normalizeActiveFilters(filters).some(filterRequiresMetadataJoin)
 }
 
-function getMediaFromClause(needsMetadataJoin) {
-  return needsMetadataJoin ? MEDIA_FROM_JOIN : 'FROM media'
+function getMediaFromClause(needsMetadataJoin, joinSql = '') {
+  const tagJoins = joinSql ? `\n${joinSql}` : ''
+
+  if (needsMetadataJoin) {
+    return `FROM media${tagJoins}
+LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
+LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId`
+  }
+
+  return tagJoins ? `FROM media${tagJoins}` : 'FROM media'
 }
 
 function getSortExpression(sortBy) {

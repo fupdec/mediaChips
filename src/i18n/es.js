@@ -1067,6 +1067,7 @@ const es = {
       number_of_views: 'Vistas',
       filesize: 'Tamaño de archivo',
       file_path: 'Ruta del archivo',
+      file_format: 'Formato de archivo',
       duration: 'Duración',
       bitrate: 'Tasa de bits',
       framerate: 'Frecuencia de cuadros',

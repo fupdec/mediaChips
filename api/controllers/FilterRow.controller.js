@@ -1,5 +1,7 @@
 module.exports = function (db) {
   const { serializeCountries } = require('../utils/country')
+  const {normalizeMetaIdParam, resolveMetaId} = require('../utils/metaId')
+  const {serializeExtList} = require('../utils/ext')
   // Create and Save a new FilterRow
   const create = async function (req, res) {
     try {
@@ -8,11 +10,14 @@ module.exports = function (db) {
       const rowId = req.body.rowId || null
       const filterId = req.body.filterId
 
-      if (filterObj.type == 'array' && filterObj.param !== 'country') {
+      if (filterObj.type == 'array' && filterObj.param !== 'country' && filterObj.param !== 'ext') {
         filterObj.val = null
       }
       if (filterObj.param == 'country' && val) {
         filterObj.val = serializeCountries(val)
+      }
+      if (filterObj.param == 'ext' && val) {
+        filterObj.val = serializeExtList(val)
       }
 
       const allowedFields = ['param', 'type', 'cond', 'val', 'active', 'note', 'lock']
@@ -21,6 +26,10 @@ module.exports = function (db) {
         if (Object.prototype.hasOwnProperty.call(filterObj, key)) {
           payload[key] = filterObj[key]
         }
+      }
+
+      if (payload.param != null) {
+        payload.param = normalizeMetaIdParam(payload.param)
       }
 
       let filterRow
@@ -50,7 +59,7 @@ module.exports = function (db) {
         })
       }
 
-      if (filterObj.type == 'array' && filterObj.param !== 'country') {
+      if (filterObj.type == 'array' && filterObj.param !== 'country' && filterObj.param !== 'ext') {
         await db.TagsInFilterRow.destroy({
           where: {
             rowId: filterRow.id,
@@ -58,12 +67,13 @@ module.exports = function (db) {
         })
 
         if (filterObj.cond?.includes('null') === false && val !== undefined && val !== null && val !== '') {
+          const metaId = resolveMetaId(filterRow.param)
           for (const tagId of val) {
             await db.TagsInFilterRow.findOrCreate({
               where: {
                 tagId,
                 rowId: filterRow.id,
-                metaId: filterRow.param,
+                metaId: metaId ?? filterRow.param,
               },
             })
           }

@@ -1,5 +1,7 @@
 const {Op} = require('sequelize')
 const {parseCountries} = require('../utils/country')
+const {normalizeMetaIdParam} = require('../utils/metaId')
+const {parseExtList} = require('../utils/ext')
 const {
   loadFilteredMediaIds,
   loadMediaPlaylistItems,
@@ -9,8 +11,8 @@ const {
 function normalizeFilterRow(row, tagsByRowId = null) {
   const normalized = {...row}
 
-  if (normalized.param != null && /^\d+$/.test(String(normalized.param))) {
-    normalized.param = Number(normalized.param)
+  if (normalized.param != null) {
+    normalized.param = normalizeMetaIdParam(normalized.param)
   }
 
   if (normalized.type === 'number' || normalized.type === 'rating') {
@@ -23,11 +25,13 @@ function normalizeFilterRow(row, tagsByRowId = null) {
     normalized.active = normalized.active === true || normalized.active === 1 || normalized.active === '1'
   }
 
-  if (normalized.type === 'array' && normalized.param !== 'country') {
+  if (normalized.type === 'array' && normalized.param !== 'country' && normalized.param !== 'ext') {
     const tags = tagsByRowId?.get(normalized.id) || []
     normalized.val = tags.map((tag) => tag.tagId)
   } else if (normalized.param === 'country' && normalized.val) {
     normalized.val = parseCountries(normalized.val)
+  } else if (normalized.param === 'ext' && normalized.val) {
+    normalized.val = parseExtList(normalized.val)
   }
 
   const {createdAt, updatedAt, ...cleaned} = normalized

@@ -1067,6 +1067,7 @@ const en = {
       number_of_views: 'Views',
       filesize: 'Filesize',
       file_path: 'File path',
+      file_format: 'File format',
       duration: 'Duration',
       bitrate: 'Bitrate',
       framerate: 'Framerate',

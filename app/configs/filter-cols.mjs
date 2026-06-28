@@ -101,6 +101,13 @@ export const Cols = {
       "icon": "harddisk",
       "text": "File size",
       "textKey": "filters.sort.filesize"
+    },
+    {
+      "param": "ext",
+      "type": "array",
+      "icon": "file-document-outline",
+      "text": "File format",
+      "textKey": "filters.sort.file_format"
     }
   ],
   "video": [

@@ -200,6 +200,23 @@
             variant="outlined"
           />
         </div>
+
+        <div v-if="parameter === 'ext'"
+          class="pa-1">
+          <v-autocomplete
+            @update:model-value="setValue"
+            :model-value="filter.val"
+            :items="extensionOptions"
+            :disabled="is_locked || !is_value_required"
+            density="compact"
+            variant="outlined"
+            rounded
+            hide-details
+            multiple
+            chips
+            closable-chips
+          />
+        </div>
       </div>
     </v-card>
   </v-form>
@@ -220,6 +237,8 @@ import {
 import MetaInputArray from '@/components/meta/input/MetaInputArray.vue'
 import MetaInputCountry from '@/components/meta/input/MetaInputCountry.vue'
 import MetaInputRating from '@/components/meta/input/MetaInputRating.vue'
+import {getCurrentMediaType} from '@/utils/mediaType'
+import {getExtensionOptions} from '@/utils/ext'
 
 // Props
 const props = defineProps({
@@ -267,6 +286,10 @@ const condition = computed(() => modelFilter.value.cond)
 const is_locked = computed(() => modelFilter.value.lock)
 const isDisabled = computed(() => is_locked.value || (itemsStore.environment.media_type_id && itemsStore.find_duplicates))
 const is_value_required = computed(() => !['is null', 'not null'].includes(condition.value))
+
+const extensionOptions = computed(() =>
+  getExtensionOptions(getCurrentMediaType(appStore.mediaTypes, itemsStore.environment?.media_type_id))
+)
 
 // Methods
 const getParamData = (data) => {
