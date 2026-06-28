@@ -128,6 +128,7 @@ const health = ref({
   duplicates: {byFilesize: 0, byContentHash: 0},
   contentHash: {total: 0, pending: 0, hashed: 0},
   generatedImages: {byType: {}, totalPending: 0},
+  imageThumbs: {total: 0, generated: 0, pending: 0},
   database: {id: null, name: null, bytes: null},
 })
 const missingCount = ref(0)
@@ -203,16 +204,36 @@ const visibleAlerts = computed(() => {
     })
   }
 
-  if (health.value.generatedImages.totalPending > 0) {
+  const videoImageTypes = ['preview', 'grid', 'timeline', 'marks']
+  const videoImagesPending = videoImageTypes.reduce(
+    (sum, key) => sum + Number(health.value.generatedImages.byType?.[key]?.pending || 0),
+    0,
+  )
+  const imageThumbsPending = Number(health.value.imageThumbs?.pending || 0)
+
+  if (videoImagesPending > 0) {
     alerts.push({
       id: 'generated-images',
       type: 'info',
       icon: 'mdi-image-off-outline',
       text: t('home.widgets.health_generated_images_pending', {
-        count: health.value.generatedImages.totalPending,
+        count: videoImagesPending,
       }),
       actionLabel: t('home.widgets.health_open_image_generation'),
       action: openImageGenerationSettings,
+    })
+  }
+
+  if (imageThumbsPending > 0) {
+    alerts.push({
+      id: 'image-thumbs',
+      type: 'info',
+      icon: 'mdi-image-outline',
+      text: t('home.widgets.health_image_thumbs_pending', {
+        count: imageThumbsPending,
+      }),
+      actionLabel: t('home.widgets.health_open_image_thumbs_generation'),
+      action: openImageThumbsGenerationSettings,
     })
   }
 
@@ -256,6 +277,16 @@ function openImageGenerationSettings() {
   })
 }
 
+function openImageThumbsGenerationSettings() {
+  router.push({
+    path: '/settings',
+    query: {
+      tab: 'files',
+      section: 'generate_image_thumbs',
+    },
+  })
+}
+
 function openTasks() {
   eventBus.emit('openTasksMenu')
 }
@@ -272,6 +303,7 @@ async function loadHealth() {
     duplicates: response.data?.duplicates || {byFilesize: 0, byContentHash: 0},
     contentHash: response.data?.contentHash || {total: 0, pending: 0, hashed: 0},
     generatedImages: response.data?.generatedImages || {byType: {}, totalPending: 0},
+    imageThumbs: response.data?.imageThumbs || {total: 0, generated: 0, pending: 0},
     database: response.data?.database || {id: null, name: null, bytes: null},
   }
 }

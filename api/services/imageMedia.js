@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const exifr = require('exifr')
 const {Jimp} = require('jimp')
 
 const THUMB_HEIGHT = 320
@@ -10,13 +11,69 @@ async function writeJpeg(image, outputPath, quality = THUMB_JPEG_QUALITY) {
   await fs.promises.writeFile(outputPath, buffer)
 }
 
+async function readExifOrientation(pathToFile) {
+  try {
+    const orientation = await exifr.orientation(pathToFile)
+    if (Number.isInteger(orientation) && orientation >= 1 && orientation <= 8) {
+      return orientation
+    }
+  } catch {
+    // EXIF is optional; fall back to the default orientation.
+  }
+
+  return 1
+}
+
+function getDisplayDimensions(width, height, orientation) {
+  if ([5, 6, 7, 8].includes(orientation)) {
+    return {width: height, height: width}
+  }
+
+  return {width, height}
+}
+
+async function applyExifOrientation(image, orientation) {
+  switch (orientation) {
+    case 2:
+      await image.flip({horizontal: true, vertical: false})
+      break
+    case 3:
+      await image.rotate(180)
+      break
+    case 4:
+      await image.flip({horizontal: false, vertical: true})
+      break
+    case 5:
+      await image.flip({horizontal: true, vertical: false})
+      await image.rotate(90)
+      break
+    case 6:
+      await image.rotate(90)
+      break
+    case 7:
+      await image.flip({horizontal: true, vertical: false})
+      await image.rotate(270)
+      break
+    case 8:
+      await image.rotate(270)
+      break
+    default:
+      break
+  }
+
+  return image
+}
+
 const getImageMetadata = async (pathToFile) => {
   try {
     const image = await Jimp.read(pathToFile)
+    const orientation = await readExifOrientation(pathToFile)
+    const display = getDisplayDimensions(image.width, image.height, orientation)
+
     return {
-      width: image.width,
-      height: image.height,
-      orientation: 1,
+      width: display.width,
+      height: display.height,
+      orientation,
     }
   } catch (error) {
     console.error(`Image metadata extraction failed for ${pathToFile}:`, error.message)
@@ -33,7 +90,10 @@ const ensureImageThumbDir = (dbPath) => {
 const createImageThumb = async (pathToFile, id, dbPath) => {
   const outputDir = ensureImageThumbDir(dbPath)
   const outputPath = path.join(outputDir, `${id}.jpg`)
-  const image = await Jimp.read(pathToFile)
+  const orientation = await readExifOrientation(pathToFile)
+  let image = await Jimp.read(pathToFile)
+
+  await applyExifOrientation(image, orientation)
 
   if (image.height > THUMB_HEIGHT) {
     await image.resize({h: THUMB_HEIGHT})
@@ -94,4 +154,7 @@ module.exports = {
   createImageThumb,
   ensureImageThumbDir,
   processAndSaveImage,
+  readExifOrientation,
+  applyExifOrientation,
+  getDisplayDimensions,
 }

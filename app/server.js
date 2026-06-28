@@ -293,9 +293,12 @@ const createDirectories = () => {
     const videoSubDirs = ['thumbs', 'marks', 'grids', 'timelines'].map(subDir =>
       path.join(videoPath, subDir)
     );
+    const imageSubDirs = ['thumbs'].map(subDir =>
+      path.join(imagePath, subDir)
+    );
 
     userDirs = [...userDirs, dbPath, mediaPath, metaPath, backupPath,
-      videoPath, imagePath, audioPath, textPath, ...videoSubDirs];
+      videoPath, imagePath, audioPath, textPath, ...videoSubDirs, ...imageSubDirs];
   }
 
   for (let dir of userDirs) {
@@ -678,6 +681,11 @@ app.post('/api/get-file', (req, res) => {
       '.webp': 'image/webp',
       '.bmp': 'image/bmp',
       '.svg': 'image/svg+xml',
+      '.heic': 'image/heic',
+      '.heif': 'image/heif',
+      '.avif': 'image/avif',
+      '.tiff': 'image/tiff',
+      '.tif': 'image/tiff',
       '.mp4': 'video/mp4',
       '.webm': 'video/webm',
       '.ogg': 'video/ogg',
