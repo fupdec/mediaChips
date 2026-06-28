@@ -29,7 +29,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useDialogsStore } from '@/stores/dialogs'
 

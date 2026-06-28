@@ -64,12 +64,15 @@
   </v-theme-provider>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useI18n} from 'vue-i18n'
 import {usePlayerPlaylist} from '@/composable/usePlayerPlaylist'
 import PlaylistItem from '@/components/app/player/PlaylistItem.vue'
+import type {PlayerMark, PlayVideoSwitch} from '@/types/player'
 
-const emit = defineEmits(['play'])
+const emit = defineEmits<{
+  play: [payload: PlayVideoSwitch]
+}>()
 const {t} = useI18n()
 
 const {

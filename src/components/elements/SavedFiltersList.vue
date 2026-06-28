@@ -48,7 +48,7 @@
       <div class="d-flex align-center">
         <FiltersChips
           :key="filter.id"
-          :filters="filter.filters"
+          :filters="filter.filters ?? []"
           readonly
           is-tooltip
         />
@@ -67,13 +67,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { PropType } from 'vue'
 import {useI18n} from 'vue-i18n'
 import FiltersChips from '@/components/elements/FiltersChips.vue'
+import type { SavedFilter } from '@/types/stores'
 
 const props = defineProps({
   filters: {
-    type: Array,
+    type: Array as PropType<SavedFilter[]>,
     default: () => [],
   },
   selectable: {
@@ -97,7 +99,7 @@ const props = defineProps({
 const emit = defineEmits(['apply', 'edit', 'delete'])
 const {t} = useI18n()
 
-const handleClick = (filter) => {
+const handleClick = (filter: SavedFilter) => {
   if (!props.selectable) return
   emit('apply', filter)
 }

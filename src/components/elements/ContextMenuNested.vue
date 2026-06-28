@@ -102,17 +102,21 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { PropType } from 'vue'
 import {useDisplay} from 'vuetify'
 import {useContextMenu} from "@/stores/contextMenu"
+import type { ContextMenuEntry } from '@/types/stores'
 
 const contextMenu = useContextMenu()
 
 const props = defineProps({
-  item: Object,
-  // Добавим проп для родительского контекстного меню, если нужно
+  item: {
+    type: Object as PropType<ContextMenuEntry>,
+    required: true,
+  },
   rootMenu: {
-    type: Object,
+    type: Object as PropType<ContextMenuEntry>,
     required: false
   }
 })
@@ -121,8 +125,8 @@ const emit = defineEmits(['show-parent'])
 
 const {xs} = useDisplay()
 
-const activate = (originalFunction) => {
-  originalFunction()
+const activate = (originalFunction?: (...args: unknown[]) => unknown) => {
+  originalFunction?.()
   contextMenu.show = false
 }
 

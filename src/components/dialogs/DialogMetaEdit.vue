@@ -73,7 +73,7 @@
 
     <DialogDeleteConfirm
       v-if="dialogDeleteMeta"
-      v-model="dialogDeleteMeta"
+      :dialog="dialogDeleteMeta"
       @delete="deleteMeta"
       @close="dialogDeleteMeta=false"
       :text="textDialogDelete"
@@ -81,8 +81,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch, nextTick} from 'vue'
+import type {PropType} from 'vue'
+import type {VFormInstance} from '@/types/vue'
+import {getErrorResponseData} from '@/types/vue'
 import {useDisplay} from 'vuetify'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
@@ -96,6 +99,15 @@ import MetaSettingsArray from '@/components/dialogs/meta/MetaSettingsArray.vue'
 import MetaSettingsRating from '@/components/dialogs/meta/MetaSettingsRating.vue'
 import {apiClient} from '@/services/apiClient'
 import {setNotification} from '@/services/notificationService'
+import type {Meta} from '@/types/stores'
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  action?: () => void | Promise<void>
+}
 
 // Props
 const props = defineProps({
@@ -104,8 +116,8 @@ const props = defineProps({
     default: false
   },
   meta: {
-    type: Object,
-    default: () => ({})
+    type: Object as PropType<Meta>,
+    required: true,
   }
 })
 
@@ -120,7 +132,7 @@ const eventBus = useEventBus()
 const {t} = useI18n()
 
 // Refs
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 const internalDialog = ref(false)
 const dialogIcons = ref(false)
 const dialogDeleteMeta = ref(false)
@@ -134,11 +146,11 @@ const metaIcon = ref('shape')
 const isLink = ref(false)
 
 // Settings
-const rating = ref({})
-const settingsArray = ref({})
+const rating = ref<Record<string, unknown>>({})
+const settingsArray = ref<Record<string, unknown>>({})
 
 // Buttons for DialogHeader
-const buttons = ref([])
+const buttons = ref<DialogHeaderButton[]>([])
 
 // Computed
 const textDialogDelete = computed(() => {
@@ -176,17 +188,17 @@ const initMeta = () => {
   if (!props.meta) return
 
   name.value = props.meta.name || ''
-  singular.value = props.meta.nameSingular || props.meta.name || ''
-  metaHint.value = props.meta.hint || ''
-  metaIcon.value = props.meta.icon || 'shape'
+  singular.value = String(props.meta.nameSingular ?? props.meta.name ?? '')
+  metaHint.value = String(props.meta.hint ?? '')
+  metaIcon.value = String(props.meta.icon || 'shape')
 }
 
-const changeIcon = (icon) => {
+const changeIcon = (icon: string) => {
   dialogIcons.value = false
   metaIcon.value = icon
 }
 
-const nameRules = (value) => {
+const nameRules = (value: string) => {
   if (!value || value.trim().length === 0) {
     return 'Name is required'
   }
@@ -241,8 +253,9 @@ const applyChanges = async () => {
     console.error('Error updating meta:', error)
 
     let errorMessage = 'Failed to update meta'
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message
+    const responseMessage = getErrorResponseData<{ message?: string }>(error)?.message
+    if (responseMessage) {
+      errorMessage = responseMessage
     }
 
     setNotification({
@@ -255,18 +268,18 @@ const applyChanges = async () => {
 const getSettings = async () => {
   try {
     const response = await apiClient.get(`/api/MetaSetting/${props.meta.id}`)
-    const settings = response.data
+    const settings = response.data as { isLink?: boolean }
     isLink.value = settings.isLink || false
   } catch (error) {
     console.error('Error fetching meta settings:', error)
   }
 }
 
-const updateRating = (ratingData) => {
+const updateRating = (ratingData: Record<string, unknown>) => {
   rating.value = ratingData
 }
 
-const updateSettingsArray = (settings) => {
+const updateSettingsArray = (settings: Record<string, unknown>) => {
   settingsArray.value = settings
 }
 

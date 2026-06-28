@@ -9,30 +9,34 @@
       {{ t('meta.default_names.bookmark') }}
     </v-chip>
     <v-chip
-      v-for="i in assigned"
-      :key="i.meta.id"
-      :value="i.meta.id"
+      v-for="i in assignedWithMeta"
+      :key="i.meta!.id"
+      :value="i.meta!.id"
       size="small"
       variant="tonal"
       filter
-      :prepend-icon="`mdi-${i.meta.icon}`"
-      :text="i.meta.name"
+      :prepend-icon="`mdi-${i.meta!.icon}`"
+      :text="i.meta!.name"
     />
   </v-chip-group>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import type {AssignedMeta} from '@/types/stores'
 
-defineProps({
-  assigned: {
-    type: Array,
-    default: () => [],
-  },
-})
+const props = defineProps<{
+  assigned?: AssignedMeta[]
+}>()
 
-const marksType = defineModel({
-  type: Array,
+const assignedWithMeta = computed(() =>
+  (props.assigned ?? []).filter((entry): entry is AssignedMeta & { meta: NonNullable<AssignedMeta['meta']> } =>
+    Boolean(entry.meta),
+  ),
+)
+
+const marksType = defineModel<Array<number | string>>({
   default: () => ['favorite', 'bookmark'],
 })
 

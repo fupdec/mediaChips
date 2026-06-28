@@ -1,9 +1,9 @@
 <template>
   <div>
     <!-- GRID VIEW -->
-    <div v-if="ITEMS.view == '1'">
+    <div v-if="Number(ITEMS.view) === 1">
       <v-img
-        :src="images.main"
+        :src="images.main || undefined"
         :aspect-ratio="meta?.imageAspectRatio"
         class="main-img"
         :class="{ static: images.alt }"
@@ -53,16 +53,16 @@
 
     <!-- CHIP VIEW -->
     <v-avatar
-      v-else-if="ITEMS.view == '2'"
+      v-else-if="Number(ITEMS.view) === 2"
       :rounded="meta?.chipLabel ? 'lg' : false"
       @click="openTagPage"
     >
-      <v-img :src="avatar" cover />
+      <v-img :src="avatar || undefined" cover />
     </v-avatar>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CountryFlag from 'vue-country-flag-next'
@@ -74,31 +74,23 @@ import { useItemsStore } from '@/stores/items'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import {getLocalImage} from '@/services/fileService'
 import {hideHoverImage} from '@/services/hoverService'
+import type {Meta, Tag} from '@/types/stores'
 
-// props
-const props = defineProps({
-  tag: {
-    type: Object,
-    required: true,
-  },
-  meta: {
-    type: Object,
-    required: true,
-  },
-  upd: {
-    type: Array,
-    default: () => [],
-  },
+type TagImageType = 'main' | 'alt' | 'custom1' | 'custom2' | 'avatar'
+
+const props = withDefaults(defineProps<{
+  tag: Tag
+  meta: Meta
+  upd?: number[]
+}>(), {
+  upd: () => [],
 })
 
-// stores
 const appStore = useAppStore()
 const itemsStore = useItemsStore()
-const hoverStore = useAppStore().hover
 const router = useRouter()
 
-// reactive state
-const images = reactive({
+const images = reactive<Record<TagImageType, string | null>>({
   main: null,
   alt: null,
   custom1: null,
@@ -106,20 +98,20 @@ const images = reactive({
   avatar: null,
 })
 
-// computed
 const ITEMS = computed(() => itemsStore)
 
-const countries = computed(() => parseCountries(props.tag.country))
+const countries = computed(() =>
+  parseCountries(typeof props.tag.country === 'string' ? props.tag.country : undefined)
+)
 
 const avatar = computed(() =>
   images.avatar || images.main
 )
 
-// methods
 const getImages = async () => {
-  let imageTypes = ['main', 'alt', 'custom1', 'custom2']
+  let imageTypes: TagImageType[] = ['main', 'alt', 'custom1', 'custom2']
 
-  if (ITEMS.value.view == '2') {
+  if (Number(ITEMS.value.view) === 2) {
     imageTypes = ['avatar', 'main']
   }
 
@@ -153,9 +145,8 @@ const openTagPage = () => {
   hideHoverImage()
 }
 
-const getFlag = (name) => getCountryCode(name)
+const getFlag = (name: string) => getCountryCode(name)
 
-// lifecycle
 onMounted(getImages)
 
 watch(

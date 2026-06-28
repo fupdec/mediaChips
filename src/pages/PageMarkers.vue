@@ -98,8 +98,8 @@
         :key="meta.id"
         :value="String(meta.id)"
         size="small"
-        :prepend-icon="`mdi-${meta.icon || 'tag'}`"
-        :text="meta.name"
+        :prepend-icon="`mdi-${String(meta.icon || 'tag')}`"
+        :text="String(meta.name ?? '')"
       />
     </v-chip-group>
 
@@ -168,7 +168,7 @@
   </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useMarksStore} from '@/stores/marks'
@@ -186,11 +186,11 @@ useMarkImageGenerator()
 const searchInput = ref('')
 const showInfiniteLoader = ref(false)
 
-const onTypesChange = (types) => {
+const onTypesChange = (types: string[]) => {
   marksStore.setSelectedTypes(types || [])
 }
 
-const onSortChange = (sortBy) => {
+const onSortChange = (sortBy: string) => {
   if (marksStore.sortBy === sortBy) {
     toggleSortDir()
     return
@@ -202,13 +202,13 @@ const toggleSortDir = () => {
   marksStore.setSortDir(marksStore.sortDir === 'asc' ? 'desc' : 'asc')
 }
 
-const applySearch = (value) => {
+const applySearch = (value: string) => {
   const nextValue = value || ''
   if (nextValue === marksStore.search) return
   marksStore.setSearch(nextValue)
 }
 
-const infiniteScrolling = (isIntersecting) => {
+const infiniteScrolling = (isIntersecting: boolean) => {
   if (isIntersecting === false) return
   marksStore.loadNextPage()
 }

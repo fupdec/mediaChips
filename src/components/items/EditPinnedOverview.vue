@@ -42,7 +42,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useSettingsStore} from '@/stores/settings'
@@ -53,29 +53,25 @@ import 'dayjs/locale/es'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/ru'
 import FilePathEditing from '@/components/items/FilePathEditing.vue'
+import type {PresetMetaParam} from '@/types/itemsPage'
+import type {MediaItem, Tag} from '@/types/stores'
 
-const props = defineProps({
-  item: {
-    type: Object,
-    required: true,
-  },
-  isMedia: {
-    type: Boolean,
-    default: false,
-  },
-  completionStatus: {
-    type: Number,
-    default: 0,
-  },
-  presetMeta: {
-    type: Array,
-    default: () => [],
-  },
+const props = withDefaults(defineProps<{
+  item: MediaItem | Tag
+  isMedia?: boolean
+  completionStatus?: number
+  presetMeta?: PresetMetaParam[]
+}>(), {
+  isMedia: false,
+  completionStatus: 0,
+  presetMeta: () => [],
 })
 
-const emit = defineEmits(['media-path-update'])
+const emit = defineEmits<{
+  'media-path-update': [media: MediaItem]
+}>()
 
-const onMediaPathUpdate = (media) => {
+const onMediaPathUpdate = (media: MediaItem) => {
   emit('media-path-update', media)
 }
 
@@ -86,19 +82,19 @@ const locale = computed(() => settingsStore.locale == 'cn' ? 'zh-cn' : settingsS
 dayjs.extend(relativeTime)
 dayjs.locale(locale.value)
 
-const getDateByKey = (key) => {
+const getDateByKey = (key: string) => {
   const date = props.item?.[key]
   if (date) {
-    const dateObj = new Date(date)
+    const dateObj = new Date(date as string | number | Date)
     return dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString()
   }
   return t('common.none')
 }
 
-const getDateAgoByKey = (key) => {
+const getDateAgoByKey = (key: string) => {
   const date = props.item?.[key]
   if (date) {
-    return dayjs(date).fromNow()
+    return dayjs(date as string | number | Date).fromNow()
   }
   return t('common.never')
 }

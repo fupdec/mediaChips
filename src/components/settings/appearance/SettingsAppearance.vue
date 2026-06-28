@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import {computed} from "vue";
 import {useSettingsStore} from "@/stores/settings";
 import {useTheme} from "vuetify";
@@ -7,6 +7,7 @@ import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import SettingsCategoryDivider
   from "@/components/ui/SettingsCategoryDivider.vue";
 import {setOption} from '@/services/settingsService'
+import type {SettingsState} from '@/types/settings'
 
 const SettingsThemeColors = defineAsyncComponent(() =>
   import("@/components/settings/appearance/SettingsAppearanceThemeColors.vue")
@@ -17,7 +18,7 @@ const theme = useTheme();
 
 const SETTINGS = computed(() => settingsStore)
 
-async function syncDarkModeWithSystem(value) {
+async function syncDarkModeWithSystem(value: string) {
   const match = window.matchMedia('(prefers-color-scheme: dark)');
 
   if (value == "1") {
@@ -30,18 +31,32 @@ async function syncDarkModeWithSystem(value) {
   }
 }
 
-async function toggleDarkMode(value) {
+async function toggleDarkMode(value: string) {
   theme.global.name.value = value == "1" ? "dark" : "light";
 }
 
-const chipVariants = [
+type ChipVariant = 'flat' | 'tonal' | 'outlined' | 'text'
+
+type DefaultMetaChipKey = Extract<keyof SettingsState,
+  | 'show_default_meta_filesize'
+  | 'show_default_meta_duration'
+  | 'show_default_meta_resolution'
+  | 'show_default_meta_ext'
+  | 'show_default_meta_codec'
+  | 'show_default_meta_bitrate'
+  | 'show_default_meta_fps'
+  | 'show_default_meta_number_media'
+  | 'show_default_meta_number_views'
+>
+
+const chipVariants: ChipVariant[] = [
   'flat',
   'tonal',
   'outlined',
   'text',
 ]
 
-const chips_default_data = [
+const chips_default_data: Array<{ icon: string; text: string; value: DefaultMetaChipKey }> = [
   {
     icon: 'harddisk',
     text: 'Filesize',
@@ -303,7 +318,7 @@ const chips_default_data = [
           v-for="chip in chips_default_data"
           :key="chip.value"
           @click="setOption(SETTINGS[chip.value] == '1' ? '0' : '1', chip.value)"
-          :variant="SETTINGS.default_meta_chip_variant"
+          :variant="SETTINGS.default_meta_chip_variant as ChipVariant"
           :base-color="SETTINGS[chip.value] == '1' ? 'primary' : ''"
           :label="SETTINGS.show_default_meta_label == '1'"
         >

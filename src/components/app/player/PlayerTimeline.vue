@@ -44,21 +44,22 @@
   </v-card-actions>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useDialogsStore} from '@/stores/dialogs'
 import Preview from '@/components/app/player/Preview.vue'
 import Mark from '@/components/app/player/Mark.vue'
 import ControlsSetMarkTime from '@/components/app/player/ControlsSetMarkTime.vue'
 import {usePlayerTimeline} from '@/composable/usePlayerTimeline'
+import type {PlayerMark} from '@/types/player'
 
-defineProps({
-  isAudioMode: {
-    type: Boolean,
-    default: false,
-  },
-})
+defineProps<{
+  isAudioMode?: boolean
+}>()
 
-const emit = defineEmits(['showControls', 'removeMark'])
+const emit = defineEmits<{
+  showControls: []
+  removeMark: [mark: PlayerMark]
+}>()
 
 const dialogsStore = useDialogsStore()
 
@@ -82,7 +83,7 @@ const {
   resize,
 } = usePlayerTimeline({emit})
 
-const onRemoveMark = (mark) => {
+const onRemoveMark = (mark: PlayerMark) => {
   emit('removeMark', mark)
 }
 

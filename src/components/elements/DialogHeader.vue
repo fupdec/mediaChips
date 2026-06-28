@@ -66,11 +66,23 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
+import type { PropType } from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {sortBy} from 'lodash'
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  outlined?: boolean
+  disabled?: boolean
+  order?: number
+  action?: () => void
+  function?: () => void
+}
 
 const emit = defineEmits(['close'])
 
@@ -82,7 +94,7 @@ const props = defineProps({
   },
   subheader: String,
   buttons: {
-    type: Array,
+    type: Array as PropType<DialogHeaderButton[]>,
     default: () => [],
   },
   closable: Boolean,
@@ -96,36 +108,31 @@ const buttonsOrdered = computed(() =>
   sortBy(props.buttons, 'order'),
 )
 
-const run = (btn) => {
-  btn.function ? btn.function() : btn.action()
+const run = (btn: DialogHeaderButton) => {
+  btn.function ? btn.function() : btn.action?.()
 }
 
-// Drag window functionality
-// Drag window functionality для Vuetify 3
-const dragWindow = (headerSelector, dialogSelector) => {
+const dragWindow = (headerSelector: string, dialogSelector: string) => {
   let isDragging = false
-  let dragElement = null
+  let dragElement: HTMLElement | null = null
   let startX = 0
   let startY = 0
   let initialLeft = 0
   let initialTop = 0
 
-  const onMouseDown = (e) => {
-    // Проверяем, кликнули ли мы на элемент с нужным классом
-    if (!e.target.closest(headerSelector)) return
+  const onMouseDown = (e: MouseEvent) => {
+    const target = e.target as HTMLElement | null
+    if (!target?.closest(headerSelector)) return
 
-    // Находим родительский диалог (v-overlay__content)
-    const dialog = e.target.closest(dialogSelector)
+    const dialog = target.closest(dialogSelector)
     if (!dialog) return
 
-    // В Vuetify 3 диалог может быть внутри .v-overlay__content
-    const dialogContent = dialog.closest('.v-overlay__content')
+    const dialogContent = dialog.closest('.v-overlay__content') as HTMLElement | null
     if (!dialogContent) return
 
     dragElement = dialogContent
     isDragging = true
 
-    // Получаем текущую позицию
     const rect = dragElement.getBoundingClientRect()
     startX = e.clientX
     startY = e.clientY
@@ -148,17 +155,15 @@ const dragWindow = (headerSelector, dialogSelector) => {
     e.preventDefault()
   }
 
-  const onMouseMove = (e) => {
+  const onMouseMove = (e: MouseEvent) => {
     if (!isDragging || !dragElement) return
 
-    // Вычисляем новую позицию
     const deltaX = e.clientX - startX
     const deltaY = e.clientY - startY
 
     let newLeft = initialLeft + deltaX
     let newTop = initialTop + deltaY
 
-    // Ограничиваем позицию, чтобы диалог не выходил за пределы экрана
     const windowWidth = window.innerWidth
     const windowHeight = window.innerHeight
     const elementWidth = dragElement.offsetWidth
@@ -197,7 +202,7 @@ const dragWindow = (headerSelector, dialogSelector) => {
   }
 }
 
-const cleanupDragWindow = ref(null)
+const cleanupDragWindow = ref<(() => void) | null>(null)
 
 onMounted(() => {
   // Инициализируем перетаскивание

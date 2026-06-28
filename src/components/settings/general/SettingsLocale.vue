@@ -60,7 +60,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import CountryFlag from 'vue-country-flag-next'
@@ -97,11 +97,15 @@ const locales = [
     nativeName: 'Русский',
     flag: 'ru',
   },
-]
+] as const
 
-const selectedLocale = computed(() => locales.find(i => i.code === settingsStore.locale))
+type LocaleEntry = (typeof locales)[number]
 
-const changeLanguage = (langCode) => {
+const selectedLocale = computed((): LocaleEntry =>
+  locales.find(i => i.code === settingsStore.locale) ?? locales[0],
+)
+
+const changeLanguage = (langCode: string) => {
   locale.value = langCode
 
   setOption(langCode, "locale")

@@ -101,14 +101,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
+import type {VFormInstance} from '@/types/vue'
+import {getErrorResponseData} from '@/types/vue'
 import {useAppStore} from '@/stores/app'
 import {useNotificationsStore} from '@/stores/notifications'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import MetaTypes from '@/assets/MetaTypes'
 import {apiClient} from '@/services/apiClient'
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  action?: () => void | Promise<void>
+}
 
 // Props
 const props = defineProps({
@@ -126,7 +136,7 @@ const appStore = useAppStore()
 const notificationsStore = useNotificationsStore()
 
 // Refs
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 const internalDialog = ref(false)
 const dialogIcons = ref(false)
 const valid = ref(false)
@@ -140,7 +150,7 @@ const metaIcon = ref('shape')
 const isLink = ref(false)
 
 // Buttons for DialogHeader
-const buttons = ref([])
+const buttons = ref<DialogHeaderButton[]>([])
 
 const currentMetaType = computed(() => {
   return metaTypes.value.find((i) => i.value === metaType.value)
@@ -159,14 +169,14 @@ const initButtons = () => {
   ]
 }
 
-const changeIcon = (icon) => {
+const changeIcon = (icon: string) => {
   dialogIcons.value = false
   metaIcon.value = icon
 }
 
 const getHint = () => {
   const type = metaType.value
-  const hints = {
+  const hints: Record<string, string> = {
     string: 'for description or notes',
     date: 'e.g. release date, last viewed date',
     number: 'to count',
@@ -179,7 +189,7 @@ const getHint = () => {
   return hints[type] || 'Please select one of the types'
 }
 
-const nameRules = (value) => {
+const nameRules = (value: string) => {
   if (!value || value.trim().length === 0) {
     return 'Name is required'
   }
@@ -199,7 +209,7 @@ const addMeta = async () => {
   if (!formValid) return
 
   try {
-    const metaData = {
+    const metaData: Record<string, unknown> = {
       type: metaType.value,
       name: name.value,
       nameSingular: metaType.value === 'array' ? (singular.value || name.value) : name.value,
@@ -232,8 +242,9 @@ const addMeta = async () => {
     console.error('Error adding meta:', error)
 
     let errorMessage = 'Failed to add meta'
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message
+    const responseMessage = getErrorResponseData<{ message?: string }>(error)?.message
+    if (responseMessage) {
+      errorMessage = responseMessage
     }
 
     notificationsStore.setNotification({

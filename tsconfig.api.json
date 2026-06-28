@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": ".api-build",
+    "rootDir": "api",
+    "moduleDetection": "force",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "ignoreDeprecations": "6.0",
+    "types": ["node"]
+  },
+  "include": ["api/**/*.ts"]
+}

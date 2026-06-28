@@ -26,7 +26,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useDialogsStore } from '@/stores/dialogs'
 import {useI18n} from 'vue-i18n'
 

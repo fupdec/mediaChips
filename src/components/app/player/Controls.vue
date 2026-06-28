@@ -29,49 +29,50 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, ref} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import PlayerTimeline from '@/components/app/player/PlayerTimeline.vue'
 import PlayerTransport from '@/components/app/player/PlayerTransport.vue'
+import type {PlayerMark, PlayVideoSwitch} from '@/types/player'
 
-const emit = defineEmits([
-  'toggleFullscreen',
-  'togglePictureInPicture',
-  'play',
-  'changeVolume',
-  'showControls',
-  'addMark',
-  'removeMark',
-  'close',
-  'updateVideo',
-])
+const emit = defineEmits<{
+  toggleFullscreen: []
+  togglePictureInPicture: []
+  play: [payload: PlayVideoSwitch]
+  changeVolume: [payload: { deltaY?: number; volume?: number }]
+  showControls: []
+  addMark: []
+  removeMark: [mark: PlayerMark]
+  close: []
+  updateVideo: [id: number | string]
+}>()
 
 const playerStore = usePlayerStore()
 const player = computed(() => playerStore)
 const isAudioMode = computed(() => playerStore.isAudioMode)
 
-const timelineRef = ref(null)
-const transportRef = ref(null)
+const timelineRef = ref<InstanceType<typeof PlayerTimeline> | null>(null)
+const transportRef = ref<InstanceType<typeof PlayerTransport> | null>(null)
 
-const jumpToMark = (type) => {
+const jumpToMark = (type: 'prev' | 'next') => {
   timelineRef.value?.jumpToMark?.(type)
 }
 
 defineExpose({
-  togglePause: (...args) => transportRef.value?.togglePause?.(...args),
-  play: (...args) => transportRef.value?.play?.(...args),
-  pause: (...args) => transportRef.value?.pause?.(...args),
-  stop: (...args) => transportRef.value?.stop?.(...args),
-  prev: (...args) => transportRef.value?.prev?.(...args),
-  next: (...args) => transportRef.value?.next?.(...args),
-  toggleMute: (...args) => transportRef.value?.toggleMute?.(...args),
-  togglePlaylist: (...args) => transportRef.value?.togglePlaylist?.(...args),
-  toggleMarks: (...args) => transportRef.value?.toggleMarks?.(...args),
+  togglePause: () => transportRef.value?.togglePause?.(),
+  play: () => transportRef.value?.play?.(),
+  pause: () => transportRef.value?.pause?.(),
+  stop: () => transportRef.value?.stop?.(),
+  prev: () => transportRef.value?.prev?.(),
+  next: () => transportRef.value?.next?.(),
+  toggleMute: () => transportRef.value?.toggleMute?.(),
+  togglePlaylist: () => transportRef.value?.togglePlaylist?.(),
+  toggleMarks: () => transportRef.value?.toggleMarks?.(),
   jumpToMark,
-  wheelSeek: (...args) => timelineRef.value?.wheelSeek?.(...args),
-  editVideo: (...args) => transportRef.value?.editVideo?.(...args),
-  deleteVideo: (...args) => transportRef.value?.deleteVideo?.(...args),
-  resize: (...args) => timelineRef.value?.resize?.(...args),
+  wheelSeek: (event: WheelEvent) => timelineRef.value?.wheelSeek?.(event),
+  editVideo: () => transportRef.value?.editVideo?.(),
+  deleteVideo: (withFile = false) => transportRef.value?.deleteVideo?.(withFile),
+  resize: () => timelineRef.value?.resize?.(),
 })
 </script>

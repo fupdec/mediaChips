@@ -74,7 +74,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted} from "vue"
 import {useRouter} from "vue-router"
 import {useAppStore} from "@/stores/app"
@@ -91,13 +91,15 @@ import {
   sortTagItems,
   getTopTagsSubtitleKey,
   META_SORT_MODES,
+  type MetaSortMode,
 } from '@/utils/metaSort'
+import type { TopTagsCategory, TopTagItem } from '@/types/widgets'
+import type { Meta } from '@/types/stores'
 
-const props = defineProps({
-  limit: {
-    type: Number,
-    default: 10,
-  },
+const props = withDefaults(defineProps<{
+  limit?: number
+}>(), {
+  limit: 10,
 })
 
 const store = useAppStore()
@@ -105,19 +107,21 @@ const settingsStore = useSettingsStore()
 const router = useRouter()
 const {t} = useI18n()
 
-const tagsTop = ref([])
+const tagsTop = ref<TopTagsCategory[]>([])
 
 const tags = computed(() => store.tags)
 const metas = computed(() => store.meta)
-const sortMode = computed(() => settingsStore.meta_sort_mode || META_SORT_MODES.menu)
+const sortMode = computed((): MetaSortMode =>
+  (settingsStore.meta_sort_mode as MetaSortMode) || META_SORT_MODES.menu,
+)
 const subtitleKey = computed(() => getTopTagsSubtitleKey(sortMode.value))
 
-async function getTagsTop(activeGroup = null) {
+async function getTagsTop(activeGroup: TopTagsCategory | null = null) {
   if (!metas.value.length) return
 
   const grouped = groupBy(tags.value, "metaId")
   const reservedCopy = cloneDeep(grouped)
-  const groups = []
+  const groups: TopTagsCategory[] = []
   const visibleMetas = sortMetaItems(
     metas.value.filter((meta) => meta.type === 'array' && !meta.hidden),
     sortMode.value,
@@ -133,7 +137,7 @@ async function getTagsTop(activeGroup = null) {
       limit = activeGroup.limit + 10
     }
 
-    const sorted = sortTagItems(grouped[metaId], sortMode.value).slice(0, limit)
+    const sorted = sortTagItems(grouped[metaId] as TopTagItem[], sortMode.value).slice(0, limit) as TopTagItem[]
     if (!sorted.length) continue
 
     for (const tag of sorted) {
@@ -160,7 +164,7 @@ async function getTagsTop(activeGroup = null) {
   tagsTop.value = groups
 }
 
-function openTagPage(meta, tag) {
+function openTagPage(meta: Meta, tag: TopTagItem) {
   router.push(`/tag?metaId=${meta.id}&tagId=${tag.id}&mediaTypeId=${getDefaultMediaTypeId(store.mediaTypes)}`)
 }
 

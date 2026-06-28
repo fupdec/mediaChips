@@ -103,7 +103,7 @@
           </v-btn>
         </div>
 
-        <img :src="frame"/>
+        <img :src="frame ?? undefined"/>
 
         <div class="sections">
           <div
@@ -177,8 +177,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted, onBeforeUnmount, nextTick} from 'vue'
+import type {ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 import path from 'path-browserify'
 import {useAppStore} from '@/stores/app'
@@ -188,6 +189,7 @@ import {useTasksStore} from '@/stores/tasks'
 import {useContextMenu} from '@/stores/contextMenu'
 import {useEventBus} from '@/utils/eventBus'
 import _ from 'lodash'
+import type {Handler} from 'mitt'
 import {apiClient} from '@/services/apiClient'
 import {createThumb as createVideoThumb, getLocalImage} from '@/services/fileService'
 import {
@@ -202,14 +204,24 @@ import {usePlayerStore} from '@/stores/player'
 import {buildApiUrl} from '@/services/apiClient'
 import {getChunkStart} from '@/utils/liveStreamChunk'
 import {resolvePreviewVideoUrl, stopLiveTranscode} from '@/services/transcodeService'
+import type {MediaItem} from '@/types/stores'
 
-// props
-const props = defineProps({
-  media: Object,
-  isFileExists: Boolean,
-})
+type TimeoutMap = {
+  shrink?: ReturnType<typeof setTimeout>
+  z?: ReturnType<typeof setTimeout>
+  leave?: ReturnType<typeof setTimeout>
+  cinema?: ReturnType<typeof setTimeout>
+  [key: string]: ReturnType<typeof setTimeout> | undefined
+}
 
-const emit = defineEmits(['update-big-preview'])
+const props = defineProps<{
+  media: MediaItem
+  isFileExists: boolean
+}>()
+
+const emit = defineEmits<{
+  'update-big-preview': [value: boolean]
+}>()
 
 // store
 const store = useAppStore()
@@ -221,21 +233,19 @@ const playerStore = usePlayerStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-// refs
-const previewRef = ref(null)
-const videoRef = ref(null)
-const storyRef = ref(null)
-const storyWrapperRef = ref(null)
+const previewRef = ref<ComponentPublicInstance | null>(null)
+const videoRef = ref<HTMLVideoElement | null>(null)
+const storyRef = ref<HTMLElement | null>(null)
+const storyWrapperRef = ref<HTMLElement | null>(null)
 
-// state
 const isHovered = ref(false)
-const thumb = ref(null)
-const frame = ref(null)
-const frames = ref([])
+const thumb = ref<string | null>(null)
+const frame = ref<string | null>(null)
+const frames = ref<string[]>([])
 const progress = ref(0)
 
 const timelines = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
-const timeouts = {}
+const timeouts: TimeoutMap = {}
 const bigPreview = ref(false)
 const bigPreviewAnimation = ref(false)
 const playbackError = ref(false)
@@ -245,17 +255,25 @@ const thumbCreateAttempted = ref(false)
 const bigPreviewMenuActive = ref(false)
 const isMounted = ref(false)
 
-const isThumbUnavailable = (src) =>
-  !src || (typeof src === 'string' && src.includes('unavailable.png'))
+const isThumbUnavailable = (src: string | null | undefined): boolean =>
+  !src || src.includes('unavailable.png')
 
-// computed
+const getPreviewEl = (): HTMLElement | null => {
+  const instance = previewRef.value
+  return (instance?.$el as HTMLElement | undefined) ?? null
+}
+
+const mediaWidth = computed(() => Number(props.media.width) || 0)
+const mediaHeight = computed(() => Number(props.media.height) || 0)
+const mediaDuration = computed(() => Number(props.media.duration) || 0)
+
 const ITEMS = computed(() => itemsStore)
 const SETTINGS = computed(() => settingsStore)
 
 const muted = computed(() => SETTINGS.value.play_sound_on_video_preview !== '1')
 
 const quality = computed(() =>
-  getReadableVideoQuality(props.media.width, props.media.height)
+  getReadableVideoQuality(mediaWidth.value, mediaHeight.value)
 )
 
 const isTaskRunning = computed(() =>
@@ -263,11 +281,11 @@ const isTaskRunning = computed(() =>
 )
 
 const height = computed(() =>
-  getReadableVideoHeight(props.media.width, props.media.height)
+  getReadableVideoHeight(mediaWidth.value, mediaHeight.value)
 )
 
 const duration = computed(() =>
-  getReadableDuration(props.media.duration)
+  getReadableDuration(mediaDuration.value)
 )
 
 const isFrameLost = computed(() =>
@@ -278,9 +296,11 @@ const isFramesLost = computed(() =>
   frames.value[0] ? frames.value[0] === thumb.value : true
 )
 
-const progressPosition = computed(() =>
-  `${100 - (progress.value / props.media.duration) * 100}%`
-)
+const progressPosition = computed(() => {
+  const duration = mediaDuration.value
+  if (!duration) return '100%'
+  return `${100 - (progress.value / duration) * 100}%`
+})
 
 const isUnsupportedFormat = computed(() =>
   props.isFileExists && !isLikelyBrowserDirectVideo(props.media?.path),
@@ -315,13 +335,9 @@ const isShowProgress = computed(() =>
   !shouldBlockVideoPreview.value,
 )
 
-const isViewCard = computed(() =>
-  ITEMS.value.view === 1 || ITEMS.value.view === '1'
-)
+const isViewCard = computed(() => Number(ITEMS.value.view) === 1)
 
-const isViewTimeline = computed(() =>
-  ITEMS.value.view === 2 || ITEMS.value.view === '2'
-)
+const isViewTimeline = computed(() => Number(ITEMS.value.view) === 2)
 
 const is_window_focused = computed(() => store.window.focused)
 
@@ -346,11 +362,10 @@ const showTimelinePreview = computed(() =>
   !shouldBlockHoverPreview.value,
 )
 
-// Перенесенные методы из первого файла
 const resetPreviewContainer = () => {
   bigPreviewAnimation.value = false
 
-  const el = previewRef.value?.$el
+  const el = getPreviewEl()
   if (!el) return
 
   el.removeEventListener('animationend', removeClasses)
@@ -363,7 +378,7 @@ const removeClasses = () => {
 }
 
 const shrink = () => {
-  const preview = previewRef.value?.$el
+  const preview = getPreviewEl()
   if (!preview) {
     resetPreviewContainer()
     return
@@ -384,7 +399,9 @@ const shrink = () => {
 }
 
 const toggleFullScreen = () => {
-  const preview = previewRef.value.$el
+  const preview = getPreviewEl()
+  if (!preview) return
+
   preview.removeEventListener("animationend", removeClasses)
   const {top, right, bottom, left} = preview.getBoundingClientRect()
   const inset = `${top}px ${right}px ${bottom}px ${left}px`
@@ -397,7 +414,7 @@ const toggleFullScreen = () => {
 }
 
 // Модифицированные методы
-const loadThumb = async (imgPath, {bust = false} = {}) => {
+const loadThumb = async (imgPath: string, {bust = false} = {}): Promise<string> => {
   const previous = thumb.value
   const src = await getLocalImage(imgPath, false, bust)
 
@@ -417,7 +434,7 @@ const loadThumb = async (imgPath, {bust = false} = {}) => {
   return imgPath
 }
 
-const maybeCreateMissingThumb = async (imgPath) => {
+const maybeCreateMissingThumb = async (imgPath: string) => {
   if (!props.isFileExists || !isThumbUnavailable(thumb.value)) return
   if (isCreatingThumb.value || thumbCreateAttempted.value) return
 
@@ -433,7 +450,7 @@ const maybeCreateMissingThumb = async (imgPath) => {
 const getImg = async ({bust = false, allowCreate = true} = {}) => {
   if (!isMounted.value || !props.media?.id) return
 
-  const getThumb = async (videos_folder) => {
+  const getThumb = async (videos_folder: string) => {
     const imgPath = path.join(
       store.mediaPath,
       videos_folder,
@@ -459,7 +476,7 @@ const getImg = async ({bust = false, allowCreate = true} = {}) => {
   }
 }
 
-const createThumb = async (imgPath) => {
+const createThumb = async (imgPath: string) => {
   try {
     await apiClient.post('/api/Task/createThumbForVideo', {
       path: props.media.path,
@@ -504,11 +521,9 @@ const setAsThumbFromPreview = async () => {
     `${props.media.id}.jpg`,
   )
 
-  const time = new Date(currentTime * 1000).toISOString().substr(11, 8)
-
   isSettingThumb.value = true
   try {
-    await createVideoThumb(time, props.media.path, imgPath, 320, true)
+    await createVideoThumb(currentTime, props.media.path ?? '', imgPath, 320, true)
     itemsStore.refreshThumb(props.media.id)
     eventBus.emit('getItemsFromDb', {ids: [props.media.id], type: 'media'})
     setNotification({
@@ -530,7 +545,7 @@ const setAsThumbFromPreview = async () => {
   }
 }
 
-const handlePreviewContextMenu = (e) => {
+const handlePreviewContextMenu = (e: MouseEvent) => {
   if (!bigPreview.value || !props.isFileExists || playbackError.value || shouldBlockVideoPreview.value) return
 
   e.preventDefault()
@@ -564,7 +579,7 @@ const handlePreviewContextMenu = (e) => {
   })
 }
 
-const play = (inApp) => {
+const play = (_inApp?: unknown) => {
   stopPlayingPreview({force: true})
   itemsStore.playVideo({
     video: props.media,
@@ -596,11 +611,12 @@ const handleVideoLoaded = () => {
   playbackError.value = false
 }
 
-const changePreviewTime = _.debounce((e) => {
+const changePreviewTime = _.debounce((e: MouseEvent) => {
   if (!props.isFileExists || playbackError.value || shouldBlockVideoPreview.value) return
   if (SETTINGS.value.videoPreviewHover !== "video") return
 
-  const rect = e.target.getBoundingClientRect()
+  const target = e.target as HTMLElement
+  const rect = target.getBoundingClientRect()
   const percent = rect.width / 100
   const x = e.clientX - rect.left
   let progressValue = x / percent
@@ -611,7 +627,7 @@ const changePreviewTime = _.debounce((e) => {
     progressValue = 100
   }
 
-  progressValue = Math.floor(props.media.duration / 100 * progressValue)
+  progressValue = Math.floor(mediaDuration.value / 100 * progressValue)
   if (progress.value !== progressValue) {
     progress.value = progressValue
     void syncPreviewVideoPosition(progressValue)
@@ -621,15 +637,15 @@ const changePreviewTime = _.debounce((e) => {
 let previewPlaybackToken = 0
 const previewUsesLiveStream = ref(false)
 
-const isIgnorablePreviewError = (error) => {
-  const name = error?.name || ''
+const isIgnorablePreviewError = (error: unknown): boolean => {
+  const name = (error as { name?: string })?.name || ''
   return name === 'AbortError' || name === 'NotAllowedError'
 }
 
 const buildPreviewVideoUrl = () =>
   resolvePreviewVideoUrl(apiClient, buildApiUrl, props.media.id, progress.value || 0)
 
-const getPreviewStreamStart = (url) => {
+const getPreviewStreamStart = (url: string): string | null => {
   try {
     return new URL(url).searchParams.get('start')
   } catch {
@@ -643,12 +659,13 @@ const stopPreviewLiveTranscode = () => {
   stopLiveTranscode(apiClient, props.media.id).catch(() => {})
 }
 
-const syncPreviewVideoPosition = async (targetTime) => {
+const syncPreviewVideoPosition = async (targetTime: number) => {
   const video = videoRef.value
   if (!video || !showVideoPreview.value) return
 
   const token = previewPlaybackToken
   const url = await buildPreviewVideoUrl()
+  if (!url) return
   const isLive = url.includes('/transcode/stream')
 
   if (isLive) {
@@ -677,7 +694,7 @@ const syncPreviewVideoPosition = async (targetTime) => {
   video.currentTime = Math.min(targetTime, video.duration || targetTime)
 }
 
-const waitForPreviewCanPlay = (video, token) => new Promise((resolve, reject) => {
+const waitForPreviewCanPlay = (video: HTMLVideoElement, token: number): Promise<void> => new Promise((resolve, reject) => {
   if (token !== previewPlaybackToken) {
     reject(new Error('Preview playback cancelled'))
     return
@@ -818,7 +835,7 @@ const handleMouseLeave = () => {
   }, 100)
 }
 
-const getFrameImg = async (progressValue) => {
+const getFrameImg = async (progressValue: number) => {
   const imgPath = path.join(
     store.mediaPath,
     "videos/timelines",
@@ -827,7 +844,7 @@ const getFrameImg = async (progressValue) => {
   frame.value = await getLocalImage(imgPath)
 }
 
-const scrollStory = (e) => {
+const scrollStory = (e: MouseEvent) => {
   if (!storyRef.value || !storyWrapperRef.value) return
 
   const storyWidth = storyRef.value.clientWidth
@@ -858,7 +875,7 @@ const initFrames = async () => {
     let img = await getLocalImage(imgPath)
     if (i == 0 && img.includes("unavailable.png")) {
       frames.value = []
-      for (let j of timelines) frames.value.push(thumb.value)
+      for (const j of timelines) frames.value.push(thumb.value ?? '')
       break
     } else {
       frames.value.push(img)
@@ -902,7 +919,7 @@ watch(() => itemsStore.thumbRefreshKeys[Number(props.media.id)], (version) => {
 })
 
 watch(() => ITEMS.value.view, (value) => {
-  if (value === '2' || value === 2) {
+  if (Number(value) === 2) {
     initFrames()
   }
   getImg()
@@ -914,7 +931,7 @@ watch(() => bigPreview.value, (value) => {
     return
   }
 
-  if (previewRef.value?.$el?.classList.contains('big-preview')) {
+  if (getPreviewEl()?.classList.contains('big-preview')) {
     shrink()
   }
 })
@@ -926,8 +943,9 @@ watch(() => is_window_focused.value, (value) => {
 })
 
 // Обработчики событий
-const handleUpdateVideoFrames = (id) => {
-  if (Number(props.media.id) === Number(id) && isViewTimeline.value) {
+const handleUpdateVideoFrames: Handler = (event) => {
+  const id = Number(event)
+  if (Number(props.media.id) === id && isViewTimeline.value) {
     initFrames()
   }
 }

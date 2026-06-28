@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: models
-          key: mediachips-models-${{ hashFiles('scripts/download-parser-model.js') }}
+          key: mediachips-models-${{ hashFiles('scripts/download-parser-model.ts') }}
 
       - name: Install dependencies
         run: npm ci
@@ -33,8 +33,8 @@ jobs:
       - name: Type-check
         run: npm run type-check
 
-      - name: Build Electron preload/updater
-        run: npm run build:electron
+      - name: Build backend and Electron artifacts
+        run: npm run build:artifacts
 
       - name: Test
         run: npm test

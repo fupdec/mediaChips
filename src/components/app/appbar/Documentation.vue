@@ -13,7 +13,7 @@
   </v-tooltip>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useI18n} from "vue-i18n"
 import {useDialogsStore} from "@/stores/dialogs"
 

@@ -124,7 +124,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -136,6 +136,7 @@ import {loadThumbDisplayUrl, loadFullImageDisplayUrl, revokeImageObjectUrl} from
 import {checkFileExists} from '@/services/fileService'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {openPath} from '@/services/shellService'
+import type { MediaItem } from '@/types/stores'
 
 const appStore = useAppStore()
 const dialogsStore = useDialogsStore()
@@ -143,9 +144,9 @@ const viewer = useImageViewerStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-const viewerRootRef = ref(null)
-const stageRef = ref(null)
-const displaySrc = ref(null)
+const viewerRootRef = ref<HTMLElement | null>(null)
+const stageRef = ref<HTMLElement | null>(null)
+const displaySrc = ref<string | null>(null)
 
 const panState = ref({
   active: false,
@@ -155,7 +156,7 @@ const panState = ref({
   originY: 0,
 })
 
-let objectUrl = null
+let objectUrl: string | null = null
 let ownsObjectUrl = false
 let loadToken = 0
 
@@ -176,7 +177,7 @@ const infoLine = computed(() => {
   }
 
   if (image.filesize) {
-    parts.push(getReadableFileSize(image.filesize))
+    parts.push(getReadableFileSize(Number(image.filesize)))
   }
 
   if (image.path) {
@@ -195,7 +196,7 @@ const clearObjectUrl = () => {
   displaySrc.value = null
 }
 
-const setDisplaySrc = (src, {owned = false} = {}) => {
+const setDisplaySrc = (src: string | null, {owned = false}: { owned?: boolean } = {}) => {
   if (owned && objectUrl && objectUrl !== src) {
     revokeImageObjectUrl(objectUrl)
   }
@@ -224,7 +225,7 @@ const loadCurrentImage = async () => {
     viewer.setLoading(false)
   }
 
-  const existsPromise = checkFileExists(image.path)
+  const existsPromise = image.path ? checkFileExists(image.path) : Promise.resolve(false)
 
   if (!previewSrc) {
     try {
@@ -258,7 +259,7 @@ const closeViewer = () => {
   clearObjectUrl()
 }
 
-const onDialogToggle = (value) => {
+const onDialogToggle = (value: boolean) => {
   if (!value) closeViewer()
 }
 
@@ -275,12 +276,12 @@ const zoomOut = () => viewer.zoomOut()
 const resetView = () => viewer.resetTransform()
 const toggleFullscreen = () => viewer.toggleFullscreen()
 
-const onWheel = (event) => {
+const onWheel = (event: WheelEvent) => {
   if (event.deltaY < 0) viewer.zoomIn()
   else viewer.zoomOut()
 }
 
-const onPanStart = (event) => {
+const onPanStart = (event: MouseEvent) => {
   if (event.button !== 0 || !displaySrc.value) return
 
   panState.value = {
@@ -295,7 +296,7 @@ const onPanStart = (event) => {
   window.addEventListener('mouseup', onPanEnd)
 }
 
-const onPanMove = (event) => {
+const onPanMove = (event: MouseEvent) => {
   if (!panState.value.active) return
 
   viewer.translateX = panState.value.originX + (event.clientX - panState.value.startX)
@@ -330,7 +331,7 @@ const openInSystem = () => {
   openPath(image.path)
 }
 
-const onKeyDown = (event) => {
+const onKeyDown = (event: KeyboardEvent) => {
   if (!viewer.active) return
 
   switch (event.key) {
@@ -369,7 +370,15 @@ const onKeyDown = (event) => {
   }
 }
 
-const openFromEvent = ({imageIds, index = 0, fallbackImage = null, previewSrc = null}) => {
+interface ViewImagePayload {
+  imageIds?: number[]
+  index?: number
+  fallbackImage?: MediaItem | null
+  previewSrc?: string | null
+}
+
+const openFromEvent = (payload: unknown) => {
+  const {imageIds, index = 0, fallbackImage = null, previewSrc = null} = payload as ViewImagePayload
   if (!imageIds?.length) return
 
   viewer.open({imageIds, index, fallbackImage, previewSrc})
@@ -386,16 +395,18 @@ const openFromEvent = ({imageIds, index = 0, fallbackImage = null, previewSrc = 
   void loadCurrentImage()
 }
 
+const viewImageHandler = (payload: unknown) => openFromEvent(payload)
+
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
-  eventBus.on('viewImage', openFromEvent)
+  eventBus.on('viewImage', viewImageHandler)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown)
   window.removeEventListener('mousemove', onPanMove)
   window.removeEventListener('mouseup', onPanEnd)
-  eventBus.off('viewImage', openFromEvent)
+  eventBus.off('viewImage', viewImageHandler)
   clearObjectUrl()
 })
 </script>

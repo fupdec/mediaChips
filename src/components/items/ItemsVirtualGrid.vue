@@ -15,7 +15,7 @@
       <Item
         v-for="(item, idx) in row.items"
         v-memo="[item.id, item.rating, item.favorite, item.views, item.name, size, view, itemsType]"
-        :key="item.key || item.id"
+        :key="item.id"
         :type="itemsType"
         :item="item"
         :meta="meta"
@@ -33,43 +33,53 @@
   </div>
 </template>
 
-<script setup>
-import {computed, ref, toRef} from 'vue'
+<script setup lang="ts">
+import {computed, ref} from 'vue'
 import Item from '@/components/items/Item.vue'
 import {useVirtualGridWindow} from '@/composable/useVirtualGridWindow'
+import type {MediaType} from '@/types/media'
+import type {MediaItem, Meta} from '@/types/stores'
 
-const props = defineProps({
-  items: {
-    type: Array,
-    default: () => [],
-  },
-  itemsType: String,
-  meta: Object,
-  mediaType: Object,
-  reg: Boolean,
-  size: [Number, String],
-  view: [Number, String],
-  gapSize: String,
-  gridClasses: {
-    type: Array,
-    default: () => [],
-  },
-  imageGrid: Boolean,
-  wideImage: Boolean,
-  lineGrid: Boolean,
-  chipsGrid: Boolean,
+const props = withDefaults(defineProps<{
+  items?: MediaItem[]
+  itemsType?: 'media' | 'tag'
+  meta?: Meta | null
+  mediaType?: MediaType | null
+  reg?: boolean
+  size?: number | string
+  view?: number | string
+  gapSize?: string
+  gridClasses?: string[]
+  imageGrid?: boolean
+  wideImage?: boolean
+  lineGrid?: boolean
+  chipsGrid?: boolean
+}>(), {
+  items: () => [],
+  itemsType: 'media',
+  meta: null,
+  mediaType: null,
+  reg: true,
+  size: 3,
+  view: 1,
+  gapSize: 'default',
+  gridClasses: () => [],
+  imageGrid: false,
+  wideImage: false,
+  lineGrid: false,
+  chipsGrid: false,
 })
 
-const layoutRef = ref(null)
-const itemsSource = toRef(props, 'items')
+const layoutRef = ref<HTMLElement | null>(null)
+const itemsSource = computed(() => props.items)
 
 const layoutOptions = computed(() => ({
-  size: props.size,
-  gapSize: props.gapSize,
-  imageGrid: props.imageGrid,
-  wideImage: props.wideImage,
-  lineGrid: props.lineGrid,
-  chipsGrid: props.chipsGrid,
+  size: Number(props.size),
+  gapSize: props.gapSize ?? 'default',
+  imageGrid: props.imageGrid ?? false,
+  wideImage: props.wideImage ?? false,
+  lineGrid: props.lineGrid ?? false,
+  chipsGrid: props.chipsGrid ?? false,
 }))
 
 const {

@@ -21,7 +21,7 @@
     <v-menu
       ref="menuRef"
       v-model="showMenu"
-      :activator="activatorRef"
+      :activator="activatorRef as never"
       location="bottom end"
       origin="top end"
       offset="8"
@@ -133,18 +133,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useTasksStore } from '@/stores/tasks'
 import {useI18n} from "vue-i18n";
+import type { TaskItem } from '@/types/stores'
 
 import Notification from '@/components/app/Notification.vue'
 
+type NotificationEntry = ReturnType<typeof useNotificationsStore>['getNotificationsHidden'][number]
+
+type TaskActivityItem = TaskItem & { kind: 'task'; key: string }
+type NotificationActivityItem = {
+  kind: 'notification'
+  key: string
+  notification: NotificationEntry
+  timestamp: number
+}
+
 const notificationsStore = useNotificationsStore()
 const tasksStore = useTasksStore()
-const activatorRef = ref(null)
-const menuRef = ref(null)
+const activatorRef = ref<HTMLElement | { $el?: HTMLElement } | null>(null)
+const menuRef = ref<{ updateLocation?: () => void } | null>(null)
 
 const {t} = useI18n()
 
@@ -155,15 +167,15 @@ const notifications = computed(() => {
 
 const tasks = computed(() => tasksStore.list)
 
-const activityItems = computed(() => {
-  const taskItems = tasks.value.map(task => ({
+const activityItems = computed((): Array<TaskActivityItem | NotificationActivityItem> => {
+  const taskItems: TaskActivityItem[] = tasks.value.map(task => ({
     ...task,
-    kind: 'task',
+    kind: 'task' as const,
     key: `task-${task.id}`,
   }))
 
-  const notificationItems = notifications.value.map(notification => ({
-    kind: 'notification',
+  const notificationItems: NotificationActivityItem[] = notifications.value.map(notification => ({
+    kind: 'notification' as const,
     key: `notification-${notification.id}`,
     notification,
     timestamp: notification.timestamp || 0,
@@ -193,14 +205,14 @@ const hideAll = () => {
   notificationsStore.hideAllNotifications()
 }
 
-const openTask = (action) => {
+const openTask = (action: unknown) => {
   showMenu.value = false
   if (action && typeof action === 'function') {
     action()
   }
 }
 
-const stopTask = (task) => {
+const stopTask = (task: TaskActivityItem) => {
   if (task.action && typeof task.action === 'function') {
     task.action()
   }

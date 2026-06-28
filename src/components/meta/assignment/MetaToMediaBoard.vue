@@ -25,6 +25,7 @@
 
   <template v-else>
     <MediaTypePreviewCard
+      v-if="anchorMediaType"
       :media-type="anchorMediaType"
       :is-pinned="true"
       :pinned-fields="pinnedMetaFields"
@@ -92,7 +93,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {getIconDataType} from '@/services/metaTypeUtils'
@@ -100,21 +101,37 @@ import draggable from 'vuedraggable'
 import {useAppStore} from '@/stores/app'
 import MediaTypePreviewCard from './MediaTypePreviewCard.vue'
 import MetaFieldPool from './MetaFieldPool.vue'
+import type {
+  MediaType,
+  Meta,
+  MetaAssignmentMode,
+  MetaInMediaTypeAssignment,
+  MetaInMediaTypeRow,
+} from '@/types/metaAssignment'
 
-const props = defineProps({
-  mode: {
-    type: String,
-    default: 'from-meta',
-    validator: (v) => ['from-meta', 'from-media-type'].includes(v),
-  },
-  anchorMeta: {type: Object, default: null},
-  anchorMediaType: {type: Object, default: null},
-  pinnedMedia: {type: Array, default: () => []},
-  pinnedItems: {type: Array, default: () => []},
-  allMeta: {type: Array, default: () => []},
+const props = withDefaults(defineProps<{
+  mode?: MetaAssignmentMode
+  anchorMeta?: Meta | null
+  anchorMediaType?: MediaType | null
+  pinnedMedia?: MetaInMediaTypeAssignment[]
+  pinnedItems?: MetaInMediaTypeRow[]
+  allMeta?: Meta[]
+}>(), {
+  mode: 'from-meta',
+  anchorMeta: null,
+  anchorMediaType: null,
+  pinnedMedia: () => [],
+  pinnedItems: () => [],
+  allMeta: () => [],
 })
 
-const emit = defineEmits(['pin-media', 'unpin-media', 'pin-meta', 'unpin-meta', 'reorder'])
+const emit = defineEmits<{
+  'pin-media': [mediaType: MediaType]
+  'unpin-media': [mediaType: MediaType]
+  'pin-meta': [meta: Meta]
+  'unpin-meta': [item: MetaInMediaTypeRow]
+  reorder: [items: MetaInMediaTypeRow[]]
+}>()
 
 const {t} = useI18n()
 const allMediaTypes = computed(() => useAppStore().mediaTypes || [])
@@ -129,12 +146,14 @@ const pinnedMediaTypeIds = computed(() => new Set(props.pinnedMedia.map((i) => i
 
 const pinnedMetaIds = computed(() => props.pinnedItems.map((i) => i.metaId))
 
-const pinnedMetaFields = computed(() => props.pinnedItems.map((i) => i.meta).filter(Boolean))
+const pinnedMetaFields = computed((): Meta[] =>
+  props.pinnedItems.map((i) => i.meta).filter((meta): meta is Meta => meta != null)
+)
 
-const isMediaTypePinned = (mediaTypeId) => pinnedMediaTypeIds.value.has(mediaTypeId)
+const isMediaTypePinned = (mediaTypeId: number) => pinnedMediaTypeIds.value.has(mediaTypeId)
 
-const requestPin = (mediaType) => emit('pin-media', mediaType)
-const requestUnpin = (mediaType) => emit('unpin-media', mediaType)
-const requestPinMeta = (meta) => emit('pin-meta', meta)
-const onReorder = (items) => emit('reorder', items)
+const requestPin = (mediaType: MediaType) => emit('pin-media', mediaType)
+const requestUnpin = (mediaType: MediaType) => emit('unpin-media', mediaType)
+const requestPinMeta = (meta: Meta) => emit('pin-meta', meta)
+const onReorder = (items: MetaInMediaTypeRow[]) => emit('reorder', items)
 </script>

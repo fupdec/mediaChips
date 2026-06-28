@@ -7,7 +7,7 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
@@ -17,6 +17,8 @@ import { useItemsStore } from '@/stores/items'
 import AppbarButton from '@/components/app/appbar/AppBarButton.vue'
 import {apiClient} from '@/services/apiClient'
 import {getTabUrl} from '@/services/routeService'
+import {useEventBus} from '@/utils/eventBus'
+import type { TabLike } from '@/types/common'
 
 /* ---------------- STORES ---------------- */
 
@@ -28,6 +30,7 @@ const items = useItemsStore()
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
+const eventBus = useEventBus()
 
 const ENV = items.environment
 
@@ -35,7 +38,7 @@ const ENV = items.environment
 
 async function add() {
   try {
-    const { data } = await apiClient.post('/api/tab', {
+    const { data } = await apiClient.post<TabLike>('/api/tab', {
       name: items.name,
       icon: items.icon,
       url: route.path,
@@ -50,7 +53,7 @@ async function add() {
     router.push(url)
 
     // заменяет $root.$emit("getTabs")
-    items.fetchTabs()
+    eventBus.emit('getTabs')
 
   } catch (e) {
     console.error(e)

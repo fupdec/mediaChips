@@ -42,7 +42,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onMounted} from 'vue'
 
 const emit = defineEmits([

@@ -33,8 +33,10 @@
   </v-dialog>
 </template>
 
-<script setup>
-import {ref, computed, watch, defineEmits, defineProps} from 'vue';
+<script setup lang="ts">
+import {ref, computed, watch} from 'vue';
+import type {PropType} from 'vue';
+import type {VFormInstance} from '@/types/vue';
 import {useI18n} from 'vue-i18n';
 import {useDisplay} from 'vuetify';
 import {apiClient} from '@/services/apiClient';
@@ -47,7 +49,7 @@ import {useEventBus} from '@/utils/eventBus';
 const props = defineProps({
   dialog: Boolean,
   mediaIds: {
-    type: Array,
+    type: Array as PropType<number[]>,
     default: () => [],
   },
 });
@@ -62,7 +64,7 @@ const eventBus = useEventBus()
 const dialogLocal = ref(props.dialog);
 const name = ref('');
 const valid = ref(false);
-const form = ref(null);
+const form = ref<VFormInstance>(null);
 
 const buttons = computed(() => [{
   icon: "plus",
@@ -92,7 +94,7 @@ const addPlaylist = async () => {
   if (!valid.value) return;
 
   try {
-    const res = await apiClient.post('/api/playlist/', {
+    const res = await apiClient.post<{id?: number; name?: string}>('/api/playlist/', {
       name: name.value,
     });
 
@@ -129,7 +131,7 @@ const addPlaylist = async () => {
   }
 };
 
-const nameRules = (value) => {
+const nameRules = (value: string) => {
   return validateName(value)
 };
 

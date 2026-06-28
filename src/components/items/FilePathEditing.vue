@@ -127,8 +127,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import type { PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import path from 'path-browserify'
 import {apiClient} from '@/services/apiClient'
@@ -142,13 +143,22 @@ import {normalizePastedFilePath} from '@/utils/filePathInput'
 import {checkFileExists as checkPathExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
 import {openPath} from '@/services/shellService'
+import type { MediaItem, MoveWsMessage } from '@/types/stores'
+import type { VFormInstance } from '@/types/vue'
+
+const normalizePath = (value: string) => (path.normalize as (p: string) => string)(value)
 
 const props = defineProps({
-  media: Object,
+  media: {
+    type: Object as PropType<MediaItem>,
+    required: true,
+  },
 })
 const { t } = useI18n()
 
-const emit = defineEmits(['update'])
+const emit = defineEmits<{
+  update: [payload: MediaItem]
+}>()
 
 const valid = ref(true)
 const dialog_edit = ref(false)
@@ -162,7 +172,7 @@ const move_progress = ref(0)
 const move_status = ref('')
 const move_size = ref('')
 const move_eta = ref('')
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 
 const appStore = useAppStore()
 const operationsStore = useOperationsStore()
@@ -172,18 +182,22 @@ const eventBus = useEventBus()
 
 const display_path = ref('')
 
-watch(() => props.media?.path, (value) => {
+watch(() => props.media.path, (value) => {
   display_path.value = value || ''
 }, { immediate: true })
 
-const buildPathFields = (filePath) => ({
-  path: filePath,
-  basename: path.basename(filePath),
-  name: path.parse(filePath).name,
-  ext: path.extname(filePath),
-})
+const buildPathFields = (filePath: string) => {
+  const ext = path.extname(filePath)
+  const basename = path.basename(filePath)
+  return {
+    path: filePath,
+    basename,
+    name: ext ? basename.slice(0, -ext.length) : basename,
+    ext,
+  }
+}
 
-const applyPathUpdate = (filePath) => {
+const applyPathUpdate = (filePath: string) => {
   const updated = buildPathFields(filePath)
   display_path.value = filePath
   is_different_path.value = false
@@ -217,13 +231,13 @@ const headerButtons = computed(() => [{
   action: updateFilePath,
 }])
 
-const onPathInput = (value) => {
-  const normalized = normalizePastedFilePath(value)
+const onPathInput = (value: string) => {
+  const normalized = normalizePastedFilePath(value) as string
   if (normalized !== value) {
     file_path.value = normalized
     value = normalized
   }
-  is_different_path.value = path.normalize(display_path.value || props.media?.path || '') !== path.normalize(value || '')
+  is_different_path.value = normalizePath(display_path.value || props.media.path || '') !== normalizePath(value || '')
 }
 
 const resetMoveState = () => {
@@ -244,7 +258,7 @@ const openFolder = () => {
   openPath(filePath, true)
 }
 
-const savePathToDb = async (filePath, { notify = true } = {}) => {
+const savePathToDb = async (filePath: string, { notify = true } = {}) => {
   const basename = path.basename(filePath)
 
   try {
@@ -278,11 +292,11 @@ const savePathToDb = async (filePath, { notify = true } = {}) => {
   }
 }
 
-const handleMoveProgress = (msg) => {
+const handleMoveProgress = (msg: MoveWsMessage) => {
   if (msg.type === 'init') {
     move_size.value = operationsStore.formatSize(msg.totalBytes || 0)
-    move_eta.value = msg.estimatedSeconds > 0
-      ? operationsStore.formatEta(msg.estimatedSeconds)
+    move_eta.value = (msg.estimatedSeconds ?? 0) > 0
+      ? operationsStore.formatEta(msg.estimatedSeconds ?? 0)
       : ''
     move_progress.value = 0
   }
@@ -290,8 +304,8 @@ const handleMoveProgress = (msg) => {
   if (msg.type === 'progress') {
     move_progress.value = msg.overallProgress || 0
     move_status.value = t('media.file_path.file_moving_progress', { file: msg.fileName })
-    if (msg.etaSeconds > 0) {
-      move_eta.value = operationsStore.formatEta(msg.etaSeconds)
+    if ((msg.etaSeconds ?? 0) > 0) {
+      move_eta.value = operationsStore.formatEta(msg.etaSeconds ?? 0)
     }
   }
 }
@@ -313,7 +327,7 @@ const updateFilePath = async () => {
 
     try {
       const result = await operationsStore.renameFilePath({
-        oldPath: display_path.value || props.media.path,
+        oldPath: display_path.value || props.media.path || '',
         newPath: filePath,
         onProgress: handleMoveProgress,
         notifyOnComplete: false,
@@ -357,7 +371,7 @@ const updateFilePath = async () => {
   }
 }
 
-const refreshPathAvailability = async (filePath) => {
+const refreshPathAvailability = async (filePath: string) => {
   if (!filePath) {
     is_file_exists.value = false
     is_folder_exists.value = false
@@ -380,7 +394,7 @@ const openDialogEdit = async () => {
 }
 
 onMounted(async () => {
-  await refreshPathAvailability(display_path.value || props.media?.path)
+  await refreshPathAvailability(display_path.value || props.media.path || '')
 })
 
 watch(display_path, async (filePath) => {

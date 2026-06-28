@@ -46,7 +46,7 @@
           v-for="playlist in dynamicFeatured"
           :key="`dynamic-card-${playlist.id}`"
           :playlist="playlist"
-          :video-count="playlist.count"
+          :video-count="playlist.count ?? undefined"
           :thumbs-loading="!is_dynamic_thumbs_loaded"
           :playing="playingPlaylistId === playlist.id"
           @play="playDynamic(playlist)"
@@ -122,7 +122,7 @@
       @delete="deletePlaylist"
       @updatePlaylist="getPlaylists"
       :dialog="dialogPlaylistEdit"
-      :playlist="playlist_edit"
+      :playlist="playlist_edit ?? undefined"
     />
 
     <DialogSmartPlaylistEdit
@@ -131,12 +131,12 @@
       @delete="deleteSmartPlaylist"
       @updatePlaylist="onSmartPlaylistUpdated"
       :dialog="dialogSmartPlaylistEdit"
-      :playlist="smart_playlist_edit"
+      :playlist="smart_playlist_edit ?? undefined"
     />
   </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
@@ -155,7 +155,17 @@ import {openSeparatePlayer, canOpenSeparatePlayer} from '@/utils/playerWindow'
 import {setNotification} from '@/services/notificationService'
 import {getFilters} from '@/services/filterService'
 import {useEventBus} from '@/utils/eventBus'
+import {getErrorStatus} from '@/types/vue'
+import type { MediaItem, Playlist } from '@/types/stores'
 
+interface PagePlaylist extends Playlist {
+  name: string
+  media?: MediaItem[]
+  count?: number | null
+  countLoading?: boolean
+  previewIds?: number[]
+  thumbs?: string[]
+}
 const appStore = useAppStore()
 const itemsStore = useItemsStore()
 const playerStore = usePlayerStore()
@@ -164,19 +174,19 @@ const {t} = useI18n()
 const {width} = useDisplay()
 const eventBus = useEventBus()
 
-const container = ref(null)
-const playlists = ref([])
-const dynamicPlaylists = ref([])
+const container = ref<HTMLElement | null>(null)
+const playlists = ref<PagePlaylist[]>([])
+const dynamicPlaylists = ref<PagePlaylist[]>([])
 const is_thumbs_loaded = ref(false)
 const is_manual_loaded = ref(false)
 const is_dynamic_loading = ref(false)
 const is_dynamic_thumbs_loaded = ref(false)
-const playingPlaylistId = ref(null)
+const playingPlaylistId = ref<string | number | null>(null)
 const dialogPlaylistEdit = ref(false)
 const dialogSmartPlaylistEdit = ref(false)
 const dialogPlaylistAdd = ref(false)
-const playlist_edit = ref(null)
-const smart_playlist_edit = ref(null)
+const playlist_edit = ref<PagePlaylist | null>(null)
+const smart_playlist_edit = ref<PagePlaylist | null>(null)
 
 const apiUrl = computed(() => appStore.localhost)
 
@@ -191,16 +201,16 @@ const dynamicCardsPerRow = computed(() => {
 const dynamicFeatured = computed(() => dynamicPlaylists.value.slice(0, dynamicCardsPerRow.value))
 const dynamicList = computed(() => dynamicPlaylists.value.slice(dynamicCardsPerRow.value))
 const dynamicRowSkeletonCount = 4
-const dynamicSkeletonPlaylist = {name: '', thumbs: [], count: 0}
+const dynamicSkeletonPlaylist: PagePlaylist = { id: 0, name: '', thumbs: [], count: 0 }
 
-const enrichMediaItem = (item) => ({
+const enrichMediaItem = (item: MediaItem): MediaItem & { key: string } => ({
   ...item,
   tags: item.tags || [],
   values: item.values || [],
   key: String(item.id),
 })
 
-const playVideos = async (videos) => {
+const playVideos = async (videos: MediaItem[]) => {
   if (!videos?.length) return false
 
   return itemsStore.playVideo({
@@ -210,7 +220,7 @@ const playVideos = async (videos) => {
   })
 }
 
-const applyFullPlaylist = async (videos) => {
+const applyFullPlaylist = async (videos: MediaItem[]) => {
   const firstPlayable = await itemsStore.findFirstPlayableVideo(videos)
     || videos.find((item) => item?.path)
     || videos[0]
@@ -252,7 +262,7 @@ const applyFullPlaylist = async (videos) => {
   return false
 }
 
-const play = async (playlist) => {
+const play = async (playlist: PagePlaylist) => {
   if (!playlist.media?.length || playingPlaylistId.value) return
 
   playingPlaylistId.value = `manual-${playlist.id}`
@@ -264,7 +274,7 @@ const play = async (playlist) => {
   }
 }
 
-const playDynamic = async (playlist) => {
+const playDynamic = async (playlist: PagePlaylist) => {
   if (playingPlaylistId.value) return
 
   playingPlaylistId.value = playlist.id
@@ -275,7 +285,7 @@ const playDynamic = async (playlist) => {
 
     if (firstId) {
       try {
-        const basicsRes = await apiClient.post('/api/Media/basics', {
+        const basicsRes = await apiClient.post<{ items?: MediaItem[] }>('/api/Media/basics', {
           ids: [firstId],
         })
         const firstVideo = basicsRes.data?.items?.[0]
@@ -288,11 +298,11 @@ const playDynamic = async (playlist) => {
       }
     }
 
-    const res = await apiClient.get(`/api/SavedFilter/${playlist.id}/media`, {
+    const res = await apiClient.get<{ items?: MediaItem[]; count?: number }>(`/api/SavedFilter/${playlist.id}/media`, {
       params: {mode: 'play'},
     })
-    const videos = (res.data.items || []).map(enrichMediaItem)
-    const videoCount = Number(res.data.count ?? videos.length) || videos.length
+    const videos = (res.data?.items || []).map(enrichMediaItem)
+    const videoCount = Number(res.data?.count ?? videos.length) || videos.length
 
     if (!videos.length) {
       if (!started) {
@@ -339,16 +349,17 @@ const loadDynamicPlaylistSummaries = async () => {
     return
   }
 
-  let legacySummaries = null
+  let legacySummaries: Map<number, PagePlaylist> | null = null
 
-  const applySummary = async (playlist) => {
+  const applySummary = async (playlist: PagePlaylist) => {
     try {
-      const res = await apiClient.get(`/api/SavedFilter/${playlist.id}/summary`)
+      const res = await apiClient.get<{ count?: number; previewIds?: number[] }>(`/api/SavedFilter/${playlist.id}/summary`)
       playlist.count = Number(res.data?.count) || 0
       playlist.previewIds = res.data?.previewIds || []
       return
-    } catch (e) {
-      if (e.response?.status !== 404) {
+    } catch (e: unknown) {
+      const status = (e as { response?: { status?: number } })?.response?.status
+      if (status !== 404) {
         console.log(`Error loading summary for playlist ${playlist.id}:`, e)
         playlist.count = 0
         playlist.previewIds = []
@@ -359,7 +370,7 @@ const loadDynamicPlaylistSummaries = async () => {
     try {
       if (!legacySummaries) {
         const res = await apiClient.get('/api/SavedFilter/dynamicPlaylists')
-        legacySummaries = new Map((res.data || []).map((item) => [item.id, item]))
+        legacySummaries = new Map((res.data as PagePlaylist[] || []).map((item) => [item.id, item]))
       }
       const match = legacySummaries.get(playlist.id)
       playlist.count = Number(match?.count) || 0
@@ -390,19 +401,19 @@ const loadDynamicPlaylists = async () => {
   is_dynamic_thumbs_loaded.value = false
 
   try {
-    const res = await apiClient.get('/api/SavedFilter/dynamicPlaylists/basic')
-    dynamicPlaylists.value = (res.data || []).map((playlist) => ({
+    const res = await apiClient.get<PagePlaylist[]>('/api/SavedFilter/dynamicPlaylists/basic')
+    dynamicPlaylists.value = (res.data || []).map((playlist: PagePlaylist) => ({
       ...playlist,
       count: null,
       countLoading: true,
       previewIds: [],
       thumbs: [],
     }))
-  } catch (e) {
-    if (e.response?.status === 404) {
+  } catch (e: unknown) {
+    if (getErrorStatus(e) === 404) {
       try {
-        const res = await apiClient.get('/api/SavedFilter/dynamicPlaylists')
-        dynamicPlaylists.value = (res.data || []).map((playlist) => ({
+        const res = await apiClient.get<PagePlaylist[]>('/api/SavedFilter/dynamicPlaylists')
+        dynamicPlaylists.value = (res.data || []).map((playlist: PagePlaylist) => ({
           ...playlist,
           count: Number(playlist.count) || 0,
           countLoading: false,
@@ -440,8 +451,8 @@ const getPlaylists = async () => {
   is_thumbs_loaded.value = false
 
   try {
-    const res = await apiClient.get('/api/Playlist/summary')
-    playlists.value = (res.data || []).map((playlist) => ({
+    const res = await apiClient.get<PagePlaylist[]>('/api/Playlist/summary')
+    playlists.value = (res.data || []).map((playlist: PagePlaylist) => ({
       ...playlist,
       thumbs: [],
     }))
@@ -464,6 +475,8 @@ const loadAllPlaylists = async () => {
 const deletePlaylist = async () => {
   dialogPlaylistEdit.value = false
 
+  if (!playlist_edit.value?.id) return
+
   try {
     await apiClient.delete(`/api/playlist/${playlist_edit.value.id}`)
   } catch (e) {
@@ -478,12 +491,12 @@ const addNewPlaylist = async () => {
   await getPlaylists()
 }
 
-const edit = (playlist) => {
+const edit = (playlist: PagePlaylist) => {
   playlist_edit.value = playlist
   dialogPlaylistEdit.value = true
 }
 
-const editDynamic = (playlist) => {
+const editDynamic = (playlist: PagePlaylist) => {
   smart_playlist_edit.value = playlist
   dialogSmartPlaylistEdit.value = true
 }

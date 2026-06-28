@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.api.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true
+  },
+  "include": [
+    "api/utils/**/*.ts",
+    "api/assets/Countries.ts",
+    "api/types/global.d.ts"
+  ]
+}

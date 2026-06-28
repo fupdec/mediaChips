@@ -49,8 +49,8 @@
       <MetaInputArray
         v-if="field.type === 'array'"
         @update:model-value="$emit('update:value', $event)"
-        :model-value="value"
-        :meta-id="field.key"
+        :model-value="Array.isArray(value) ? (value as number[]) : []"
+        :meta-id="Number(field.key)"
         :disabled="disabled"
         purpose="bulk"
         variant="filled"
@@ -110,14 +110,14 @@
 
       <div v-else-if="field.type === 'rating'" class="d-flex align-center pt-1">
         <v-rating
-          :model-value="value"
+          :model-value="typeof value === 'number' ? value : undefined"
           @update:model-value="$emit('update:value', $event)"
-          :length="field.meta?.ratingMax"
-          :full-icon="`mdi-${field.meta?.ratingIcon}`"
-          :empty-icon="`mdi-${field.meta?.ratingIconEmpty || field.meta?.ratingIcon}`"
-          :half-increments="field.meta?.ratingHalf"
-          :half-icon="`mdi-${field.meta?.ratingIconHalf || field.meta?.ratingIcon}`"
-          :color="field.meta?.ratingColor"
+          :length="fieldMeta.ratingMax"
+          :full-icon="`mdi-${fieldMeta.ratingIcon}`"
+          :empty-icon="`mdi-${fieldMeta.ratingIconEmpty || fieldMeta.ratingIcon}`"
+          :half-increments="fieldMeta.ratingHalf"
+          :half-icon="`mdi-${fieldMeta.ratingIconHalf || fieldMeta.ratingIcon}`"
+          :color="fieldMeta.ratingColor"
           :readonly="disabled"
           background-color="grey"
           density="compact"
@@ -128,7 +128,7 @@
 
       <div v-else-if="field.type === 'preset-rating'" class="d-flex align-center pt-1">
         <v-rating
-          :model-value="value"
+          :model-value="typeof value === 'number' ? value : undefined"
           @update:model-value="$emit('update:value', $event)"
           color="yellow-darken-3"
           background-color="grey-darken-1"
@@ -160,13 +160,39 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
+import type {PropType} from 'vue'
 import MetaInputArray from '@/components/meta/input/MetaInputArray.vue'
+
+interface BulkEditFieldMeta {
+  ratingMax?: number
+  ratingIcon?: string
+  ratingIconEmpty?: string
+  ratingIconHalf?: string
+  ratingHalf?: boolean
+  ratingColor?: string
+}
+
+interface BulkEditField {
+  key: string | number
+  type: string
+  name: string
+  icon?: string
+  hint?: string
+  meta?: BulkEditFieldMeta
+}
+
+interface BulkEditMode {
+  type: number
+  icon: string
+  color: string
+  label: string
+}
 
 const props = defineProps({
   field: {
-    type: Object,
+    type: Object as PropType<BulkEditField>,
     required: true,
   },
   editType: {
@@ -174,10 +200,11 @@ const props = defineProps({
     default: 0,
   },
   editMode: {
-    type: Object,
+    type: Object as PropType<BulkEditMode>,
     required: true,
   },
   value: {
+    type: [String, Number, Boolean, Array] as PropType<string | number | boolean | unknown[] | null>,
     default: null,
   },
   showIcons: Boolean,
@@ -196,6 +223,8 @@ const fieldCardClass = computed(() => ({
   'bulk-field-card--replace': props.editType === 2,
   'bulk-field-card--add': props.editType === 3,
 }))
+
+const fieldMeta = computed(() => props.field.meta || {})
 </script>
 
 <style scoped>

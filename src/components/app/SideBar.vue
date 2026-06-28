@@ -113,13 +113,13 @@
 
           <!-- Watcher folders -->
           <div
-            v-if="watcherStore.files && watcherStore.files.length && settingsStore.watchFolders == '1'"
+            v-if="watcherFiles.length && settingsStore.watchFolders == '1'"
             @mouseover="folderHovered = true"
             @mouseleave="folderHovered = false"
           >
             <v-divider class="my-1"/>
             <v-list-item
-              v-for="f in watcherStore.files"
+              v-for="f in watcherFiles"
               :key="f.folder.id"
               @click="openDialogFolder(f)"
               :disabled="watcherStore.busy"
@@ -128,7 +128,7 @@
                 <v-badge
                   v-if="!watcherStore.busy"
                   :content="getBadgeVal(f.files, 'new')"
-                  :model-value="getBadgeVal(f.files, 'new')"
+                  :model-value="Boolean(getBadgeVal(f.files, 'new'))"
                   :dot="!folderHovered"
                   color="success"
                   location="top right"
@@ -136,7 +136,7 @@
                   <v-badge
                     v-if="!watcherStore.busy"
                     :content="getBadgeVal(f.files, 'lost')"
-                    :model-value="getBadgeVal(f.files, 'lost')"
+                    :model-value="Boolean(getBadgeVal(f.files, 'lost'))"
                     :dot="!folderHovered"
                     color="error"
                     location="bottom right"
@@ -160,29 +160,34 @@
   </v-navigation-drawer>
 </template>
 
-<script setup>
-/* Vue / Utilities */
+<script setup lang="ts">
 import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
-import draggable from 'vuedraggable' // vuedraggable@next
+import draggable from 'vuedraggable'
 import {apiClient} from '@/services/apiClient'
 import orderBy from 'lodash/orderBy'
-
-/* Pinia stores — adjust names to your stores */
-import {useAppStore} from '@/stores/app' // optional, or read from central store
+import {useAppStore} from '@/stores/app'
 import {useWatcherStore} from '@/stores/watcher'
 import {useSettingsStore} from '@/stores/settings'
-
-/* i18n */
 import {useI18n} from 'vue-i18n'
-import {useEventBus} from "@/utils/eventBus";
+import {useEventBus} from "@/utils/eventBus"
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import type { Meta } from '@/types/stores'
 
-/* local state */
+type MetaNavItem = Meta & { hidden?: boolean; order?: number }
+type MetaNavRow = MetaNavItem | { type: 'toggler'; id: string }
+
 const isShowHidden = ref(false)
 const folderHovered = ref(false)
-const meta_arr = ref([])
+const meta_arr = ref<MetaNavRow[]>([])
 const drag = ref(false)
+
+interface WatcherFolderEntry {
+  folder: { id: number; name?: string; [key: string]: unknown }
+  files: Array<Record<string, unknown[]>>
+}
+
+const watcherFiles = computed(() => (watcherStore.files || []) as WatcherFolderEntry[])
 
 const dragOptions = {
   animation: 200,
@@ -214,13 +219,11 @@ const metaDisordered = computed(() => {
 })
 
 /* helpers */
-function reorderMeta(items) {
-  // order by hidden then order
+function reorderMeta(items: MetaNavItem[]): MetaNavRow[] {
   let sorted = orderBy(items, ['hidden', 'order'], ['asc', 'asc'])
-  // if there is more than one visible -> insert toggler after visible useItemsStore
   if (sorted.length > 1) {
     const visibleCount = sorted.filter(i => !i.hidden).length
-    const arr = [...sorted]
+    const arr: MetaNavRow[] = [...sorted]
     arr.splice(visibleCount, 0, {type: 'toggler', id: 'toggler'})
     return arr
   }
@@ -237,29 +240,27 @@ watch(metaDisordered, (v) => {
 })
 
 /* methods */
-async function updateMetaOrder(evt) {
+async function updateMetaOrder() {
   drag.value = false
 
-  // prepare payload: skip toggler item
   const indexToggler = meta_arr.value.findIndex(i => i.type === 'toggler')
 
   const payload = meta_arr.value
     .map((i, idx) => {
-      // toggler is not a real meta
       if (i.type === 'toggler') return null
 
-      let hidden = i.hidden
-      // heuristic similar to original: if moved across toggler adjust hidden
+      const metaItem = i as MetaNavItem
+      let hidden = metaItem.hidden
       if (indexToggler >= 0) {
         hidden = idx >= indexToggler
       }
       return {
-        id: i.id,
+        id: metaItem.id,
         order: idx,
         hidden,
       }
     })
-    .filter(Boolean)
+    .filter((entry): entry is { id: number; order: number; hidden: boolean | undefined } => entry !== null)
 
   // send updates sequentially (original did it one-by-one)
   for (const p of payload) {
@@ -276,14 +277,14 @@ async function updateMetaOrder(evt) {
   eventBus.emit('getMeta')
 }
 
-function openDialogFolder(folder) {
+function openDialogFolder(folder: unknown) {
   console.log('openDialogFolder', folder)
 
   watcherStore.folder = folder
   watcherStore.dialogFolder = true
 }
 
-function getBadgeVal(files = [], type = 'new') {
+function getBadgeVal(files: Array<Record<string, unknown[]>> = [], type = 'new') {
   let value = 0
   for (const f of files) value += (f[type] || []).length
   return value

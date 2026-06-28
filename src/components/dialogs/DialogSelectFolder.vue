@@ -16,7 +16,6 @@
             icon: 'check',
             text: t('common.select'),
             color: 'success',
-            variant: 'flat',
             function: select,
           },
         ]"
@@ -59,8 +58,9 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {storeToRefs} from 'pinia'
@@ -81,12 +81,12 @@ const {isElectron} = storeToRefs(appStore)
 const operations = computed(() => operationsStore)
 
 const valid = ref(true)
-const isFolderExists = ref(null)
-const form = ref(null)
+const isFolderExists = ref<boolean | null>(null)
+const form = ref<VFormInstance>(null)
 
-const onFolderPathInput = (value) => {
+const onFolderPathInput = (value: string) => {
   if (operations.value.moving) {
-    operations.value.moving.folderPath = normalizePastedFilePath(value)
+    operations.value.moving.folderPath = String(normalizePastedFilePath(value) ?? '')
   }
   isFolderExists.value = null
 }
@@ -127,8 +127,10 @@ const folderPath = computed({
 
 const chooseDir = async () => {
   try {
-    const result = await window.electronAPI.invoke('showOpenDialog', ['openDirectory'])
-    if (result.filePaths.length !== 0) {
+    const result = await window.electronAPI?.invoke?.('showOpenDialog', ['openDirectory']) as {
+      filePaths?: string[]
+    } | undefined
+    if (result?.filePaths?.length) {
       folderPath.value = result.filePaths[0]
       isFolderExists.value = true
     }

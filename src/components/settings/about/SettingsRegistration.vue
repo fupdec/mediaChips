@@ -15,17 +15,17 @@
           </v-chip>
         </td>
       </tr>
-      <tr v-if="regInfo.license_code">
+      <tr v-if="licenseInfo?.license_code">
         <td>{{ t('registration.activation_key') }}</td>
-        <td><b>{{ regInfo.license_code || "??" }}</b></td>
+        <td><b>{{ licenseInfo.license_code || "??" }}</b></td>
       </tr>
-      <tr v-if="regInfo.license_code">
+      <tr v-if="licenseInfo?.license_code">
         <td>{{ t('registration.used_devices') }}</td>
         <td><b>{{ activated_devices }} / 3</b></td>
       </tr>
-      <tr v-if="regInfo.license_code">
+      <tr v-if="licenseInfo?.license_code">
         <td>{{ t('registration.expiration_date') }}</td>
-        <td><b>{{ regInfo.license_expiry || "??" }}</b></td>
+        <td><b>{{ licenseInfo.license_expiry || "??" }}</b></td>
       </tr>
       </tbody>
     </v-table>
@@ -50,7 +50,7 @@
       </v-btn>
     </div>
 
-    <div v-if="regInfo.license_type !== 'Lifetime'" class="mb-4">
+    <div v-if="licenseInfo?.license_type !== 'Lifetime'" class="mb-4">
       <v-btn
         @click="openLink('https://mediachips.app/')"
         color="primary"
@@ -86,8 +86,8 @@
 
           <v-stepper-item
             :value="2"
-            :complete="step > 1 && (numberOfActivations < 3 || !isKeyExpired)"
-            :error="numberOfActivations > 2 || isKeyExpired"
+            :complete="step > 1 && (activationsCount < 3 || !isKeyExpired)"
+            :error="activationsCount > 2 || isKeyExpired"
             :title="t('registration.key_status')"
             color="primary"
           ></v-stepper-item>
@@ -196,9 +196,9 @@
                   </tr>
                   <tr>
                     <td>{{ t('registration.used_devices') }}</td>
-                    <td><b>{{ numberOfActivations }} / 3</b></td>
+                    <td><b>{{ activationsCount }} / 3</b></td>
                     <td>
-                      <v-icon v-if="numberOfActivations < 3" color="success">mdi-check</v-icon>
+                      <v-icon v-if="activationsCount < 3" color="success">mdi-check</v-icon>
                       <v-icon v-else color="error">mdi-close</v-icon>
                     </td>
                   </tr>
@@ -214,17 +214,17 @@
                 </v-table>
 
                 <v-alert
-                  v-if="numberOfActivations > 2 || isKeyExpired"
+                  v-if="activationsCount > 2 || isKeyExpired"
                   class="mt-4"
                   color="error"
                   rounded="xl"
                   variant="tonal"
                 >
-                  <div v-if="numberOfActivations > 2">
+                  <div v-if="activationsCount > 2">
                     {{ t('registration.activations_exceeded') }}
                   </div>
                   <div v-if="isKeyExpired">{{ t('registration.key_expired') }}</div>
-                  <div v-if="numberOfActivations > 2 || isKeyExpired">
+                  <div v-if="activationsCount > 2 || isKeyExpired">
                     {{ t('registration.enter_another_key') }}
                   </div>
                 </v-alert>
@@ -244,7 +244,7 @@
                   color="primary"
                   class="ma-2 px-4"
                   :disabled="
-                    numberOfActivations > 2 || isQueryRun || isKeyExpired
+                    activationsCount > 2 || isQueryRun || isKeyExpired
                   "
                   rounded
                   variant="flat"
@@ -293,21 +293,34 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRegistrationStore} from '@/stores/registration'
 import {useNotificationsStore} from '@/stores/notifications'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import type {VFormInstance} from '@/types/vue'
+import type {LicenseInfo} from '@/types/stores'
+
+interface AxiosLikeError {
+  response?: { data?: { message?: string } }
+  message?: string
+}
+
+interface LicenseActionResponse {
+  success?: boolean
+  message?: string
+}
 
 // Инициализация хранилищ
 const registrationStore = useRegistrationStore()
 const notificationsStore = useNotificationsStore()
 const {t} = useI18n()
 
-function getErrorMessage(error, fallback) {
-  return error.response?.data?.message || error.message || fallback
+function getErrorMessage(error: unknown, fallback: string): string {
+  const err = error as AxiosLikeError
+  return err.response?.data?.message || err.message || fallback
 }
 
 // Локальные реактивные переменные
@@ -317,14 +330,14 @@ const step = ref(1)
 const licenseKey = ref('')
 const valid = ref(false)
 const isQueryRun = ref(false)
-const numberOfActivations = ref(null)
+const numberOfActivations = ref<number | null>(null)
 const licenseExpiryDate = ref('')
 const isKeyExpired = ref(false)
 const checkingStatus = ref('')
 const registrationStatus = ref('')
 const activated_devices = ref(0)
 
-const cleanObj = {
+const cleanObj: LicenseInfo = {
   license_code: '',
   license_created: '',
   license_expiry: '',
@@ -339,14 +352,19 @@ const cleanObj = {
 // Вычисляемые свойства
 const regInfo = computed(() => registrationStore.regInfo)
 const reg = computed(() => registrationStore.reg)
+const licenseInfo = computed((): LicenseInfo | null => {
+  const info = regInfo.value
+  return info && typeof info === 'object' ? info : null
+})
+const activationsCount = computed(() => numberOfActivations.value ?? 0)
 
 // Ссылка на форму
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 
 // Методы
 const openDialog = () => {
   step.value = 1
-  licenseKey.value = regInfo.value.license_code || ''
+  licenseKey.value = licenseInfo.value?.license_code || ''
   dialog.value = true
   checkingStatus.value = ''
 }
@@ -359,11 +377,11 @@ const closeDialog = () => {
   }, 1000)
 }
 
-const openLink = (link) => {
+const openLink = (link: string) => {
   window.open(link, '_blank')
 }
 
-const calculateActivations = (data) =>{
+const calculateActivations = (data: LicenseInfo) => {
   const fingerprints = [
     data.fingerprint_1,
     data.fingerprint_2,
@@ -372,14 +390,10 @@ const calculateActivations = (data) =>{
 
   let numberOfActivationsCount = 0
   for (let i = 0; i < fingerprints.length; i++) {
-    if (fingerprints[i] && fingerprints[i].length > 0) {
+    if (fingerprints[i] && fingerprints[i]!.length > 0) {
       ++numberOfActivationsCount
     }
   }
-
-  // if (fingerprints.includes(registrationStore.machineId)) {
-  //   ++numberOfActivationsCount
-  // }
 
   return numberOfActivationsCount
 }
@@ -396,16 +410,17 @@ const checkLicenseKey = async () => {
       numberOfActivations.value = calculateActivations(data)
 
       const today = new Date().toISOString().substring(0, 10)
-      isKeyExpired.value = today > data.license_expiry && data.license_expiry !== '0000-00-00'
+      const expiry = data.license_expiry || ''
+      isKeyExpired.value = today > expiry && expiry !== '0000-00-00'
 
-      licenseExpiryDate.value = data.license_expiry
+      licenseExpiryDate.value = expiry
       step.value = 2
       checkingStatus.value = ''
     } else {
       checkingStatus.value = t('registration.key_not_found', {key: licenseKey.value})
     }
   } catch (error) {
-    checkingStatus.value = error.message
+    checkingStatus.value = getErrorMessage(error, t('registration.internet_error_checking_key'))
     notificationsStore.setNotification({
       type: 'error',
       text: t('registration.internet_error_checking_key')
@@ -422,12 +437,15 @@ const register = async () => {
     const data = await registrationStore.activateLicense(licenseKey.value)
 
     if (data && data.activated) {
-      registrationStatus.value = data.message
+      registrationStatus.value = data.message || ''
 
       try {
-        // Обновляем информацию о регистрации в хранилище
-        await registrationStore.updateRegInfo(data.license)
-        registrationStatus.value = t('registration.registration_successful')
+        if (data.license) {
+          await registrationStore.updateRegInfo(data.license)
+          registrationStatus.value = t('registration.registration_successful')
+        } else {
+          registrationStatus.value = t('registration.registration_failed')
+        }
       } catch (encryptError) {
         console.error('Registration save error:', encryptError)
         registrationStatus.value = t('registration.registration_failed')
@@ -453,7 +471,8 @@ const register = async () => {
 const deactivateKey = async () => {
   dialogDeactivateConfirm.value = false
 
-  if (!regInfo.value.license_code) {
+  const licenseCode = licenseInfo.value?.license_code
+  if (!licenseCode) {
     notificationsStore.setNotification({
       type: 'error',
       text: t('registration.no_activation_key_found')
@@ -462,16 +481,15 @@ const deactivateKey = async () => {
   }
 
   try {
-    const data = await registrationStore.deactivateLicense(regInfo.value.license_code)
+    const data = await registrationStore.deactivateLicense(licenseCode) as LicenseActionResponse
 
     if (data.success) {
       notificationsStore.setNotification({
         type: 'info',
-        text: data.message
+        text: data.message || ''
       })
       licenseKey.value = ''
 
-      // Очищаем информацию о регистрации
       await registrationStore.updateRegInfo(cleanObj)
     } else {
       notificationsStore.setNotification({
@@ -482,16 +500,15 @@ const deactivateKey = async () => {
   } catch (error) {
     notificationsStore.setNotification({
       type: 'error',
-      text: error.message
+      text: getErrorMessage(error, t('registration.deactivation_failed'))
     })
   }
 }
 
 // Инициализация при монтировании
 onMounted(() => {
-  // Проверяем, есть ли сохраненная регистрационная информация
-  if (regInfo.value) {
-    activated_devices.value = calculateActivations(regInfo.value)
+  if (licenseInfo.value) {
+    activated_devices.value = calculateActivations(licenseInfo.value)
   }
 })
 </script>

@@ -2,6 +2,16 @@
 node_modules
 /dist
 /.electron-build
+/.app-build
+/.api-build
+/.main-build
+/.scripts-build
+/app/**/*.js
+/api/**/*.js
+/api/assets/**/*.js
+/electron/*.js
+/main.js
+/scripts/*.js
 /app_storage
 /models
 /databases

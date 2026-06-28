@@ -34,7 +34,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   page: {
     type: Number,
@@ -56,7 +56,7 @@ defineProps({
 
 const emit = defineEmits(['update:page', 'update:jumpPage', 'change', 'jump'])
 
-const onPageChange = (value) => {
+const onPageChange = (value: number) => {
   emit('update:page', value)
   emit('change', value)
 }

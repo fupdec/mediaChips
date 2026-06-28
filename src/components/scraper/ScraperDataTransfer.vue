@@ -54,10 +54,8 @@
         {{ getMetaName(item.meta, t) }}
       </td>
 
-      <!-- Параметр -->
       <td>{{ getScraperFieldName(item.key) }}</td>
 
-      <!-- Текущее значение -->
       <td class="text-right pr-12">
         <span> {{ item.valueCurrent }} </span>
         <v-btn
@@ -73,80 +71,72 @@
         </v-btn>
       </td>
 
-      <!-- найденное значение -->
       <td>{{ item.valueScraper }}</td>
     </tr>
     </tbody>
   </v-table>
 
-  <!-- Выбор изображений для импорта - inline реализация -->
-  <ScraperSelectImages :selected="selected"></ScraperSelectImages>
+  <ScraperSelectImages v-if="selected" :selected="selected"></ScraperSelectImages>
 </template>
 
-<script setup>
-import {ref, computed, onMounted, watch} from 'vue'
+<script setup lang="ts">
+import {computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useScraperStore} from '@/stores/scraper'
 import {useAppStore} from '@/stores/app'
 import Countries from "@/assets/Countries"
 import {cloneDeep} from 'lodash'
-import ScraperSelectImages from "@/components/scraper/ScraperSelectImages.vue";
-import {getMetaName} from "@/utils/metaI18n";
+import ScraperSelectImages from "@/components/scraper/ScraperSelectImages.vue"
+import {getMetaName} from "@/utils/metaI18n"
+import type {
+  ScraperPinnedItem,
+  ScraperSelectedResult,
+  ScraperTransferField,
+} from '@/types/scraper'
+import type { Meta } from '@/types/stores'
 
-const props = defineProps({
-  selected: Object
-})
+const props = defineProps<{
+  selected?: ScraperSelectedResult | null
+}>()
 
 const scraperStore = useScraperStore()
 const appStore = useAppStore()
 const {t} = useI18n()
 
-const selectedImages = ref([])
-
-// Компьютеды через Pinia stores
 const fields = computed(() => scraperStore.fields)
-const pinned = computed(() => scraperStore.pinned)
-const metas = computed(() => pinned.value.filter(i => i.scraper))
+const pinned = computed(() => scraperStore.pinned as ScraperPinnedItem[])
+const metas = computed(() => pinned.value.filter((i) => i.scraper))
 const currentValues = computed(() => scraperStore.currentValues)
 
-const getScraperFieldName = (key) => t(`scraper.fields.${key}`, key)
-
-function toggleImage(img) {
-  const index = selectedImages.value.indexOf(img)
-  if (index > -1) {
-    selectedImages.value.splice(index, 1)
-  } else {
-    selectedImages.value.push(img)
-  }
-}
+const getScraperFieldName = (key: string) => t(`scraper.fields.${key}`, key)
 
 async function getData() {
-  const values = props.selected?.extras // получаем данные из скрапера
-  if (!values) return // проверка на отсутствие данных
+  const values = props.selected?.extras
+  if (!values) return
 
-  const clearVal = (value, regexp) => {
+  const clearVal = (value: unknown, regexp: RegExp) => {
     if (value) {
-      let val = cloneDeep(value.match(regexp))
+      const val = cloneDeep(String(value).match(regexp))
       if (val) return val[0]
-    } else return value
+    }
+    return value
   }
 
-  values["bra"] = clearVal(values["cupsize"], /\d+/) // оставить только цифры
-  values["cupsize"] = clearVal(values["cupsize"], /\D+/) // оставить все кроме цифр
+  values["bra"] = clearVal(values["cupsize"], /\d+/)
+  values["cupsize"] = clearVal(values["cupsize"], /\D+/)
   values["height"] = clearVal(values["height"], /\d+/)
   values["weight"] = clearVal(values["weight"], /\d+/)
   if (values["fake_boobs"] || values["fake_boobs"] === false) {
     values["fake_boobs"] = values["fake_boobs"] ? "Fake" : "Real"
   }
 
-  let data = []
-  let tagsAll = appStore.tags || []
+  const data: ScraperTransferField[] = []
+  const tagsAll = appStore.tags || []
 
-  // для страны, тип данных строка
   const cc = values.birthplace_code
-  const found_cc = Countries.find(i => i.code === cc)
+  const found_cc = Countries.find((i) => i.code === cc)
   if (found_cc) {
-    const currentCountry = currentValues.value.country || []
+    const currentCountry = (currentValues.value.country as string[]) || []
     data.push({
       dataType: 'country',
       valueCurrent: currentCountry,
@@ -154,67 +144,69 @@ async function getData() {
       valueScraper: [found_cc.name],
       isTagExists: false,
       key: 'country',
-      meta: {icon: 'flag'},
+      meta: {id: 0, icon: 'flag'} as Meta,
       isTransfered: false,
       isAlreadyContain: currentCountry.includes(found_cc.name),
     })
   }
 
-  // для остальных медиа, которые прикреплены
-  metas.value.forEach((meta) => {
-    const valueScraper = values[meta.scraper] // значение поля полученное по api
-    if (!!valueScraper) {
-      let val = currentValues.value[meta.pinnedMetaId] || null
-      let isTagExists
-      if (meta.meta.type === "array") {
-        if (val && val.length) {
-          // получаем массив с именами вместо айдишников
-          val = val.map((id) => {
-            const tag = appStore.getTagById(id)
-            return tag ? tag.name : id
-          })
-        } else {
-          val = []
-        }
-        // ищем есть ли уже тэг с таким именем
-        isTagExists =
-          tagsAll
-            .filter(tag => tag.metaId === meta.meta.id)
-            .findIndex(
-              tag => tag.name.toLowerCase() === valueScraper.toLowerCase()
-            ) > -1
-      }
+  metas.value.forEach((metaItem) => {
+    if (!metaItem.meta) return
+    const valueScraper = values[metaItem.scraper as string]
+    if (!valueScraper) return
 
-      let isAlreadyContain = false
-      if (val && val.length) {
-        isAlreadyContain = val.includes(valueScraper)
+    const pinnedKey = metaItem.pinnedMetaId
+    let val = pinnedKey != null ? currentValues.value[pinnedKey] : null
+    let isTagExists = false
+
+    if (metaItem.meta.type === "array") {
+      if (Array.isArray(val) && val.length) {
+        val = val.map((id) => {
+          const tag = appStore.getTagById(Number(id))
+          return tag ? tag.name : id
+        })
+      } else {
+        val = []
       }
-      data.push({
-        dataType: meta.meta.type,
-        valueCurrent: cloneDeep(val),
-        valueReserved: cloneDeep(val),
-        valueScraper,
-        isTagExists: isTagExists,
-        key: meta.scraper,
-        meta: cloneDeep(meta.meta),
-        isTransfered: false,
-        isAlreadyContain,
-      })
+      isTagExists =
+        tagsAll
+          .filter((tag) => tag.metaId === metaItem.meta?.id)
+          .findIndex(
+            (tag) => tag.name?.toLowerCase() === String(valueScraper).toLowerCase()
+          ) > -1
     }
+
+    let isAlreadyContain = false
+    if (Array.isArray(val) && val.length) {
+      isAlreadyContain = val.includes(valueScraper)
+    }
+
+    data.push({
+      dataType: metaItem.meta.type,
+      valueCurrent: cloneDeep(val),
+      valueReserved: cloneDeep(val),
+      valueScraper,
+      isTagExists,
+      key: metaItem.scraper as string,
+      meta: cloneDeep(metaItem.meta),
+      isTransfered: false,
+      isAlreadyContain,
+    })
   })
-  fields.value = data
+
+  scraperStore.fields = data
 }
 
-function restore(item) {
+function restore(item: ScraperTransferField) {
   item.valueCurrent = cloneDeep(item.valueReserved)
   item.isTransfered = false
-  fields.value = [...fields.value]
+  scraperStore.fields = [...scraperStore.fields]
 }
 
-function transfer(item) {
-  if (item.isTransfered) return // если уже перенесен
+function transfer(item: ScraperTransferField) {
+  if (item.isTransfered) return
   if (item.dataType === "array") {
-    if (!item.isAlreadyContain) {
+    if (!item.isAlreadyContain && Array.isArray(item.valueCurrent)) {
       item.valueCurrent.push(item.valueScraper)
     }
   } else {
@@ -224,19 +216,15 @@ function transfer(item) {
 }
 
 function restoreAll() {
-  fields.value
-    .filter(i => i.isTransfered)
-    .forEach(item => {
-      restore(item)
-    })
+  scraperStore.fields
+    .filter((i) => i.isTransfered)
+    .forEach((item) => restore(item))
 }
 
 function transferAll() {
-  fields.value
-    .filter(i => !i.isAlreadyContain)
-    .forEach(item => {
-      transfer(item)
-    })
+  scraperStore.fields
+    .filter((i) => !i.isAlreadyContain)
+    .forEach((item) => transfer(item))
 }
 
 onMounted(() => {

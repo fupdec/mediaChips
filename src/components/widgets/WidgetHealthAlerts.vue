@@ -104,7 +104,7 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
@@ -114,6 +114,8 @@ import {useItemsStore} from '@/stores/items'
 import {useTasksStore} from '@/stores/tasks'
 import {useEventBus} from '@/utils/eventBus'
 import {getReadableFileSize} from '@/services/formatUtils'
+import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import type { HealthAlertItem, HomeHealthData } from '@/types/widgets'
 
 const {t} = useI18n()
 const router = useRouter()
@@ -124,12 +126,14 @@ const eventBus = useEventBus()
 
 const checked = ref(false)
 const loading = ref(false)
-const health = ref({
+const emptyHealth = (): HomeHealthData => ({
   duplicates: {byFilesize: 0, byContentHash: 0},
   contentHash: {total: 0, pending: 0, hashed: 0},
   generatedImages: {byType: {}, totalPending: 0},
   database: {id: null, name: null, bytes: null},
 })
+
+const health = ref<HomeHealthData>(emptyHealth())
 const missingCount = ref(0)
 
 const activeTasksCount = computed(() => tasksStore.list.length)
@@ -140,7 +144,7 @@ const databaseSize = computed(() => {
 })
 
 const databaseSizeLabel = computed(() => {
-  const size = getReadableFileSize(databaseSize.value)
+  const size = getReadableFileSize(databaseSize.value ?? 0)
   const name = health.value.database?.name
 
   if (name) {
@@ -150,8 +154,8 @@ const databaseSizeLabel = computed(() => {
   return t('home.widgets.health_database_size', {size})
 })
 
-const visibleAlerts = computed(() => {
-  const alerts = []
+const visibleAlerts = computed((): HealthAlertItem[] => {
+  const alerts: HealthAlertItem[] = []
 
   if (missingCount.value > 0) {
     alerts.push({
@@ -263,12 +267,13 @@ function openTasks() {
 function openDuplicates() {
   const mediaTypeId = getDefaultMediaTypeId(appStore.mediaTypes)
   itemsStore.find_duplicates = true
-  router.push(`/media?mediaTypeId=${mediaTypeId}`)
+  router.push(`/media?mediaTypeId=${mediaTypeId ?? ''}`)
 }
 
 async function loadHealth() {
-  const response = await apiClient.get('/api/home/health')
+  const response = await apiClient.get<Partial<HomeHealthData>>('/api/home/health')
   health.value = {
+    ...emptyHealth(),
     duplicates: response.data?.duplicates || {byFilesize: 0, byContentHash: 0},
     contentHash: response.data?.contentHash || {total: 0, pending: 0, hashed: 0},
     generatedImages: response.data?.generatedImages || {byType: {}, totalPending: 0},
@@ -277,7 +282,7 @@ async function loadHealth() {
 }
 
 async function loadMissingStatus() {
-  const response = await apiClient.get('/api/Task/missingMediaStatus')
+  const response = await apiClient.get<{ missing?: number }>('/api/Task/missingMediaStatus')
   missingCount.value = Number(response.data?.missing || 0)
 }
 
@@ -287,12 +292,7 @@ async function runCheck() {
   loading.value = true
   checked.value = false
   missingCount.value = 0
-  health.value = {
-    duplicates: {byFilesize: 0, byContentHash: 0},
-    contentHash: {total: 0, pending: 0, hashed: 0},
-    generatedImages: {byType: {}, totalPending: 0},
-    database: {id: null, name: null, bytes: null},
-  }
+  health.value = emptyHealth()
 
   try {
     await Promise.all([

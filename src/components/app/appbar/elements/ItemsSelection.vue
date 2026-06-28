@@ -22,7 +22,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useItemsStore } from '@/stores/items'
@@ -48,7 +48,7 @@ const filesizes = computed(() => {
     itemsStore.selection.includes(i.id)
   )
 
-  const sum = selectedFiles.reduce((a, b) => a + (b.filesize || 0), 0)
+  const sum = selectedFiles.reduce((a, b) => a + Number(b.filesize || 0), 0)
 
   return getReadableFileSize(sum)
 })

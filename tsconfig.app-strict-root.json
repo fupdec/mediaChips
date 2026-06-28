@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": [
+    "app/server.ts",
+    "app/LanServerDiscovery.ts",
+    "app/types/**/*.ts",
+    "app/types/global.d.ts"
+  ]
+}

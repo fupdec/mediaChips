@@ -149,22 +149,23 @@
   </v-system-bar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, onUnmounted, nextTick} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
+import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useHeaderBarStyle} from '@/composable/useHeaderBarStyle'
 import WindowControls from '@/components/ui/WindowControls.vue' // Импортируем компонент
 
-// Пропсы
-defineProps({
-  disabled: Boolean,
-})
+defineProps<{
+  disabled?: boolean
+}>()
 
-// Эмиты
-const emit = defineEmits(['lock'])
+const emit = defineEmits<{
+  lock: []
+}>()
 
 // Реактивные переменные
 const maximized = ref(false)
@@ -175,13 +176,14 @@ const {t} = useI18n()
 
 // Хранилища Pinia
 const settingsStore = useSettingsStore()
+const appStore = useAppStore()
 const dialogsStore = useDialogsStore()
 
 const {colorRGBA, gradient, barTheme} = useHeaderBarStyle('system')
 
 // Компьютеды
 const SETTINGS = computed(() => settingsStore)
-const app_title = computed(() => settingsStore.app_title || 'MediaChips')
+const app_title = computed(() => appStore.app_title || 'MediaChips')
 
 // Методы окон (теперь вызываются из WindowControls через emits)
 const minimize = () => {
@@ -197,7 +199,7 @@ const unmaximize = () => {
 }
 
 const close = () => {
-  if (window.electronAPI) {
+  if (window.electronAPI?.send) {
     window.electronAPI.send('closeApp')
   }
 }
@@ -222,7 +224,7 @@ const forward = () => {
 }
 
 const toggleDevTools = () => {
-  if (window.electronAPI) {
+  if (window.electronAPI?.invoke) {
     window.electronAPI.invoke('toggleDevTools')
   }
 }
@@ -246,8 +248,7 @@ const handleNavigationForward = () => {
 
 // Жизненный цикл
 onMounted(() => {
-  if (window.electronAPI) {
-    // Подписываемся на события IPC
+  if (window.electronAPI?.on) {
     window.electronAPI.on('maximize', handleMaximize)
     window.electronAPI.on('unmaximize', handleUnmaximize)
     window.electronAPI.on('navigationBack', handleNavigationBack)
@@ -256,8 +257,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (window.electronAPI) {
-    // Отписываемся от событий IPC
+  if (window.electronAPI?.removeListener) {
     window.electronAPI.removeListener('maximize', handleMaximize)
     window.electronAPI.removeListener('unmaximize', handleUnmaximize)
     window.electronAPI.removeListener('navigationBack', handleNavigationBack)

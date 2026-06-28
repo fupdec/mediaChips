@@ -97,7 +97,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onMounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -128,12 +128,12 @@ const logoPath = computed(() => {
   }
 })
 
-const openLink = (link) => {
+const openLink = (link: string) => {
   window.open(link, '_blank', 'noopener,noreferrer')
 }
 
 const openReleases = () => {
-  openLink(status.value.releasesUrl || 'https://github.com/fupdec/MediaChips/releases/latest')
+  openLink(String(status.value.releasesUrl || 'https://github.com/fupdec/MediaChips/releases/latest'))
 }
 
 async function handleCheckUpdates() {

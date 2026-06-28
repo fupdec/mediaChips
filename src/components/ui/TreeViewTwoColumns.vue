@@ -36,19 +36,19 @@
             class="custom-treeview"
           >
             <!-- Слот для кастомизации отображения элементов -->
-            <template #prepend="{ item, open }">
-              <v-icon :icon="item.icon || getIcon(item, open)" size="small" />
+            <template #prepend="slotData">
+              <v-icon :icon="treeIcon(slotData)" size="small" />
             </template>
 
-            <template #append="{ item }">
+            <template #append="slotData">
               <v-chip
-                v-if="item.badge"
+                v-if="treeItem(slotData.item).badge"
                 size="x-small"
-                :color="item.badgeColor || 'primary'"
+                :color="treeItem(slotData.item).badgeColor || 'primary'"
                 variant="flat"
                 class="ml-2"
               >
-                {{ item.badge }}
+                {{ treeItem(slotData.item).badge }}
               </v-chip>
             </template>
           </v-treeview>
@@ -169,38 +169,55 @@
   </v-card>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+<script setup lang="ts">
+import { ref, computed, onMounted, type Component } from 'vue'
 
-// Props
-const props = defineProps({
-  items: {
-    type: Array,
-    default: () => []
-  },
-  initialSelectedId: {
-    type: [String, Number],
-    default: null
-  },
-  searchable: {
-    type: Boolean,
-    default: true
-  },
-  showStats: {
-    type: Boolean,
-    default: true
-  },
-  height: {
-    type: String,
-    default: '500px'
-  }
+type TreeViewListEntry = {
+  id: string | number
+  title: string
+  subtitle?: string
+  icon?: string
+  badge?: string | number
+  badgeColor?: string
+  children?: TreeViewListEntry[]
+  searchTerms?: string[]
+  contentType?: string
+  content?: string
+  component?: Component
+  props?: Record<string, unknown>
+  items?: Array<{ icon?: string; title: string; subtitle?: string }>
+  link?: string
+  createdAt?: string | number | Date
+  updatedAt?: string | number | Date
+  tags?: string[]
+}
+
+type TreeViewSlotData = {
+  item: unknown
+  open?: boolean
+  isOpen?: boolean
+}
+
+const props = withDefaults(defineProps<{
+  items?: TreeViewListEntry[]
+  initialSelectedId?: string | number | null
+  searchable?: boolean
+  showStats?: boolean
+  height?: string
+}>(), {
+  items: () => [],
+  initialSelectedId: null,
+  searchable: true,
+  showStats: true,
+  height: '500px',
 })
 
-// Reactive data
 const search = ref('')
-const openedItems = ref([])
-const selectedItems = ref([])
-const filteredItems = ref([...props.items])
+const openedItems = ref<Array<string | number>>([])
+const selectedItems = ref<TreeViewListEntry[]>([])
+const filteredItems = ref<TreeViewListEntry[]>([...props.items])
+
+const treeItem = (item: unknown): TreeViewListEntry => item as TreeViewListEntry
 
 // Computed
 const selectedItem = computed(() => {
@@ -215,17 +232,22 @@ const hasMetaInfo = computed(() => {
   )
 })
 
-// Methods
-const getIcon = (item, open) => {
+const treeIcon = (slotData: TreeViewSlotData) => {
+  const item = treeItem(slotData.item)
+  const open = slotData.open ?? slotData.isOpen ?? false
+  return item.icon || getIcon(item, open)
+}
+
+const getIcon = (item: TreeViewListEntry, open: boolean) => {
   if (item.children && item.children.length > 0) {
     return open ? 'mdi-folder-open' : 'mdi-folder'
   }
   return item.icon || 'mdi-file'
 }
 
-const treeFilter = (item, searchTerm, itemText) => {
+const treeFilter = (item: TreeViewListEntry, searchTerm: string, itemText: string) => {
   return itemText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.searchTerms && item.searchTerms.some(term =>
+    (item.searchTerms && item.searchTerms.some((term: string) =>
       term.toLowerCase().includes(searchTerm.toLowerCase())
     ))
 }
@@ -239,15 +261,13 @@ const filterTree = () => {
 
   const searchTerm = search.value.toLowerCase()
 
-  const filterItems = (items) => {
+  const filterItems = (items: TreeViewListEntry[]): TreeViewListEntry[] => {
     return items.filter(item => {
-      // Проверяем текущий элемент
       const matches = item.title.toLowerCase().includes(searchTerm) ||
-        (item.searchTerms && item.searchTerms.some(term =>
+        (item.searchTerms && item.searchTerms.some((term: string) =>
           term.toLowerCase().includes(searchTerm)
         ))
 
-      // Если есть дети, фильтруем их
       if (item.children) {
         item.children = filterItems(item.children)
         return matches || item.children.length > 0
@@ -260,7 +280,7 @@ const filterTree = () => {
   filteredItems.value = filterItems([...props.items])
 }
 
-const formatDate = (date) => {
+const formatDate = (date: string | number | Date) => {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -272,7 +292,7 @@ const formatDate = (date) => {
 onMounted(() => {
   if (props.initialSelectedId) {
     // Найти элемент по ID и выбрать его
-    const findItem = (items, id) => {
+    const findItem = (items: TreeViewListEntry[], id: string | number): TreeViewListEntry | null => {
       for (const item of items) {
         if (item.id === id) {
           return item

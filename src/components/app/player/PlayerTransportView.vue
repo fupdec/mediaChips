@@ -58,7 +58,7 @@
     </v-btn-group>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {inject} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {PLAYER_TRANSPORT_KEY} from '@/composable/playerTransportKey'
@@ -74,5 +74,5 @@ const {
   handleVolumeWheel,
   handleVolumeSliderWheel,
   emit,
-} = inject(PLAYER_TRANSPORT_KEY)
+} = inject(PLAYER_TRANSPORT_KEY)!
 </script>

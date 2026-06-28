@@ -1,23 +1,38 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
 import { useSettingsStore } from "@/stores/settings";
 import { useI18n } from "vue-i18n";
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";
 import {setOption} from '@/services/settingsService'
+import type {SettingsState} from '@/types/settings'
 
 const settingsStore = useSettingsStore();
 const SETTINGS = computed(() => settingsStore);
 const { t } = useI18n();
 
-const chipVariants = [
+type ChipVariant = 'flat' | 'tonal' | 'outlined' | 'text'
+
+type DefaultMetaChipKey = Extract<keyof SettingsState,
+  | 'show_default_meta_filesize'
+  | 'show_default_meta_duration'
+  | 'show_default_meta_resolution'
+  | 'show_default_meta_ext'
+  | 'show_default_meta_codec'
+  | 'show_default_meta_bitrate'
+  | 'show_default_meta_fps'
+  | 'show_default_meta_number_media'
+  | 'show_default_meta_number_views'
+>
+
+const chipVariants: ChipVariant[] = [
   'flat',
   'tonal',
   'outlined',
   'text',
 ];
 
-const chips_default_data = [
+const chips_default_data: Array<{ icon: string; textKey: string; value: DefaultMetaChipKey }> = [
   { icon: 'harddisk', textKey: 'settings_labels.appearance.filesize', value: 'show_default_meta_filesize' },
   { icon: 'clock-outline', textKey: 'settings_labels.appearance.duration', value: 'show_default_meta_duration' },
   { icon: 'monitor-screenshot', textKey: 'settings_labels.appearance.resolution', value: 'show_default_meta_resolution' },
@@ -63,7 +78,7 @@ const chips_default_data = [
         v-for="chip in chips_default_data"
         :key="chip.value"
         @click="setOption(SETTINGS[chip.value] == '1' ? '0' : '1', chip.value)"
-        :variant="SETTINGS.default_meta_chip_variant"
+        :variant="SETTINGS.default_meta_chip_variant as ChipVariant"
         :base-color="SETTINGS[chip.value] == '1' ? 'primary' : ''"
         :label="SETTINGS.show_default_meta_label == '1'"
       >

@@ -137,6 +137,7 @@ export interface ItemContextMenuEntry {
   disabled?: boolean
   action?: (...args: unknown[]) => unknown
   menu?: ItemContextMenuEntry[]
+  [key: string]: unknown
 }
 
 export interface PresetMetaProps {

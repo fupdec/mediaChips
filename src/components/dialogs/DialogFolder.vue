@@ -16,15 +16,15 @@
         <div class="px-4 pb-4 d-flex justify-space-between flex-wrap">
           <div>
             <v-icon start>mdi-folder</v-icon>
-            <span v-text="watcherStore.folder?.folder?.name"/>
+            <span v-text="folderState?.folder?.name"/>
           </div>
-          <div v-text="watcherStore.folder?.folder?.path"
+          <div v-text="folderState?.folder?.path"
             class="text-medium-emphasis mt-1"/>
         </div>
 
         <v-expansion-panels v-model="panel">
           <v-expansion-panel
-            v-for="(item, index) in watcherStore.folder.files"
+            v-for="(item, index) in folderState?.files ?? []"
             :key="item.type.id"
             rounded="xl"
           >
@@ -155,8 +155,8 @@
   </v-dialog>
 </template>
 
-<script setup>
-import {ref} from 'vue'
+<script setup lang="ts">
+import {ref, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
@@ -169,6 +169,25 @@ import {apiClient} from "@/services/apiClient"
 import useAppStore from "@/stores/app"
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getMediaDeleteAssetFolder, isManagedMediaType} from '@/utils/mediaType'
+import type {MediaType} from '@/types/media'
+
+interface WatcherFolderInfo {
+  id: number
+  name?: string
+  path?: string
+  [key: string]: unknown
+}
+
+interface WatcherFolderFileGroup {
+  type: MediaType
+  new: string[]
+  lost: Array<{ id: number; path: string; [key: string]: unknown }>
+}
+
+interface WatcherFolderState {
+  folder: WatcherFolderInfo
+  files: WatcherFolderFileGroup[]
+}
 
 const {xs} = useDisplay()
 const watcherStore = useWatcherStore()
@@ -178,13 +197,15 @@ const notificationStore = useNotificationsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
+const folderState = computed(() => watcherStore.folder as WatcherFolderState | null)
+
 const panel = ref(0)
 
 const closeDialog = () => {
   watcherStore.dialogFolder = false
 }
 
-const copyPaths = (files) => {
+const copyPaths = (files: string[]) => {
   let paths = ''
 
   for (let filePath of files) {
@@ -199,7 +220,7 @@ const copyPaths = (files) => {
   })
 }
 
-const addFiles = (files, mediaTypeId) => {
+const addFiles = (files: string[], mediaTypeId: number) => {
   watcherStore.dialogFolder = false
 
   tasksStore.mediaAdding.directFiles = [...files]
@@ -214,7 +235,10 @@ const addFiles = (files, mediaTypeId) => {
   })
 }
 
-const removeFiles = async (lost, fileType) => {
+const removeFiles = async (
+  lost: WatcherFolderFileGroup['lost'],
+  fileType: MediaType,
+) => {
   dialogsStore.confirm.text = t('watcher.folder.delete_confirm')
   dialogsStore.confirm.show = true
   dialogsStore.confirm.action = async () => {
@@ -228,7 +252,7 @@ const removeFiles = async (lost, fileType) => {
       type: getMediaDeleteAssetFolder(fileType),
     }
 
-    const deletePromises = lost.map(async (item) => {
+    const deletePromises = lost.map(async (item: WatcherFolderFileGroup['lost'][number]) => {
       const deleteData = {...data, ...{id: item.id, path: item.path}}
 
       return apiClient.post('/api/media/deleteOne', deleteData)
@@ -237,7 +261,7 @@ const removeFiles = async (lost, fileType) => {
     await Promise.all(deletePromises)
 
     eventBus.emit("removeEntitiesFromState", {
-      ids: lost.map((i) => i.id),
+      ids: lost.map((i: WatcherFolderFileGroup['lost'][number]) => i.id),
       type: 'media',
     })
 

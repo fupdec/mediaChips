@@ -1,5 +1,5 @@
-<script setup>
-import {ref, computed} from "vue";
+<script setup lang="ts">
+import {ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {useSettingsStore} from "@/stores/settings";
 import SettingsHeaderGradient from "@/components/settings/appearance/SettingsHeaderGradient.vue";
@@ -11,21 +11,34 @@ import {setOption} from '@/services/settingsService'
 const {t} = useI18n();
 const {applyTheme} = useAppTheme();
 
+type ThemeColorKey =
+  | 'appColorLightHeader'
+  | 'appColorLightPrimary'
+  | 'appColorLightSecondary'
+  | 'appColorDarkHeader'
+  | 'appColorDarkPrimary'
+  | 'appColorDarkSecondary'
+
+type HeaderGradientKey = 'headerGradientLight' | 'headerGradientDark'
+
 const dialogPalette = ref(false);
 const dialogHeaderGradient = ref(false);
-const colorType = ref(null);
-const palette = ref("#777777");
+const colorType = ref<ThemeColorKey | null>(null);
+const palette = ref<string>("#777777");
 const gradientThemeDark = ref(false);
 
 const SETTINGS = useSettingsStore()
 
-function normalizeColor(value) {
-  if (!value) return value
-  if (typeof value === 'object') return value.hex ?? value.rgba ?? value
-  return value
+function normalizeColor(value: unknown): string {
+  if (!value) return String(value)
+  if (typeof value === 'object' && value !== null) {
+    const colorObj = value as { hex?: string; rgba?: string }
+    return colorObj.hex ?? colorObj.rgba ?? String(value)
+  }
+  return String(value)
 }
 
-function openDialogPalette(type) {
+function openDialogPalette(type: ThemeColorKey) {
   colorType.value = type;
   palette.value = SETTINGS[type];
   dialogPalette.value = true;
@@ -35,6 +48,7 @@ function applyColor() {
   dialogPalette.value = false;
   const value = normalizeColor(palette.value);
   const option = colorType.value;
+  if (!option) return
   SETTINGS[option] = value;
   applyTheme();
   setOption(value, option);
@@ -50,8 +64,8 @@ function openDialogHeaderGradientDark() {
   dialogHeaderGradient.value = true;
 }
 
-function saveHeaderGradient(values) {
-  const key = "headerGradient" + (values.themeDark ? "Dark" : "Light");
+function saveHeaderGradient(values: { themeDark?: boolean; gradient: string }) {
+  const key: HeaderGradientKey = values.themeDark ? "headerGradientDark" : "headerGradientLight";
   SETTINGS[key] = values.gradient;
   applyTheme();
   setOption(values.gradient, key);

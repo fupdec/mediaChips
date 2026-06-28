@@ -102,7 +102,7 @@
   </v-menu>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useTasksStore} from '@/stores/tasks'
 import {mergeProps} from 'vue'
@@ -123,18 +123,18 @@ const tasks = computed(() => tasksStore.list)
 const badge = computed(() => tasksStore.list.length)
 
 // Методы
-const open = (action) => {
+const open = (action: unknown) => {
   menuVisible.value = false
-  if (action && typeof action === 'function') {
+  if (typeof action === 'function') {
     action()
   }
 }
 
-const remove = (action, id) => {
-  if (action && typeof action === 'function') {
+const remove = (action: unknown, id: string | number) => {
+  if (typeof action === 'function') {
     action()
   }
-  tasksStore.removeTask(id)
+  tasksStore.removeTask(String(id))
 }
 
 const openTasksMenu = () => {

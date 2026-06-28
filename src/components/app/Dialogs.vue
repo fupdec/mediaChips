@@ -107,8 +107,8 @@
   </div>
 </template>
 
-<script setup>
-import {ref, defineAsyncComponent} from 'vue'
+<script setup lang="ts">
+import {defineAsyncComponent} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useTasksStore} from '@/stores/tasks'
@@ -185,7 +185,7 @@ const itemsStore = useItemsStore()
 const {t} = useI18n()
 
 const closeApp = () => {
-  if (window.electronAPI) {
+  if (window.electronAPI?.send) {
     window.electronAPI.send("closeApp")
   }
 }

@@ -19,7 +19,7 @@
 
       <v-card-text class="pa-2 pa-sm-4">
         <EditPinnedMetaValues
-          v-if="tag"
+          v-if="tag && meta"
           :key="tag.id"
           layout="hero"
           @close="close"
@@ -50,8 +50,9 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, onBeforeUnmount, shallowRef} from 'vue'
+import type {Meta, Tag} from '@/types/stores'
 import {useDisplay} from 'vuetify'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
@@ -71,6 +72,28 @@ import EditDialogMediaPanel from '@/components/items/EditDialogMediaPanel.vue'
 import {useEventBus} from "@/utils/eventBus"
 import DialogDeleteConfirm from "@/components/dialogs/DialogDeleteConfirm.vue"
 
+interface TagImage {
+  type: string
+  path: string
+  src: string
+  aspectRatio: number
+  width: number
+  height: number
+  key: string
+}
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  action?: () => void | Promise<void>
+}
+
+interface EditComponentInstance {
+  save?: () => void
+}
+
 const {xl, xs} = useDisplay()
 const router = useRouter()
 const dialogsStore = useDialogsStore()
@@ -82,15 +105,15 @@ const notificationsStore = useNotificationsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-const images = ref([])
-const buttons = ref([])
-const debounceTimer = ref(null)
+const images = ref<TagImage[]>([])
+const buttons = ref<DialogHeaderButton[]>([])
+const debounceTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const is_show_dialog_delete_confirm = ref(false)
-const editingComponent = ref(null)
+const editingComponent = ref<EditComponentInstance | null>(null)
 const currentIndex = shallowRef(0)
 
-const tag = computed(() => dialogsStore.tagEditing.tag)
-const meta = computed(() => dialogsStore.tagEditing.meta)
+const tag = computed(() => dialogsStore.tagEditing.tag as Tag | null)
+const meta = computed(() => dialogsStore.tagEditing.meta as Meta | null)
 
 const isTagPage = computed(() => checkCurrentPage(router.currentRoute.value, 'tag'))
 
@@ -173,6 +196,7 @@ const getImages = async () => {
 
 const onImageEdited = () => {
   getImages()
+  if (!tag.value) return
   eventBus.emit('getItemsFromDb', {
     ids: [tag.value.id],
     type: 'tag'
@@ -231,7 +255,7 @@ const save = () => {
 
   if (itemsStore.type === 'media') {
     eventBus.emit('getTags')
-  } else {
+  } else if (tag.value) {
     eventBus.emit('getItemsFromDb', {ids: [tag.value.id], type: 'tag'})
   }
 
@@ -251,6 +275,7 @@ const openScraper = () => {
 
 const handleScraperImages = () => {
   getImages()
+  if (!tag.value) return
   eventBus.emit('getItemsFromDb', {ids: [tag.value.id], type: 'tag'})
 }
 
@@ -265,6 +290,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   eventBus.off('scraperGotImages', handleScraperImages)
-  clearTimeout(debounceTimer.value)
+  if (debounceTimer.value) clearTimeout(debounceTimer.value)
 })
 </script>

@@ -52,7 +52,7 @@
             rounded
             variant="flat"
           >
-            <DialogScraperConfig :meta="selected_meta"/>
+            <DialogScraperConfig v-if="selected_meta" :meta="selected_meta"/>
 
             <v-icon start>mdi-search-web</v-icon>
             {{ t('settings_labels.tools.configure_scraper') }}
@@ -63,7 +63,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, defineAsyncComponent} from "vue"
 import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"
@@ -74,6 +74,7 @@ import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue"
 import {useEventBus} from "@/utils/eventBus"
+import type {Meta} from "@/types/stores"
 
 const DialogScraperConfig = defineAsyncComponent(() =>
   import("@/components/dialogs/DialogScraperConfig.vue")
@@ -84,14 +85,14 @@ const settingsStore = useSettingsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-const selected_meta = ref(null)
+const selected_meta = ref<Meta | undefined>(undefined)
 
 const meta_tags = computed(() => {
   const metas = store.meta?.filter(i => i.type === "array") || []
   return _.sortBy(metas, "name")
 })
 
-async function updateSettings(meta) {
+async function updateSettings(meta: Meta | null | undefined) {
   if (!meta) return
 
   const allMeta = store.meta || []
@@ -113,8 +114,6 @@ async function updateSettings(meta) {
 }
 
 onMounted(() => {
-  if (meta_tags.value) {
-    selected_meta.value = meta_tags.value.find(i => i.scraper)
-  }
+  selected_meta.value = meta_tags.value.find(i => i.scraper)
 })
 </script>

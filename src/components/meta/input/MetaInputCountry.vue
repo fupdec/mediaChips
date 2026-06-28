@@ -4,7 +4,7 @@
     @update:model-value="setVal"
     :model-value="modelValue"
     :items="countries"
-    :custom-filter="filterCountry"
+    :custom-filter="filterCountryForAutocomplete"
     :rules="[rules]"
     :disabled="disabled"
     :prepend-icon="showIcons && !purpose ? 'mdi-flag' : ''"
@@ -50,45 +50,46 @@
   </v-autocomplete>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch, useAttrs} from 'vue'
 import {foundByChars} from '@/services/formatUtils'
 import {useSettingsStore} from '@/stores/settings'
 import CountryFlag from 'vue-country-flag-next'
 import Countries from '@/assets/Countries'
+import type {CountryEntry} from '@/types/metaInput'
 
 const attrs = useAttrs()
 
-// Props
-const props = defineProps({
-  modelValue: {
-    type: Array,
-    default: () => []
-  },
-  purpose: {
-    type: String,
-    default: ''
-  },
-  cond: {
-    type: String,
-    default: null
-  },
-  disabled: {
-    type: Boolean,
-    default: false
-  }
+const props = withDefaults(defineProps<{
+  modelValue?: string[]
+  purpose?: string
+  cond?: string | null
+  disabled?: boolean
+}>(), {
+  modelValue: () => [],
+  purpose: '',
+  cond: null,
+  disabled: false,
 })
 
-// Emits
-const emit = defineEmits(['update:model-value'])
+const emit = defineEmits<{
+  'update:model-value': [value: string[]]
+}>()
 
-// Stores
 const settingsStore = useSettingsStore()
 
-// Refs
-const field = ref(null)
-const val = ref([])
-const countries = ref(Countries)
+interface AutocompleteFieldInstance {
+  lazySearch?: string | null
+}
+
+interface CountryListItem {
+  raw: CountryEntry
+  value: string
+}
+
+const field = ref<AutocompleteFieldInstance | null>(null)
+const val = ref<string[]>([])
+const countries = ref<CountryEntry[]>(Countries as CountryEntry[])
 
 const view = ref({
   persistentHint: true,
@@ -96,10 +97,9 @@ const view = ref({
   filled: false,
   rounded: false,
   dense: false,
-  hideIcon: false
+  hideIcon: false,
 })
 
-// Computed
 const showIcons = computed(() =>
   settingsStore.showIconsInsteadTextOnFiltersChips === '1'
 )
@@ -108,8 +108,7 @@ const typingFiltersDefault = computed(() =>
   settingsStore.typingFiltersDefault === '1'
 )
 
-// Methods
-const setVal = (newVal) => {
+const setVal = (newVal: string[]) => {
   if (field.value) {
     field.value.lazySearch = null
   }
@@ -117,8 +116,9 @@ const setVal = (newVal) => {
   emit('update:model-value', newVal)
 }
 
-const remove = (country) => {
-  const index = val.value.indexOf(country.name)
+const remove = (country: CountryListItem) => {
+  const name = country.value ?? country.raw.name
+  const index = val.value.indexOf(name)
   if (index > -1) {
     const newVal = [...val.value]
     newVal.splice(index, 1)
@@ -126,28 +126,31 @@ const remove = (country) => {
   }
 }
 
-const filterCountry = (title, queryText, item) => {
-  const country = item.raw.name.toLowerCase()
+const filterCountry = (title: string, queryText: string, item: CountryListItem) => {
+  const countryName = item.raw.name.toLowerCase()
   const code = item.raw.code.toLowerCase()
   const query = queryText.toLowerCase()
 
   if (typingFiltersDefault.value) {
-    return country.includes(query) || code.includes(query)
-  } else {
-    return foundByChars(country, query) || foundByChars(code, query)
+    return countryName.includes(query) || code.includes(query)
   }
+  return foundByChars(countryName, query) || foundByChars(code, query)
 }
+
+const filterCountryForAutocomplete = filterCountry as (
+  value: string,
+  query: string,
+  item?: CountryListItem,
+) => boolean
 
 const rules = () => {
   if (props.purpose !== 'filter') return true
   if (val.value !== null && val.value.length > 0) return true
-  else if (props.cond === 'is null' || props.cond === 'null') return true
-  else return 'Value is required'
+  if (props.cond === 'is null' || props.cond === 'null') return true
+  return 'Value is required'
 }
 
-// Lifecycle
 onMounted(() => {
-  // Настройка view в зависимости от purpose
   if (props.purpose === 'filter') {
     view.value = {
       persistentHint: false,
@@ -155,23 +158,20 @@ onMounted(() => {
       filled: true,
       rounded: true,
       dense: true,
-      hideIcon: true
+      hideIcon: true,
     }
   }
 
-  // Инициализация значения
   val.value = props.modelValue
 })
 
-// Watchers
 watch(() => props.modelValue, (newVal) => {
   val.value = newVal
 }, { immediate: true })
 
-// Expose methods if needed
 defineExpose({
   setVal,
-  remove
+  remove,
 })
 </script>
 

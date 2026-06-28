@@ -103,10 +103,10 @@
         <!-- VALUE -->
         <span v-if="filter.type === 'array'" class="ml-1">
           <template v-if="filter.param === 'country'">
-            "{{ filter.val ? filter.val.join(', ') : '' }}"
+            "{{ Array.isArray(filter.val) ? filter.val.join(', ') : '' }}"
           </template>
           <template v-else-if="filter.param === 'ext'">
-            "{{ filter.val ? filter.val.join(', ') : '' }}"
+            "{{ Array.isArray(filter.val) ? filter.val.join(', ') : '' }}"
           </template>
           <template v-else>
             "{{ getTagName(filter.param, filter.val) }}"
@@ -125,10 +125,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, ref} from 'vue'
+import type { PropType } from 'vue'
 import {useI18n} from 'vue-i18n'
-import Cols from '../../../app/configs/filter-cols.mjs'
+import Cols from '../../../app/configs/filter-cols'
 
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
@@ -137,6 +138,7 @@ import {useEventBus} from '@/utils/eventBus'
 import {getCurrentMediaType} from '@/utils/mediaType'
 import {getListCond, getReadableFileSize, getReadableDuration} from '@/services/formatUtils'
 import {getDuplicatesModeLabelKey} from '@/utils/mediaSortFilter'
+import type { FilterObject, FilterListParam } from '@/types/common'
 
 /* =========================
  * PROPS
@@ -144,7 +146,7 @@ import {getDuplicatesModeLabelKey} from '@/utils/mediaSortFilter'
 
 const props = defineProps({
   filters: {
-    type: Array,
+    type: Array as PropType<FilterObject[]>,
     required: true,
   },
   isTooltip: {
@@ -157,7 +159,7 @@ const props = defineProps({
   },
 })
 
-const colsCache = ref(null)
+const colsCache = ref<FilterListParam[] | null>(null)
 
 /* =========================
  * STORES
@@ -209,55 +211,56 @@ const deactivateAll = () => {
   eventBus.emit("deactivateAllFilters")
 }
 
-const deactivate = index => {
+const deactivate = (index: number) => {
   eventBus.emit("deactivateFilter", index);
 }
 
-const isFilterRowActive = (filter) => filter.active !== false && !filter.removed
+const isFilterRowActive = (filter: FilterObject) => filter.active !== false && !filter.removed
 
-const shouldShowFilter = (filter) => {
+const shouldShowFilter = (filter: FilterObject) => {
   if (filter.removed) return false
   if (props.isTooltip) return true
   return isFilterRowActive(filter)
 }
 
-const getChipVariant = (filter) => {
+const getChipVariant = (filter: FilterObject) => {
   if (!props.isTooltip) return 'tonal'
   return isFilterRowActive(filter) ? 'flat' : 'outlined'
 }
 
-const getChipColor = (filter) => {
+const getChipColor = (filter: FilterObject) => {
   if (!props.isTooltip) return 'primary'
   return isFilterRowActive(filter) ? 'primary' : 'default'
 }
 
-const getChipTitle = (filter) => {
+const getChipTitle = (filter: FilterObject) => {
   if (!props.isTooltip) return t('filters.deactivate_filter')
   if (isFilterRowActive(filter)) return t('filters.filter_row_active')
   return t('filters.filter_row_inactive')
 }
 
-const getBy = (param, show) => {
+const getBy = (param: string | number | null, show: string) => {
+  if (param == null) return ''
   const isMeta = /\d/.test(param.toString())
 
   if (isMeta) {
     const key = show === 'text' ? 'name' : show
     const m = meta.value.find(i => i.id == param)
-    return m?.[key] || ''
+    return (m?.[key as keyof typeof m] as string) || ''
   }
 
   // Кешируйте cols для производительности
   if (!colsCache.value) {
-    colsCache.value = Object.values(Cols).flat()
+    colsCache.value = Object.values(Cols).flat() as FilterListParam[]
   }
 
   const col = colsCache.value.find(i => i.param === param)
   if (show === 'text' && col?.textKey) return t(col.textKey)
-  return col?.[show] || ''
+  return (col?.[show as keyof FilterListParam] as string) || ''
 }
 
 
-const getCond = (type, cond, show) => {
+const getCond = (type: string | null, cond: string | null, show: string) => {
   try {
     const conds = getListCond(type)
     const found = conds.find(i => i.cond === cond)
@@ -265,28 +268,29 @@ const getCond = (type, cond, show) => {
       const key = found.text.replaceAll(' ', '_')
       return t(`filters.conditions.${key}`, found.text)
     }
-    return found?.[show] || ''
+    return (found?.[show as keyof typeof found] as string) || ''
   } catch (error) {
     console.error('Error getting condition:', error)
     return ''
   }
 }
 
-const getTagName = (metaId, val) => {
+const getTagName = (metaId: string | number | null, val: unknown) => {
   const list = tags.value.filter(t => t.metaId == metaId)
-  if (!val) return ''
+  if (!val || !Array.isArray(val)) return ''
 
   return val
     .map(id => list.find(t => t.id === id)?.name || '')
     .join(', ')
 }
 
-const getValForTypeNumber = (parameter, number) => {
+const getValForTypeNumber = (parameter: string | number | null, number: unknown) => {
+  const numeric = Number(number)
   if (parameter === 'filesize') {
-    return getReadableFileSize(number)
+    return getReadableFileSize(numeric)
   }
   if (parameter === 'duration') {
-    return getReadableDuration(number)
+    return getReadableDuration(numeric)
   }
   return number
 }

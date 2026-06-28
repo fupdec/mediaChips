@@ -11,24 +11,25 @@
   </v-btn>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import type {MetaAssignmentView} from '@/types/metaAssignment'
 
-const props = defineProps({
-  view: {
-    type: String,
-    default: 'media',
-    validator: (v) => ['media', 'tags'].includes(v),
-  },
-  mediaTypeId: {type: Number, default: null},
-  metaId: {type: Number, default: null},
+const props = withDefaults(defineProps<{
+  view?: MetaAssignmentView
+  mediaTypeId?: number | null
+  metaId?: number | null
+}>(), {
+  view: 'media',
+  mediaTypeId: null,
+  metaId: null,
 })
 
 const {t} = useI18n()
 
 const link = computed(() => {
-  const query = {tab: 'library', view: props.view}
+  const query: Record<string, string | number> = {tab: 'library', view: props.view}
   if (props.mediaTypeId) query.mediaTypeId = props.mediaTypeId
   if (props.metaId) query.metaId = props.metaId
   return {path: '/settings', query}

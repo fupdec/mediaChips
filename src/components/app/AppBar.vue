@@ -117,7 +117,7 @@
   </v-app-bar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useDisplay} from 'vuetify'
@@ -203,14 +203,14 @@ function openRandomItem() {
 }
 
 function register() {
-  if (router.currentRoute !== "Settings") {
+  if (!route.path.startsWith('/settings')) {
     router.push("/settings/?tab=about")
   }
 }
 
 /* Electron events */
 onMounted(() => {
-  if (window.electronAPI) {
+  if (window.electronAPI?.on) {
     window.electronAPI.on('enter-full-screen', () => {
       fullscreen.value = true
     })

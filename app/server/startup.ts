@@ -1,0 +1,170 @@
+const fs = require('fs')
+const path = require('path')
+const os = require('os')
+const package_json = require('../../package.json')
+const {FIXED_PORT, ALLOW_LAN, BIND_HOST} = require('./constants')
+const {getBestLocalIp, getAllIps} = require('./network')
+
+function showSystemNotification(title: any, message: any) {
+  const isElectron = process.versions.electron
+
+  if (isElectron) {
+    try {
+      const {dialog} = require('electron')
+      dialog.showErrorBox(title, message)
+    } catch (err: any) {
+      console.error('Failed to show system dialog:', err)
+      console.error(`\x1b[31m${title}: ${message}\x1b[0m`)
+    }
+  } else {
+    console.error('\n' + '='.repeat(70))
+    console.error('\x1b[41m\x1b[37m%s\x1b[0m', ` ${title} `)
+    console.error('\x1b[31m%s\x1b[0m', message)
+    console.error('='.repeat(70) + '\n')
+
+    console.log('\x1b[33m%s\x1b[0m', '💡 Possible solutions:')
+    console.log('\x1b[33m%s\x1b[0m', `   1. Close other applications using port ${FIXED_PORT}`)
+    console.log('\x1b[33m%s\x1b[0m', `   2. Find the process using the port: lsof -i :${FIXED_PORT}`)
+    console.log('\x1b[33m%s\x1b[0m', `   3. Kill the process: kill -9 <PID>`)
+    console.log('\x1b[33m%s\x1b[0m', '   4. Restart your computer')
+  }
+}
+
+function isPortInUse(port: any) {
+  return new Promise((resolve) => {
+    const net = require('net')
+    const tester = net.createServer()
+      .once('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          resolve(true)
+        } else {
+          resolve(false)
+        }
+      })
+      .once('listening', () => {
+        tester.once('close', () => {
+          resolve(false)
+        }).close()
+      })
+      .listen(port, BIND_HOST)
+  })
+}
+
+function createServerStarter({app, config, configPath, databasesPath}: any) {
+  let listener: any
+
+  const startServer = async () => {
+    const portToUse = FIXED_PORT
+    const portBusy = await isPortInUse(portToUse)
+
+    if (portBusy) {
+      const errorTitle = 'Application startup error'
+      const errorMessage = `Port ${portToUse} is already in use by another application.\n\nPlease close other applications using this port and restart the application.`
+
+      showSystemNotification(errorTitle, errorMessage)
+      process.exit(1)
+      return
+    }
+
+    console.log('\n' + '='.repeat(70))
+    console.log('\x1b[33m%s\x1b[0m', `🚀 Starting server on ${BIND_HOST}:${portToUse}...`)
+
+    listener = app.listen(portToUse, BIND_HOST, () => {
+      const actualPort = listener.address().port
+
+      const bestIp = getBestLocalIp()
+      config.ip = ALLOW_LAN ? bestIp : 'localhost'
+      config.ips = ALLOW_LAN ? getAllIps().map((ip: any) => ip.address) : []
+      config.hostname = ALLOW_LAN ? os.hostname() : 'localhost'
+      config.port = actualPort
+
+      const activeDb = config.databases.find((db: any) => db.active)
+      if (activeDb) {
+        config.path = path.join(databasesPath, activeDb.id)
+      }
+
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+
+      console.log('\x1b[32m%s\x1b[0m', '✅ Server started successfully!')
+      console.log('='.repeat(70))
+
+      console.log('\x1b[36m%s\x1b[0m', '📊 Server information:')
+      console.log('\x1b[36m%s\x1b[0m', `   • Host:            ${config.hostname}`)
+      console.log('\x1b[36m%s\x1b[0m', `   • Port:            ${actualPort}`)
+      console.log('\x1b[36m%s\x1b[0m', `   • Primary IP:      ${bestIp}`)
+      console.log('\x1b[36m%s\x1b[0m', `   • All IPs:         ${config.ips.join(', ')}`)
+      console.log('\x1b[36m%s\x1b[0m', `   • Version:         ${package_json.version}`)
+
+      if (activeDb) {
+        console.log('\x1b[36m%s\x1b[0m', `   • Active database: ${activeDb.name} (${activeDb.id})`)
+      }
+
+      console.log('\n\x1b[36m%s\x1b[0m', '🌐 Available addresses:')
+      console.log('\x1b[36m%s\x1b[0m', '   1. Local machine:')
+      console.log('\x1b[36m%s\x1b[0m', `      → http://localhost:${actualPort}`)
+      console.log('\x1b[36m%s\x1b[0m', `      → http://127.0.0.1:${actualPort}`)
+
+      if (ALLOW_LAN && config.ips && config.ips.length > 0) {
+        console.log('\x1b[36m%s\x1b[0m', '   2. Local network:')
+        config.ips.forEach((ip: any, index: any) => {
+          const iface = getAllIps()[index]?.interface || 'interface'
+          console.log('\x1b[36m%s\x1b[0m', `      → http://${ip}:${actualPort} (${iface})`)
+        })
+      } else {
+        console.log('\x1b[36m%s\x1b[0m', '   2. Local network: disabled (set MEDIA_CHIPS_ALLOW_LAN=1 to enable)')
+      }
+
+      console.log('\n\x1b[36m%s\x1b[0m', '🔧 API Endpoints:')
+      console.log('\x1b[36m%s\x1b[0m', `   • Health check:   http://localhost:${actualPort}/api/health`)
+      console.log('\x1b[36m%s\x1b[0m', `   • Server config:  http://localhost:${actualPort}/api/config`)
+      console.log('\x1b[36m%s\x1b[0m', `   • Get file:       http://localhost:${actualPort}/api/get-file`)
+
+      console.log('\n\x1b[7m%s\x1b[0m', `✨ Open in browser: http://localhost:${actualPort}`)
+      console.log('='.repeat(70))
+
+      config.appVersion = package_json.version
+      process.server_config = config
+    })
+
+    listener.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        const errorTitle = 'Application startup error'
+        const errorMessage = `Port ${portToUse} is already in use by another application.\n\nPlease close other applications using this port and restart the application.`
+
+        console.log('\x1b[31m%s\x1b[0m', `❌ Port ${portToUse} is already in use!`)
+        showSystemNotification(errorTitle, errorMessage)
+        process.exit(1)
+      } else {
+        console.log('\x1b[31m%s\x1b[0m', '❌ Server error:', err)
+        showSystemNotification('Server error', err.message)
+        process.exit(1)
+      }
+    })
+  }
+
+  const bindShutdownHandler = () => {
+    process.on('SIGINT', () => {
+      console.log('\n\x1b[33m%s\x1b[0m', '🛑 Stopping server...')
+      if (listener) {
+        listener.close(() => {
+          console.log('\x1b[32m%s\x1b[0m', '✅ Server stopped')
+          process.exit(0)
+        })
+      } else {
+        process.exit(0)
+      }
+    })
+  }
+
+  return {
+    startServer,
+    bindShutdownHandler,
+    getListener: () => listener,
+  }
+}
+
+module.exports = {
+  createServerStarter,
+  showSystemNotification,
+  isPortInUse,
+}

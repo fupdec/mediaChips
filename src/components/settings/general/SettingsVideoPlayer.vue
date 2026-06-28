@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import SettingsSwitch from '@/components/ui/SettingsSwitch.vue'
 import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
@@ -10,6 +10,11 @@ import {fetchTranscodeCacheStats} from '@/services/transcodeService'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
 import {computed, onMounted, ref} from 'vue'
+
+interface TranscodeCacheStats {
+  bytes?: number
+  removed?: number
+}
 
 const SETTINGS = useSettingsStore()
 const appStore = useAppStore()
@@ -25,7 +30,7 @@ const cacheUsageLabel = computed(() =>
 
 const loadCacheStats = async () => {
   try {
-    const stats = await fetchTranscodeCacheStats(apiClient)
+    const stats = await fetchTranscodeCacheStats(apiClient) as TranscodeCacheStats
     cacheBytes.value = stats?.bytes || 0
   } catch {
     cacheBytes.value = 0
@@ -36,7 +41,7 @@ const clearTranscodeCache = async () => {
   clearingCache.value = true
 
   try {
-    const response = await apiClient.delete('/api/transcode/cache')
+    const response = await apiClient.delete<TranscodeCacheStats>('/api/transcode/cache')
     cacheBytes.value = 0
     setNotification({
       type: 'success',
@@ -50,7 +55,7 @@ const clearTranscodeCache = async () => {
     setNotification({
       type: 'error',
       title: t('common.error'),
-      text: error.message,
+      text: error instanceof Error ? error.message : String(error),
     })
   } finally {
     clearingCache.value = false

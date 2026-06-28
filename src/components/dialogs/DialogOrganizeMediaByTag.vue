@@ -121,8 +121,8 @@
   </v-dialog>
 </template>
 
-<script setup>
-import {ref, computed, onMounted, watch, defineProps} from 'vue'
+<script setup lang="ts">
+import {ref, computed, onMounted} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {storeToRefs} from 'pinia'
@@ -136,6 +136,25 @@ import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
 import {useEventBus} from '@/utils/eventBus'
 import {normalizePastedFilePath} from '@/utils/filePathInput'
+import type {Meta} from '@/types/stores'
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  disabled?: boolean
+  function?: () => void | Promise<void>
+}
+
+interface MediaTagLink {
+  metaId?: number
+  tagId?: number
+}
+
+interface OpenDialogResult {
+  filePaths?: string[]
+}
 
 const {smAndDown} = useDisplay()
 const {t} = useI18n()
@@ -149,14 +168,14 @@ const {
   tags: allTags,
 } = storeToRefs(mainStore)
 
-const buttons = ref([])
-const meta_list = ref([])
-const structure = ref([])
-const root_folder = ref(null)
+const buttons = ref<DialogHeaderButton[]>([])
+const meta_list = ref<Meta[]>([])
+const structure = ref<Meta[]>([])
+const root_folder = ref<string | null>(null)
 const example = ref('')
 
-const onRootFolderInput = (value) => {
-  root_folder.value = normalizePastedFilePath(value)
+const onRootFolderInput = (value: string) => {
+  root_folder.value = String(normalizePastedFilePath(value) ?? '')
 }
 
 const dragOptions = {
@@ -168,8 +187,8 @@ const dragOptions = {
 
 const ITEMS = computed(() => itemsStore)
 
-const metas = computed(() => {
-  return ITEMS.value?.assigned?.map(i => i.meta)?.filter(i => i?.type === "array") || []
+const metas = computed((): Meta[] => {
+  return ITEMS.value?.assigned?.map(i => i.meta)?.filter((i): i is Meta => Boolean(i?.type === "array")) || []
 })
 
 const getMetaList = () => {
@@ -179,12 +198,12 @@ const getMetaList = () => {
 const initFolder = () => {
   const ids = operationsStore.create_folder_move_media?.ids || []
   const item = ITEMS.value?.entities?.find(i => i.id === ids[0])
-  if (item) {
+  if (item?.path) {
     root_folder.value = path.dirname(item.path)
   }
 }
 
-const addTag = (tag) => {
+const addTag = (tag: Meta) => {
   meta_list.value = meta_list.value.filter(i => i.id !== tag.id)
   structure.value.push(tag)
 
@@ -195,7 +214,7 @@ const addTag = (tag) => {
   getExample()
 }
 
-const remove = (meta, index) => {
+const remove = (meta: Meta, index: number) => {
   structure.value.splice(index, 1)
   meta_list.value.push(meta)
 
@@ -208,9 +227,9 @@ const remove = (meta, index) => {
 
 const chooseDir = async () => {
   try {
-    const result = await window.electronAPI.invoke('showOpenDialog', ['openDirectory'])
-    if (result.filePaths.length !== 0) {
-      root_folder.value = result.filePaths[0]
+    const result = await window.electronAPI?.invoke?.('showOpenDialog', ['openDirectory']) as OpenDialogResult | undefined
+    if (result?.filePaths?.length) {
+      root_folder.value = result.filePaths[0] ?? null
       getExample()
     }
   } catch (error) {
@@ -245,7 +264,7 @@ const organizeFiles = async () => {
       const item = ITEMS.value?.entities?.find(i => i.id === id)
       if (!item) continue
 
-      const item_tags = item.tags || []
+      const item_tags = (item.tags || []) as MediaTagLink[]
       let folder = root_folder.value
 
       for (const meta of structure.value) {
@@ -280,7 +299,7 @@ const organizeFiles = async () => {
     console.error('Error organizing files:', error)
     await setNotification({
       type: "error",
-      text: t('media.organize.error', {message: error.message}),
+      text: t('media.organize.error', {message: error instanceof Error ? error.message : String(error)}),
     })
   }
 }

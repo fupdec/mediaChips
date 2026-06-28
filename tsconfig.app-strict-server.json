@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": [
+    "app/server/**/*.ts",
+    "app/types/**/*.ts",
+    "app/types/global.d.ts",
+    "api/types/global.d.ts",
+    "api/types/db.ts"
+  ]
+}

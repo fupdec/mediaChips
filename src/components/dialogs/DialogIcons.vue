@@ -101,7 +101,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -111,8 +111,12 @@ import icons from '@/assets/material-icons.json'
 const props = defineProps({
   icon: {
     type: String,
-    default: 'shape'
-  }
+    default: 'shape',
+  },
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 // Emits
@@ -138,7 +142,7 @@ const filteredIcons = computed(() => {
 })
 
 // Methods
-const applyIcon = (iconName) => {
+const applyIcon = (iconName: string) => {
   selectedIcon.value = iconName
   emit('apply', iconName)
   closeDialog()
@@ -155,7 +159,7 @@ const resetDialog = () => {
   selectedIcon.value = ''
 }
 
-const truncateIconName = (name) => {
+const truncateIconName = (name: string) => {
   if (name && name.length > 15) {
     return name.substring(0, 12) + '...'
   }

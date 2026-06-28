@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {useHotkey} from 'vuetify'
@@ -15,6 +15,21 @@ import {getDefaultMediaTypeId, isAudioMediaType, isImageMediaType, isTextMediaTy
 import {highlightChars} from '@/services/formatUtils'
 import {hideHoverImage, showHoverImage} from '@/services/hoverService'
 import {openPath} from '@/services/shellService'
+import type { MediaItem, Meta } from '@/types/stores'
+
+interface SearchGroup {
+  data: MediaItem[]
+  name?: string
+  icon?: string
+  mediaTypeId?: number
+  metaId?: number
+  is_media: boolean
+  group_id: string
+}
+
+type FlatResultRow =
+  | { kind: 'header'; group: SearchGroup; id: string }
+  | { kind: 'item'; group: SearchGroup; item: MediaItem; id: string }
 
 const {t} = useI18n()
 const eventBus = useEventBus()
@@ -34,12 +49,12 @@ const mediaTypes = computed(() => app.mediaTypes)
 const dialog = ref(false)
 const query = ref('')
 const loading = ref(false)
-const results = ref([])
-const searchField = ref(null)
-const resultsScroller = ref(null)
+const results = ref<SearchGroup[]>([])
+const searchField = ref<{ focus: () => void } | null>(null)
+const resultsScroller = ref<{ scrollToIndex: (index: number) => void } | null>(null)
 const selectedIndex = ref(-1)
 
-let abortController = null
+let abortController: AbortController | null = null
 const RESULT_LIMIT = 200
 const ROW_HEIGHT = 30
 const RESULTS_MAX_HEIGHT = 480
@@ -48,8 +63,8 @@ const totalResults = computed(() =>
   results.value.reduce((sum, group) => sum + group.data.length, 0),
 )
 
-const flatResults = computed(() => {
-  const flat = []
+const flatResults = computed((): FlatResultRow[] => {
+  const flat: FlatResultRow[] = []
 
   for (const group of results.value) {
     flat.push({kind: 'header', group, id: `h-${group.group_id}`})
@@ -73,7 +88,7 @@ const resultsScrollHeight = computed(() => {
 })
 
 const navigableIndices = computed(() =>
-  flatResults.value.reduce((indices, row, index) => {
+  flatResults.value.reduce<number[]>((indices, row, index) => {
     if (row.kind === 'item') indices.push(index)
     return indices
   }, []),
@@ -87,7 +102,7 @@ const status = computed(() => {
   return t('globalSearch.resultsCount', {count: totalResults.value})
 })
 
-function escapeLike(value) {
+function escapeLike(value: string) {
   return value.replace(/'/g, "''")
 }
 
@@ -132,11 +147,11 @@ function onDialogClose() {
   resetState()
 }
 
-function buildMediaGroups(data) {
+function buildMediaGroups(data: MediaItem[]) {
   const grouped = _.groupBy(data, 'mediaTypeId')
 
   return Object.keys(grouped).map(id => {
-    const type = mediaTypes.value.find(item => item.id == id)
+    const type = mediaTypes.value.find(item => item.id === Number(id))
     if (!type) return null
 
     return {
@@ -147,14 +162,14 @@ function buildMediaGroups(data) {
       is_media: true,
       group_id: `media-${type.id}`,
     }
-  }).filter(Boolean)
+  }).filter(Boolean) as SearchGroup[]
 }
 
-function buildTagGroups(data) {
+function buildTagGroups(data: MediaItem[]) {
   const grouped = _.groupBy(data, 'metaId')
 
   return Object.keys(grouped).map(metaId => {
-    const m = meta.value.find(item => item.id == metaId)
+    const m = meta.value.find(item => item.id === Number(metaId))
     if (!m) return null
 
     return {
@@ -165,10 +180,10 @@ function buildTagGroups(data) {
       is_media: false,
       group_id: `meta-${m.id}`,
     }
-  }).filter(Boolean)
+  }).filter(Boolean) as SearchGroup[]
 }
 
-function sortGroups(groups) {
+function sortGroups(groups: SearchGroup[]) {
   return groups.sort((a, b) => {
     if (a.is_media !== b.is_media) return a.is_media ? -1 : 1
 
@@ -242,11 +257,12 @@ async function search() {
 
     if (signal.aborted) return
 
-    const mediaGroups = buildMediaGroups(mediaRes.data[0] || [])
-    const tagGroups = buildTagGroups(tagRes.data[0] || [])
+    const mediaGroups = buildMediaGroups((mediaRes.data as unknown[][])[0] as MediaItem[] || [])
+    const tagGroups = buildTagGroups((tagRes.data as unknown[][])[0] as MediaItem[] || [])
     results.value = sortGroups([...mediaGroups, ...tagGroups])
-  } catch (e) {
-    if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError') return
+  } catch (e: unknown) {
+    const err = e as { code?: string; name?: string }
+    if (err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError') return
     console.error(e)
   } finally {
     if (!signal.aborted) loading.value = false
@@ -274,12 +290,12 @@ watch(query, (value) => {
   if (!value) onQueryInput()
 })
 
-function openGroup(group) {
+function openGroup(group: SearchGroup) {
   if (group.is_media) openMediaPage(group.mediaTypeId)
   else openMeta(group.metaId)
 }
 
-function openMedia(media, mediaTypeId) {
+function openMedia(media: MediaItem, mediaTypeId?: number) {
   const type = mediaTypes.value.find(item => item.id === Number(mediaTypeId || media.mediaTypeId))
 
   if (isImageMediaType(type)) {
@@ -295,17 +311,17 @@ function openMedia(media, mediaTypeId) {
   hide()
 }
 
-function openMeta(metaId) {
+function openMeta(metaId?: number) {
   router.push(`/meta?metaId=${metaId}`)
   hide()
 }
 
-function openMediaPage(mediaTypeId) {
+function openMediaPage(mediaTypeId?: number) {
   router.push(`/media?mediaTypeId=${mediaTypeId}`)
   hide()
 }
 
-function openTag(tag) {
+function openTag(tag: MediaItem) {
   hideHoverImage()
   router.push(`/tag?metaId=${tag.metaId}&tagId=${tag.id}&mediaTypeId=${getDefaultMediaTypeId(mediaTypes.value)}`)
   hide()
@@ -338,7 +354,7 @@ function scrollSelectedIntoView() {
   })
 }
 
-function moveSelection(direction) {
+function moveSelection(direction: number) {
   const indices = navigableIndices.value
   if (!indices.length) return
 
@@ -356,7 +372,7 @@ function moveSelection(direction) {
   scrollSelectedIntoView()
 }
 
-function onSearchKeydown(e) {
+function onSearchKeydown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     moveSelection(1)
@@ -369,26 +385,27 @@ function onSearchKeydown(e) {
   }
 }
 
-function onItemMouseenter(row, index) {
+function onItemMouseenter(row: FlatResultRow, index: number) {
   if (row.kind !== 'item') return
   selectedIndex.value = index
 }
 
-function showResultHover(event, row) {
+function showResultHover(event: MouseEvent, row: FlatResultRow) {
+  if (row.kind !== 'item') return
   if (row.group.is_media) {
     const type = mediaTypes.value.find(item => item.id === row.group.mediaTypeId)
-    showHoverImage(event, row.group.mediaTypeId, row.item.id, 'media', {
-      width: row.item.width,
-      height: row.item.height,
+    showHoverImage(event, row.group.mediaTypeId ?? null, row.item.id, 'media', {
+      width: row.item.width as number | undefined,
+      height: row.item.height as number | undefined,
       isVideo: isVideoMediaType(type),
     })
     return
   }
 
-  showHoverImage(event, row.item.metaId, row.item.id)
+  showHoverImage(event, (row.item.metaId as number) ?? null, row.item.id, 'tag')
 }
 
-function getNameHighlighted(text) {
+function getNameHighlighted(text: string) {
   return highlightChars(text, query.value.trim(), true)
 }
 </script>
@@ -506,7 +523,7 @@ function getNameHighlighted(text) {
               </v-icon>
 
               <div class="global-search__item-title">
-                <span v-html="getNameHighlighted(row.item.name)"/>
+                <span v-html="getNameHighlighted(row.item.name ?? '')"/>
                 <span
                   v-if="!row.group.is_media && row.item.synonyms"
                   class="text-medium-emphasis ml-1"

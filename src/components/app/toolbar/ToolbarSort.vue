@@ -14,7 +14,7 @@
     hide-details
     :disabled="!items.isFiltersLoaded"
   >
-    <template v-slot:prepend="{ item }">
+    <template #prepend>
       <v-btn
         v-tooltip:top="t('filters.change_direction')"
         color="primary"
@@ -139,7 +139,7 @@
 <!--  </v-card>-->
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -206,7 +206,7 @@ function toggleDir() {
   eventBus.emit("setItemsSortDir", dir);
 }
 
-function sort(param) {
+function sort(param: string) {
   if (items.value.sortBy === param) {
     toggleDir()
     return

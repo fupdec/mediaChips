@@ -11,7 +11,7 @@
 
     <v-progress-linear
       v-if="status.state === 'downloading'"
-      :model-value="status.percent || 0"
+      :model-value="Number(status.percent || 0)"
       color="success"
       class="mt-3"
       rounded
@@ -88,7 +88,7 @@
   </v-snackbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onMounted, onBeforeUnmount, ref, watch} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useI18n} from 'vue-i18n'
@@ -118,7 +118,7 @@ const message = computed(() => {
       })
     case 'downloading':
       return t('auto_update.downloading', {
-        percent: Math.round(status.value.percent || 0),
+        percent: Math.round(Number(status.value.percent || 0)),
       })
     case 'downloaded':
       return t('auto_update.ready_to_install', {
@@ -219,7 +219,7 @@ function handleDismiss() {
 }
 
 function openReleases() {
-  window.open(status.value.releasesUrl || releasesUrl, '_blank', 'noopener,noreferrer')
+  window.open(String(status.value.releasesUrl || releasesUrl), '_blank', 'noopener,noreferrer')
 }
 
 onMounted(() => {

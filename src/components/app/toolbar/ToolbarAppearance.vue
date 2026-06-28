@@ -136,11 +136,11 @@
 
         <v-card-text class="text-center py-4 px-2 px-sm-4">
           <SettingsMediaTypeAddedMeta
-            v-if="itemsStore.type === 'media'"
+            v-if="itemsStore.type === 'media' && media_type"
             :media-type="media_type"
           />
           <MetaSettingsPinned
-            v-if="itemsStore.type === 'tag'"
+            v-if="itemsStore.type === 'tag' && meta"
             :meta="meta"
           />
         </v-card-text>
@@ -149,7 +149,7 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -164,6 +164,8 @@ import ItemsView from '@/components/app/appbar/elements/ItemsView.vue'
 import SettingsMediaTypeAddedMeta from '@/components/settings/SettingsMediaTypeAddedMeta.vue'
 import MetaSettingsPinned from '@/components/dialogs/meta/MetaSettingsPinned.vue'
 import {getMetaName} from '@/utils/metaI18n'
+import type { AssignedMeta, Meta } from '@/types/stores'
+import type { MediaType } from '@/types/media'
 
 // Stores
 const itemsStore = useItemsStore()
@@ -179,21 +181,27 @@ const dialogEditingPinnedMeta = ref(false)
 // Computed properties
 const ENV = computed(() => itemsStore.environment || {})
 
-const media_type = computed(() => {
+const media_type = computed((): MediaType | null => {
   if (!ENV.value.media_type_id) return null
-  return mediaTypesStore.find(i => i.id === ENV.value.media_type_id)
+  return mediaTypesStore.find(i => i.id === ENV.value.media_type_id) ?? null
 })
 
-const meta = computed(() => {
+const meta = computed((): Meta | null => {
   if (!ENV.value.meta_id) return null
-  return metaStore.find(i => i.id === ENV.value.meta_id)
+  return metaStore.find(i => i.id === ENV.value.meta_id) ?? null
 })
 
-// Methods
-const toggleMetaVisibility = async (metaItem) => {
+interface MetaVisibilityPayload {
+  data: { show: boolean }
+  metaId?: number | null
+  pinnedMetaId?: number
+  mediaTypeId?: number | null
+}
+
+const toggleMetaVisibility = async (metaItem: AssignedMeta & { show?: boolean; pinnedMetaId?: number; metaId?: number }) => {
   try {
     let urlPath = '/api/'
-    let data = {
+    const data: MetaVisibilityPayload = {
       data: {show: !metaItem.show}
     }
 
@@ -216,12 +224,12 @@ const toggleMetaVisibility = async (metaItem) => {
   }
 }
 
-const updateLimit = (val) => {
+const updateLimit = (val: number) => {
   itemsStore.updateState({key: 'limit', value: val})
   eventBus.emit('setItemsLimit', val)
 }
 
-const updateSize = (val) => {
+const updateSize = (val: number) => {
   itemsStore.updateState({key: 'size', value: val})
 }
 

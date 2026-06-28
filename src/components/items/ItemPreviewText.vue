@@ -14,24 +14,25 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useItemsStore} from '@/stores/items'
 import {openPath} from '@/services/shellService'
+import type {MediaItem} from '@/types/stores'
 
-const props = defineProps({
-  media: Object,
-  isFileExists: Boolean,
-})
+const props = defineProps<{
+  media: MediaItem
+  isFileExists?: boolean
+}>()
 
 const itemsStore = useItemsStore()
 
 const isViewCard = computed(() =>
-  itemsStore.view === 1 || itemsStore.view === '1'
+  Number(itemsStore.view) === 1
 )
 
 const isViewTimeline = computed(() =>
-  itemsStore.view === 2 || itemsStore.view === '2'
+  Number(itemsStore.view) === 2
 )
 
 const open = () => {

@@ -31,16 +31,16 @@
   />
   <WidgetRandomMarkers
     v-else-if="widgetId === 'markers'"
-    :limit="limits.markers"
+    :limit="limits?.markers ?? 8"
   />
   <WidgetHealthAlerts v-else-if="widgetId === 'health'"/>
   <WidgetTopTags
     v-else-if="widgetId === 'topTags'"
-    :limit="limits.topTags"
+    :limit="limits?.topTags ?? 10"
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useI18n} from 'vue-i18n'
 import WidgetTopTags from '@/components/widgets/WidgetTopTags.vue'
 import WidgetTotalStats from '@/components/widgets/WidgetTotalStats.vue'
@@ -49,49 +49,21 @@ import WidgetQuickActions from '@/components/widgets/WidgetQuickActions.vue'
 import WidgetMediaRow from '@/components/widgets/WidgetMediaRow.vue'
 import WidgetRandomMarkers from '@/components/widgets/WidgetRandomMarkers.vue'
 import WidgetHealthAlerts from '@/components/widgets/WidgetHealthAlerts.vue'
+import type { HomeMediaItem, HomeWidgetLimits } from '@/types/widgets'
+import type { MediaItem } from '@/types/stores'
 
-defineProps({
-  widgetId: {
-    type: String,
-    required: true,
-  },
-  continueWatching: {
-    type: Array,
-    default: () => [],
-  },
-  favorites: {
-    type: Array,
-    default: () => [],
-  },
-  topViews: {
-    type: Array,
-    default: () => [],
-  },
-  limits: {
-    type: Object,
-    default: () => ({}),
-  },
-  onOpenMedia: {
-    type: Function,
-    required: true,
-  },
-  onOpenContinue: {
-    type: Function,
-    required: true,
-  },
-  onOpenContinueList: {
-    type: Function,
-    required: true,
-  },
-  onOpenFavoritesList: {
-    type: Function,
-    required: true,
-  },
-  onOpenTopViewsList: {
-    type: Function,
-    required: true,
-  },
-})
+defineProps<{
+  widgetId: string
+  continueWatching?: HomeMediaItem[]
+  favorites?: HomeMediaItem[]
+  topViews?: HomeMediaItem[]
+  limits?: HomeWidgetLimits
+  onOpenMedia: (item: MediaItem) => void | Promise<void>
+  onOpenContinue: (item: MediaItem) => void | Promise<void>
+  onOpenContinueList: () => void
+  onOpenFavoritesList: () => void
+  onOpenTopViewsList: () => void
+}>()
 
 const {t} = useI18n()
 </script>

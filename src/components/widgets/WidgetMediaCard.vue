@@ -41,7 +41,7 @@
       </v-icon>
 
       <v-rating
-        v-if="variant === 'favorite' && item.rating > 0"
+        v-if="variant === 'favorite' && (item.rating ?? 0) > 0"
         class="home-media-card__rating"
         :model-value="item.rating"
         active-color="yellow-darken-2"
@@ -74,7 +74,7 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
@@ -82,24 +82,20 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import {useAppStore} from '@/stores/app'
 import {checkFileExists as checkPathExists} from '@/services/fileService'
 import {findMediaTypeById, isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
+import type { HomeMediaCardVariant, HomeMediaItem } from '@/types/widgets'
 
-const props = defineProps({
-  item: {
-    type: Object,
-    required: true,
-  },
-  thumb: {
-    type: String,
-    default: null,
-  },
-  variant: {
-    type: String,
-    default: 'views',
-    validator: (value) => ['continue', 'favorite', 'views'].includes(value),
-  },
+const props = withDefaults(defineProps<{
+  item: HomeMediaItem
+  thumb?: string | null
+  variant?: HomeMediaCardVariant
+}>(), {
+  thumb: null,
+  variant: 'views',
 })
 
-const emit = defineEmits(['click'])
+const emit = defineEmits<{
+  click: []
+}>()
 
 const isFileExists = ref(true)
 
@@ -108,7 +104,7 @@ async function verifyFileExists() {
     isFileExists.value = false
     return
   }
-  isFileExists.value = await checkPathExists(props.item.path)
+  isFileExists.value = await checkPathExists(String(props.item.path))
 }
 
 onMounted(verifyFileExists)

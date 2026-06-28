@@ -78,14 +78,30 @@
   </v-dialog>
 </template>
 
-<script setup>
-import {ref, computed, onMounted, watch, nextTick} from 'vue'
+<script setup lang="ts">
+import {ref, computed, onMounted, watch} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useNotificationsStore} from '@/stores/notifications'
 import {createImage, deleteLocalFile} from '@/services/fileService'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
+
+interface FilePondInstance {
+  getFiles: () => Array<{ getFileEncodeDataURL?: () => string }>
+}
+
+interface CropperInstance {
+  getResult: () => { canvas?: HTMLCanvasElement } | null
+}
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  action?: () => void | Promise<void>
+}
 
 // FilePond импорт
 import vueFilePond from 'vue-filepond'
@@ -135,20 +151,20 @@ const {xs} = useDisplay()
 const {t} = useI18n()
 
 // Refs
-const pond = ref(null)
-const cropper = ref(null)
+const pond = ref<FilePondInstance | null>(null)
+const cropper = ref<CropperInstance | null>(null)
 const internalDialog = ref(false)
 const dialogImageDeleting = ref(false)
 const dialog = ref(false)
 
 // Cropper data
-const src = ref(null)
-const width = ref(null)
-const height = ref(null)
+const src = ref<string | null>(null)
+const width = ref<number | null>(null)
+const height = ref<number | null>(null)
 
 // FilePond data
-const uploadedImageError = ref(null)
-const uploadedImage = ref([])
+const uploadedImageError = ref<unknown>(null)
+const uploadedImage = ref<unknown[]>([])
 
 // Buttons
 const buttons = computed(() => [
@@ -177,7 +193,7 @@ const textDialogDelete = computed(() => {
 
 // Methods
 // FilePond methods
-const handleFileError = (error) => {
+const handleFileError = (error: unknown) => {
   uploadedImageError.value = error
   console.error('File upload error:', error)
 
@@ -239,12 +255,12 @@ const crop = async () => {
   }
 
   try {
-    const result = cropper.value.getResult()
-    if (!result || !result.canvas) {
+    const cropResult = cropper.value.getResult()
+    if (!cropResult || !cropResult.canvas) {
       throw new Error(t('image.no_canvas_result'))
     }
 
-    const canvas = result.canvas
+    const canvas = cropResult.canvas
     const imgBuffer = canvas.toDataURL().replace(/^data:image\/\w+;base64,/, '')
 
     const sizes = {
@@ -253,9 +269,9 @@ const crop = async () => {
     }
 
     // Create image from buffer
-    const resultStatus = await createImage(imgBuffer, props.imagePath, sizes);
+    const createResult = await createImage(imgBuffer, props.imagePath, sizes);
 
-    if (resultStatus === 202 || resultStatus === false) {
+    if (createResult.status === 202 || !createResult.status) {
       notificationsStore.setNotification({
         type: 'error',
         title: t('image.generation'),
@@ -273,14 +289,15 @@ const crop = async () => {
 
   } catch (error) {
     console.error('Error cropping image:', error)
+    const message = error instanceof Error ? error.message : String(error)
     notificationsStore.setNotification({
       type: 'error',
-      text: t('image.crop_failed', {message: error.message})
+      text: t('image.crop_failed', {message})
     })
   }
 }
 
-const updateSize = ({coordinates}) => {
+const updateSize = ({coordinates}: { coordinates?: { width: number; height: number } }) => {
   if (coordinates) {
     width.value = Math.round(coordinates.width)
     height.value = Math.round(coordinates.height)
@@ -294,24 +311,12 @@ const closeDialog = () => {
 
 // Lifecycle
 onMounted(() => {
-  src.value = props.image
+  src.value = props.image || null
 })
 
 // Watchers
-watch(() => props.dialog, (newVal) => {
-  internalDialog.value = newVal
-
-  if (newVal) {
-    nextTick(() => {
-      src.value = props.image
-    })
-  }
-})
-
 watch(() => props.image, (newVal) => {
-  if (internalDialog.value) {
-    src.value = newVal
-  }
+  src.value = newVal || null
 })
 </script>
 

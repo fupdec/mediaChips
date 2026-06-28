@@ -51,9 +51,9 @@
     <ItemsPaginationBar
       v-if="showPagination"
       v-model:page="paginationPage"
-      v-model:jump-page="paginationJumpPage"
+      v-model:jump-page="jumpPageForPagination"
       :pages="pages"
-      :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
+      :total-visible="paginationTotalVisible"
       @change="changePage"
       @jump="jumpToPage"
     />
@@ -64,8 +64,8 @@
     >
       <Item
         v-for="(i, x) in ITEMS.itemsOnPage"
-        :key="i.key || i.id"
-        :type="items_type"
+        :key="String(i.id)"
+        :type="listItemType"
         :item="i"
         :meta="meta"
         :media-type="mediaType"
@@ -93,9 +93,9 @@
     <ItemsPaginationBar
       v-if="showPagination"
       v-model:page="paginationPage"
-      v-model:jump-page="paginationJumpPage"
+      v-model:jump-page="jumpPageForPagination"
       :pages="pages"
-      :total-visible="xs ? 5 : SETTINGS.numberOfPagesLimit"
+      :total-visible="paginationTotalVisible"
       @change="changePage"
       @jump="jumpToPage"
     />
@@ -165,7 +165,7 @@
   </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
@@ -180,6 +180,9 @@ import {useItemsPage} from '@/composable/useItemsPage'
 import {useItemsPageInit} from '@/composable/useItemsPageInit'
 import {useItemsPageEvents} from '@/composable/useItemsPageEvents'
 import useVideoImageGenerator from '@/composable/GeneratingThumbsForVideos'
+import type {ItemsPageProps, ItemsPageType} from '@/types/itemsPage'
+import type {MediaType} from '@/types/media'
+import type {Meta} from '@/types/stores'
 
 // Компоненты
 import Item from '@/components/items/Item.vue'
@@ -199,13 +202,7 @@ import {getReadableFileSize} from '@/services/formatUtils'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 
 // Пропсы
-const props = defineProps({
-  items_type: String,
-  tagId: Number,
-  mediaTypeId: Number,
-  metaId: Number,
-  tabId: Number,
-})
+const props = defineProps<ItemsPageProps>()
 
 // Сторы Pinia
 const appStore = useAppStore()
@@ -225,11 +222,11 @@ const {xs} = useDisplay()
 useVideoImageGenerator()
 
 // Реактивные переменные
-const mediaType = ref(null)
-const meta = ref(null)
+const mediaType = ref<MediaType | null>(null)
+const meta = ref<Meta | null>(null)
 const dropzone = ref(false)
 const dropzoneDragDepth = ref(0)
-const container = ref(null)
+const container = ref<HTMLElement | null>(null)
 
 const {
   isFiltersReady,
@@ -312,19 +309,19 @@ const activeFilters = computed(() => {
   return ITEMS.value.filters.filter(i => i && i.active);
 });
 const isImageGrid = computed(() =>
-  props.items_type === 'media' && mediaType.value?.type === 'image' && ITEMS.value.view == '1'
+  props.items_type === 'media' && mediaType.value?.type === 'image' && ITEMS.value.view == 1
 )
 const isWideImage = computed(() =>
-  props.items_type === 'media' && isVideoMediaType(mediaType.value) && ITEMS.value.view == '2'
+  props.items_type === 'media' && isVideoMediaType(mediaType.value) && ITEMS.value.view == 2
 )
 const isLineGrid = computed(() => isWideImage.value)
 const isChipsGrid = computed(() =>
-  props.items_type === 'tag' && ITEMS.value.view == '2'
+  props.items_type === 'tag' && ITEMS.value.view == 2
 )
 const itemsGridClasses = computed(() => [
   `item__size-${ITEMS.value.size}`,
   `gap-size-${SETTINGS.value.gapSize}`,
-  {'card-grid': ITEMS.value.view == '1'},
+  {'card-grid': ITEMS.value.view == 1},
   {'chips-grid': isChipsGrid.value},
   {'line-grid': isLineGrid.value},
   {'wide-image': isWideImage.value},
@@ -333,6 +330,21 @@ const itemsGridClasses = computed(() => [
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
 const ENV = computed(() => ITEMS.value.environment)
+
+const listItemType = computed((): ItemsPageType =>
+  props.items_type === 'tag' ? 'tag' : 'media',
+)
+
+const jumpPageForPagination = computed({
+  get: (): number | undefined => paginationJumpPage.value ?? undefined,
+  set: (value: number | undefined) => {
+    paginationJumpPage.value = value ?? null
+  },
+})
+
+const paginationTotalVisible = computed(() =>
+  xs.value ? 5 : Number(SETTINGS.value.numberOfPagesLimit) || 7,
+)
 
 const filesize_all = computed(() => {
   if (props.items_type !== 'media') return ""
@@ -369,10 +381,10 @@ const toggleCustomization = () => {
   toolbarStore.appearance.show = !toolbarStore.appearance.show
 }
 
-const containsDroppedFiles = (event) =>
+const containsDroppedFiles = (event: DragEvent) =>
   Array.from(event?.dataTransfer?.types || []).includes('Files')
 
-const showDrop = (e) => {
+const showDrop = (e: DragEvent) => {
   if (!containsDroppedFiles(e)) return
 
   e.preventDefault()
@@ -381,13 +393,13 @@ const showDrop = (e) => {
   }
 }
 
-const onDropzoneDragEnter = (event) => {
+const onDropzoneDragEnter = (event: DragEvent) => {
   if (!containsDroppedFiles(event)) return
   dropzoneDragDepth.value += 1
   dropzone.value = true
 }
 
-const onDropzoneDragOver = (event) => {
+const onDropzoneDragOver = (event: DragEvent) => {
   if (!containsDroppedFiles(event)) return
   event.preventDefault()
   dropzone.value = true
@@ -400,10 +412,10 @@ const onDropzoneDragLeave = () => {
   }
 }
 
-const catchDrop = (e) => {
+const catchDrop = (e: DragEvent) => {
   dropzone.value = false
   dropzoneDragDepth.value = 0
-  if (!isElectron.value || props.items_type !== 'media' || !mediaType.value) return
+  if (!isElectron.value || props.items_type !== 'media' || !mediaType.value || !props.mediaTypeId) return
 
   const paths = collectDroppedPaths(e)
   if (!paths.length) return
@@ -411,13 +423,15 @@ const catchDrop = (e) => {
   startDroppedMediaAdding({
     paths,
     mediaTypeId: props.mediaTypeId,
-    tasksStore,
+    tasksStore: tasksStore as Parameters<typeof startDroppedMediaAdding>[0]['tasksStore'],
     eventBus,
   })
 }
 
-// События
-const emit = defineEmits(['addMedia', 'playVideo'])
+defineEmits<{
+  addMedia: []
+  playVideo: [payload: unknown]
+}>()
 </script>
 
 <style lang="scss">

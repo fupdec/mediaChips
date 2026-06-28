@@ -1,4 +1,4 @@
-import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
+import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick, type InjectionKey} from 'vue'
 import type { Handler } from 'mitt'
 import {useI18n} from 'vue-i18n'
 import _ from 'lodash'
@@ -27,8 +27,6 @@ import {
 } from '@/utils/liveTranscodeLifecycle'
 import type { MediaItem } from '@/types/stores'
 import type { PlayVideoSwitch, PlayerControlsRef, PlayerMark, PlayerMarksComponentRef } from '@/types/player'
-
-export const PLAYER_SESSION_KEY = Symbol('playerSession')
 
 export function usePlayerSession() {
   const appStore = useAppStore()
@@ -308,7 +306,9 @@ export function usePlayerSession() {
 
   const playVideoObject = async (videos: PlayVideoSwitch) => {
     const {n, o} = videos
-    await updatePlaybackTime(o)
+    if (o) {
+      await updatePlaybackTime(o)
+    }
     await loadSrc(n)
   }
 
@@ -400,7 +400,8 @@ export function usePlayerSession() {
     }
   }
 
-  const removeMark = async (mark: PlayerMark & { id: number }) => {
+  const removeMark = async (mark: PlayerMark) => {
+    if (!mark.id) return
     try {
       await apiClient.delete(`/api/mark/${mark.id}`)
       await getMarks(video.value)
@@ -530,3 +531,7 @@ export function usePlayerSession() {
     updateItemVideo,
   }
 }
+
+export type PlayerSessionContext = ReturnType<typeof usePlayerSession>
+
+export const PLAYER_SESSION_KEY: InjectionKey<PlayerSessionContext> = Symbol('playerSession')

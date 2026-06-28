@@ -11,7 +11,7 @@
     <div class="playlist-item__thumb-wrap">
       <v-img
         :key="video.id"
-        :src="thumb"
+        :src="thumb ?? undefined"
         :aspect-ratio="16 / 9"
         :id="'video_'+video.id"
         class="playlist-item__thumb"
@@ -35,21 +35,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {usePlaylistItem} from '@/composable/usePlaylistItem'
+import type {MediaItem} from '@/types/stores'
 
-const props = defineProps({
-  video: {
-    type: Object,
-    required: true,
-  },
-  index: {
-    type: Number,
-    required: true,
-  },
-})
+const props = defineProps<{
+  video: MediaItem
+  index: number
+}>()
 
-const emit = defineEmits(['play'])
+const emit = defineEmits<{
+  play: [index: number]
+}>()
 
 const {
   thumb,

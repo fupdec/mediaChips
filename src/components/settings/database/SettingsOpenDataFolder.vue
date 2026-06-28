@@ -24,7 +24,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import path from "path-browserify"
 import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"

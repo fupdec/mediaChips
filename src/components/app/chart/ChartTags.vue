@@ -15,9 +15,9 @@
   </v-card>
 </template>
 
-<script>
+<script setup lang="ts">
+import {computed, ref} from 'vue'
 import {Line as LineChartGenerator} from 'vue-chartjs'
-
 import {
   Chart as ChartJS,
   Title,
@@ -26,8 +26,11 @@ import {
   LineElement,
   LinearScale,
   CategoryScale,
-  PointElement
+  PointElement,
 } from 'chart.js'
+import _ from 'lodash'
+import {useAppStore} from '@/stores/app'
+import type { Tag } from '@/types/stores'
 
 ChartJS.register(
   Title,
@@ -36,119 +39,77 @@ ChartJS.register(
   LineElement,
   LinearScale,
   CategoryScale,
-  PointElement
+  PointElement,
 )
 
-export default {
-  name: 'ChartTags',
-  components: {
-    LineChartGenerator
-  },
-  props: {
-    chartId: {
-      type: String,
-      default: 'line-chart'
-    },
-    datasetIdKey: {
-      type: String,
-      default: 'label'
-    },
-    width: {
-      type: Number,
-      default: 100
-    },
-    height: {
-      type: Number,
-      default: 100
-    },
-    cssClasses: {
-      default: '',
-      type: String
-    },
-    styles: {
-      type: Object,
-      default: () => {
+const props = withDefaults(defineProps<{
+  chartId?: string
+  datasetIdKey?: string
+  width?: number
+  height?: number
+  cssClasses?: string
+  styles?: Record<string, unknown>
+  plugins?: unknown[]
+}>(), {
+  chartId: 'line-chart',
+  datasetIdKey: 'label',
+  width: 100,
+  height: 100,
+  cssClasses: '',
+  styles: () => ({}),
+  plugins: () => [],
+})
+
+const appStore = useAppStore()
+
+const chartOptions = ref<Record<string, unknown>>({})
+
+const tags = computed(() => appStore.tags as Tag[])
+
+const datasets = computed(() => {
+  let labels: string[] = []
+
+  const getDataset = (param: 'createdAt' | 'updatedAt', color: string) => {
+    const dates = tags.value.map((i) => new Date(String(i[param])))
+    const sortedDates = _.sortBy(dates, (date) => date.getTime())
+    const start = sortedDates[0]
+    const end = sortedDates[sortedDates.length - 1]
+
+    const getDaysArray = (s: Date, e: Date) => {
+      const days: string[] = []
+      for (const d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+        days.push(d.toLocaleDateString())
       }
-    },
-    plugins: {
-      type: Array,
-      default: () => []
+      return days
     }
-  },
-  data: () => ({
-    chartData: {
-      labels: ['January',],
-      datasets: [
-        {
-          label: 'Added',
-          backgroundColor: '#8af879',
-          data: [40,],
-        },
-      ],
-    },
-    chartOptions: {
-      // responsive: true,
-      // maintainAspectRatio: false
-      // scales: {
-      //   x: {
-      //     type: 'timeseries',
-      //   }
-      // },
-    },
-  }),
-  computed: {
-    tags() {
-      return this.$store.state.tags;
-    },
-    datasets() {
-      let labels = []
-      const getDataset = (param, color) => {
-        let dates = this.tags.map(i => new Date(i[param]));
-        dates = _.sortBy(dates, (i) => i.getTime());
-        let start = dates[0];
-        let end = dates[dates.length - 1];
 
-        // даты за каждый день в промежутке между двумя датами
-        const getDaysArray = function (s, e) {
-          const a = [];
-          for (const d = new Date(s); d <= new Date(e); d.setDate(d.getDate() + 1)) {
-            a.push(d.toLocaleDateString());
-          }
-          return a;
-        };
+    const dateStrings = sortedDates.map((date) => date.toLocaleDateString())
+    const grouped = _.groupBy(dateStrings)
 
-        dates = dates.map(i => i.toLocaleDateString());
-        let grouped = _.groupBy(dates);
+    const days = getDaysArray(start, end)
+    const res = days.map((day) => grouped[day] ? grouped[day].length : null)
 
-        const days = getDaysArray(start, end);
-        const res = days.map(i => grouped[i] ? grouped[i].length : null);
+    if (param === 'createdAt') {
+      labels = days
+    }
 
-        if (param === 'createdAt') {
-          labels = days;
-        }
+    return {
+      data: res,
+      label: param,
+      backgroundColor: color,
+    }
+  }
 
-        return {
-          data: res,
-          label: param,
-          backgroundColor: color,
-        };
-      }
+  const params = [
+    {text: 'createdAt' as const, color: '#E1CB5AFF'},
+    {text: 'updatedAt' as const, color: '#8AF879FF'},
+  ]
 
-      const params = [
-        {text: 'createdAt', color: '#E1CB5AFF'},
-        {text: 'updatedAt', color: '#8AF879FF'},
-      ];
-      let data = [];
-      for (let i of params) {
-        data.push(getDataset(i.text, i.color));
-      }
-      console.log(labels)
-      console.log(data)
-      return {
-        labels: labels,
-        datasets: data,
-      }
-    },
-  },
-}
+  const data = params.map((item) => getDataset(item.text, item.color))
+
+  return {
+    labels,
+    datasets: data,
+  }
+})
 </script>

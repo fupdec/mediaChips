@@ -1,11 +1,11 @@
 <template>
-  <v-dialog v-if="dialog" @input="close" :value="dialog" width="800" scrollable>
+  <v-dialog v-if="dialog" @input="close" :model-value="dialog" width="800" scrollable>
     <v-card>
-      <DialogHeader @close="close" :header="$t('actions.scrape_info')" closable />
+      <DialogHeader @close="close" :header="t('actions.scrape_info')" closable />
 
       <v-progress-linear
         v-if="progress < 99"
-        :value="progress"
+        :model-value="progress"
       ></v-progress-linear>
       <v-card-text>
         <div v-for="i in performers" :key="i.performer.id">
@@ -17,34 +17,31 @@
   </v-dialog>
 </template>
 
-<script>
-import DialogHeader from "@/components/elements/DialogHeader.vue";
+<script setup lang="ts">
+import {ref, computed, onMounted, defineAsyncComponent} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useDialogsStore} from '@/stores/dialogs'
+import DialogHeader from "@/components/elements/DialogHeader.vue"
+import type { ScraperMultiplePerformer } from '@/types/scraper'
 
-export default {
-  name: "DialogScraper",
-  components: {
-    DialogHeader,
-    ScraperDataTransfer: () =>
-      import("@/components/scraper/ScraperDataTransfer.vue"),
-  },
-  data: () => ({
-    dialog: false,
-  }),
-  computed: {
-    performers() {
-      return this.$store.state.Dialogs.scraperMultiple.performers;
-    },
-    progress() {
-      return this.$store.state.Dialogs.scraperMultiple.progress;
-    },
-  },
-  methods: {
-    close() {
-      this.$store.state.Dialogs.scraperMultiple.show = false;
-    },
-  },
-  mounted() {
-    this.dialog = true;
-  },
-};
+const ScraperDataTransfer = defineAsyncComponent(() =>
+  import("@/components/scraper/ScraperDataTransfer.vue"),
+)
+
+const {t} = useI18n()
+const dialogsStore = useDialogsStore()
+const dialog = ref(false)
+
+const performers = computed(() =>
+  dialogsStore.scraperMultiple.performers as ScraperMultiplePerformer[]
+)
+const progress = computed(() => dialogsStore.scraperMultiple.progress)
+
+function close() {
+  dialogsStore.scraperMultiple.show = false
+}
+
+onMounted(() => {
+  dialog.value = true
+})
 </script>

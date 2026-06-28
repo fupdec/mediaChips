@@ -184,7 +184,7 @@
   </v-navigation-drawer>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
@@ -199,6 +199,9 @@ import {
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
+import type { FilterObject, FilterListParam } from '@/types/common'
+import type { SavedFilter } from '@/types/stores'
+import type { VForm } from 'vuetify/components'
 import {
   getCurrentMediaType,
   isImageMediaType,
@@ -209,7 +212,7 @@ import {
   sanitizeFiltersForMediaType,
 } from '@/utils/mediaSortFilter'
 
-import cols from "../../../app/configs/filter-cols.mjs";
+import cols from '../../../app/configs/filter-cols'
 
 // Components
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -244,23 +247,27 @@ const {t} = useI18n()
 
 // Reactive data
 const updKey = ref(0)
-const filters = ref([])
-const listBy = ref([])
+const filters = ref<FilterObject[]>([])
+const listBy = ref<FilterListParam[]>([])
 const valid = ref(true)
-const datePicker = ref({
+const datePicker = ref<{
+  dialog: boolean
+  index: number
+  value: string | null
+}>({
   dialog: false,
   index: -1,
   value: null
 })
 const dialogSave = ref(false)
 const validName = ref(false)
-const filterRows = ref(null)
+const filterRows = ref<Array<InstanceType<typeof FilterRow>> | null>(null)
 const filterName = ref('')
 const dialogLoad = ref(false)
-const filtersPreviousState = ref([])
+const filtersPreviousState = ref<FilterObject[]>([])
 const removeAllState = ref(true)
 const deactivateAllState = ref(true)
-const formSave = ref(null)
+const formSave = ref<VForm | null>(null)
 
 // Computed
 const filtersVisible = computed(() => filtersStore.visible)
@@ -286,7 +293,7 @@ const is_filters_changed = computed(() => {
 })
 
 // Methods
-const filterTextKeys = {
+const filterTextKeys: Record<string, string> = {
   rating: 'filters.sort.rating',
   favorite: 'meta.sorting.favorite',
   bookmark: 'player.controls.bookmark',
@@ -309,16 +316,16 @@ const filterTextKeys = {
   codec: 'filters.sort.codec',
 }
 
-const withFilterI18n = (items, group) => items.map(item => ({
+const withFilterI18n = (items: FilterListParam[], group: string): FilterListParam[] => items.map(item => ({
   ...item,
   group,
-  textKey: filterTextKeys[item.param],
+  textKey: filterTextKeys[String(item.param)],
 }))
 
-const translateFilterText = item => item.textKey ? t(item.textKey) : item.text
+const translateFilterText = (item: FilterListParam): string => item.textKey ? t(item.textKey) : (item.text ?? '')
 
 const init = () => {
-  let listByArray = []
+  let listByArray: FilterListParam[] = []
 
   if (ITEMS.value.type === 'media') {
     let media = withFilterI18n(cols.media || [], "File")
@@ -376,46 +383,46 @@ const init = () => {
   filtersPreviousState.value = _.cloneDeep(filters.value)
 }
 
-const add = (params) => {
-  for (let i of params) {
-    let cond = getListCond(i.type)
-    if (cond) cond = cond[0].cond
-    let filter_obj = getFilterObject({
-      param: i.param,
-      type: i.type,
-      cond: cond
+const add = (params: FilterListParam[]) => {
+  for (const i of params) {
+    const conditions = getListCond(i.type ?? null)
+    const cond = conditions?.[0]?.cond ?? null
+    const filter_obj = getFilterObject({
+      param: String(i.param),
+      type: i.type ?? null,
+      cond,
     })
     filters.value.push(filter_obj)
   }
 }
 
-const setBy = (value, index) => {
+const setBy = (value: string | number, index: number) => {
   filters.value[index].param = value
-  let found = listBy.value.findIndex(i => i.param === value)
-  if (found > -1) filters.value[index].type = listBy.value[found].type
+  const found = listBy.value.findIndex(i => i.param === value)
+  if (found > -1) filters.value[index].type = listBy.value[found].type ?? null
   filters.value[index].cond = null
   filters.value[index].val = null
   if (typeof value === "number") filters.value[index].metaId = value
 }
 
-const setCondition = (value, index) => {
+const setCondition = (value: string | null, index: number) => {
   filters.value[index].cond = value
 }
 
-const setValue = (value, index) => {
+const setValue = (value: unknown, index: number) => {
   filters.value[index].val = value
 }
 
-const setActive = (value, index) => {
+const setActive = (value: boolean, index: number) => {
   filters.value[index].active = value
 }
 
-const remove = (index) => {
+const remove = (index: number) => {
   filters.value[index].removed = !filters.value[index].removed
   updKey.value += Date.now()
 }
 
-const removeAll = (state) => {
+const removeAll = (state?: boolean) => {
   const is_removed = state === undefined ? true : state
   filters.value.forEach(i => {
     if (!i.lock) i.removed = is_removed
@@ -428,7 +435,7 @@ const toggleRemovingAll = () => {
   removeAllState.value = !removeAllState.value
 }
 
-const deactivateAll = (state) => {
+const deactivateAll = (state?: boolean) => {
   const is_active = state === undefined ? false : state
   const updatedFilters = filters.value.map(i =>
     i.lock ? i : {...i, active: is_active}
@@ -480,7 +487,7 @@ const apply = async () => {
   eventBus.emit('setItemsFilters', {filters: filters.value})
 }
 
-const addFilterRows = async (filterId, isSavedFilter = false) => {
+const addFilterRows = async (filterId: number | null | undefined, isSavedFilter = false) => {
   const filterRows = _.cloneDeep(filters.value.filter(i => !i.lock && !i.removed))
   for (let f of filterRows) {
     if (isSavedFilter) f.id = null
@@ -502,17 +509,18 @@ const save = async () => {
   const {valid} = await formSave.value.validate()
   if (!valid) return
 
-  let savedFilter = {}
+  let savedFilter: SavedFilter = { id: 0 }
 
   try {
-    const response = await apiClient.post('/api/SavedFilter', {
+    const response = await apiClient.post<SavedFilter | SavedFilter[]>('/api/SavedFilter', {
       name: filterName.value,
       mediaTypeId: ENV.value.media_type_id ?? null,
       metaId: ENV.value.meta_id ?? null,
       tagId: ENV.value.tag_id ?? null,
       tabId: ENV.value.tab_id ?? null,
     })
-    savedFilter = response.data?.[0] || response.data
+    const data = response.data
+    savedFilter = Array.isArray(data) ? data[0] : data
   } catch (error) {
     console.error('Error saving filter:', error)
     return
@@ -529,7 +537,7 @@ const save = async () => {
   await getSavedFilters()
 }
 
-const loadSavedFilter = (loadedFilters) => {
+const loadSavedFilter = (loadedFilters: FilterObject[]) => {
   dialogLoad.value = false
   removeAll()
   let old_filters = _.cloneDeep(filters.value.filter(i => !i.lock))
@@ -537,22 +545,22 @@ const loadSavedFilter = (loadedFilters) => {
   updKey.value += Date.now()
 }
 
-const pickDate = (index) => {
+const pickDate = (index: number) => {
   datePicker.value.dialog = true
-  datePicker.value.value = filters.value[index].val
+  datePicker.value.value = filters.value[index].val as string | null
   datePicker.value.index = index
 }
 
-const setDate = (date) => {
+const setDate = (date: string | Date | null) => {
   datePicker.value.dialog = false
   filters.value[datePicker.value.index].val = dayjs(date).format('YYYY-MM-DD')
 }
 
-const validate = (val) => {
+const validate = (val: boolean) => {
   valid.value = val
 }
 
-const nameRules = (string) => {
+const nameRules = (string: string) => {
   return validateName(string)
 }
 
@@ -565,12 +573,12 @@ const toggleDuplicates = () => {
 }
 
 // Event listeners
-const handleApplySavedFilter = (filters) => {
-  loadSavedFilter(filters)
+const handleApplySavedFilter = (filtersPayload: unknown) => {
+  loadSavedFilter(filtersPayload as FilterObject[])
   apply()
 }
 
-const handleDeactivateFilter = (index) => {
+const handleDeactivateFilter = (index: number) => {
   filters.value[index].active = false
   apply()
 }
@@ -584,10 +592,12 @@ const handleApplyFilters = () => {
   apply()
 }
 
+const handleDeactivateFilterEvent = (payload: unknown) => handleDeactivateFilter(payload as number)
+
 // Lifecycle
 onMounted(() => {
   eventBus.on('applySavedFilter', handleApplySavedFilter)
-  eventBus.on('deactivateFilter', handleDeactivateFilter)
+  eventBus.on('deactivateFilter', handleDeactivateFilterEvent)
   eventBus.on('deactivateAllFilters', handleDeactivateAllFilters)
   eventBus.on('applyFilters', handleApplyFilters)
 
@@ -596,7 +606,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   eventBus.off('applySavedFilter', handleApplySavedFilter)
-  eventBus.off('deactivateFilter', handleDeactivateFilter)
+  eventBus.off('deactivateFilter', handleDeactivateFilterEvent)
   eventBus.off('deactivateAllFilters', handleDeactivateAllFilters)
   eventBus.off('applyFilters', handleApplyFilters)
 })

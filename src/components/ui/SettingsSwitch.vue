@@ -1,29 +1,29 @@
-<script setup>
+<script setup lang="ts">
 import {useAttrs} from 'vue'
-
-const emit = defineEmits([
-  'update',     // Кастомное событие
-])
 import {useSettingsStore} from "@/stores/settings";
 import {setOption as persistSetting} from '@/services/settingsService'
+import type {SettingsState} from '@/types/settings'
+
+const emit = defineEmits<{
+  update: [value: SettingsState[keyof SettingsState]]
+}>()
 
 const attrs = useAttrs()
 
 const settingsStore = useSettingsStore();
 
-const props = defineProps({
-  option: String,
-  title: String,
-  hint: String,
-  iconText: String,
-  iconColor: String,
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
+const props = withDefaults(defineProps<{
+  option: keyof SettingsState
+  title?: string
+  hint?: string
+  iconText?: string
+  iconColor?: string
+  disabled?: boolean
+}>(), {
+  disabled: false,
 })
 
-const setOption = (value) => {
+const setOption = (value: SettingsState[keyof SettingsState]) => {
   persistSetting(value, props.option)
   emit('update', value)
 }
@@ -33,7 +33,7 @@ const setOption = (value) => {
   <v-switch
     v-bind="attrs"
     :model-value="settingsStore[props.option]"
-    @update:modelValue="value => setOption(value)"
+    @update:modelValue="(value: string | null) => value != null && setOption(value as SettingsState[keyof SettingsState])"
     color="primary"
     false-value="0"
     true-value="1"

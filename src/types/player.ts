@@ -10,7 +10,10 @@ export interface PlayerMark {
   metaId?: number
   'tag.icon'?: string
   'tag.color'?: string
-  tag?: { color?: string }
+  tag?: { name?: string; color?: string }
+  thumb?: string
+  text?: string
+  name?: string
   [key: string]: unknown
 }
 
@@ -41,7 +44,7 @@ export interface UsePlayerPlaybackOptions {
 
 export interface PlayVideoSwitch {
   n: MediaItem
-  o: MediaItem
+  o: MediaItem | undefined
 }
 
 export interface ResolvedPlayableVideo {
@@ -62,6 +65,14 @@ export interface PlayerWindowBridgeAttachOptions {
   onStopPlaying: () => void | Promise<void>
 }
 
-export interface PlayerSessionInject {
-  changeLiveTranscodeMaxHeight?: (maxHeight: number | string) => Promise<void>
+export type PlayerTransportEmit = {
+  (event: 'toggleFullscreen'): void
+  (event: 'togglePictureInPicture'): void
+  (event: 'play', payload: PlayVideoSwitch): void
+  (event: 'changeVolume', payload: { deltaY?: number; volume?: number }): void
+  (event: 'showControls'): void
+  (event: 'addMark'): void
+  (event: 'removeMark', mark: PlayerMark): void
+  (event: 'close'): void
+  (event: 'updateVideo', id: number | string): void
 }

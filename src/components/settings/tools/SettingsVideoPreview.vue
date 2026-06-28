@@ -33,7 +33,7 @@
 
       <v-radio-group
         :model-value="SETTINGS.videoPreviewStatic"
-        @update:model-value="(val) => setOption(val, 'videoPreviewStatic')"
+        @update:model-value="(val) => setOption(String(val ?? ''), 'videoPreviewStatic')"
         color="primary"
         class="mt-0 pt-0"
         hide-details
@@ -71,7 +71,7 @@
 
       <v-radio-group
         :model-value="SETTINGS.videoPreviewHover"
-        @update:model-value="(val) => setOption(val, 'videoPreviewHover')"
+        @update:model-value="(val) => setOption(String(val ?? ''), 'videoPreviewHover')"
         class="mt-0 pt-0"
         color="primary"
         hide-details
@@ -132,11 +132,11 @@
     <!-- Delay for Video Preview -->
     <div v-if="SETTINGS.videoPreviewHover === 'video'">
       <div class="text-subtitle-2 mt-5 mb-2">{{ $t('settings_labels.appearance.preview_delay') }}
-        {{ Math.floor(SETTINGS.delayVideoPreview) }} ms
+        {{ Math.floor(Number(SETTINGS.delayVideoPreview)) }} ms
       </div>
       <v-slider
-        :model-value="SETTINGS.delayVideoPreview"
-        @update:model-value="(val) => setOption(val, 'delayVideoPreview')"
+        :model-value="Number(SETTINGS.delayVideoPreview)"
+        @update:model-value="(val) => setOption(String(val), 'delayVideoPreview')"
         min="0"
         max="9999"
         step="100"
@@ -157,22 +157,22 @@
     <!-- Delay for Big Video Preview -->
     <div v-if="SETTINGS.videoPreviewHover === 'video' && SETTINGS.big_video_preview == '1'">
       <div class="text-subtitle-2 mt-5 mb-2">{{ $t('settings_labels.appearance.big_preview_delay') }}
-        {{ Math.floor(SETTINGS.big_video_preview_delay) }} ms
+        {{ Math.floor(Number(SETTINGS.big_video_preview_delay)) }} ms
       </div>
       <v-slider
-        :model-value="SETTINGS.big_video_preview_delay"
-        @update:model-value="(val) => setOption(val, 'big_video_preview_delay')"
+        :model-value="Number(SETTINGS.big_video_preview_delay)"
+        @update:model-value="(val) => setOption(String(val), 'big_video_preview_delay')"
         min="0"
         max="9999"
         step="100"
         track-size="7"
         density="compact"
         width="350"
-        :color="SETTINGS.big_video_preview_delay < 1000 ? 'warning' : 'primary'"
+        :color="Number(SETTINGS.big_video_preview_delay) < 1000 ? 'warning' : 'primary'"
       ></v-slider>
 
       <v-alert
-        v-if="SETTINGS.big_video_preview_delay < 1000"
+        v-if="Number(SETTINGS.big_video_preview_delay) < 1000"
         type="warning"
         variant="tonal"
         class="text-caption"
@@ -193,7 +193,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useSettingsStore} from '@/stores/settings'
 import SettingsCategoryDivider
   from '@/components/ui/SettingsCategoryDivider.vue'

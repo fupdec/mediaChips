@@ -32,34 +32,28 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useI18n} from 'vue-i18n'
 import WidgetMediaCard from '@/components/widgets/WidgetMediaCard.vue'
+import type { HomeMediaCardVariant, HomeMediaItem } from '@/types/widgets'
 
-defineProps({
-  title: {
-    type: String,
-    required: true,
-  },
-  icon: {
-    type: String,
-    default: 'mdi-play-circle-outline',
-  },
-  items: {
-    type: Array,
-    default: () => [],
-  },
-  variant: {
-    type: String,
-    default: 'views',
-  },
-  showViewAll: {
-    type: Boolean,
-    default: true,
-  },
+withDefaults(defineProps<{
+  title: string
+  icon?: string
+  items?: HomeMediaItem[]
+  variant?: HomeMediaCardVariant
+  showViewAll?: boolean
+}>(), {
+  icon: 'mdi-play-circle-outline',
+  items: () => [],
+  variant: 'views',
+  showViewAll: true,
 })
 
-const emit = defineEmits(['open', 'view-all'])
+const emit = defineEmits<{
+  open: [item: HomeMediaItem]
+  'view-all': []
+}>()
 const {t} = useI18n()
 </script>
 

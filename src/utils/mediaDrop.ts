@@ -60,7 +60,7 @@ export function collectDroppedPaths(event: DragEvent | null | undefined): string
 
 interface MediaAddingStore {
   mediaAdding: {
-    media_type_id: number
+    media_type_id: number | null
     directFiles: unknown[]
     skipFileScan: boolean
     paths: string

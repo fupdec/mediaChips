@@ -171,7 +171,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, onMounted, watch, nextTick, defineAsyncComponent} from "vue"
 import {useRoute} from "vue-router"
 import {useI18n} from "vue-i18n"
@@ -248,7 +248,7 @@ const About = defineAsyncComponent(() =>
   import("@/components/app/About.vue")
 )
 
-const TAB_ALIASES = {
+const TAB_ALIASES: Record<string, string> = {
   tools: "general",
   meta: "library",
   media: "library",
@@ -256,21 +256,21 @@ const TAB_ALIASES = {
 }
 
 const tab = ref("general")
-const contentRef = ref(null)
+const contentRef = ref<HTMLElement | null>(null)
 const route = useRoute()
 const {t} = useI18n()
 
-const SETTINGS_SECTION_IDS = {
+const SETTINGS_SECTION_IDS: Record<string, string> = {
   generate_video_images: "settings-generate-video-images",
   field_pinning: "settings-meta-assignment",
   video_preview: "video_preview",
 }
 
-function resolveTab(routeTab) {
+function resolveTab(routeTab: string) {
   return TAB_ALIASES[routeTab] || routeTab
 }
 
-function scrollToSettingsSection(sectionId, attempts = 12) {
+function scrollToSettingsSection(sectionId: string, attempts = 12) {
   const scrollContainer = contentRef.value
   const element = document.getElementById(sectionId)
   if (scrollContainer && element) {
@@ -305,7 +305,7 @@ function applyRouteSettings() {
     tab.value = resolveTab(String(route.query.tab))
   }
 
-  const sectionId = SETTINGS_SECTION_IDS[route.query.section]
+  const sectionId = SETTINGS_SECTION_IDS[String(route.query.section || "")]
   if (!sectionId) return
 
   nextTick(() => {

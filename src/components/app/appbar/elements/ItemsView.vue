@@ -13,13 +13,15 @@
   </v-chip-group>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useItemsStore } from '@/stores/items'
 import { useAppStore } from '@/stores/app'
 import { getCurrentMediaType, isVideoMediaType } from '@/utils/mediaType'
-import emitter from '@/utils/eventBus'
+import { useEventBus } from '@/utils/eventBus'
+
+const eventBus = useEventBus()
 
 // Store
 const itemsStore = useItemsStore()
@@ -27,16 +29,16 @@ const appStore = useAppStore()
 const {t} = useI18n()
 
 // State
-const viewOptions = ref([
+const viewOptions = ref<Array<{ val: number; icon: string; textKey: string }>>([
   {
-    val: "1",
+    val: 1,
     icon: "view-module",
     textKey: "items.view.card",
   }
 ])
 
 // Computed
-const currentView = computed(() => itemsStore.view || "1")
+const currentView = computed(() => itemsStore.view || 1)
 
 const currentMediaType = computed(() => {
   if (itemsStore.type !== 'media') return null
@@ -48,7 +50,7 @@ const initViewOptions = () => {
   // Сбрасываем к базовому варианту
   viewOptions.value = [
     {
-      val: "1",
+      val: 1,
       icon: "view-module",
       textKey: "items.view.card",
     }
@@ -57,29 +59,29 @@ const initViewOptions = () => {
   // Таймлайн доступен только для видео
   if (itemsStore.type === 'media' && isVideoMediaType(currentMediaType.value)) {
     viewOptions.value.push({
-      val: "2",
+      val: 2,
       icon: "view-sequential",
       textKey: "items.view.timeline",
     })
   } else if (itemsStore.type === 'tag') {
     viewOptions.value.push({
-      val: "2",
+      val: 2,
       icon: "format-line-style",
       textKey: "items.view.chip",
     })
   }
 
-  if (itemsStore.type === 'media' && !isVideoMediaType(currentMediaType.value) && currentView.value === '2') {
-    updateView('1')
+  if (itemsStore.type === 'media' && !isVideoMediaType(currentMediaType.value) && currentView.value === 2) {
+    updateView(1)
   }
 }
 
-const updateView = (val) => {
+const updateView = (val: number) => {
   // Обновляем в хранилище
   itemsStore.updateState({ key: 'view', value: val })
 
   // Отправляем событие через event bus
-  emitter.emit('setItemsView', val)
+  eventBus.emit('setItemsView', val)
 
   // Или отправляем кастомное событие
   const viewChangedEvent = new CustomEvent('items-view-changed', {

@@ -29,18 +29,24 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, defineAsyncComponent} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {apiClient} from '@/services/apiClient'
-import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useEventBus} from "@/utils/eventBus"
+import {validateName as validateNameFormat} from '@/services/formatUtils'
 
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 
 const DialogIcons = defineAsyncComponent(() => import("@/components/dialogs/DialogIcons.vue"))
 
-const appStore = useAppStore()
+interface EditingTab {
+  id?: number
+  name?: string
+  icon?: string
+}
+
 const dialogsStore = useDialogsStore()
 const eventBus = useEventBus()
 
@@ -48,7 +54,7 @@ const valid = ref(false)
 const dialogIcons = ref(false)
 const tabName = ref('')
 const icon = ref('')
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 
 const buttons = ref([{
   icon: "content-save",
@@ -71,12 +77,12 @@ const dialog = computed({
 })
 
 const nameRules = [
-  (v) => !!v || 'Name is required',
-  (v) => validateName(v) || 'Invalid name format'
+  (v: string) => !!v || 'Name is required',
+  (v: string) => validateName(v) || 'Invalid name format'
 ]
 
 // Methods
-const changeIcon = (newIcon) => {
+const changeIcon = (newIcon: string) => {
   dialogIcons.value = false
   icon.value = newIcon
 }
@@ -113,19 +119,20 @@ const closeDialog = () => {
   icon.value = ''
 }
 
-const validateName = (string) => {
+const validateName = (string: string) => {
   // Замените на вашу реализацию $validateName
   if (!string) return false
-  return string.length >= 1 && string.length <= 100
+  return validateNameFormat(string) === true
 }
 
 // Watchers
 watch(() => dialog.value.tab, (val) => {
   if (!val) return
 
-  console.log('Editing tab:', val)
-  icon.value = val.icon || ''
-  tabName.value = val.name || ''
+  const tab = val as EditingTab
+  console.log('Editing tab:', tab)
+  icon.value = tab.icon || ''
+  tabName.value = tab.name || ''
 }, {immediate: true})
 
 // Для очистки при закрытии диалога

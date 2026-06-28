@@ -92,7 +92,7 @@
   </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue"
 import {apiClient} from "@/services/apiClient"
 import {useI18n} from 'vue-i18n'
@@ -108,6 +108,7 @@ import HomeWidgetRenderer from '@/components/widgets/HomeWidgetRenderer.vue'
 import DialogHomeWidgets from '@/components/dialogs/DialogHomeWidgets.vue'
 import {openPath} from '@/services/shellService'
 import {setOption} from '@/services/settingsService'
+import type { MediaItem } from '@/types/stores'
 
 const store = useAppStore()
 const settingsStore = useSettingsStore()
@@ -117,9 +118,9 @@ const {t} = useI18n()
 const {openMediaList} = useOpenMediaList()
 const {orderedEnabledWidgets, limits, isWidgetEnabled} = useHomeWidgets()
 
-const continueWatching = ref([])
-const favorites = ref([])
-const topViews = ref([])
+const continueWatching = ref<MediaItem[]>([])
+const favorites = ref<MediaItem[]>([])
+const topViews = ref<MediaItem[]>([])
 const showWidgetsDialog = ref(false)
 
 const apiUrl = computed(() => store.localhost)
@@ -144,7 +145,11 @@ async function loadHomeMedia() {
         topViewsLimit: limits.value.topViews,
       },
     })
-    const data = response.data || {}
+    const data = response.data as {
+      continueWatching?: MediaItem[]
+      favorites?: MediaItem[]
+      topViews?: MediaItem[]
+    } || {}
 
     continueWatching.value = data.continueWatching || []
     favorites.value = data.favorites || []
@@ -162,7 +167,7 @@ async function loadHomeMedia() {
   }
 }
 
-async function openMediaItem(item) {
+async function openMediaItem(item: MediaItem) {
   const mediaType = findMediaTypeById(store.mediaTypes, item.mediaTypeId)
 
   if (isVideoMediaType(mediaType) || isAudioMediaType(mediaType)) {
@@ -181,7 +186,7 @@ async function openMediaItem(item) {
   await openMediaList({mediaTypeId: item.mediaTypeId})
 }
 
-async function openContinueItem(item) {
+async function openContinueItem(item: MediaItem) {
   const mediaType = findMediaTypeById(store.mediaTypes, item.mediaTypeId)
 
   if (!isVideoMediaType(mediaType) && !isAudioMediaType(mediaType)) {
@@ -217,7 +222,7 @@ function copy() {
 }
 
 async function hideAlert() {
-  await setOption(0, "show_ip_at_home_screen")
+  await setOption('0', "show_ip_at_home_screen")
 }
 
 watch(
@@ -230,6 +235,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  setOption(0, "show_salutation")
+  setOption('0', "show_salutation")
 })
 </script>

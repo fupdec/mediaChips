@@ -4,6 +4,8 @@ import { apiClient } from '@/services/apiClient'
 
 const SCRAPER_API_BASE_URL = import.meta.env.VITE_SCRAPER_API_URL || 'https://mediachips.app/wp-json/mediachips/v1/scraper'
 
+import type { ScraperTransferField, ScraperPinnedItem } from '@/types/scraper'
+
 interface ScraperPerformer {
   slug?: string
   posters?: unknown[]
@@ -15,8 +17,8 @@ export const useScraperStore = defineStore('useScraperStore', {
     query: '',
     scraperApiBaseUrl: SCRAPER_API_BASE_URL,
     currentValues: {} as Record<string, unknown>,
-    fields: [] as unknown[],
-    pinned: [] as unknown[],
+    fields: [] as ScraperTransferField[],
+    pinned: [] as ScraperPinnedItem[],
   }),
   actions: {
     async searchPerformer({ page = 1, query }: { page?: number; query?: string } = {}) {

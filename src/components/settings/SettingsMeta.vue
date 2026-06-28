@@ -78,7 +78,7 @@
           class="ma-1"
         >
           <v-icon size="20" start>mdi-{{ m.icon }}</v-icon>
-          <span v-html="highlightChars(m.name)"/>
+          <span v-html="highlightChars(m.name ?? '', search ?? '')"/>
         </v-chip>
       </v-chip-group>
     </v-card>
@@ -98,37 +98,38 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import MetaManager from '@/components/dialogs/DialogMetaManager.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
-import {getMetaSortOptions, groupMetaByType, META_SORT_MODES} from '@/utils/metaSort'
+import {getMetaSortOptions, groupMetaByType, META_SORT_MODES, type MetaSortMode} from '@/utils/metaSort'
 import {highlightChars} from '@/services/formatUtils'
 import {getIconDataType, getTextDataType} from '@/services/metaTypeUtils'
 import {setOption} from '@/services/settingsService'
+import type {Meta} from '@/types/stores'
 
-const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 const eventBus = useEventBus()
 const {t, te} = useI18n()
 
-const formatDataType = (type) => getTextDataType(type, {te, t})
+const formatDataType = (type: string) => getTextDataType(type, {te, t})
 
-const meta = ref([])
+const meta = ref<Meta[]>([])
 const search = ref('')
 const initiated = ref(false)
-const selectedMeta = ref(null)
+const selectedMeta = ref<Meta | null>(null)
 const editDialog = ref(false)
 const editMode = ref(false)
 const metaKey = ref(0)
 
-const sortMode = computed(() => settingsStore.meta_sort_mode || META_SORT_MODES.menu)
+const sortMode = computed((): MetaSortMode =>
+  (settingsStore.meta_sort_mode as MetaSortMode) || META_SORT_MODES.menu,
+)
 const sortOptions = computed(() => getMetaSortOptions(t))
 
 const filteredMeta = computed(() => {
@@ -136,23 +137,23 @@ const filteredMeta = computed(() => {
 
   const filtered = meta.value.filter(item => {
     if (!searchTerm) return true
-    return item.name.toLowerCase().includes(searchTerm)
+    return (item.name ?? '').toLowerCase().includes(searchTerm)
   })
 
   return groupMetaByType(filtered, sortMode.value)
 })
 
-const setSortMode = (value) => {
+const setSortMode = (value: MetaSortMode) => {
   setOption(value, 'meta_sort_mode')
 }
 
 const isSearchEmpty = computed(() => _.isEmpty(filteredMeta.value))
 
-const getMeta = async (type) => {
+const getMeta = async (type?: string) => {
   try {
     initiated.value = false
 
-    const response = await apiClient.get('/api/Meta')
+    const response = await apiClient.get<Meta[]>('/api/Meta')
     meta.value = response.data
 
     if (type === 'array') {
@@ -171,7 +172,7 @@ const openCreateDialog = () => {
   editDialog.value = true
 }
 
-const openEditDialog = (metaItem) => {
+const openEditDialog = (metaItem: Meta) => {
   selectedMeta.value = metaItem
   editMode.value = true
   editDialog.value = true

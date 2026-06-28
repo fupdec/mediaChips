@@ -5,6 +5,7 @@ import {
   getAbsolutePlaybackTime,
 } from '@/utils/playerBuffer'
 import type { MediaItem, PlayerPlaylistItem } from '@/types/stores'
+import type { PlayerMark } from '@/types/player'
 
 type TimeoutHandle = ReturnType<typeof setTimeout>
 type IntervalHandle = ReturnType<typeof setInterval>
@@ -49,7 +50,7 @@ export const usePlayerStore = defineStore('player', {
     transcodeError: null as string | null,
     timeRemain: false,
     media: null as MediaItem | null,
-    progress_hover: null as unknown,
+    progress_hover: null as number | null,
     is_mark_hover: false,
     metadata: {} as Record<string, unknown>,
     is_file_exists: false,
@@ -60,7 +61,7 @@ export const usePlayerStore = defineStore('player', {
     playlistShuffle: [] as number[],
     playlistMode: ['autoplay'] as string[],
 
-    marks: [] as unknown[],
+    marks: [] as PlayerMark[],
     mediaWindowTitle: '',
   }),
   getters: {

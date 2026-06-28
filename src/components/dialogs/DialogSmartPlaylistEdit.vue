@@ -85,8 +85,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted} from 'vue'
+import type {PropType} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import {apiClient} from '@/services/apiClient'
@@ -97,10 +99,21 @@ import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import FiltersChips from '@/components/elements/FiltersChips.vue'
 import {buildM3uPlaylist, downloadTextFile, playlistExportFilename} from '@/utils/playlistExport'
+import type {FilterObject} from '@/types/common'
+import type {SavedFilter} from '@/types/stores'
+import type {MediaItem} from '@/types/stores'
+
+interface SaveFileResult {
+  canceled?: boolean
+  filePath?: string
+}
 
 const props = defineProps({
   dialog: Boolean,
-  playlist: Object,
+  playlist: {
+    type: Object as PropType<SavedFilter>,
+    default: undefined,
+  },
 })
 
 const emit = defineEmits(['close', 'updatePlaylist', 'delete'])
@@ -112,10 +125,10 @@ const dialogLocal = ref(props.dialog)
 const dialogDelete = ref(false)
 const valid = ref(false)
 const name = ref('')
-const filterRows = ref([])
+const filterRows = ref<FilterObject[]>([])
 const loading = ref(false)
 const exporting = ref(false)
-const formRef = ref(null)
+const formRef = ref<VFormInstance>(null)
 
 const buttons = computed(() => [
   {
@@ -147,7 +160,7 @@ watch(dialogLocal, (newVal) => {
   if (!newVal) close()
 })
 
-const nameRules = (value) => validateName(value)
+const nameRules = (value: string) => validateName(value)
 
 const close = () => emit('close')
 
@@ -191,10 +204,10 @@ const exportPlaylist = async () => {
   exporting.value = true
 
   try {
-    const response = await apiClient.get(`/api/SavedFilter/${props.playlist.id}/media`, {
+    const response = await apiClient.get<{items?: MediaItem[]}>(`/api/SavedFilter/${props.playlist.id}/media`, {
       params: {mode: 'play'},
     })
-    const videos = (response.data?.items || []).map((item) => ({
+    const videos = (response.data?.items || []).map((item: MediaItem) => ({
       medium: item,
       ...item,
     }))
@@ -217,7 +230,7 @@ const exportPlaylist = async () => {
         defaultPath,
         content,
         filters,
-      })
+      }) as SaveFileResult
 
       if (result?.canceled) return
 
@@ -235,12 +248,13 @@ const exportPlaylist = async () => {
       title: t('playlists.export'),
       text: t('playlists.export_success', {path: defaultPath}),
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error)
+    const message = error instanceof Error ? error.message : String(error)
     setNotification({
       type: 'error',
       title: t('playlists.export'),
-      text: error.message,
+      text: message,
     })
   } finally {
     exporting.value = false

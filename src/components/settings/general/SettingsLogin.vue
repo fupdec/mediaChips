@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 
 import {ref, computed, onMounted} from "vue";

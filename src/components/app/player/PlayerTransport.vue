@@ -9,38 +9,35 @@
   </v-card-actions>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {provide} from 'vue'
 import {usePlayerTransport} from '@/composable/usePlayerTransport'
-import {PLAYER_TRANSPORT_KEY} from '@/composable/playerTransportKey'
+import {PLAYER_TRANSPORT_KEY, type PlayerTransportEmit} from '@/composable/playerTransportKey'
 import PlayerTransportPlayback from '@/components/app/player/PlayerTransportPlayback.vue'
 import PlayerTransportMarks from '@/components/app/player/PlayerTransportMarks.vue'
 import PlayerTransportMedia from '@/components/app/player/PlayerTransportMedia.vue'
 import PlayerTransportView from '@/components/app/player/PlayerTransportView.vue'
 
-const props = defineProps({
-  jumpToMark: {
-    type: Function,
-    required: true,
-  },
-})
+const props = defineProps<{
+  jumpToMark: (type: 'prev' | 'next') => void
+}>()
 
-const emit = defineEmits([
-  'toggleFullscreen',
-  'togglePictureInPicture',
-  'play',
-  'changeVolume',
-  'showControls',
-  'addMark',
-  'removeMark',
-  'close',
-  'updateVideo',
-])
+const emit = defineEmits<{
+  toggleFullscreen: []
+  togglePictureInPicture: []
+  play: [payload: import('@/types/player').PlayVideoSwitch]
+  changeVolume: [payload: { deltaY?: number; volume?: number }]
+  showControls: []
+  addMark: []
+  removeMark: [mark: import('@/types/player').PlayerMark]
+  close: []
+  updateVideo: [id: number | string]
+}>()
 
-const jumpToMark = (type) => props.jumpToMark(type)
+const jumpToMark = (type: 'prev' | 'next') => props.jumpToMark(type)
 
 const transport = usePlayerTransport({
-  emit,
+  emit: emit as PlayerTransportEmit,
   jumpToMark,
 })
 

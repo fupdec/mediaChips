@@ -57,12 +57,12 @@
                 shaped
                 class="styled-treeview"
               >
-                <template #prepend="{ item, open }">
-                  <v-icon :icon="item.icon || getIcon(item, open)" size="small" />
+                <template #prepend="{ item }">
+                  <v-icon :icon="getDocIcon(item as DocumentationItem)" size="small" />
                 </template>
-                <template #title="{ item, open }">
-                  <div :id="'doc_' + item.id" class="text-caption mr-4">
-                    {{ item.name || item.title }}
+                <template #title="{ item }">
+                  <div :id="'doc_' + (item as DocumentationItem).id" class="text-caption mr-4">
+                    {{ (item as DocumentationItem).name || (item as DocumentationItem).title }}
                   </div>
                 </template>
               </v-treeview>
@@ -342,7 +342,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
@@ -351,6 +351,20 @@ import { useDialogsStore } from '@/stores/dialogs'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import Documentation from "@/assets/Documentation"
 import { localizeDocumentation } from "@/assets/DocumentationTranslations"
+
+interface DocumentationItem {
+  id: string
+  name?: string
+  title?: string
+  icon?: string
+  subtitle?: string
+  description?: string
+  link?: string
+  selector?: string | string[]
+  content?: string
+  children?: DocumentationItem[]
+  [key: string]: unknown
+}
 
 // Инициализация
 const { xs } = useDisplay()
@@ -361,11 +375,11 @@ const dialogsStore = useDialogsStore()
 // Реактивные данные
 const isOpenAll = ref(false)
 const errorSelector = ref(false)
-const activatedIds = ref([])
-const openedIds = ref([])
-const selected = ref({})
+const activatedIds = ref<string[]>([])
+const openedIds = ref<string[]>([])
+const selected = ref<Partial<DocumentationItem>>({})
 const search = ref('')
-const items = computed(() => localizeDocumentation(Documentation, locale.value))
+const items = computed((): DocumentationItem[] => localizeDocumentation(Documentation, locale.value))
 
 // Фильтрация по поиску
 // Фильтрация по поиску - НЕ МУТИРУЕМ исходные данные
@@ -374,27 +388,26 @@ const filteredItems = computed(() => {
 
   const searchTerm = search.value.toLowerCase()
 
-  const filterItemsRecursive = (itemsList) => {
-    return itemsList.filter(item => {
+  const filterItemsRecursive = (itemsList: DocumentationItem[]): DocumentationItem[] => {
+    return itemsList.flatMap((item) => {
       const matches =
         item.name?.toLowerCase().includes(searchTerm) ||
         item.title?.toLowerCase().includes(searchTerm) ||
         item.description?.toLowerCase().includes(searchTerm) ||
         item.content?.toLowerCase().includes(searchTerm)
 
-      // Создаем КОПИЮ объекта с отфильтрованными детьми
       if (item.children) {
         const filteredChildren = filterItemsRecursive(item.children)
         if (filteredChildren.length > 0 || matches) {
-          return {
+          return [{
             ...item,
-            children: filteredChildren
-          }
+            children: filteredChildren,
+          }]
         }
-        return false
+        return []
       }
 
-      return matches
+      return matches ? [item] : []
     })
   }
 
@@ -405,14 +418,14 @@ const filteredItems = computed(() => {
 const dialogs = computed(() => dialogsStore)
 
 // Methods
-const getIcon = (item, open) => {
+const getDocIcon = (item: DocumentationItem) => {
   if (item.children && item.children.length > 0) {
-    return open ? 'mdi-folder-open' : 'mdi-folder'
+    return openedIds.value.includes(item.id) ? 'mdi-folder-open' : 'mdi-folder'
   }
   return item.icon || 'mdi-file'
 }
 
-const highlightElement = (selectors) => {
+const highlightElement = (selectors: string | string[]) => {
   errorSelector.value = false
   dialogs.value.documentation = false
 
@@ -444,7 +457,11 @@ const closeDialog = () => {
   dialogs.value.documentation = false
 }
 
-const getAncestorIds = (nodes, id, path = []) => {
+const getAncestorIds = (
+  nodes: DocumentationItem[],
+  id: string,
+  path: string[] = [],
+): string[] | null => {
   for (const node of nodes) {
     if (node.id === id) return path
 
@@ -457,7 +474,7 @@ const getAncestorIds = (nodes, id, path = []) => {
   return null
 }
 
-const selectById = (id, { scroll = false } = {}) => {
+const selectById = (id: string, { scroll = false }: { scroll?: boolean } = {}) => {
   const foundItem = getSelected(items.value, id)
   if (!foundItem) return
 
@@ -469,7 +486,7 @@ const selectById = (id, { scroll = false } = {}) => {
   if (scroll) scrollToArticle(id)
 }
 
-const updateActivated = (ids) => {
+const updateActivated = (ids: string[]) => {
   if (!ids.length) {
     selected.value = {}
     return
@@ -484,7 +501,7 @@ const resetSelection = () => {
   selected.value = {}
 }
 
-const scrollToArticle = (id) => {
+const scrollToArticle = (id: string) => {
   setTimeout(() => {
     const element = document.getElementById('doc_' + id)
     if (element) {
@@ -493,9 +510,9 @@ const scrollToArticle = (id) => {
   }, 0)
 }
 
-const getSelected = (nodes, id) => {
+const getSelected = (nodes: DocumentationItem[] | DocumentationItem, id: string): DocumentationItem | null => {
   // Приводим к массиву
-  const nodeArray = Array.isArray(nodes) ? nodes : []
+  const nodeArray = Array.isArray(nodes) ? nodes : [nodes]
 
   if (!nodeArray.length) return null
 
@@ -529,7 +546,7 @@ watch(items, (localizedItems) => {
 
 watch(() => dialogsStore.documentation, (isOpen) => {
   if (isOpen && selected.value?.id) {
-    nextTick(() => selectById(selected.value.id, { scroll: true }))
+    nextTick(() => selectById(selected.value.id!, { scroll: true }))
   }
 })
 
@@ -538,7 +555,8 @@ onMounted(() => {
     selectById(items.value[0].id)
   }
 
-  eventBus.on('showDocumentation', (id) => {
+  eventBus.on('showDocumentation', (payload: unknown) => {
+    const id = payload as string
     dialogs.value.documentation = true
     nextTick(() => selectById(id, { scroll: true }))
   })

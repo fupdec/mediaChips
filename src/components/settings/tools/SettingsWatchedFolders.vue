@@ -181,16 +181,16 @@
 
     <!-- Delete Confirmation Dialog -->
     <DialogDeleteConfirm
-      v-model="showDeleteDialog"
+      v-if="showDeleteDialog"
+      :dialog="showDeleteDialog"
       @close="showDeleteDialog = false"
       @confirm="removeFolder"
       :text="deleteConfirmText"
-      :title="t('settings_labels.tools.remove_watched_folder')"
     />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, nextTick} from 'vue'
 import {apiClient} from '@/services/apiClient'
 import {useI18n} from 'vue-i18n'
@@ -205,6 +205,24 @@ import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import {normalizePastedFilePath} from '@/utils/filePathInput'
 import {getWatchedFolders as fetchWatchedFolders} from '@/services/watcherService'
 import {setNotification} from '@/services/notificationService'
+import type {VFormInstance} from '@/types/vue'
+import type {WatchedFolderEntry} from '@/services/watcherUtils'
+
+interface FolderFormData {
+  id: number | null
+  path: string
+  name: string
+  selectedTypes: number[]
+}
+
+interface OpenDialogResult {
+  filePaths?: string[]
+}
+
+interface WatchedFolderUpdatePayload {
+  path: string
+  name: string
+}
 
 const appStore = useAppStore()
 const watcherStore = useWatcherStore()
@@ -213,7 +231,7 @@ const {t} = useI18n()
 const isElectron = appStore.isElectron
 
 // Refs
-const folderForm = ref(null)
+const folderForm = ref<VFormInstance>(null)
 const formValid = ref(false)
 const showMediaTypesError = ref(false)
 const showFolderDialog = ref(false)
@@ -222,19 +240,19 @@ const isEditMode = ref(false)
 const watcherBusy = ref(false)
 
 // Folder Data
-const folderData = ref({
+const folderData = ref<FolderFormData>({
   id: null,
   path: '',
   name: '',
   selectedTypes: []
 })
 
-const onFolderPathInput = (value) => {
-  folderData.value.path = normalizePastedFilePath(value)
+const onFolderPathInput = (value: string) => {
+  folderData.value.path = normalizePastedFilePath(value) as string
 }
 
 // Watcher State (вместо стора)
-const currentFolder = ref(null)
+const currentFolder = ref<WatchedFolderEntry | null>(null)
 
 // Computed
 const mediaTypes = computed(() => appStore.mediaTypes)
@@ -255,7 +273,7 @@ const getWatchedFolders = async () => {
   watcherStore.folders = await fetchWatchedFolders()
 }
 
-const updateWatchedFolder = async (id, data) => {
+const updateWatchedFolder = async (id: number, data: WatchedFolderUpdatePayload) => {
   try {
     const response = await apiClient.put(`/api/WatchedFolder/${id}`, data)
     return response.data
@@ -265,7 +283,7 @@ const updateWatchedFolder = async (id, data) => {
   }
 }
 
-const toggleFolderWatchStatus = async (id, watch) => {
+const toggleFolderWatchStatus = async (id: number, watch: boolean) => {
   try {
     const response = await apiClient.put(`/api/WatchedFolder/${id}`, {watch})
     return response.data
@@ -277,15 +295,15 @@ const toggleFolderWatchStatus = async (id, watch) => {
 
 // UI методы
 const chooseDirectory = async () => {
-  if (!isElectron || !window.electronAPI) return
+  if (!isElectron || !window.electronAPI?.invoke) return
 
   try {
-    const result = await window.electronAPI.invoke('showOpenDialog', ['openDirectory'])
+    const result = await window.electronAPI.invoke('showOpenDialog', ['openDirectory']) as OpenDialogResult
     if (result?.filePaths?.length) {
       folderData.value.path = result.filePaths[0]
       // Set default name from path if not specified
       if (!folderData.value.name) {
-        folderData.value.name = folderData.value.path.split(/[\\/]/).pop()
+        folderData.value.name = folderData.value.path.split(/[\\/]/).pop() || ''
       }
     }
   } catch (error) {
@@ -304,22 +322,14 @@ const openAddFolderDialog = () => {
   showMediaTypesError.value = false
 
   nextTick(() => {
-    if (folderForm.value) {
-      folderForm.value.reset()
-    }
+    folderForm.value?.reset()
   })
 }
 
 const addNewFolder = async () => {
-  // Validate form
-  const {valid} = await folderForm.value?.validate()
-  if (!valid) return
+  const validation = await folderForm.value?.validate()
+  if (!validation?.valid) return
 
-  // Validate media types
-  // if (folderData.value.selectedTypes.length === 0) {
-  //   showMediaTypesError.value = true
-  //   return
-  // }
   const folderName = folderData.value.name || folderData.value.path
 
   await apiClient.post('/api/WatchedFolder', {
@@ -328,8 +338,7 @@ const addNewFolder = async () => {
       name: folderName,
     },
     types: [1]
-    // types: folderData.value.selectedTypes.map(index => mediaTypes.value[index].id)
-  }).then(async (res) => {
+  }).then(async () => {
     setNotification({
       type: 'success',
       title: t('notifications_text.folder_added'),
@@ -349,16 +358,13 @@ const addNewFolder = async () => {
   showFolderDialog.value = false
 }
 
-const editFolder = (folder) => {
+const editFolder = (folder: WatchedFolderEntry) => {
   currentFolder.value = folder
   folderData.value = {
-    id: folder.id,
+    id: folder.id ?? null,
     path: folder.path,
-    name: folder.name,
+    name: folder.name || '',
     selectedTypes: [1],
-    // selectedTypes: folder.types.map(type =>
-    //   mediaTypes.value.findIndex(mt => mt.id === type.id)
-    // ).filter(index => index !== -1)
   }
   isEditMode.value = true
   showFolderDialog.value = true
@@ -366,9 +372,8 @@ const editFolder = (folder) => {
 }
 
 const saveFolder = async () => {
-  // Validate form
-  const {valid} = await folderForm.value?.validate()
-  if (!valid) return
+  const validation = await folderForm.value?.validate()
+  if (!validation?.valid || folderData.value.id == null) return
 
   watcherBusy.value = true
   try {
@@ -394,13 +399,13 @@ const saveFolder = async () => {
   }
 }
 
-const confirmRemoveFolder = (folder) => {
+const confirmRemoveFolder = (folder: WatchedFolderEntry) => {
   currentFolder.value = folder
   showDeleteDialog.value = true
 }
 
 const removeFolder = async () => {
-  if (!currentFolder.value) return
+  if (!currentFolder.value?.id) return
 
   watcherBusy.value = true
   try {
@@ -421,7 +426,9 @@ const removeFolder = async () => {
   }
 }
 
-const toggleFolderWatch = async (folder) => {
+const toggleFolderWatch = async (folder: WatchedFolderEntry) => {
+  if (folder.id == null) return
+
   watcherBusy.value = true
   try {
     await toggleFolderWatchStatus(folder.id, !folder.watch)
@@ -434,10 +441,6 @@ const toggleFolderWatch = async (folder) => {
   } finally {
     watcherBusy.value = false
   }
-}
-
-const toggleWatchFolders = async (enabled) => {
-  emit('update-settings', {watchFolders: enabled ? '1' : '0'})
 }
 
 const closeFolderDialog = () => {

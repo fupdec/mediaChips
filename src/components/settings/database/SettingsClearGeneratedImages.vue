@@ -39,7 +39,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import SettingsClearGeneratedImagesButton from
     '@/components/settings/database/SettingsClearGeneratedImagesButton.vue'
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue";

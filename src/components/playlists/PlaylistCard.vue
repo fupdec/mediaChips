@@ -96,38 +96,30 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import type { PagePlaylist } from '@/types/playlists'
 
-const props = defineProps({
-  playlist: {
-    type: Object,
-    required: true,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  thumbsLoading: {
-    type: Boolean,
-    default: false,
-  },
-  playing: {
-    type: Boolean,
-    default: false,
-  },
-  videoCount: {
-    type: Number,
-    default: null,
-  },
-  showEdit: {
-    type: Boolean,
-    default: true,
-  },
+const props = withDefaults(defineProps<{
+  playlist: PagePlaylist
+  loading?: boolean
+  thumbsLoading?: boolean
+  playing?: boolean
+  videoCount?: number | null
+  showEdit?: boolean
+}>(), {
+  loading: false,
+  thumbsLoading: false,
+  playing: false,
+  videoCount: null,
+  showEdit: true,
 })
 
-const emit = defineEmits(['play', 'edit'])
+const emit = defineEmits<{
+  play: []
+  edit: []
+}>()
 const {t} = useI18n()
 
 const displayThumbs = computed(() => (props.playlist.thumbs || []).slice(0, 4))

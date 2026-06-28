@@ -24,8 +24,8 @@
       <v-item-group v-model="selected_images" multiple>
         <v-row>
           <v-col v-for="(poster, x) in images" :key="poster.id" cols="4" xs="4" sm="3" md="2">
-            <v-item v-slot="{ isSelected, toggle }">
-              <v-card @click="toggle" :disabled="selected_images.length>3" class="scraper-selected-image">
+            <v-item v-slot="{ isSelected, toggle }" :value="x">
+              <v-card @click="toggle" :disabled="selected_images.length>3 && !isSelected" class="scraper-selected-image">
                 <v-img :src="poster.url" contain>
                   <v-chip class="scraper-selected-image__size" size="small" variant="flat">
                     {{ getReadableFileSize(poster.size) }}
@@ -42,52 +42,39 @@
   </v-card>
 </template>
 
-<script setup>
-import {ref, computed, watch} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {useDialogsStore} from '@/stores/dialogs';
-import 'viewerjs/dist/viewer.css';
-import {api as viewerApi} from 'v-viewer';
+<script setup lang="ts">
+import {ref, computed, watch} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useDialogsStore} from '@/stores/dialogs'
+import {getReadableFileSize} from '@/services/formatUtils'
+import 'viewerjs/dist/viewer.css'
+import {api as viewerApi} from 'v-viewer'
+import type { ScraperSelectedResult } from '@/types/scraper'
 
-const props = defineProps({
-  selected: Object,
-});
+const props = defineProps<{
+  selected: ScraperSelectedResult
+}>()
 
-const selected_images = ref([]);
-const dialogsStore = useDialogsStore();
-const {t} = useI18n();
+const selected_images = ref<number[]>([])
+const dialogsStore = useDialogsStore()
+const {t} = useI18n()
 
-const images = computed(() => {
-  return props.selected.posters;
-});
+const images = computed(() => props.selected.posters || [])
 
-const images_urls = computed(() => {
-  return props.selected.posters.map(i => i.url);
-});
-
-const getReadableFileSize = (number) => {
-  // Перенесите вашу реализацию $getReadableFileSize сюда
-  // или создайте composable/утилиту
-  if (number < 1024) {
-    return number + ' bytes';
-  } else if (number < 1048576) {
-    return (number / 1024).toFixed(1) + ' KB';
-  } else {
-    return (number / 1048576).toFixed(1) + ' MB';
-  }
-};
+const images_urls = computed(() => images.value.map((i) => i.url))
 
 const show = () => {
   viewerApi({
     images: images_urls.value,
-    'z-index': 5000,
-  });
-};
+    zIndex: 5000,
+  } as Parameters<typeof viewerApi>[0])
+}
 
 watch(selected_images, (val) => {
-  const images = val.map((i) => props.selected.posters[i].url);
-  dialogsStore.scraper.images = images;
-});
+  const posters = props.selected.posters || []
+  const urls = val.map((i) => posters[i]?.url).filter(Boolean)
+  dialogsStore.scraper.images = urls
+})
 </script>
 
 <style lang="scss">

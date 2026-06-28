@@ -3,12 +3,12 @@
     <v-card variant="elevated" rounded="lg" elevation="3" class="edit-dialog-media-panel__card">
       <template v-if="mode === 'media'">
         <div class="edit-dialog-media-panel__image-wrap" :style="imageWrapStyle">
-          <v-img :src="imageSrc" cover class="edit-dialog-media-panel__image">
+          <v-img :src="imageSrc ?? undefined" cover class="edit-dialog-media-panel__image">
             <DialogImageEditing
               v-if="imageSrc"
               :image="imageSrc"
               :options="cropperOptions"
-              :image-path="imagePath"
+              :image-path="imagePath ?? undefined"
               :min-width="minWidth"
               :min-height="mediaMinHeight"
               @edited="$emit('edited')"
@@ -65,26 +65,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
+import type {PropType} from 'vue'
 import DialogImageEditing from '@/components/dialogs/DialogImageEditing.vue'
+
+interface TagImage {
+  type: string
+  path: string
+  src: string
+  aspectRatio: number
+  width: number
+  height: number
+  key: string
+}
+
+interface CropperOptions {
+  aspectRatio?: number
+  [key: string]: unknown
+}
 
 const props = defineProps({
   mode: {
-    type: String,
+    type: String as PropType<'media' | 'tag'>,
     default: 'media',
-    validator: (value) => ['media', 'tag'].includes(value),
   },
   imageSrc: {
-    type: String,
+    type: String as PropType<string | null>,
     default: null,
   },
   imagePath: {
-    type: String,
+    type: String as PropType<string | null>,
     default: null,
   },
   cropperOptions: {
-    type: Object,
+    type: Object as PropType<CropperOptions>,
     default: () => ({aspectRatio: 16 / 9}),
   },
   minWidth: {
@@ -92,7 +107,7 @@ const props = defineProps({
     default: 500,
   },
   images: {
-    type: Array,
+    type: Array as PropType<TagImage[]>,
     default: () => [],
   },
   currentIndex: {
@@ -103,7 +118,7 @@ const props = defineProps({
 
 defineEmits(['edited', 'update:currentIndex'])
 
-const currentImage = computed(() => props.images[props.currentIndex])
+const currentImage = computed((): TagImage | undefined => props.images[props.currentIndex])
 
 const mediaMinHeight = computed(() => {
   const ratio = props.cropperOptions?.aspectRatio || 16 / 9

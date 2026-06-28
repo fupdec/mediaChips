@@ -3,11 +3,19 @@ import type { MediaType } from '@/types/media'
 
 export interface MediaItem {
   id: number
+  name?: string
   path?: string
   mediaTypeId?: number
   thumb?: string
   views?: number
-  tags?: Array<{ tagId: number }>
+  favorite?: boolean
+  duration?: number
+  time?: number
+  color?: string
+  bookmark?: string
+  synonyms?: string
+  values?: ItemValueRef[]
+  tags?: ItemTagRef[]
   [key: string]: unknown
 }
 
@@ -16,7 +24,22 @@ export interface Tag {
   metaId?: number
   name?: string
   synonyms?: string
+  favorite?: boolean
+  color?: string
+  bookmark?: string
+  values?: ItemValueRef[]
+  tags?: ItemTagRef[]
   [key: string]: unknown
+}
+
+export interface ItemTagRef {
+  tagId: number
+  metaId?: number
+}
+
+export interface ItemValueRef {
+  metaId: number
+  value: unknown
 }
 
 export interface Meta {
@@ -24,6 +47,15 @@ export interface Meta {
   name?: string
   parser?: boolean
   icon?: string
+  chipVariant?: string
+  color?: boolean
+  rating?: boolean
+  favorite?: boolean
+  synonyms?: boolean
+  imageAspectRatio?: number
+  hidden?: boolean
+  order?: number
+  type?: string
   [key: string]: unknown
 }
 
@@ -125,6 +157,11 @@ export interface ContextMenuEntry {
   id?: string
   show?: boolean
   type?: string
+  name?: string
+  icon?: string
+  color?: string
+  disabled?: boolean
+  action?: (...args: unknown[]) => unknown
   menu?: ContextMenuEntry[]
   [key: string]: unknown
 }
@@ -141,10 +178,11 @@ export interface TaskItem {
   title?: string
   subtitle?: string
   icon?: string
-  click?: unknown
-  action?: unknown
+  click?: (() => void) | unknown
+  action?: (() => void) | unknown
   progress?: number
   color?: string
+  done?: boolean
   [key: string]: unknown
 }
 
@@ -154,7 +192,11 @@ export interface PlayerPlaylistItem extends MediaItem {
 
 export interface LicenseInfo {
   license_code?: string
+  license_created?: string
   license_expiry?: string
+  license_type?: string
+  client_email?: string
+  client_name?: string
   fingerprint_1?: string
   fingerprint_2?: string
   fingerprint_3?: string

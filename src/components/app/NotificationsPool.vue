@@ -55,37 +55,58 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useTasksStore } from '@/stores/tasks'
 import { useI18n } from 'vue-i18n'
 import Notification from '@/components/app/Notification.vue'
+import type { NotificationInput } from '@/services/notificationService'
+
+type PoolNotification = NotificationInput & { id: number; timestamp?: number; title?: string }
+
+interface PoolItemBase {
+  key: string
+}
+
+interface TaskSummaryItem extends PoolItemBase {
+  kind: 'task-summary'
+  title: string
+  text: string
+}
+
+interface NotificationPoolItem extends PoolItemBase {
+  kind: 'notification'
+  notification: PoolNotification
+  timestamp: number
+}
+
+type PoolItem = TaskSummaryItem | NotificationPoolItem
 
 // Store
 const notificationsStore = useNotificationsStore()
 const tasksStore = useTasksStore()
 const {t} = useI18n()
 const taskSummaryVisible = ref(false)
-const knownTaskIds = ref(new Set())
-const taskSummaryTimer = ref(null)
+const knownTaskIds = ref(new Set<string>())
+const taskSummaryTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 // Computed properties
 const notifications = computed(() => notificationsStore.getNotifications)
 const tasks = computed(() => tasksStore.list)
 
-const poolItems = computed(() => {
-  const notificationItems = notifications.value.map(notification => ({
+const poolItems = computed((): PoolItem[] => {
+  const notificationItems: NotificationPoolItem[] = notifications.value.map(notification => ({
     kind: 'notification',
     key: `notification-${notification.id}`,
-    notification,
+    notification: notification as PoolNotification,
     timestamp: notification.timestamp || 0,
   }))
 
-  const taskSummary = tasks.value.length > 0
+  const taskSummary: TaskSummaryItem[] = tasks.value.length > 0
     && taskSummaryVisible.value
     ? [{
-      kind: 'task-summary',
+      kind: 'task-summary' as const,
       key: 'task-summary',
       title: t('appbar.processStarted'),
       text: tasks.value.length === 1
@@ -107,13 +128,13 @@ const limitedItems = computed(() => {
 // Methods
 const hideTaskSummary = () => {
   taskSummaryVisible.value = false
-  clearTimeout(taskSummaryTimer.value)
+  if (taskSummaryTimer.value) clearTimeout(taskSummaryTimer.value)
   taskSummaryTimer.value = null
 }
 
 const showTaskSummary = () => {
   taskSummaryVisible.value = true
-  clearTimeout(taskSummaryTimer.value)
+  if (taskSummaryTimer.value) clearTimeout(taskSummaryTimer.value)
   taskSummaryTimer.value = setTimeout(() => {
     taskSummaryVisible.value = false
     taskSummaryTimer.value = null
@@ -157,7 +178,7 @@ watch(
 )
 
 onUnmounted(() => {
-  clearTimeout(taskSummaryTimer.value)
+  if (taskSummaryTimer.value) clearTimeout(taskSummaryTimer.value)
 })
 </script>
 

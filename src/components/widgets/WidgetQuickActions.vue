@@ -67,7 +67,7 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -98,7 +98,7 @@ const visibleMetas = computed(() =>
 )
 
 function openAddDialog() {
-  tasksStore.mediaAdding.media_type_id = getDefaultMediaTypeId(appStore.mediaTypes)
+  tasksStore.mediaAdding.media_type_id = getDefaultMediaTypeId(appStore.mediaTypes) ?? null
   addDialogOpen.value = true
 }
 
@@ -106,17 +106,17 @@ function openSearch() {
   eventBus.emit('showGlobalSearch')
 }
 
-function containsFiles(event) {
+function containsFiles(event: DragEvent) {
   return Array.from(event.dataTransfer?.types || []).includes('Files')
 }
 
-function onDragEnter(event) {
+function onDragEnter(event: DragEvent) {
   if (!appStore.isElectron || !containsFiles(event)) return
   dragDepth.value += 1
   dropzoneActive.value = true
 }
 
-function onDragOver(event) {
+function onDragOver(event: DragEvent) {
   if (!appStore.isElectron || !containsFiles(event)) return
   dropzoneActive.value = true
 }
@@ -128,7 +128,7 @@ function onDragLeave() {
   }
 }
 
-function onDrop(event) {
+function onDrop(event: DragEvent) {
   dropzoneActive.value = false
   dragDepth.value = 0
 
@@ -137,7 +137,7 @@ function onDrop(event) {
   const mediaTypeId = getDefaultMediaTypeId(appStore.mediaTypes)
   const paths = collectDroppedPaths(event)
 
-  if (!paths.length) {
+  if (!paths.length || mediaTypeId == null) {
     setNotification({
       type: 'warning',
       title: t('media.adding.files'),

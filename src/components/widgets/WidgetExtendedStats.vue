@@ -66,7 +66,7 @@
           >
             <span class="text-truncate">{{ file.name || file.basename }}</span>
             <span class="text-medium-emphasis text-no-wrap">
-              {{ formatFilesize(file.filesize) }}
+              {{ formatFilesize(file.filesize ?? 0) }}
             </span>
           </div>
         </div>
@@ -75,7 +75,7 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
@@ -88,12 +88,13 @@ import {
 } from '@/utils/homeWidgets'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {setOption} from '@/services/settingsService'
+import type { ExtendedStats, ExtendedStatsByType } from '@/types/widgets'
 
 const {t} = useI18n()
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 
-const stats = ref({
+const emptyStats = (): ExtendedStats => ({
   total: 0,
   byType: [],
   averageRating: 0,
@@ -105,11 +106,13 @@ const stats = ref({
   largestFiles: [],
 })
 
+const stats = ref<ExtendedStats>(emptyStats())
+
 const collapsed = ref(false)
 
 const summaryCards = computed(() => {
   const total = stats.value.total || 0
-  const percent = (count) => total ? `${Math.round((count / total) * 100)}%` : '0%'
+  const percent = (count: number) => total ? `${Math.round((count / total) * 100)}%` : '0%'
 
   return [
     {
@@ -152,12 +155,12 @@ function syncCollapsedState() {
   collapsed.value = config.collapsed.extendedStats === true
 }
 
-function formatTypeName(typeRow) {
+function formatTypeName(typeRow: ExtendedStatsByType) {
   const mediaType = appStore.mediaTypes.find((item) => item.id === Number(typeRow.mediaTypeId))
-  return getMediaTypeName(mediaType || typeRow, t) || typeRow.name
+  return getMediaTypeName(mediaType, t) || typeRow.name || ''
 }
 
-function formatFilesize(bytes) {
+function formatFilesize(bytes: number) {
   return getReadableFileSize(bytes)
 }
 
@@ -176,17 +179,9 @@ async function toggleCollapsed() {
 
 async function loadStats() {
   try {
-    const response = await apiClient.get('/api/home/extended-stats')
+    const response = await apiClient.get<Partial<ExtendedStats>>('/api/home/extended-stats')
     stats.value = {
-      total: 0,
-      byType: [],
-      averageRating: 0,
-      withTags: 0,
-      rated: 0,
-      favorites: 0,
-      addedLast7Days: 0,
-      addedLast30Days: 0,
-      largestFiles: [],
+      ...emptyStats(),
       ...(response.data || {}),
     }
   } catch (error) {

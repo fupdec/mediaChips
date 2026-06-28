@@ -143,7 +143,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {inject} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {PLAYER_TRANSPORT_KEY} from '@/composable/playerTransportKey'
@@ -166,5 +166,5 @@ const {
   changeSpeed,
   transcodeQualityLabel,
   changeTranscodeMaxHeight,
-} = inject(PLAYER_TRANSPORT_KEY)
+} = inject(PLAYER_TRANSPORT_KEY)!
 </script>

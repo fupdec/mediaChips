@@ -15,11 +15,14 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  icon: {type: String, required: true},
-  name: {type: String, required: true},
-  subtitle: {type: String, default: ''},
-  typeLabel: {type: String, default: ''},
+<script setup lang="ts">
+withDefaults(defineProps<{
+  icon: string
+  name: string
+  subtitle?: string
+  typeLabel?: string
+}>(), {
+  subtitle: '',
+  typeLabel: '',
 })
 </script>

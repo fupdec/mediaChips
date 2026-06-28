@@ -68,20 +68,28 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {getIconDataType} from '@/services/metaTypeUtils'
 import draggable from 'vuedraggable'
 import MetaFieldPool from './MetaFieldPool.vue'
+import type {Meta, PinnedChildMetaAssignment} from '@/types/metaAssignment'
 
-const props = defineProps({
-  parentMeta: {type: Object, required: true},
-  pinnedItems: {type: Array, default: () => []},
-  allMeta: {type: Array, default: () => []},
+const props = withDefaults(defineProps<{
+  parentMeta: Meta
+  pinnedItems?: PinnedChildMetaAssignment[]
+  allMeta?: Meta[]
+}>(), {
+  pinnedItems: () => [],
+  allMeta: () => [],
 })
 
-const emit = defineEmits(['pin', 'unpin', 'reorder'])
+const emit = defineEmits<{
+  pin: [meta: Meta]
+  unpin: [item: PinnedChildMetaAssignment]
+  reorder: [items: PinnedChildMetaAssignment[]]
+}>()
 
 const {t} = useI18n()
 
@@ -98,7 +106,7 @@ const disabledMetaIds = computed(() => {
   return [props.parentMeta.id]
 })
 
-const onReorder = (items) => {
+const onReorder = (items: PinnedChildMetaAssignment[]) => {
   emit('reorder', items)
 }
 </script>

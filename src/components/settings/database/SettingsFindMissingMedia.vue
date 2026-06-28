@@ -164,7 +164,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -173,12 +173,19 @@ import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue
 import {normalizePastedFilePathsText} from '@/utils/filePathInput'
 import {showOpenDialog} from '@/services/electronDialogService'
 import {setNotification} from '@/services/notificationService'
+import type {
+  MissingMediaMatch,
+  MissingMediaSearchEvent,
+  MissingMediaStatus,
+  MissingMediaSummary,
+  RelinkMissingMediaResponse,
+} from '@/types/settings'
 
 const {t} = useI18n()
 const appStore = useAppStore()
 const tasksStore = useTasksStore()
 
-const status = ref({
+const status = ref<MissingMediaStatus>({
   total: 0,
   missing: 0,
   withHash: 0,
@@ -187,12 +194,12 @@ const status = ref({
 
 const searchPaths = ref('')
 
-const onSearchPathsInput = (value) => {
-  searchPaths.value = normalizePastedFilePathsText(value)
+const onSearchPathsInput = (value: string) => {
+  searchPaths.value = normalizePastedFilePathsText(value) as string
 }
 
-const matches = ref([])
-const selectedIds = ref([])
+const matches = ref<MissingMediaMatch[]>([])
+const selectedIds = ref<Array<MissingMediaMatch['id']>>([])
 const selectAll = ref(false)
 
 const active = ref(false)
@@ -200,15 +207,15 @@ const relinking = ref(false)
 const progress = ref(0)
 const currentPath = ref('')
 const currentPhase = ref('')
-const lastSummary = ref(null)
+const lastSummary = ref<MissingMediaSummary | null>(null)
 const counters = ref({
   scanned: 0,
   matched: 0,
   missing: 0,
 })
 
-let abortController = null
-let taskId = null
+let abortController: AbortController | null = null
+let taskId: string | null = null
 
 const canStart = computed(() => (
   status.value.missing > 0 &&
@@ -234,7 +241,7 @@ const fetchStatus = async () => {
     throw new Error(response.statusText || 'Failed to load missing media status')
   }
 
-  status.value = await response.json()
+  status.value = await response.json() as MissingMediaStatus
 }
 
 const selectFolders = async () => {
@@ -245,7 +252,7 @@ const selectFolders = async () => {
   searchPaths.value = [...new Set([...existing, ...paths])].join('\n')
 }
 
-const toggleMatch = (id, value) => {
+const toggleMatch = (id: MissingMediaMatch['id'], value: boolean | null) => {
   if (value) {
     if (!selectedIds.value.includes(id)) {
       selectedIds.value = [...selectedIds.value, id]
@@ -257,7 +264,7 @@ const toggleMatch = (id, value) => {
   selectAll.value = selectedIds.value.length === matches.value.length && matches.value.length > 0
 }
 
-const toggleSelectAll = (value) => {
+const toggleSelectAll = (value: boolean | null) => {
   selectedIds.value = value ? matches.value.map((item) => item.id) : []
 }
 
@@ -313,7 +320,7 @@ const startSearch = async () => {
     const decoder = new TextDecoder()
     let buffer = ''
 
-    const handleEvent = (event) => {
+    const handleEvent = (event: MissingMediaSearchEvent) => {
       if (event.type === 'progress') {
         currentPhase.value = event.phase || currentPhase.value
         counters.value = {
@@ -324,15 +331,17 @@ const startSearch = async () => {
         currentPath.value = event.current || currentPath.value
 
         if (event.phase === 'loading_missing' && event.total) {
-          progress.value = Math.min((event.processed / event.total) * 20, 20)
+          progress.value = Math.min((event.processed! / event.total) * 20, 20)
         } else if (event.scanned) {
           progress.value = Math.min(20 + (event.scanned % 1000) / 10, 95)
         }
 
-        tasksStore.updateTask(taskId, {
-          subtitle: t('settings_labels.database.find_missing_media_progress', counters.value),
-          progress: progress.value,
-        })
+        if (taskId) {
+          tasksStore.updateTask(taskId, {
+            subtitle: t('settings_labels.database.find_missing_media_progress', counters.value),
+            progress: progress.value,
+          })
+        }
       }
 
       if (event.type === 'match' && event.match) {
@@ -353,15 +362,17 @@ const startSearch = async () => {
         }
         progress.value = 100
 
-        tasksStore.updateTask(taskId, {
-          subtitle: event.stopped
-            ? t('common.stop')
-            : t('settings_labels.database.find_missing_media_complete', lastSummary.value),
-          progress: 100,
-          color: event.stopped ? 'warning' : 'success',
-          done: true,
-          action: () => {},
-        })
+        if (taskId) {
+          tasksStore.updateTask(taskId, {
+            subtitle: event.stopped
+              ? t('common.stop')
+              : t('settings_labels.database.find_missing_media_complete', lastSummary.value),
+            progress: 100,
+            color: event.stopped ? 'warning' : 'success',
+            done: true,
+            action: () => {},
+          })
+        }
       }
 
       if (event.type === 'error') {
@@ -379,27 +390,28 @@ const startSearch = async () => {
 
       for (const line of lines) {
         if (!line.trim()) continue
-        handleEvent(JSON.parse(line))
+        handleEvent(JSON.parse(line) as MissingMediaSearchEvent)
       }
     }
 
     if (buffer.trim()) {
-      handleEvent(JSON.parse(buffer))
+      handleEvent(JSON.parse(buffer) as MissingMediaSearchEvent)
     }
 
     await fetchStatus()
   } catch (error) {
-    if (error.name !== 'AbortError') {
+    const err = error as Error
+    if (err.name !== 'AbortError') {
       console.error('Missing media search failed:', error)
       setNotification({
         type: 'error',
         title: t('settings_labels.database.find_missing_media'),
-        text: error.message,
+        text: err.message,
       })
 
       if (taskId) {
         tasksStore.updateTask(taskId, {
-          subtitle: error.message,
+          subtitle: err.message,
           color: 'error',
           done: true,
           action: () => {},
@@ -438,7 +450,7 @@ const relinkSelected = async () => {
       throw new Error(response.statusText || 'Failed to relink media paths')
     }
 
-    const data = await response.json()
+    const data = await response.json() as RelinkMissingMediaResponse
     const relinkedIds = new Set(selectedMatches.map((item) => item.id))
     matches.value = matches.value.filter((item) => !relinkedIds.has(item.id))
     selectedIds.value = matches.value.map((item) => item.id)
@@ -454,11 +466,12 @@ const relinkSelected = async () => {
 
     await fetchStatus()
   } catch (error) {
+    const err = error as Error
     console.error('Failed to relink missing media:', error)
     setNotification({
       type: 'error',
       title: t('settings_labels.database.find_missing_media_relink_done'),
-      text: error.message,
+      text: err.message,
     })
   } finally {
     relinking.value = false

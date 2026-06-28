@@ -166,7 +166,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch, defineAsyncComponent} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
@@ -181,6 +181,38 @@ import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
 import {shouldReloadListAfterBulkAction} from '@/utils/resolveSelection'
 import {sortPinnedAssignmentItems} from '@/utils/pinnedMetaOrder'
 import {setNotification} from '@/services/notificationService'
+import {getErrorResponseData} from '@/types/vue'
+import type {AssignedMeta, Meta} from '@/types/stores'
+
+interface BulkEditFieldMeta extends Meta {
+  ratingMax?: number
+  ratingIcon?: string
+  ratingIconEmpty?: string
+  ratingIconHalf?: string
+  ratingHalf?: boolean
+  ratingColor?: string
+  hint?: string
+}
+
+interface BulkEditField {
+  key: string | number
+  kind: string
+  type: string
+  name: string
+  icon?: string
+  hint?: string
+  meta?: BulkEditFieldMeta
+}
+
+interface BulkEditMode {
+  type: number
+  icon: string
+  color: string
+  label: string
+}
+
+type FieldKey = string | number
+type FieldValue = string | number | boolean | unknown[] | null
 
 const BulkEditFieldCard = defineAsyncComponent(() =>
   import('@/components/dialogs/BulkEditFieldCard.vue')
@@ -194,28 +226,32 @@ const eventBus = useEventBus()
 const {t} = useI18n()
 
 const dialog = ref(true)
-const values = ref({})
-const edits = ref({})
+const values = ref<Record<FieldKey, FieldValue>>({})
+const edits = ref<Record<FieldKey, number>>({})
 const key = ref(Date.now())
 const saving = ref(false)
-const datePicker = ref({
+const datePicker = ref<{
+  dialog: boolean
+  metaId: FieldKey | null
+  value: FieldValue
+}>({
   dialog: false,
   metaId: null,
   value: null,
 })
 
-const pinned = computed(() => {
-  const assigned = Array.isArray(itemsStore.assigned)
+const pinned = computed((): Meta[] => {
+  const assigned: AssignedMeta[] = Array.isArray(itemsStore.assigned)
     ? itemsStore.assigned
-    : Object.values(itemsStore.assigned || {})
+    : Object.values(itemsStore.assigned || {}) as AssignedMeta[]
 
   return sortPinnedAssignmentItems(assigned)
     .map((item) => item.meta)
-    .filter(Boolean)
+    .filter((meta): meta is Meta => Boolean(meta))
 })
 
-const presetFields = computed(() => {
-  const fields = []
+const presetFields = computed((): BulkEditField[] => {
+  const fields: BulkEditField[] = []
   const itemType = itemsStore.type
   const tagMeta = itemsStore.meta || {}
 
@@ -268,19 +304,19 @@ const presetFields = computed(() => {
   return fields
 })
 
-const pinnedFields = computed(() =>
+const pinnedFields = computed((): BulkEditField[] =>
   pinned.value.map((meta) => ({
     key: meta.id,
     kind: 'meta',
-    name: meta.name,
+    name: meta.name || '',
     icon: meta.icon,
-    hint: meta.hint || '',
-    type: meta.type,
-    meta,
+    hint: String(meta.hint ?? ''),
+    type: meta.type || '',
+    meta: meta as BulkEditFieldMeta,
   }))
 )
 
-const editableFields = computed(() => [
+const editableFields = computed((): BulkEditField[] => [
   ...presetFields.value,
   ...pinnedFields.value,
 ])
@@ -295,7 +331,7 @@ const activeChangesCount = computed(() =>
   editableFields.value.filter((field) => (edits.value[field.key] || 0) > 0).length
 )
 
-const editModes = computed(() => [
+const editModes = computed((): BulkEditMode[] => [
   {
     type: 0,
     icon: 'mdi-cancel',
@@ -331,14 +367,14 @@ const buttons = computed(() => [{
   action: save,
 }])
 
-const getEditType = (fieldKey) => edits.value[fieldKey] || 0
+const getEditType = (fieldKey: FieldKey) => edits.value[fieldKey] || 0
 
-const editModeMeta = (fieldKey) => {
+const editModeMeta = (fieldKey: FieldKey) => {
   const editType = getEditType(fieldKey)
   return editModes.value.find((mode) => mode.type === editType) || editModes.value[0]
 }
 
-const isFieldInputDisabled = (fieldKey) => {
+const isFieldInputDisabled = (fieldKey: FieldKey) => {
   const editType = getEditType(fieldKey)
   return editType === 0 || editType === 1
 }
@@ -427,14 +463,15 @@ const save = async () => {
     setNotification({
       type: 'error',
       title: t('bulk_editing.save_error'),
-      text: error.response?.data?.message || error.message,
+      text: getErrorResponseData<{ message?: string }>(error)?.message
+        || (error instanceof Error ? error.message : String(error)),
     })
   } finally {
     saving.value = false
   }
 }
 
-const toggleEditMode = (field) => {
+const toggleEditMode = (field: BulkEditField) => {
   const fieldKey = field.key
   edits.value[fieldKey] = (edits.value[fieldKey] || 0) + 1
 
@@ -447,11 +484,11 @@ const toggleEditMode = (field) => {
   key.value = Date.now()
 }
 
-const setVal = (val, fieldKey) => {
+const setVal = (val: FieldValue, fieldKey: FieldKey) => {
   values.value[fieldKey] = val
 }
 
-const pickDate = (fieldKey) => {
+const pickDate = (fieldKey: FieldKey) => {
   if (isFieldInputDisabled(fieldKey)) return
 
   datePicker.value.dialog = true
@@ -459,15 +496,15 @@ const pickDate = (fieldKey) => {
   datePicker.value.metaId = fieldKey
 }
 
-const clearDate = (fieldKey) => {
+const clearDate = (fieldKey: FieldKey) => {
   if (isFieldInputDisabled(fieldKey)) return
   values.value[fieldKey] = null
 }
 
-const setDate = (date) => {
+const setDate = (date: unknown) => {
   datePicker.value.dialog = false
-  if (datePicker.value.metaId !== null) {
-    values.value[datePicker.value.metaId] = dayjs(date).format('YYYY-MM-DD')
+  if (datePicker.value.metaId !== null && date) {
+    values.value[datePicker.value.metaId] = dayjs(date as string | Date).format('YYYY-MM-DD')
   }
 }
 

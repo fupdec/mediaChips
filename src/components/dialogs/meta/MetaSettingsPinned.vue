@@ -17,16 +17,14 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import MetaAssignmentPanel from '@/components/meta/assignment/MetaAssignmentPanel.vue'
 import MetaAssignmentSettingsLink from '@/components/meta/assignment/MetaAssignmentSettingsLink.vue'
+import type {Meta} from '@/types/stores'
 
-defineProps({
-  meta: {
-    type: Object,
-    required: true,
-  },
-})
+defineProps<{
+  meta: Meta
+}>()
 
 defineEmits(['pinned-meta-updated', 'pinned-media-updated'])
 </script>

@@ -27,7 +27,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -58,9 +58,9 @@ watch(() => props.color, (newColor) => {
   palette.value = newColor
 })
 
-const changeColor = (value) => {
+const changeColor = (value: string | { hex?: string }) => {
   // В Vuetify 3 v-color-picker возвращает объект
-  palette.value = typeof value === 'object' ? value.hex : value
+  palette.value = typeof value === 'object' ? (value.hex ?? props.color) : value
 }
 
 const apply = () => {

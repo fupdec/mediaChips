@@ -25,7 +25,7 @@
             <v-autocomplete
               v-model="extensions"
               :hide-no-data="!search"
-              :items="[]"
+              :items="extensionItems"
               :rules="[
                 (v) => v.length > 0 || translate('validation.extension_required'),
               ]"
@@ -76,10 +76,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted} from 'vue'
+import type {PropType} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
-import {useAppStore} from '@/stores/app'
 import {useDisplay} from 'vuetify'
 import {apiClient} from '@/services/apiClient'
 import {validateName} from '@/services/formatUtils'
@@ -87,18 +88,33 @@ import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import type {MediaType} from '@/types/media'
+
+interface EditableMediaType extends MediaType {
+  custom?: boolean
+}
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  function?: () => void | Promise<void>
+}
 
 const props = defineProps({
   dialog: Boolean,
-  media: Object
+  media: {
+    type: Object as PropType<EditableMediaType>,
+    default: undefined,
+  },
 })
 
 const emit = defineEmits(['update', 'close', 'update:dialog'])
 
-const appStore = useAppStore()
 const {xs} = useDisplay()
 const {t: translate} = useI18n()
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 
 const dialogModel = computed({
   get: () => props.dialog,
@@ -109,10 +125,11 @@ const dialogDeleteMediaType = ref(false)
 const valid = ref(false)
 const name = ref('')
 const icon = ref('shape')
-const extensions = ref([])
+const extensions = ref<string[]>([])
+const extensionItems: string[] = []
 const search = ref('')
 const hidden = ref(0)
-const buttons = ref([])
+const buttons = ref<DialogHeaderButton[]>([])
 
 const textDialogDelete = computed(() => {
   return `${translate('media.type.delete_confirm')}\n${translate('common.are_you_sure')}`
@@ -157,19 +174,19 @@ function initMediaType() {
   const media = props.media
   if (!media) return
 
-  name.value = media.name
-  icon.value = media.icon
-  extensions.value = media.extensions.split(',') || []
+  name.value = media.name || ''
+  icon.value = media.icon || 'shape'
+  extensions.value = media.extensions?.split(',') || []
   hidden.value = media.hidden ? 1 : 0
 }
 
-function changeIcon(newIcon) {
+function changeIcon(newIcon: string) {
   icon.value = newIcon
 }
 
 async function apply() {
   await form.value?.validate()
-  if (!valid.value) return
+  if (!valid.value || !props.media) return
 
   try {
     await apiClient.put(`/api/MediaType/${props.media.id}`, {

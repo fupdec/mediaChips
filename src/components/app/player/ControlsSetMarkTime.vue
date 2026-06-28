@@ -19,7 +19,7 @@
   </v-range-slider>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -32,8 +32,8 @@ const playerStore = usePlayerStore()
 const marks = computed(() => dialogsStore.markAdding)
 
 const markTimeRange = computed({
-  get: () => [marks.value.time || 0, marks.value.end || 0],
-  set: (newValue) => {
+  get: (): [number, number] => [marks.value.time || 0, marks.value.end || 0],
+  set: (newValue: [number, number] | null) => {
     if (newValue && newValue.length === 2) {
       marks.value.time = newValue[0]
       marks.value.end = newValue[1]
@@ -41,9 +41,9 @@ const markTimeRange = computed({
   }
 })
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
-const onMarkRangeWheel = (event) => {
+const onMarkRangeWheel = (event: WheelEvent) => {
   preventWheelDefault(event)
 
   const delta = getMarkRangeDeltaFromWheel(event)

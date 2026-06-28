@@ -15,42 +15,33 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {apiClient} from '@/services/apiClient'
 import { useItemsStore } from '@/stores/items'
+import type {MediaItem, Tag} from '@/types/stores'
 
-// Определяем пропсы
-const props = defineProps({
-  item: {
-    type: Object,
-    required: true
-  },
-  type: {
-    type: String,
-    required: true
-  }
-})
+const props = defineProps<{
+  item: MediaItem | Tag
+  type: 'media' | 'tag'
+}>()
 
-// Используем хранилища
 const itemsStore = useItemsStore()
 
-// Методы
-const setVal = async (val, key) => {
+const setVal = async (val: boolean | number | null, key: string) => {
+  const numVal = val ? 1 : 0
   try {
     await apiClient.put(`/api/${props.type}/${props.item.id}`, {
-      [key]: val,
+      [key]: numVal,
     })
 
-    // Обновляем элемент в хранилище Pinia
     itemsStore.updateItemField({
       id: props.item.id,
       field: key,
-      value: val
+      value: numVal,
     })
   } catch (error) {
     console.error('Error updating favorite:', error)
-    // В случае ошибки отменяем изменение
-    props.item.favorite = val === 1 ? 0 : 1
+    ;(props.item as Record<string, unknown>).favorite = numVal === 1 ? 0 : 1
   }
 }
 </script>

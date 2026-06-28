@@ -34,7 +34,7 @@
   </v-sheet>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onBeforeUnmount} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import {getReadableDuration} from '@/services/formatUtils'
@@ -43,11 +43,11 @@ import _ from 'lodash'
 const SEEK_MIN_DELTA = 0.25
 
 const playerStore = usePlayerStore()
-const preview = ref(null)
+const preview = ref<HTMLVideoElement | null>(null)
 
 const aspectRatio = computed(() => {
-  const item = playerStore.playlist[playerStore.nowPlaying]
-  return item?.width / item?.height || 16 / 9
+  const item = playerStore.playlist[playerStore.nowPlaying] as { width?: number; height?: number } | undefined
+  return (item?.width ?? 0) / (item?.height ?? 1) || 16 / 9
 })
 
 const shouldShowPreview = computed(() => {
@@ -58,14 +58,15 @@ const shouldShowPreview = computed(() => {
 })
 
 const formattedTime = computed(() => {
-  let time = playerStore.duration / 100 * playerStore.progress_hover
-  if (playerStore.progress_hover < 0) {
+  const hover = Number(playerStore.progress_hover ?? 0)
+  let time = playerStore.duration / 100 * hover
+  if (hover < 0) {
     time = 0
   }
   return getReadableDuration(time)
 })
 
-const throttledSeek = _.throttle((time) => {
+const throttledSeek = _.throttle((time: number) => {
   const video = preview.value
   if (!video || !Number.isFinite(time)) return
   if (Math.abs(video.currentTime - time) < SEEK_MIN_DELTA) return
@@ -77,7 +78,7 @@ const throttledSeek = _.throttle((time) => {
 function updatePreviewFrame() {
   if (playerStore.progress_hover == null) return
 
-  const time = playerStore.duration / 100 * playerStore.progress_hover
+  const time = playerStore.duration / 100 * Number(playerStore.progress_hover)
   throttledSeek(time)
 }
 

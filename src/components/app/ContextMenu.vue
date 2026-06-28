@@ -75,24 +75,27 @@
   </v-menu>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from "vue"
 import {useDisplay} from 'vuetify'
 import {useContextMenu} from '@/stores/contextMenu'
 import ContextMenuNested from "@/components/elements/ContextMenuNested.vue"
+import type {ContextMenuEntry} from '@/types/stores'
 
 const {xs} = useDisplay()
 const contextMenu = useContextMenu()
 
-const menu = computed(() => contextMenu);
+const menu = computed(() => contextMenu)
 
-const activate = (originalFunction) => {
-  originalFunction();
-  menu.value.show = false;
+const activate = (originalFunction: unknown) => {
+  if (typeof originalFunction === 'function') {
+    (originalFunction as () => void)()
+  }
+  menu.value.show = false
 }
 
 const hideNested = () => {
-  for (let item in menu.value.content) {
+  for (const item of (menu.value.content ?? []) as ContextMenuEntry[]) {
     if (item.type == 'menu') {
       item.show = false
     }

@@ -16,16 +16,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import MetaAssignmentPanel from '@/components/meta/assignment/MetaAssignmentPanel.vue'
 import MetaAssignmentSettingsLink from '@/components/meta/assignment/MetaAssignmentSettingsLink.vue'
+import type {MediaType} from '@/types/media'
+import type {MetaInMediaTypeRow} from '@/types/metaAssignment'
 
-defineProps({
-  mediaType: {
-    type: Object,
-    required: true,
-  },
-})
+defineProps<{
+  mediaType: MediaType
+}>()
 
-defineEmits(['meta-updated'])
+defineEmits<{
+  'meta-updated': [items: MetaInMediaTypeRow[]]
+}>()
 </script>

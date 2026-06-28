@@ -24,7 +24,7 @@
           <v-col cols="12">
             <v-card class="text-md-h2 text-xl-h1" variant="text">
               <v-avatar v-if="is_avatar_exists" :size="lg ? 120 : md ? 80 : sm ? 60 : xs ? 40 : 160" class="mr-8">
-                <v-img :src="images.avatar"></v-img>
+                <v-img :src="images.avatar ?? undefined"></v-img>
               </v-avatar>
               <v-icon v-else start>mdi-{{ meta.icon }}</v-icon>
               <span>{{ tag.name }}</span>
@@ -91,7 +91,6 @@
           v-if="is_init"
           :model-value="tab"
           @update:model-value="changeTab"
-          background-color="transparent"
           class="fullwidth-tabs"
           slider-size="3"
           color="primary"
@@ -122,9 +121,9 @@
               :key="'media_type_' + upd + '_' + i.mediaType.id"
               :items_type="'media'"
               :mediaTypeId="i.mediaType.id"
-              :metaId="ENV.meta_id"
-              :tagId="ENV.tag_id"
-              :tabId="ENV.tab_id"
+              :metaId="ENV.meta_id ?? undefined"
+              :tagId="ENV.tag_id ?? undefined"
+              :tabId="ENV.tab_id ?? undefined"
             ></LayoutItems>
           </v-window-item>
         </template>
@@ -135,10 +134,10 @@
               v-if="tab === `tag_${i.id}`"
               :key="'meta_' + upd + '_' + i.id"
               :items_type="'tag'"
-              :mediaTypeId="ENV.media_type_id"
+              :mediaTypeId="ENV.media_type_id ?? undefined"
               :metaId="i.id"
-              :tagId="ENV.tag_id"
-              :tabId="ENV.tab_id"
+              :tagId="ENV.tag_id ?? undefined"
+              :tabId="ENV.tab_id ?? undefined"
             ></LayoutItems>
           </v-window-item>
         </template>
@@ -163,7 +162,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
@@ -183,7 +182,20 @@ import path from 'path-browserify';
 import LayoutItems from "@/layouts/LayoutItems.vue";
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {sortByMenuMediaTypeOrder} from '@/utils/mediaType'
+import {getUrlParam} from '@/services/routeService'
+import type { Meta, Tag, AssignedMeta } from '@/types/stores'
+import type { MediaType } from '@/types/media'
 
+interface PinnedMediaEntry {
+  mediaType: MediaType
+  [key: string]: unknown
+}
+
+interface TagImages {
+  main: string | null
+  header: string | null
+  avatar: string | null
+}
 const route = useRoute()
 const router = useRouter()
 const theme = useTheme()
@@ -198,32 +210,29 @@ const {t} = useI18n()
 
 // Refs
 const upd = ref(0)
-const upd_tag = ref(0)
-const tab = ref(null)
+const upd_tag = ref<string | number>(0)
+const tab = ref<string | null>(null)
 const is_init = ref(false)
-const meta = ref({})
-const tag = ref({
-  tags: [],
-  values: [],
-})
-const images = ref({
+const meta = ref<Meta>({ id: 0 })
+const tag = ref<Tag>({ id: 0, tags: [], values: [] })
+const images = ref<TagImages>({
   main: null,
   header: null,
   avatar: null,
 })
-const panel = ref([])
+const panel = ref<number[]>([])
 const dialogImageEditing = ref(false)
 const imgPath = ref("")
 const cropperOps = ref({
   aspectRatio: 1,
 })
 const bgc = ref("#777")
-const tags_filter = ref([])
-const tags_filter_value = ref([])
-const pinnedParentMeta = ref([])
-const pinnedMeta = ref([])
-const pinnedMedia = ref([])
-const values = ref([])
+const tags_filter = ref<Record<string, Tag[]>>({})
+const tags_filter_value = ref<number[]>([])
+const pinnedParentMeta = ref<Meta[]>([])
+const pinnedMeta = ref<AssignedMeta[]>([])
+const pinnedMedia = ref<PinnedMediaEntry[]>([])
+const values = ref<unknown[]>([])
 const completionStatus = ref(0)
 
 // Computed
@@ -248,7 +257,7 @@ const is_avatar_exists = computed(() => {
   }
 })
 const resolveInitialTab = () => {
-  const urlMediaTypeId = Number(getUrlParam('mediaTypeId'))
+  const urlMediaTypeId = getUrlParam(route, 'mediaTypeId')
 
   if (urlMediaTypeId) {
     const mediaEntry = pinnedMedia.value.find(
@@ -289,7 +298,7 @@ const init = async () => {
   tab.value = resolveInitialTab()
   is_init.value = true
 
-  cropperOps.value.aspectRatio = meta.value?.imageAspectRatio
+  cropperOps.value.aspectRatio = meta.value?.imageAspectRatio ?? 1
   imgPath.value = path.join(
     appStore.dbPath,
     "meta/",
@@ -303,7 +312,7 @@ const init = async () => {
 
 const getMeta = async () => {
   try {
-    const res = await apiClient.get(`/api/meta/${ENV.value.meta_id}`)
+    const res = await apiClient.get<Meta>(`/api/meta/${ENV.value.meta_id}`)
     meta.value = res.data
   } catch (e) {
     console.log(e)
@@ -320,24 +329,24 @@ const getTag = async () => {
   }
 
   try {
-    const res = await apiClient.post('/api/tag/items', query)
-    tag.value = res.data.items[0] || {tags: [], values: []}
+    const res = await apiClient.post<{ items: Tag[] }>('/api/tag/items', query)
+    tag.value = res.data.items[0] || { id: 0, tags: [], values: [] }
   } catch (e) {
     console.log(e)
   }
 }
 
 const getImages = async () => {
-  const imageTypes = ["main", "header", 'avatar']
-  for (let i of imageTypes) {
-    let imgPath = path.join(
+  const imageTypes = ['main', 'header', 'avatar'] as const
+  for (const i of imageTypes) {
+    const imgPathLocal = path.join(
       appStore.dbPath,
       "meta",
       `${meta.value.id}`,
       `${tag.value.id}_${i}.jpg`
     )
 
-    images.value[i] = await getLocalImage(imgPath)
+    images.value[i] = await getLocalImage(imgPathLocal)
   }
   upd.value = Date.now()
 }
@@ -347,7 +356,7 @@ const getPinnedMedia = async () => {
     const res = await apiClient.get(
       `/api/MetaInMediaType?metaId=${ENV.value.meta_id}`
     )
-    pinnedMedia.value = sortByMenuMediaTypeOrder(res.data || [], appStore.mediaTypes)
+    pinnedMedia.value = sortByMenuMediaTypeOrder(res.data as PinnedMediaEntry[] || [], appStore.mediaTypes)
   } catch (e) {
     console.log(e)
   }
@@ -356,7 +365,7 @@ const getPinnedMedia = async () => {
 const getPinnedParentMeta = async () => {
   try {
     const res = await apiClient.get(`/api/PinnedMeta?pinnedMetaId=${ENV.value.meta_id}`)
-    let childMetas = res.data || []
+    let childMetas = (res.data as Array<{ metaId: number }>) || []
     let metas = []
 
     for (let cm of childMetas) {
@@ -372,48 +381,48 @@ const getPinnedParentMeta = async () => {
 }
 
 const getCompletionStatus = async () => {
-  let tags = []
-  let values = []
-  let pinned = []
+  let tags: Array<{ metaId: number; tagId: number }> = []
+  let values: Array<{ metaId: number; value: unknown }> = []
+  let pinned: AssignedMeta[] = []
 
   try {
     const tagsRes = await apiClient.get(`/api/TagsInTag?tagId=${tag.value.id}`)
-    tags = tagsRes.data || []
+    tags = (tagsRes.data as Array<{ metaId: number; tagId: number }>) || []
   } catch (e) {
     console.log(e)
   }
 
   try {
     const valuesRes = await apiClient.get(`/api/ValuesInTag?tagId=${tag.value.id}`)
-    values = valuesRes.data || []
+    values = (valuesRes.data as Array<{ metaId: number; value: unknown }>) || []
   } catch (e) {
     console.log(e)
   }
 
   try {
     const pinnedRes = await apiClient.get(`/api/PinnedMeta?metaId=${meta.value.id}`)
-    pinned = pinnedRes.data || []
+    pinned = (pinnedRes.data as AssignedMeta[]) || []
     pinnedMeta.value = pinned
   } catch (e) {
     console.log(e)
   }
 
-  let vals = {}
-  const setValByKey = (val, key) => {
+  let vals: Record<string | number, unknown> = {}
+  const setValByKey = (val: unknown, key: string | number) => {
     vals[key] = val
   }
 
-  for (let i of pinned) setValByKey(null, i.pinnedMetaId)
+  for (const i of pinned) setValByKey(null, i.pinnedMetaId as number)
 
   // parsing values and place their value into meta values
-  for (let i of values) {
+  for (const i of values) {
     let v = i.value
-    let x = pinned.findIndex((j) => j.pinnedMetaId == i.metaId)
+    const x = pinned.findIndex((j) => j.pinnedMetaId == i.metaId)
     if (x > -1) {
-      let type = pinned[x].meta?.type
+      const type = pinned[x].meta?.type
       if (type === "rating") {
         v = Number(v)
-        if (isNaN(v)) v = 0
+        if (isNaN(v as number)) v = 0
       } else if (type === "number") {
         // оставляем как есть
       }
@@ -422,21 +431,21 @@ const getCompletionStatus = async () => {
   }
 
   // parsing tags. creating array and place it into meta values
-  let pi = {} // parsed tags
-  for (let i of tags) {
+  const pi: Record<string | number, number[]> = {}
+  for (const i of tags) {
     if (!pi[i.metaId]) pi[i.metaId] = [i.tagId]
     else pi[i.metaId].push(i.tagId)
   }
-  for (let i in pi) setValByKey(pi[i], i)
+  for (const i in pi) setValByKey(pi[i], i)
 
-  let completed = []
-  for (let m of _.cloneDeep(pinned)) {
-    const val = vals[m.pinnedMetaId]
+  const completed: number[] = []
+  for (const m of _.cloneDeep(pinned)) {
+    const val = vals[m.pinnedMetaId as number]
     if (val === undefined || val === null) completed.push(0)
     else if (typeof val == "boolean") completed.push(1)
     else if (typeof val == "number")
-      val > 0 ? completed.push(1) : completed.push(0)
-    else val.length > 0 ? completed.push(1) : completed.push(0)
+      (val as number) > 0 ? completed.push(1) : completed.push(0)
+    else (val as unknown[]).length > 0 ? completed.push(1) : completed.push(0)
   }
   let completedValue = 0
   for (let i of completed) {
@@ -477,22 +486,21 @@ const getTagsInMedia = async () => {
   }
 
   try {
-    const res = await apiClient.post('/api/media/items', query)
-    let medias = res.data.items
-    let tags = []
-    for (let i of medias) {
-      tags = [...tags, ...i.tags]
+    const res = await apiClient.post<{ items: Array<{ tags?: Array<{ tagId: number }> }> }>('/api/media/items', query)
+    const medias = res.data.items
+    let tags: number[] = []
+    for (const i of medias) {
+      tags = [...tags, ...(i.tags || []).map(t => t.tagId)]
     }
-    tags = _.uniqBy(tags, 'tagId')
-    tags = tags.map(j => j.tagId)
-    tags = appStore.tags.filter(i => tags.includes(i.id))
-    tags_filter.value = _.groupBy(tags, 'metaId')
+    tags = _.uniq(tags)
+    tags_filter.value = _.groupBy(appStore.tags.filter(i => tags.includes(i.id)), 'metaId')
   } catch (e) {
     console.log(e)
   }
 }
 
-const changeTab = async (tab_value) => {
+const changeTab = async (tab_value: string | null) => {
+  if (!tab_value) return
   let item_types = ['tag', 'media']
   for (let item_type of item_types) {
     if (tab_value.includes(item_type)) {
@@ -508,7 +516,7 @@ const changeTab = async (tab_value) => {
   itemsStore.environment.meta_id = metaId
 
   try {
-    const filter = await apiClient.post('/api/SavedFilter', {
+    const filter = await apiClient.post<Array<{ id: number }>>('/api/SavedFilter', {
       name: null,
       tagId: ENV.value.tag_id,
       mediaTypeId: mediaTypeId,
@@ -530,7 +538,7 @@ const changeTab = async (tab_value) => {
 }
 
 const openMetaPage = () => {
-  router.push("/meta?metaId=" + meta.value.id)
+  router.push("/meta?metaId=" + String(meta.value.id))
 }
 
 // Event handlers
@@ -547,10 +555,10 @@ const handleUpdateLayoutItems = () => {
 }
 
 const applyRouteContext = () => {
-  itemsStore.environment.media_type_id = getUrlParam("mediaTypeId")
-  itemsStore.environment.meta_id = getUrlParam("metaId")
-  itemsStore.environment.tag_id = getUrlParam("tagId")
-  itemsStore.environment.tab_id = getUrlParam("tabId")
+  itemsStore.environment.media_type_id = getUrlParam(route, "mediaTypeId")
+  itemsStore.environment.meta_id = getUrlParam(route, "metaId")
+  itemsStore.environment.tag_id = getUrlParam(route, "tagId")
+  itemsStore.environment.tab_id = getUrlParam(route, "tabId")
 }
 
 const reloadTagPage = async () => {
@@ -591,9 +599,4 @@ watch(
     await reloadTagPage()
   },
 )
-
-// Helper function to get URL params
-const getUrlParam = (param) => {
-  return route.query[param] || null
-}
 </script>

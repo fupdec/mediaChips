@@ -23,9 +23,9 @@ import {
   isPlaylistNavDisabled,
   resolvePlaylistIndex,
 } from '@/composable/usePlayerTransportPlayback'
-import {PLAYER_SESSION_KEY} from '@/composable/usePlayerSession'
+import {PLAYER_SESSION_KEY, type PlayerSessionContext} from '@/composable/usePlayerSession'
 import type { MediaItem } from '@/types/stores'
-import type { PlayerMark, PlayerSessionInject, PlayVideoSwitch } from '@/types/player'
+import type { PlayerMark, PlayVideoSwitch } from '@/types/player'
 
 interface VideoEditComponentRef {
   save?: () => Promise<void>
@@ -45,7 +45,7 @@ interface UsePlayerTransportOptions {
 }
 
 export function usePlayerTransport({emit, jumpToMark}: UsePlayerTransportOptions) {
-  const session = inject<PlayerSessionInject | null>(PLAYER_SESSION_KEY, null)
+  const session = inject<PlayerSessionContext | null>(PLAYER_SESSION_KEY, null)
   const appStore = useAppStore()
   const playerStore = usePlayerStore()
   const dialogsStore = useDialogsStore()

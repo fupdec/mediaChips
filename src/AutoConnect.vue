@@ -12,7 +12,7 @@
     </div>
 
     <!-- Server found -->
-    <div v-else-if="status === 'connected'" class="connected">
+    <div v-else-if="status === 'connected' && serverInfo" class="connected">
       <div class="success-message">
         <h3>✅ Connected to server</h3>
         <div class="server-info">
@@ -78,14 +78,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import LanServerDiscovery from '../app/LanServerDiscovery';
 
 const emit = defineEmits(['connected', 'manual-mode']);
 
 const status = ref('searching'); // searching, connected, error, manual
-const serverInfo = ref(null);
+interface ServerDiscoveryResult {
+  success: boolean
+  ip?: string
+  url?: string
+  apiUrl?: string
+  responseTime?: number
+  status?: string | number
+  timestamp?: string
+}
+
+const serverInfo = ref<ServerDiscoveryResult | null>(null);
 const currentSearchIp = ref('');
 const scanProgress = ref(0);
 const scannedCount = ref(0);
@@ -125,7 +135,7 @@ async function startDiscovery() {
     scannedCount.value = 50;
 
     if (result.success) {
-      serverInfo.value = result;
+      serverInfo.value = result as ServerDiscoveryResult;
       status.value = 'connected';
       emit('connected', result);
 

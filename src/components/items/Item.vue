@@ -15,7 +15,7 @@
     class="item"
   >
     <v-card
-      v-if="itemsStore.view == '1' || (itemsStore.view == '2' && type === 'media' && isVideoMedia)"
+      v-if="itemsStore.view == 1 || (itemsStore.view == 2 && type === 'media' && isVideoMedia)"
       class="item_wrapper"
       :color="card_color"
       variant="flat"
@@ -46,7 +46,7 @@
         <ItemPreviewTag
           v-if="type=='tag'"
           :tag="item"
-          :meta="meta"
+          :meta="previewMeta"
         />
 
         <ItemRating
@@ -66,7 +66,7 @@
 
       <v-progress-linear
         v-if="type === 'media' && (isVideoMedia || isAudioMedia) && item.duration"
-        :value="(Number(item.time || 0) / item.duration) * 100"
+        :value="(Number(item.time || 0) / Number(item.duration)) * 100"
       />
 
       <div @click="editItem"
@@ -120,20 +120,20 @@
     </v-card>
 
     <v-chip
-      v-else-if="itemsStore.view == '2' && type == 'tag'"
+      v-else-if="itemsStore.view == 2 && type == 'tag'"
       @contextmenu.stop="showContextMenu"
       @mousedown="stopSmoothScroll($event)"
-      @mouseover.stop="showHoverImage($event, item.metaId, item.id)"
+      @mouseover.stop="showHoverImage($event, tagMetaId, item.id, 'tag')"
       @mouseleave.stop="hideHoverImage"
-      :variant="meta?.chipVariant"
+      :variant="tagChipVariant"
       :color="meta?.color ? item.color || '' : ''"
       :size="getChipSize"
       class="tag-chip-view"
       rounded="pill"
     >
       <ItemPreviewTag v-if="type=='tag'"
-                      :tag="item"
-                      :meta="meta"></ItemPreviewTag>
+                      :tag="item as Tag"
+                      :meta="previewMeta"></ItemPreviewTag>
       <div @click="editItem"
            class="ml-2">{{ item.name }}
       </div>
@@ -155,7 +155,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
@@ -174,24 +174,30 @@ import {isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} f
 import {checkFileExists as checkPathExists} from '@/services/fileService'
 import {hexToRgba} from '@/services/formatUtils'
 import {hideHoverImage, showHoverImage} from '@/services/hoverService'
+import type {MediaType} from '@/types/media'
+import type {ContextMenuEntry, MediaItem, Meta, Tag} from '@/types/stores'
 
-const props = defineProps({
-  item: Object,
-  reg: Boolean,
-  x: Number,
-  type: String,
-  meta: Object,
-  mediaType: Object,
+const props = withDefaults(defineProps<{
+  item: MediaItem | Tag
+  reg?: boolean
+  x?: number
+  type?: 'media' | 'tag'
+  meta?: Meta | null
+  mediaType?: MediaType | null
+}>(), {
+  reg: true,
+  x: 0,
+  type: 'media',
 })
 
-const emit = defineEmits([
-  'getItemsFromDb',
-  'getTabs',
-  'parseMetadata',
-  'removeEntitiesFromState',
-  'getTags',
-  'playVideo'
-])
+const emit = defineEmits<{
+  getItemsFromDb: []
+  getTabs: []
+  parseMetadata: []
+  removeEntitiesFromState: []
+  getTags: []
+  playVideo: [payload: unknown]
+}>()
 
 const itemsStore = useItemsStore()
 const settingsStore = useSettingsStore()
@@ -203,10 +209,26 @@ const contextMenu = computed(() => contextMenuStore)
 const is_file_exists = ref(false)
 const big_preview = ref(false)
 
-const isVideoMedia = computed(() => isVideoMediaType(props.mediaType))
-const isImageMedia = computed(() => isImageMediaType(props.mediaType))
-const isAudioMedia = computed(() => isAudioMediaType(props.mediaType))
-const isTextMedia = computed(() => isTextMediaType(props.mediaType))
+const isVideoMedia = computed(() => isVideoMediaType(props.mediaType ?? undefined))
+const isImageMedia = computed(() => isImageMediaType(props.mediaType ?? undefined))
+const isAudioMedia = computed(() => isAudioMediaType(props.mediaType ?? undefined))
+const isTextMedia = computed(() => isTextMediaType(props.mediaType ?? undefined))
+
+const tagMetaId = computed((): number | null => {
+  if (props.type !== 'tag') return null
+  const metaId = (props.item as Tag).metaId
+  return typeof metaId === 'number' ? metaId : null
+})
+
+const previewMeta = computed((): Meta => props.meta ?? { id: 0 })
+
+type ChipVariant = 'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'
+
+const tagChipVariant = computed((): ChipVariant | undefined => {
+  const variant = props.meta?.chipVariant
+  if (!variant) return undefined
+  return variant as ChipVariant
+})
 
 const is_selected = computed(() => {
   return itemsStore.selection.includes(props.item.id)
@@ -244,7 +266,7 @@ const getChipSize = computed(() => {
   }
 })
 
-const stopSmoothScroll = (event) => {
+const stopSmoothScroll = (event: MouseEvent) => {
   if (event.button != 1) return
   event.preventDefault()
   event.stopPropagation()
@@ -252,13 +274,13 @@ const stopSmoothScroll = (event) => {
 
 const editItem = () => {
   if (props.type === 'media' || props.mediaType) {
-    dialogsStore.editMedia(props.item, props.mediaType)
-  } else if (props.type === 'tag') {
-    dialogsStore.editTag(props.item, props.meta)
+    dialogsStore.editMedia(props.item as MediaItem, props.mediaType ?? undefined)
+  } else if (props.type === 'tag' && props.meta) {
+    dialogsStore.editTag(props.item as Tag, props.meta)
   }
 }
 
-const showContextMenu = (e) => {
+const showContextMenu = (e: MouseEvent) => {
   e.preventDefault()
 
   const {getContextMenu} = useItemContextMenu(
@@ -266,27 +288,26 @@ const showContextMenu = (e) => {
     props.type,
     props.meta,
     is_file_exists.value,
-    emit
+    emit,
   )
 
   const content = getContextMenu()
 
-  const menu = {
-    content: content,
+  contextMenu.value.showContextMenu({
+    content: content as ContextMenuEntry[],
     x: e.clientX,
     y: e.clientY,
     tagMeta: props.meta,
-  }
-
-  contextMenu.value.showContextMenu(menu)
+  })
 }
 
-const toggleSelect = (e) => {
+const toggleSelect = (e: MouseEvent) => {
   itemsStore.toggleSelect(e, props.item)
 }
 
 const checkVideoFileExists = async () => {
-  is_file_exists.value = await checkPathExists(props.item.path)
+  const mediaItem = props.item as MediaItem
+  is_file_exists.value = await checkPathExists(mediaItem.path ?? '')
 }
 
 onMounted(() => {
@@ -295,7 +316,7 @@ onMounted(() => {
   }
 })
 
-watch(() => props.item?.path, () => {
+watch(() => (props.item as MediaItem).path, () => {
   if (props.type === 'media') {
     checkVideoFileExists()
   }

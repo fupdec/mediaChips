@@ -60,7 +60,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -68,26 +68,41 @@ import {useAppStore} from '@/stores/app'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import versions_history from "@/assets/Version_Histrory"
 
+interface VersionEntry {
+  id: string
+  version: string
+  name: string
+  content: string
+  date?: string
+}
+
+const emptyVersion: VersionEntry = {
+  id: '',
+  version: '',
+  name: '',
+  content: '',
+}
+
 // Инициализация
 const {xs} = useDisplay()
 const dialogsStore = useDialogsStore()
 const appStore = useAppStore()
 
 // Реактивные данные
-const activeItems = ref([])
-const selected = ref({})
-const items = ref(versions_history)
+const activeItems = ref<VersionEntry[]>([])
+const selected = ref<VersionEntry>(emptyVersion)
+const items = ref<VersionEntry[]>(versions_history)
 
 // Вычисляемые свойства
 const dialogs = computed(() => dialogsStore)
 const apiUrl = computed(() => appStore.localhost)
 
 // Методы
-const updateActive = (version) => {
-  selected.value = version || {}
+const updateActive = (version: VersionEntry) => {
+  selected.value = version || emptyVersion
 }
 
-const convertDate = (str) => {
+const convertDate = (str: string) => {
   try {
     const date = new Date(str)
     return date.toLocaleDateString()

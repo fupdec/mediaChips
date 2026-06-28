@@ -22,7 +22,7 @@
   </v-system-bar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, onMounted, computed} from 'vue'
 import {storeToRefs} from 'pinia'
 import {useAppStore} from '@/stores/app'
@@ -30,13 +30,10 @@ import {usePlayerStore} from '@/stores/player'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import {useDisplay} from "vuetify"; // Импортируем компонент
 
-const props = defineProps({
-  disabled: Boolean,
-  os: {
-    type: [Boolean, String],
-    default: false
-  }
-})
+defineProps<{
+  disabled?: boolean
+  os?: boolean | string
+}>()
 
 const {platform} = useDisplay()
 const appStore = useAppStore()
@@ -68,7 +65,7 @@ function close() {
 }
 
 onMounted(() => {
-  if (window.electronAPI) {
+  if (window.electronAPI?.on) {
     window.electronAPI.on("maximize", () => {
       maximized.value = true
     })

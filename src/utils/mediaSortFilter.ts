@@ -1,4 +1,4 @@
-import Cols from '../../app/configs/filter-cols.mjs'
+import Cols from '../../app/configs/filter-cols'
 import type { FilterObject } from '@/types/common'
 import type { MediaType } from '@/types/media'
 import {

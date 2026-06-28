@@ -85,8 +85,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
+import type {PropType} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
@@ -95,11 +96,35 @@ import {useEventBus} from '@/utils/eventBus'
 import path from 'path-browserify'
 import {checkFileExists as checkPathExists, getLocalImage} from '@/services/fileService'
 import {getReadableDuration} from '@/services/formatUtils'
+import type {MarkItem, MediaItem} from '@/types/stores'
+
+interface ItemMarkerMedium {
+  id?: number
+  path?: string
+  name?: string
+  basename?: string
+}
+
+interface ItemMarkerTag {
+  color?: string
+  name?: string
+  meta?: { icon?: string }
+}
+
+interface ItemMarkerMark extends MarkItem {
+  time?: number
+  end?: number
+  type?: string
+  text?: string
+  mediumId?: number
+  medium?: ItemMarkerMedium
+  tag?: ItemMarkerTag
+}
 
 const props = defineProps({
   mark: {
-    type: Object,
-    required: true
+    type: Object as PropType<ItemMarkerMark>,
+    required: true,
   },
   plainCard: {
     type: Boolean,
@@ -113,14 +138,13 @@ const itemsStore = useItemsStore()
 const {t} = useI18n()
 const eventBus = useEventBus()
 
-// Refs
-const video = ref(null)
-const thumb = ref(null)
+const video = ref<HTMLVideoElement | null>(null)
+const thumb = ref<string | undefined>(undefined)
 const is_hovered = ref(false)
 const is_file_exists = ref(false)
 const playback_error = ref(false)
-const previewTimeout = ref(null)
-const videoLoadTimeout = ref(null)
+const previewTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+const videoLoadTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const isVideoPlaying = ref(false)
 
 // Computed
@@ -128,10 +152,16 @@ const apiUrl = computed(() => appStore.localhost)
 const SETTINGS = computed(() => settingsStore)
 const muted = computed(() => SETTINGS.value.play_sound_on_video_preview !== "1")
 
+const markTime = computed(() => Number(props.mark.time) || 0)
+const markEnd = computed(() => {
+  const end = props.mark.end
+  return typeof end === 'number' ? end : null
+})
+
 const time = computed(() => {
-  const startTime = getReadableDuration(props.mark.time)
-  if (props.mark.end) {
-    return startTime + " – " + getReadableDuration(props.mark.end)
+  const startTime = getReadableDuration(markTime.value)
+  if (markEnd.value != null) {
+    return startTime + " – " + getReadableDuration(markEnd.value)
   }
   return startTime
 })
@@ -143,7 +173,7 @@ const safePlayVideo = () => {
   try {
     video.value.play().then(() => {
       isVideoPlaying.value = true
-    }).catch(e => {
+    }).catch((e: unknown) => {
       console.error('Error playing video:', e)
       playback_error.value = true
       isVideoPlaying.value = false
@@ -206,7 +236,8 @@ const getImg = async () => {
 }
 
 const checkMarkFileExists = async () => {
-  is_file_exists.value = await checkPathExists(props.mark.medium.path)
+  const mediumPath = (props.mark.medium as MediaItem | undefined)?.path
+  is_file_exists.value = mediumPath ? await checkPathExists(mediumPath) : false
 }
 
 const playPreview = () => {
@@ -227,22 +258,26 @@ const playPreview = () => {
       // Сбрасываем ошибку воспроизведения
       playback_error.value = false
 
-      const timeParam = props.mark.end
-        ? `#t=${props.mark.time},${props.mark.end}`
-        : `#t=${props.mark.time}`
+      const medium = props.mark.medium as MediaItem | undefined
+      const mediumId = medium?.id
+      if (!mediumId) return
 
-      const videoSrc = apiUrl.value + "/api/video/" + props.mark.medium?.id + timeParam
+      const timeParam = markEnd.value != null
+        ? `#t=${markTime.value},${markEnd.value}`
+        : `#t=${markTime.value}`
+
+      const videoSrc = apiUrl.value + "/api/video/" + mediumId + timeParam
 
       // Если источник уже установлен и видео то же самое
-      if (video.value.src && video.value.src.includes(props.mark.medium?.id)) {
-        video.value.currentTime = props.mark.time
+      if (video.value.src && video.value.src.includes(String(mediumId))) {
+        video.value.currentTime = markTime.value
         safePlayVideo()
       } else {
         // Устанавливаем новый источник
         safeStopVideo()
 
         video.value.src = videoSrc
-        video.value.currentTime = props.mark.time
+        video.value.currentTime = markTime.value
 
         // Очищаем предыдущий таймаут загрузки
         if (videoLoadTimeout.value) {
@@ -257,17 +292,17 @@ const playPreview = () => {
         }
 
         // Обработчик ошибок
-        video.value.onerror = (e) => {
+        video.value.onerror = (e: Event | string) => {
           console.error('Video error:', e)
           playback_error.value = true
           isVideoPlaying.value = false
         }
 
         // Обработчик для зацикливания в рамках временного отрезка
-        if (props.mark.end) {
+        if (markEnd.value != null) {
           video.value.ontimeupdate = () => {
-            if (video.value && props.mark.end && video.value.currentTime > props.mark.end) {
-              video.value.currentTime = props.mark.time
+            if (video.value && markEnd.value != null && video.value.currentTime > markEnd.value) {
+              video.value.currentTime = markTime.value
             }
           }
         }
@@ -284,7 +319,7 @@ const playPreview = () => {
       playback_error.value = true
       isVideoPlaying.value = false
     }
-  }, SETTINGS.value.delayVideoPreview || 0)
+  }, Number(SETTINGS.value.delayVideoPreview) || 0)
 }
 
 const stopPlayingPreview = () => {
@@ -305,17 +340,18 @@ const stopPlayingPreview = () => {
 }
 
 const play = () => {
-  const videoItem = props.mark.medium
+  const videoItem = props.mark.medium as MediaItem | undefined
+  if (!videoItem) return
+
   itemsStore.playVideo({
     video: videoItem,
     videos: [videoItem],
-    time: props.mark.time,
+    time: markTime.value,
   })
   stopPlayingPreview()
 }
 
-// Lifecycle
-const handleUpdateMarkImage = (id) => {
+const handleUpdateMarkImage = (id: unknown) => {
   if (props.mark.id === id) {
     getImg()
   }

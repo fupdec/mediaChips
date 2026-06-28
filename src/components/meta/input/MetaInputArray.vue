@@ -5,7 +5,7 @@
     @update:model-value="setVal"
     v-model:search="search"
     :items="listTags"
-    :custom-filter="filterTags"
+    :custom-filter="filterTagsForAutocomplete"
     item-title="name"
     item-value="id"
     ref="field"
@@ -32,12 +32,12 @@
       <v-chip
         v-if="item.raw"
         @click:close="removeTag(item.value)"
-        @mouseover.stop="showHoverImage($event, meta.id, item.value)"
+        @mouseover.stop="showHoverImage($event, meta.id, Number(item.value), 'tag')"
         @mouseleave.stop="hideHoverImage"
         :label="meta?.chipLabel"
-        :variant="meta?.chipVariant"
+        :variant="chipVariant"
         :color="meta?.color ? item.raw.color : ''"
-        :text-color="meta?.color ? getTextColor(item.raw.color,meta?.chipVariant) : ''"
+        :text-color="meta?.color ? getTextColor(item.raw.color, chipVariant === 'outlined') : ''"
         closable
         class="ma-1"
         size="small"
@@ -59,7 +59,7 @@
       <v-list-item
         v-bind="props"
         @click="hideHoverImage"
-        @mouseover.stop="showHoverImage($event, meta.id, item.value)"
+        @mouseover.stop="showHoverImage($event, meta.id, Number(item.value), 'tag')"
         @mouseleave.stop="hideHoverImage"
         class="list-item"
       >
@@ -134,8 +134,8 @@
   </v-autocomplete>
 </template>
 
-<script setup>
-import {ref, reactive, computed, onMounted, watch, nextTick, useAttrs} from 'vue'
+<script setup lang="ts">
+import {ref, computed, onMounted, watch, nextTick, useAttrs} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
@@ -148,40 +148,38 @@ import {
   highlightChars,
 } from '@/services/formatUtils'
 import {hideHoverImage, showHoverImage} from '@/services/hoverService'
+import type {ArrayMeta, TagFilterResponse, TagListItem} from '@/types/metaInput'
 
 const attrs = useAttrs()
 
-const props = defineProps({
-  metaId: Number,
-  purpose: String,
-  modelValue: [Array, Number],
-  disabled: Boolean,
-  cond: {
-    type: String,
-    default: null,
-  },
-  menuProps: {
-    type: Object,
-    default: () => ({
-      contentClass: "custom-list",
-    }),
-  },
+const props = withDefaults(defineProps<{
+  metaId?: number
+  purpose?: string
+  modelValue?: number[] | number
+  disabled?: boolean
+  cond?: string | null
+  menuProps?: Record<string, unknown>
+}>(), {
+  cond: null,
+  menuProps: () => ({
+    contentClass: "custom-list",
+  }),
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  'update:modelValue': [value: number[]]
+}>()
 
-// Stores
 const settingsStore = useSettingsStore()
 const eventBus = useEventBus()
 const router = useRouter()
 const {t} = useI18n()
 
-// Reactive data
-const meta = ref({})
-const val = ref([])
-const listTags = ref([])
-const search = ref(null)
-const field = ref(null)
+const meta = ref<ArrayMeta>({} as ArrayMeta)
+const val = ref<number[]>([])
+const listTags = ref<TagListItem[]>([])
+const search = ref('')
+const field = ref<unknown>(null)
 
 const sortBy = computed(() => [
   {
@@ -211,9 +209,18 @@ const showIcons = computed(() =>
   settingsStore.showIconsOfMetaInEditingDialog === '1'
 )
 
-const filterTags = (title, queryText, tagObj) => {
-  let tag = _.cloneDeep(tagObj.raw);
-  let query = queryText.toLowerCase();
+const chipVariant = computed(() =>
+  (meta.value?.chipVariant || 'flat') as 'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'
+)
+
+interface TagFilterItem {
+  raw: TagListItem
+  value: number | string
+}
+
+const filterTags = (title: string, queryText: string, tagObj: TagFilterItem) => {
+  const tag = _.cloneDeep(tagObj.raw);
+  const query = queryText.toLowerCase();
 
   const is_default = settingsStore.typingFiltersDefault == "1";
   const is_name_found = is_default
@@ -224,39 +231,39 @@ const filterTags = (title, queryText, tagObj) => {
     tagObj.raw.name_parsed = highlightChars(tag.name, queryText, is_default);
     tagObj.raw.synonyms_parsed = tagObj.raw.synonyms;
     return true;
-  } else {
-    if (!tag.synonyms) {
-      return false;
-    }
-    let synonyms = tag.synonyms.split(',');
-    synonyms = synonyms.map(i => i.trim());
-
-    let values = [];
-    let synonyms_parsed = [];
-    for (let i of synonyms) {
-      const val = is_default
-        ? i.toLowerCase().indexOf(query) > -1
-        : foundByChars(i, query);
-      values.push(val);
-
-      // для отображения строки с подчеркнутыми символами
-      if (val) {
-        let text = highlightChars(i, queryText, is_default);
-        synonyms_parsed.push(text);
-      } else {
-        synonyms_parsed.push(i);
-      }
-    }
-
-    tagObj.raw.name_parsed = tag.name;
-    tagObj.raw.synonyms_parsed = synonyms_parsed.join(', ');
-    return values.some(i => i);
   }
+  if (!tag.synonyms) {
+    return false;
+  }
+  const synonyms = tag.synonyms.split(',').map((i: string) => i.trim());
+
+  const values: boolean[] = [];
+  const synonyms_parsed: string[] = [];
+  for (const i of synonyms) {
+    const synonymMatch = is_default
+      ? i.toLowerCase().indexOf(query) > -1
+      : foundByChars(i, query);
+    values.push(synonymMatch);
+
+    if (synonymMatch) {
+      synonyms_parsed.push(highlightChars(i, queryText, is_default));
+    } else {
+      synonyms_parsed.push(i);
+    }
+  }
+
+  tagObj.raw.name_parsed = tag.name;
+  tagObj.raw.synonyms_parsed = synonyms_parsed.join(', ');
+  return values.some(Boolean);
 }
 
+const filterTagsForAutocomplete = filterTags as (
+  value: string,
+  query: string,
+  item?: TagFilterItem,
+) => boolean
 
-// Methods
-const normalizeIds = (value) => {
+const normalizeIds = (value: unknown): number[] => {
   if (value == null) return []
   const items = Array.isArray(value) ? value : [value]
 
@@ -265,16 +272,16 @@ const normalizeIds = (value) => {
     .filter((id) => Number.isFinite(id))
 }
 
-const sameIds = (left, right) => {
+const sameIds = (left: unknown, right: unknown) => {
   const a = normalizeIds(left)
   const b = normalizeIds(right)
   if (a.length !== b.length) return false
   return a.every((id, index) => id === b[index])
 }
 
-const findTagName = (tagId) => {
+const findTagName = (tagId: number | string) => {
   const tag = listTags.value.find((t) => String(t.id) === String(tagId))
-  return tag ? tag.name : tagId
+  return tag ? tag.name : String(tagId)
 }
 
 const getTags = async () => {
@@ -292,7 +299,7 @@ const getTags = async () => {
   }
 
   try {
-    const res = await apiClient.post('/api/tag/filter', sets)
+    const res = await apiClient.post<TagFilterResponse>('/api/tag/filter', sets)
     const tags = res.data.items
     listTags.value = sortTags(tags)
   } catch (e) {
@@ -315,7 +322,7 @@ const changeSortDir = async () => {
   }
 }
 
-const changeSortBy = async (param) => {
+const changeSortBy = async (param: string) => {
   try {
     await apiClient.put(`/api/Meta/${meta.value.id}`, {
       sortBy: param,
@@ -327,12 +334,11 @@ const changeSortBy = async (param) => {
   }
 }
 
-const sortTags = (tags) => {
+const sortTags = (tags: TagListItem[]) => {
   const sortByParam = meta.value?.sortBy || 'createdAt'
-  const sortDir = meta.value?.sortDir || 'asc'
+  const sortDir = (meta.value?.sortDir || 'asc') as 'asc' | 'desc'
 
-  // Сначала сортируем по имени, затем по выбранному параметру
-  let sorted = _.orderBy(tags, ['name'], ['asc'])
+  const sorted = _.orderBy(tags, ['name'], ['asc'])
   return _.orderBy(sorted, [sortByParam], [sortDir])
 }
 
@@ -349,12 +355,12 @@ const create = async () => {
   if (isExists) return
 
   try {
-    const res = await apiClient.post('/api/tag', [{
+    const res = await apiClient.post<TagListItem[]>('/api/tag', [{
       name: searchText,
       metaId: props.metaId,
     }])
 
-    search.value = null
+    search.value = ''
     let newVal = [res.data[0].id]
 
     if (Array.isArray(val.value)) {
@@ -364,20 +370,17 @@ const create = async () => {
     setVal(newVal)
     await getTags()
 
-    // Используем event bus вместо $root
     eventBus.emit("getTags")
 
-    if (+router.currentRoute.value.query.metaId === props.metaId) {
+    const routeMetaId = router.currentRoute.value.query.metaId
+    if (routeMetaId != null && +routeMetaId === props.metaId) {
       const data = {
         ids: [],
         type: 'tag',
       }
 
       if (router.currentRoute.value.query.player) {
-        // Для Electron
-        if (window.electronAPI) {
-          window.electronAPI.send("getItemsFromDb", data)
-        }
+        window.electronAPI?.send?.("getItemsFromDb", data)
       } else {
         eventBus.emit("getItemsFromDb", data)
       }
@@ -387,10 +390,10 @@ const create = async () => {
   }
 }
 
-const onEnter = (event) => {
+const onEnter = (event: KeyboardEvent) => {
   const searchText = search.value?.trim()
   const isExists = listTags.value.some(
-    i => i.name.toLowerCase() === searchText?.toLowerCase()
+    (i) => i.name.toLowerCase() === searchText?.toLowerCase()
   )
 
   if (searchText && !isExists) {
@@ -398,7 +401,7 @@ const onEnter = (event) => {
     create()
   }
 }
-const setVal = (newVal) => {
+const setVal = (newVal: unknown) => {
   const normalized = normalizeIds(newVal)
   const previous = normalizeIds(val.value)
 
@@ -408,7 +411,7 @@ const setVal = (newVal) => {
     )
     if (tagsStillExist) {
       nextTick(() => {
-        search.value = null
+        search.value = ''
       })
       return
     }
@@ -416,7 +419,7 @@ const setVal = (newVal) => {
 
   if (sameIds(normalized, previous)) {
     nextTick(() => {
-      search.value = null
+      search.value = ''
     })
     return
   }
@@ -425,17 +428,17 @@ const setVal = (newVal) => {
   emit('update:modelValue', normalized)
 
   nextTick(() => {
-    search.value = null
+    search.value = ''
   })
 }
 
 const onBlur = () => {
   nextTick(() => {
-    search.value = null
+    search.value = ''
   })
 }
 
-const removeTag = (tagId) => {
+const removeTag = (tagId: number | string) => {
   if (Array.isArray(val.value)) {
     const newVal = normalizeIds(val.value).filter((id) => String(id) !== String(tagId))
     setVal(newVal)
@@ -454,7 +457,7 @@ const rules = () => {
 
 const getMeta = async () => {
   try {
-    const res = await apiClient.get(`/api/meta/${props.metaId}`)
+    const res = await apiClient.get<ArrayMeta>(`/api/meta/${props.metaId}`)
     meta.value = res.data
   } catch (e) {
     console.error(e)
@@ -470,7 +473,7 @@ onMounted(async () => {
 })
 
 // Watchers
-watch(() => props.modelValue, (newVal) => {
+watch(() => props.modelValue, (newVal: number[] | number | undefined) => {
   val.value = normalizeIds(newVal)
 })
 </script>

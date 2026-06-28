@@ -42,7 +42,10 @@ interface SliderProgressRef {
 }
 
 interface UsePlayerTimelineOptions {
-  emit: (event: 'showControls') => void
+  emit: {
+    (event: 'showControls'): void
+    (event: 'removeMark', mark: PlayerMark): void
+  }
 }
 
 export function usePlayerTimeline({ emit }: UsePlayerTimelineOptions) {

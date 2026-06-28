@@ -72,11 +72,13 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue'
+import type { PropType } from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
+import type { VForm } from 'vuetify/components'
 
 /* ---------------- COMPONENTS ---------------- */
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -103,7 +105,7 @@ const props = defineProps({
     default: undefined,
   },
   buttonVariant: {
-    type: String,
+    type: String as PropType<'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'>,
     default: 'text',
   },
 })
@@ -119,15 +121,15 @@ const tagsStore = app.tags
 /* ---------------- STATE ---------------- */
 
 const names = ref('')
-const dups = ref([])
-const added = ref([])
-const selectedMetaId = ref(null)
+const dups = ref<string[]>([])
+const added = ref<string[]>([])
+const selectedMetaId = ref<number | null>(null)
 const metaMenuOpen = ref(false)
 
 const valid = ref(false)
 const dialogNames = ref(false)
 
-const form = ref(null)
+const form = ref<VForm | null>(null)
 
 const buttons = computed(() => [
   {
@@ -157,7 +159,7 @@ async function add() {
   // проверяем дубли
   arr.forEach(n => {
     const exists = tagsStore.find(
-      i => i.name.toLowerCase() === n.toLowerCase()
+      i => i.name?.toLowerCase() === n.toLowerCase()
     )
     if (exists) dups.value.push(n)
     else added.value.push(n)
@@ -208,7 +210,7 @@ async function add() {
   closeDialog()
 }
 
-function openWithNames(payload = {}) {
+function openWithNames(payload: { names?: string | string[]; metaId?: number } = {}) {
   const incomingNames = Array.isArray(payload.names) ? payload.names : String(payload.names || '').split('\n')
   names.value = incomingNames.filter(Boolean).join('\n')
   selectedMetaId.value = payload.metaId || fixedMetaId.value || metas.value[0]?.id || null
@@ -232,7 +234,7 @@ function resetForm() {
   })
 }
 
-function nameRules(string) {
+function nameRules(string: string) {
   const arr = transformTextToArray(string)
 
   for (const name of arr) {
@@ -243,11 +245,13 @@ function nameRules(string) {
   return true
 }
 
+const openTagsAddHandler = (payload: unknown) => openWithNames(payload as { names?: string | string[]; metaId?: number })
+
 onMounted(() => {
-  eventBus.on('openTagsAddWithNames', openWithNames)
+  eventBus.on('openTagsAddWithNames', openTagsAddHandler)
 })
 
 onUnmounted(() => {
-  eventBus.off('openTagsAddWithNames', openWithNames)
+  eventBus.off('openTagsAddWithNames', openTagsAddHandler)
 })
 </script>

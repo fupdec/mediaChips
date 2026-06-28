@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import {useEventBus} from "@/utils/eventBus";
 const eventBus = useEventBus()
 

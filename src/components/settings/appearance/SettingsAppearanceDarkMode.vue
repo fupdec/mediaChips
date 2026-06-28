@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
 import { useSettingsStore } from "@/stores/settings";
 import { useTheme } from "vuetify";
@@ -9,7 +9,7 @@ const theme = useTheme();
 
 const SETTINGS = computed(() => settingsStore);
 
-async function syncDarkModeWithSystem(value) {
+async function syncDarkModeWithSystem(value: string) {
   const match = window.matchMedia('(prefers-color-scheme: dark)');
 
   if (value == "1") {
@@ -22,7 +22,7 @@ async function syncDarkModeWithSystem(value) {
   }
 }
 
-async function toggleDarkMode(value) {
+async function toggleDarkMode(value: string) {
   theme.global.name.value = value == "1" ? "dark" : "light";
 }
 </script>

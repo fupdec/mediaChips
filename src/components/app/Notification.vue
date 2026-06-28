@@ -76,7 +76,7 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, onUnmounted} from 'vue'
 import {useSettingsStore} from '@/stores/settings'
 import {useNotificationsStore} from '@/stores/notifications'
@@ -86,6 +86,25 @@ import 'dayjs/locale/en'
 import 'dayjs/locale/es'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/ru'
+import type { NotificationInput } from '@/services/notificationService'
+
+interface NotificationAction {
+  id?: string
+  text?: string
+  color?: string
+  variant?: 'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'
+  icon?: string
+  hide?: boolean
+  close?: boolean
+  action?: (notification: PoolNotification) => void
+}
+
+type PoolNotification = NotificationInput & {
+  id: number
+  title?: string
+  timestamp?: number
+  actions?: NotificationAction[]
+}
 
 const settingsStore = useSettingsStore()
 const locale = settingsStore.locale == 'cn' ? 'zh-cn' : settingsStore.locale
@@ -93,16 +112,12 @@ const locale = settingsStore.locale == 'cn' ? 'zh-cn' : settingsStore.locale
 dayjs.extend(relativeTime)
 dayjs.locale(locale)
 
-// Props
-const props = defineProps({
-  notification: {
-    type: Object,
-    required: true
-  }
-})
+const props = defineProps<{
+  notification: PoolNotification
+}>()
 
 // Reactive state
-const interval = ref(null)
+const interval = ref<ReturnType<typeof setInterval> | null>(null)
 const progress = ref(100)
 const collapsed = ref(true)
 
@@ -122,7 +137,7 @@ const displayText = computed(() => {
 })
 
 // Метод для безопасного форматирования (альтернатива)
-const getSafeFormattedTimestamp = (timestamp) => {
+const getSafeFormattedTimestamp = (timestamp?: number) => {
   try {
     if (!timestamp) return ''
 
@@ -153,7 +168,7 @@ const hideNotification = () => {
   notificationsStore.hideNotification(props.notification.id)
 }
 
-const runAction = (action) => {
+const runAction = (action: NotificationAction) => {
   if (action.action && typeof action.action === 'function') {
     action.action(props.notification)
   }
@@ -167,28 +182,26 @@ const runAction = (action) => {
   }
 }
 
-const runTimer = (percent) => {
+const runTimer = (percent?: number) => {
   if (isHidden.value) {
-    clearInterval(interval.value)
+    if (interval.value) clearInterval(interval.value)
     return
   }
 
-  if (!percent) {
-    percent = (props.notification.timeout || 5000) / 100
-  }
+  const step = percent ?? ((props.notification.timeout || 5000) / 100)
 
-  clearInterval(interval.value)
+  if (interval.value) clearInterval(interval.value)
 
   interval.value = setInterval(() => {
     progress.value--
     if (progress.value < 1) {
       hideNotification()
     }
-  }, percent)
+  }, step)
 }
 
 const stopTimer = () => {
-  clearInterval(interval.value)
+  if (interval.value) clearInterval(interval.value)
   interval.value = null
 }
 

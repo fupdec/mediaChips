@@ -31,7 +31,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
@@ -43,22 +43,26 @@ const {t} = useI18n()
 
 const loading = ref(false)
 const message = ref('')
-const messageType = ref('info')
+const messageType = ref<'info' | 'success' | 'error' | 'warning'>('info')
+
+interface SuggestTagsResponse {
+  suggestions?: Array<{ word?: string }>
+}
 
 async function openSuggestedTags() {
   loading.value = true
   message.value = ''
 
   try {
-    const res = await apiClient.post('/api/Task/suggestTagsFromPaths', {
+    const res = await apiClient.post<SuggestTagsResponse>('/api/Task/suggestTagsFromPaths', {
       limit: 150,
       maxWords: 3,
       excludeExisting: true,
     })
 
     const names = (res.data?.suggestions || [])
-      .map(item => item.word)
-      .filter(Boolean)
+      .map((item) => item.word)
+      .filter((word): word is string => Boolean(word))
       .slice(0, 150)
 
     if (names.length === 0) {

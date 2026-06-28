@@ -6,7 +6,7 @@
       </div>
       <div class="edit-dialog-hero__overview">
         <EditPinnedOverview
-          :item="currentItem"
+          :item="overviewItem"
           :is-media="isMedia"
           :completion-status="completionStatus"
           :preset-meta="preset_meta"
@@ -18,7 +18,7 @@
     <template v-else-if="showOverview">
       <v-col cols="12">
         <EditPinnedOverview
-          :item="currentItem"
+          :item="overviewItem"
           :is-media="isMedia"
           :completion-status="completionStatus"
           :preset-meta="preset_meta"
@@ -138,7 +138,7 @@
           <v-col v-if="isTag && meta?.color" cols="12" md="6" xl="4">
             <v-card class="rounded-xl pa-4" color="rgba(150, 150, 150, 0.09)" variant="flat">
               <div class="text-medium-emphasis text-caption">{{ t('meta.default_names.color') }}</div>
-              <v-icon @click="pickColor" :color="vals.color" start>mdi-circle</v-icon>
+              <v-icon @click="pickColor" :color="vals.color ?? undefined" start>mdi-circle</v-icon>
               <v-btn @click="pickColor" color="primary" variant="flat" rounded="xl">{{ t('settings_labels.appearance.change_color') }}</v-btn>
             </v-card>
           </v-col>
@@ -148,7 +148,7 @@
             <v-card class="rounded-xl pa-4" color="rgba(150, 150, 150, 0.09)" variant="flat">
               <MetaInputCountry
                 @update:model-value="setValByKey($event, 'country')"
-                :model-value="vals.country"
+                :model-value="vals.country || []"
                 variant="filled"
                 hide-details
               />
@@ -167,8 +167,8 @@
               <MetaInputArray
                 v-if="item.meta?.type === 'array'"
                 @update:model-value="setVal($event, getItemKey(item))"
-                :model-value="vals[getItemKey(item)]"
-                :meta-id="getItemKey(item)"
+                :model-value="getArrayVal(item)"
+                :meta-id="getMetaIdNumber(item)"
                 :key="`${currentItemId}_${getItemKey(item)}`"
                 :ref="el => setMetaInputRef(el, getItemKey(item))"
                 multiple
@@ -177,10 +177,11 @@
               <!-- Number type meta -->
               <v-text-field
                 v-if="item.meta?.type === 'number'"
-                v-model="vals[getItemKey(item)]"
-                :label="item.meta?.name"
-                :hint="item.meta?.hint"
-                :prepend-icon="showIcons ? `mdi-${item.meta?.icon}` : ''"
+                :model-value="getNumberVal(item)"
+                @update:model-value="setVal($event, getItemKey(item))"
+                :label="metaName(item)"
+                :hint="metaHint(item)"
+                :prepend-icon="showIcons ? `mdi-${metaIcon(item)}` : ''"
                 type="number"
                 persistent-hint
                 clearable
@@ -190,10 +191,11 @@
               <!-- String type meta -->
               <v-text-field
                 v-if="item.meta?.type === 'string'"
-                v-model="vals[getItemKey(item)]"
-                :label="item.meta?.name"
-                :hint="item.meta?.hint"
-                :prepend-icon="showIcons ? `mdi-${item.meta?.icon}` : ''"
+                :model-value="getStringVal(item)"
+                @update:model-value="setVal($event, getItemKey(item))"
+                :label="metaName(item)"
+                :hint="metaHint(item)"
+                :prepend-icon="showIcons ? `mdi-${metaIcon(item)}` : ''"
                 persistent-hint
                 clearable
                 variant="filled"
@@ -202,10 +204,11 @@
               <!-- Boolean type meta -->
               <v-checkbox
                 v-if="item.meta?.type === 'boolean'"
-                v-model="vals[getItemKey(item)]"
-                :label="item.meta?.name"
-                :hint="item.meta?.hint"
-                :prepend-icon="showIcons ? `mdi-${item.meta?.icon}` : ''"
+                :model-value="getBooleanVal(item)"
+                @update:model-value="setVal($event, getItemKey(item))"
+                :label="metaName(item)"
+                :hint="metaHint(item)"
+                :prepend-icon="showIcons ? `mdi-${metaIcon(item)}` : ''"
                 persistent-hint
               />
 
@@ -213,10 +216,10 @@
               <v-text-field
                 v-if="item.meta?.type === 'date'"
                 @click="pickDate(getItemKey(item))"
-                :model-value="vals[getItemKey(item)]"
-                :label="item.meta?.name"
-                :hint="item.meta?.hint"
-                :prepend-icon="showIcons ? `mdi-${item.meta?.icon}` : ''"
+                :model-value="getStringVal(item)"
+                :label="metaName(item)"
+                :hint="metaHint(item)"
+                :prepend-icon="showIcons ? `mdi-${metaIcon(item)}` : ''"
                 persistent-hint
                 readonly
                 clearable
@@ -226,19 +229,19 @@
               <!-- Rating type meta -->
               <div v-if="item.meta?.type === 'rating'" class="d-flex flex-column">
                 <div class="text-medium-emphasis text-caption" :class="[{ 'pl-9': showIcons }]">
-                  {{ item.meta?.name }}
+                  {{ metaName(item) }}
                 </div>
                 <div class="d-flex">
-                  <v-icon v-if="showIcons" :icon="`mdi-${item.meta?.icon}`" start/>
+                  <v-icon v-if="showIcons" :icon="`mdi-${metaIcon(item)}`" start/>
                   <v-rating
-                    :model-value="vals[getItemKey(item)]"
+                    :model-value="getRatingVal(item)"
                     @update:model-value="setVal($event, getItemKey(item))"
-                    :length="item.meta?.ratingMax"
-                    :full-icon="`mdi-${item.meta?.ratingIcon}`"
-                    :empty-icon="`mdi-${item.meta?.ratingIconEmpty || item.meta?.ratingIcon}`"
-                    :half-increments="item.meta?.ratingHalf"
-                    :half-icon="`mdi-${item.meta?.ratingIconHalf || item.meta?.ratingIcon}`"
-                    :active-color="item.meta?.ratingColor"
+                    :length="metaRatingMax(item)"
+                    :full-icon="`mdi-${metaRatingIcon(item)}`"
+                    :empty-icon="`mdi-${metaRatingIconEmpty(item)}`"
+                    :half-increments="metaRatingHalf(item)"
+                    :half-icon="`mdi-${metaRatingIconHalf(item)}`"
+                    :active-color="metaRatingColor(item)"
                     color="grey-darken-1"
                     density="compact"
                     clearable
@@ -246,7 +249,7 @@
                   ></v-rating>
                 </div>
                 <div class="text-medium-emphasis text-caption" :class="[{ 'pl-9': showIcons }]">
-                  {{ item.meta?.hint }}
+                  {{ metaHint(item) }}
                 </div>
               </div>
 
@@ -298,7 +301,7 @@
     <ColorPicker
       v-if="colorPicker.dialog"
       v-model="colorPicker.dialog"
-      :color="colorPicker.color"
+      :color="colorPicker.color ?? '#777'"
       @get-color="setColor"
     />
 
@@ -314,7 +317,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -337,6 +340,10 @@ import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/ru'
 import {usePresetMeta} from '@/composable/ItemPresetMeta'
 import {sortPinnedAssignmentItems} from '@/utils/pinnedMetaOrder'
+import type {PresetMetaProps} from '@/types/itemsPage'
+import type { ScraperPinnedItem } from '@/types/scraper'
+import type {AssignedMeta, MediaItem, Meta, Tag} from '@/types/stores'
+import type {VFormInstance} from '@/types/vue'
 
 // Components
 import MetaInputArray from '@/components/meta/input/MetaInputArray.vue'
@@ -344,48 +351,106 @@ import MetaInputCountry from '@/components/meta/input/MetaInputCountry.vue'
 import EditPinnedOverview from '@/components/items/EditPinnedOverview.vue'
 import ColorPicker from '@/components/elements/ColorPicker.vue'
 
-// Props - определяем тип редактируемого объекта
-const props = defineProps({
-  layout: {
-    type: String,
-    default: 'default',
-    validator: (value) => ['default', 'hero'].includes(value),
-  },
-  showOverview: {
-    type: Boolean,
-    default: true,
-  },
-  // Для тегов (приоритет из первого файла)
-  tag: {
-    type: Object,
-    default: null
-  },
-  meta: {
-    type: Object,
-    default: null
-  },
-  // Для медиа
-  media: {
-    type: Object,
-    default: null
-  },
+type EditLayout = 'default' | 'hero'
+
+interface PinnedMetaAssignment extends AssignedMeta {
+  metaId?: number
+  pinnedMetaId?: number
+  show?: number
+  order?: number
+}
+
+type MetaFieldValue = string | number | boolean | string[] | number[] | null | undefined
+
+interface PinnedMetaValues {
+  name?: string | null
+  color?: string | null
+  synonyms?: string | null
+  rating?: number
+  favorite?: number
+  views?: number
+  bookmark?: string | null
+  country?: string[] | null
+  [key: string]: MetaFieldValue
+}
+
+interface TagInItemRow {
+  tagId: number
+  metaId: number
+}
+
+interface ValueInItemRow {
+  metaId: number
+  value: unknown
+}
+
+interface TagInTagPayload {
+  parentTagId: number
+  tagId: number
+  metaId: string | number
+}
+
+interface TagInMediaPayload {
+  mediaId: number
+  tagId: number
+  metaId: string | number
+}
+
+interface ValueInTagPayload {
+  value: unknown
+  tagId: number
+  metaId: string | number
+}
+
+interface ValueInMediaPayload {
+  value: unknown
+  mediaId: number
+  metaId: string | number
+}
+
+interface MetaInputArrayInstance {
+  create: (name: string) => void
+}
+
+interface ScraperTransferField {
+  isTransfered?: boolean
+  dataType?: string
+  meta: Meta
+  isTagExists?: boolean
+  valueScraper?: string
+}
+
+const props = withDefaults(defineProps<{
+  layout?: EditLayout
+  showOverview?: boolean
+  tag?: Tag | null
+  meta?: Meta | null
+  media?: MediaItem | null
+}>(), {
+  layout: 'default',
+  showOverview: true,
+  tag: null,
+  meta: null,
+  media: null,
 })
 
-// Emits
-const emit = defineEmits(['close'])
+const emit = defineEmits<{
+  close: []
+}>()
 
-// Определяем тип редактируемого объекта (приоритет первому файлу)
 const isTag = computed(() => !!props.tag)
 const isMedia = computed(() => !props.tag && !!props.media)
-const mediaOverride = ref(null)
-const currentItem = computed(() => {
-  if (isTag.value) return props.tag
+const mediaOverride = ref<MediaItem | null>(null)
+const currentItem = computed((): MediaItem | Tag | null => {
+  if (isTag.value) return props.tag ?? null
   return mediaOverride.value || props.media
 })
 const currentItemId = computed(() => currentItem.value?.id)
-const currentItemType = computed(() => isTag.value ? 'tag' : 'media')
+const currentItemType = computed((): 'tag' | 'media' => isTag.value ? 'tag' : 'media')
+const overviewItem = computed((): MediaItem | Tag => {
+  return currentItem.value ?? props.tag ?? props.media ?? {id: 0}
+})
 
-// Stores (из первого файла)
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 const dialogsStore = useDialogsStore()
@@ -394,40 +459,42 @@ const itemsStore = useItemsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-// DayJS setup (из первого файла)
 const locale = computed(() => settingsStore.locale == 'cn' ? 'zh-cn' : settingsStore.locale)
 dayjs.extend(relativeTime)
 dayjs.locale(locale.value)
 
-// Refs (из первого файла)
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 const valid = ref(false)
-const vals = ref({})
-const old = ref({})
-const assignedItems = ref([])
-const metaInputRefs = ref({})
+const vals = ref<PinnedMetaValues>({})
+const old = ref<PinnedMetaValues>({})
+const assignedItems = ref<PinnedMetaAssignment[]>([])
+const metaInputRefs = ref<Record<string | number, MetaInputArrayInstance>>({})
 
-// composable for default meta
-const presetMetaProps = {
+const presetMetaProps: PresetMetaProps = {
   type: isTag.value ? 'tag' : 'media',
-  item: currentItem.value,
-  tagPage: false,
+  item: (currentItem.value ?? props.media ?? {id: 0}) as MediaItem,
   isShowAll: true,
 }
 const {preset_meta} = usePresetMeta(presetMetaProps)
 
-const colorPicker = ref({
+const colorPicker = ref<{
+  dialog: boolean
+  color: string | null
+}>({
   dialog: false,
-  color: null
+  color: null,
 })
 
-const datePicker = ref({
+const datePicker = ref<{
+  dialog: boolean
+  metaId: string | number | null
+  value: string | null
+}>({
   dialog: false,
   metaId: null,
-  value: null
+  value: null,
 })
 
-// Computed (из первого файла с дополнениями)
 const settings = computed(() => settingsStore)
 const showIcons = computed(() => settings.value.showIconsOfMetaInEditingDialog === '1')
 
@@ -443,32 +510,77 @@ const favoriteEnabled = computed(() => {
   return false
 })
 
-// Methods (в основном из первого файла)
+// Methods
 
-const nameRules = (value) => {
+const nameRules = (value: string) => {
   if (!value || value.trim().length === 0) {
     return t('validation.name_required')
   }
   return true
 }
 
-const getItemKey = (item) => {
-  return item.pinnedMetaId || item.metaId
+const getItemKey = (item: PinnedMetaAssignment): string | number => {
+  return item.pinnedMetaId ?? item.metaId ?? item.id ?? ''
 }
 
-const findAssignedItemByMetaId = (metaId) => {
+const getMetaIdNumber = (item: PinnedMetaAssignment): number => Number(getItemKey(item))
+
+const getArrayVal = (item: PinnedMetaAssignment): number[] | undefined => {
+  const val = vals.value[getItemKey(item)]
+  return Array.isArray(val) ? val as number[] : undefined
+}
+
+const getStringVal = (item: PinnedMetaAssignment): string | undefined => {
+  const val = vals.value[getItemKey(item)]
+  if (val == null) return undefined
+  return String(val)
+}
+
+const getNumberVal = (item: PinnedMetaAssignment): number | undefined => {
+  const val = vals.value[getItemKey(item)]
+  if (val == null || val === '') return undefined
+  const n = Number(val)
+  return isNaN(n) ? undefined : n
+}
+
+const getBooleanVal = (item: PinnedMetaAssignment): boolean | undefined => {
+  const val = vals.value[getItemKey(item)]
+  return typeof val === 'boolean' ? val : undefined
+}
+
+const getRatingVal = (item: PinnedMetaAssignment): number | undefined => {
+  const val = vals.value[getItemKey(item)]
+  const n = Number(val)
+  return isNaN(n) ? undefined : n
+}
+
+const metaName = (item: PinnedMetaAssignment): string | undefined => item.meta?.name as string | undefined
+const metaHint = (item: PinnedMetaAssignment): string | undefined => item.meta?.hint as string | undefined
+const metaIcon = (item: PinnedMetaAssignment): string | undefined => item.meta?.icon as string | undefined
+const metaRatingMax = (item: PinnedMetaAssignment): number | undefined => Number(item.meta?.ratingMax) || undefined
+const metaRatingIcon = (item: PinnedMetaAssignment): string | undefined => item.meta?.ratingIcon as string | undefined
+const metaRatingIconEmpty = (item: PinnedMetaAssignment): string | undefined => {
+  return (item.meta?.ratingIconEmpty || item.meta?.ratingIcon) as string | undefined
+}
+const metaRatingHalf = (item: PinnedMetaAssignment): boolean | undefined => Boolean(item.meta?.ratingHalf)
+const metaRatingIconHalf = (item: PinnedMetaAssignment): string | undefined => {
+  return (item.meta?.ratingIconHalf || item.meta?.ratingIcon) as string | undefined
+}
+const metaRatingColor = (item: PinnedMetaAssignment): string | undefined => item.meta?.ratingColor as string | undefined
+
+const findAssignedItemByMetaId = (metaId: string | number): PinnedMetaAssignment | undefined => {
   return assignedItems.value.find((item) =>
     Number(getItemKey(item)) === Number(metaId)
     || Number(item.meta?.id) === Number(metaId)
   )
 }
 
-const resolveItemKey = (metaId) => {
+const resolveItemKey = (metaId: string | number): string | number => {
   const item = findAssignedItemByMetaId(metaId)
   return item ? getItemKey(item) : metaId
 }
 
-const getDefaultMetaValue = (type) => {
+const getDefaultMetaValue = (type?: string): MetaFieldValue => {
   if (type === 'array') return []
   if (type === 'boolean') return false
   if (type === 'number' || type === 'rating') return 0
@@ -476,129 +588,121 @@ const getDefaultMetaValue = (type) => {
 }
 
 const initBaseValues = () => {
-  if (isTag.value) {
-    const countries = parseCountries(props.tag.country)
+  if (isTag.value && props.tag) {
+    const countries = parseCountries(props.tag.country as string | undefined)
     vals.value = {
       country: countries,
       name: props.tag.name || null,
-      color: props.tag.color || '#777',
+      color: (props.tag.color as string | undefined) || '#777',
       synonyms: props.tag.synonyms || null,
-      rating: props.tag.rating || 0,
-      favorite: props.tag.favorite || 0,
-      views: props.tag.views || 0,
+      rating: Number(props.tag.rating) || 0,
+      favorite: Number(props.tag.favorite) || 0,
+      views: Number(props.tag.views) || 0,
       bookmark: props.tag.bookmark || null,
     }
     return
   }
 
-  if (isMedia.value) {
+  if (isMedia.value && props.media) {
     vals.value = {
-      rating: props.media.rating || 0,
-      favorite: props.media.favorite || 0,
-      views: props.media.views || 0,
+      rating: Number(props.media.rating) || 0,
+      favorite: Number(props.media.favorite) || 0,
+      views: Number(props.media.views) || 0,
       bookmark: props.media.bookmark || null,
     }
   }
 }
 
-const setVal = (val, key) => {
+const setVal = (val: MetaFieldValue, key: string | number) => {
   vals.value[key] = val
 }
 
-const setValByKey = (val, key) => {
+const setValByKey = (val: MetaFieldValue, key: string | number) => {
   setVal(val, key)
 }
 
 const pickColor = () => {
-  colorPicker.value.color = vals.value.color
+  colorPicker.value.color = (vals.value.color as string | undefined) ?? '#777'
   colorPicker.value.dialog = true
 }
 
-const setColor = (color) => {
+const setColor = (color: string) => {
   vals.value.color = color
   colorPicker.value.dialog = false
 }
 
-const pickDate = (metaId) => {
+const pickDate = (metaId: string | number) => {
   datePicker.value.dialog = true
-  datePicker.value.value = vals.value[metaId]
+  datePicker.value.value = vals.value[metaId] as string | null
   datePicker.value.metaId = metaId
 }
 
-const setDate = (date) => {
+const setDate = (date: string | Date | null) => {
   datePicker.value.dialog = false
-  if (datePicker.value.metaId) {
+  if (datePicker.value.metaId != null && date) {
     vals.value[datePicker.value.metaId] = dayjs(date).format('YYYY-MM-DD')
   }
 }
 
-const equalOld = (metaId, metaType) => {
+const equalOld = (metaId: string | number, metaType?: string) => {
   const val = vals.value[metaId]
   const oldVal = old.value[metaId]
 
   if (metaType === 'array') {
-    const valCopy = _.cloneDeep(val) || []
-    const oldCopy = _.cloneDeep(oldVal) || []
+    const valCopy = _.cloneDeep(val) as unknown[] || []
+    const oldCopy = _.cloneDeep(oldVal) as unknown[] || []
     return _.isEqual(valCopy.sort(), oldCopy.sort())
-  } else {
-    return val === oldVal
   }
+  return val === oldVal
 }
 
-const restore = (key) => {
+const restore = (key: string | number) => {
   vals.value[key] = _.cloneDeep(old.value[key])
 }
 
-const onMediaPathUpdate = (updatedMedia) => {
+const onMediaPathUpdate = (updatedMedia: MediaItem) => {
   if (!isMedia.value) return
   mediaOverride.value = updatedMedia
 }
 
-const setMetaInputRef = (el, metaId) => {
+const setMetaInputRef = (el: unknown, metaId: string | number) => {
   if (el) {
-    metaInputRefs.value[metaId] = el
+    metaInputRefs.value[metaId] = el as MetaInputArrayInstance
   }
 }
 
-// Метод getMetaValues из первого файла, адаптированный для обоих типов
 const getMetaValues = async () => {
   try {
     if (!currentItemId.value) return
 
-    let tags = []
-    let values = []
+    let tags: TagInItemRow[] = []
+    let values: ValueInItemRow[] = []
 
-    // Выбираем правильные endpoints в зависимости от типа
-    if (isTag.value) {
-      // Для тегов (из первого файла)
-      const tagsResponse = await apiClient.get(`/api/TagsInTag?tagId=${currentItemId.value}`)
+    if (isTag.value && props.meta) {
+      const tagsResponse = await apiClient.get<TagInItemRow[]>(`/api/TagsInTag?tagId=${currentItemId.value}`)
       tags = tagsResponse.data
 
-      const valuesResponse = await apiClient.get(`/api/ValuesInTag?tagId=${currentItemId.value}`)
+      const valuesResponse = await apiClient.get<ValueInItemRow[]>(`/api/ValuesInTag?tagId=${currentItemId.value}`)
       values = valuesResponse.data
 
-      // Получаем закрепленные метаданные (только для тегов)
-      const pinnedResponse = await apiClient.get(`/api/PinnedMeta?metaId=${props.meta.id}`)
+      const pinnedResponse = await apiClient.get<PinnedMetaAssignment[]>(`/api/PinnedMeta?metaId=${props.meta.id}`)
       assignedItems.value = sortPinnedAssignmentItems(pinnedResponse.data)
-      scraperStore.pinned = assignedItems.value
+      scraperStore.pinned = assignedItems.value as ScraperPinnedItem[]
 
     } else if (isMedia.value) {
-      // Для медиа (адаптировано из второго файла)
-      const tagsResponse = await apiClient.get(`/api/TagsInMedia?mediaId=${currentItemId.value}`)
+      const tagsResponse = await apiClient.get<TagInItemRow[]>(`/api/TagsInMedia?mediaId=${currentItemId.value}`)
       tags = tagsResponse.data
 
-      const valuesResponse = await apiClient.get(`/api/ValuesInMedia?mediaId=${currentItemId.value}`)
+      const valuesResponse = await apiClient.get<ValueInItemRow[]>(`/api/ValuesInMedia?mediaId=${currentItemId.value}`)
       values = valuesResponse.data
 
-      assignedItems.value = sortPinnedAssignmentItems(itemsStore.assigned || [])
+      assignedItems.value = sortPinnedAssignmentItems((itemsStore.assigned || []) as PinnedMetaAssignment[])
     }
 
-    // Инициализируем значения для всех ассоциированных мета
     for (const item of assignedItems.value) {
       setVal(getDefaultMetaValue(item.meta?.type), getItemKey(item))
     }
 
-    // Заполняем значения из базы
     for (const value of values) {
       const item = findAssignedItemByMetaId(value.metaId)
       let val = value.value
@@ -607,20 +711,20 @@ const getMetaValues = async () => {
         const type = item.meta?.type
         if (type === 'rating') {
           val = Number(val)
-          if (isNaN(val)) val = 0
+          if (isNaN(val as number)) val = 0
         }
       }
 
-      setVal(val, resolveItemKey(value.metaId))
+      setVal(val as MetaFieldValue, resolveItemKey(value.metaId))
     }
 
-    // Обрабатываем теги
-    const parsedTags = {}
+    const parsedTags: Record<string, number[]> = {}
     for (const tag of tags) {
-      if (!parsedTags[tag.metaId]) {
-        parsedTags[tag.metaId] = [tag.tagId]
+      const metaIdKey = String(tag.metaId)
+      if (!parsedTags[metaIdKey]) {
+        parsedTags[metaIdKey] = [tag.tagId]
       } else {
-        parsedTags[tag.metaId].push(tag.tagId)
+        parsedTags[metaIdKey].push(tag.tagId)
       }
     }
 
@@ -628,10 +732,8 @@ const getMetaValues = async () => {
       setVal(parsedTags[metaId], resolveItemKey(metaId))
     }
 
-    // Сохраняем старые значения
     old.value = _.cloneDeep(vals.value)
 
-    // Сохраняем текущие значения в store скрапера (только для тегов)
     if (isTag.value) {
       scraperStore.currentValues = vals.value
     }
@@ -654,8 +756,8 @@ const save = async () => {
     return
   }
 
-  const tags = []
-  const values = []
+  const tags: Array<TagInTagPayload | TagInMediaPayload> = []
+  const values: Array<ValueInTagPayload | ValueInMediaPayload> = []
   const assignedKeys = new Set(
     assignedItems.value.map((item) => String(getItemKey(item)))
   )
@@ -668,50 +770,49 @@ const save = async () => {
     const type = typeof val
 
     if (type === 'string') {
-      val = val.trim()
-      if (val.length === 0) val = null
+      val = (val as string).trim()
+      if ((val as string).length === 0) val = null
     } else if (Array.isArray(val)) {
-      for (const tagId of val) {
-        if (isTag.value) {
+      for (const tagId of val as number[]) {
+        if (isTag.value && currentItemId.value) {
           tags.push({
             parentTagId: currentItemId.value,
             tagId: tagId,
-            metaId: key
+            metaId: key,
           })
-        } else if (isMedia.value) {
+        } else if (isMedia.value && currentItemId.value) {
           tags.push({
             mediaId: currentItemId.value,
             tagId: tagId,
-            metaId: key
+            metaId: key,
           })
         }
       }
     }
 
-    if (isMeta && !Array.isArray(val)) {
+    if (isMeta && !Array.isArray(val) && currentItemId.value) {
       if (isTag.value) {
         values.push({
           value: val,
           tagId: currentItemId.value,
-          metaId: key
+          metaId: key,
         })
       } else if (isMedia.value) {
         values.push({
           value: val,
           mediaId: currentItemId.value,
-          metaId: key
+          metaId: key,
         })
       }
     }
   }
 
-  const updateData = _.cloneDeep(vals.value)
+  const updateData = _.cloneDeep(vals.value) as PinnedMetaValues
 
-  // Обрабатываем страну (только для тегов)
   if (isTag.value && updateData.country && updateData.country.length) {
-    updateData.country = serializeCountries(updateData.country)
+    updateData.country = serializeCountries(updateData.country) as unknown as string[]
   } else if (isTag.value) {
-    updateData.country = null
+    updateData.country = undefined
   }
 
   try {
@@ -751,34 +852,30 @@ const save = async () => {
 }
 
 const transferScrapedInfo = async () => {
-  // Только для тегов (из первого файла)
-  if (!isTag.value) return
+  if (!isTag.value || !props.meta || !props.tag) return
 
-  const images = dialogsStore.scraper?.images || []
+  const images = (dialogsStore.scraper?.images || []) as string[]
 
   if (images.length > 0) {
-    // Нужно реализовать загрузку и сохранение изображений
-    let imageTypes = ["main", "alt", "custom1", "custom2"]
+    const imageTypes = ['main', 'alt', 'custom1', 'custom2']
     let index = 0
 
-    for (let url of images) {
+    for (const url of images) {
       const imageType = imageTypes[index]
-      // Нужно получить dbPath и meta.id, tag.id из текущего контекста
-      let imagePath = path.join(
-        appStore.dbPath, // нужно получить из store
-        "meta",
-        `${props.meta.id}`, // текущий meta.id
-        `${props.tag.id}_${imageType}.jpg` // текущий tag.id
+      const imagePath = path.join(
+        appStore.dbPath,
+        'meta',
+        `${props.meta.id}`,
+        `${props.tag.id}_${imageType}.jpg`,
       )
       ++index
-      const ar = props.meta.imageAspectRatio // нужно получить aspect ratio
+      const ar = Number(props.meta.imageAspectRatio) || 1
       const sizes = {width: 300, height: 300 / ar}
 
-      // Вызов функции создания изображения
       const res = await createImage(url, imagePath, sizes)
       if (res.status != 201) {
         setNotification({
-          type: "error",
+          type: 'error',
           title: t('scraper.error'),
           text: t('scraper.image_cannot_be_obtained'),
         })
@@ -788,24 +885,20 @@ const transferScrapedInfo = async () => {
     dialogsStore.scraper.images = []
   }
 
-  const fields = scraperStore.fields || []
+  const fields = (scraperStore.fields || []) as ScraperTransferField[]
 
   for (const field of fields) {
     if (field.isTransfered) {
       if (field.dataType === 'array') {
         const metaId = field.meta.id
-        console.log(field)
 
         if (field.isTagExists) {
-          // Получаем теги для данного meta
           const tags = appStore.getTagsByMetaId(metaId)
           const tag = tags.find((i) => i.name === field.valueScraper)
 
           if (tag) {
-            // получаем текуший массив
-            let arr = _.cloneDeep(vals.value[metaId] || [])
+            const arr = _.cloneDeep(vals.value[metaId] || []) as number[]
 
-            // Добавляем ID тега, если его еще нет
             if (!arr.includes(tag.id)) {
               arr.push(tag.id)
               setValByKey(arr, metaId)
@@ -813,7 +906,7 @@ const transferScrapedInfo = async () => {
           }
         } else {
           const input = metaInputRefs.value[metaId]
-          if (input && input.create) {
+          if (input?.create && field.valueScraper) {
             input.create(field.valueScraper)
           }
         }
@@ -849,7 +942,7 @@ onUnmounted(() => {
 
 // Computed properties только для тегов (из первого файла)
 const completionStatus = computed(() => {
-  let completed = []
+  const completed: number[] = []
 
   for (const item of assignedItems.value) {
     const val = vals.value[getItemKey(item)]
@@ -860,8 +953,10 @@ const completionStatus = computed(() => {
       completed.push(1)
     } else if (typeof val === 'number') {
       completed.push(val > 0 ? 1 : 0)
-    } else {
+    } else if (typeof val === 'string' || Array.isArray(val)) {
       completed.push(val.length > 0 ? 1 : 0)
+    } else {
+      completed.push(0)
     }
   }
 

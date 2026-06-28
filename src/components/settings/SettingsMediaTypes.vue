@@ -20,7 +20,7 @@
         <v-icon start size="18">mdi-{{ m.icon }}</v-icon>
         <span>{{ getMediaTypeName(m, t) }}</span>
         <v-icon
-          v-if="m.hidden !== 1"
+          v-if="!m.hidden"
           end
           size="14"
           :title="t('media.type.show_in_navbar')"
@@ -47,7 +47,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, defineAsyncComponent} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -56,6 +56,11 @@ import orderBy from 'lodash/orderBy'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {isEditableMediaType} from '@/utils/mediaType'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import type {MediaType} from '@/types/media'
+
+interface EditableMediaType extends MediaType {
+  custom?: boolean
+}
 
 const DialogMediaTypeAdd = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogMediaTypeAdd.vue')
@@ -68,7 +73,7 @@ const appStore = useAppStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-const selected = ref(null)
+const selected = ref<EditableMediaType | undefined>(undefined)
 const dialogAdd = ref(false)
 const dialogEdit = ref(false)
 
@@ -84,7 +89,7 @@ function finishAdding() {
   eventBus.emit('getMediaTypes')
 }
 
-function open(media) {
+function open(media: EditableMediaType) {
   if (!isEditableMediaType(media)) return
   selected.value = media
   dialogEdit.value = true

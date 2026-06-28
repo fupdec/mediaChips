@@ -39,7 +39,7 @@
                 size="small"
                 label
                 :prepend-icon="`mdi-${cm.meta.icon}`"
-                :append-icon="getIconDataType(cm.meta.type)"
+                :append-icon="getIconDataType(cm.meta.type || '')"
               >
                 {{ getMetaName(cm.meta, t) }}
               </v-chip>
@@ -110,8 +110,9 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, onMounted, computed} from 'vue'
+import type {PropType} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -121,9 +122,33 @@ import {getIconDataType} from '@/services/metaTypeUtils'
 import DialogHeader from "@/components/elements/DialogHeader.vue";
 import ScraperFields from "@/assets/ScraperFields";
 import {getMetaName} from "@/utils/metaI18n";
+import type {Meta} from '@/types/stores'
+
+interface ScraperFieldTemplate {
+  name: string
+  oldKey: string
+  type: string
+  key: string
+}
+
+interface ScraperField extends ScraperFieldTemplate {
+  meta?: PinnedMetaEntry | null
+}
+
+interface PinnedMetaEntry {
+  id?: number
+  metaId?: number
+  pinnedMetaId?: number
+  scraper?: string | null
+  meta: Meta
+  [key: string]: unknown
+}
 
 const props = defineProps({
-  meta: Object
+  meta: {
+    type: Object as PropType<Meta>,
+    required: true,
+  },
 })
 
 const emit = defineEmits(['close'])
@@ -132,35 +157,35 @@ const store = useAppStore()
 const {xs} = useDisplay()
 const {t} = useI18n()
 
-const pinnedMetas = ref([])
-const pinnedMetasFree = ref([])
-const dragging = ref(null)
-const scraperFields = ref([])
-const draggedMeta = ref(null)
+const pinnedMetas = ref<PinnedMetaEntry[]>([])
+const pinnedMetasFree = ref<PinnedMetaEntry[]>([])
+const dragging = ref<string | null>(null)
+const scraperFields = ref<ScraperField[]>([])
+const draggedMeta = ref<PinnedMetaEntry | null>(null)
 
-const getScraperFieldName = (field) => t(`scraper.fields.${field.key}`, field.name)
+const getScraperFieldName = (field: ScraperFieldTemplate) => t(`scraper.fields.${field.key}`, field.name)
 
-const getMetaTypeName = (type) => t(`meta.types.${type}`, type)
+const getMetaTypeName = (type: string) => t(`meta.types.${type}`, type)
 
 function close() {
   emit('close')
 }
 
-function handleDragStart(meta) {
+function handleDragStart(meta: PinnedMetaEntry) {
   console.log(meta)
-  dragging.value = meta.meta.type
+  dragging.value = meta.meta.type || null
   draggedMeta.value = meta
 }
 
-function handleDragover(field, event) {
+function handleDragover(field: ScraperField, event: DragEvent) {
   if (field.meta || (draggedMeta.value && draggedMeta.value.meta.type !== field.type)) {
-    event.dataTransfer.dropEffect = 'none'
+    event.dataTransfer!.dropEffect = 'none'
   } else {
     event.preventDefault()
   }
 }
 
-async function handleDrop(field, index, event) {
+async function handleDrop(field: ScraperField, index: number, event: DragEvent) {
   event.preventDefault()
 
   if (!draggedMeta.value || field.meta || draggedMeta.value.meta.type !== field.type) {
@@ -184,15 +209,15 @@ async function handleDrop(field, index, event) {
 
 async function updateScraperFields() {
   await getPinnedMeta()
-  scraperFields.value = cloneDeep(ScraperFields)
+  scraperFields.value = cloneDeep(ScraperFields) as ScraperField[]
 
-  for (let field of scraperFields.value) {
+  for (const field of scraperFields.value) {
     const found = pinnedMetas.value.find(i => i.scraper === field.key)
     if (found) field.meta = found
   }
 }
 
-async function remove(meta) {
+async function remove(meta: PinnedMetaEntry) {
   try {
     await apiClient.put('/api/PinnedMeta', {
       data: {scraper: null},
@@ -208,7 +233,7 @@ async function remove(meta) {
 
 async function getPinnedMeta() {
   try {
-    const res = await apiClient.get(
+    const res = await apiClient.get<PinnedMetaEntry[]>(
       `/api/PinnedMeta?metaId=${props.meta?.id}`
     )
 

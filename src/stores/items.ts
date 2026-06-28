@@ -306,7 +306,7 @@ export const useItemsStore = defineStore('items', {
       return true
     },
 
-    async countViewNumber(item: MediaItem, itemType: 'media' | 'tag' | 'meta') {
+    async countViewNumber(item: { id: number; views?: number }, itemType: 'media' | 'tag' | 'meta') {
       const appStore = useAppStore()
       const settingsStore = useSettingsStore()
 

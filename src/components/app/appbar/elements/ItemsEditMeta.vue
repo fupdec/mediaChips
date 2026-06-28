@@ -7,6 +7,7 @@
     />
 
     <MetaManager
+      v-if="meta"
       :edit-mode="true"
       :meta="meta"
       :dialog="dialogEditMeta"
@@ -17,7 +18,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
@@ -26,6 +27,7 @@ import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
 import {defineAsyncComponent} from 'vue'
+import type { Meta } from '@/types/stores'
 
 const MetaManager = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogMetaManager.vue')
@@ -40,7 +42,11 @@ const {t} = useI18n()
 const dialogEditMeta = ref(false)
 
 // Computed properties
-const meta = computed(() => itemsStore.meta)
+const meta = computed((): Meta | null => {
+  const metaId = itemsStore.environment.meta_id
+  if (!metaId) return null
+  return store.meta.find((item) => item.id === metaId) ?? null
+})
 
 // Methods
 const editMeta = () => {

@@ -90,14 +90,14 @@
           <MetaSettingsArray
             v-if="metaSettings.type === 'array'"
             @update="updateMetaSettings"
-            :meta="metaSettings"
+            :meta="metaSettingsAsMeta"
             :edit-mode="editMode"
           />
 
           <MetaSettingsRating
             v-if="metaSettings.type === 'rating'"
             @update="updateMetaSettings"
-            :meta="metaSettings"
+            :meta="metaSettingsAsMeta"
           />
 
           <SettingsSection v-if="metaSettings.type === 'string'" padded>
@@ -126,15 +126,18 @@
   <!-- Диалог подтверждения удаления (только в режиме редактирования) -->
   <DialogDeleteConfirm
     v-if="editMode && dialogDeleteMeta"
-    v-model="dialogDeleteMeta"
+    :dialog="dialogDeleteMeta"
     @delete="deleteMeta"
     @close="dialogDeleteMeta=false"
     :text="textDialogDelete"
   ></DialogDeleteConfirm>
 </template>
 
-<script setup>
-import {ref, computed, onMounted, watch, nextTick} from 'vue'
+<script setup lang="ts">
+import {ref, computed, watch} from 'vue'
+import type {PropType} from 'vue'
+import type {VFormInstance} from '@/types/vue'
+import {getErrorResponseData} from '@/types/vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -148,7 +151,47 @@ import MetaTypes from '@/assets/MetaTypes'
 import {apiClient} from '@/services/apiClient'
 import {validateName} from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
+import type {Meta} from '@/types/stores'
 import _ from 'lodash'
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  action?: () => void | Promise<void>
+}
+
+interface MetaSettingsForm {
+  type: string
+  name: string
+  hint: string
+  icon: string
+  isLink: boolean
+  hidden: boolean
+  parser: boolean
+  imageAspectRatio: number
+  chipLabel: boolean
+  chipVariant: string
+  color: boolean
+  favorite: boolean
+  rating: boolean
+  synonyms: boolean
+  bookmark: boolean
+  country: boolean
+  career: boolean
+  scraper: boolean
+  nested: boolean
+  marks: boolean
+  ratingIcon: string
+  ratingIconEmpty: string
+  ratingIconHalf: string
+  ratingHalf: boolean
+  ratingMax: number
+  ratingColor: string
+  id?: number
+  [key: string]: unknown
+}
 
 // Props
 const props = defineProps({
@@ -158,7 +201,7 @@ const props = defineProps({
   },
   // Для режима редактирования
   meta: {
-    type: Object,
+    type: Object as PropType<Meta | null>,
     default: null
   },
   // Режим работы: создание (false) или редактирование (true)
@@ -176,7 +219,7 @@ const {xs} = useDisplay()
 const {t} = useI18n()
 
 // Refs
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 const internalDialog = ref(false)
 const dialogIcons = ref(false)
 const dialogDeleteMeta = ref(false)
@@ -189,10 +232,7 @@ const metaTypes = computed(() => MetaTypes.map(type => ({
   hint: t(`meta.hints.${type.value}`),
 })))
 
-const metaSettings = ref({})
-
-// Единый объект для всех настроек мета
-const metaSettingsDefault = ref({
+const metaSettingsDefault = ref<MetaSettingsForm>({
 
   // Основные настройки для всех типов
   type: 'array',
@@ -229,11 +269,15 @@ const metaSettingsDefault = ref({
   ratingColor: "#ffab00",
 })
 
+const metaSettings = ref<MetaSettingsForm>(_.cloneDeep(metaSettingsDefault.value))
+
+const metaSettingsAsMeta = computed((): Meta => metaSettings.value as Meta)
+
 // Keys для принудительного перерисовывания
 const metaKey = ref(0)
 
 // Buttons for DialogHeader
-const buttons = ref([])
+const buttons = ref<DialogHeaderButton[]>([])
 
 // Computed
 const hasOptions = computed(() => ['array', 'rating', 'string'].includes(metaSettings.value.type))
@@ -287,12 +331,12 @@ const initButtons = () => {
   }
 }
 
-const changeIcon = (icon) => {
+const changeIcon = (icon: string) => {
   dialogIcons.value = false
   metaSettings.value.icon = icon
 }
 
-const nameRules = (value) => {
+const nameRules = (value: string) => {
   return validateName(value)
 }
 
@@ -303,14 +347,9 @@ const sendForm = async () => {
   if (!formValid) return
 
   try {
-
-    let response = {}
-
-    if (props.editMode && props.meta.id) {
-      response = await apiClient.put(`/api/Meta/${props.meta.id}`, metaSettings.value)
-    } else {
-      response = await apiClient.post('/api/Meta', metaSettings.value)
-    }
+    const response = props.editMode && props.meta?.id
+      ? await apiClient.put(`/api/Meta/${props.meta.id}`, metaSettings.value)
+      : await apiClient.post('/api/Meta', metaSettings.value)
 
     if (response.data) {
       if (!props.editMode) {
@@ -326,10 +365,8 @@ const sendForm = async () => {
   } catch (error) {
     console.error('Error adding meta:', error)
 
-    let errorMessage = t('meta.dialogs.failed_add')
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message
-    }
+    const errorMessage = getErrorResponseData<{ message?: string }>(error)?.message
+      || t('meta.dialogs.failed_add')
 
     setNotification({
       type: 'error',
@@ -338,7 +375,7 @@ const sendForm = async () => {
   }
 }
 
-const updateMetaSettings = (newSettings) => {
+const updateMetaSettings = (newSettings: Partial<MetaSettingsForm>) => {
   console.log('updateMetaSettings called with:', newSettings)
 
   // Объединяем с текущими настройками

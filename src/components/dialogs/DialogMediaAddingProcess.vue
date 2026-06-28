@@ -339,7 +339,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, nextTick, onMounted, watch} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
@@ -354,6 +354,54 @@ import {useEventBus} from '@/utils/eventBus'
 import {useMediaAdding} from '@/composable/AddingMedia'
 import {deleteLocalFile} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
+import {getErrorResponseData} from '@/types/vue'
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  action?: () => void
+}
+
+interface MediaDuplicateDetails {
+  id?: number
+  path?: string
+  parameter?: string
+  reason?: string
+}
+
+interface MediaAddingDuplicateEntry {
+  path: string
+  duplicate?: MediaDuplicateDetails
+}
+
+interface RecognitionEvent {
+  type: string
+  processed?: number
+  total?: number
+  remaining?: number
+  suggestions?: Array<{ word?: string }>
+  media?: number
+  message?: string
+}
+
+interface NotificationAction {
+  id: string
+  text: string
+  icon: string
+  action: () => void | Promise<void>
+  hide?: boolean
+}
+
+type DeleteDuplicateType = 'incoming' | 'existing'
+
+const getDuplicateDetails = (duplicate: unknown): MediaDuplicateDetails | undefined =>
+  duplicate as MediaDuplicateDetails | undefined
+
+const getErrorMessage = (error: unknown) =>
+  getErrorResponseData<{ message?: string }>(error)?.message
+  || (error instanceof Error ? error.message : String(error))
 
 // Props - dialog state is controlled via tasksStore.mediaAdding.dialogProcess
 
@@ -370,7 +418,7 @@ const eventBus = useEventBus()
 const {reparseTagsForAddedMedia} = useMediaAdding()
 
 // Reactive state
-const buttons = ref([])
+const buttons = ref<DialogHeaderButton[]>([])
 const is_show_added = ref(false)
 const is_show_duplicates_by_content_hash = ref(false)
 const is_show_moved_files = ref(false)
@@ -426,21 +474,25 @@ const clipModelNeedsDownload = computed(() => (
   !clipModelReady.value && !['loading'].includes(clipModelStatus.value)
 ))
 
-const duplicates_by_path = computed(() => {
-  return task.value.duplicates
-    .filter(i => i.duplicate?.parameter === 'path')
+const duplicates_by_path = computed((): string[] => {
+  return (task.value.duplicates as MediaAddingDuplicateEntry[])
+    .filter(i => getDuplicateDetails(i.duplicate)?.parameter === 'path')
     .map(i => i.path)
 })
 
-const duplicates_by_content_hash = computed(() => {
-  return task.value.duplicates
-    .filter(i => i.duplicate?.parameter === 'content_hash' && i.duplicate?.reason === 'duplicate')
+const duplicates_by_content_hash = computed((): MediaAddingDuplicateEntry[] => {
+  return (task.value.duplicates as MediaAddingDuplicateEntry[])
+    .filter(i => {
+      const duplicate = getDuplicateDetails(i.duplicate)
+      return duplicate?.parameter === 'content_hash' && duplicate?.reason === 'duplicate'
+    })
 })
 
-const moved_files = computed(() => {
-  return task.value.duplicates.filter(
-    i => i.duplicate?.parameter === 'content_hash' && i.duplicate?.reason === 'moved',
-  )
+const moved_files = computed((): MediaAddingDuplicateEntry[] => {
+  return (task.value.duplicates as MediaAddingDuplicateEntry[]).filter(i => {
+    const duplicate = getDuplicateDetails(i.duplicate)
+    return duplicate?.parameter === 'content_hash' && duplicate?.reason === 'moved'
+  })
 })
 
 // Methods
@@ -463,22 +515,24 @@ const reparseTags = async () => {
   await reparseTagsForAddedMedia()
 }
 
-const pathsLookSame = (left, right) => {
+const pathsLookSame = (left: unknown, right: unknown) => {
   if (!left || !right) return false
   return left === right || String(left).toLowerCase() === String(right).toLowerCase()
 }
 
-const deleteDuplicates = async (delete_type) => {
+const deleteDuplicates = async (delete_type: DeleteDuplicateType) => {
   dialogsStore.confirm.show = true
   dialogsStore.confirm.text = t('media.adding.delete_files_confirm')
   dialogsStore.confirm.action = async () => {
     try {
-      const dupes = task.value.duplicates.filter(
-        i => i.duplicate?.parameter === 'content_hash' && i.duplicate?.reason === 'duplicate',
-      )
+      const dupes = (task.value.duplicates as MediaAddingDuplicateEntry[]).filter(i => {
+        const duplicate = getDuplicateDetails(i.duplicate)
+        return duplicate?.parameter === 'content_hash' && duplicate?.reason === 'duplicate'
+      })
 
       for (const dupe of dupes) {
-        const file_path = delete_type === 'incoming' ? dupe.path : dupe.duplicate?.path
+        const duplicate = getDuplicateDetails(dupe.duplicate)
+        const file_path = delete_type === 'incoming' ? dupe.path : duplicate?.path
 
         if (!file_path) continue
 
@@ -488,16 +542,16 @@ const deleteDuplicates = async (delete_type) => {
           console.error('Error deleting local file:', error)
         }
 
-        if (delete_type === 'existing' && dupe.duplicate?.id) {
+        if (delete_type === 'existing' && duplicate?.id) {
           await apiClient.post('/api/media/updatePath', {
-            id: dupe.duplicate.id,
+            id: duplicate.id,
             path: dupe.path,
           })
         }
       }
 
       if (delete_type === "existing") {
-        const ids = dupes.map(i => i.duplicate?.id).filter(Boolean)
+        const ids = dupes.map(i => getDuplicateDetails(i.duplicate)?.id).filter(Boolean) as number[]
 
         if (ids.length > 0) {
           eventBus.emit('getItemsFromDb', {
@@ -530,15 +584,16 @@ const relinkMovedFiles = async () => {
 
   try {
     for (const dupe of dupes) {
-      if (!dupe.duplicate?.id || !dupe.path) continue
+      const duplicate = getDuplicateDetails(dupe.duplicate)
+      if (!duplicate?.id || !dupe.path) continue
 
       await apiClient.post('/api/media/updatePath', {
-        id: dupe.duplicate.id,
+        id: duplicate.id,
         path: dupe.path,
       })
     }
 
-    const ids = dupes.map(i => i.duplicate?.id).filter(Boolean)
+    const ids = dupes.map(i => getDuplicateDetails(i.duplicate)?.id).filter(Boolean) as number[]
 
     if (ids.length > 0) {
       eventBus.emit('getItemsFromDb', {
@@ -559,7 +614,7 @@ const relinkMovedFiles = async () => {
     setNotification({
       type: 'error',
       title: t('media.adding.relink_moved_files'),
-      text: error.response?.data?.message || error.message,
+      text: getErrorMessage(error),
     })
   }
 }
@@ -571,8 +626,8 @@ const openSuggestedTags = () => {
   })
 }
 
-const uniqueNames = (items) => {
-  const seen = new Set()
+const uniqueNames = (items: string[]) => {
+  const seen = new Set<string>()
   return items.filter((name) => {
     const key = String(name || '').trim().toLowerCase()
     if (!key || seen.has(key)) return false
@@ -581,7 +636,7 @@ const uniqueNames = (items) => {
   })
 }
 
-const openProcessAction = () => ({
+const openProcessAction = (): NotificationAction => ({
   id: 'open-media-adding-process',
   text: t('media.adding.open_process_dialog'),
   icon: 'open-in-new',
@@ -595,7 +650,7 @@ const openProcessAction = () => ({
 
 const fetchClipModelStatus = async () => {
   try {
-    const response = await apiClient.get('/api/Task/clipModelStatus')
+    const response = await apiClient.get<{ status?: string }>('/api/Task/clipModelStatus')
     clipModelStatus.value = response.data?.status || 'unknown'
   } catch (error) {
     console.error('Error checking CLIP model status:', error)
@@ -608,7 +663,7 @@ const downloadClipModel = async () => {
   clipModelStatus.value = 'loading'
 
   try {
-    const response = await apiClient.post('/api/Task/downloadClipModel')
+    const response = await apiClient.post<{ status?: string }>('/api/Task/downloadClipModel')
     clipModelStatus.value = response.data?.status || 'downloaded'
     setNotification({
       type: 'success',
@@ -621,7 +676,7 @@ const downloadClipModel = async () => {
     setNotification({
       type: 'error',
       title: t('media.adding.download_video_recognition_model'),
-      text: error.response?.data?.message || error.message,
+      text: getErrorMessage(error),
     })
   } finally {
     clipModelDownloading.value = false
@@ -686,9 +741,9 @@ const recognizeVideoObjects = async () => {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
-    let names = []
+    let names: string[] = []
 
-    const handleEvent = (event) => {
+    const handleEvent = (event: RecognitionEvent) => {
       if (event.type === 'progress') {
         task.value.objectRecognitionProcessed = event.processed || 0
         task.value.objectRecognitionTotal = event.total || task.value.objectRecognitionTotal || 0
@@ -709,8 +764,8 @@ const recognizeVideoObjects = async () => {
 
       if (event.type === 'complete') {
         names = (event.suggestions || [])
-          .map(item => item.word)
-          .filter(Boolean)
+          .map((item: { word?: string }) => item.word)
+          .filter((word): word is string => Boolean(word))
           .slice(0, 50)
 
         task.value.objectRecognitionProcessed = event.media || task.value.objectRecognitionTotal
@@ -773,18 +828,19 @@ const recognizeVideoObjects = async () => {
     }
   } catch (error) {
     console.error('Error recognizing video objects:', error)
+    const isAbortError = error instanceof Error && error.name === 'AbortError'
     tasksStore.updateTask(recognitionTaskId, {
-      subtitle: error.name === 'AbortError'
+      subtitle: isAbortError
         ? t('common.stop')
         : t('media.adding.video_object_recognition_failed'),
-      color: error.name === 'AbortError' ? 'warning' : 'error',
+      color: isAbortError ? 'warning' : 'error',
       done: true,
       action: () => {},
     })
     setNotification({
       type: 'error',
       title: t('media.adding.video_object_recognition_failed'),
-      text: error.response?.data?.message || error.message,
+      text: getErrorMessage(error),
     })
   } finally {
     task.value.status = previousStatus

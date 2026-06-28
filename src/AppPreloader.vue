@@ -73,7 +73,7 @@
   </v-app>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, defineAsyncComponent} from 'vue'
 import {useRoute} from 'vue-router'
 import {useDisplay} from 'vuetify'

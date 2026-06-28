@@ -110,7 +110,7 @@
 
     <DialogDeleteConfirm
       v-if="dialogDeletePlaylist"
-      v-model="dialogDeletePlaylist"
+      :dialog="dialogDeletePlaylist"
       @close="dialogDeletePlaylist = false"
       @delete="deletePlaylist"
       :text="t('playlists.delete_confirm')"
@@ -118,8 +118,10 @@
   </div>
 </template>
 
-<script setup>
-import {ref, computed, watch, defineEmits, defineProps, onMounted} from 'vue';
+<script setup lang="ts">
+import {ref, computed, watch, onMounted} from 'vue';
+import type {PropType} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify';
 import {storeToRefs} from 'pinia';
@@ -134,10 +136,37 @@ import DialogHeader from '@/components/elements/DialogHeader.vue';
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue';
 import {sortBy} from 'lodash';
 import {buildM3uPlaylist, downloadTextFile, playlistExportFilename} from '@/utils/playlistExport';
+import type {Playlist} from '@/types/stores'
+
+interface PlaylistVideo {
+  mediaId: number
+  playlistId: number
+  order?: number
+  thumb?: string | null
+  medium?: { name?: string }
+  [key: string]: unknown
+}
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  variant?: string
+  disabled?: boolean
+  action?: () => void | Promise<void>
+}
+
+interface SaveFileResult {
+  canceled?: boolean
+  filePath?: string
+}
 
 const props = defineProps({
   dialog: Boolean,
-  playlist: Object,
+  playlist: {
+    type: Object as PropType<Playlist>,
+    default: undefined,
+  },
 });
 
 const emit = defineEmits(['close', 'updatePlaylist', 'delete']);
@@ -152,12 +181,12 @@ const dialogLocal = ref(props.dialog);
 const dialogDeletePlaylist = ref(false);
 const valid = ref(false);
 const name = ref('');
-const videos = ref([]);
+const videos = ref<PlaylistVideo[]>([]);
 const is_thumbs_loaded = ref(false);
 const drag = ref(false);
-const form = ref(null);
+const form = ref<VFormInstance>(null);
 
-const buttons = computed(() => [
+const buttons = computed((): DialogHeaderButton[] => [
   {
     icon: "file-export",
     text: t('playlists.export'),
@@ -199,15 +228,16 @@ watch(dialogLocal, (newVal) => {
 });
 
 const initButtons = () => {
-  name.value = props.playlist?.name || '';
+  name.value = String(props.playlist?.name ?? '');
 };
 
-const nameRules = (value) => {
+const nameRules = (value: string) => {
   return validateName(value)
 };
 
 const apply = async () => {
-  await form.value?.validate();
+  if (!form.value || !props.playlist) return
+  await form.value.validate();
   if (!valid.value) return;
 
   try {
@@ -239,7 +269,10 @@ const exportPlaylist = async () => {
     return
   }
 
-  const content = buildM3uPlaylist(videos.value, name.value || props.playlist?.name)
+  const content = buildM3uPlaylist(
+    videos.value as Parameters<typeof buildM3uPlaylist>[0],
+    name.value || String(props.playlist?.name ?? ''),
+  )
   const defaultPath = playlistExportFilename(name.value || props.playlist?.name)
   const filters = [{name: 'M3U Playlist', extensions: ['m3u8', 'm3u']}]
 
@@ -249,14 +282,14 @@ const exportPlaylist = async () => {
         defaultPath,
         content,
         filters,
-      })
+      }) as SaveFileResult
 
       if (result?.canceled) return
 
       setNotification({
         type: 'success',
         title: t('playlists.export'),
-        text: t('playlists.export_success', {path: result.filePath}),
+        text: t('playlists.export_success', {path: result.filePath ?? ''}),
       })
       return
     }
@@ -272,17 +305,18 @@ const exportPlaylist = async () => {
     setNotification({
       type: 'error',
       title: t('playlists.export'),
-      text: error.message,
+      text: error instanceof Error ? error.message : String(error),
     })
   }
 };
 
 const getVideos = async () => {
+  if (!props.playlist) return
   is_thumbs_loaded.value = false;
   try {
     const res = await apiClient.get(`/api/mediaInPlaylists/${props.playlist.id}`);
 
-    videos.value = sortBy(res.data, "order");
+    videos.value = sortBy(res.data as PlaylistVideo[], "order");
 
     for (const video of videos.value) {
       const imgPath = path.join(
@@ -299,7 +333,8 @@ const getVideos = async () => {
   }
 };
 
-const removeVideo = async (video) => {
+const removeVideo = async (video: PlaylistVideo) => {
+  if (!props.playlist) return
   try {
     await apiClient.delete('/api/mediaInPlaylists/', {
       data: {

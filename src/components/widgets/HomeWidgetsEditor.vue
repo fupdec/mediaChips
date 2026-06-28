@@ -53,7 +53,7 @@
   </draggable>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import draggable from 'vuedraggable'
@@ -62,8 +62,12 @@ import {
   HOME_WIDGETS_WITH_LIMIT,
   parseHomeWidgetsConfig,
   serializeHomeWidgetsConfig,
+  type HomeWidgetId,
+  type HomeWidgetsConfig,
+  type HomeWidgetWithLimit,
 } from '@/utils/homeWidgets'
 import {setOption} from '@/services/settingsService'
+import type { HomeWidgetEditorItem } from '@/types/widgets'
 
 const {t} = useI18n()
 const settingsStore = useSettingsStore()
@@ -107,16 +111,16 @@ const widgetMeta = computed(() => ({
   },
 }))
 
-const widgets = ref([])
+const widgets = ref<HomeWidgetEditorItem[]>([])
 
-function buildWidgetsList(config) {
+function buildWidgetsList(config: HomeWidgetsConfig): HomeWidgetEditorItem[] {
   return config.order.map((id) => ({
     id,
     title: widgetMeta.value[id]?.title || id,
     icon: widgetMeta.value[id]?.icon || 'mdi-widgets',
     enabled: config.enabled[id] !== false,
-    hasLimit: HOME_WIDGETS_WITH_LIMIT.includes(id),
-    limit: config.limits[id],
+    hasLimit: (HOME_WIDGETS_WITH_LIMIT as readonly HomeWidgetId[]).includes(id),
+    limit: config.limits[id as HomeWidgetWithLimit],
   }))
 }
 
@@ -138,22 +142,22 @@ watch(
 
 async function saveConfig() {
   const current = parseHomeWidgetsConfig(settingsStore.home_widgets_config)
-  const config = {
-    order: widgets.value.map((widget) => widget.id),
-    enabled: widgets.value.reduce((acc, widget) => {
-      acc[widget.id] = widget.enabled
-      return acc
-    }, {}),
-    limits: widgets.value.reduce((acc, widget) => {
-      if (widget.hasLimit) {
-        acc[widget.id] = widget.limit
-      }
-      return acc
-    }, {}),
-    collapsed: current.collapsed,
+  const enabled: Partial<HomeWidgetsConfig['enabled']> = {}
+  const limits: Partial<HomeWidgetsConfig['limits']> = {}
+
+  for (const widget of widgets.value) {
+    enabled[widget.id] = widget.enabled
+    if (widget.hasLimit && widget.limit != null) {
+      limits[widget.id as HomeWidgetWithLimit] = widget.limit
+    }
   }
 
-  const serialized = serializeHomeWidgetsConfig(config)
+  const serialized = serializeHomeWidgetsConfig({
+    order: widgets.value.map((widget) => widget.id),
+    enabled,
+    limits,
+    collapsed: current.collapsed,
+  } as Partial<HomeWidgetsConfig>)
   settingsStore.home_widgets_config = serialized
   await setOption(serialized, 'home_widgets_config')
 }

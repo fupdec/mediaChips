@@ -74,8 +74,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed} from 'vue'
+import type {PropType} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import {apiClient} from '@/services/apiClient'
@@ -87,6 +89,8 @@ import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import SavedFiltersList from '@/components/elements/SavedFiltersList.vue'
 
 import {useItemsStore} from '@/stores/items'
+import type {FilterObject} from '@/types/common'
+import type {SavedFilter} from '@/types/stores'
 
 const props = defineProps({
   dialog: Boolean,
@@ -105,17 +109,17 @@ const dialogModel = computed({
 
 const dialogDel = ref(false)
 const dialogEditing = ref(false)
-const selected = ref(null)
+const selected = ref<SavedFilter | null>(null)
 
 const validName = ref(true)
 const filterName = ref('')
-const formRef = ref(null)
+const formRef = ref<VFormInstance>(null)
 
 const savedFilters = computed(() => itemsStore.filters_saved)
 
 const close = () => emit('close')
 
-const openDialogDelete = (filter) => {
+const openDialogDelete = (filter: SavedFilter) => {
   selected.value = filter
   dialogDel.value = true
 }
@@ -126,7 +130,7 @@ const deleteSavedFilter = async () => {
 
   await apiClient.delete(`/api/SavedFilter/${savedFilter.id}`)
 
-  for (const row of savedFilter.filters) {
+  for (const row of savedFilter.filters || []) {
     await apiClient.delete(`/api/FilterRow/${row.id}`)
   }
 
@@ -134,9 +138,9 @@ const deleteSavedFilter = async () => {
   dialogDel.value = false
 }
 
-const openDialogEditing = (filter) => {
+const openDialogEditing = (filter: SavedFilter) => {
   selected.value = filter
-  filterName.value = filter.name
+  filterName.value = filter.name || ''
   dialogEditing.value = true
 }
 
@@ -145,6 +149,7 @@ const updateFilterName = async () => {
   if (!validName.value) return
 
   const savedFilter = selected.value
+  if (!savedFilter?.id) return
 
   await apiClient.put(
     `/api/SavedFilter/${savedFilter.id}`,
@@ -160,8 +165,8 @@ const updateFilterName = async () => {
     })
 }
 
-const apply = (savedFilter) => {
-  const filters = savedFilter.filters.map((f) => ({
+const apply = (savedFilter: SavedFilter) => {
+  const filters = (savedFilter.filters || []).map((f: FilterObject) => ({
     ...f,
     id: null,
   }))

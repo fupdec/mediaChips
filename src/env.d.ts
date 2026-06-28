@@ -18,6 +18,25 @@ declare module 'path-browserify' {
   export default path
 }
 
+declare module 'vue-chartjs' {
+  import type { DefineComponent } from 'vue'
+  export const Line: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>
+  export const Bar: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>
+}
+
+declare module 'chart.js' {
+  export class Chart {
+    static register(...items: unknown[]): void
+  }
+  export const Title: unknown
+  export const Tooltip: unknown
+  export const Legend: unknown
+  export const LineElement: unknown
+  export const LinearScale: unknown
+  export const CategoryScale: unknown
+  export const PointElement: unknown
+}
+
 interface UpdaterState {
   state: string
   [key: string]: unknown
@@ -42,8 +61,18 @@ interface ElectronAPI {
   [key: string]: unknown
 }
 
+interface OsAPI {
+  platform: string
+  homedir: string
+  tmpdir: string
+  arch: string
+  type: string
+  version: string
+}
+
 interface Window {
   electronAPI?: ElectronAPI
+  osAPI?: OsAPI
   os?: string
   showNotification?: (text: string, type: string) => void
 }

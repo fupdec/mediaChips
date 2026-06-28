@@ -66,13 +66,16 @@
   </v-theme-provider>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useI18n} from 'vue-i18n'
 import {usePlayerMarks} from '@/composable/usePlayerMarks'
 import PlayerMarksFilters from '@/components/app/player/PlayerMarksFilters.vue'
 import PlayerMarkListItem from '@/components/app/player/PlayerMarkListItem.vue'
+import type {PlayerMark} from '@/types/player'
 
-const emit = defineEmits(['removeMark'])
+const emit = defineEmits<{
+  removeMark: [mark: PlayerMark]
+}>()
 const {t} = useI18n()
 
 const {

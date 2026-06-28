@@ -1,0 +1,188 @@
+const path = require('path')
+const {
+  getContentHashBackfillStatus,
+  iterateContentHashBackfill,
+} = require('../../services/contentHashBackfill')
+const {
+  getMissingMediaStatus,
+  iterateMissingMediaSearch,
+} = require('../../services/missingMediaFinder')
+
+module.exports = function createTasksMaintenanceController(shared) {
+  const {
+    db,
+    dbPath,
+    createStreamAbortSignal,
+    getVideoImagesGeneration,
+  } = shared
+
+  const contentHashBackfillStatus = async (req, res) => {
+    try {
+      const status = await getContentHashBackfillStatus(db)
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while checking content hash status."
+      })
+    }
+  }
+
+  const videoImagesGenerationStatus = async (req, res) => {
+    try {
+      const status = await getVideoImagesGeneration().getVideoImagesGenerationStatus(db, dbPath)
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while checking video images generation status.',
+      })
+    }
+  }
+
+  const streamVideoImagesGeneration = async (req, res) => {
+    const imageType = String(req.query.type || '').toLowerCase()
+    const writeEvent = (event) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const shouldStop = createStreamAbortSignal(req, res)
+
+      for await (const event of getVideoImagesGeneration().iterateVideoImagesGeneration(db, dbPath, imageType, {
+        shouldStop,
+        force: String(req.query.force || '').toLowerCase() === 'true',
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: err.message || 'Some error occurred while generating video images.',
+      })
+      res.end()
+    }
+  }
+
+  const streamContentHashBackfill = async (req, res) => {
+    const writeEvent = (event) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const shouldStop = createStreamAbortSignal(req, res)
+
+      for await (const event of iterateContentHashBackfill(db, {
+        shouldStop,
+        force: String(req.query.force || '').toLowerCase() === 'true',
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: err.message || "Some error occurred while backfilling content hashes."
+      })
+      res.end()
+    }
+  }
+
+  const missingMediaStatus = async (req, res) => {
+    try {
+      const status = await getMissingMediaStatus(db)
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while checking missing media status."
+      })
+    }
+  }
+
+  const streamFindMissingMedia = async (req, res) => {
+    const writeEvent = (event) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const folders = Array.isArray(req.body?.folders) ? req.body.folders : []
+      const shouldStop = createStreamAbortSignal(req, res)
+
+      for await (const event of iterateMissingMediaSearch(db, {
+        folders,
+        shouldStop,
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: err.message || "Some error occurred while searching for missing media."
+      })
+      res.end()
+    }
+  }
+
+  const relinkMissingMedia = async (req, res) => {
+    try {
+      const matches = Array.isArray(req.body?.matches) ? req.body.matches : []
+      let updated = 0
+
+      for (const item of matches) {
+        const filePath = item.newPath || item.path
+        const mediaId = item.id
+
+        if (!filePath || !mediaId) continue
+
+        const data: Record<string, any> = {
+          path: filePath,
+          basename: path.basename(filePath),
+          name: path.parse(filePath).name,
+          ext: path.extname(filePath),
+        }
+
+        if (item.contentHash) {
+          data.contentHash = item.contentHash
+        }
+
+        await db.Media.update(data, {
+          where: {id: mediaId},
+          silent: true,
+        })
+
+        updated += 1
+      }
+
+      res.status(201).send({updated})
+    } catch (err) {
+      res.status(500).send({
+        message: err.message || "Some error occurred while relinking missing media."
+      })
+    }
+  }
+
+  return {
+    contentHashBackfillStatus,
+    streamContentHashBackfill,
+    videoImagesGenerationStatus,
+    streamVideoImagesGeneration,
+    missingMediaStatus,
+    streamFindMissingMedia,
+    relinkMissingMedia,
+  }
+}

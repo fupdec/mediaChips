@@ -1,10 +1,9 @@
-interface WatchedFolderType {
-  extensions: string
-}
+import type { MediaType } from '@/types/media'
 
 export interface WatchedFolderEntry {
   path: string
-  types: WatchedFolderType[]
+  name?: string
+  types: MediaType[]
   watch?: boolean
   id?: number
   folderId?: number
@@ -16,7 +15,7 @@ export function getWatchedFoldersExtensions(watchedFolders: WatchedFolderEntry[]
   watchedFolders.forEach((folder) => {
     let arr: string[] = []
     folder.types.forEach((type) => {
-      arr = arr.concat(type.extensions.split(','))
+      arr = arr.concat((type.extensions || '').split(','))
     })
     ext[folder.path] = arr
   })

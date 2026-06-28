@@ -62,10 +62,9 @@
 
         <v-number-input
           v-model="settings.ratingMax"
-          type="number"
           :rules="[(v) => (v > 1 && v < 11) || t('validation.incorrect_value')]"
-          min="2"
-          max="10"
+          :min="2"
+          :max="10"
           :label="t('meta.settings.max_value')"
           :hint="t('meta.settings.rating_range_hint', {max: settings.ratingMax})"
           variant="outlined"
@@ -79,7 +78,8 @@
     </v-row>
 
     <ColorPicker
-      :dialog="dialogPalette"
+      :model-value="dialogPalette"
+      @update:model-value="dialogPalette = $event"
       :color="settings.ratingColor"
       @close="dialogPalette = false"
       @getColor="changeColor($event)"
@@ -87,16 +87,32 @@
   </SettingsSection>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, watch, onMounted, nextTick} from 'vue'
+import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import ColorPicker from '@/components/elements/ColorPicker.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import SettingsSection from '@/components/ui/SettingsSection.vue'
+import type {Meta} from '@/types/stores'
+
+interface RatingSettings {
+  ratingIcon: string
+  ratingIconEmpty: string
+  ratingIconHalf: string
+  ratingHalf: boolean
+  ratingMax: number
+  ratingColor: string
+}
+
+type RatingSettingKey = keyof RatingSettings
 
 const props = defineProps({
-  meta: Object,
+  meta: {
+    type: Object as PropType<Meta>,
+    default: undefined,
+  },
 })
 
 const emit = defineEmits(['update'])
@@ -105,7 +121,7 @@ const {t} = useI18n()
 const rating = ref(1.5)
 const dialogPalette = ref(false)
 
-const settings = ref({
+const settings = ref<RatingSettings>({
   ratingIcon: "star",
   ratingIconEmpty: "star-outline",
   ratingIconHalf: "star-half-full",
@@ -115,20 +131,22 @@ const settings = ref({
 })
 
 const initSettings = () => {
-  if (props.meta) {
-    Object.keys(settings.value).forEach(key => {
-      if (key in props.meta) {
-        settings.value[key] = props.meta[key]
-      }
-    })
-  }
+  if (!props.meta) return
+
+  const meta = props.meta
+  if (typeof meta.ratingIcon === 'string') settings.value.ratingIcon = meta.ratingIcon
+  if (typeof meta.ratingIconEmpty === 'string') settings.value.ratingIconEmpty = meta.ratingIconEmpty
+  if (typeof meta.ratingIconHalf === 'string') settings.value.ratingIconHalf = meta.ratingIconHalf
+  if (typeof meta.ratingHalf === 'boolean') settings.value.ratingHalf = meta.ratingHalf
+  if (typeof meta.ratingMax === 'number') settings.value.ratingMax = meta.ratingMax
+  if (typeof meta.ratingColor === 'string') settings.value.ratingColor = meta.ratingColor
 }
 
-const changeIcon = (icon, iconType) => {
+const changeIcon = (icon: string, iconType: 'ratingIcon' | 'ratingIconEmpty' | 'ratingIconHalf') => {
   settings.value[iconType] = icon
 }
 
-const changeColor = (e) => {
+const changeColor = (e: string) => {
   settings.value.ratingColor = e
   dialogPalette.value = false
 }
@@ -141,9 +159,9 @@ onMounted(() => {
 })
 
 watch(() => settings.value.ratingMax, (val) => {
-  val = parseInt(val)
-  if (val < 2 || val > 10) return
-  else if (rating.value > val) rating.value = val
+  const num = parseInt(String(val), 10)
+  if (num < 2 || num > 10) return
+  else if (rating.value > num) rating.value = num
 })
 
 watch(settings.value, () => {

@@ -258,20 +258,49 @@
   </SettingsSection>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch, nextTick} from 'vue'
+import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useAppStore} from '@/stores/app'
 import {isVideoMediaType, isImageMediaType, isAudioMediaType, isTextMediaType} from '@/utils/mediaType'
 import {apiClient} from '@/services/apiClient'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import SettingsSection from '@/components/ui/SettingsSection.vue'
 import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
+import type {Meta} from '@/types/stores'
+import type {MediaType} from '@/types/media'
+
+type ChipVariant = 'flat' | 'tonal' | 'outlined' | 'text'
+
+interface MetaSettings {
+  hidden: boolean
+  parser: boolean
+  imageAspectRatio: number
+  chipLabel: boolean
+  chipVariant: ChipVariant
+  color: boolean
+  favorite: boolean
+  rating: boolean
+  synonyms: boolean
+  bookmark: boolean
+  country: boolean
+  career: boolean
+  scraper: boolean
+  nested: boolean
+  marks: boolean
+}
+
+interface MetaInMediaTypeItem {
+  mediaType?: MediaType
+}
+
+const toMediaType = (mediaType: MediaType | string | undefined): MediaType | undefined =>
+  typeof mediaType === 'string' ? undefined : mediaType
 
 // Props
 const props = defineProps({
   meta: {
-    type: Object,
+    type: Object as PropType<Meta>,
     required: true
   },
   // Режим работы: создание (false) или редактирование (true)
@@ -284,12 +313,10 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['update'])
 
-// Stores
-const appStore = useAppStore()
 const {t} = useI18n()
 
 // Refs
-const settings = ref({
+const settings = ref<MetaSettings>({
   hidden: false,
   parser: false,
   imageAspectRatio: 1,
@@ -307,12 +334,12 @@ const settings = ref({
   marks: false
 })
 
-const chipVariants = ref([
+const chipVariants: ChipVariant[] = [
   'flat',
   'tonal',
   'outlined',
   'text',
-])
+]
 
 const isPinnedToVideos = ref(false)
 const isPinnedForMediaParser = ref(false)
@@ -324,9 +351,13 @@ const initSettings = () => {
   if (!props.meta) return
 
   // Копируем настройки из meta, сохраняя значения по умолчанию
-  Object.keys(settings.value).forEach(key => {
-    if (key in props.meta) {
-      settings.value[key] = props.meta[key]
+  (Object.keys(settings.value) as Array<keyof MetaSettings>).forEach((key) => {
+    if (key in props.meta && props.meta[key] !== undefined) {
+      const nextValue = props.meta[key]
+      settings.value = {
+        ...settings.value,
+        [key]: nextValue,
+      }
     }
   })
 }
@@ -346,14 +377,14 @@ const checkPinnedMediaTypes = async () => {
     const response = await apiClient.get(
       `/api/MetaInMediaType?metaId=${props.meta.id}`
     )
-    const pinnedMedia = response.data || []
+    const pinnedMedia = (response.data || []) as MetaInMediaTypeItem[]
 
-    isPinnedToVideos.value = pinnedMedia.some((item) => isVideoMediaType(item.mediaType))
+    isPinnedToVideos.value = pinnedMedia.some((item) => isVideoMediaType(toMediaType(item.mediaType)))
     isPinnedForMediaParser.value = pinnedMedia.some((item) =>
-      isVideoMediaType(item.mediaType) ||
-      isImageMediaType(item.mediaType) ||
-      isAudioMediaType(item.mediaType) ||
-      isTextMediaType(item.mediaType)
+      isVideoMediaType(toMediaType(item.mediaType)) ||
+      isImageMediaType(toMediaType(item.mediaType)) ||
+      isAudioMediaType(toMediaType(item.mediaType)) ||
+      isTextMediaType(toMediaType(item.mediaType))
     )
   } catch (error) {
     console.error('Error checking pinned media:', error)
@@ -362,7 +393,7 @@ const checkPinnedMediaTypes = async () => {
   }
 }
 
-const showDocumentation = (id) => {
+const showDocumentation = (id: string) => {
   window.dispatchEvent(new CustomEvent('show-doc', {
     detail: {id}
   }))

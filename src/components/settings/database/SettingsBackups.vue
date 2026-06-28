@@ -207,13 +207,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
+import type {BackupEntry} from '@/types/settings'
+import {getErrorResponseData} from '@/types/vue'
 
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
@@ -221,6 +223,13 @@ import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import {normalizePastedFilePath} from '@/utils/filePathInput'
 import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
+
+interface OpenDialogResult {
+  canceled?: boolean
+  error?: boolean
+  message?: string
+  filePaths?: string[]
+}
 
 /* ---------- UI ---------- */
 
@@ -237,24 +246,24 @@ const dialogExport = ref(false)
 /* ---------- DATA ---------- */
 
 const isLoaded = ref(false)
-const backups = ref([])
-const selected = ref([])
+const backups = ref<BackupEntry[]>([])
+const selected = ref<BackupEntry[]>([])
 
 const filePath = ref('')
 const folderPath = ref('')
 
-const onFilePathInput = (value) => {
-  filePath.value = normalizePastedFilePath(value)
+const onFilePathInput = (value: string) => {
+  filePath.value = normalizePastedFilePath(value) as string
   isFileExists.value = null
 }
 
-const onFolderPathInput = (value) => {
-  folderPath.value = normalizePastedFilePath(value)
+const onFolderPathInput = (value: string) => {
+  folderPath.value = normalizePastedFilePath(value) as string
   isFolderExists.value = null
 }
 
 const validateFilePath = async () => {
-  const path = normalizePastedFilePath(filePath.value)
+  const path = normalizePastedFilePath(filePath.value) as string
   filePath.value = path
   if (!path) {
     isFileExists.value = null
@@ -264,7 +273,7 @@ const validateFilePath = async () => {
 }
 
 const validateFolderPath = async () => {
-  const path = normalizePastedFilePath(folderPath.value)
+  const path = normalizePastedFilePath(folderPath.value) as string
   folderPath.value = path
   if (!path) {
     isFolderExists.value = null
@@ -273,8 +282,8 @@ const validateFolderPath = async () => {
   isFolderExists.value = await checkFileExists(path)
 }
 
-const isFileExists = ref(null)
-const isFolderExists = ref(null)
+const isFileExists = ref<boolean | null>(null)
+const isFolderExists = ref<boolean | null>(null)
 
 /* ---------- STORE ---------- */
 
@@ -291,7 +300,7 @@ const dialogProcess = computed({
 
 const headers = computed(() => [
   {title: t('settings_labels.database.date_time'), key: 'date'},
-  {title: t('settings_labels.database.total_size_mb'), key: 'size', sort: (a, b) => a - b},
+  {title: t('settings_labels.database.total_size_mb'), key: 'size', sort: (a: number, b: number) => a - b},
 ])
 
 const notSelected = computed(() => selected.value.length === 0)
@@ -315,7 +324,7 @@ function manageBackups() {
 async function getBackups() {
   isLoaded.value = false
   try {
-    const {data} = await apiClient.get('/api/TasksBackups/getBackups')
+    const {data} = await apiClient.get<BackupEntry[]>('/api/TasksBackups/getBackups')
     backups.value = data
   } catch {
     backups.value = []
@@ -353,7 +362,7 @@ async function restoreBackup() {
 }
 
 async function importBackup() {
-  const path = normalizePastedFilePath(filePath.value)
+  const path = normalizePastedFilePath(filePath.value) as string
   filePath.value = path
   if (!path) return
 
@@ -378,8 +387,8 @@ async function importBackup() {
     })
   } catch (error) {
     console.error('Import backup failed:', error)
-    const message = error.response?.data?.message
-      || (typeof error.response?.data === 'string' ? error.response.data : null)
+    const responseData = getErrorResponseData<{message?: string} | string>(error)
+    const message = (typeof responseData === 'object' ? responseData?.message : responseData)
       || t('settings_labels.database.failed_import_backup')
     setNotification({
       type: 'error',
@@ -390,7 +399,7 @@ async function importBackup() {
 }
 
 async function exportBackup() {
-  const path = normalizePastedFilePath(folderPath.value)
+  const path = normalizePastedFilePath(folderPath.value) as string
   folderPath.value = path
   if (!path) return
 
@@ -410,7 +419,8 @@ async function exportBackup() {
   } catch (error) {
     console.error('Export backup failed:', error)
     setNotification({
-      text: error.response?.data?.message || t('settings_labels.database.failed_export_backup'),
+      text: getErrorResponseData<{message?: string}>(error)?.message
+        || t('settings_labels.database.failed_export_backup'),
       type: 'error',
     })
   }
@@ -423,21 +433,21 @@ async function exportBackup() {
 
 function relaunchApp() {
   if (isElectron.value) {
-    window.electronAPI.invoke('relaunch')
+    void window.electronAPI?.invoke?.('relaunch')
   }
 }
 
 async function chooseDir() {
-  const res = await window.electronAPI.invoke('showOpenDialog', ['openDirectory'])
-  if (res.filePaths?.length) {
+  const res = await window.electronAPI?.invoke?.('showOpenDialog', ['openDirectory']) as OpenDialogResult | undefined
+  if (res?.filePaths?.length) {
     folderPath.value = res.filePaths[0]
     isFolderExists.value = true
   }
 }
 
 async function chooseFile() {
-  const res = await window.electronAPI.invoke('showOpenDialog', ['openFile'])
-  if (res.filePaths?.length) {
+  const res = await window.electronAPI?.invoke?.('showOpenDialog', ['openFile']) as OpenDialogResult | undefined
+  if (res?.filePaths?.length) {
     filePath.value = res.filePaths[0]
     isFileExists.value = true
   }

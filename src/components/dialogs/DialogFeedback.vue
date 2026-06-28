@@ -143,13 +143,14 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {apiClient} from "@/services/apiClient"
 import {computed, reactive, ref} from "vue"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {useDialogsStore} from "@/stores/dialogs"
 import {useNotificationsStore} from "@/stores/notifications"
+import {getErrorResponseData} from '@/types/vue'
 
 const store = useAppStore()
 const dialogsStore = useDialogsStore()
@@ -162,14 +163,14 @@ const feedback = reactive({
   email: "",
   subject: "",
   message: "",
-  screenshots: [],
+  screenshots: [] as File[],
 })
 const isFeedbackSending = ref(false)
 const feedbackError = ref("")
 const maxScreenshotFiles = 3
 const maxScreenshotSize = 5 * 1024 * 1024
 const allowedScreenshotTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"]
-const platformLabels = {
+const platformLabels: Record<string, string> = {
   darwin: "macOS",
   win32: "Windows",
   linux: "Linux",
@@ -182,7 +183,8 @@ function getFeedbackOs() {
     return `${name} ${version} (${arch})`
   }
 
-  return navigator.userAgentData?.platform || navigator.platform || "Unknown"
+  const uaData = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData
+  return uaData?.platform || navigator.platform || "Unknown"
 }
 
 const feedbackOs = computed(() => getFeedbackOs())
@@ -252,8 +254,9 @@ async function sendFeedback() {
       type: 'success',
       text: t('home.feedback_success'),
     })
-  } catch (error) {
-    feedbackError.value = error.response?.data?.message || t('home.feedback_error')
+  } catch (error: unknown) {
+    const data = getErrorResponseData<{message?: string}>(error)
+    feedbackError.value = data?.message || t('home.feedback_error')
   } finally {
     isFeedbackSending.value = false
   }

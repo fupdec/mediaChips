@@ -123,13 +123,13 @@
               v-if="parameter === 'filesize'"
               class="mr-2"
               style="white-space: nowrap;"
-              v-html="getReadableFileSize(filter.val)"
+              v-html="getReadableFileSize(filterValNumber)"
             ></span>
             <span
               v-if="parameter === 'duration'"
               class="mr-2"
               style="white-space: nowrap;"
-              v-html="getReadableDuration(filter.val)"
+              v-html="getReadableDuration(filterValNumber)"
             ></span>
           </template>
         </v-text-field>
@@ -137,7 +137,7 @@
         <v-rating
           v-if="parameter === 'rating' && filter.type !== 'rating'"
           @update:model-value="setValue"
-          :model-value="Number(filter.val)"
+          :model-value="filterValNumber"
           color="yellow-darken-2"
           background-color="grey-lighten-1"
           empty-icon="mdi-star-outline"
@@ -151,14 +151,14 @@
         <MetaInputRating
           v-if="filter.type === 'rating'"
           @update:model-value="setValue"
-          :model-value="filter.val"
-          :meta_id="parameter"
+          :model-value="filterValNumber"
+          :meta_id="metaIdParam"
         ></MetaInputRating>
 
         <v-text-field
           v-if="filter.type === 'date'"
           @click="pickDate"
-          :model-value="filter.val"
+          :model-value="filterValString"
           :disabled="is_locked || !is_value_required"
           class="ma-1 pt-0"
           readonly
@@ -169,14 +169,14 @@
         />
 
         <div
-          v-if="filter.type === 'array' && /\d/.test(parameter) && condition !== 'is null' && condition !== 'not null'"
+          v-if="filter.type === 'array' && /\d/.test(paramAsString) && condition !== 'is null' && condition !== 'not null'"
           class="pa-1"
         >
           <MetaInputArray
             @update:model-value="setValue"
-            :model-value="filter.val"
-            :meta-id="parameter"
-            :cond="condition"
+            :model-value="filterValArray"
+            :meta-id="metaIdParam"
+            :cond="condition ?? undefined"
             :disabled="is_locked || !is_value_required"
             :rounded="true"
             :hide-details="true"
@@ -192,8 +192,8 @@
           class="pa-1">
           <MetaInputCountry
             @update:model-value="setValue"
-            :model-value="filter.val"
-            :cond="condition"
+            :model-value="filterValArray"
+            :cond="condition ?? undefined"
             :disabled="is_locked || !is_value_required"
             :view="{ hideIcon: true }"
             purpose="filter"
@@ -205,8 +205,7 @@
           class="pa-1">
           <v-autocomplete
             @update:model-value="setValue"
-            :model-value="filter.val"
-            :items="extensionOptions"
+            :model-value="filterValArray"
             :disabled="is_locked || !is_value_required"
             density="compact"
             variant="outlined"
@@ -222,13 +221,16 @@
   </v-form>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
+import type { PropType } from 'vue'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
+import type { FilterObject, FilterListParam } from '@/types/common'
+import type { VForm } from 'vuetify/components'
 import {
   getListCond,
   getReadableDuration,
@@ -243,7 +245,7 @@ import {getExtensionOptions} from '@/utils/ext'
 // Props
 const props = defineProps({
   filter: {
-    type: Object,
+    type: Object as PropType<FilterObject>,
     required: true
   },
   index: {
@@ -251,7 +253,7 @@ const props = defineProps({
     required: true
   },
   listBy: {
-    type: Array,
+    type: Array as PropType<FilterListParam[]>,
     default: () => []
   }
 })
@@ -267,7 +269,7 @@ const emit = defineEmits([
 ])
 
 // Reactive state
-const form = ref(null)
+const form = ref<VForm | null>(null)
 const valid = ref(false)
 const active = ref(false)
 const icon = ref('shape')
@@ -284,15 +286,23 @@ const removed = computed(() => modelFilter.value.removed)
 const parameter = computed(() => modelFilter.value.param)
 const condition = computed(() => modelFilter.value.cond)
 const is_locked = computed(() => modelFilter.value.lock)
-const isDisabled = computed(() => is_locked.value || (itemsStore.environment.media_type_id && itemsStore.find_duplicates))
-const is_value_required = computed(() => !['is null', 'not null'].includes(condition.value))
+const isDisabled = computed(() => !!(is_locked.value || (itemsStore.environment.media_type_id && itemsStore.find_duplicates)))
+const metaIdParam = computed(() => {
+  const param = parameter.value
+  return typeof param === 'number' ? param : Number(param)
+})
+const filterValNumber = computed(() => Number(modelFilter.value.val))
+const filterValArray = computed(() => Array.isArray(modelFilter.value.val) ? modelFilter.value.val : [])
+const filterValString = computed(() => modelFilter.value.val == null ? '' : String(modelFilter.value.val))
+const paramAsString = computed(() => String(parameter.value ?? ''))
+const is_value_required = computed(() => !['is null', 'not null'].includes(condition.value ?? ''))
 
 const extensionOptions = computed(() =>
   getExtensionOptions(getCurrentMediaType(appStore.mediaTypes, itemsStore.environment?.media_type_id))
 )
 
 // Methods
-const getParamData = (data) => {
+const getParamData = (data: string | number | null) => {
   const param = _.find(props.listBy, (i) => {
     if (typeof i.param === 'string') {
       return i.param === data
@@ -317,11 +327,11 @@ const filterValue = computed({
   },
 })
 
-const setCondition = (val) => {
+const setCondition = (val: string | null) => {
   emit('setCondition', val)
 }
 
-const setValue = (val) => {
+const setValue = (val: unknown) => {
   emit('setValue', val)
 }
 
@@ -353,23 +363,21 @@ const toggleActivation = async () => {
   }
 }
 
-const getConditionTitle = (type, condition) => {
+const getConditionTitle = (type: string | null, condition: string | null) => {
   const conditions = getListCond(type)
   const item = conditions.find(i => i.cond == condition)
   return item ? getConditionText(item.text) : ''
 }
 
-const getConditionText = (conditionText) => {
+const getConditionText = (conditionText?: string) => {
   const key = conditionText?.replaceAll(' ', '_')
-  return key ? t(`filters.conditions.${key}`, conditionText) : ''
+  return key ? t(`filters.conditions.${key}`, conditionText ?? '') : ''
 }
 
 // Lifecycle
 onMounted(() => {
   getParamData(parameter.value)
 })
-
-// Watchers
 watch(valid, (val) => {
   emit('valid', val)
 })

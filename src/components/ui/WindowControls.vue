@@ -45,7 +45,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, onMounted, onUnmounted, computed} from 'vue'
 import {useRoute} from "vue-router";
 
@@ -66,35 +66,27 @@ const maximized = ref(false)
 
 const minimize = () => {
   emit('minimize')
-  if (window.electronAPI) {
-    window.electronAPI.invoke("minimize", windowType.value)
-  }
+  window.electronAPI?.invoke?.("minimize", windowType.value)
 }
 
 const maximize = () => {
   maximized.value = true
   emit('maximize')
-  if (window.electronAPI) {
-    window.electronAPI.invoke("maximize", windowType.value)
-  }
+  window.electronAPI?.invoke?.("maximize", windowType.value)
 }
 
 const unmaximize = () => {
   maximized.value = false
   emit('unmaximize')
-  if (window.electronAPI) {
-    window.electronAPI.invoke("unmaximize", windowType.value)
-  }
+  window.electronAPI?.invoke?.("unmaximize", windowType.value)
 }
 
 const close = () => {
   emit('close')
-  if (window.electronAPI) {
-    if (windowType.value === 'player') {
-      window.electronAPI.invoke("closePlayer")
-    } else {
-      window.electronAPI.send("closeApp")
-    }
+  if (windowType.value === 'player') {
+    window.electronAPI?.invoke?.("closePlayer")
+  } else {
+    window.electronAPI?.send?.("closeApp")
   }
 }
 
@@ -108,17 +100,13 @@ const handleUnmaximize = () => {
 }
 
 onMounted(() => {
-  if (window.electronAPI) {
-    window.electronAPI.on('maximize', handleMaximize)
-    window.electronAPI.on('unmaximize', handleUnmaximize)
-  }
+  window.electronAPI?.on?.('maximize', handleMaximize)
+  window.electronAPI?.on?.('unmaximize', handleUnmaximize)
 })
 
 onUnmounted(() => {
-  if (window.electronAPI) {
-    window.electronAPI.removeListener('maximize', handleMaximize)
-    window.electronAPI.removeListener('unmaximize', handleUnmaximize)
-  }
+  window.electronAPI?.removeListener?.('maximize', handleMaximize)
+  window.electronAPI?.removeListener?.('unmaximize', handleUnmaximize)
 })
 </script>
 

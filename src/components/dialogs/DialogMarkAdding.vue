@@ -65,10 +65,10 @@
         <section v-else-if="is_meta" class="mark-adding__section">
           <MetaInputArray
             v-if="markAdding.meta?.id"
-            :key="markAdding.meta.id"
+            :key="String(markAdding.meta.id)"
             @update:model-value="setVal"
-            :model-value="val"
-            :meta-id="markAdding.meta.id"
+            :model-value="val ?? undefined"
+            :meta-id="Number(markAdding.meta.id)"
             :multiple="false"
             :autofocus="!is_bookmark"
             :return-object="false"
@@ -93,7 +93,7 @@
             <div class="mark-adding__time-head">
               <span class="mark-adding__field-label">{{ t('player.mark_dialog.start_time') }}</span>
               <v-chip size="x-small" variant="tonal" class="mark-adding__readable">
-                {{ formatTime(markAdding.time) }}
+                {{ formatTime(markAdding.time ?? 0) }}
               </v-chip>
             </div>
 
@@ -120,7 +120,7 @@
                 <v-icon>mdi-sync</v-icon>
               </v-btn>
               <v-btn
-                @click="jumpTo(markAdding.time)"
+                @click="jumpTo(markAdding.time ?? 0)"
                 size="small"
                 variant="tonal"
                 :title="t('player.mark_dialog.jump_to_time')"
@@ -168,7 +168,7 @@
                 <v-icon>mdi-sync</v-icon>
               </v-btn>
               <v-btn
-                @click="jumpTo(markAdding.end)"
+                @click="jumpTo(markAdding.end ?? 0)"
                 size="small"
                 variant="tonal"
                 :title="t('player.mark_dialog.jump_to_time')"
@@ -213,8 +213,9 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
@@ -231,6 +232,13 @@ import {
   normalizeMarkTime,
 } from '@/utils/markAdding'
 
+interface MarkAddingData {
+  text?: string
+  tagId?: number | null
+}
+
+type MarkTypeItem = ReturnType<typeof buildMarkTypes>[number]
+
 const emit = defineEmits(['addMark'])
 
 const appStore = useAppStore()
@@ -239,12 +247,12 @@ const dialogsStore = useDialogsStore()
 const itemsStore = useItemsStore()
 const {t} = useI18n()
 
-const form = ref(null)
-const val = ref(null)
+const form = ref<VFormInstance>(null)
+const val = ref<number | null>(null)
 const text = ref('')
 const valid = ref(false)
-const validationError = ref(null)
-const mark_types = ref([...BASE_MARK_TYPES])
+const validationError = ref<string | null>(null)
+const mark_types = ref<MarkTypeItem[]>([...BASE_MARK_TYPES])
 
 const player = computed(() => playerStore.player)
 const markAdding = computed(() => dialogsStore.markAdding)
@@ -291,30 +299,34 @@ const buttons = computed(() => [{
   action: add,
 }])
 
-const formatTime = (seconds) => getReadableDuration(seconds || 0)
+const formatTime = (seconds: number) => getReadableDuration(seconds || 0)
 
 const initMarkTypes = () => {
   mark_types.value = buildMarkTypes(itemsStore.assigned || [])
 }
 
-const getMarkTypeText = (item) => item.textKey ? t(item.textKey) : item.text
+const getMarkTypeText = (item: MarkTypeItem) => {
+  if ('textKey' in item && item.textKey) return t(item.textKey)
+  if ('text' in item && item.text) return item.text
+  return ''
+}
 
-const applyTypeColor = (type) => {
+const applyTypeColor = (type: string | number) => {
   const preset = BASE_MARK_TYPES.find((item) => item.value === type)
   if (preset) {
     dialogsStore.markAdding.color = preset.color
     return
   }
 
-  const found = findAssignedMeta(itemsStore.assigned, type)
-  dialogsStore.markAdding.color = found?.meta?.color ? '#fff' : '#fff'
+  findAssignedMeta(itemsStore.assigned, type)
+  dialogsStore.markAdding.color = '#fff'
 }
 
-const changeType = (type) => {
+const changeType = (type: string | number) => {
   validationError.value = null
   applyTypeColor(type)
 
-  if (!isMetaMarkType(type)) {
+  if (!isMetaMarkType(String(type))) {
     dialogsStore.markAdding.meta = {}
     val.value = null
     return
@@ -325,7 +337,7 @@ const changeType = (type) => {
   val.value = null
 }
 
-const onStartTimeChange = (time) => {
+const onStartTimeChange = (time: number) => {
   dialogsStore.markAdding.time = normalizeMarkTime(time)
   if (
     markAdding.value.is_end_time_active &&
@@ -335,11 +347,11 @@ const onStartTimeChange = (time) => {
   }
 }
 
-const onEndTimeChange = (time) => {
+const onEndTimeChange = (time: number) => {
   dialogsStore.markAdding.end = normalizeMarkTime(time, markAdding.value.time || 0)
 }
 
-const toggleEndTime = (active) => {
+const toggleEndTime = (active: boolean | null) => {
   if (!active) {
     dialogsStore.markAdding.end = null
     return
@@ -350,7 +362,7 @@ const toggleEndTime = (active) => {
   dialogsStore.markAdding.end = Math.max(start, defaultEnd)
 }
 
-const getCurrentTime = (field) => {
+const getCurrentTime = (field: 'time' | 'end') => {
   const current = normalizeMarkTime(player.value?.currentTime ?? playerStore.currentTime ?? 0)
   if (field === 'time') {
     dialogsStore.markAdding.time = current
@@ -362,14 +374,15 @@ const getCurrentTime = (field) => {
   }
 }
 
-const jumpTo = (seconds) => {
+const jumpTo = (seconds: number) => {
   if (playerStore.player) {
     playerStore.player.currentTime = normalizeMarkTime(seconds)
   }
 }
 
-const setVal = (newVal) => {
-  val.value = Array.isArray(newVal) ? newVal[0] : newVal
+const setVal = (newVal: unknown) => {
+  val.value = Array.isArray(newVal) ? (newVal[0] as number) : (newVal as number)
+  if (val.value == null) return
   const tag = appStore.getTagById(val.value)
   if (tag?.color) {
     dialogsStore.markAdding.color = tag.color
@@ -404,7 +417,7 @@ const add = () => {
     if (!valid.value || !text.value?.trim()) return
   }
 
-  let data = {}
+  let data: MarkAddingData = {}
   if (!markAdding.value.is_end_time_active) {
     dialogsStore.markAdding.end = null
   }

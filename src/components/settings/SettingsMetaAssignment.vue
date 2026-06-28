@@ -108,7 +108,7 @@
           v-else
           :key="`meta_${selectedItem.id}`"
           mode="from-meta"
-          :meta="selectedItem.raw"
+          :meta="(selectedItem.raw as Meta)"
           :show-warning="false"
           :show-anchor="false"
           @pinned-meta-updated="onAssignmentUpdated"
@@ -119,7 +119,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
@@ -130,15 +130,37 @@ import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import MetaAssignmentPanel from '@/components/meta/assignment/MetaAssignmentPanel.vue'
 import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
+import type {Meta} from '@/types/stores'
+import type {MediaType} from '@/types/media'
+
+type AssignmentViewMode = 'media' | 'tags'
+
+interface AssignmentListItem {
+  id: number
+  icon?: string
+  title: string
+  pinnedCount: number
+  pinnedCountHint: string
+  raw: MediaType | Meta
+}
+
+interface MetaInMediaTypeRow {
+  mediaTypeId: number
+  metaId: number
+}
+
+interface PinnedMetaRow {
+  metaId: number
+}
 
 const {t} = useI18n()
 const route = useRoute()
 
-const viewMode = ref('media')
-const selectedIds = ref([])
-const pinnedFieldsByMediaType = ref({})
-const pinnedMediaByMeta = ref({})
-const childPinnedByMeta = ref({})
+const viewMode = ref<AssignmentViewMode>('media')
+const selectedIds = ref<number[]>([])
+const pinnedFieldsByMediaType = ref<Record<number, number>>({})
+const pinnedMediaByMeta = ref<Record<number, number>>({})
+const childPinnedByMeta = ref<Record<number, number>>({})
 
 const mediaTypes = computed(() => useAppStore().mediaTypes || [])
 
@@ -150,9 +172,9 @@ const tagCategories = computed(() =>
   )
 )
 
-const listItems = computed(() => {
+const listItems = computed((): AssignmentListItem[] => {
   if (viewMode.value === 'media') {
-    return mediaTypes.value.map((mt) => {
+    return mediaTypes.value.map((mt: MediaType) => {
       const pinnedCount = pinnedFieldsByMediaType.value[Number(mt.id)] || 0
       return {
         id: mt.id,
@@ -165,14 +187,14 @@ const listItems = computed(() => {
     })
   }
 
-  return tagCategories.value.map((meta) => {
+  return tagCategories.value.map((meta: Meta) => {
     const mediaCount = pinnedMediaByMeta.value[Number(meta.id)] || 0
     const childCount = childPinnedByMeta.value[Number(meta.id)] || 0
     const pinnedCount = mediaCount + childCount
     return {
       id: meta.id,
       icon: meta.icon,
-      title: meta.name,
+      title: meta.name ?? '',
       pinnedCount,
       pinnedCountHint: t('settings_labels.field_pinning.pinned_assignments_hint', {
         media: mediaCount,
@@ -194,12 +216,12 @@ const selectedItem = computed(() => {
 const loadAssignmentCounts = async () => {
   try {
     const [mediaTypeRows, pinnedMetaRows] = await Promise.all([
-      apiClient.get('/api/MetaInMediaType'),
-      apiClient.get('/api/PinnedMeta'),
+      apiClient.get<MetaInMediaTypeRow[]>('/api/MetaInMediaType'),
+      apiClient.get<PinnedMetaRow[]>('/api/PinnedMeta'),
     ])
 
-    const fieldsByMedia = {}
-    const mediaByMeta = {}
+    const fieldsByMedia: Record<number, number> = {}
+    const mediaByMeta: Record<number, number> = {}
 
     for (const row of mediaTypeRows.data || []) {
       const mediaTypeId = Number(row.mediaTypeId)
@@ -208,7 +230,7 @@ const loadAssignmentCounts = async () => {
       mediaByMeta[metaId] = (mediaByMeta[metaId] || 0) + 1
     }
 
-    const childByMeta = {}
+    const childByMeta: Record<number, number> = {}
     for (const row of pinnedMetaRows.data || []) {
       const metaId = Number(row.metaId)
       childByMeta[metaId] = (childByMeta[metaId] || 0) + 1

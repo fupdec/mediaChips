@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "outDir": ".electron-build",
     "rootDir": "electron",
+    "moduleDetection": "force",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,

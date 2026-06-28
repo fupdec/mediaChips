@@ -14,7 +14,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useI18n} from "vue-i18n"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue"

@@ -1,3 +1,66 @@
+export type DatabaseEntry = {
+  id: string
+  name: string
+  active: boolean
+  createdAt: number
+}
+
+export type DatabaseSizesResponse = {
+  sizes?: Record<string, number>
+}
+
+export type BackupEntry = {
+  date: string
+  size: number
+}
+
+export type MissingMediaStatus = {
+  total: number
+  missing: number
+  withHash: number
+  withoutHash: number
+}
+
+export type MissingMediaMatch = {
+  id: string | number
+  confidence: 'hash' | 'size' | string
+  newPath: string
+  oldPath: string
+}
+
+export type MissingMediaSummary = {
+  scanned: number
+  matched: number
+  missing: number
+  stopped: boolean
+}
+
+export type MissingMediaSearchEvent =
+  | {
+    type: 'progress'
+    phase?: string
+    scanned?: number
+    matched?: number
+    missing?: number
+    current?: string
+    total?: number
+    processed?: number
+  }
+  | { type: 'match'; match: MissingMediaMatch }
+  | {
+    type: 'complete'
+    matches?: MissingMediaMatch[]
+    scanned?: number
+    matched?: number
+    missing?: number
+    stopped?: boolean
+  }
+  | { type: 'error'; message?: string }
+
+export type RelinkMissingMediaResponse = {
+  updated?: number
+}
+
 export type SettingsState = {
   passwordProtection: string
   phrase: string

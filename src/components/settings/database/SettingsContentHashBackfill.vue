@@ -112,7 +112,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
@@ -120,11 +120,44 @@ import {useTasksStore} from '@/stores/tasks'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import {setNotification} from '@/services/notificationService'
 
+interface ContentHashStatus {
+  total: number
+  pending: number
+  hashed: number
+}
+
+interface BackfillCounters {
+  processed: number
+  total: number
+  hashed: number
+  missing: number
+  failed: number
+}
+
+interface BackfillSummary {
+  hashed: number
+  missing: number
+  failed: number
+  stopped: boolean
+}
+
+interface BackfillEvent {
+  type: 'progress' | 'complete' | 'error'
+  processed?: number
+  total?: number
+  hashed?: number
+  missing?: number
+  failed?: number
+  current?: string
+  message?: string
+  stopped?: boolean
+}
+
 const {t} = useI18n()
 const appStore = useAppStore()
 const tasksStore = useTasksStore()
 
-const status = ref({
+const status = ref<ContentHashStatus>({
   total: 0,
   pending: 0,
   hashed: 0,
@@ -133,8 +166,8 @@ const status = ref({
 const active = ref(false)
 const progress = ref(0)
 const currentPath = ref('')
-const lastSummary = ref(null)
-const counters = ref({
+const lastSummary = ref<BackfillSummary | null>(null)
+const counters = ref<BackfillCounters>({
   processed: 0,
   total: 0,
   hashed: 0,
@@ -142,8 +175,8 @@ const counters = ref({
   failed: 0,
 })
 
-let abortController = null
-let taskId = null
+let abortController: AbortController | null = null
+let taskId: string | null = null
 
 const fetchStatus = async () => {
   const response = await fetch(`${appStore.localhost}/api/Task/contentHashBackfillStatus`)
@@ -192,6 +225,7 @@ const startBackfill = async (force = false) => {
     progress: 0,
     action: stopBackfill,
   })
+  const currentTaskId = taskId
 
   try {
     const response = await fetch(
@@ -211,7 +245,7 @@ const startBackfill = async (force = false) => {
     const decoder = new TextDecoder()
     let buffer = ''
 
-    const handleEvent = (event) => {
+    const handleEvent = (event: BackfillEvent) => {
       if (event.type === 'progress') {
         counters.value = {
           processed: event.processed || 0,
@@ -222,28 +256,33 @@ const startBackfill = async (force = false) => {
         }
         currentPath.value = event.current || ''
         progress.value = event.total
-          ? Math.min((event.processed / event.total) * 100, 100)
+          ? Math.min(((event.processed ?? 0) / event.total) * 100, 100)
           : 0
 
-        tasksStore.updateTask(taskId, {
+        tasksStore.updateTask(currentTaskId, {
           subtitle: t('settings_labels.database.content_hash_backfill_progress', counters.value),
           progress: progress.value,
         })
       }
 
       if (event.type === 'complete') {
-        lastSummary.value = {
+        const summary: BackfillSummary = {
           hashed: event.hashed || 0,
           missing: event.missing || 0,
           failed: event.failed || 0,
           stopped: event.stopped === true,
         }
+        lastSummary.value = summary
         progress.value = 100
 
-        tasksStore.updateTask(taskId, {
+        tasksStore.updateTask(currentTaskId, {
           subtitle: event.stopped
             ? t('common.stop')
-            : t('settings_labels.database.content_hash_backfill_complete', lastSummary.value),
+            : t('settings_labels.database.content_hash_backfill_complete', {
+              hashed: summary.hashed,
+              missing: summary.missing,
+              failed: summary.failed,
+            }),
           progress: 100,
           color: event.stopped ? 'warning' : 'success',
           done: true,
@@ -251,13 +290,16 @@ const startBackfill = async (force = false) => {
         })
 
         if (!event.stopped) {
-          const summary = lastSummary.value
           setNotification({
             type: summary.hashed > 0 ? 'success' : 'info',
             title: force
               ? t('settings_labels.database.content_hash_backfill_recalculate')
               : t('settings_labels.database.content_hash_backfill'),
-            text: t('settings_labels.database.content_hash_backfill_complete', summary),
+            text: t('settings_labels.database.content_hash_backfill_complete', {
+              hashed: summary.hashed,
+              missing: summary.missing,
+              failed: summary.failed,
+            }),
             icon: 'mdi-fingerprint',
           })
         }
@@ -288,17 +330,18 @@ const startBackfill = async (force = false) => {
 
     await fetchStatus()
   } catch (error) {
-    if (error.name !== 'AbortError') {
-      console.error('Content hash backfill failed:', error)
+    const err = error instanceof Error ? error : new Error(String(error))
+    if (err.name !== 'AbortError') {
+      console.error('Content hash backfill failed:', err)
       setNotification({
         type: 'error',
         title: t('settings_labels.database.content_hash_backfill'),
-        text: error.message,
+        text: err.message,
       })
 
       if (taskId) {
         tasksStore.updateTask(taskId, {
-          subtitle: error.message,
+          subtitle: err.message,
           color: 'error',
           done: true,
           action: () => {},

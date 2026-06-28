@@ -21,7 +21,7 @@
     </div>
 
     <v-sheet class="tooltip text-caption text-center pa-0 elevation-6" outlined rounded>
-      <v-img :src="thumb" :aspect-ratio="16 / 9" class="thumb" contain>
+      <v-img :src="thumb ?? undefined" :aspect-ratio="16 / 9" class="thumb" contain>
         <v-sheet v-if="mark.type !== 'favorite'" class="mark-name">
           <div class="name">
             <span v-if="mark.type === 'meta'" v-html="mark['tag.name'] || mark.tag?.name"/>
@@ -46,21 +46,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {usePlayerMark} from '@/composable/usePlayerMark'
+import type {PlayerMark} from '@/types/player'
 
-const props = defineProps({
-  mark: {
-    type: Object,
-    required: true,
-  },
-  controls_width: {
-    type: Number,
-    required: true,
-  },
-})
+const props = defineProps<{
+  mark: PlayerMark
+  controls_width: number
+}>()
 
-const emit = defineEmits(['removeMark'])
+const emit = defineEmits<{
+  removeMark: [mark: PlayerMark]
+}>()
 
 const {
   playerStore,

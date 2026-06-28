@@ -52,12 +52,16 @@
               clearable
             >
               <template v-slot:selection="{ item }">
-                <v-icon left> {{ item.icon }}</v-icon>
-                <span class="body-2">{{ item.text }}</span>
+                <v-icon left>{{ getMetaTypeItem(item.raw).icon }}</v-icon>
+                <span class="body-2">{{ getMetaTypeItem(item.raw).text }}</span>
               </template>
-              <template v-slot:item="{ item }">
-                <v-icon left> {{ item.icon }}</v-icon>
-                <span class="body-2">{{ item.text }}</span>
+              <template v-slot:item="{ item, props: itemProps }">
+                <v-list-item v-bind="itemProps">
+                  <template #prepend>
+                    <v-icon>{{ getMetaTypeItem(item.raw).icon }}</v-icon>
+                  </template>
+                  <template #title>{{ getMetaTypeItem(item.raw).text }}</template>
+                </v-list-item>
               </template>
             </v-select>
           </v-col>
@@ -72,12 +76,12 @@
             flat
           >
             <div class="subtitle-2 text--secondary mb-4">
-              <v-icon color="grey" left>{{ getGroupIcon(param).icon }}</v-icon>
-              <span>{{ getGroupText(param) }}</span>
+              <v-icon color="grey" left>{{ getGroupIcon(String(param)).icon }}</v-icon>
+              <span>{{ getGroupText(String(param)) }}</span>
             </div>
 
             <v-chip
-              v-for="(i, x) in group"
+              v-for="i in group"
               :key="i.id"
               :class="{found:(search||filtered_type)&&!i.found}"
               :color="selected.includes(i.id) ? 'primary' : ''"
@@ -94,19 +98,34 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed} from 'vue'
+import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import _ from 'lodash'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import {highlightChars} from '@/services/formatUtils'
 import {getIconDataType} from '@/services/metaTypeUtils'
+import MetaTypes from '@/assets/MetaTypes'
+import type { FilterListParam } from '@/types/common'
+
+interface FilterParamWithMeta extends FilterListParam {
+  id: number
+  found?: boolean
+}
+
+interface MetaTypeItem {
+  text: string
+  value: string
+  icon: string
+  hint?: string
+}
 
 const props = defineProps({
   dialog: Boolean,
   params: {
-    type: Array,
+    type: Array as PropType<FilterListParam[]>,
     default: () => []
   }
 })
@@ -117,17 +136,19 @@ const {xs} = useDisplay()
 const {t} = useI18n()
 
 // Refs
-const selected = ref([])
+const selected = ref<number[]>([])
 const search = ref("")
-const filtered_type = ref(null)
-const metaTypes = ref(MetaTypes || [])
+const filtered_type = ref<string | null>(null)
+const metaTypes = ref<MetaTypeItem[]>(MetaTypes)
+
+const getMetaTypeItem = (raw: unknown): MetaTypeItem => raw as MetaTypeItem
 
 // Computed
 const groups = computed(() => {
   const searchVal = search.value
   const filteredTypeVal = filtered_type.value
-  let params = props.params.map((i, index) => {
-    const item = {...i, id: index}
+  let params: FilterParamWithMeta[] = props.params.map((i, index) => {
+    const item: FilterParamWithMeta = {...i, id: index}
 
     if (searchVal && !filteredTypeVal) {
       item.found = i.text?.toLowerCase().includes(searchVal.toLowerCase()) || false
@@ -143,12 +164,12 @@ const groups = computed(() => {
   })
 
   params = _.orderBy(params, ["text", "group"])
-  return _.groupBy(params, "group")
+  return _.groupBy(params, "group") as Record<string, FilterParamWithMeta[]>
 })
 
 // Methods
 const add = () => {
-  let params = props.params.filter((i, x) => selected.value.includes(x))
+  const params = props.params.filter((_i, x) => selected.value.includes(x))
   emit("add", params)
 }
 
@@ -157,15 +178,15 @@ const close = () => {
   emit("close")
 }
 
-const getIcon = (type) => {
-  return getIconDataType(type)
+const getIcon = (type?: string) => {
+  return getIconDataType(type || '')
 }
 
-const getNameHighlighted = (name) => {
-  return highlightChars(name, search.value, true)
+const getNameHighlighted = (name?: string) => {
+  return highlightChars(name || '', search.value, true)
 }
 
-const getGroupIcon = (type) => {
+const getGroupIcon = (type: string) => {
   const arr = [
     {
       text: "Tag",
@@ -191,7 +212,7 @@ const getGroupIcon = (type) => {
   return arr.find(i => i.text === type) || {icon: 'mdi-help-circle'}
 }
 
-const getGroupText = (group) =>
+const getGroupText = (group: string) =>
   t(`filters.groups.${group}`, group || '')
 </script>
 

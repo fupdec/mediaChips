@@ -14,19 +14,13 @@ import { loadMarkImageDisplayUrl } from '@/utils/markThumb'
 import type { PlayerMark } from '@/types/player'
 
 interface PlayerMarkProps {
-  mark: PlayerMark & {
-    id: number
-    text?: string
-    name?: string
-    'tag.name'?: string
-    tag?: { name?: string; color?: string }
-  }
+  mark: PlayerMark
   controls_width: number
 }
 
 export function usePlayerMark(
   props: PlayerMarkProps,
-  emit: (event: 'removeMark', mark: PlayerMarkProps['mark']) => void,
+  emit: (event: 'removeMark', mark: PlayerMark) => void,
 ) {
   const appStore = useAppStore()
   const playerStore = usePlayerStore()

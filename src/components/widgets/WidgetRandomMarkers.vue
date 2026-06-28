@@ -44,31 +44,32 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import ItemMarker from '@/components/items/ItemMarker.vue'
+import type { HomeMarkersResponse } from '@/types/widgets'
+import type { MarkItem } from '@/types/stores'
 
-const props = defineProps({
-  limit: {
-    type: Number,
-    default: 8,
-  },
+const props = withDefaults(defineProps<{
+  limit?: number
+}>(), {
+  limit: 8,
 })
 
 const {t} = useI18n()
 const appStore = useAppStore()
 
-const marks = ref([])
+const marks = ref<MarkItem[]>([])
 const loading = ref(false)
 
 async function loadMarks() {
   loading.value = true
 
   try {
-    const response = await apiClient.get('/api/home/markers', {
+    const response = await apiClient.get<HomeMarkersResponse>('/api/home/markers', {
       params: {limit: props.limit},
     })
     marks.value = response.data?.marks || []

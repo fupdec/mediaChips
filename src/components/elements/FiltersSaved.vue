@@ -13,11 +13,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed, onBeforeUnmount} from 'vue'
 import {useRoute} from 'vue-router'
 import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
+import type { SavedFilter } from '@/types/stores'
 
 const route = useRoute()
 const itemsStore = useItemsStore()
@@ -25,7 +26,7 @@ const eventBus = useEventBus()
 
 const savedFilters = computed(() => itemsStore.filters_saved || [])
 
-const activate = (savedFilter) => {
+const activate = (savedFilter: SavedFilter) => {
   let filters = savedFilter.filters
   if (filters && Array.isArray(filters)) {
     filters = filters.map((filter) => ({...filter, id: null}))

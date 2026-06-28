@@ -73,7 +73,7 @@
           </div>
 
           <div v-if="showPlaybackError" class="video-error">
-            <v-alert color="error" text>
+            <v-alert color="error" variant="text">
               <v-icon size="24" color="error" left>mdi-alert</v-icon>
               {{ t('common.error') }}:
               <div class="filename" v-text="t('player.file') + ' ' + currentPlaying"></div>
@@ -142,7 +142,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {inject} from 'vue'
 import {useI18n} from 'vue-i18n'
 import Controls from '@/components/app/player/Controls.vue'
@@ -153,7 +153,7 @@ import DialogMarkAdding from '@/components/dialogs/DialogMarkAdding.vue'
 import {PLAYER_SESSION_KEY} from '@/composable/usePlayerSession'
 
 const {t} = useI18n()
-const session = inject(PLAYER_SESSION_KEY)
+const session = inject(PLAYER_SESSION_KEY)!
 
 const {
   player,
@@ -189,16 +189,17 @@ const {
   updateItemVideo,
 } = session
 
-const setVideoPlayerRef = (el) => {
-  videoPlayer.value = el
-  bindVideoElement(el)
+const setVideoPlayerRef = (el: unknown) => {
+  const video = el as HTMLVideoElement | null
+  videoPlayer.value = video
+  bindVideoElement(video)
 }
 
-const setControlsRef = (el) => {
-  controls.value = el
+const setControlsRef = (el: unknown) => {
+  controls.value = el as typeof controls.value
 }
 
-const setMarksRef = (el) => {
-  marks.value = el
+const setMarksRef = (el: unknown) => {
+  marks.value = el as typeof marks.value
 }
 </script>

@@ -91,7 +91,7 @@
           </v-list-item-title>
         </v-list-item>
 
-        <v-list-item @click="deleteVideo()">
+        <v-list-item @click="deleteVideo(false)">
           <v-list-item-title>
             <v-icon class="mr-4" icon="mdi-delete" color="error"/>
             <span>{{ t('common.delete') }}</span>
@@ -102,7 +102,7 @@
   </v-btn-group>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {inject} from 'vue'
 import {useI18n} from 'vue-i18n'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -125,5 +125,5 @@ const {
   editVideo,
   updateVideoInfo,
   deleteVideo,
-} = inject(PLAYER_TRANSPORT_KEY)
+} = inject(PLAYER_TRANSPORT_KEY)!
 </script>

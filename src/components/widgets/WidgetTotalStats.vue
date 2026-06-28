@@ -45,13 +45,14 @@
   </v-row>
 </template>
 
-<script setup>
-import {ref, computed, onMounted, watch} from "vue"
+<script setup lang="ts">
+import {ref, computed, onMounted, watch, type Ref} from "vue"
 import {apiClient} from '@/services/apiClient'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {gsap} from "gsap"
 import {useAppStore} from "@/stores/app"
 import {useI18n} from 'vue-i18n'
+import type { HomeMediaStatsResponse, HomeTagCountResponse } from '@/types/widgets'
 
 const store = useAppStore()
 const {t} = useI18n()
@@ -82,24 +83,22 @@ const animatedFilesize = computed(() => tweenedFilesize.value.toFixed(2))
 async function getStats() {
   try {
     const [mediaRes, tagsRes] = await Promise.all([
-      apiClient.get('/api/media/get-stats'),
-      apiClient.get('/api/tag/count'),
+      apiClient.get<HomeMediaStatsResponse>('/api/media/get-stats'),
+      apiClient.get<HomeTagCountResponse>('/api/tag/count'),
     ])
 
     numberFiles.value = mediaRes.data.total
     numberTags.value = tagsRes.data.count
 
     const readable = getReadableFileSize(mediaRes.data.filesize, true)
-    numberFilesize.value = readable.number
+    numberFilesize.value = Number(readable.number)
     filesizeText.value = readable.text
   } catch (e) {
     console.error(e)
   }
 }
 
-/* ---------------------- Animations ---------------------- */
-
-function animate(refValue, tweened) {
+function animate(refValue: Ref<number>, tweened: { value: number }) {
   gsap.to(tweened, {duration: 1, value: refValue.value, ease: "power2.out"})
 }
 

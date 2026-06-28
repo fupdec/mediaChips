@@ -8,22 +8,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import path from 'path-browserify'
 
 /* store */
 import { useAppStore } from '@/stores/app'
 import {getLocalImage} from '@/services/fileService'
+import {useContextMenu} from '@/stores/contextMenu'
 
 const appStore = useAppStore()
+const contextMenuStore = useContextMenu()
 const hover = useAppStore().hover
 
-const src = ref(null)
+const src = ref<string | null>(null)
 
 /* computed */
 const contextMenuVisible = computed(
-  () => appStore.contextMenu?.show
+  () => contextMenuStore.show
 )
 
 const style = computed(() => ({

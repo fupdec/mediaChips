@@ -18,48 +18,35 @@
   ></v-rating>
 </template>
 
-<script setup>
-import {ref, computed, onMounted} from 'vue'
+<script setup lang="ts">
+import {ref, computed, onMounted, watch} from 'vue'
 import {apiClient} from '@/services/apiClient'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
+import type {RatingMeta} from '@/types/metaInput'
+import type {Meta} from '@/types/stores'
 
-// Props
-const props = defineProps({
-  modelValue: {
-    type: [Number, String],
-    default: 0
-  },
-  meta_id: {
-    type: Number,
-    required: true
-  },
-  read_only: {
-    type: Boolean,
-    default: false
-  },
-  in_card: {
-    type: Boolean,
-    default: false
-  }
+const props = withDefaults(defineProps<{
+  modelValue?: number | string
+  meta_id: number
+  read_only?: boolean
+  in_card?: boolean
+}>(), {
+  modelValue: 0,
+  read_only: false,
+  in_card: false,
 })
 
-// Emits
-const emit = defineEmits(['update:model-value'])
+const emit = defineEmits<{
+  'update:model-value': [value: number | string | null]
+}>()
 
-// Stores
-const appStore = useAppStore()
 const metaStore = useAppStore().meta
+const meta = ref<RatingMeta>({} as RatingMeta)
 
-// Reactive state
-const meta = ref({})
-
-// Computed properties
 const internalValue = computed(() => props.modelValue || 0)
 
-const fullIcon = computed(() => {
-  return `mdi-${meta.value?.ratingIcon || 'star'}`
-})
+const fullIcon = computed(() => `mdi-${meta.value?.ratingIcon || 'star'}`)
 
 const emptyIcon = computed(() => {
   const icon = meta.value?.ratingIconEmpty || meta.value?.ratingIcon || 'star'
@@ -71,8 +58,7 @@ const halfIcon = computed(() => {
   return `mdi-${icon}`
 })
 
-// Methods
-const setVal = (val) => {
+const setVal = (val: number | string | null) => {
   emit('update:model-value', val)
 }
 
@@ -80,14 +66,12 @@ const getMeta = async () => {
   if (!props.meta_id) return
 
   try {
-    // Пробуем получить мету из store
-    const metaFromStore = _.find(metaStore, props.meta_id)
+    const metaFromStore = metaStore.find((m: Meta) => m.id === props.meta_id)
 
     if (metaFromStore) {
-      meta.value = metaFromStore
+      meta.value = metaFromStore as RatingMeta
     } else {
-      // Если нет в store, запрашиваем с сервера
-      const response = await apiClient.get(`/api/meta/${props.meta_id}`)
+      const response = await apiClient.get<RatingMeta>(`/api/meta/${props.meta_id}`)
       meta.value = response.data
     }
   } catch (error) {
@@ -95,13 +79,9 @@ const getMeta = async () => {
   }
 }
 
-// Lifecycle
 onMounted(() => {
   getMeta()
 })
-
-// Watch for meta_id changes
-import {watch} from 'vue'
 
 watch(() => props.meta_id, (newId) => {
   if (newId) {

@@ -12,7 +12,7 @@
       >
         <v-badge
           v-if="badge"
-          :content="badge"
+          :content="String(badge)"
           color="secondary"
           overlap
         >
@@ -46,15 +46,16 @@
   </v-btn>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useDisplay} from 'vuetify'
+import type { PropType } from 'vue'
 
 const props = defineProps({
-  action: Function,
+  action: Function as PropType<() => void>,
   icon: String,
   text: String,
   badge: {
-    type: [String, Boolean, Number],
+    type: [String, Boolean, Number] as PropType<string | boolean | number>,
     default: false,
   },
   disabled: Boolean,
@@ -69,7 +70,7 @@ const props = defineProps({
     default: undefined,
   },
   variant: {
-    type: String,
+    type: String as PropType<'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'>,
     default: 'text',
   },
 })

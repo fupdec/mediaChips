@@ -6,7 +6,7 @@
     <div class="mark-item__thumb-wrap">
       <v-img
         v-if="isThumbsLoaded"
-        :src="mark.thumb"
+        :src="mark.thumb ?? undefined"
         :aspect-ratio="16 / 9"
         class="mark-item__thumb"
         cover
@@ -48,35 +48,17 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  mark: {
-    type: Object,
-    required: true,
-  },
-  isThumbsLoaded: {
-    type: Boolean,
-    default: false,
-  },
-  getIcon: {
-    type: Function,
-    required: true,
-  },
-  getColor: {
-    type: Function,
-    required: true,
-  },
-  getDuration: {
-    type: Function,
-    required: true,
-  },
-  jumpTo: {
-    type: Function,
-    required: true,
-  },
-  remove: {
-    type: Function,
-    required: true,
-  },
-})
+<script setup lang="ts">
+import type {AssignedMeta} from '@/types/stores'
+import type {PlayerMark} from '@/types/player'
+
+defineProps<{
+  mark: PlayerMark
+  isThumbsLoaded?: boolean
+  getIcon: (mark: PlayerMark) => string
+  getColor: (mark: PlayerMark) => string
+  getDuration: (time: number) => string
+  jumpTo: (time: number) => void
+  remove: (mark: PlayerMark) => void
+}>()
 </script>

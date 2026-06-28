@@ -28,8 +28,8 @@
             <EditDialogMediaPanel
               v-if="isImageMedia"
               mode="media"
-              :image-src="thumb"
-              :image-path="imgPath"
+              :image-src="thumb ?? undefined"
+              :image-path="imgPath ?? undefined"
               :cropper-options="cropperOps"
               :min-width="500"
               @edited="onImageEdited"
@@ -55,8 +55,8 @@
             <EditDialogMediaPanel
               v-else
               mode="media"
-              :image-src="thumb"
-              :image-path="imgPath"
+              :image-src="thumb ?? undefined"
+              :image-path="imgPath ?? undefined"
               :cropper-options="cropperOps"
               :min-width="500"
               @edited="onImageEdited"
@@ -68,8 +68,9 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, defineAsyncComponent} from 'vue'
+import type {MediaItem} from '@/types/stores'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import {useAppStore} from '@/stores/app'
@@ -91,6 +92,18 @@ import {
 
 const DialogHeader = defineAsyncComponent(() => import("@/components/elements/DialogHeader.vue"))
 
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  outlined?: boolean
+  action?: () => void | Promise<void>
+}
+
+interface EditComponentInstance {
+  save?: () => void
+}
+
 const props = defineProps({
   dialog: Boolean,
   media: Object,
@@ -103,15 +116,15 @@ const appStore = useAppStore()
 const dialogsStore = useDialogsStore()
 const itemsStore = useItemsStore()
 const {t} = useI18n()
-const thumb = ref(null)
-const imgPath = ref(null)
-const buttons = ref([])
-const editingComponent = ref(null)
+const thumb = ref<string | null>(null)
+const imgPath = ref<string | null>(null)
+const buttons = ref<DialogHeaderButton[]>([])
+const editingComponent = ref<EditComponentInstance | null>(null)
 const cropperOps = ref({
   aspectRatio: 16 / 9,
 })
 
-const media = computed(() => props.media || dialogsStore.mediaEditing.media)
+const media = computed(() => (props.media || dialogsStore.mediaEditing.media) as MediaItem | null)
 
 const fileName = computed(() => {
   const filePath = media.value?.path || ''
@@ -158,7 +171,7 @@ async function getImage() {
     imgPath.value = path.join(appStore.mediaPath, 'images/thumbs', `${currentMedia.id}.jpg`)
     thumb.value = await getLocalImage(imgPath.value, false, true)
 
-    if (thumb.value.includes('unavailable.png') && currentMedia.path) {
+    if (thumb.value?.includes('unavailable.png') && currentMedia.path) {
       thumb.value = await getLocalImage(currentMedia.path, true, true)
     }
 
@@ -206,28 +219,29 @@ function save() {
 }
 
 function deleteMedia() {
-  if (dialogsStore?.confirm) {
-    dialogsStore.confirm.show = true
-    dialogsStore.confirm.checkBoxText = t('actions.also_delete_files')
-    dialogsStore.confirm.text = t('media.delete_from_app_confirm')
-    dialogsStore.confirm.action = async () => {
-      const is_checked = dialogsStore.confirm.checkBox
-      await apiClient.post('/api/media/deleteOne', {
-        type: getMediaDeleteAssetFolder(currentMediaType.value),
-        id: media.value.id,
-        with_file: is_checked,
-        path: media.value.path,
-      })
+  const currentMedia = media.value
+  if (!currentMedia || !dialogsStore?.confirm) return
 
-      eventBus.emit('removeEntitiesFromState', {
-        detail: {
-          ids: [media.value.id],
-          type: 'media',
-        }
-      })
+  dialogsStore.confirm.show = true
+  dialogsStore.confirm.checkBoxText = t('actions.also_delete_files')
+  dialogsStore.confirm.text = t('media.delete_from_app_confirm')
+  dialogsStore.confirm.action = async () => {
+    const is_checked = dialogsStore.confirm.checkBox
+    await apiClient.post('/api/media/deleteOne', {
+      type: getMediaDeleteAssetFolder(currentMediaType.value),
+      id: currentMedia.id,
+      with_file: is_checked,
+      path: currentMedia.path,
+    })
 
-      close()
-    }
+    eventBus.emit('removeEntitiesFromState', {
+      detail: {
+        ids: [currentMedia.id],
+        type: 'media',
+      }
+    })
+
+    close()
   }
 }
 

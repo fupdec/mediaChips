@@ -16,20 +16,21 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useItemsStore} from '@/stores/items'
 import {getReadableDuration} from '@/services/formatUtils'
+import type {MediaItem} from '@/types/stores'
 
-const props = defineProps({
-  media: Object,
-  isFileExists: Boolean,
-})
+const props = defineProps<{
+  media: MediaItem
+  isFileExists?: boolean
+}>()
 
 const itemsStore = useItemsStore()
 
 const isViewCard = computed(() =>
-  itemsStore.view === 1 || itemsStore.view === '1'
+  Number(itemsStore.view) === 1
 )
 
 const durationLabel = computed(() => {

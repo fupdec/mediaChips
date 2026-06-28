@@ -104,7 +104,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {apiClient} from "@/services/apiClient"
 import path from "path-browserify"
 import {ref, computed} from "vue"
@@ -115,6 +115,11 @@ import {useNotificationsStore} from "@/stores/notifications"
 import {useDisplay} from "vuetify"
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
+
+interface MediaPathFile {
+  id: number
+  path: string
+}
 
 const store = useAppStore()
 const dialogsStore = useDialogsStore()
@@ -127,7 +132,7 @@ const dialog = ref(false)
 const query = ref("")
 const replacement = ref("")
 const found = ref("")
-const files = ref([])
+const files = ref<MediaPathFile[]>([])
 
 const buttons = computed(() => [
   {
@@ -140,12 +145,12 @@ const buttons = computed(() => [
 
 const searchMedia = async () => {
   try {
-    const res = await apiClient.post('/api/task/searchMediaByPath', {
+    const res = await apiClient.post<MediaPathFile[]>('/api/task/searchMediaByPath', {
       query: query.value,
     })
 
     found.value = query.value
-    files.value = res.data.filter((i) =>
+    files.value = res.data.filter((i: MediaPathFile) =>
       i.path.includes(query.value)
     )
   } catch (e) {
@@ -157,7 +162,7 @@ const searchMedia = async () => {
   }
 }
 
-const highlightPath = (filePath) => {
+const highlightPath = (filePath: string) => {
   if (!found.value) return filePath
 
   const searchStr = found.value

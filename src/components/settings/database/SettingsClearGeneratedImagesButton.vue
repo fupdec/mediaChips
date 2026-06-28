@@ -28,7 +28,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
@@ -60,8 +60,12 @@ const folderSize = ref('0 MB')
 const confirmText = computed(() => t('settings_labels.database.clear_generated_images_confirm'))
 
 /* methods */
+interface FolderSizeResponse {
+  size: number
+}
+
 const getFolderSize = async () => {
-  const {data} = await apiClient.post(
+  const {data} = await apiClient.post<FolderSizeResponse>(
     '/api/task/getFolderSize',
     {folder: props.imageType}
   )

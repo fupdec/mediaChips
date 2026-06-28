@@ -80,9 +80,11 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useAppStore } from '@/stores/app'
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { PropType } from 'vue'
+import type { VFormInstance } from '@/types/vue'
+import { apiClient } from '@/services/apiClient'
 import {validateName} from '@/services/formatUtils'
 import DialogIcons from "@/components/dialogs/DialogIcons.vue";
 
@@ -92,14 +94,13 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'added'])
 
-const store = useAppStore()
-const form = ref(null)
+const form = ref<VFormInstance>(null)
 
 const dialogIcons = ref(false)
 const valid = ref(false)
 const name = ref('')
 const singular = ref('')
-const extensions = ref([])
+const extensions = ref<string[]>([])
 const search = ref('')
 const icon = ref('shape')
 
@@ -110,12 +111,12 @@ function addExt() {
   }
 }
 
-function changeIcon(selectedIcon) {
+function changeIcon(selectedIcon: string) {
   dialogIcons.value = false
   icon.value = selectedIcon
 }
 
-function nameRules(string) {
+function nameRules(string: string) {
   return validateName(string)
 }
 

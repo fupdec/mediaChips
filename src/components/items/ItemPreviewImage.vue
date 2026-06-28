@@ -11,7 +11,7 @@
       @click.stop="openViewer"
     >
       <v-img
-        :src="thumb"
+        :src="thumb || undefined"
         :aspect-ratio="aspectRatio"
         class="thumb"
         cover
@@ -29,7 +29,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted, onBeforeUnmount} from 'vue'
 import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
@@ -39,30 +39,31 @@ import {
   getReadableVideoHeight,
   getReadableVideoQuality,
 } from '@/services/formatUtils'
+import type {MediaItem} from '@/types/stores'
 
-const props = defineProps({
-  media: Object,
-  isFileExists: Boolean,
-})
+const props = defineProps<{
+  media: MediaItem
+  isFileExists?: boolean
+}>()
 
 const store = useAppStore()
 const itemsStore = useItemsStore()
 
-const containerRef = ref(null)
-const thumb = ref(null)
+const containerRef = ref<HTMLElement | null>(null)
+const thumb = ref<string | null>(null)
 const isMounted = ref(false)
-let thumbObjectUrl = null
-let thumbObserver = null
+let thumbObjectUrl: string | null = null
+let thumbObserver: IntersectionObserver | null = null
 let thumbLoadStarted = false
 
 const ITEMS = computed(() => itemsStore)
 
 const isViewCard = computed(() =>
-  ITEMS.value.view === 1 || ITEMS.value.view === '1'
+  Number(ITEMS.value.view) === 1
 )
 
 const isViewTimeline = computed(() =>
-  ITEMS.value.view === 2 || ITEMS.value.view === '2'
+  Number(ITEMS.value.view) === 2
 )
 
 const aspectRatio = computed(() => {
@@ -77,12 +78,17 @@ const aspectRatio = computed(() => {
 })
 
 const quality = computed(() =>
-  getReadableVideoQuality(props.media?.width, props.media?.height)
+  getReadableVideoQuality(
+    Number(props.media?.width) || 0,
+    Number(props.media?.height) || 0,
+  )
 )
 
 const resolutionLabel = computed(() => {
-  if (!props.media?.width || !props.media?.height) return ''
-  return getReadableVideoHeight(props.media.width, props.media.height)
+  const width = Number(props.media?.width) || 0
+  const height = Number(props.media?.height) || 0
+  if (!width || !height) return ''
+  return getReadableVideoHeight(width, height)
 })
 
 const clearThumbUrl = () => {

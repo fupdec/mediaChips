@@ -43,7 +43,7 @@
   </v-tabs>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, watch, onMounted, computed} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useContextMenu} from '@/stores/contextMenu'
@@ -55,6 +55,8 @@ import _ from 'lodash'
 import {useEventBus} from '@/utils/eventBus'
 import {useI18n} from 'vue-i18n'
 import {getTabUrl} from '@/services/routeService'
+import type { Tab } from '@/types/stores'
+import type { LocationQueryValue } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
@@ -64,10 +66,10 @@ const dialogsStore = useDialogsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-const tabs = ref([])
-const active = ref(null)
+const tabs = ref<Tab[]>([])
+const active = ref<LocationQueryValue | LocationQueryValue[] | null>(null)
 const drag = ref(false)
-const draggableTabIndex = ref(null)
+const draggableTabIndex = ref<number | null>(null)
 
 const tabsStore = computed(() => useAppStore().tabs)
 
@@ -96,20 +98,20 @@ watch(
   }
 )
 
-function startDrag(tab) {
+function startDrag(tab: { oldIndex: number }) {
   draggableTabIndex.value = tab.oldIndex
   drag.value = true
 }
 
-const deleteTabs = async (tabs) => {
-  for (let tab of tabs) {
+const deleteTabs = async (tabsToDelete: Tab[]) => {
+  for (const tab of tabsToDelete) {
     await apiClient.delete(`/api/tab/${tab.id}`)
   }
 
   eventBus.emit('getTabs')
 }
 
-const closeTab = async (e, tabId) => {
+const closeTab = async (e: Event, tabId: number | string) => {
   e.preventDefault()
 
   if (route.query.tabId == tabId) {
@@ -119,7 +121,7 @@ const closeTab = async (e, tabId) => {
   eventBus.emit('getTabs')
 }
 
-const editTab = (index) => {
+const editTab = (index: number) => {
   const tab = tabs.value[index]
   dialogsStore.editTab(tab)
 }
@@ -145,7 +147,7 @@ const endDrag = async () => {
   }
 }
 
-const closeTabsOnRight = async (index) => {
+const closeTabsOnRight = async (index: number) => {
   if (index < -1) return
 
   const indexCurrent = tabs.value.findIndex(tab => tab.id === route.query.tabId)
@@ -157,10 +159,10 @@ const closeTabsOnRight = async (index) => {
   await deleteTabs(tabsToClose)
 }
 
-const closeTabsOther = async (tabId, index) => {
+const closeTabsOther = async (tabId: number | string, index: number) => {
   const tabsToClose = tabs.value.filter(tab => tab.id !== tabId)
 
-  if (tabId.value && tabId.value !== tabId) {
+  if (route.query.tabId && route.query.tabId !== tabId) {
     changeRoute(index)
   }
 
@@ -175,15 +177,15 @@ const closeTabsAll = async () => {
   await deleteTabs(tabs.value)
 }
 
-const changeRoute = (tabIndex) => {
+const changeRoute = (tabIndex: number) => {
   const tab = tabs.value[tabIndex]
   if (tab) {
-    const url = getTabUrl(tab)
+    const url = getTabUrl({ ...tab, url: tab.url ?? '/' })
     router.push(url)
   }
 }
 
-const showContextMenu = (e, tabId, index) => {
+const showContextMenu = (e: MouseEvent, tabId: number | string, index: number) => {
   e.preventDefault()
 
   const contextMenu = [

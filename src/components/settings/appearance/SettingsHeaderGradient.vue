@@ -123,34 +123,37 @@
   </div>
 </template>
 
-<script setup>
-import {ref, computed, onMounted, nextTick} from 'vue'
+<script setup lang="ts">
+import {ref, computed, onMounted, nextTick, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import draggable from 'vuedraggable'
 import {useSettingsStore} from '@/stores/settings'
-import {useTheme} from 'vuetify'
 
-// Props
+interface GradientColor {
+  id: number
+  hex: string
+  disabled: boolean
+}
+
 const props = defineProps({
   themeDark: {
-    type: Boolean,
-    required: true
-  }
+    type: Boolean as PropType<boolean>,
+    required: true,
+  },
 })
 
 const {t} = useI18n()
 
-// Emits
-const emit = defineEmits(['close', 'save'])
+const emit = defineEmits<{
+  close: []
+  save: [values: { gradient: string; themeDark: boolean }]
+}>()
 
-// Stores and Theme
 const settingsStore = useSettingsStore()
-const theme = useTheme()
 
-// State
 const dialogHeaderGradient = ref(false)
 const dialogPalette = ref(false)
-const colors = ref([])
+const colors = ref<GradientColor[]>([])
 const palette = ref('#435121')
 const colorIndex = ref(0)
 
@@ -216,13 +219,13 @@ const initColors = () => {
   }
 }
 
-const openDialogPalette = (index) => {
+const openDialogPalette = (index: number) => {
   dialogPalette.value = true
   colorIndex.value = index
   palette.value = colors.value[index].hex
 }
 
-const changeColor = (color) => {
+const changeColor = (color: string | { hex?: string }) => {
   // color может быть объектом или строкой в зависимости от color-picker
   if (typeof color === 'object' && color.hex) {
     palette.value = color.hex
@@ -261,7 +264,7 @@ const generateGradient = () => {
   })
 }
 
-const lockColor = (index) => {
+const lockColor = (index: number) => {
   colors.value[index].disabled = !colors.value[index].disabled
 }
 

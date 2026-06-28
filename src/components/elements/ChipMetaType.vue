@@ -5,20 +5,18 @@
   </v-chip>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import {useI18n} from 'vue-i18n'
+import type { Meta } from '@/types/stores'
 
-const props = defineProps({
-  meta: {
-    type: Object,
-    required: true,
-  },
-})
+const props = defineProps<{
+  meta: Meta
+}>()
 
 const {t} = useI18n()
 
-const icons = {
+const icons: Record<string, string> = {
   string: 'mdi-format-text',
   number: 'mdi-numeric',
   array: 'mdi-format-list-bulleted',
@@ -29,7 +27,7 @@ const icons = {
   country: 'mdi-flag',
 }
 
-const icon = computed(() => icons[props.meta.type] || 'mdi-help-circle')
+const icon = computed(() => icons[props.meta.type ?? ''] || 'mdi-help-circle')
 
-const text = computed(() => t(`meta.types.${props.meta.type}`, props.meta.type))
+const text = computed(() => t(`meta.types.${props.meta.type}`, props.meta.type ?? ''))
 </script>

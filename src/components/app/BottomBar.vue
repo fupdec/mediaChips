@@ -1,32 +1,39 @@
-<script setup>
+<script setup lang="ts">
 import {ref, computed} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useWatcherStore} from '@/stores/watcher'
 import {useI18n} from 'vue-i18n'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import type { Meta } from '@/types/stores'
 
 const settings = useSettingsStore()
 const app = useAppStore()
 const watcherStore = useWatcherStore()
 const {t} = useI18n()
+interface WatcherFolderEntry {
+  folder: { id: number; name?: string; [key: string]: unknown }
+  files: Array<Record<string, unknown[]>>
+}
+
+const watcherFiles = computed(() => (watcherStore.files || []) as WatcherFolderEntry[])
 const folderHovered = ref(false)
 const hiddenMetaMenu = ref(false)
 
 const mediaTypes = computed(() => app.mediaTypes.filter(i => !i.hidden))
 const mediaTypesHidden = computed(() => app.mediaTypes.filter(i => i.hidden))
 
-const meta = computed(() => app.meta.filter(i => i.type === 'array' && !i.hidden))
-const hiddenMeta = computed(() => app.meta.filter(i => i.type === 'array' && i.hidden))
+const meta = computed(() => (app.meta as Meta[]).filter(i => i.type === 'array' && !i.hidden))
+const hiddenMeta = computed(() => (app.meta as Meta[]).filter(i => i.type === 'array' && i.hidden))
 
-function openDialogFolder(folder) {
+function openDialogFolder(folder: unknown) {
   watcherStore.folder = folder
   watcherStore.dialogFolder = true
 }
 
-const getBadgeVal = (files, type) => {
+const getBadgeVal = (files: Array<Record<string, unknown[]>>, type: string) => {
   let v = 0
-  for (const f of files) v += f[type].length
+  for (const f of files) v += f[type]?.length ?? 0
   return v
 }
 </script>
@@ -185,13 +192,13 @@ const getBadgeVal = (files, type) => {
 
     <!-- Watcher folders -->
     <div
-      v-if="watcherStore.files && watcherStore.files.length && settings.watchFolders === '1'"
+      v-if="watcherFiles.length && settings.watchFolders === '1'"
       class="folders"
       @mouseover="folderHovered = true"
       @mouseleave="folderHovered = false"
     >
       <v-tooltip
-        v-for="i in watcherStore.files"
+        v-for="i in watcherFiles"
         :key="i.folder.id"
         location="top"
       >

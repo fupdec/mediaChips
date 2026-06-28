@@ -49,26 +49,38 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import type {MediaType, Meta, MediaTypePreviewField} from '@/types/metaAssignment'
 
-const props = defineProps({
-  mediaType: {type: Object, required: true},
-  isPinned: {type: Boolean, default: false},
-  highlightMeta: {type: Object, default: null},
-  pinnedFields: {type: Array, default: () => []},
-  hero: {type: Boolean, default: false},
-  showUnpin: {type: Boolean, default: true},
-  clickable: {type: Boolean, default: true},
+const props = withDefaults(defineProps<{
+  mediaType: MediaType
+  isPinned?: boolean
+  highlightMeta?: Meta | null
+  pinnedFields?: Meta[]
+  hero?: boolean
+  showUnpin?: boolean
+  clickable?: boolean
+}>(), {
+  isPinned: false,
+  highlightMeta: null,
+  pinnedFields: () => [],
+  hero: false,
+  showUnpin: true,
+  clickable: true,
 })
 
-const emit = defineEmits(['pin', 'unpin', 'click'])
+const emit = defineEmits<{
+  pin: []
+  unpin: []
+  click: []
+}>()
 
 const {t} = useI18n()
 
-const previewFields = computed(() => {
+const previewFields = computed((): MediaTypePreviewField[] => {
   if (props.pinnedFields.length) {
     return props.pinnedFields.map((meta) => ({
       id: meta.id,

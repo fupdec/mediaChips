@@ -26,10 +26,10 @@
         </form>
 
         <v-pagination
-          v-if="performers.length && pagination.last_page > 1"
+          v-if="performers.length && (pagination.last_page ?? 0) > 1"
           v-model="pagination.current_page"
           @update:model-value="searchPerformer"
-          :length="pagination.last_page"
+          :length="pagination.last_page ?? 1"
           density="compact"
           active-color="primary"
           class="my-4"
@@ -51,23 +51,23 @@
           <v-card>
             <DialogHeader
               @close="dialogDataTransfer = false"
-              :header="t('scraper.data_transfer', {name: selected.name})"
+              :header="t('scraper.data_transfer', {name: selected.name ?? ''})"
               :buttons="buttons"
               closable
             ></DialogHeader>
 
             <v-card-text>
               <!-- ScraperDataTransfer компонент заменен на inline-разметку -->
-              <ScraperDataTransfer :selected="selected"></ScraperDataTransfer>
+              <ScraperDataTransfer :selected="selected as ScraperSelectedResult"></ScraperDataTransfer>
             </v-card-text>
           </v-card>
         </v-dialog>
 
         <v-pagination
-          v-if="performers.length && pagination.last_page > 1"
+          v-if="performers.length && (pagination.last_page ?? 0) > 1"
           v-model="pagination.current_page"
           @update:model-value="searchPerformer"
-          :length="pagination.last_page"
+          :length="pagination.last_page ?? 1"
           density="compact"
           active-color="primary"
           class="my-4"
@@ -78,7 +78,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useScraperStore} from '@/stores/scraper'
@@ -86,7 +86,29 @@ import {useDialogsStore} from '@/stores/dialogs'
 
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import ScraperDataTransfer from "@/components/scraper/ScraperDataTransfer.vue";
-import {useEventBus} from "@/utils/eventBus";
+import {useEventBus} from "@/utils/eventBus"
+import type { ScraperSelectedResult } from '@/types/scraper'
+
+interface ScraperPerformer {
+  id?: number
+  name?: string
+  face?: string
+  [key: string]: unknown
+}
+
+interface ScraperPagination {
+  last_page?: number
+  current_page?: number
+  [key: string]: unknown
+}
+
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  outlined?: boolean
+  action?: () => void | Promise<void>
+}
 
 const scraperStore = useScraperStore()
 const dialogsStore = useDialogsStore()
@@ -95,10 +117,10 @@ const {t} = useI18n()
 
 const searchInProgress = ref(false)
 const dialogDataTransfer = ref(false)
-const performers = ref([])
-const pagination = ref({})
-const selected = ref({})
-const buttons = computed(() => [
+const performers = ref<ScraperPerformer[]>([])
+const pagination = ref<ScraperPagination>({})
+const selected = ref<ScraperPerformer>({})
+const buttons = computed((): DialogHeaderButton[] => [
   {
     icon: 'check',
     text: t('common.apply'),
@@ -116,17 +138,17 @@ const query = computed({
   }
 })
 
-async function searchPerformer(page) {
+async function searchPerformer(page = 1) {
   searchInProgress.value = true
   const result = await scraperStore.searchPerformer({
     page: page,
   })
   performers.value = result?.data || []
-  pagination.value = result?.meta || {}
+  pagination.value = (result as { meta?: ScraperPagination })?.meta || {}
   searchInProgress.value = false
 }
 
-function getInfo(performer) {
+function getInfo(performer: ScraperPerformer) {
   selected.value = performer
   dialogDataTransfer.value = true
 }

@@ -68,7 +68,7 @@
         />
 
         <MetaToMetaBoard
-          v-else-if="showTagsBoard"
+          v-else-if="showTagsBoard && meta"
           :parent-meta="meta"
           :pinned-items="pinnedChildMeta"
           :all-meta="allMeta"
@@ -89,7 +89,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {getTextDataType} from '@/services/metaTypeUtils'
@@ -100,19 +100,35 @@ import MetaToMediaBoard from './MetaToMediaBoard.vue'
 import MetaToMetaBoard from './MetaToMetaBoard.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 
-const props = defineProps({
-  mode: {
-    type: String,
-    default: 'from-meta',
-    validator: (v) => ['from-meta', 'from-media-type'].includes(v),
-  },
-  meta: {type: Object, default: null},
-  mediaType: {type: Object, default: null},
-  showWarning: {type: Boolean, default: true},
-  showAnchor: {type: Boolean, default: true},
+import type {
+  MediaType,
+  Meta,
+  MetaAssignmentMode,
+  MetaInMediaTypeAssignment,
+  MetaInMediaTypeRow,
+  PinnedChildMetaAssignment,
+  ConfirmAction,
+} from '@/types/metaAssignment'
+
+const props = withDefaults(defineProps<{
+  mode?: MetaAssignmentMode
+  meta?: Meta | null
+  mediaType?: MediaType | null
+  showWarning?: boolean
+  showAnchor?: boolean
+}>(), {
+  mode: 'from-meta',
+  meta: null,
+  mediaType: null,
+  showWarning: true,
+  showAnchor: true,
 })
 
-const emit = defineEmits(['pinned-meta-updated', 'pinned-media-updated', 'meta-updated'])
+const emit = defineEmits<{
+  'pinned-meta-updated': []
+  'pinned-media-updated': []
+  'meta-updated': [items: MetaInMediaTypeRow[]]
+}>()
 
 const {t, te} = useI18n()
 const {
@@ -128,13 +144,13 @@ const {
   updateChildMetaOrder,
 } = useMetaAssignment()
 
-const activeSegment = ref('media')
-const pinnedMedia = ref([])
-const pinnedChildMeta = ref([])
-const pinnedMetaItems = ref([])
-const allMeta = ref([])
+const activeSegment = ref<'media' | 'tags'>('media')
+const pinnedMedia = ref<MetaInMediaTypeAssignment[]>([])
+const pinnedChildMeta = ref<PinnedChildMetaAssignment[]>([])
+const pinnedMetaItems = ref<MetaInMediaTypeRow[]>([])
+const allMeta = ref<Meta[]>([])
 const confirmDialog = ref(false)
-const pendingAction = ref(null)
+const pendingAction = ref<ConfirmAction | null>(null)
 
 const isMetaTypeArray = computed(() => props.meta?.type === 'array')
 
@@ -152,15 +168,16 @@ const anchorIcon = computed(() => {
 })
 
 const anchorName = computed(() => {
-  if (props.mode === 'from-media-type') return getMediaTypeName(props.mediaType, t)
+  if (props.mode === 'from-media-type') return getMediaTypeName(props.mediaType ?? undefined, t)
   return props.meta?.name || ''
 })
 
-const anchorSubtitle = computed(() => {
+const anchorSubtitle = computed((): string => {
   if (props.mode === 'from-media-type') {
     return t('meta.settings.assignment_anchor_media')
   }
-  return props.meta?.hint || t('meta.settings.assignment_anchor_field')
+  const hint = props.meta?.hint
+  return hint != null && hint !== '' ? String(hint) : t('meta.settings.assignment_anchor_field')
 })
 
 const anchorTypeLabel = computed(() => {
@@ -172,7 +189,7 @@ const anchorTypeLabel = computed(() => {
 
 const loadAllMeta = async () => {
   try {
-    allMeta.value = await fetchAllMeta()
+    allMeta.value = (await fetchAllMeta()) as Meta[]
   } catch (e) {
     console.error('Error loading meta:', e)
     allMeta.value = []
@@ -182,7 +199,7 @@ const loadAllMeta = async () => {
 const loadPinnedMedia = async () => {
   if (props.mode === 'from-meta' && props.meta?.id) {
     try {
-      pinnedMedia.value = await fetchPinnedMediaForMeta(props.meta.id)
+      pinnedMedia.value = await fetchPinnedMediaForMeta(props.meta.id) as MetaInMediaTypeAssignment[]
       emit('pinned-media-updated')
     } catch (e) {
       console.error('Error loading pinned media:', e)
@@ -193,7 +210,7 @@ const loadPinnedMedia = async () => {
 const loadPinnedMetaItems = async () => {
   if (props.mode === 'from-media-type' && props.mediaType?.id) {
     try {
-      pinnedMetaItems.value = await fetchPinnedMetaForMediaType(props.mediaType.id)
+      pinnedMetaItems.value = await fetchPinnedMetaForMediaType(props.mediaType.id) as MetaInMediaTypeRow[]
       emit('meta-updated', pinnedMetaItems.value)
     } catch (e) {
       console.error('Error loading pinned meta items:', e)
@@ -204,7 +221,7 @@ const loadPinnedMetaItems = async () => {
 const loadPinnedChildMeta = async () => {
   if (props.mode === 'from-meta' && props.meta?.id && isMetaTypeArray.value) {
     try {
-      pinnedChildMeta.value = await fetchPinnedChildMeta(props.meta.id)
+      pinnedChildMeta.value = await fetchPinnedChildMeta(props.meta.id) as PinnedChildMetaAssignment[]
       emit('pinned-meta-updated')
     } catch (e) {
       console.error('Error loading pinned child meta:', e)
@@ -223,7 +240,7 @@ const refresh = async () => {
 
 const confirmText = computed(() => pendingAction.value?.text || '')
 
-const openConfirm = (action) => {
+const openConfirm = (action: ConfirmAction) => {
   pendingAction.value = action
   confirmDialog.value = true
 }
@@ -246,7 +263,8 @@ const executeConfirm = async () => {
   }
 }
 
-const confirmPinMedia = async (mediaType) => {
+const confirmPinMedia = async (mediaType: MediaType) => {
+  if (!props.meta?.id) return
   try {
     await pinMetaToMediaType(props.meta.id, mediaType.id)
     await loadPinnedMedia()
@@ -255,7 +273,9 @@ const confirmPinMedia = async (mediaType) => {
   }
 }
 
-const confirmUnpinMedia = (mediaType) => {
+const confirmUnpinMedia = (mediaType: MediaType) => {
+  const metaId = props.meta?.id
+  if (!metaId) return
   const warningKey = props.meta?.type === 'array'
     ? 'unpin_media_type_tags_removed'
     : 'unpin_media_type_values_removed'
@@ -263,11 +283,12 @@ const confirmUnpinMedia = (mediaType) => {
   openConfirm({
     title: t('meta.settings.remove_pinned_media_types'),
     text: `${t(`meta.settings.${warningKey}`)}\n${t('common.are_you_sure')}`,
-    run: () => unpinMetaFromMediaType(props.meta.id, mediaType.id),
+    run: () => unpinMetaFromMediaType(metaId, mediaType.id),
   })
 }
 
-const confirmPinMetaToType = async (meta) => {
+const confirmPinMetaToType = async (meta: Meta) => {
+  if (!props.mediaType?.id) return
   try {
     const order = pinnedMetaItems.value.length
     await pinMetaToMediaType(meta.id, props.mediaType.id, order)
@@ -277,15 +298,17 @@ const confirmPinMetaToType = async (meta) => {
   }
 }
 
-const confirmUnpinMetaFromType = (item) => {
+const confirmUnpinMetaFromType = (item: MetaInMediaTypeRow) => {
+  if (!props.mediaType?.id || !item.meta?.id) return
   openConfirm({
     title: t('meta.dialogs.remove_meta'),
     text: `${t('meta.dialogs.remove_from_all_media')}\n${t('common.are_you_sure')}`,
-    run: () => unpinMetaFromMediaType(item.meta.id, props.mediaType.id),
+    run: () => unpinMetaFromMediaType(item.meta!.id, props.mediaType!.id),
   })
 }
 
-const confirmPinChildMeta = async (childMeta) => {
+const confirmPinChildMeta = async (childMeta: Meta) => {
+  if (!props.meta?.id) return
   try {
     const order = pinnedChildMeta.value.length
     await pinChildMeta(props.meta.id, childMeta.id, order)
@@ -295,20 +318,22 @@ const confirmPinChildMeta = async (childMeta) => {
   }
 }
 
-const confirmUnpinChildMeta = (item) => {
+const confirmUnpinChildMeta = (item: PinnedChildMetaAssignment) => {
+  if (!props.meta?.id) return
   openConfirm({
     title: t('meta.settings.remove_pinned_meta'),
     text: `${t('meta.settings.remove_from_all_tags')}\n${t('common.are_you_sure')}`,
-    run: () => unpinChildMeta(props.meta.id, item.pinnedMetaId),
+    run: () => unpinChildMeta(props.meta!.id, item.pinnedMetaId),
   })
 }
 
-const onChildMetaReorder = async (items) => {
+const onChildMetaReorder = async (items: PinnedChildMetaAssignment[]) => {
+  if (!props.meta?.id) return
   pinnedChildMeta.value = items
   try {
     await Promise.all(
       items.map((item, index) =>
-        updateChildMetaOrder(props.meta.id, item.pinnedMetaId, index)
+        updateChildMetaOrder(props.meta!.id, item.pinnedMetaId, index)
       )
     )
     emit('pinned-meta-updated')
@@ -318,12 +343,13 @@ const onChildMetaReorder = async (items) => {
   }
 }
 
-const onMetaItemsReorder = async (items) => {
+const onMetaItemsReorder = async (items: MetaInMediaTypeRow[]) => {
+  if (!props.mediaType?.id) return
   pinnedMetaItems.value = items
   try {
     await Promise.all(
       items.map((item, index) =>
-        updateMetaInMediaTypeOrder(item.metaId, props.mediaType.id, index)
+        updateMetaInMediaTypeOrder(item.metaId, props.mediaType!.id, index)
       )
     )
     emit('meta-updated', pinnedMetaItems.value)

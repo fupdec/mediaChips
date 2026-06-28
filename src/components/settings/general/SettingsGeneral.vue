@@ -29,14 +29,14 @@
 
     <!-- EXACT TYPING SWITCH -->
     <settings-switch
-      option="typingFiltersDefaultModel"
+      option="typingFiltersDefault"
       :hide-details="false"
     >
       <template #label>
         <div class="d-flex flex-column ml-4">
           <div class="text-body-1 text-high-emphasis">{{ t('settings_labels.general.exact_filtering') }}</div>
           <div class="text-caption text-medium-emphasis filtering-sample mt-1">
-            <span v-if="SETTINGS.typingFiltersDefaultModel == '1'">
+            <span v-if="SETTINGS.typingFiltersDefault == '1'">
               {{ t('settings_labels.general.typing') }}: <b>favo</b> / {{ t('settings_labels.general.result') }}: <b>favo</b>rite video
             </span>
             <span v-else>
@@ -49,7 +49,7 @@
 
     <!-- COUNT VIEWS SWITCH -->
     <settings-switch
-      option="countViewsModel"
+      option="count_number_of_views"
       :title="t('settings_labels.general.count_views')"
       :hint="t('settings_labels.general.count_views_hint')"
     ></settings-switch>
@@ -79,63 +79,29 @@
   </div>
 </template>
 
-<script setup>
-import {ref, computed, watch} from 'vue'
+<script setup lang="ts">
+import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useTheme, useLocale} from 'vuetify'
-import CountryFlag from 'vue-country-flag-next'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import SettingsLocale from "@/components/settings/general/SettingsLocale.vue";
-import {setOption} from '@/services/settingsService'
 
-// Хуки
-const {locale, t} = useI18n({useScope: 'global'})
-const theme = useTheme()
+const {t} = useI18n({useScope: 'global'})
 
-// Хранилища Pinia
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 
-// Компьютеды
 const SETTINGS = computed(() => settingsStore)
 const frontendUrl = computed(() => appStore.localhost)
 
-// Модели для v-model с watcher'ами
-const typingFiltersDefaultModel = computed({
-  get: () => SETTINGS.value.typingFiltersDefault || '0',
-  set: (value) => setOption(value, 'typingFiltersDefault')
-})
-
-// const experimentalFeaturesModel = computed({
-//   get: () => SETTINGS.value.showExperimentalFeatures || '0',
-//   set: (value) => setOption(value, 'showExperimentalFeatures')
-// })
-
-// Методы
 const copy = async () => {
   try {
     await navigator.clipboard.writeText(frontendUrl.value)
-    // Можно показать уведомление об успешном копировании
     console.log('Link copied to clipboard')
   } catch (err) {
     console.error('Failed to copy link:', err)
-  }
-}
-
-const setLang = async (newLocale) => {
-  console.log(newLocale)
-
-  try {
-    locale.value = newLocale
-
-    // Сохраняем в настройках
-    await setOption(newLocale, "locale")
-
-  } catch (error) {
-    console.error('Failed to change language:', error)
   }
 }
 </script>

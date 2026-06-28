@@ -124,12 +124,14 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
+import type {DatabaseEntry, DatabaseSizesResponse} from '@/types/settings'
+import type {VFormInstance} from '@/types/vue'
 
 import SettingsBackups from '@/components/settings/database/SettingsBackups.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
@@ -142,6 +144,13 @@ import {
   validateName,
 } from '@/services/formatUtils'
 
+interface DialogHeaderButton {
+  icon?: string
+  text?: string
+  color?: string
+  action?: () => void | Promise<void>
+}
+
 /* stores */
 const store = useAppStore()
 const dialogsStore = useDialogsStore()
@@ -149,7 +158,7 @@ const {t} = useI18n()
 
 /* state */
 const dbName = ref('')
-const db = ref(null)
+const db = ref<DatabaseEntry | null>(null)
 const valid = ref(false)
 
 const dialogDb = ref(false)
@@ -157,15 +166,23 @@ const dialogActivateConfirm = ref(false)
 const dialogSelected = ref(false)
 
 const headerText = ref('')
-const buttons = ref([])
+const buttons = ref<DialogHeaderButton[]>([])
 
-const formRef = ref(null)
-const dbSizes = ref({})
+const formRef = ref<VFormInstance>(null)
+const dbSizes = ref<Record<string, number>>({})
+
+function getConfigDatabases(): DatabaseEntry[] {
+  return (store.config.databases as DatabaseEntry[] | undefined) ?? []
+}
+
+function setConfigDatabases(databases: DatabaseEntry[]) {
+  store.config.databases = databases
+}
 
 /* computed */
 const databases = computed({
-  get: () => store.databases.sort((a, b) => {
-    return b.active - a.active;
+  get: () => [...(store.databases as DatabaseEntry[])].sort((a, b) => {
+    return Number(b.active) - Number(a.active)
   }),
   set: v => (store.databases = v),
 })
@@ -178,14 +195,14 @@ async function loadDatabaseSizes() {
   }
 
   try {
-    const {data} = await apiClient.post('/api/task/getDatabaseSizes', {ids})
+    const {data} = await apiClient.post<DatabaseSizesResponse>('/api/task/getDatabaseSizes', {ids})
     dbSizes.value = data.sizes || {}
   } catch (error) {
     console.error('Error loading database sizes:', error)
   }
 }
 
-function formatDbSize(id) {
+function formatDbSize(id: string) {
   const size = dbSizes.value[id]
   if (size == null) return '…'
   return getReadableFileSize(size)
@@ -206,7 +223,7 @@ function openAdd() {
   dialogDb.value = true
 }
 
-function openEdit(item) {
+function openEdit(item: DatabaseEntry) {
   db.value = item
   dbName.value = item.name
   headerText.value = t('settings_labels.database.editing_database')
@@ -221,66 +238,72 @@ function openEdit(item) {
   dialogDb.value = true
 }
 
-function openActivate(item) {
+function openActivate(item: DatabaseEntry) {
   if (item.active) return
   db.value = item
   dialogActivateConfirm.value = true
 }
 
 async function addDb() {
-  await formRef.value.validate()
+  await formRef.value?.validate()
   if (!valid.value) return
 
-  const config = store.config
+  const databasesList = getConfigDatabases()
 
-  config.databases.push({
+  databasesList.push({
     id: Date.now().toString(16),
     name: dbName.value,
     active: false,
     createdAt: Date.now(),
   })
 
-  await updateConfig({databases: config.databases})
-  databases.value = config.databases
+  setConfigDatabases(databasesList)
+  await updateConfig({databases: databasesList})
+  databases.value = databasesList
 
   db.value = [...databases.value].sort(
     (a, b) => b.createdAt - a.createdAt,
-  )[0]
+  )[0] ?? null
 
   dialogDb.value = false
   dialogActivateConfirm.value = true
 }
 
 async function updateDb() {
-  await formRef.value.validate()
-  if (!valid.value) return
+  await formRef.value?.validate()
+  if (!valid.value || !db.value) return
 
-  const config = store.config
-  const target = config.databases.find(i => i.id === db.value.id)
+  const databasesList = getConfigDatabases()
+  const target = databasesList.find(i => i.id === db.value?.id)
+  if (!target) return
+
   target.name = dbName.value
 
-  await updateConfig({databases: config.databases})
-  databases.value = config.databases
+  setConfigDatabases(databasesList)
+  await updateConfig({databases: databasesList})
+  databases.value = databasesList
 
   dialogDb.value = false
 }
 
 async function activateDb() {
-  const config = store.config
+  if (!db.value) return
 
-  config.databases = config.databases.map(i => ({
+  const activeId = db.value.id
+  const databasesList = getConfigDatabases().map(i => ({
     ...i,
-    active: i.id === db.value.id,
+    active: i.id === activeId,
   }))
 
-  await updateConfig({databases: config.databases})
-  databases.value = config.databases
+  setConfigDatabases(databasesList)
+  await updateConfig({databases: databasesList})
+  databases.value = databasesList
 
   dialogActivateConfirm.value = false
   dialogSelected.value = true
 }
 
-async function confirmRemoving(item) {
+async function confirmRemoving(item: DatabaseEntry) {
   db.value = item
 
   dialogsStore.confirm.text = 'The database will be permanently deleted. \n Are you sure?'
@@ -290,16 +313,16 @@ async function confirmRemoving(item) {
       id: item.id,
     })
 
-    const config = store.config
-    config.databases = config.databases.filter(i => i.id !== item.id)
+    const databasesList = getConfigDatabases().filter(i => i.id !== item.id)
 
-    await updateConfig({databases: config.databases})
-    databases.value = config.databases
+    setConfigDatabases(databasesList)
+    await updateConfig({databases: databasesList})
+    databases.value = databasesList
   }
 }
 
 function relaunchApp() {
-  window?.electronAPI?.invoke('relaunch')
+  void window.electronAPI?.invoke?.('relaunch')
 }
 
 onMounted(loadDatabaseSizes)

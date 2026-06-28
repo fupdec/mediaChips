@@ -31,27 +31,37 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {getIconDataType, getTextDataType} from '@/services/metaTypeUtils'
 import {groupMetaByType} from '@/utils/metaSort'
+import type {MetaFieldPoolItem} from '@/types/metaAssignment'
 
-const props = defineProps({
-  items: {type: Array, default: () => []},
-  excludeIds: {type: Array, default: () => []},
-  disabledIds: {type: Array, default: () => []},
-  compact: {type: Boolean, default: false},
-  emptyIcon: {type: String, default: 'mdi-database-check'},
-  emptyText: {type: String, default: ''},
+const props = withDefaults(defineProps<{
+  items?: MetaFieldPoolItem[]
+  excludeIds?: Array<number | string>
+  disabledIds?: Array<number | string>
+  compact?: boolean
+  emptyIcon?: string
+  emptyText?: string
+}>(), {
+  items: () => [],
+  excludeIds: () => [],
+  disabledIds: () => [],
+  compact: false,
+  emptyIcon: 'mdi-database-check',
+  emptyText: '',
 })
 
-defineEmits(['select'])
+defineEmits<{
+  select: [item: MetaFieldPoolItem]
+}>()
 
 const {te, t} = useI18n()
-const formatDataType = (type) => getTextDataType(type, {te, t})
+const formatDataType = (type: string) => getTextDataType(type, {te, t})
 
-const availableItems = computed(() => {
+const availableItems = computed((): MetaFieldPoolItem[] => {
   const exclude = new Set(props.excludeIds)
   const disabled = new Set(props.disabledIds)
   return props.items

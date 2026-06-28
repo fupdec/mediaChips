@@ -8,7 +8,7 @@
       <div class="tag-page-param">
         <div class="tag-page-param__value">
           <v-rating
-            :model-value="item.rating"
+            :model-value="itemRating"
             density="compact"
             half-increments
             readonly
@@ -60,7 +60,7 @@
               v-for="tag in category.items"
               :key="`${tag.id}_${item.id}`"
               @click.stop.prevent="showMenu($event, tag)"
-              @mouseenter="showHoverImage($event, tag.metaId, tag.id)"
+              @mouseenter="onTagHover($event, tag)"
               @mouseleave="hideHoverImage"
             >
               {{ tag.name }}
@@ -98,8 +98,8 @@
 
         <v-chip
           :label="settingsStore.show_default_meta_label == '1'"
-          :variant="settingsStore.default_meta_chip_variant"
-          :text="meta.value || item[meta.name]"
+          :variant="defaultMetaChipVariant"
+          :text="String(meta.value ?? item[meta.name] ?? '')"
         ></v-chip>
       </div>
 
@@ -119,11 +119,11 @@
             v-for="tag in category.items"
             :key="`${tag.id}_${item.id}`"
             :color="tag.meta?.color ? tag.color : undefined"
-            :variant="tag.meta?.chipVariant"
-            :label="tag.meta?.chipLabel"
+            :variant="getMetaChipVariant(tag.meta)"
+            :label="getMetaChipLabel(tag.meta)"
             :text="tag.name"
             @click.stop.prevent="showMenu($event, tag)"
-            @mouseenter="showHoverImage($event, tag.metaId, tag.id)"
+            @mouseenter="onTagHover($event, tag)"
             @mouseleave="hideHoverImage"
           ></v-chip>
         </template>
@@ -132,7 +132,7 @@
           <v-chip
             v-for="i in category.items"
             :key="`${i.name}_${item.id}`"
-            :text="i.value"
+            :text="formatMetaValue(i.value)"
           ></v-chip>
         </template>
       </div>
@@ -146,9 +146,9 @@
         :key="meta.name"
         :title="meta.text"
         :label="settingsStore.show_default_meta_label == '1'"
-        :variant="settingsStore.default_meta_chip_variant"
+        :variant="defaultMetaChipVariant"
         :prepend-icon="`mdi-${meta.icon}`"
-        :text="meta.value || item[meta.name]"
+        :text="String(meta.value ?? item[meta.name] ?? '')"
       ></v-chip>
 
       <!-- PINNED FIELDS FLAT -->
@@ -156,8 +156,8 @@
         <v-chip
           v-if="entry.kind === 'tag'"
           :color="entry.data.meta?.color ? entry.data.color : undefined"
-          :variant="entry.data.meta?.chipVariant"
-          :label="entry.data.meta?.chipLabel"
+          :variant="getMetaChipVariant(entry.data.meta)"
+          :label="getMetaChipLabel(entry.data.meta)"
           :prepend-icon="`mdi-${entry.data?.meta?.icon}`"
           :text="entry.data.name"
           @click.stop.prevent="showMenu($event, entry.data)"
@@ -173,8 +173,8 @@
   </div>
 </template>
 
-<script setup>
-import {computed, onBeforeMount} from 'vue'
+<script setup lang="ts">
+import {computed} from 'vue'
 import _ from 'lodash'
 import {apiClient} from '@/services/apiClient'
 
@@ -185,8 +185,8 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
 
 import {useEventBus} from "@/utils/eventBus"
-import translate from '@/utils/translate'
-import {useRouter} from "vue-router";
+import translate, {type Locale} from '@/utils/translate'
+import {useRouter} from "vue-router"
 import {usePresetMeta} from "@/composable/ItemPresetMeta"
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import {getFilterObject} from '@/services/formatUtils'
@@ -196,31 +196,62 @@ import {
   sortByPinnedAssignmentOrder,
   sortPinnedAssignmentItems,
 } from '@/utils/pinnedMetaOrder'
+import type {ItemsPageType, ItemContextMenuEntry, PresetMetaProps} from '@/types/itemsPage'
+import type {AssignedMeta, MediaItem, Meta, Tag, ItemTagRef, ItemValueRef} from '@/types/stores'
+
+type ChipVariant = 'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'
+
+interface PinnedMetaAssignment extends AssignedMeta {
+  metaId?: number
+  pinnedMetaId?: number
+  show?: number
+  order?: number
+}
+
+type TagWithMeta = Tag & { meta: Meta }
+
+type ValueWithMeta = Meta & { value: unknown }
+
+type PinnedCategory =
+  | { kind: 'tags'; metaId: number; items: TagWithMeta[]; name?: string; meta?: { name?: string } }
+  | { kind: 'values'; metaId: number; items: ValueWithMeta[]; name?: string; meta?: { name?: string } }
+
+type PinnedFlatEntry =
+  | { kind: 'tag'; metaId: number; data: TagWithMeta; name?: string; meta?: { name?: string } }
+  | { kind: 'value'; metaId: number; data: ValueWithMeta; name?: string; meta?: { name?: string } }
+
+interface RemoveTagPayload {
+  tagId: number
+  mediaId?: number
+  parentTagId?: number
+}
 
 const router = useRouter()
 
-/* props */
-const props = defineProps({
-  item: {type: Object, required: true},
-  tags: {type: Array, default: () => []},
-  values: {type: Array, default: () => []},
-  type: {type: String, required: true},
-  tagPage: {type: Boolean, default: false},
-  isShowAll: {type: Boolean, default: false},
-  assignment: {type: Array, default: () => []},
+const props = withDefaults(defineProps<{
+  item: MediaItem | Tag
+  tags?: ItemTagRef[]
+  values?: ItemValueRef[]
+  type: ItemsPageType | string
+  tagPage?: boolean
+  isShowAll?: boolean
+  assignment?: PinnedMetaAssignment[]
+}>(), {
+  tags: () => [],
+  values: () => [],
+  tagPage: false,
+  isShowAll: false,
+  assignment: () => [],
 })
 
-// composable for default meta
-const presetMetaProps = {
+const presetMetaProps: PresetMetaProps = {
   type: props.type,
-  item: props.item,
-  tagPage: props.tagPage,
+  item: props.item as MediaItem,
   isShowAll: props.isShowAll,
 }
 
 const {preset_meta} = usePresetMeta(presetMetaProps)
 
-/* stores */
 const settingsStore = useSettingsStore()
 const appStore = useAppStore()
 const metaStore = useAppStore().meta
@@ -231,7 +262,31 @@ const itemsStore = useItemsStore()
 
 const eventBus = useEventBus()
 
-/* computed */
+const itemRating = computed((): number | undefined => {
+  const rating = props.item.rating
+  return typeof rating === 'number' ? rating : undefined
+})
+
+const defaultMetaChipVariant = computed((): ChipVariant | undefined => {
+  return settingsStore.default_meta_chip_variant as ChipVariant
+})
+
+const getMetaChipVariant = (meta?: Meta): ChipVariant | undefined => {
+  return meta?.chipVariant as ChipVariant | undefined
+}
+
+const getMetaChipLabel = (meta?: Meta): boolean | undefined => {
+  return meta?.chipLabel as boolean | undefined
+}
+
+const formatMetaValue = (value: unknown): string => String(value ?? '')
+
+const onTagHover = (event: MouseEvent | KeyboardEvent, tag: TagWithMeta): void => {
+  if (event instanceof MouseEvent) {
+    showHoverImage(event, tag.metaId ?? null, tag.id, 'tag')
+  }
+}
+
 const isGrouped = computed(() =>
   settingsStore.group_chips_in_card_description === '1' || props.tagPage
 )
@@ -244,23 +299,21 @@ const assignmentRows = computed(() => {
   if (props.assignment?.length) {
     return sortPinnedAssignmentItems(props.assignment)
   }
-  return itemsStore.sortedAssigned
+  return itemsStore.sortedAssigned as PinnedMetaAssignment[]
 })
 
-/* TAGS */
-const tagItems = computed(() => {
+const tagItems = computed((): TagWithMeta[] => {
   if (!metaStore.length || !tagsStore.length || !props.tags?.length) return []
 
-  let result = props.tags
-    .map(i => {
+  const result = props.tags
+    .map((i): TagWithMeta | null => {
       if (!i) return null
       const meta = metaStore.find(m => m.id === i.metaId)
       const tag = tagsStore.find(t => t.id === i.tagId)
       return tag && meta ? {...tag, meta} : null
     })
-    .filter(Boolean)
-    .filter(tag => tag && tag.meta && tag.id)
-    .filter(tag => checkShow(tag.metaId))
+    .filter((tag): tag is TagWithMeta => tag !== null && !!tag.meta && !!tag.id)
+    .filter(tag => checkShow(tag.metaId as number))
 
   if (result.length === 0) return []
 
@@ -278,18 +331,16 @@ const tagGroups = computed(() =>
   }),
 )
 
-/* VALUES */
-const valueItems = computed(() => {
+const valueItems = computed((): ValueWithMeta[] => {
   if (!metaStore.length || !props.values?.length) return []
 
-  let result = props.values
-    .map(i => {
+  const result = props.values
+    .map((i): ValueWithMeta | null => {
       if (!i) return null
       const meta = metaStore.find(m => m.id === i.metaId)
       return meta ? {...meta, value: i.value} : null
     })
-    .filter(Boolean)
-    .filter(meta => meta && meta.id)
+    .filter((meta): meta is ValueWithMeta => meta !== null && !!meta.id)
     .filter(meta => checkShow(meta.id))
 
   if (result.length === 0) return []
@@ -308,17 +359,17 @@ const valueGroups = computed(() =>
   }),
 )
 
-const pinnedCategoriesComputed = computed(() => {
-  const categories = [
-    ...tagGroups.value.map((items) => ({
+const pinnedCategoriesComputed = computed((): PinnedCategory[] => {
+  const categories: PinnedCategory[] = [
+    ...tagGroups.value.map((items): PinnedCategory => ({
       kind: 'tags',
-      metaId: items[0].metaId,
-      items,
+      metaId: items[0].metaId as number,
+      items: items as TagWithMeta[],
     })),
-    ...valueGroups.value.map((items) => ({
+    ...valueGroups.value.map((items): PinnedCategory => ({
       kind: 'values',
       metaId: items[0].id,
-      items,
+      items: items as ValueWithMeta[],
     })),
   ]
 
@@ -330,10 +381,10 @@ const pinnedCategoriesComputed = computed(() => {
   )
 })
 
-const pinnedFlatComputed = computed(() => {
-  const items = [
-    ...tagItems.value.map((tag) => ({kind: 'tag', metaId: tag.metaId, data: tag})),
-    ...valueItems.value.map((value) => ({kind: 'value', metaId: value.id, data: value})),
+const pinnedFlatComputed = computed((): PinnedFlatEntry[] => {
+  const items: PinnedFlatEntry[] = [
+    ...tagItems.value.map((tag): PinnedFlatEntry => ({kind: 'tag', metaId: tag.metaId as number, data: tag})),
+    ...valueItems.value.map((value): PinnedFlatEntry => ({kind: 'value', metaId: value.id, data: value})),
   ]
 
   return sortByPinnedAssignmentOrder(
@@ -344,28 +395,26 @@ const pinnedFlatComputed = computed(() => {
   )
 })
 
-// проверяем стоит ли отображать эти метаданные
-const checkShow = (metaId) => {
+const checkShow = (metaId: number): boolean => {
   if (props.tagPage) {
     return true
   }
-  let assigned = itemsStore.assigned
-  let tagName = "metaId"
-  if (itemsStore.type === 'tag') tagName = "pinnedMetaId"
-  let x = assigned.findIndex((i) => i[tagName] == metaId)
+  const assigned = itemsStore.assigned as PinnedMetaAssignment[]
+  let tagName: 'metaId' | 'pinnedMetaId' = 'metaId'
+  if (itemsStore.type === 'tag') tagName = 'pinnedMetaId'
+  const x = assigned.findIndex((i) => i[tagName] == metaId)
   if (x > -1) {
-    return assigned[x].show == 1 ? true : false
-  } else {
-    return false
+    return assigned[x].show == 1
   }
+  return false
 }
 
-const getPath = (tag) => {
+const getPath = (tag: TagWithMeta): string => {
   const mediaTypeId = itemsStore.environment?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes)
   return "/tag?metaId=" + tag.metaId + "&tagId=" + tag.id + "&mediaTypeId=" + mediaTypeId
 }
 
-const openNewTab = (tag) => {
+const openNewTab = (tag: TagWithMeta): void => {
   apiClient.post('/api/tab', {
     name: tag.name,
     icon: tag.meta.icon,
@@ -374,7 +423,7 @@ const openNewTab = (tag) => {
     mediaTypeId: itemsStore.environment?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes),
     metaId: tag.metaId,
   })
-    .then((res) => {
+    .then(() => {
       eventBus.emit('getTabs')
     })
     .catch((e) => {
@@ -382,10 +431,10 @@ const openNewTab = (tag) => {
     })
 }
 
-const removeTag = (tag) => {
-  let url = `/api/TagsIn${props.type}/deleteFrom${props.type}`
-  let data = {
-    tagId: tag.id
+const removeTag = (tag: TagWithMeta): void => {
+  const url = `/api/TagsIn${props.type}/deleteFrom${props.type}`
+  const data: RemoveTagPayload = {
+    tagId: tag.id,
   }
 
   if (props.type === 'media') {
@@ -415,7 +464,7 @@ const removeTag = (tag) => {
     })
 }
 
-const filterByTag = (tag) => {
+const filterByTag = (tag: TagWithMeta): void => {
   const filter_new = getFilterObject({
     param: tag.metaId,
     type: "array",
@@ -431,21 +480,22 @@ const filterByTag = (tag) => {
   }, 0)
 }
 
-const showMenu = (e, tag) => {
+const showMenu = (e: MouseEvent | KeyboardEvent, tag: TagWithMeta): void => {
   hideHoverImage()
 
-  const locale = settingsStore.locale
-  const t = (key, params = {}) => translate(key, params, locale)
+  const locale = settingsStore.locale as Locale
+  const t = (key: string, params: Record<string, string | number> = {}) => translate(key, params, locale)
+  const clientX = e instanceof MouseEvent ? e.clientX : 0
+  const clientY = e instanceof MouseEvent ? e.clientY : 0
 
-  const contextMenu = [
+  const contextMenu: ItemContextMenuEntry[] = [
     {
       name: t('context_menu.edit_tag'),
       type: "item",
       icon: "pencil",
       action: () => {
-        let meta = appStore.getMetaById(tag.metaId)
-        dialogsStore.editTag(tag, meta)
-        // TODO написать функцию для добавления нового фильтра
+        const meta = appStore.getMetaById(tag.metaId as number)
+        if (meta) dialogsStore.editTag(tag, meta)
       },
     }, {
       type: "divider"
@@ -490,8 +540,8 @@ const showMenu = (e, tag) => {
   ]
 
   contextMenuStore.showContextMenu({
-    x: e.clientX,
-    y: e.clientY,
+    x: clientX,
+    y: clientY,
     content: contextMenu,
     tagMeta: tag,
   })

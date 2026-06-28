@@ -17,13 +17,24 @@ export interface ServerConfigPayload {
 
 export interface FilterObject {
   id: number | null
-  param: string | null
+  param: string | number | null
   type: string | null
   cond: string | null
   val: unknown
   note: string | null
   active: boolean
   lock: boolean
+  removed?: boolean
+  metaId?: number
+}
+
+export interface FilterListParam {
+  param: string | number
+  type?: string
+  icon?: string
+  text?: string
+  textKey?: string
+  group?: string
 }
 
 export interface FilterCondition {

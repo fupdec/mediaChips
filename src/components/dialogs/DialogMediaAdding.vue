@@ -130,8 +130,10 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, watch, onMounted} from 'vue'
+import type {PropType} from 'vue'
+import type {VFormInstance} from '@/types/vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useTasksStore} from '@/stores/tasks'
@@ -164,7 +166,7 @@ const props = defineProps({
     default: undefined,
   },
   buttonVariant: {
-    type: String,
+    type: String as PropType<'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'>,
     default: 'text',
   },
   hideActivator: {
@@ -190,7 +192,7 @@ const mediaAdding = useMediaAdding()
 // Реактивные переменные
 const internalDialogVisible = ref(false)
 const isFormValid = ref(false)
-const mediaForm = ref()
+const mediaForm = ref<VFormInstance>(null)
 
 const isDialogVisible = computed({
   get() {
@@ -237,19 +239,19 @@ const dialogActionButtons = computed(() => [
 ])
 
 // Правило валидации для обязательного поля путей
-const requiredPathRule = (value) => {
+const requiredPathRule = (value: string) => {
   if (!value || value.trim().length === 0) {
     return t('validation.path_required')
   }
   return true
 }
 
-const onPathsInput = (value) => {
-  tasksStore.mediaAdding.paths = normalizePastedFilePathsText(value)
+const onPathsInput = (value: string) => {
+  tasksStore.mediaAdding.paths = String(normalizePastedFilePathsText(value) ?? '')
 }
 
-const onExcludedInput = (value) => {
-  tasksStore.mediaAdding.excluded = normalizePastedFilePathsText(value)
+const onExcludedInput = (value: string) => {
+  tasksStore.mediaAdding.excluded = String(normalizePastedFilePathsText(value) ?? '')
 }
 
 // Методы
@@ -301,18 +303,19 @@ const syncMediaTypeFromContext = () => {
  */
 const selectMultipleDirectories = async () => {
   const paths = await showOpenDialog(['openDirectory', 'multiSelections'])
-  tasksStore.mediaAdding.paths = normalizePastedFilePathsText(paths || '')
+  tasksStore.mediaAdding.paths = String(normalizePastedFilePathsText(paths || '') ?? '')
 }
 
 const selectMultipleDirectoriesExcluded = async () => {
   const paths = await showOpenDialog(['openDirectory', 'multiSelections'])
-  tasksStore.mediaAdding.excluded = normalizePastedFilePathsText(paths || '')
+  tasksStore.mediaAdding.excluded = String(normalizePastedFilePathsText(paths || '') ?? '')
 }
 
 /**
  * Запускает процесс добавления медиафайлов после валидации формы
  */
 const startMediaAddingProcess = async () => {
+  if (!mediaForm.value) return
   const {valid} = await mediaForm.value.validate()
 
   if (!valid) {
@@ -322,8 +325,8 @@ const startMediaAddingProcess = async () => {
 
   // Активируем задачу и показываем диалог процесса
   syncMediaTypeFromContext()
-  tasksStore.mediaAdding.paths = normalizePastedFilePathsText(tasksStore.mediaAdding.paths || '')
-  tasksStore.mediaAdding.excluded = normalizePastedFilePathsText(tasksStore.mediaAdding.excluded || '')
+  tasksStore.mediaAdding.paths = String(normalizePastedFilePathsText(tasksStore.mediaAdding.paths || '') ?? '')
+  tasksStore.mediaAdding.excluded = String(normalizePastedFilePathsText(tasksStore.mediaAdding.excluded || '') ?? '')
   tasksStore.mediaAdding.dialogProcess = true
   tasksStore.mediaAdding.active = true
   isDialogVisible.value = false
@@ -335,7 +338,7 @@ const startMediaAddingProcess = async () => {
  * Обрабатывает событие перетаскивания файлов в диалог
  * @param {DragEvent} event - Событие перетаскивания
  */
-const handleFileDrop = (event) => {
+const handleFileDrop = (event: DragEvent) => {
   if (!isElectron.value) return
 
   const existingPaths = tasksStore.mediaAdding.paths || ''
@@ -344,7 +347,7 @@ const handleFileDrop = (event) => {
   if (!newPaths) return
 
   tasksStore.mediaAdding.paths = existingPaths
-    ? normalizePastedFilePathsText(`${existingPaths}\n${newPaths}`)
-    : normalizePastedFilePathsText(newPaths)
+    ? String(normalizePastedFilePathsText(`${existingPaths}\n${newPaths}`) ?? '')
+    : String(normalizePastedFilePathsText(newPaths) ?? '')
 }
 </script>
