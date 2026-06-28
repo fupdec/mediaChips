@@ -9,6 +9,42 @@ const {
   requiresMetadataJoinForSort,
 } = require('./mediaFilterSql')
 
+function buildFilteredTotalsSql(fromClause, whereClause, needsDistinct) {
+  if (!needsDistinct) {
+    return `SELECT COUNT(*) AS totalFiltered,
+      COALESCE(SUM(media.filesize), 0) AS totalFilesize
+      ${fromClause}
+      ${whereClause}`
+  }
+
+  return `SELECT COUNT(*) AS totalFiltered,
+    COALESCE(SUM(filesize), 0) AS totalFilesize
+    FROM (
+      SELECT DISTINCT media.id, media.filesize
+      ${fromClause}
+      ${whereClause}
+    )`
+}
+
+function buildFilteredCountSql(fromClause, whereClause, needsDistinct) {
+  if (!needsDistinct) {
+    return `SELECT COUNT(*) AS totalFiltered
+      ${fromClause}
+      ${whereClause}`
+  }
+
+  return `SELECT COUNT(*) AS totalFiltered
+    FROM (
+      SELECT DISTINCT media.id
+      ${fromClause}
+      ${whereClause}
+    )`
+}
+
+function buildMediaIdSelect(needsDistinct) {
+  return needsDistinct ? 'SELECT DISTINCT media.id' : 'SELECT media.id'
+}
+
 const MEDIA_BASE_SELECT = `SELECT media.*,
   videoMetadata.duration,
   videoMetadata.bitrate,
@@ -201,21 +237,22 @@ async function loadMediaItemsSql(db, options = {}) {
     return loadMediaItemsLegacy(db, options)
   }
 
-  const {whereSql, replacements} = filterQuery
+  const {whereSql, joinSql = '', needsDistinct = false, replacements} = filterQuery
   const whereClause = `WHERE ${whereSql}`
   const sortExpr = getSortExpression(sortBy)
   const sortDir = direction === 'asc' ? 'ASC' : 'DESC'
   const joinForFilters = requiresMetadataJoinForFilters(filters)
   const joinForSort = requiresMetadataJoinForSort(sortBy)
-  const fromForCount = getMediaFromClause(joinForFilters)
-  const fromForSort = getMediaFromClause(joinForFilters || joinForSort)
+  const fromForCount = getMediaFromClause(joinForFilters, joinSql)
+  const fromForSort = getMediaFromClause(joinForFilters || joinForSort, joinSql)
+  const idSelect = buildMediaIdSelect(needsDistinct)
 
   const shouldPaginate = !ids.length && limit > 0 && limit < 101
   const safePage = Math.max(1, Number(page) || 1)
   const pageLimit = shouldPaginate ? limit : null
   const queryReplacements = {...replacements}
 
-  let idQuery = `SELECT media.id
+  let idQuery = `${idSelect}
     ${fromForSort}
     ${whereClause}
     ORDER BY ${sortExpr} ${sortDir}`
@@ -231,10 +268,7 @@ async function loadMediaItemsSql(db, options = {}) {
   if (!skipTotals) {
     queries.push(
       db.sequelize.query(
-        `SELECT COUNT(*) AS totalFiltered,
-          COALESCE(SUM(media.filesize), 0) AS totalFilesize
-        ${fromForCount}
-        ${whereClause}`,
+        buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct),
         {replacements},
       ),
       db.sequelize.query(
@@ -265,8 +299,11 @@ async function loadMediaItemsSql(db, options = {}) {
 
   let navigation
   if (includeNavigation) {
+    const navSelect = needsDistinct
+      ? getNavigationSelect().replace('SELECT', 'SELECT DISTINCT')
+      : getNavigationSelect()
     const [navRows] = await db.sequelize.query(
-      `${getNavigationSelect()}
+      `${navSelect}
       ${fromForSort}
       ${whereClause}
       ORDER BY ${sortExpr} ${sortDir}`,
@@ -351,22 +388,23 @@ async function getFilteredMediaSummary(db, options = {}) {
     }
   }
 
-  const {whereSql, replacements} = filterQuery
+  const {whereSql, joinSql = '', needsDistinct = false, replacements} = filterQuery
   const whereClause = `WHERE ${whereSql}`
   const joinForFilters = requiresMetadataJoinForFilters(filters)
   const joinForSort = requiresMetadataJoinForSort(sortBy)
-  const fromForCount = getMediaFromClause(joinForFilters)
-  const fromForSort = getMediaFromClause(joinForFilters || joinForSort)
+  const fromForCount = getMediaFromClause(joinForFilters, joinSql)
+  const fromForSort = getMediaFromClause(joinForFilters || joinForSort, joinSql)
   const sortExpr = getSortExpression(sortBy)
   const sortDir = direction === 'asc' ? 'ASC' : 'DESC'
+  const idSelect = buildMediaIdSelect(needsDistinct)
 
   const [countQuery, previewQuery] = await Promise.all([
     db.sequelize.query(
-      `SELECT COUNT(*) AS totalFiltered ${fromForCount} ${whereClause}`,
+      buildFilteredCountSql(fromForCount, whereClause, needsDistinct),
       {replacements},
     ),
     db.sequelize.query(
-      `SELECT media.id
+      `${idSelect}
       ${fromForSort}
       ${whereClause}
       ORDER BY ${sortExpr} ${sortDir}
@@ -419,24 +457,21 @@ async function loadFilteredMediaIds(db, options = {}) {
     }
   }
 
-  const {whereSql, replacements} = filterQuery
+  const {whereSql, joinSql = '', needsDistinct = false, replacements} = filterQuery
   const whereClause = `WHERE ${whereSql}`
   const joinForFilters = requiresMetadataJoinForFilters(options.filters || [])
   const joinForSort = requiresMetadataJoinForSort(options.sortBy || 'id')
-  const fromForCount = getMediaFromClause(joinForFilters)
-  const fromForSort = getMediaFromClause(joinForFilters || joinForSort)
+  const fromForCount = getMediaFromClause(joinForFilters, joinSql)
+  const fromForSort = getMediaFromClause(joinForFilters || joinForSort, joinSql)
+  const idSelect = buildMediaIdSelect(needsDistinct)
 
   const [countQuery, idQuery] = await Promise.all([
     db.sequelize.query(
-      `SELECT
-        COUNT(*) AS totalFiltered,
-        COALESCE(SUM(media.filesize), 0) AS totalFilesize
-      ${fromForCount}
-      ${whereClause}`,
+      buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct),
       {replacements},
     ),
     db.sequelize.query(
-      `SELECT media.id
+      `${idSelect}
       ${fromForSort}
       ${whereClause}
       ORDER BY ${getSortExpression(options.sortBy || 'id')} ${options.direction === 'asc' ? 'ASC' : 'DESC'}`,

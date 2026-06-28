@@ -53,7 +53,8 @@ const aspectRatio = computed(() => {
 const shouldShowPreview = computed(() => {
   return playerStore.is_file_exists &&
     playerStore.progress_hover != null &&
-    !playerStore.is_mark_hover
+    !playerStore.is_mark_hover &&
+    !playerStore.usesLiveTranscode
 })
 
 const formattedTime = computed(() => {

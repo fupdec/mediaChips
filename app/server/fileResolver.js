@@ -108,7 +108,12 @@ function createFileResolver({config, databasesPath}) {
 }
 
 function isClientAbortError(err) {
-  return err?.code === 'ECONNABORTED' || err?.message === 'Request aborted'
+  const code = err?.code
+  return code === 'ECONNABORTED'
+    || code === 'ECONNRESET'
+    || code === 'EPIPE'
+    || code === 'ERR_STREAM_WRITE_AFTER_END'
+    || err?.message === 'Request aborted'
 }
 
 function safeJsonError(res, req, status, payload) {

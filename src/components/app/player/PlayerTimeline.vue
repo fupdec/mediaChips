@@ -7,7 +7,7 @@
     ref="slider_progress"
   >
     <v-slider
-      :model-value="player.seeking ? player.seekTime : player.currentTime"
+      :model-value="timelineTime"
       @update:model-value="handleSliderChange"
       @start="startSeeking"
       @end="seek"
@@ -15,7 +15,14 @@
       @wheel.prevent.stop="wheelSeek"
       :disabled="!player.is_file_exists || player.playbackError"
       :track-size="2"
-      class="timeline-slider pt-4"
+      :class="[
+        'timeline-slider pt-4',
+        {
+          'timeline-slider--transcode': showTranscodeTimeline,
+          'timeline-slider--stream': showTranscodeTimeline && timelineDisplay.showStream,
+        },
+      ]"
+      :style="timelineTrackStyle"
       color="white"
       step="0.05"
       min="0"
@@ -25,7 +32,7 @@
 
     <controls-set-mark-time v-if="dialogsStore.markAdding.show"/>
 
-    <Preview v-if="!isAudioMode"/>
+    <Preview v-if="!isAudioMode && !player.usesLiveTranscode"/>
 
     <Mark
       v-for="mark in player.marks"
@@ -59,6 +66,10 @@ const {
   player,
   slider_progress,
   controls_width,
+  showTranscodeTimeline,
+  timelineDisplay,
+  timelineTime,
+  timelineTrackStyle,
   startSeeking,
   seek,
   handleSliderChange,

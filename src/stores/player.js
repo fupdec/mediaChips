@@ -1,5 +1,9 @@
 import { defineStore } from 'pinia'
 import {getReadableDuration} from '@/services/formatUtils'
+import {
+  getAbsoluteBufferedRanges,
+  getAbsolutePlaybackTime,
+} from '@/utils/playerBuffer'
 
 export const usePlayerStore = defineStore('player', {
   state: () => ({
@@ -8,12 +12,23 @@ export const usePlayerStore = defineStore('player', {
     fullscreen: false,
     statusText: '',
     statusIcon: '',
+    backgroundStatusText: '',
+    backgroundStatusIcon: '',
     statusTimeout: -1,
     playlistVisible: false,
     marksVisible: false,
     mouseOverControls: false,
     isControlsVisible: true,
     keyboardBlockers: {},
+
+    usesLiveTranscode: false,
+    liveTranscodeStarted: false,
+    liveTranscodeMediaId: null,
+    liveStreamSeekHandler: null,
+    liveStreamOffset: 0,
+    bufferedRanges: [],
+    isLiveStreamSeeking: false,
+    isStreamWaiting: false,
 
     duration: 1,
     volume: 1,
@@ -25,6 +40,10 @@ export const usePlayerStore = defineStore('player', {
     seekTime: 0,
     seeking: false,
     playbackError: null,
+    transcodeActive: false,
+    transcodeProgress: 0,
+    transcodeStatus: 'none',
+    transcodeError: null,
     timeRemain: false,
     media: null,
     progress_hover: null,
@@ -45,6 +64,12 @@ export const usePlayerStore = defineStore('player', {
     isKeyboardBlocked(state) {
       return Object.keys(state.keyboardBlockers).length > 0
     },
+    displayStatusText(state) {
+      return state.statusText || state.backgroundStatusText
+    },
+    displayStatusIcon(state) {
+      return state.statusIcon || state.backgroundStatusIcon
+    },
   },
   actions: {
     setKeyboardBlocked(reason, blocked) {
@@ -61,8 +86,22 @@ export const usePlayerStore = defineStore('player', {
       let timeout = 100
       if (this.duration > 200) timeout = 1000
       this.currentTimeTimeout = setInterval(() => {
-        if (this.player) this.currentTime = this.player.currentTime
+        this.syncPlaybackState()
       }, timeout)
+    },
+    syncPlaybackState() {
+      if (!this.player) return
+
+      this.currentTime = getAbsolutePlaybackTime({
+        usesLiveTranscode: this.usesLiveTranscode,
+        liveStreamOffset: this.liveStreamOffset,
+        playerCurrentTime: this.player.currentTime,
+      })
+
+      this.bufferedRanges = getAbsoluteBufferedRanges(
+        this.player,
+        this.usesLiveTranscode ? this.liveStreamOffset : 0,
+      )
     },
     playerPlay() {
       if (!this.player) return
@@ -83,13 +122,20 @@ export const usePlayerStore = defineStore('player', {
       this.player.pause()
       this.paused = true
       if (this.player) this.player.currentTime = 0
-      this.currentTime = 0
+      this.currentTime = this.usesLiveTranscode ? this.liveStreamOffset : 0
+      this.bufferedRanges = []
       clearInterval(this.currentTimeTimeout)
     },
     playerJumpTo(time) {
       if (!this.player) return
       if (time < 0) time = 0
       else if (time > this.duration) time = this.duration
+
+      if (this.usesLiveTranscode && this.liveStreamSeekHandler) {
+        this.liveStreamSeekHandler(time)
+        return
+      }
+
       this.player.currentTime = time
       this.currentTime = time
       const current = getReadableDuration(time)
@@ -104,6 +150,14 @@ export const usePlayerStore = defineStore('player', {
         this.statusText = ''
         this.statusIcon = ''
       }, 3000)
+    },
+    setBackgroundStatus({ text, icon }) {
+      this.backgroundStatusText = text
+      this.backgroundStatusIcon = icon
+    },
+    clearBackgroundStatus() {
+      this.backgroundStatusText = ''
+      this.backgroundStatusIcon = ''
     },
     setPlaylistItems(videos, {host = ''} = {}) {
       const currentId = this.playlist[this.nowPlaying]?.id

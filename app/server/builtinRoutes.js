@@ -4,6 +4,24 @@ const package_json = require('../../package.json')
 const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
 const {isLoopbackHost} = require('./constants')
 const {isClientAbortError, safeJsonError} = require('./fileResolver')
+const {streamVideoFile} = require('../../api/services/transcode/streamVideoFile')
+
+function resolveMediaVideoPath(db, resolveFilePath, mediaId) {
+  return db.Media.findOne({
+    where: {id: mediaId},
+  }).then((video) => {
+    if (!video || !video.path) {
+      return {error: {status: 404, body: {message: 'Video not found in database'}}}
+    }
+
+    const videoPath = resolveFilePath(video.path)
+    if (!videoPath || !fs.existsSync(videoPath)) {
+      return {error: {status: 404, body: {message: "Video file doesn't exist"}}}
+    }
+
+    return {video, videoPath}
+  })
+}
 
 function registerBuiltinRoutes({
   app,
@@ -15,6 +33,7 @@ function registerBuiltinRoutes({
   routeLoadErrors,
   resolveFilePath,
   getStreamContentType,
+  transcodeManager,
 }) {
   app.get('/api/health', (req, res) => {
     console.log('Health check from:', req.headers.origin || 'unknown origin')
@@ -266,70 +285,186 @@ function registerBuiltinRoutes({
     })
   })
 
-  router.get('/api/video/:id', (req, res) => {
-    db.Media.findOne({
-      where: {id: req.params.id},
-    }).then(video => {
-      if (!video || !video.path) {
-        return res.status(404).json({message: 'Video not found in database'})
+  router.get('/api/video/:id/playable', async (req, res) => {
+    if (!transcodeManager) {
+      return res.json({
+        mode: 'direct',
+        url: `/api/video/${req.params.id}?source=direct`,
+        transcodeRequired: false,
+        transcodeStatus: 'none',
+        progress: 100,
+        error: null,
+      })
+    }
+
+    try {
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      if (resolved.error) {
+        return res.status(resolved.error.status).json(resolved.error.body)
       }
 
-      const videoPath = resolveFilePath(video.path)
-      if (!videoPath || !fs.existsSync(videoPath)) {
-        return res.status(404).json({
-          message: "Video file doesn't exist",
-        })
+      const plan = await transcodeManager.getPlaybackPlan(resolved.videoPath)
+      let url = `/api/video/${req.params.id}?source=auto`
+
+      if (plan.streamPlayback) {
+        url = `/api/video/${req.params.id}/transcode/stream`
       }
 
-      const videoStat = fs.statSync(videoPath)
-      const fileSize = videoStat.size
-      const videoRange = req.headers.range
-      const contentType = getStreamContentType(videoPath)
+      res.json({
+        mode: plan.mode,
+        url,
+        transcodeRequired: plan.transcodeRequired,
+        transcodeStatus: plan.transcodeStatus,
+        streamPlayback: plan.streamPlayback,
+        progress: plan.progress,
+        error: plan.error,
+        reason: plan.reason,
+        playability: plan.playability,
+      })
+    } catch (err) {
+      console.error('Playable check error:', err)
+      safeJsonError(res, req, 500, {message: err.message || 'Failed to analyze video'})
+    }
+  })
 
-      if (videoRange) {
-        const parts = videoRange.replace(/bytes=/, '').split('-')
-        const start = parseInt(parts[0], 10)
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1
-        const chunksize = (end - start) + 1
-        const file = fs.createReadStream(videoPath, {start, end})
+  router.delete('/api/transcode/streams', (req, res) => {
+    if (!transcodeManager) {
+      return res.json({stopped: false})
+    }
 
-        const head = {
-          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunksize,
-          'Content-Type': contentType,
+    try {
+      transcodeManager.stopAllLiveStreams()
+      res.json({stopped: true})
+    } catch (err) {
+      console.error('Live transcode stop-all error:', err)
+      safeJsonError(res, req, 500, {message: err.message || 'Failed to stop live transcode streams'})
+    }
+  })
+
+  router.delete('/api/video/:id/transcode/stream', async (req, res) => {
+    if (!transcodeManager) {
+      return res.json({stopped: false})
+    }
+
+    try {
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      if (resolved.error) {
+        return res.status(resolved.error.status).json(resolved.error.body)
+      }
+
+      const stopped = transcodeManager.stopLiveStream(resolved.videoPath)
+      res.json({stopped})
+    } catch (err) {
+      console.error('Live transcode stop error:', err)
+      safeJsonError(res, req, 500, {message: err.message || 'Failed to stop live transcode stream'})
+    }
+  })
+
+  router.get('/api/video/:id/transcode/stream', async (req, res) => {
+    if (!transcodeManager) {
+      return res.status(503).json({message: 'Transcoding is unavailable'})
+    }
+
+    try {
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      if (resolved.error) {
+        return res.status(resolved.error.status).json(resolved.error.body)
+      }
+
+      const startTime = Math.max(0, Number(req.query.start) || 0)
+      await transcodeManager.streamLive(req, res, resolved.videoPath, {startTime})
+    } catch (err) {
+      console.error('Live transcode stream error:', err)
+      safeJsonError(res, req, 500, {message: err.message || 'Failed to start live transcode stream'})
+    }
+  })
+
+  router.get('/api/video/:id/transcode/status', async (req, res) => {
+    if (!transcodeManager) {
+      return res.json({status: 'none', progress: 100, error: null})
+    }
+
+    try {
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      if (resolved.error) {
+        return res.status(resolved.error.status).json(resolved.error.body)
+      }
+
+      const status = await transcodeManager.getTranscodeStatus(resolved.videoPath)
+      res.json(status)
+    } catch (err) {
+      console.error('Transcode status error:', err)
+      safeJsonError(res, req, 500, {message: err.message || 'Failed to get transcode status'})
+    }
+  })
+
+  router.post('/api/video/:id/transcode/start', async (req, res) => {
+    res.status(410).json({
+      status: 'stream',
+      progress: 0,
+      mode: 'stream',
+      message: 'Full-file transcode is disabled. Use live chunk streaming.',
+    })
+  })
+
+  router.get('/api/transcode/cache', (req, res) => {
+    if (!transcodeManager) {
+      return res.json({bytes: 0, files: 0, entries: 0})
+    }
+
+    try {
+      res.json(transcodeManager.getCacheStatsForActiveDb())
+    } catch (err) {
+      console.error('Transcode cache stats error:', err)
+      safeJsonError(res, req, 500, {message: err.message || 'Failed to read transcode cache stats'})
+    }
+  })
+
+  router.delete('/api/transcode/cache', (req, res) => {
+    if (!transcodeManager) {
+      return res.json({removed: 0, bytes: 0})
+    }
+
+    try {
+      const result = transcodeManager.clearCacheForActiveDb()
+      res.json(result)
+    } catch (err) {
+      console.error('Transcode cache clear error:', err)
+      safeJsonError(res, req, 500, {message: err.message || 'Failed to clear transcode cache'})
+    }
+  })
+
+  router.get('/api/video/:id', async (req, res) => {
+    const source = String(req.query.source || 'auto').toLowerCase()
+
+    try {
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      if (resolved.error) {
+        return res.status(resolved.error.status).json(resolved.error.body)
+      }
+
+      let streamPath = resolved.videoPath
+      let contentType = getStreamContentType(resolved.videoPath)
+
+      if (transcodeManager) {
+        const streamInfo = await transcodeManager.resolveStreamPath(resolved.videoPath, source)
+        if (streamInfo.filePath) {
+          streamPath = streamInfo.filePath
+          contentType = streamInfo.contentType || contentType
+        } else if (source !== 'direct') {
+          return res.status(409).json({
+            message: 'Transcoded video is not ready',
+            transcodeStatus: streamInfo.plan?.transcodeStatus || 'pending',
+            progress: streamInfo.plan?.progress || 0,
+          })
         }
-
-        res.writeHead(206, head)
-        file.on('error', (streamErr) => {
-          if (!isClientAbortError(streamErr)) {
-            console.error('Video stream error:', streamErr)
-          }
-          file.destroy()
-        })
-        req.on('close', () => file.destroy())
-        file.pipe(res)
-      } else {
-        const head = {
-          'Content-Length': fileSize,
-          'Content-Type': contentType,
-        }
-
-        res.writeHead(200, head)
-        const file = fs.createReadStream(videoPath)
-        file.on('error', (streamErr) => {
-          if (!isClientAbortError(streamErr)) {
-            console.error('Video stream error:', streamErr)
-          }
-          file.destroy()
-        })
-        req.on('close', () => file.destroy())
-        file.pipe(res)
       }
-    }).catch(err => {
+
+      streamVideoFile(req, res, streamPath, contentType)
+    } catch (err) {
       console.error('Video streaming error:', err)
       safeJsonError(res, req, 500, {message: err.message || 'Database error'})
-    })
+    }
   })
 }
 

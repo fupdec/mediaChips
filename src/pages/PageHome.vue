@@ -105,6 +105,7 @@ import {loadHomeMediaThumbs} from "@/utils/homeMediaThumbs"
 import {useOpenMediaList} from "@/utils/openMediaList"
 import {findMediaTypeById, isAudioMediaType, isTextMediaType, isVideoMediaType} from "@/utils/mediaType"
 import HomeWidgetRenderer from '@/components/widgets/HomeWidgetRenderer.vue'
+import DialogHomeWidgets from '@/components/dialogs/DialogHomeWidgets.vue'
 import {openPath} from '@/services/shellService'
 import {setOption} from '@/services/settingsService'
 
@@ -120,6 +121,8 @@ const continueWatching = ref([])
 const favorites = ref([])
 const topViews = ref([])
 const showWidgetsDialog = ref(false)
+
+const apiUrl = computed(() => store.localhost)
 
 const shouldLoadMedia = computed(() =>
   isWidgetEnabled('continue') || isWidgetEnabled('favorites') || isWidgetEnabled('topViews'),

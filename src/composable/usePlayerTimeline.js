@@ -5,6 +5,10 @@ import {
   getSeekSecondsFromWheel,
   preventWheelDefault,
 } from '@/utils/playerWheel'
+import {
+  getTimelinePercents,
+  shouldShowTranscodeTimeline,
+} from '@/utils/playerBuffer'
 import _ from 'lodash'
 
 export function findMarkToJump(marks, currentTime, type) {
@@ -47,6 +51,36 @@ export function usePlayerTimeline({emit}) {
       return slider_progress.value?.$el?.clientWidth || 0
     }
     return 0
+  })
+
+  const timelineTime = computed(() =>
+    player.value.seeking ? player.value.seekTime : player.value.currentTime,
+  )
+
+  const showTranscodeTimeline = computed(() =>
+    shouldShowTranscodeTimeline({
+      usesLiveTranscode: player.value.usesLiveTranscode,
+    }),
+  )
+
+  const timelineDisplay = computed(() => {
+    const state = player.value
+    return getTimelinePercents({
+      currentTime: timelineTime.value,
+      duration: state.duration,
+      bufferedRanges: state.bufferedRanges,
+      usesLiveTranscode: state.usesLiveTranscode,
+      isLiveStreamSeeking: state.isLiveStreamSeeking,
+      isStreamWaiting: state.isStreamWaiting,
+    })
+  })
+
+  const timelineTrackStyle = computed(() => {
+    if (!showTranscodeTimeline.value) return undefined
+
+    return {
+      '--timeline-buffer': `${timelineDisplay.value.buffer}%`,
+    }
   })
 
   const jumpTo = (time) => {
@@ -118,6 +152,7 @@ export function usePlayerTimeline({emit}) {
   }
 
   const showPreview = (e) => {
+    if (player.value.usesLiveTranscode) return
     if (!preview_show.value || !preview_event_target.value) return
 
     previewPendingX = e.pageX
@@ -182,6 +217,10 @@ export function usePlayerTimeline({emit}) {
     playerStore,
     slider_progress,
     controls_width,
+    showTranscodeTimeline,
+    timelineDisplay,
+    timelineTime,
+    timelineTrackStyle,
     startSeeking,
     seek,
     handleSliderChange,

@@ -169,6 +169,18 @@ const Settings = [{
   {
     "option": "locale",
     "value": "en"
+  },
+  {
+    "option": "transcodeUnsupportedFormats",
+    "value": "1"
+  },
+  {
+    "option": "transcodeMaxHeight",
+    "value": "1080"
+  },
+  {
+    "option": "transcodeCacheMaxGb",
+    "value": "5"
   }
 ]
 

@@ -20,6 +20,13 @@ const {app, router} = createExpressApp()
 const routeLoadErrors = registerApiRoutes(app, db)
 
 const {resolveFilePath, getStreamContentType} = createFileResolver({config, databasesPath})
+const {createTranscodeManager} = require('../api/services/transcode/transcodeService')
+
+const transcodeManager = createTranscodeManager({
+  databasesPath,
+  db,
+  getActiveDbId: () => config.databases.find((entry) => entry.active)?.id || null,
+})
 
 registerBuiltinRoutes({
   app,
@@ -31,6 +38,7 @@ registerBuiltinRoutes({
   routeLoadErrors,
   resolveFilePath,
   getStreamContentType,
+  transcodeManager,
 })
 
 setupStaticApp(app)

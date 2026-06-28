@@ -7,6 +7,7 @@
       v-ripple="bigPreview ? false : { class: `text-primary` }"
       :aspect-ratio="16 / 9"
       class="video-preview-container"
+      :class="{ 'is-hovered': isHovered }"
       @blur="handlePreviewBlur"
       @click="handlePreviewClick"
       @contextmenu="handlePreviewContextMenu"
@@ -40,9 +41,27 @@
         </div>
       </div>
 
+      <!-- SYSTEM PLAYER (transcode disabled + unsupported format) -->
+      <div
+        v-if="showTranscodeDisabledNotice"
+        class="player-only-notice"
+      >
+        <v-btn
+          class="player-only-notice__btn"
+          color="primary"
+          variant="flat"
+          rounded="pill"
+          size="small"
+          @click.stop="openInSystemPlayer"
+        >
+          {{ t('actions.open_system_player') }}
+        </v-btn>
+      </div>
+
       <!-- VIDEO PREVIEW -->
       <div
-        v-if="showVideoPreview"
+        v-if="canMountVideoPreview"
+        v-show="showVideoPreview"
         :style="{ animationDelay: `${SETTINGS.delayVideoPreview}ms` }"
         class="preview"
         @click.stop="play"
@@ -58,7 +77,7 @@
         />
         <div v-if="playbackError"
           class="playback-error">
-          ERROR: format not supported
+          {{ t('player.preview_format_unavailable') }}
         </div>
       </div>
 
@@ -99,7 +118,7 @@
 
     <!-- BIG PREVIEW ANIMATION -->
     <v-responsive
-      v-if="bigPreviewAnimation && !playbackError"
+      v-if="bigPreviewAnimation && isHovered && !playbackError"
       :aspect-ratio="16 / 9"
       class="big-preview-plug"
     >
@@ -178,6 +197,10 @@ import {
 } from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
 import {setOption} from '@/services/settingsService'
+import {isLikelyBrowserDirectVideo} from '@/utils/transcodeCompatibility'
+import {usePlayerStore} from '@/stores/player'
+import {buildApiUrl} from '@/services/apiClient'
+import {buildVideoStreamUrl} from '@/services/transcodeService'
 
 // props
 const props = defineProps({
@@ -193,6 +216,7 @@ const itemsStore = useItemsStore()
 const settingsStore = useSettingsStore()
 const tasksStore = useTasksStore()
 const contextMenuStore = useContextMenu()
+const playerStore = usePlayerStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
@@ -214,7 +238,6 @@ const timeouts = {}
 const bigPreview = ref(false)
 const bigPreviewAnimation = ref(false)
 const playbackError = ref(false)
-const isProcessingHover = ref(false) // Новый флаг для отслеживания обработки наведения
 const isSettingThumb = ref(false)
 const isCreatingThumb = ref(false)
 const thumbCreateAttempted = ref(false)
@@ -258,10 +281,35 @@ const progressPosition = computed(() =>
   `${100 - (progress.value / props.media.duration) * 100}%`
 )
 
+const isUnsupportedFormat = computed(() =>
+  props.isFileExists && !isLikelyBrowserDirectVideo(props.media?.path),
+)
+
+const isTranscodeEnabled = computed(() =>
+  settingsStore.transcodeUnsupportedFormats === '1',
+)
+
+const isVideoPreviewEnabled = computed(() =>
+  SETTINGS.value.videoPreviewHover === 'video',
+)
+
+const shouldBlockHoverPreview = computed(() =>
+  isUnsupportedFormat.value &&
+  !isTranscodeEnabled.value &&
+  isVideoPreviewEnabled.value,
+)
+
+const showTranscodeDisabledNotice = computed(() =>
+  shouldBlockHoverPreview.value &&
+  isHovered.value &&
+  isViewCard.value,
+)
+
 const isShowProgress = computed(() =>
   SETTINGS.value.videoPreviewHover === 'video' &&
   props.isFileExists &&
-  isHovered.value
+  isHovered.value &&
+  !shouldBlockHoverPreview.value,
 )
 
 const isViewCard = computed(() =>
@@ -277,34 +325,59 @@ const is_window_focused = computed(() => store.window.focused)
 const showVideoPreview = computed(() =>
   SETTINGS.value.videoPreviewHover === 'video' &&
   props.isFileExists &&
-  isHovered.value
+  isHovered.value &&
+  !shouldBlockHoverPreview.value,
+)
+
+const canMountVideoPreview = computed(() =>
+  isViewCard.value &&
+  SETTINGS.value.videoPreviewHover === 'video' &&
+  props.isFileExists &&
+  !shouldBlockHoverPreview.value,
 )
 
 const showTimelinePreview = computed(() =>
   SETTINGS.value.videoPreviewHover === 'timeline' &&
   props.isFileExists &&
-  isHovered.value
+  isHovered.value &&
+  !shouldBlockHoverPreview.value,
 )
 
 // Перенесенные методы из первого файла
-const removeClasses = () => {
-  const preview = previewRef.value.$el
-  preview.classList.remove("big-preview")
-  preview.classList.remove("shrink-down")
+const resetPreviewContainer = () => {
   bigPreviewAnimation.value = false
+
+  const el = previewRef.value?.$el
+  if (!el) return
+
+  el.removeEventListener('animationend', removeClasses)
+  el.classList.remove('big-preview', 'shrink-down')
+  el.style.animation = ''
+}
+
+const removeClasses = () => {
+  resetPreviewContainer()
 }
 
 const shrink = () => {
-  const preview = previewRef.value.$el
+  const preview = previewRef.value?.$el
+  if (!preview) {
+    resetPreviewContainer()
+    return
+  }
 
   // Remove cloned element from DOM after animation is over
-  preview.addEventListener("animationend", removeClasses)
+  preview.addEventListener('animationend', removeClasses, {once: true})
 
   // Trigger browser reflow to start animation
   preview.style.animation = 'none'
   preview.offsetHeight
   preview.style.animation = ''
-  preview.classList.add("shrink-down")
+  preview.classList.add('shrink-down')
+
+  timeouts.shrink = setTimeout(() => {
+    resetPreviewContainer()
+  }, 400)
 }
 
 const toggleFullScreen = () => {
@@ -455,7 +528,7 @@ const setAsThumbFromPreview = async () => {
 }
 
 const handlePreviewContextMenu = (e) => {
-  if (!bigPreview.value || !props.isFileExists || playbackError.value) return
+  if (!bigPreview.value || !props.isFileExists || playbackError.value || shouldBlockHoverPreview.value) return
 
   e.preventDefault()
   e.stopPropagation()
@@ -495,6 +568,14 @@ const play = (inApp) => {
   })
 }
 
+const openInSystemPlayer = () => {
+  stopPlayingPreview({force: true})
+  itemsStore.playVideo({
+    video: props.media,
+    in_system: true,
+  })
+}
+
 const handleVideoError = () => {
   playbackError.value = true
   // Очищаем источник видео
@@ -513,7 +594,7 @@ const handleVideoLoaded = () => {
 }
 
 const changePreviewTime = _.debounce((e) => {
-  if (!props.isFileExists || playbackError.value) return
+  if (!props.isFileExists || playbackError.value || shouldBlockHoverPreview.value) return
   if (SETTINGS.value.videoPreviewHover !== "video") return
 
   const rect = e.target.getBoundingClientRect()
@@ -558,77 +639,120 @@ const checkVideoFormat = async () => {
   }
 }
 
-const handleMouseEnter = () => {
-  if (!props.isFileExists || playbackError.value || isProcessingHover.value) return
+let previewPlaybackToken = 0
 
-  isProcessingHover.value = true
+const isIgnorablePreviewError = (error) => {
+  const name = error?.name || ''
+  return name === 'AbortError' || name === 'NotAllowedError'
+}
 
-  // Используем nextTick чтобы гарантировать обновление DOM
-  nextTick(() => {
-    if (!isHovered.value) {
-      isHovered.value = true
-      playbackError.value = false
+const buildPreviewVideoUrl = () =>
+  buildVideoStreamUrl(buildApiUrl, props.media.id, 'auto')
 
-      if (SETTINGS.value.videoPreviewHover !== "video") {
-        isProcessingHover.value = false
-        return
-      }
+const waitForPreviewCanPlay = (video, token) => new Promise((resolve, reject) => {
+  if (token !== previewPlaybackToken) {
+    reject(new Error('Preview playback cancelled'))
+    return
+  }
 
-      if (SETTINGS.value.big_video_preview === "1") {
-        const totalDelay = (Number(SETTINGS.value.delayVideoPreview) || 0) +
-          (Number(SETTINGS.value.big_video_preview_delay) || 0)
+  if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+    resolve()
+    return
+  }
 
-        timeouts.cinema = setTimeout(() => {
-          emit('update-big-preview', true)
-          bigPreview.value = true
-          bigPreviewAnimation.value = true
-        }, Math.floor(totalDelay))
-      }
+  const cleanup = () => {
+    video.removeEventListener('canplay', onCanPlay)
+    video.removeEventListener('error', onError)
+  }
 
-      if (!bigPreview.value) {
-        timeouts.z = setTimeout(() => {
-          if (videoRef.value) {
-            const videoSrc = store.localhost + "/api/video/" + props.media.id
-            const video = videoRef.value
+  const onCanPlay = () => {
+    cleanup()
+    resolve()
+  }
 
-            // Сначала проверяем, не загружено ли уже видео
-            if (video.src && video.src.includes(props.media.id)) {
-              // Если видео уже загружено, просто воспроизводим
-              video.play().catch(error => {
-                console.error("Video playback error:", error)
-                playbackError.value = true
-              })
-            } else {
-              // Если видео не загружено, загружаем и воспроизводим
-              video.src = videoSrc
-              video.load()
+  const onError = () => {
+    cleanup()
+    reject(video.error || new Error('Video failed to load'))
+  }
 
-              video.play().catch(error => {
-                console.error("Video playback error:", error)
-                playbackError.value = true
-                video.src = ''
-              })
-            }
-          }
-          isProcessingHover.value = false
-        }, 50) // Уменьшенная задержка
-      } else {
-        isProcessingHover.value = false
-      }
-    } else {
-      isProcessingHover.value = false
+  video.addEventListener('canplay', onCanPlay, {once: true})
+  video.addEventListener('error', onError, {once: true})
+})
+
+const startPreviewPlayback = async () => {
+  const token = ++previewPlaybackToken
+  const video = videoRef.value
+  if (!video || !showVideoPreview.value) return
+  if (playerStore.active && playerStore.liveTranscodeMediaId === props.media.id) return
+
+  const videoSrc = buildPreviewVideoUrl()
+
+  try {
+    const needsNewSource = !video.src || !video.src.includes(String(props.media.id))
+    if (needsNewSource) {
+      video.src = videoSrc
+      await waitForPreviewCanPlay(video, token)
     }
-  })
+
+    if (token !== previewPlaybackToken || !showVideoPreview.value) return
+
+    await video.play()
+    playbackError.value = false
+  } catch (error) {
+    if (token !== previewPlaybackToken || isIgnorablePreviewError(error)) return
+
+    console.error('Video playback error:', error)
+    playbackError.value = true
+    video.removeAttribute('src')
+    video.load()
+  }
+}
+
+const schedulePreviewPlayback = () => {
+  clearTimeout(timeouts.z)
+
+  const delay = Math.max(0, Number(SETTINGS.value.delayVideoPreview) || 0)
+  timeouts.z = setTimeout(() => {
+    if (!showVideoPreview.value) return
+    void startPreviewPlayback()
+  }, delay)
+}
+
+const handleMouseEnter = () => {
+  if (!props.isFileExists || isHovered.value) return
+
+  clearTimeout(timeouts.leave)
+  playbackError.value = false
+  isHovered.value = true
+
+  if (isVideoPreviewEnabled.value && !shouldBlockHoverPreview.value) {
+    schedulePreviewPlayback()
+  }
+
+  if (SETTINGS.value.big_video_preview === '1' && !shouldBlockHoverPreview.value) {
+    const totalDelay = (Number(SETTINGS.value.delayVideoPreview) || 0) +
+      (Number(SETTINGS.value.big_video_preview_delay) || 0)
+
+    timeouts.cinema = setTimeout(() => {
+      emit('update-big-preview', true)
+      bigPreview.value = true
+      bigPreviewAnimation.value = true
+    }, Math.floor(totalDelay))
+  }
 }
 
 const stopPlayingPreview = ({force = false} = {}) => {
-  if (!props.isFileExists || isProcessingHover.value) return
+  if (!props.isFileExists) return
   if (!force && shouldKeepBigPreviewOpen()) return
 
+  previewPlaybackToken += 1
+  clearTimeout(timeouts.leave)
+  clearTimeout(timeouts.z)
   bigPreviewMenuActive.value = false
 
   // Сбрасываем состояние предпросмотра
   isHovered.value = false
+  resetPreviewContainer()
 
   emit('update-big-preview', false)
   bigPreview.value = false
@@ -654,10 +778,10 @@ const stopPlayingPreview = ({force = false} = {}) => {
 }
 
 const handleMouseLeave = () => {
-  // Сначала сбрасываем флаг обработки
-  isProcessingHover.value = false
-  // Затем останавливаем превью
-  stopPlayingPreview()
+  clearTimeout(timeouts.leave)
+  timeouts.leave = setTimeout(() => {
+    stopPlayingPreview()
+  }, 100)
 }
 
 const getFrameImg = async (progressValue) => {
@@ -709,6 +833,14 @@ const initFrames = async () => {
 }
 
 // Наблюдатели
+watch(
+  () => showVideoPreview.value && videoRef.value,
+  (ready) => {
+    if (!ready) return
+    schedulePreviewPlayback()
+  },
+)
+
 watch(() => contextMenuStore.show, (show) => {
   if (show || !bigPreviewMenuActive.value) return
 
@@ -745,7 +877,10 @@ watch(() => ITEMS.value.view, (value) => {
 watch(() => bigPreview.value, (value) => {
   if (value) {
     toggleFullScreen()
-  } else {
+    return
+  }
+
+  if (previewRef.value?.$el?.classList.contains('big-preview')) {
     shrink()
   }
 })
@@ -821,6 +956,22 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   font-size: 12px;
   text-align: center;
+}
+
+.player-only-notice {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.35);
+
+  .player-only-notice__btn {
+    pointer-events: auto;
+    opacity: 1;
+  }
 }
 
 .big-preview-plug .v-card {

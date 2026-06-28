@@ -762,9 +762,11 @@
   .resolution {
     z-index: 1;
   }
-  &:hover {
+  &:hover,
+  &.is-hovered {
     .preview {
       animation-name: appearing;
+      opacity: 1;
       video {
         opacity: 1;
       }

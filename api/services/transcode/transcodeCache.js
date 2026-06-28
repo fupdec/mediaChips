@@ -1,0 +1,162 @@
+const crypto = require('crypto')
+const fs = require('fs')
+const path = require('path')
+
+function buildCacheKey(filePath, stat) {
+  const payload = `${filePath}|${stat.mtimeMs}|${stat.size}`
+  return crypto.createHash('sha256').update(payload).digest('hex')
+}
+
+function getCacheDir(databasesPath, dbId) {
+  return path.join(databasesPath, dbId, 'transcode_cache')
+}
+
+function getCachePaths(databasesPath, dbId, cacheKey) {
+  const cacheDir = getCacheDir(databasesPath, dbId)
+  return {
+    cacheDir,
+    outputPath: path.join(cacheDir, `${cacheKey}.mp4`),
+    metaPath: path.join(cacheDir, `${cacheKey}.json`),
+    tempPath: path.join(cacheDir, `${cacheKey}.part.mp4`),
+  }
+}
+
+function readCacheMeta(metaPath) {
+  try {
+    if (!fs.existsSync(metaPath)) return null
+    return JSON.parse(fs.readFileSync(metaPath, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+function writeCacheMeta(metaPath, meta) {
+  fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2))
+}
+
+function resolveExistingCache(databasesPath, dbId, filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return null
+
+  const stat = fs.statSync(filePath)
+  const cacheKey = buildCacheKey(filePath, stat)
+  const {outputPath, metaPath} = getCachePaths(databasesPath, dbId, cacheKey)
+  const meta = readCacheMeta(metaPath)
+
+  if (meta?.status === 'done' && fs.existsSync(outputPath)) {
+    return {cacheKey, outputPath, metaPath, meta, stat}
+  }
+
+  return {cacheKey, outputPath, metaPath, meta, stat, pending: true}
+}
+
+function ensureCacheDir(cacheDir) {
+  fs.mkdirSync(cacheDir, {recursive: true})
+}
+
+function listCacheEntries(databasesPath, dbId) {
+  const cacheDir = getCacheDir(databasesPath, dbId)
+  if (!fs.existsSync(cacheDir)) return []
+
+  const entries = []
+
+  for (const fileName of fs.readdirSync(cacheDir)) {
+    if (!fileName.endsWith('.json')) continue
+
+    const metaPath = path.join(cacheDir, fileName)
+    const meta = readCacheMeta(metaPath)
+    if (!meta) continue
+
+    const outputPath = path.join(cacheDir, `${meta.cacheKey}.mp4`)
+    const size = fs.existsSync(outputPath) ? fs.statSync(outputPath).size : 0
+
+    entries.push({
+      ...meta,
+      outputPath,
+      metaPath,
+      size,
+    })
+  }
+
+  return entries
+}
+
+function clearCacheExcept(databasesPath, dbId, keepCacheKey) {
+  const cacheDir = getCacheDir(databasesPath, dbId)
+  if (!fs.existsSync(cacheDir)) return 0
+
+  let removed = 0
+
+  for (const fileName of fs.readdirSync(cacheDir)) {
+    if (keepCacheKey && fileName.startsWith(keepCacheKey)) continue
+
+    try {
+      fs.unlinkSync(path.join(cacheDir, fileName))
+      removed += 1
+    } catch (error) {
+      console.error('Failed to remove transcode cache file:', error)
+    }
+  }
+
+  return removed
+}
+
+function getCacheStats(databasesPath, dbId) {
+  const cacheDir = getCacheDir(databasesPath, dbId)
+  if (!fs.existsSync(cacheDir)) {
+    return {bytes: 0, files: 0, entries: 0}
+  }
+
+  let bytes = 0
+  let files = 0
+
+  for (const fileName of fs.readdirSync(cacheDir)) {
+    const filePath = path.join(cacheDir, fileName)
+
+    try {
+      const stat = fs.statSync(filePath)
+      if (!stat.isFile()) continue
+      files += 1
+      bytes += stat.size
+    } catch (error) {
+      console.error('Failed to stat transcode cache file:', error)
+    }
+  }
+
+  const entries = listCacheEntries(databasesPath, dbId)
+    .filter((entry) => entry.status === 'done' || entry.status === 'running').length
+
+  return {bytes, files, entries}
+}
+
+function clearCache(databasesPath, dbId) {
+  const cacheDir = getCacheDir(databasesPath, dbId)
+  if (!fs.existsSync(cacheDir)) return {removed: 0, bytes: 0}
+
+  const stats = getCacheStats(databasesPath, dbId)
+  let removed = 0
+
+  for (const fileName of fs.readdirSync(cacheDir)) {
+    try {
+      fs.unlinkSync(path.join(cacheDir, fileName))
+      removed += 1
+    } catch (error) {
+      console.error('Failed to remove transcode cache file:', error)
+    }
+  }
+
+  return {removed, bytes: stats.bytes}
+}
+
+module.exports = {
+  buildCacheKey,
+  getCacheDir,
+  getCachePaths,
+  readCacheMeta,
+  writeCacheMeta,
+  resolveExistingCache,
+  ensureCacheDir,
+  listCacheEntries,
+  clearCacheExcept,
+  getCacheStats,
+  clearCache,
+}

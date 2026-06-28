@@ -43,7 +43,7 @@
           />
           <div v-if="playback_error"
             class="playback-error">
-            {{ t('player.video_format_not_supported') }}
+            {{ t('player.preview_format_unavailable') }}
           </div>
         </div>
       </v-responsive>

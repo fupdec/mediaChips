@@ -18,6 +18,24 @@ import {apiClient, buildApiUrl} from '@/services/apiClient'
 import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
 import {ensureMarkThumb, getMarkImagePath} from '@/utils/markThumb'
+import {isIgnorablePlaybackError} from '@/utils/playerBuffer'
+import {
+  getChunkStart,
+  getNextChunkStart,
+  LIVE_STREAM_CHUNK_SECONDS,
+  LIVE_STREAM_PREFETCH_SECONDS,
+} from '@/utils/liveStreamChunk.js'
+import {
+  buildVideoStreamUrl,
+  buildLiveStreamUrl,
+  fetchPlayableInfo,
+  stopLiveTranscode,
+  playWhenReady,
+} from '@/services/transcodeService'
+import {
+  markLiveTranscodeSession,
+  clearLiveTranscodeSessionMark,
+} from '@/utils/liveTranscodeLifecycle'
 
 export async function resolvePlayableVideo(playlist, initialVideo, checkFileExists) {
   const candidates = []
@@ -81,10 +99,38 @@ export function usePlayerPlayback({
     isReady.value = false
 
     playerStore.player.addEventListener('loadedmetadata', () => {
-      playerStore.duration = playerStore.player.duration
+      if (playerStore.usesLiveTranscode && playerStore.metadata?.duration) {
+        playerStore.duration = playerStore.metadata.duration
+      } else if (Number.isFinite(playerStore.player.duration) && playerStore.player.duration > 0) {
+        playerStore.duration = playerStore.player.duration
+      } else if (playerStore.metadata?.duration) {
+        playerStore.duration = playerStore.metadata.duration
+      }
+
+      playerStore.syncPlaybackState()
     })
 
-    playerStore.player.addEventListener('ended', () => {
+    playerStore.player.addEventListener('timeupdate', () => {
+      playerStore.syncPlaybackState()
+      maybeAdvanceLiveStreamChunk()
+    })
+
+    playerStore.player.addEventListener('progress', () => {
+      playerStore.syncPlaybackState()
+    })
+
+    playerStore.player.addEventListener('ended', async () => {
+      if (playerStore.usesLiveTranscode) {
+        const nextStart = getNextChunkStart(
+          playerStore.liveStreamOffset,
+          playerStore.duration,
+        )
+        if (nextStart != null) {
+          const advanced = await switchLiveStreamChunk(nextStart)
+          if (advanced) return
+        }
+      }
+
       if (playerStore.playlistMode.includes('autoplay') && controls.value) {
         controls.value.next()
       }
@@ -92,7 +138,29 @@ export function usePlayerPlayback({
 
     playerStore.player.addEventListener('error', () => {
       if (!playerStore.active || !playerStore.player?.src) return
+
+      if (isIgnorablePlaybackError({
+        usesLiveTranscode: playerStore.usesLiveTranscode,
+        isLiveStreamSeeking: playerStore.isLiveStreamSeeking,
+        mediaErrorCode: playerStore.player.error?.code,
+      })) {
+        return
+      }
+
       playerStore.playbackError = true
+    })
+
+    playerStore.player.addEventListener('waiting', () => {
+      if (!playerStore.usesLiveTranscode) return
+      playerStore.isStreamWaiting = true
+    })
+
+    playerStore.player.addEventListener('playing', () => {
+      if (!playerStore.usesLiveTranscode) return
+      playerStore.liveTranscodeStarted = true
+      playerStore.isStreamWaiting = false
+      playerStore.playbackError = false
+      playerStore.isLiveStreamSeeking = false
     })
   }
 
@@ -155,7 +223,194 @@ export function usePlayerPlayback({
     playerStore.media = media
   }
 
+  let transcodeSessionId = 0
+  let currentLiveMediaId = null
+  let liveStreamSeekGeneration = 0
+  let isAdvancingChunk = false
+  let pendingNextChunkStart = null
+
+  const resetTranscodeState = () => {
+    playerStore.transcodeActive = false
+    playerStore.transcodeProgress = 0
+    playerStore.transcodeStatus = 'none'
+    playerStore.transcodeError = null
+  }
+
+  const stopLiveTranscodeSession = (mediaId = currentLiveMediaId) => {
+    if (!mediaId) return Promise.resolve()
+    return stopLiveTranscode(apiClient, mediaId).catch((error) => {
+      console.warn('Failed to stop live transcode session:', error)
+    })
+  }
+
+  const clearLiveTranscodeHandlers = () => {
+    const stoppingMediaId = currentLiveMediaId
+    playerStore.usesLiveTranscode = false
+    playerStore.liveTranscodeStarted = false
+    playerStore.liveTranscodeMediaId = null
+    playerStore.liveStreamSeekHandler = null
+    playerStore.liveStreamOffset = 0
+    playerStore.bufferedRanges = []
+    playerStore.isLiveStreamSeeking = false
+    playerStore.isStreamWaiting = false
+    currentLiveMediaId = null
+    isAdvancingChunk = false
+    pendingNextChunkStart = null
+    liveStreamSeekGeneration += 1
+    seekLiveStream.cancel?.()
+    maybeAdvanceLiveStreamChunk.cancel?.()
+
+    if (stoppingMediaId) {
+      stopLiveTranscodeSession(stoppingMediaId)
+    }
+
+    clearLiveTranscodeSessionMark()
+  }
+
+  const switchLiveStreamChunk = async (nextChunkStart) => {
+    if (!currentLiveMediaId || !playerStore.player || nextChunkStart == null) return false
+
+    const seekGeneration = ++liveStreamSeekGeneration
+    isAdvancingChunk = true
+    pendingNextChunkStart = null
+    const wasPaused = playerStore.paused
+
+    playerStore.isLiveStreamSeeking = true
+    playerStore.playbackError = false
+    playerStore.liveStreamOffset = nextChunkStart
+    playerStore.bufferedRanges = []
+    playerStore.player.src = buildLiveStreamUrl(buildApiUrl, currentLiveMediaId, nextChunkStart)
+    playerStore.currentTime = nextChunkStart
+
+    try {
+      if (!wasPaused) {
+        await playWhenReady(playerStore.player)
+        playerStore.paused = false
+      }
+    } catch (error) {
+      if (seekGeneration === liveStreamSeekGeneration && !isIgnorablePlaybackError({
+        usesLiveTranscode: true,
+        isLiveStreamSeeking: true,
+        mediaErrorCode: playerStore.player.error?.code,
+      })) {
+        console.log(error)
+      }
+    } finally {
+      if (seekGeneration === liveStreamSeekGeneration) {
+        isAdvancingChunk = false
+        playerStore.isLiveStreamSeeking = false
+        playerStore.syncPlaybackState()
+      }
+    }
+
+    return seekGeneration === liveStreamSeekGeneration
+  }
+
+  const maybeAdvanceLiveStreamChunk = _.debounce(async () => {
+    if (!playerStore.usesLiveTranscode || !playerStore.player || isAdvancingChunk) return
+    if (playerStore.isLiveStreamSeeking || playerStore.paused) return
+
+    const chunkStart = playerStore.liveStreamOffset
+    const relativeTime = playerStore.player.currentTime || 0
+    const nextStart = getNextChunkStart(chunkStart, playerStore.duration)
+    if (nextStart == null) return
+
+    const prefetchAt = LIVE_STREAM_CHUNK_SECONDS - LIVE_STREAM_PREFETCH_SECONDS
+    if (relativeTime < prefetchAt) return
+    if (pendingNextChunkStart === nextStart) return
+
+    pendingNextChunkStart = nextStart
+    await switchLiveStreamChunk(nextStart)
+  }, 200)
+
+  const seekLiveStream = _.debounce(async (time) => {
+    if (!currentLiveMediaId || !playerStore.player) return
+
+    const chunkStart = getChunkStart(time)
+    const seekGeneration = ++liveStreamSeekGeneration
+    const wasPaused = playerStore.paused
+    isAdvancingChunk = false
+    pendingNextChunkStart = null
+    playerStore.isLiveStreamSeeking = true
+    playerStore.playbackError = false
+    playerStore.liveStreamOffset = chunkStart
+    playerStore.bufferedRanges = []
+    playerStore.player.src = buildLiveStreamUrl(buildApiUrl, currentLiveMediaId, chunkStart)
+    playerStore.currentTime = chunkStart
+
+    const onPlaying = () => {
+      if (seekGeneration !== liveStreamSeekGeneration) return
+      playerStore.isLiveStreamSeeking = false
+      playerStore.playbackError = false
+      playerStore.syncPlaybackState()
+    }
+
+    playerStore.player.addEventListener('playing', onPlaying, {once: true})
+
+    if (!wasPaused) {
+      try {
+        await playWhenReady(playerStore.player)
+        playerStore.paused = false
+      } catch (error) {
+        if (seekGeneration !== liveStreamSeekGeneration) return
+        if (isIgnorablePlaybackError({
+          usesLiveTranscode: true,
+          isLiveStreamSeeking: true,
+          mediaErrorCode: playerStore.player.error?.code,
+        })) {
+          return
+        }
+        console.log(error)
+      }
+    }
+
+    if (seekGeneration !== liveStreamSeekGeneration) return
+
+    playerStore.syncPlaybackState()
+
+    window.setTimeout(() => {
+      if (seekGeneration !== liveStreamSeekGeneration) return
+      if (!playerStore.isLiveStreamSeeking) return
+      playerStore.isLiveStreamSeeking = false
+    }, 15000)
+  }, 250)
+
+  const resolveVideoSource = async (mediaId, startTime = 0) => {
+    clearLiveTranscodeHandlers()
+
+    if (settingsStore.transcodeUnsupportedFormats !== '1') {
+      return buildVideoStreamUrl(buildApiUrl, mediaId, 'direct')
+    }
+
+    const playable = await fetchPlayableInfo(apiClient, mediaId)
+
+    if (!playable.transcodeRequired) {
+      resetTranscodeState()
+      return buildVideoStreamUrl(buildApiUrl, mediaId, 'auto')
+    }
+
+    const chunkStart = getChunkStart(startTime)
+    currentLiveMediaId = mediaId
+    playerStore.usesLiveTranscode = true
+    playerStore.liveTranscodeMediaId = mediaId
+    playerStore.transcodeStatus = 'stream'
+    playerStore.liveStreamSeekHandler = (time) => {
+      playerStore.currentTime = time
+      seekLiveStream(time)
+    }
+
+    playerStore.liveStreamOffset = chunkStart
+    resetTranscodeState()
+    playerStore.transcodeStatus = 'stream'
+    markLiveTranscodeSession(mediaId)
+    return buildLiveStreamUrl(buildApiUrl, mediaId, chunkStart)
+  }
+
   const loadSrc = async (media, start_time) => {
+    transcodeSessionId += 1
+    resetTranscodeState()
+    clearLiveTranscodeHandlers()
+    playerStore.liveTranscodeStarted = false
     isReady.value = false
     playerStore.playbackError = false
 
@@ -190,25 +445,47 @@ export function usePlayerPlayback({
       playerStore.nowPlaying = resolved.index
     }
 
-    playerStore.player.src = `${buildApiUrl(`/api/video/${media.id}`)}?time=${Math.random()}`
+    await getMetadata(media)
+    if (playerStore.metadata?.duration) {
+      playerStore.duration = playerStore.metadata.duration
+    }
+
+    let targetStartTime = start_time || 0
+    if (!start_time && settingsStore.restorePlaybackTime == '1') {
+      if (playerStore.metadata.time && playerStore.metadata.duration) {
+        if (!(playerStore.metadata.duration - playerStore.metadata.time < 5)) {
+          targetStartTime = playerStore.metadata.time
+        }
+      }
+    }
+
+    try {
+      playerStore.player.src = await resolveVideoSource(media.id, targetStartTime)
+    } catch (error) {
+      console.error('Player: Failed to prepare video source:', error)
+      clearLiveTranscodeHandlers()
+      resetTranscodeState()
+      playerStore.playbackError = true
+      isReady.value = true
+      return
+    }
+
     playerStore.media = media
     await getMarks(media)
-    await getMetadata(media)
     playerStore.trackCurrentTime()
     playerStore.player.playbackRate = playerStore.speed
 
-    if (start_time) {
-      playerStore.player.currentTime = start_time
-    } else {
-      let resumeTime = 0
-      if (settingsStore.restorePlaybackTime == '1') {
-        if (playerStore.metadata.time && playerStore.metadata.duration) {
-          if (!(playerStore.metadata.duration - playerStore.metadata.time < 5)) {
-            resumeTime = playerStore.metadata.time
-          }
-        }
+    if (!playerStore.usesLiveTranscode) {
+      if (start_time) {
+        playerStore.player.currentTime = start_time
+      } else if (targetStartTime) {
+        playerStore.player.currentTime = targetStartTime
       }
-      playerStore.player.currentTime = resumeTime
+    } else {
+      const chunkStart = getChunkStart(targetStartTime)
+      playerStore.liveStreamOffset = chunkStart
+      playerStore.currentTime = chunkStart
+      playerStore.bufferedRanges = []
     }
 
     await itemsStore.countViewNumber(media, 'media')
@@ -231,20 +508,34 @@ export function usePlayerPlayback({
     })
 
     try {
-      await videoEl.play()
+      if (playerStore.usesLiveTranscode) {
+        await playWhenReady(videoEl)
+      } else {
+        await videoEl.play()
+      }
       playerStore.paused = false
     } catch (e) {
-      console.log(e)
+      if (!playerStore.usesLiveTranscode || !isIgnorablePlaybackError({
+        usesLiveTranscode: playerStore.usesLiveTranscode,
+        isLiveStreamSeeking: playerStore.isLiveStreamSeeking,
+        mediaErrorCode: videoEl.error?.code,
+      })) {
+        console.log(e)
+      }
     }
 
     isReady.value = true
   }
 
   const updatePlaybackTime = async (media) => {
-    await apiClient.put(`/api/videoMetadata/${media.id}`, {
-      time: playerStore.currentTime,
-    })
-    updateItemVideo(media.id)
+    try {
+      await apiClient.put(`/api/videoMetadata/${media.id}`, {
+        time: playerStore.currentTime,
+      })
+      updateItemVideo(media.id)
+    } catch (error) {
+      console.warn('Failed to save playback time:', error)
+    }
   }
 
   const initPlayingVideo = async (media, videos, time) => {
@@ -293,6 +584,7 @@ export function usePlayerPlayback({
     getMarks,
     loadSrc,
     updatePlaybackTime,
+    stopLiveTranscodeSession,
     initPlayingVideo,
   }
 }

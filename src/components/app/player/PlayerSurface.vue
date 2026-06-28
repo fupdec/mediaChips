@@ -57,7 +57,7 @@
           <video
             :ref="setVideoPlayerRef"
             :class="{ 'audio-hidden': isAudioMode }"
-            autoplay
+            :autoplay="!player.usesLiveTranscode"
           />
 
           <div v-if="isAudioMode && !showPlaybackError" class="audio-overlay">
@@ -111,9 +111,9 @@
             </div>
           </div>
 
-          <div v-show="player.statusText" class="status-text">
-            <v-icon dark start>mdi-{{ player.statusIcon }}</v-icon>
-            {{ player.statusText }}
+          <div v-show="player.displayStatusText" class="status-text">
+            <v-icon dark start>mdi-{{ player.displayStatusIcon }}</v-icon>
+            {{ player.displayStatusText }}
           </div>
         </div>
 

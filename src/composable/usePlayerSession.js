@@ -2,11 +2,12 @@ import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 import _ from 'lodash'
 import path from 'path-browserify'
-import {apiClient} from '@/services/apiClient'
+import {apiClient, buildApiUrl} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useRegistrationStore} from '@/stores/registration'
+import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import {buildMarkPayload} from '@/utils/markAdding'
 import {isWinElectronUi} from '@/utils/debugWinElectronUi'
@@ -14,8 +15,16 @@ import {usePlayerHotkeys} from '@/composable/usePlayerHotkeys'
 import {usePlayerWindowBridge} from '@/composable/usePlayerWindowBridge'
 import {usePlayerPlayback} from '@/composable/usePlayerPlayback'
 import {handlePlayerVideoWheel} from '@/utils/playerHotkeys'
+import {getTranscodePlayerStatus} from '@/utils/playerTranscodeStatus'
 import {setNotification} from '@/services/notificationService'
 import {openPath as openFilePath} from '@/services/shellService'
+import {
+  abortVideoPlayback,
+  cleanupOrphanedLiveTranscode,
+  clearLiveTranscodeSessionMark,
+  getMarkedLiveTranscodeMediaId,
+  installLiveTranscodeUnloadGuard,
+} from '@/utils/liveTranscodeLifecycle'
 
 export const PLAYER_SESSION_KEY = Symbol('playerSession')
 
@@ -24,6 +33,7 @@ export function usePlayerSession() {
   const playerStore = usePlayerStore()
   const dialogsStore = useDialogsStore()
   const registrationStore = useRegistrationStore()
+  const settingsStore = useSettingsStore()
   const eventBus = useEventBus()
   const {t} = useI18n()
 
@@ -56,6 +66,7 @@ export function usePlayerSession() {
     getMarks,
     loadSrc,
     updatePlaybackTime,
+    stopLiveTranscodeSession,
     initPlayingVideo,
   } = usePlayerPlayback({
     isReady,
@@ -84,6 +95,18 @@ export function usePlayerSession() {
     return ext ? ext.slice(1).toUpperCase() : ''
   })
   const formatErrorMessage = computed(() => {
+    if (playerStore.transcodeError) {
+      return `${t('player.transcode_error')}: ${playerStore.transcodeError}`
+    }
+
+    const transcodeEnabled = settingsStore.transcodeUnsupportedFormats === '1'
+
+    if (transcodeEnabled && playerStore.usesLiveTranscode) {
+      return isAudioMode.value
+        ? t('player.audio_playback_failed')
+        : t('player.video_playback_failed')
+    }
+
     return isAudioMode.value
       ? t('player.audio_format_not_supported')
       : t('player.video_format_not_supported')
@@ -92,13 +115,65 @@ export function usePlayerSession() {
     playerStore.active && isReady.value && playerStore.playbackError
   )
 
+  const syncTranscodeBackgroundStatus = () => {
+    if (!playerStore.active || playerStore.playbackError) {
+      playerStore.clearBackgroundStatus()
+      return
+    }
+
+    const status = getTranscodePlayerStatus(playerStore, t)
+    if (status) {
+      playerStore.setBackgroundStatus(status)
+    } else {
+      playerStore.clearBackgroundStatus()
+    }
+  }
+
+  watch(
+    () => [
+      playerStore.active,
+      playerStore.playbackError,
+      playerStore.usesLiveTranscode,
+      playerStore.liveTranscodeStarted,
+      playerStore.isLiveStreamSeeking,
+      playerStore.isStreamWaiting,
+      playerStore.transcodeStatus,
+      playerStore.transcodeError,
+    ],
+    syncTranscodeBackgroundStatus,
+    {immediate: true},
+  )
+
   const closePlayer = async () => {
+    const closingLiveTranscodeId = playerStore.usesLiveTranscode
+      ? playerStore.liveTranscodeMediaId
+      : null
+
     if (video.value) {
       await updatePlaybackTime(video.value)
     }
 
+    if (closingLiveTranscodeId) {
+      stopLiveTranscodeSession(closingLiveTranscodeId)
+    }
+
+    clearLiveTranscodeSessionMark()
+
     playerStore.active = false
     playerStore.playbackError = false
+    playerStore.transcodeActive = false
+    playerStore.transcodeProgress = 0
+    playerStore.transcodeStatus = 'none'
+    playerStore.transcodeError = null
+    playerStore.usesLiveTranscode = false
+    playerStore.liveTranscodeStarted = false
+    playerStore.liveTranscodeMediaId = null
+    playerStore.liveStreamSeekHandler = null
+    playerStore.liveStreamOffset = 0
+    playerStore.bufferedRanges = []
+    playerStore.isLiveStreamSeeking = false
+    playerStore.isStreamWaiting = false
+    playerStore.clearBackgroundStatus()
     isReady.value = false
 
     if (playerStore.player) {
@@ -345,7 +420,21 @@ export function usePlayerSession() {
     }
   }
 
+  let removeLiveTranscodeUnloadGuard = null
+
   onMounted(async () => {
+    await cleanupOrphanedLiveTranscode({
+      buildStopUrl: (mediaId) => buildApiUrl(`/api/video/${mediaId}/transcode/stream`),
+      stopAllUrl: buildApiUrl('/api/transcode/streams'),
+    })
+
+    removeLiveTranscodeUnloadGuard = installLiveTranscodeUnloadGuard({
+      getMediaId: () => playerStore.liveTranscodeMediaId || getMarkedLiveTranscodeMediaId(),
+      buildStopUrl: (mediaId) => buildApiUrl(`/api/video/${mediaId}/transcode/stream`),
+      stopAllUrl: buildApiUrl('/api/transcode/streams'),
+      abortPlayback: () => abortVideoPlayback(playerStore.player),
+    })
+
     await nextTick()
     bindVideoElement(videoPlayer.value)
 
@@ -365,6 +454,8 @@ export function usePlayerSession() {
   })
 
   onBeforeUnmount(() => {
+    removeLiveTranscodeUnloadGuard?.()
+    removeLiveTranscodeUnloadGuard = null
     eventBus.off('playVideo', handlePlayVideoEvent)
     detachPlayerWindowBridge()
     clearTimeout(timeoutControls.value)

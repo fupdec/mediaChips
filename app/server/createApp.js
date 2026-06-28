@@ -28,7 +28,15 @@ function createExpressApp() {
   })
 
   app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl} ${req.headers.origin || 'no origin'}`)
+    const url = req.originalUrl || req.url
+    const isTranscodeStream = req.method === 'GET' && /\/api\/video\/\d+\/transcode\/stream(?:\?|$)/.test(url)
+
+    if (isTranscodeStream) {
+      console.log(`${new Date().toISOString()} [transcode] ${req.method} ${url} ${req.headers.origin || 'no origin'}`)
+    } else if (!url.startsWith('/api/services/')) {
+      console.log(`${new Date().toISOString()} ${req.method} ${url} ${req.headers.origin || 'no origin'}`)
+    }
+
     next()
   })
 
