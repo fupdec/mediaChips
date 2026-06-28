@@ -18,6 +18,7 @@
       <v-card-text class="pa-2 pa-sm-4">
         <EditPinnedMetaValues
           v-if="media"
+          :key="media.id"
           layout="hero"
           @close="dialogsStore.mediaEditing.show = false"
           :media="media"

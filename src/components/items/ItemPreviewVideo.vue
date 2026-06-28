@@ -219,8 +219,6 @@ const isSettingThumb = ref(false)
 const isCreatingThumb = ref(false)
 const thumbCreateAttempted = ref(false)
 const bigPreviewMenuActive = ref(false)
-const menuClosedByAction = ref(false)
-const previewPausedForMenu = ref(false)
 const isMounted = ref(false)
 
 const isThumbUnavailable = (src) =>
@@ -402,34 +400,6 @@ const togglePreviewMute = () => {
   setOption(nextValue, 'play_sound_on_video_preview')
 }
 
-const pausePreviewForMenu = () => {
-  const video = videoRef.value
-  if (!video || video.paused) {
-    previewPausedForMenu.value = false
-    return
-  }
-
-  video.pause()
-  previewPausedForMenu.value = true
-}
-
-const resumePreviewAfterMenu = () => {
-  if (!previewPausedForMenu.value || !bigPreview.value) {
-    previewPausedForMenu.value = false
-    return
-  }
-
-  const video = videoRef.value
-  previewPausedForMenu.value = false
-
-  if (!video || playbackError.value) return
-
-  video.play().catch((error) => {
-    console.error('Video playback error:', error)
-    playbackError.value = true
-  })
-}
-
 const shouldKeepBigPreviewOpen = () => {
   return bigPreview.value && (contextMenuStore.show || bigPreviewMenuActive.value)
 }
@@ -491,7 +461,6 @@ const handlePreviewContextMenu = (e) => {
   e.stopPropagation()
 
   bigPreviewMenuActive.value = true
-  pausePreviewForMenu()
 
   contextMenuStore.showContextMenu({
     x: e.clientX,
@@ -502,7 +471,6 @@ const handlePreviewContextMenu = (e) => {
         type: 'item',
         icon: muted.value ? 'volume-off' : 'volume-high',
         action: () => {
-          menuClosedByAction.value = true
           togglePreviewMute()
         },
       },
@@ -513,7 +481,6 @@ const handlePreviewContextMenu = (e) => {
         icon: 'image',
         disabled: isSettingThumb.value,
         action: () => {
-          menuClosedByAction.value = true
           setAsThumbFromPreview()
         },
       },
@@ -659,8 +626,6 @@ const stopPlayingPreview = ({force = false} = {}) => {
   if (!force && shouldKeepBigPreviewOpen()) return
 
   bigPreviewMenuActive.value = false
-  menuClosedByAction.value = false
-  previewPausedForMenu.value = false
 
   // Сбрасываем состояние предпросмотра
   isHovered.value = false
@@ -748,13 +713,7 @@ watch(() => contextMenuStore.show, (show) => {
   if (show || !bigPreviewMenuActive.value) return
 
   nextTick(() => {
-    const closedByAction = menuClosedByAction.value
     bigPreviewMenuActive.value = false
-    menuClosedByAction.value = false
-
-    if (!closedByAction) {
-      resumePreviewAfterMenu()
-    }
   })
 })
 

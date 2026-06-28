@@ -158,7 +158,7 @@
           <!-- Assigned/Pinned metadata -->
           <v-col
             v-for="(item, index) in assignedItems"
-            :key="`${index}_${item.pinnedMetaId || item.metaId}`"
+            :key="`${currentItemId}_${item.pinnedMetaId || item.metaId}`"
             cols="12" md="6" xl="4"
             class="field"
           >
@@ -169,6 +169,7 @@
                 @update:model-value="setVal($event, getItemKey(item))"
                 :model-value="vals[getItemKey(item)]"
                 :meta-id="getItemKey(item)"
+                :key="`${currentItemId}_${getItemKey(item)}`"
                 :ref="el => setMetaInputRef(el, getItemKey(item))"
                 multiple
               />
@@ -455,6 +456,51 @@ const getItemKey = (item) => {
   return item.pinnedMetaId || item.metaId
 }
 
+const findAssignedItemByMetaId = (metaId) => {
+  return assignedItems.value.find((item) =>
+    Number(getItemKey(item)) === Number(metaId)
+    || Number(item.meta?.id) === Number(metaId)
+  )
+}
+
+const resolveItemKey = (metaId) => {
+  const item = findAssignedItemByMetaId(metaId)
+  return item ? getItemKey(item) : metaId
+}
+
+const getDefaultMetaValue = (type) => {
+  if (type === 'array') return []
+  if (type === 'boolean') return false
+  if (type === 'number' || type === 'rating') return 0
+  return null
+}
+
+const initBaseValues = () => {
+  if (isTag.value) {
+    const countries = parseCountries(props.tag.country)
+    vals.value = {
+      country: countries,
+      name: props.tag.name || null,
+      color: props.tag.color || '#777',
+      synonyms: props.tag.synonyms || null,
+      rating: props.tag.rating || 0,
+      favorite: props.tag.favorite || 0,
+      views: props.tag.views || 0,
+      bookmark: props.tag.bookmark || null,
+    }
+    return
+  }
+
+  if (isMedia.value) {
+    vals.value = {
+      rating: props.media.rating || 0,
+      favorite: props.media.favorite || 0,
+      views: props.media.views || 0,
+      bookmark: props.media.bookmark || null,
+    }
+  }
+}
+
 const setVal = (val, key) => {
   vals.value[key] = val
 }
@@ -549,12 +595,12 @@ const getMetaValues = async () => {
 
     // Инициализируем значения для всех ассоциированных мета
     for (const item of assignedItems.value) {
-      setVal(null, getItemKey(item))
+      setVal(getDefaultMetaValue(item.meta?.type), getItemKey(item))
     }
 
     // Заполняем значения из базы
     for (const value of values) {
-      const item = assignedItems.value.find(p => getItemKey(p) === value.metaId)
+      const item = findAssignedItemByMetaId(value.metaId)
       let val = value.value
 
       if (item) {
@@ -565,7 +611,7 @@ const getMetaValues = async () => {
         }
       }
 
-      setVal(val, value.metaId)
+      setVal(val, resolveItemKey(value.metaId))
     }
 
     // Обрабатываем теги
@@ -579,7 +625,7 @@ const getMetaValues = async () => {
     }
 
     for (const metaId in parsedTags) {
-      setVal(parsedTags[metaId], metaId)
+      setVal(parsedTags[metaId], resolveItemKey(metaId))
     }
 
     // Сохраняем старые значения
@@ -595,6 +641,13 @@ const getMetaValues = async () => {
   }
 }
 
+const loadEditingState = async () => {
+  if (!currentItemId.value) return
+
+  initBaseValues()
+  await getMetaValues()
+}
+
 const save = async () => {
   if (!valid.value || !form.value) {
     await form.value?.validate()
@@ -603,10 +656,13 @@ const save = async () => {
 
   const tags = []
   const values = []
+  const assignedKeys = new Set(
+    assignedItems.value.map((item) => String(getItemKey(item)))
+  )
 
   for (const key in vals.value) {
     const isMeta = /\d/.test(key)
-    if (!isMeta) continue
+    if (!isMeta || !assignedKeys.has(String(key))) continue
 
     let val = vals.value[key]
     const type = typeof val
@@ -614,7 +670,7 @@ const save = async () => {
     if (type === 'string') {
       val = val.trim()
       if (val.length === 0) val = null
-    } else if (type === 'object' && Array.isArray(val)) {
+    } else if (Array.isArray(val)) {
       for (const tagId of val) {
         if (isTag.value) {
           tags.push({
@@ -632,7 +688,7 @@ const save = async () => {
       }
     }
 
-    if (isMeta && type !== 'object') {
+    if (isMeta && !Array.isArray(val)) {
       if (isTag.value) {
         values.push({
           value: val,
@@ -648,9 +704,6 @@ const save = async () => {
       }
     }
   }
-
-  console.log(tags)
-  console.log(values)
 
   const updateData = _.cloneDeep(vals.value)
 
@@ -775,34 +828,17 @@ const transferScrapedInfo = async () => {
 
 // Lifecycle (из первого файла с адаптацией)
 onMounted(async () => {
-  // Инициализация значений
-  if (isTag.value) {
-    const countries = parseCountries(props.tag.country)
-    vals.value = {
-      country: countries,
-      name: props.tag.name || null,
-      color: props.tag.color || '#777',
-      synonyms: props.tag.synonyms || null,
-      rating: props.tag.rating || 0,
-      favorite: props.tag.favorite || 0,
-      views: props.tag.views || 0,
-      bookmark: props.tag.bookmark || null
-    }
-  } else if (isMedia.value) {
-    vals.value = {
-      rating: props.media.rating || 0,
-      favorite: props.media.favorite || 0,
-      views: props.media.views || 0,
-      bookmark: props.media.bookmark || null
-    }
-  }
-
-  await getMetaValues()
+  await loadEditingState()
 
   // Подписываемся на событие передачи данных из скрапера (только для тегов)
   if (isTag.value) {
     eventBus.on('transferScrapedInfo', transferScrapedInfo)
   }
+})
+
+watch(currentItemId, async (itemId, previousItemId) => {
+  if (!itemId || itemId === previousItemId) return
+  await loadEditingState()
 })
 
 onUnmounted(() => {

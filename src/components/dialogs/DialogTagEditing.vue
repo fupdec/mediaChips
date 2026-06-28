@@ -20,6 +20,7 @@
       <v-card-text class="pa-2 pa-sm-4">
         <EditPinnedMetaValues
           v-if="tag"
+          :key="tag.id"
           layout="hero"
           @close="close"
           :tag="tag"
