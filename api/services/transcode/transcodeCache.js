@@ -100,6 +100,32 @@ function clearCacheExcept(databasesPath, dbId, keepCacheKey) {
   return removed
 }
 
+function trimCacheToLimit(databasesPath, dbId, maxGb) {
+  const maxBytes = Number(maxGb) * 1024 * 1024 * 1024
+  if (!Number.isFinite(maxBytes) || maxBytes <= 0) return {removed: 0, bytes: 0}
+
+  const entries = listCacheEntries(databasesPath, dbId)
+    .filter((entry) => entry.status === 'done' && entry.size > 0)
+    .sort((a, b) => (a.updatedAt || a.createdAt || 0) - (b.updatedAt || b.createdAt || 0))
+
+  let removed = 0
+
+  for (const entry of entries) {
+    const stats = getCacheStats(databasesPath, dbId)
+    if (stats.bytes <= maxBytes) break
+
+    try {
+      if (fs.existsSync(entry.outputPath)) fs.unlinkSync(entry.outputPath)
+      if (fs.existsSync(entry.metaPath)) fs.unlinkSync(entry.metaPath)
+      removed += 1
+    } catch (error) {
+      console.error('Failed to trim transcode cache entry:', error)
+    }
+  }
+
+  return {removed, bytes: getCacheStats(databasesPath, dbId).bytes}
+}
+
 function getCacheStats(databasesPath, dbId) {
   const cacheDir = getCacheDir(databasesPath, dbId)
   if (!fs.existsSync(cacheDir)) {
@@ -159,4 +185,5 @@ module.exports = {
   clearCacheExcept,
   getCacheStats,
   clearCache,
+  trimCacheToLimit,
 }

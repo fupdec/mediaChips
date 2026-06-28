@@ -7,6 +7,7 @@ import {
   clearCacheExcept,
   getCacheStats,
   getCacheDir,
+  trimCacheToLimit,
 } from '../../api/services/transcode/transcodeCache.js'
 
 describe('transcodeCache single-video policy', () => {
@@ -58,5 +59,27 @@ describe('transcodeCache single-video policy', () => {
       files: 0,
       entries: 0,
     })
+  })
+
+  it('trims oldest cache entries when over the configured limit', () => {
+    const cacheDir = getCacheDir(databasesPath, dbId)
+    fs.writeFileSync(path.join(cacheDir, 'aaa.json'), JSON.stringify({
+      cacheKey: 'aaa',
+      status: 'done',
+      createdAt: 1,
+      updatedAt: 1,
+    }))
+    fs.writeFileSync(path.join(cacheDir, 'bbb.json'), JSON.stringify({
+      cacheKey: 'bbb',
+      status: 'done',
+      createdAt: 2,
+      updatedAt: 2,
+    }))
+
+    const maxGb = 350 / (1024 * 1024 * 1024)
+    trimCacheToLimit(databasesPath, dbId, maxGb)
+
+    expect(fs.existsSync(path.join(cacheDir, 'aaa.mp4'))).toBe(false)
+    expect(fs.existsSync(path.join(cacheDir, 'bbb.mp4'))).toBe(true)
   })
 })

@@ -12,9 +12,7 @@ describe('getTranscodePlayerStatus', () => {
       liveTranscodeStarted: false,
       isLiveStreamSeeking: false,
       isStreamWaiting: false,
-      transcodeActive: false,
       transcodeStatus: 'stream',
-      transcodeProgress: 0,
       transcodeError: null,
     }, t)).toEqual({
       text: 'player.transcode_preparing',
@@ -30,13 +28,27 @@ describe('getTranscodePlayerStatus', () => {
       liveTranscodeStarted: true,
       isLiveStreamSeeking: true,
       isStreamWaiting: false,
-      transcodeActive: false,
       transcodeStatus: 'stream',
-      transcodeProgress: 0,
       transcodeError: null,
     }, t)).toEqual({
       text: 'player.transcode_buffering',
       icon: 'cached',
+    })
+  })
+
+  it('returns transcode error status when stream fails', () => {
+    expect(getTranscodePlayerStatus({
+      active: true,
+      playbackError: false,
+      usesLiveTranscode: true,
+      liveTranscodeStarted: false,
+      isLiveStreamSeeking: false,
+      isStreamWaiting: false,
+      transcodeStatus: 'error',
+      transcodeError: 'ffmpeg exited',
+    }, t)).toEqual({
+      text: 'player.transcode_error: ffmpeg exited',
+      icon: 'alert',
     })
   })
 

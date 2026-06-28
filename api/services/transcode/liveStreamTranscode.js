@@ -44,8 +44,14 @@ function isIgnorableStreamError(error) {
     || code === 'ERR_STREAM_WRITE_AFTER_END'
 }
 
-function buildSessionKey(streamKey, startTime) {
-  return `${streamKey}@${Number(startTime).toFixed(2)}`
+function buildSessionKey(streamKey, startTime, maxHeight = null) {
+  const heightPart = maxHeight == null ? 'auto' : String(maxHeight)
+  return `${streamKey}@${Number(startTime).toFixed(2)}@${heightPart}`
+}
+
+function shouldRejectDuplicateStream(existing, now = Date.now()) {
+  if (!existing || existing.stopped) return false
+  return (now - (existing.startedAt || 0)) < 5000
 }
 
 function createLiveStreamRegistry() {
@@ -63,10 +69,6 @@ function createLiveStreamRegistry() {
 
     if (active.req?.socket && active.onSocketClose) {
       active.req.socket.removeListener('close', active.onSocketClose)
-    }
-
-    if (active.req && active.onClientClose) {
-      active.req.removeListener('close', active.onClientClose)
     }
 
     if (active.res && active.onResponseError) {
@@ -132,12 +134,11 @@ function createLiveStreamRegistry() {
     audioOnly = false,
     maxHeight = null,
   }) {
-    const sessionKey = buildSessionKey(streamKey, startTime)
+    const sessionKey = buildSessionKey(streamKey, startTime, maxHeight)
     const existing = activeStreams.get(sessionKey)
 
     if (existing && !existing.stopped) {
-      const age = Date.now() - (existing.startedAt || 0)
-      if (age < 5000) {
+      if (shouldRejectDuplicateStream(existing)) {
         res.status(409).end()
         return
       }
@@ -171,7 +172,6 @@ function createLiveStreamRegistry() {
       req,
       pipe: null,
       stopped: false,
-      onClientClose: null,
       onClientAbort: null,
       onSocketClose: null,
       onResponseError: null,
@@ -210,8 +210,6 @@ function createLiveStreamRegistry() {
       req.socket.on('close', active.onSocketClose)
     }
 
-    active.onClientClose = null
-
     proc.stderr.on('data', (chunk) => {
       stderr += chunk.toString()
     })
@@ -242,11 +240,11 @@ function createLiveStreamRegistry() {
     proc.on('close', (code) => {
       if (active.stopped) return
 
-      activeStreams.delete(sessionKey)
-
       if (code !== 0 && !res.writableEnded && stderr) {
         console.error('Live transcode failed:', stderr.trim())
       }
+
+      destroyActiveStream(active)
     })
   }
 
@@ -265,6 +263,8 @@ function createLiveStreamRegistry() {
 
 module.exports = {
   buildFfmpegLiveArgs,
+  buildSessionKey,
+  shouldRejectDuplicateStream,
   createLiveStreamRegistry,
   isIgnorableStreamError,
 }

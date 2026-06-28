@@ -21,7 +21,6 @@ import {openPath as openFilePath} from '@/services/shellService'
 import {
   abortVideoPlayback,
   cleanupOrphanedLiveTranscode,
-  clearLiveTranscodeSessionMark,
   getMarkedLiveTranscodeMediaId,
   installLiveTranscodeUnloadGuard,
 } from '@/utils/liveTranscodeLifecycle'
@@ -66,7 +65,8 @@ export function usePlayerSession() {
     getMarks,
     loadSrc,
     updatePlaybackTime,
-    stopLiveTranscodeSession,
+    clearLiveTranscodeHandlers,
+    changeLiveTranscodeMaxHeight,
     initPlayingVideo,
   } = usePlayerPlayback({
     isReady,
@@ -145,24 +145,14 @@ export function usePlayerSession() {
   )
 
   const closePlayer = async () => {
-    const closingLiveTranscodeId = playerStore.usesLiveTranscode
-      ? playerStore.liveTranscodeMediaId
-      : null
-
     if (video.value) {
       await updatePlaybackTime(video.value)
     }
 
-    if (closingLiveTranscodeId) {
-      stopLiveTranscodeSession(closingLiveTranscodeId)
-    }
-
-    clearLiveTranscodeSessionMark()
+    await clearLiveTranscodeHandlers()
 
     playerStore.active = false
     playerStore.playbackError = false
-    playerStore.transcodeActive = false
-    playerStore.transcodeProgress = 0
     playerStore.transcodeStatus = 'none'
     playerStore.transcodeError = null
     playerStore.usesLiveTranscode = false
@@ -313,7 +303,7 @@ export function usePlayerSession() {
   const playVideoObject = async (videos) => {
     const {n, o} = videos
     await updatePlaybackTime(o)
-    loadSrc(n)
+    await loadSrc(n)
   }
 
   const togglePause = () => {
@@ -496,6 +486,7 @@ export function usePlayerSession() {
     formatErrorMessage,
     showPlaybackError,
     closePlayer,
+    changeLiveTranscodeMaxHeight,
     stopSmoothScroll,
     moveOverPlayer,
     togglePause,

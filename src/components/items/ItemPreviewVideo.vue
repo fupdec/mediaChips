@@ -200,7 +200,8 @@ import {setOption} from '@/services/settingsService'
 import {isLikelyBrowserDirectVideo} from '@/utils/transcodeCompatibility'
 import {usePlayerStore} from '@/stores/player'
 import {buildApiUrl} from '@/services/apiClient'
-import {buildVideoStreamUrl} from '@/services/transcodeService'
+import {getChunkStart} from '@/utils/liveStreamChunk.js'
+import {resolvePreviewVideoUrl, stopLiveTranscode} from '@/services/transcodeService'
 
 // props
 const props = defineProps({
@@ -611,35 +612,12 @@ const changePreviewTime = _.debounce((e) => {
   progressValue = Math.floor(props.media.duration / 100 * progressValue)
   if (progress.value !== progressValue) {
     progress.value = progressValue
-    if (videoRef.value && !isNaN(videoRef.value.duration)) {
-      try {
-        videoRef.value.currentTime = Math.min(progress.value, videoRef.value.duration)
-      } catch (error) {
-        console.error("Error setting currentTime:", error)
-      }
-    }
+    void syncPreviewVideoPosition(progressValue)
   }
 }, 50)
 
-const checkVideoFormat = async () => {
-  try {
-    // Проверяем MIME тип или расширение файла
-    const videoExtension = props.media.path.split('.').pop().toLowerCase()
-    const supportedFormats = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv']
-
-    if (!supportedFormats.includes(videoExtension)) {
-      playbackError.value = true
-      return false
-    }
-
-    return true
-  } catch (error) {
-    console.error("Error checking video format:", error)
-    return false
-  }
-}
-
 let previewPlaybackToken = 0
+const previewUsesLiveStream = ref(false)
 
 const isIgnorablePreviewError = (error) => {
   const name = error?.name || ''
@@ -647,7 +625,55 @@ const isIgnorablePreviewError = (error) => {
 }
 
 const buildPreviewVideoUrl = () =>
-  buildVideoStreamUrl(buildApiUrl, props.media.id, 'auto')
+  resolvePreviewVideoUrl(apiClient, buildApiUrl, props.media.id, progress.value || 0)
+
+const getPreviewStreamStart = (url) => {
+  try {
+    return new URL(url).searchParams.get('start')
+  } catch {
+    return null
+  }
+}
+
+const stopPreviewLiveTranscode = () => {
+  if (!previewUsesLiveStream.value) return
+  previewUsesLiveStream.value = false
+  stopLiveTranscode(apiClient, props.media.id).catch(() => {})
+}
+
+const syncPreviewVideoPosition = async (targetTime) => {
+  const video = videoRef.value
+  if (!video || !showVideoPreview.value) return
+
+  const token = previewPlaybackToken
+  const url = await buildPreviewVideoUrl()
+  const isLive = url.includes('/transcode/stream')
+
+  if (isLive) {
+    previewUsesLiveStream.value = true
+    const nextStart = getPreviewStreamStart(url)
+    const currentStart = video.src ? getPreviewStreamStart(video.src) : null
+
+    if (!video.src || currentStart !== nextStart) {
+      video.src = url
+      await waitForPreviewCanPlay(video, token)
+    }
+
+    if (token !== previewPlaybackToken) return
+    const chunkStart = getChunkStart(targetTime)
+    video.currentTime = Math.max(0, targetTime - chunkStart)
+    return
+  }
+
+  previewUsesLiveStream.value = false
+  if (!video.src || !video.src.includes(String(props.media.id))) {
+    video.src = url
+    await waitForPreviewCanPlay(video, token)
+  }
+
+  if (token !== previewPlaybackToken) return
+  video.currentTime = Math.min(targetTime, video.duration || targetTime)
+}
 
 const waitForPreviewCanPlay = (video, token) => new Promise((resolve, reject) => {
   if (token !== previewPlaybackToken) {
@@ -685,7 +711,12 @@ const startPreviewPlayback = async () => {
   if (!video || !showVideoPreview.value) return
   if (playerStore.active && playerStore.liveTranscodeMediaId === props.media.id) return
 
-  const videoSrc = buildPreviewVideoUrl()
+  const videoSrc = await buildPreviewVideoUrl()
+  if (!videoSrc) {
+    playbackError.value = true
+    return
+  }
+  previewUsesLiveStream.value = videoSrc.includes('/transcode/stream')
 
   try {
     const needsNewSource = !video.src || !video.src.includes(String(props.media.id))
@@ -703,6 +734,7 @@ const startPreviewPlayback = async () => {
 
     console.error('Video playback error:', error)
     playbackError.value = true
+    stopPreviewLiveTranscode()
     video.removeAttribute('src')
     video.load()
   }
@@ -749,6 +781,7 @@ const stopPlayingPreview = ({force = false} = {}) => {
   clearTimeout(timeouts.leave)
   clearTimeout(timeouts.z)
   bigPreviewMenuActive.value = false
+  stopPreviewLiveTranscode()
 
   // Сбрасываем состояние предпросмотра
   isHovered.value = false
@@ -768,9 +801,8 @@ const stopPlayingPreview = ({force = false} = {}) => {
     try {
       videoRef.value.pause()
       videoRef.value.currentTime = 0
-      // НЕ очищаем src, чтобы можно было повторно использовать
-      // videoRef.value.src = ''
-      // videoRef.value.load()
+      videoRef.value.removeAttribute('src')
+      videoRef.value.load()
     } catch (error) {
       console.error(error)
     }
@@ -904,10 +936,6 @@ onMounted(async () => {
   await getImg()
 
   if (!isMounted.value) return
-
-  if (props.isFileExists) {
-    await checkVideoFormat()
-  }
 
   if (isViewTimeline.value) {
     await initFrames()

@@ -40,9 +40,7 @@ export const usePlayerStore = defineStore('player', {
     currentTimeTimeout: -1,
     seekTime: 0,
     seeking: false,
-    playbackError: null,
-    transcodeActive: false,
-    transcodeProgress: 0,
+    playbackError: false,
     transcodeStatus: 'none',
     transcodeError: null,
     timeRemain: false,
@@ -122,10 +120,17 @@ export const usePlayerStore = defineStore('player', {
       if (!this.player) return
       this.player.pause()
       this.paused = true
-      if (this.player) this.player.currentTime = 0
-      this.currentTime = this.usesLiveTranscode ? this.liveStreamOffset : 0
       this.bufferedRanges = []
       clearInterval(this.currentTimeTimeout)
+
+      if (this.usesLiveTranscode && this.liveStreamSeekHandler) {
+        this.currentTime = 0
+        this.liveStreamSeekHandler(0)
+        return
+      }
+
+      this.player.currentTime = 0
+      this.currentTime = 0
     },
     playerJumpTo(time) {
       if (!this.player) return

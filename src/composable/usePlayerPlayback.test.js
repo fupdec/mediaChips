@@ -1,5 +1,16 @@
 import {describe, it, expect, vi} from 'vitest'
-import {resolvePlayableVideo} from '@/composable/usePlayerPlayback'
+import {resolvePlayableVideo, isLoadSrcSessionStale} from '@/composable/usePlayerPlayback'
+
+describe('isLoadSrcSessionStale', () => {
+  it('detects stale session id', () => {
+    expect(isLoadSrcSessionStale(1, 2, true)).toBe(true)
+    expect(isLoadSrcSessionStale(2, 2, true)).toBe(false)
+  })
+
+  it('detects inactive player', () => {
+    expect(isLoadSrcSessionStale(2, 2, false)).toBe(true)
+  })
+})
 
 describe('resolvePlayableVideo', () => {
   const playlist = [

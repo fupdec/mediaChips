@@ -315,6 +315,7 @@ function registerBuiltinRoutes({
         mode: plan.mode,
         url,
         transcodeRequired: plan.transcodeRequired,
+        transcodeEnabled: plan.transcodeEnabled ?? true,
         transcodeStatus: plan.transcodeStatus,
         streamPlayback: plan.streamPlayback,
         progress: plan.progress,
@@ -388,8 +389,20 @@ function registerBuiltinRoutes({
   })
 
   router.get('/api/video/:id/transcode/status', async (req, res) => {
+    res.setHeader('Deprecation', 'true')
+    res.setHeader('Link', `</api/video/${req.params.id}/playable>; rel="successor-version"`)
+
     if (!transcodeManager) {
-      return res.json({status: 'none', progress: 100, error: null})
+      return res.json({
+        mode: 'direct',
+        transcodeRequired: false,
+        transcodeEnabled: true,
+        streamPlayback: false,
+        status: 'none',
+        progress: 100,
+        error: null,
+        streamUrl: null,
+      })
     }
 
     try {
@@ -399,20 +412,16 @@ function registerBuiltinRoutes({
       }
 
       const status = await transcodeManager.getTranscodeStatus(resolved.videoPath)
-      res.json(status)
+      res.json({
+        ...status,
+        streamUrl: status.streamPlayback
+          ? `/api/video/${req.params.id}/transcode/stream`
+          : null,
+      })
     } catch (err) {
       console.error('Transcode status error:', err)
       safeJsonError(res, req, 500, {message: err.message || 'Failed to get transcode status'})
     }
-  })
-
-  router.post('/api/video/:id/transcode/start', async (req, res) => {
-    res.status(410).json({
-      status: 'stream',
-      progress: 0,
-      mode: 'stream',
-      message: 'Full-file transcode is disabled. Use live chunk streaming.',
-    })
   })
 
   router.get('/api/transcode/cache', (req, res) => {
@@ -460,10 +469,11 @@ function registerBuiltinRoutes({
           streamPath = streamInfo.filePath
           contentType = streamInfo.contentType || contentType
         } else if (source !== 'direct') {
-          return res.status(409).json({
-            message: 'Transcoded video is not ready',
-            transcodeStatus: streamInfo.plan?.transcodeStatus || 'pending',
-            progress: streamInfo.plan?.progress || 0,
+          return res.status(503).json({
+            message: 'Use live transcode stream endpoint for this format',
+            mode: 'stream',
+            streamUrl: `/api/video/${req.params.id}/transcode/stream`,
+            transcodeStatus: streamInfo.plan?.transcodeStatus,
           })
         }
       }

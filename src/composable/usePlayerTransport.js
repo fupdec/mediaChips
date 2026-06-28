@@ -1,12 +1,10 @@
-import {ref, computed, watch} from 'vue'
+import {ref, computed, watch, inject} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 import {useDisplay} from 'vuetify'
 import _ from 'lodash'
 import path from 'path-browserify'
-import {apiClient, buildApiUrl} from '@/services/apiClient'
-import {buildLiveStreamUrl, playWhenReady} from '@/services/transcodeService'
-import {getChunkStart} from '@/utils/liveStreamChunk.js'
+import {apiClient} from '@/services/apiClient'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -25,8 +23,10 @@ import {
   isPlaylistNavDisabled,
   resolvePlaylistIndex,
 } from '@/composable/usePlayerTransportPlayback'
+import {PLAYER_SESSION_KEY} from '@/composable/usePlayerSession'
 
 export function usePlayerTransport({emit, jumpToMark}) {
+  const session = inject(PLAYER_SESSION_KEY, null)
   const appStore = useAppStore()
   const playerStore = usePlayerStore()
   const dialogsStore = useDialogsStore()
@@ -184,45 +184,14 @@ export function usePlayerTransport({emit, jumpToMark}) {
   }
 
   const changeTranscodeMaxHeight = async (maxHeight) => {
-    const normalized = String(maxHeight)
-    if (!playerStore.usesLiveTranscode || !playerStore.player || !playerStore.liveTranscodeMediaId) {
-      return
-    }
-    if (normalized === playerStore.liveTranscodeMaxHeight) return
+    if (!session?.changeLiveTranscodeMaxHeight) return
 
-    playerStore.liveTranscodeMaxHeight = normalized
-
-    const chunkStart = getChunkStart(playerStore.currentTime)
-    const wasPaused = playerStore.paused
-
-    playerStore.isLiveStreamSeeking = true
-    playerStore.playbackError = false
-    playerStore.liveStreamOffset = chunkStart
-    playerStore.bufferedRanges = []
-    playerStore.player.src = buildLiveStreamUrl(
-      buildApiUrl,
-      playerStore.liveTranscodeMediaId,
-      chunkStart,
-      normalized,
-    )
-    playerStore.currentTime = chunkStart
+    await session.changeLiveTranscodeMaxHeight(maxHeight)
 
     playerStore.changePlayerStatusText({
-      text: transcodeQualityLabel(normalized),
+      text: transcodeQualityLabel(String(maxHeight)),
       icon: 'high-definition-box',
     })
-
-    try {
-      if (!wasPaused) {
-        await playWhenReady(playerStore.player)
-        playerStore.paused = false
-      }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      playerStore.isLiveStreamSeeking = false
-      playerStore.syncPlaybackState()
-    }
   }
 
   const addMark = () => {

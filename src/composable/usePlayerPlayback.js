@@ -30,12 +30,17 @@ import {
   buildLiveStreamUrl,
   fetchPlayableInfo,
   stopLiveTranscode,
-  playWhenReady,
+  playLiveStreamWhenReady,
+  UnsupportedPlaybackError,
 } from '@/services/transcodeService'
 import {
   markLiveTranscodeSession,
   clearLiveTranscodeSessionMark,
 } from '@/utils/liveTranscodeLifecycle'
+
+export function isLoadSrcSessionStale(session, currentSession, isActive) {
+  return session !== currentSession || !isActive
+}
 
 export async function resolvePlayableVideo(playlist, initialVideo, checkFileExists) {
   const candidates = []
@@ -154,6 +159,9 @@ export function usePlayerPlayback({
       }
 
       playerStore.playbackError = true
+      if (playerStore.usesLiveTranscode) {
+        failTranscode(playerStore.player.error?.message || 'Playback failed')
+      }
     })
 
     playerStore.player.addEventListener('waiting', () => {
@@ -172,6 +180,10 @@ export function usePlayerPlayback({
 
   const bindVideoElement = (el) => {
     if (!el) return
+
+    if (playerStore.player && playerStore.player !== el) {
+      delete playerStore.player.dataset.playerBound
+    }
 
     playerStore.player = el
     initPlayer()
@@ -236,11 +248,25 @@ export function usePlayerPlayback({
   let pendingNextChunkStart = null
 
   const resetTranscodeState = () => {
-    playerStore.transcodeActive = false
-    playerStore.transcodeProgress = 0
     playerStore.transcodeStatus = 'none'
     playerStore.transcodeError = null
   }
+
+  const failTranscode = (message) => {
+    playerStore.transcodeStatus = 'error'
+    playerStore.transcodeError = message || 'Live transcode failed'
+    playerStore.playbackError = true
+  }
+
+  const playCurrentLiveStream = () => playLiveStreamWhenReady(
+    playerStore.player,
+    () => buildLiveStreamUrl(
+      buildApiUrl,
+      currentLiveMediaId,
+      playerStore.liveStreamOffset,
+      playerStore.liveTranscodeMaxHeight,
+    ),
+  )
 
   const stopLiveTranscodeSession = (mediaId = currentLiveMediaId) => {
     if (!mediaId) return Promise.resolve()
@@ -249,7 +275,7 @@ export function usePlayerPlayback({
     })
   }
 
-  const clearLiveTranscodeHandlers = () => {
+  const clearLiveTranscodeHandlers = async () => {
     const stoppingMediaId = currentLiveMediaId
     playerStore.usesLiveTranscode = false
     playerStore.liveTranscodeStarted = false
@@ -267,15 +293,17 @@ export function usePlayerPlayback({
     seekLiveStream.cancel?.()
     maybeAdvanceLiveStreamChunk.cancel?.()
 
-    if (stoppingMediaId) {
-      stopLiveTranscodeSession(stoppingMediaId)
-    }
-
     clearLiveTranscodeSessionMark()
+
+    if (stoppingMediaId) {
+      await stopLiveTranscodeSession(stoppingMediaId)
+    }
   }
 
   const switchLiveStreamChunk = async (nextChunkStart) => {
-    if (!currentLiveMediaId || !playerStore.player || nextChunkStart == null) return false
+    if (!currentLiveMediaId || !playerStore.player || !playerStore.active || nextChunkStart == null) {
+      return false
+    }
 
     const seekGeneration = ++liveStreamSeekGeneration
     isAdvancingChunk = true
@@ -296,7 +324,7 @@ export function usePlayerPlayback({
 
     try {
       if (!wasPaused) {
-        await playWhenReady(playerStore.player)
+        await playCurrentLiveStream()
         playerStore.paused = false
       }
     } catch (error) {
@@ -319,7 +347,9 @@ export function usePlayerPlayback({
   }
 
   const maybeAdvanceLiveStreamChunk = _.debounce(async () => {
-    if (!playerStore.usesLiveTranscode || !playerStore.player || isAdvancingChunk) return
+    if (!playerStore.usesLiveTranscode || !playerStore.player || !playerStore.active || isAdvancingChunk) {
+      return
+    }
     if (playerStore.isLiveStreamSeeking || playerStore.paused) return
 
     const chunkStart = playerStore.liveStreamOffset
@@ -336,7 +366,9 @@ export function usePlayerPlayback({
   }, 200)
 
   const seekLiveStream = _.debounce(async (time) => {
-    if (!currentLiveMediaId || !playerStore.player) return
+    if (!currentLiveMediaId || !playerStore.player || !playerStore.active || !playerStore.usesLiveTranscode) {
+      return
+    }
 
     const chunkStart = getChunkStart(time)
     const seekGeneration = ++liveStreamSeekGeneration
@@ -353,7 +385,7 @@ export function usePlayerPlayback({
       chunkStart,
       playerStore.liveTranscodeMaxHeight,
     )
-    playerStore.currentTime = chunkStart
+    playerStore.currentTime = time
 
     const onPlaying = () => {
       if (seekGeneration !== liveStreamSeekGeneration) return
@@ -366,7 +398,7 @@ export function usePlayerPlayback({
 
     if (!wasPaused) {
       try {
-        await playWhenReady(playerStore.player)
+        await playCurrentLiveStream()
         playerStore.paused = false
       } catch (error) {
         if (seekGeneration !== liveStreamSeekGeneration) return
@@ -393,13 +425,13 @@ export function usePlayerPlayback({
   }, 250)
 
   const resolveVideoSource = async (mediaId, startTime = 0) => {
-    clearLiveTranscodeHandlers()
-
-    if (settingsStore.transcodeUnsupportedFormats !== '1') {
-      return buildVideoStreamUrl(buildApiUrl, mediaId, 'direct')
-    }
+    await clearLiveTranscodeHandlers()
 
     const playable = await fetchPlayableInfo(apiClient, mediaId)
+
+    if (playable.mode === 'unsupported') {
+      throw new UnsupportedPlaybackError()
+    }
 
     if (!playable.transcodeRequired) {
       resetTranscodeState()
@@ -424,10 +456,76 @@ export function usePlayerPlayback({
     return buildLiveStreamUrl(buildApiUrl, mediaId, chunkStart, playerStore.liveTranscodeMaxHeight)
   }
 
+  const isLoadSrcStale = (session) => isLoadSrcSessionStale(session, transcodeSessionId, playerStore.active)
+
+  const changeLiveTranscodeMaxHeight = async (maxHeight) => {
+    const normalized = String(maxHeight)
+    if (!playerStore.usesLiveTranscode || !playerStore.player || !currentLiveMediaId || !playerStore.active) {
+      return
+    }
+    if (normalized === playerStore.liveTranscodeMaxHeight) return
+
+    seekLiveStream.cancel?.()
+    maybeAdvanceLiveStreamChunk.cancel?.()
+
+    const seekGeneration = ++liveStreamSeekGeneration
+    isAdvancingChunk = false
+    pendingNextChunkStart = null
+    const time = playerStore.currentTime
+    const chunkStart = getChunkStart(time)
+    const wasPaused = playerStore.paused
+
+    playerStore.liveTranscodeMaxHeight = normalized
+    playerStore.isLiveStreamSeeking = true
+    playerStore.playbackError = false
+    playerStore.liveStreamOffset = chunkStart
+    playerStore.bufferedRanges = []
+    playerStore.currentTime = time
+    playerStore.player.src = buildLiveStreamUrl(
+      buildApiUrl,
+      currentLiveMediaId,
+      chunkStart,
+      normalized,
+    )
+
+    try {
+      if (!wasPaused) {
+        await playLiveStreamWhenReady(
+          playerStore.player,
+          () => buildLiveStreamUrl(
+            buildApiUrl,
+            currentLiveMediaId,
+            chunkStart,
+            normalized,
+          ),
+        )
+        if (seekGeneration !== liveStreamSeekGeneration || !playerStore.active) return
+        playerStore.paused = false
+      }
+    } catch (error) {
+      if (seekGeneration !== liveStreamSeekGeneration || !playerStore.active) return
+      if (!isIgnorablePlaybackError({
+        usesLiveTranscode: true,
+        isLiveStreamSeeking: true,
+        mediaErrorCode: playerStore.player.error?.code,
+      })) {
+        failTranscode(error?.message || 'Failed to change transcode quality')
+        console.warn('Failed to change transcode quality:', error)
+      }
+    } finally {
+      if (seekGeneration === liveStreamSeekGeneration && playerStore.active) {
+        playerStore.isLiveStreamSeeking = false
+        playerStore.syncPlaybackState()
+      }
+    }
+  }
+
   const loadSrc = async (media, start_time) => {
-    transcodeSessionId += 1
+    const session = ++transcodeSessionId
     resetTranscodeState()
-    clearLiveTranscodeHandlers()
+    await clearLiveTranscodeHandlers()
+    if (isLoadSrcStale(session)) return
+
     playerStore.liveTranscodeStarted = false
     isReady.value = false
     playerStore.playbackError = false
@@ -437,6 +535,7 @@ export function usePlayerPlayback({
       media,
       (filePath) => checkFileExists(filePath),
     )
+    if (isLoadSrcStale(session)) return
 
     if (!resolved) {
       console.error('Player: No playable video found in playlist:', media?.path)
@@ -447,6 +546,8 @@ export function usePlayerPlayback({
     }
 
     const videoEl = await ensureVideoElement()
+    if (isLoadSrcStale(session)) return
+
     if (!videoEl) {
       console.error('Player: Video element is not available')
       playerStore.playbackError = true
@@ -458,12 +559,15 @@ export function usePlayerPlayback({
     const mediaType = findMediaTypeById(appStore.mediaTypes, media.mediaTypeId)
     playerStore.isAudioMode = isAudioMediaType(mediaType) || isAudioFilePath(media.path)
     playerStore.is_file_exists = await checkFileExists(media.path)
+    if (isLoadSrcStale(session)) return
 
     if (playerStore.playlist.length > 0) {
       playerStore.nowPlaying = resolved.index
     }
 
     await getMetadata(media)
+    if (isLoadSrcStale(session)) return
+
     if (playerStore.metadata?.duration) {
       playerStore.duration = playerStore.metadata.duration
     }
@@ -480,16 +584,30 @@ export function usePlayerPlayback({
     try {
       playerStore.player.src = await resolveVideoSource(media.id, targetStartTime)
     } catch (error) {
+      if (isLoadSrcStale(session)) return
       console.error('Player: Failed to prepare video source:', error)
-      clearLiveTranscodeHandlers()
+      await clearLiveTranscodeHandlers()
       resetTranscodeState()
-      playerStore.playbackError = true
+      if (error instanceof UnsupportedPlaybackError) {
+        playerStore.playbackError = true
+      } else {
+        failTranscode(error?.message || 'Failed to prepare video source')
+      }
       isReady.value = true
+      return
+    }
+    if (isLoadSrcStale(session)) {
+      await clearLiveTranscodeHandlers()
       return
     }
 
     playerStore.media = media
     await getMarks(media)
+    if (isLoadSrcStale(session)) {
+      await clearLiveTranscodeHandlers()
+      return
+    }
+
     playerStore.trackCurrentTime()
     playerStore.player.playbackRate = playerStore.speed
 
@@ -502,18 +620,26 @@ export function usePlayerPlayback({
     } else {
       const chunkStart = getChunkStart(targetStartTime)
       playerStore.liveStreamOffset = chunkStart
-      playerStore.currentTime = chunkStart
+      playerStore.currentTime = targetStartTime
       playerStore.bufferedRanges = []
     }
 
     await itemsStore.countViewNumber(media, 'media')
+    if (isLoadSrcStale(session)) {
+      await clearLiveTranscodeHandlers()
+      return
+    }
+
     updateItemVideo(media.id)
 
     playerStore.playbackError = false
     dialogsStore.closeMarkAdding()
 
     if (!registrationStore.reg && playerStore.nowPlaying > 14) {
+      await clearLiveTranscodeHandlers()
       playerStore.player.src = ''
+      isReady.value = true
+      return
     }
 
     if (isPlayerWindow.value) {
@@ -527,21 +653,27 @@ export function usePlayerPlayback({
 
     try {
       if (playerStore.usesLiveTranscode) {
-        await playWhenReady(videoEl)
+        await playCurrentLiveStream()
       } else {
         await videoEl.play()
       }
+      if (isLoadSrcStale(session)) return
       playerStore.paused = false
     } catch (e) {
+      if (isLoadSrcStale(session)) return
       if (!playerStore.usesLiveTranscode || !isIgnorablePlaybackError({
         usesLiveTranscode: playerStore.usesLiveTranscode,
         isLiveStreamSeeking: playerStore.isLiveStreamSeeking,
         mediaErrorCode: videoEl.error?.code,
       })) {
+        if (playerStore.usesLiveTranscode) {
+          failTranscode(e?.message || 'Live transcode playback failed')
+        }
         console.log(e)
       }
     }
 
+    if (isLoadSrcStale(session)) return
     isReady.value = true
   }
 
@@ -603,6 +735,8 @@ export function usePlayerPlayback({
     loadSrc,
     updatePlaybackTime,
     stopLiveTranscodeSession,
+    clearLiveTranscodeHandlers,
+    changeLiveTranscodeMaxHeight,
     initPlayingVideo,
   }
 }
