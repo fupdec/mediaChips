@@ -107,6 +107,40 @@
         </v-list>
       </v-menu>
     </div>
+
+    <div v-if="playerStore.usesLiveTranscode && !isAudioMode" class="transcode-quality ml-1">
+      <v-menu
+        attach=".transcode-quality"
+        nudge-top="45"
+        nudge-left="10"
+        min-width="140"
+        top
+      >
+        <template #activator="{ props: menuProps }">
+          <v-btn v-bind="menuProps"
+            icon
+            variant="tonal"
+            :density="density"
+            dark>
+            <v-icon>mdi-high-definition-box</v-icon>
+            <div class="tip" v-html="t('player.controls.transcode_quality')"/>
+          </v-btn>
+        </template>
+
+        <v-list density="compact" class="py-1">
+          <v-list-item
+            v-for="height in transcodeHeights"
+            :key="height"
+            :value="height"
+            :active="playerStore.liveTranscodeMaxHeight === height"
+            color="primary"
+            @click="changeTranscodeMaxHeight(height)"
+          >
+            <v-list-item-title v-text="transcodeQualityLabel(height)"/>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </div>
 </template>
 
 <script setup>
@@ -117,15 +151,20 @@ import {PLAYER_TRANSPORT_KEY} from '@/composable/playerTransportKey'
 const {t} = useI18n()
 const {
   player,
+  playerStore,
   speeds,
+  transcodeHeights,
   density,
   isPrevDisabled,
   isNextDisabled,
+  isAudioMode,
   msToTime,
   togglePause,
   stop,
   prev,
   next,
   changeSpeed,
+  transcodeQualityLabel,
+  changeTranscodeMaxHeight,
 } = inject(PLAYER_TRANSPORT_KEY)
 </script>

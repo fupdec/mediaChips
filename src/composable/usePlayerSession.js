@@ -168,6 +168,7 @@ export function usePlayerSession() {
     playerStore.usesLiveTranscode = false
     playerStore.liveTranscodeStarted = false
     playerStore.liveTranscodeMediaId = null
+    playerStore.liveTranscodeMaxHeight = '1080'
     playerStore.liveStreamSeekHandler = null
     playerStore.liveStreamOffset = 0
     playerStore.bufferedRanges = []

@@ -24,6 +24,7 @@ export const usePlayerStore = defineStore('player', {
     usesLiveTranscode: false,
     liveTranscodeStarted: false,
     liveTranscodeMediaId: null,
+    liveTranscodeMaxHeight: '1080',
     liveStreamSeekHandler: null,
     liveStreamOffset: 0,
     bufferedRanges: [],

@@ -37,9 +37,18 @@ function getMaxHeight(settings) {
   return value
 }
 
+function parseMaxHeightOverride(value) {
+  if (value === undefined || value === null || value === '') return undefined
+  const num = Number(value)
+  if (!Number.isFinite(num)) return undefined
+  if (num <= 0) return null
+  return num
+}
+
 module.exports = {
   DEFAULTS,
   getTranscodeSettings,
   isTranscodeEnabled,
   getMaxHeight,
+  parseMaxHeightOverride,
 }

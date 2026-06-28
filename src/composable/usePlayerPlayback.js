@@ -73,6 +73,12 @@ export async function resolvePlayableVideo(playlist, initialVideo, checkFileExis
   return null
 }
 
+function normalizeTranscodeMaxHeight(value) {
+  const num = Number(value)
+  if (!Number.isFinite(num) || num <= 0) return '0'
+  return String(num)
+}
+
 export function usePlayerPlayback({
   isReady,
   videoPlayer,
@@ -248,6 +254,7 @@ export function usePlayerPlayback({
     playerStore.usesLiveTranscode = false
     playerStore.liveTranscodeStarted = false
     playerStore.liveTranscodeMediaId = null
+    playerStore.liveTranscodeMaxHeight = '1080'
     playerStore.liveStreamSeekHandler = null
     playerStore.liveStreamOffset = 0
     playerStore.bufferedRanges = []
@@ -279,7 +286,12 @@ export function usePlayerPlayback({
     playerStore.playbackError = false
     playerStore.liveStreamOffset = nextChunkStart
     playerStore.bufferedRanges = []
-    playerStore.player.src = buildLiveStreamUrl(buildApiUrl, currentLiveMediaId, nextChunkStart)
+    playerStore.player.src = buildLiveStreamUrl(
+      buildApiUrl,
+      currentLiveMediaId,
+      nextChunkStart,
+      playerStore.liveTranscodeMaxHeight,
+    )
     playerStore.currentTime = nextChunkStart
 
     try {
@@ -335,7 +347,12 @@ export function usePlayerPlayback({
     playerStore.playbackError = false
     playerStore.liveStreamOffset = chunkStart
     playerStore.bufferedRanges = []
-    playerStore.player.src = buildLiveStreamUrl(buildApiUrl, currentLiveMediaId, chunkStart)
+    playerStore.player.src = buildLiveStreamUrl(
+      buildApiUrl,
+      currentLiveMediaId,
+      chunkStart,
+      playerStore.liveTranscodeMaxHeight,
+    )
     playerStore.currentTime = chunkStart
 
     const onPlaying = () => {
@@ -393,6 +410,7 @@ export function usePlayerPlayback({
     currentLiveMediaId = mediaId
     playerStore.usesLiveTranscode = true
     playerStore.liveTranscodeMediaId = mediaId
+    playerStore.liveTranscodeMaxHeight = normalizeTranscodeMaxHeight(settingsStore.transcodeMaxHeight)
     playerStore.transcodeStatus = 'stream'
     playerStore.liveStreamSeekHandler = (time) => {
       playerStore.currentTime = time
@@ -403,7 +421,7 @@ export function usePlayerPlayback({
     resetTranscodeState()
     playerStore.transcodeStatus = 'stream'
     markLiveTranscodeSession(mediaId)
-    return buildLiveStreamUrl(buildApiUrl, mediaId, chunkStart)
+    return buildLiveStreamUrl(buildApiUrl, mediaId, chunkStart, playerStore.liveTranscodeMaxHeight)
   }
 
   const loadSrc = async (media, start_time) => {

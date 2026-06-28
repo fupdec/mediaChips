@@ -18,9 +18,18 @@ export function buildVideoStreamUrl(buildApiUrl, mediaId, source = 'auto') {
   return `${buildApiUrl(`/api/video/${mediaId}`)}?source=${source}&time=${Math.random()}`
 }
 
-export function buildLiveStreamUrl(buildApiUrl, mediaId, startSeconds = 0) {
+export function buildLiveStreamUrl(buildApiUrl, mediaId, startSeconds = 0, maxHeight = null) {
   const start = getChunkStart(startSeconds)
-  return `${buildApiUrl(`/api/video/${mediaId}/transcode/stream`)}?start=${start}&time=${Math.random()}`
+  const params = new URLSearchParams({
+    start: String(start),
+    time: String(Math.random()),
+  })
+
+  if (maxHeight != null && maxHeight !== '') {
+    params.set('maxHeight', String(maxHeight))
+  }
+
+  return `${buildApiUrl(`/api/video/${mediaId}/transcode/stream`)}?${params.toString()}`
 }
 
 export function playWhenReady(videoEl, {timeout = 60000} = {}) {

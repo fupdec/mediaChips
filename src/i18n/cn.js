@@ -1105,6 +1105,11 @@ const cn = {
       now_playing: '正在播放',
       switch_time: '在已播放时间和剩余时间之间切换',
       picture_in_picture: '画中画模式',
+      transcode_quality: '转码质量',
+      transcode_quality_original: '原始',
+      transcode_quality_1080: '1080p',
+      transcode_quality_720: '720p',
+      transcode_quality_480: '480p',
     },
     mark_dialog: {
       adding_marker: '添加标记',

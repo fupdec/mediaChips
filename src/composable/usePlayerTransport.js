@@ -4,7 +4,9 @@ import {useRoute} from 'vue-router'
 import {useDisplay} from 'vuetify'
 import _ from 'lodash'
 import path from 'path-browserify'
-import {apiClient} from '@/services/apiClient'
+import {apiClient, buildApiUrl} from '@/services/apiClient'
+import {buildLiveStreamUrl, playWhenReady} from '@/services/transcodeService'
+import {getChunkStart} from '@/utils/liveStreamChunk.js'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -36,6 +38,7 @@ export function usePlayerTransport({emit, jumpToMark}) {
 
   const editingComponent = ref(null)
   const speeds = ref([0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2])
+  const transcodeHeights = ['0', '1080', '720', '480']
   const video_editing = ref(null)
   const dialog_video_edit = ref(false)
 
@@ -173,6 +176,53 @@ export function usePlayerTransport({emit, jumpToMark}) {
       }),
       icon: 'play-speed',
     })
+  }
+
+  const transcodeQualityLabel = (height) => {
+    if (height === '0') return t('player.controls.transcode_quality_original')
+    return t(`player.controls.transcode_quality_${height}`)
+  }
+
+  const changeTranscodeMaxHeight = async (maxHeight) => {
+    const normalized = String(maxHeight)
+    if (!playerStore.usesLiveTranscode || !playerStore.player || !playerStore.liveTranscodeMediaId) {
+      return
+    }
+    if (normalized === playerStore.liveTranscodeMaxHeight) return
+
+    playerStore.liveTranscodeMaxHeight = normalized
+
+    const chunkStart = getChunkStart(playerStore.currentTime)
+    const wasPaused = playerStore.paused
+
+    playerStore.isLiveStreamSeeking = true
+    playerStore.playbackError = false
+    playerStore.liveStreamOffset = chunkStart
+    playerStore.bufferedRanges = []
+    playerStore.player.src = buildLiveStreamUrl(
+      buildApiUrl,
+      playerStore.liveTranscodeMediaId,
+      chunkStart,
+      normalized,
+    )
+    playerStore.currentTime = chunkStart
+
+    playerStore.changePlayerStatusText({
+      text: transcodeQualityLabel(normalized),
+      icon: 'high-definition-box',
+    })
+
+    try {
+      if (!wasPaused) {
+        await playWhenReady(playerStore.player)
+        playerStore.paused = false
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      playerStore.isLiveStreamSeeking = false
+      playerStore.syncPlaybackState()
+    }
   }
 
   const addMark = () => {
@@ -328,6 +378,7 @@ export function usePlayerTransport({emit, jumpToMark}) {
     dialogsStore,
     editingComponent,
     speeds,
+    transcodeHeights,
     video_editing,
     dialog_video_edit,
     video,
@@ -352,6 +403,8 @@ export function usePlayerTransport({emit, jumpToMark}) {
     handleVolumeWheel,
     handleVolumeSliderWheel,
     changeSpeed,
+    transcodeQualityLabel,
+    changeTranscodeMaxHeight,
     addMark,
     removeMark,
     setAsThumb,

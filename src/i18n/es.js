@@ -1105,6 +1105,11 @@ const es = {
       now_playing: 'Reproduciendo ahora',
       switch_time: 'Cambiar entre tiempo transcurrido y restante',
       picture_in_picture: 'Modo imagen en imagen',
+      transcode_quality: 'Calidad de transcodificación',
+      transcode_quality_original: 'Original',
+      transcode_quality_1080: '1080p',
+      transcode_quality_720: '720p',
+      transcode_quality_480: '480p',
     },
     mark_dialog: {
       adding_marker: 'Agregando marcador',

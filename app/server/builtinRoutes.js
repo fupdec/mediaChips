@@ -5,6 +5,7 @@ const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
 const {isLoopbackHost} = require('./constants')
 const {isClientAbortError, safeJsonError} = require('./fileResolver')
 const {streamVideoFile} = require('../../api/services/transcode/streamVideoFile')
+const {parseMaxHeightOverride} = require('../../api/services/transcode/transcodeSettings')
 
 function resolveMediaVideoPath(db, resolveFilePath, mediaId) {
   return db.Media.findOne({
@@ -372,7 +373,14 @@ function registerBuiltinRoutes({
       }
 
       const startTime = Math.max(0, Number(req.query.start) || 0)
-      await transcodeManager.streamLive(req, res, resolved.videoPath, {startTime})
+      const maxHeightOverride = parseMaxHeightOverride(req.query.maxHeight)
+      const streamOptions = {startTime}
+
+      if (maxHeightOverride !== undefined) {
+        streamOptions.maxHeight = maxHeightOverride
+      }
+
+      await transcodeManager.streamLive(req, res, resolved.videoPath, streamOptions)
     } catch (err) {
       console.error('Live transcode stream error:', err)
       safeJsonError(res, req, 500, {message: err.message || 'Failed to start live transcode stream'})
