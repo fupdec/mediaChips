@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import { translate } from '@/utils/translate'
 import { useSettingsStore } from '@/stores/settings'
+import { useTasksStore } from '@/stores/tasks'
+import { useNotificationsStore } from '@/stores/notifications'
+import { useAppStore } from '@/stores/app'
 import {getReadableDuration, getReadableFileSize} from '@/services/formatUtils'
 
 export const useOperationsStore = defineStore('useOperationsStore', {
@@ -141,10 +144,6 @@ export const useOperationsStore = defineStore('useOperationsStore', {
       if (this.moving.active) {
         return { success: false, aborted: true, reason: 'busy' }
       }
-
-      const { useTasksStore } = await import('./tasks')
-      const { useNotificationsStore } = await import('./notifications')
-      const { useAppStore } = await import('./app')
 
       const tasks = useTasksStore()
       const notifications = useNotificationsStore()

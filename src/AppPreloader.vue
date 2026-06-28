@@ -127,5 +127,5 @@ const {isAppReady} = useAppBootstrap({isPlayerWindow, appZoom})
 </script>
 
 <style lang="scss">
-@import "@/assets/styles/app-preloader.scss";
+@use "@/assets/styles/app-preloader.scss";
 </style>

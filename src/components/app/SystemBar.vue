@@ -349,7 +349,7 @@ onUnmounted(() => {
       align-items: center;
     }
 
-    :deep(.v-hotkey) {
+    .v-hotkey {
       flex-shrink: 0;
       margin-left: 12px;
     }

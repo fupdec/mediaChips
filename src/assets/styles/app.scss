@@ -1,9 +1,11 @@
-@import "./fonts.scss";
-@import "./player.scss";
-@import "./image-viewer.scss";
-@import "./tag-page.scss";
-@import "./sfw.scss";
-@import "./meta-assignment.scss";
+@use "./fonts.scss";
+@use "./player.scss";
+@use "./image-viewer.scss";
+@use "./tag-page.scss";
+@use "./sfw.scss";
+@use "./meta-assignment.scss";
+@use "./item.scss";
+@use "./screen.scss";
 
 html {
   //overflow-y: hidden !important;
@@ -1188,6 +1190,3 @@ header {
   max-width: 560px;
   margin-inline: auto;
 }
-
-@import "./item.scss";
-@import "./screen.scss";
