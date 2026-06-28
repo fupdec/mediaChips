@@ -294,10 +294,12 @@ const isVideoPreviewEnabled = computed(() =>
   SETTINGS.value.videoPreviewHover === 'video',
 )
 
+const shouldBlockVideoPreview = computed(() =>
+  isUnsupportedFormat.value && isVideoPreviewEnabled.value,
+)
+
 const shouldBlockHoverPreview = computed(() =>
-  isUnsupportedFormat.value &&
-  !isTranscodeEnabled.value &&
-  isVideoPreviewEnabled.value,
+  shouldBlockVideoPreview.value && !isTranscodeEnabled.value,
 )
 
 const showTranscodeDisabledNotice = computed(() =>
@@ -310,7 +312,7 @@ const isShowProgress = computed(() =>
   SETTINGS.value.videoPreviewHover === 'video' &&
   props.isFileExists &&
   isHovered.value &&
-  !shouldBlockHoverPreview.value,
+  !shouldBlockVideoPreview.value,
 )
 
 const isViewCard = computed(() =>
@@ -327,14 +329,14 @@ const showVideoPreview = computed(() =>
   SETTINGS.value.videoPreviewHover === 'video' &&
   props.isFileExists &&
   isHovered.value &&
-  !shouldBlockHoverPreview.value,
+  !shouldBlockVideoPreview.value,
 )
 
 const canMountVideoPreview = computed(() =>
   isViewCard.value &&
   SETTINGS.value.videoPreviewHover === 'video' &&
   props.isFileExists &&
-  !shouldBlockHoverPreview.value,
+  !shouldBlockVideoPreview.value,
 )
 
 const showTimelinePreview = computed(() =>
@@ -529,7 +531,7 @@ const setAsThumbFromPreview = async () => {
 }
 
 const handlePreviewContextMenu = (e) => {
-  if (!bigPreview.value || !props.isFileExists || playbackError.value || shouldBlockHoverPreview.value) return
+  if (!bigPreview.value || !props.isFileExists || playbackError.value || shouldBlockVideoPreview.value) return
 
   e.preventDefault()
   e.stopPropagation()
@@ -595,7 +597,7 @@ const handleVideoLoaded = () => {
 }
 
 const changePreviewTime = _.debounce((e) => {
-  if (!props.isFileExists || playbackError.value || shouldBlockHoverPreview.value) return
+  if (!props.isFileExists || playbackError.value || shouldBlockVideoPreview.value) return
   if (SETTINGS.value.videoPreviewHover !== "video") return
 
   const rect = e.target.getBoundingClientRect()
@@ -757,11 +759,11 @@ const handleMouseEnter = () => {
   playbackError.value = false
   isHovered.value = true
 
-  if (isVideoPreviewEnabled.value && !shouldBlockHoverPreview.value) {
+  if (isVideoPreviewEnabled.value && !shouldBlockVideoPreview.value) {
     schedulePreviewPlayback()
   }
 
-  if (SETTINGS.value.big_video_preview === '1' && !shouldBlockHoverPreview.value) {
+  if (SETTINGS.value.big_video_preview === '1' && !shouldBlockVideoPreview.value) {
     const totalDelay = (Number(SETTINGS.value.delayVideoPreview) || 0) +
       (Number(SETTINGS.value.big_video_preview_delay) || 0)
 
