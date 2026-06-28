@@ -17,7 +17,7 @@
           variant="tonal"
           rounded="xl"
         >
-          {{ t('media.file_path.file_missing_operations_unavailable') }}
+          {{ fileMissingAlertMessage }}
         </v-alert>
       </v-card-text>
 
@@ -35,7 +35,7 @@
 
         <v-btn
           @click="openFolder"
-          :disabled="!is_file_exists"
+          :disabled="!is_folder_exists"
           color="primary"
           variant="flat"
           rounded="xl"
@@ -80,7 +80,7 @@
             variant="tonal"
             rounded="xl"
           >
-            {{ t('media.file_path.file_missing_operations_unavailable') }}
+            {{ fileMissingAlertMessage }}
           </v-alert>
 
           <v-alert
@@ -157,6 +157,7 @@ const move_file = ref(true)
 const is_different_path = ref(false)
 const is_file_moving = ref(false)
 const is_file_exists = ref(false)
+const is_folder_exists = ref(false)
 const move_progress = ref(0)
 const move_status = ref('')
 const move_size = ref('')
@@ -200,6 +201,13 @@ const applyPathUpdate = (filePath) => {
 }
 
 const isAnotherMoveActive = computed(() => operationsStore.moving.active && !is_file_moving.value)
+
+const fileMissingAlertMessage = computed(() => {
+  if (is_folder_exists.value) {
+    return t('media.file_path.file_missing_operations_unavailable')
+  }
+  return t('media.file_path.file_and_folder_missing')
+})
 
 const headerButtons = computed(() => [{
   icon: 'content-save',
@@ -333,7 +341,7 @@ const updateFilePath = async () => {
           icon: 'folder-edit',
         })
         dialog_edit.value = false
-        await refreshFileExists(filePath)
+        await refreshPathAvailability(filePath)
       }
     } finally {
       is_file_moving.value = false
@@ -345,12 +353,20 @@ const updateFilePath = async () => {
   const saved = await savePathToDb(filePath)
   if (saved) {
     dialog_edit.value = false
-    await refreshFileExists(filePath)
+    await refreshPathAvailability(filePath)
   }
 }
 
-const refreshFileExists = async (filePath) => {
+const refreshPathAvailability = async (filePath) => {
+  if (!filePath) {
+    is_file_exists.value = false
+    is_folder_exists.value = false
+    return
+  }
+
   is_file_exists.value = await checkPathExists(filePath)
+  const folderPath = path.dirname(filePath)
+  is_folder_exists.value = folderPath ? await checkPathExists(folderPath) : false
 }
 
 const openDialogEdit = async () => {
@@ -364,12 +380,10 @@ const openDialogEdit = async () => {
 }
 
 onMounted(async () => {
-  await refreshFileExists(display_path.value || props.media?.path)
+  await refreshPathAvailability(display_path.value || props.media?.path)
 })
 
 watch(display_path, async (filePath) => {
-  if (filePath) {
-    await refreshFileExists(filePath)
-  }
+  await refreshPathAvailability(filePath)
 })
 </script>

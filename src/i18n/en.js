@@ -817,6 +817,7 @@ const en = {
       editing_path: 'Editing path to file',
       full_path_hint: "It's full path. For example: /home/media/video.mp4",
       file_missing_operations_unavailable: "File doesn't exist. File operations are not available.",
+      file_and_folder_missing: "File doesn't exist. The file's folder is also unavailable.",
       file_moving: 'Please wait. File is moving.',
       file_moving_size: 'Size: {size}',
       file_moving_eta: 'Approximately {eta} remaining',

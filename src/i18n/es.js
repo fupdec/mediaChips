@@ -817,6 +817,7 @@ const es = {
       editing_path: 'Editando ruta al archivo',
       full_path_hint: 'Es la ruta completa. Por ejemplo: /home/media/video.mp4',
       file_missing_operations_unavailable: 'El archivo no existe. Las operaciones de archivo no están disponibles.',
+      file_and_folder_missing: 'El archivo no existe. La carpeta del archivo tampoco está disponible.',
       file_moving: 'Espere. El archivo se está moviendo.',
       file_moving_size: 'Tamaño: {size}',
       file_moving_eta: 'Aproximadamente {eta} restante',

@@ -817,6 +817,7 @@ const cn = {
       editing_path: '编辑文件路径',
       full_path_hint: '这是完整路径。例如：/home/media/video.mp4',
       file_missing_operations_unavailable: '文件不存在。文件操作不可用。',
+      file_and_folder_missing: '文件不存在，文件所在文件夹也不可用。',
       file_moving: '请稍候。文件正在移动。',
       file_moving_size: '大小：{size}',
       file_moving_eta: '大约剩余 {eta}',

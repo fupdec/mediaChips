@@ -817,6 +817,7 @@ const ru = {
       editing_path: 'Редактирование пути к файлу',
       full_path_hint: 'Это полный путь. Например: /home/media/video.mp4',
       file_missing_operations_unavailable: 'Файл не существует. Операции с файлом недоступны.',
+      file_and_folder_missing: 'Файл не существует. Папка с файлом также недоступна.',
       file_moving: 'Подождите. Файл перемещается.',
       file_moving_size: 'Размер: {size}',
       file_moving_eta: 'Осталось примерно {eta}',
