@@ -546,14 +546,22 @@ const handleUpdateLayoutItems = () => {
   upd.value = Date.now()
 }
 
-// Lifecycle
-onMounted(async () => {
-  // Set environment from URL params
+const applyRouteContext = () => {
   itemsStore.environment.media_type_id = getUrlParam("mediaTypeId")
   itemsStore.environment.meta_id = getUrlParam("metaId")
   itemsStore.environment.tag_id = getUrlParam("tagId")
   itemsStore.environment.tab_id = getUrlParam("tabId")
+}
 
+const reloadTagPage = async () => {
+  is_init.value = false
+  applyRouteContext()
+  await init()
+}
+
+// Lifecycle
+onMounted(async () => {
+  applyRouteContext()
   await init()
 
   eventBus.on("getTag", handleGetTag)
@@ -566,6 +574,23 @@ onBeforeUnmount(() => {
   eventBus.off("updateLayoutItems")
   eventBus.off("getTag")
 })
+
+watch(
+  () => [
+    route.query.tagId,
+    route.query.metaId,
+    route.query.mediaTypeId,
+    route.query.tabId,
+  ],
+  async (newParams, oldParams) => {
+    if (!oldParams || route.path !== '/tag') return
+
+    const hasChanged = newParams.some((value, index) => value !== oldParams[index])
+    if (!hasChanged) return
+
+    await reloadTagPage()
+  },
+)
 
 // Helper function to get URL params
 const getUrlParam = (param) => {
