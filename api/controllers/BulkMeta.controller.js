@@ -6,6 +6,7 @@ module.exports = function (db) {
       const itemType = req.body.itemType
       const itemIds = Array.isArray(req.body.itemIds) ? req.body.itemIds.filter(Boolean) : []
       const changes = Array.isArray(req.body.changes) ? req.body.changes : []
+      const presetChanges = Array.isArray(req.body.presetChanges) ? req.body.presetChanges : []
 
       if (!['media', 'tag'].includes(itemType)) {
         return res.status(400).send({message: 'itemType must be media or tag'})
@@ -19,6 +20,7 @@ module.exports = function (db) {
         itemType,
         itemIds,
         changes,
+        presetChanges,
       })
 
       res.status(201).send(result)

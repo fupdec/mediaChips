@@ -6,15 +6,19 @@
     v-model:search="search"
     :items="listTags"
     :custom-filter="filterTags"
+    item-title="name"
     item-value="id"
     ref="field"
     :rules="[rules]"
     :menu-props="menuProps"
     :label="meta.name"
     :hint="meta.hint"
+    :disabled="disabled"
     :hide-no-data="!search"
     hide-selected
+    multiple
     @keydown.enter="onEnter"
+    @blur="onBlur"
   >
     <template v-slot:no-data>
       <div v-if="purpose == 'filter'" class="pa-3">{{ t('common.no_data') }}</div>
@@ -86,7 +90,7 @@
       </v-list-item>
     </template>
 
-    <template v-if="purpose != 'filter' && showIcons" v-slot:prepend>
+    <template v-if="purpose != 'filter' && purpose != 'bulk' && showIcons" v-slot:prepend>
       <v-menu location="top" close-on-click>
         <template v-slot:activator="{ props }">
           <v-btn v-bind="props" icon variant="plain" density="compact">
@@ -151,6 +155,7 @@ const props = defineProps({
   metaId: Number,
   purpose: String,
   modelValue: [Array, Number],
+  disabled: Boolean,
   cond: {
     type: String,
     default: null,
@@ -210,12 +215,10 @@ const filterTags = (title, queryText, tagObj) => {
   let tag = _.cloneDeep(tagObj.raw);
   let query = queryText.toLowerCase();
 
-  const foundByChars = (text, query) => {
-    return foundByChars(text, query);
-  };
-
   const is_default = settingsStore.typingFiltersDefault == "1";
-  const is_name_found = is_default ? tag.name.toLowerCase().indexOf(query) > -1 : foundByChars(tag.name, query);
+  const is_name_found = is_default
+    ? tag.name.toLowerCase().indexOf(query) > -1
+    : foundByChars(tag.name, query);
 
   if (is_name_found) {
     tagObj.raw.name_parsed = highlightChars(tag.name, queryText, is_default);
@@ -231,7 +234,9 @@ const filterTags = (title, queryText, tagObj) => {
     let values = [];
     let synonyms_parsed = [];
     for (let i of synonyms) {
-      const val = is_default ? i.toLowerCase().indexOf(query) > -1 : foundByChars(i, query);
+      const val = is_default
+        ? i.toLowerCase().indexOf(query) > -1
+        : foundByChars(i, query);
       values.push(val);
 
       // для отображения строки с подчеркнутыми символами
@@ -251,8 +256,24 @@ const filterTags = (title, queryText, tagObj) => {
 
 
 // Methods
+const normalizeIds = (value) => {
+  if (value == null) return []
+  const items = Array.isArray(value) ? value : [value]
+
+  return items
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id))
+}
+
+const sameIds = (left, right) => {
+  const a = normalizeIds(left)
+  const b = normalizeIds(right)
+  if (a.length !== b.length) return false
+  return a.every((id, index) => id === b[index])
+}
+
 const findTagName = (tagId) => {
-  const tag = listTags.value.find(t => t.id === tagId)
+  const tag = listTags.value.find((t) => String(t.id) === String(tagId))
   return tag ? tag.name : tagId
 }
 
@@ -337,7 +358,7 @@ const create = async () => {
     let newVal = [res.data[0].id]
 
     if (Array.isArray(val.value)) {
-      newVal = [...(val.value || []), ...newVal]
+      newVal = [...normalizeIds(val.value), ...newVal]
     }
 
     setVal(newVal)
@@ -378,10 +399,37 @@ const onEnter = (event) => {
   }
 }
 const setVal = (newVal) => {
-  val.value = newVal
-  emit('update:modelValue', newVal)
+  const normalized = normalizeIds(newVal)
+  const previous = normalizeIds(val.value)
 
-  // Очищаем поиск после выбора
+  if (!normalized.length && previous.length) {
+    const tagsStillExist = previous.every((id) =>
+      listTags.value.some((tag) => Number(tag.id) === id)
+    )
+    if (tagsStillExist) {
+      nextTick(() => {
+        search.value = null
+      })
+      return
+    }
+  }
+
+  if (sameIds(normalized, previous)) {
+    nextTick(() => {
+      search.value = null
+    })
+    return
+  }
+
+  val.value = normalized
+  emit('update:modelValue', normalized)
+
+  nextTick(() => {
+    search.value = null
+  })
+}
+
+const onBlur = () => {
   nextTick(() => {
     search.value = null
   })
@@ -389,10 +437,10 @@ const setVal = (newVal) => {
 
 const removeTag = (tagId) => {
   if (Array.isArray(val.value)) {
-    const newVal = (val.value || []).filter(i => String(i) !== String(tagId))
+    const newVal = normalizeIds(val.value).filter((id) => String(id) !== String(tagId))
     setVal(newVal)
   } else if (String(val.value) === String(tagId)) {
-    setVal(null)
+    setVal([])
   }
   hideHoverImage()
 }
@@ -417,13 +465,13 @@ const getMeta = async () => {
 onMounted(async () => {
   await getMeta()
 
-  val.value = props.modelValue
+  val.value = normalizeIds(props.modelValue)
   await getTags()
 })
 
 // Watchers
 watch(() => props.modelValue, (newVal) => {
-  val.value = newVal
+  val.value = normalizeIds(newVal)
 })
 </script>
 

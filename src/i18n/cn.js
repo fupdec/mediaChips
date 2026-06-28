@@ -411,6 +411,11 @@ const cn = {
     saving: '正在应用更改，请稍候...',
     replace: '替换',
     no_action: '无操作',
+    changes_count: '将更改 {count} 个字段',
+    save_success: '批量编辑已应用于 {count} 个项目',
+    save_error: '批量编辑应用失败',
+    preset_section: '标准字段',
+    pinned_section: '固定的元数据字段',
   },
   empty_states: {
     no_items_add_first: '没有项目。请先添加。',

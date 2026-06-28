@@ -411,6 +411,11 @@ const es = {
     saving: 'Aplicando cambios, espere...',
     replace: 'Reemplazar',
     no_action: 'Sin acción',
+    changes_count: 'Se cambiarán {count} campos',
+    save_success: 'Edición masiva aplicada a {count} elementos',
+    save_error: 'No se pudo aplicar la edición masiva',
+    preset_section: 'Campos estándar',
+    pinned_section: 'Campos de metadatos fijados',
   },
   empty_states: {
     no_items_add_first: 'No hay elementos. Agréguelos primero.',

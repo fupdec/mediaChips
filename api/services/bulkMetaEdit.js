@@ -85,7 +85,49 @@ function buildValueRows(itemType, itemIds, metaId, value) {
   }))
 }
 
-async function applyBulkMetaEdit(db, {itemType, itemIds = [], changes = []}) {
+const PRESET_FIELDS = new Set(['rating', 'favorite', 'views'])
+
+function normalizePresetValue(field, editType, value) {
+  if (editType === 1) {
+    if (field === 'favorite') return false
+    return 0
+  }
+
+  if (field === 'favorite') {
+    return value === true || value === 1 || value === '1'
+  }
+
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : 0
+}
+
+async function applyPresetBulkEdit(db, itemType, itemIds, presetChanges = []) {
+  const Model = itemType === 'media' ? db.Media : db.Tag
+  let appliedChanges = 0
+
+  for (const change of presetChanges) {
+    const editType = Number(change.editType)
+    if (!editType || editType === 3) continue
+
+    const field = change.field
+    if (!PRESET_FIELDS.has(field)) continue
+
+    const value = normalizePresetValue(field, editType, change.value)
+    const updatePayload = {[field]: value}
+
+    for (const batch of chunkArray(itemIds)) {
+      await Model.update(updatePayload, {
+        where: {id: {[Op.in]: batch}},
+      })
+    }
+
+    appliedChanges += 1
+  }
+
+  return appliedChanges
+}
+
+async function applyBulkMetaEdit(db, {itemType, itemIds = [], changes = [], presetChanges = []}) {
   const models = getModels(db, itemType)
   if (!models) {
     throw new Error(`Unsupported item type: ${itemType}`)
@@ -154,9 +196,16 @@ async function applyBulkMetaEdit(db, {itemType, itemIds = [], changes = []}) {
     appliedChanges += 1
   }
 
+  const presetApplied = await applyPresetBulkEdit(
+    db,
+    itemType,
+    uniqueItemIds,
+    presetChanges,
+  )
+
   return {
     updated: uniqueItemIds.length,
-    changes: appliedChanges,
+    changes: appliedChanges + presetApplied,
   }
 }
 

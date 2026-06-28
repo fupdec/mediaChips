@@ -411,6 +411,11 @@ const en = {
     saving: 'Applying changes, please wait...',
     replace: 'Replace',
     no_action: 'No action',
+    changes_count: '{count} fields will be changed',
+    save_success: 'Bulk edit applied to {count} items',
+    save_error: 'Failed to apply bulk edit',
+    preset_section: 'Standard fields',
+    pinned_section: 'Pinned metadata fields',
   },
   empty_states: {
     no_items_add_first: 'There are no items. Please add them first.',
