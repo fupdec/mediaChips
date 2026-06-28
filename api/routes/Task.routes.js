@@ -72,6 +72,9 @@ module.exports = (app, db) => {
   // creating thumbnail for video
   register('post', "/createThumb", 'createThumb');
 
+  // creating thumbnail for player marker
+  register('post', "/createMarkThumbForMark", 'createMarkThumbForMark');
+
   // creating frames grid for video
   register('post', "/createGrid", 'createGrid');
 

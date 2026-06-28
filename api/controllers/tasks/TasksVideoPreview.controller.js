@@ -8,9 +8,12 @@ const {
   ffprobe,
 } = require('../../utils/ffmpeg')
 const {resolveExistingPath} = require('../../services/contentHash')
+const {resolveMediaInputPath, resolveActiveDbFilePath} = require('../../services/mediaPathResolver')
+
+const formatMarkTimestamp = (time) => new Date(1000 * time).toISOString().substr(11, 12)
 
 module.exports = function createTasksVideoPreviewController(shared) {
-  const {dbPath, createThumbMiddle, createThumbCustom, getImageMedia} = shared
+  const {db, dbPath, createThumbMiddle, createThumbCustom, getImageMedia} = shared
 
   const createThumbForVideo = async function (req, res) {
     createThumbMiddle(req.body.path, req.body.id)
@@ -23,28 +26,46 @@ module.exports = function createTasksVideoPreviewController(shared) {
   }
 
   const createThumb = async function (req, res) {
-    if (!fs.existsSync(req.body.inputPath)) {
-      res.status(400).send({
-        message: "The video does not exist."
-      })
-      return
-    }
+    try {
+      const resolvedInputPath = resolveActiveDbFilePath(req.body.inputPath, dbPath)
+      if (!resolvedInputPath) {
+        res.status(400).send({
+          message: "The video does not exist."
+        })
+        return
+      }
 
-    if (!req.body.overwrite && fs.existsSync(req.body.outputPath)) {
-      res.status(400).send({
-        message: "The image already exists."
-      })
-      return
-    }
+      const outputPath = req.body.outputPath
+      if (!outputPath) {
+        res.status(400).send({
+          message: "No output path provided."
+        })
+        return
+      }
 
-    let outputPath = req.body.outputPath
-    createThumbCustom(req.body.timestamp, req.body.inputPath, outputPath, req.body.width)
-      .then(thumbResult => {
-        res.status(201).send(thumbResult)
-      })
-      .catch(e => {
-        res.status(400).send(e)
-      })
+      const outputExists = await resolveExistingPath(outputPath)
+      if (!req.body.overwrite && outputExists) {
+        res.status(400).send({
+          message: "The image already exists."
+        })
+        return
+      }
+
+      const outputDir = path.dirname(outputPath)
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, {recursive: true})
+      }
+
+      const thumbResult = await createThumbCustom(
+        req.body.timestamp,
+        resolvedInputPath,
+        outputPath,
+        req.body.width,
+      )
+      res.status(201).send(thumbResult)
+    } catch (e) {
+      res.status(400).send(e)
+    }
   }
 
   const createGrid = async function (req, res) {
@@ -264,9 +285,69 @@ module.exports = function createTasksVideoPreviewController(shared) {
     }
   }
 
+  const createMarkThumbForMark = async function (req, res) {
+    try {
+      const markId = Number(req.body.markId)
+      const mediaId = Number(req.body.mediaId)
+
+      if (!markId || !mediaId) {
+        res.status(400).send({message: 'markId and mediaId are required'})
+        return
+      }
+
+      const mark = await db.Mark.findOne({
+        where: {id: markId, mediaId},
+        raw: true,
+      })
+
+      if (!mark) {
+        res.status(404).send({message: 'Mark not found'})
+        return
+      }
+
+      const media = await db.Media.findOne({
+        where: {id: mediaId},
+        raw: true,
+      })
+
+      if (!media?.path) {
+        res.status(404).send({message: 'Media not found'})
+        return
+      }
+
+      const resolvedInputPath = resolveActiveDbFilePath(media.path, dbPath)
+      if (!resolvedInputPath) {
+        res.status(400).send({message: 'The video does not exist.'})
+        return
+      }
+
+      const marksDir = path.join(dbPath, 'media/videos/marks')
+      if (!fs.existsSync(marksDir)) {
+        fs.mkdirSync(marksDir, {recursive: true})
+      }
+
+      const outputPath = path.join(marksDir, `${markId}.jpg`)
+      if (!req.body.overwrite && fs.existsSync(outputPath)) {
+        res.status(400).send({message: 'The image already exists.'})
+        return
+      }
+
+      await createThumbCustom(
+        formatMarkTimestamp(mark.time),
+        resolvedInputPath,
+        outputPath,
+        180,
+      )
+      res.status(201).send('success')
+    } catch (e) {
+      res.status(400).send(e)
+    }
+  }
+
   return {
     createThumbForVideo,
     createThumb,
+    createMarkThumbForMark,
     createGrid,
     createTimeline,
     createImage,

@@ -1,6 +1,5 @@
 import {nextTick} from 'vue'
 import _ from 'lodash'
-import path from 'path-browserify'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
@@ -16,8 +15,9 @@ import {
   isAudioFilePath,
 } from '@/utils/mediaType'
 import {apiClient, buildApiUrl} from '@/services/apiClient'
-import {checkFileExists, createThumb} from '@/services/fileService'
+import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
+import {ensureMarkThumb, getMarkImagePath} from '@/utils/markThumb'
 
 export async function resolvePlayableVideo(playlist, initialVideo, checkFileExists) {
   const candidates = []
@@ -116,34 +116,36 @@ export function usePlayerPlayback({
       const res = await apiClient.get(`/api/Mark/video/${media.id}`)
       playerStore.marks = res.data
 
-      if (!playerStore.is_file_exists) return
+      if (!media?.id || !appStore.mediaPath) return
 
       for (const mark of playerStore.marks) {
-        const time = new Date(1000 * mark.time).toISOString().substr(11, 12)
-        const imgPath = path.join(
-          appStore.mediaPath || '',
-          'videos/marks',
-          `${mark.id}.jpg`
-        )
-        const exists = await checkFileExists(imgPath, true)
+        const imgPath = getMarkImagePath(appStore.mediaPath, mark.id)
+        const exists = await checkFileExists(imgPath)
         if (exists) {
           eventBus.emit('updateMarkImage', mark.id)
           continue
         }
 
         try {
-          await createThumb(time, media.path, imgPath, 180)
-          eventBus.emit('updateMarkImage', mark.id)
+          await ensureMarkThumb({
+            mark,
+            videoPath: media.path,
+            mediaPath: appStore.mediaPath,
+            mediaId: media.id,
+            onUpdated: (markId) => eventBus.emit('updateMarkImage', markId),
+          })
         } catch (e) {
-          console.log(e)
+          console.error('Failed to create mark thumb:', e)
         }
       }
+
+      eventBus.emit('refreshMarkThumbs')
 
       if (marks.value?.getThumbs) {
         await marks.value.getThumbs()
       }
     } catch (e) {
-      console.log(e)
+      console.error('Failed to load marks:', e)
     }
   }
 
@@ -189,6 +191,7 @@ export function usePlayerPlayback({
     }
 
     playerStore.player.src = `${buildApiUrl(`/api/video/${media.id}`)}?time=${Math.random()}`
+    playerStore.media = media
     await getMarks(media)
     await getMetadata(media)
     playerStore.trackCurrentTime()

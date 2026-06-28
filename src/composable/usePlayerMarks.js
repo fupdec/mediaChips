@@ -1,16 +1,18 @@
 import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
-import path from 'path-browserify'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
-import {getLocalImage} from '@/services/fileService'
 import {getReadableDuration} from '@/services/formatUtils'
 import {
   filterMarksByTypes,
   getMarkListColor,
   getMarkListIcon,
 } from '@/composable/playerMarkDisplay'
+import {
+  ensureMarkThumb,
+  loadMarkImageDisplayUrl,
+} from '@/utils/markThumb'
 
 export function usePlayerMarks({emit}) {
   const appStore = useAppStore()
@@ -26,17 +28,23 @@ export function usePlayerMarks({emit}) {
 
   const marks = computed(() => filterMarksByTypes(playerStore.marks, marksType.value))
 
+  const loadMarkThumb = async (mark) => {
+    if (!appStore.mediaPath) return
+
+    mark.thumb = await loadMarkImageDisplayUrl({
+      markId: mark.id,
+      mediaPath: appStore.mediaPath,
+      mediaId: playerStore.media?.id,
+    })
+  }
+
   const getThumbs = async () => {
+    if (!appStore.mediaPath) return
+
     is_thumbs_loaded.value = false
 
     for (const mark of playerStore.marks) {
-      const imgPath = path.join(
-        appStore.mediaPath,
-        'videos/marks',
-        `${mark.id}.jpg`,
-      )
-
-      mark.thumb = await getLocalImage(imgPath)
+      await loadMarkThumb(mark)
     }
 
     is_thumbs_loaded.value = true
@@ -75,17 +83,29 @@ export function usePlayerMarks({emit}) {
     })
   })
 
+  watch(() => appStore.mediaPath, (mediaPath) => {
+    if (mediaPath) {
+      getThumbs()
+    }
+  })
+
   watch(assigned, (arr) => {
     arr.forEach((i) => ensureMetaTypeSelected(i.meta?.id))
   }, {immediate: true})
 
+  const handleRefreshMarkThumbs = () => {
+    getThumbs()
+  }
+
   onMounted(() => {
     eventBus.on('updateMarkImage', handleUpdateMarkImage)
+    eventBus.on('refreshMarkThumbs', handleRefreshMarkThumbs)
     getThumbs()
   })
 
   onBeforeUnmount(() => {
     eventBus.off('updateMarkImage', handleUpdateMarkImage)
+    eventBus.off('refreshMarkThumbs', handleRefreshMarkThumbs)
   })
 
   return {

@@ -1,15 +1,14 @@
 import {ref, watch, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
-import path from 'path-browserify'
 import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import {useMarksStore} from '@/stores/marks'
 import {useEventBus} from '@/utils/eventBus'
-import {checkFileExists, createThumb} from '@/services/fileService'
-
-function formatMarkTimestamp(time) {
-  return new Date(1000 * time).toISOString().substr(11, 12)
-}
+import {checkFileExists} from '@/services/fileService'
+import {
+  ensureMarkThumb,
+  getMarkImagePath,
+} from '@/utils/markThumb'
 
 export default function useMarkImageGenerator() {
   const {t} = useI18n()
@@ -24,11 +23,7 @@ export default function useMarkImageGenerator() {
   const processedMarkIds = ref(new Set())
   const lastMarksCount = ref(0)
 
-  const getMarkImagePath = (markId) => path.join(
-    appStore.mediaPath || '',
-    'videos/marks',
-    `${markId}.jpg`,
-  )
+  const getMarkImagePathForMark = (markId) => getMarkImagePath(appStore.mediaPath, markId)
 
   const getMarksToProcess = (marks) => {
     if (!Array.isArray(marks) || !marks.length) return []
@@ -46,8 +41,8 @@ export default function useMarkImageGenerator() {
     processedMarkIds.value = new Set()
   }
 
-  const ensureMarkThumb = async (mark) => {
-    const imgPath = getMarkImagePath(mark.id)
+  const ensureMarkThumbLocal = async (mark) => {
+    const imgPath = getMarkImagePathForMark(mark.id)
     const thumbExists = await checkFileExists(imgPath)
 
     if (thumbExists) {
@@ -61,13 +56,13 @@ export default function useMarkImageGenerator() {
     const videoExists = await checkFileExists(videoPath)
     if (!videoExists) return 'skipped'
 
-    await createThumb(
-      formatMarkTimestamp(mark.time),
+    await ensureMarkThumb({
+      mark,
       videoPath,
-      imgPath,
-      180,
-    )
-    eventBus.emit('updateMarkImage', mark.id)
+      mediaPath: appStore.mediaPath,
+      mediaId: mark.medium?.id || mark.mediaId,
+      onUpdated: (markId) => eventBus.emit('updateMarkImage', markId),
+    })
     return 'created'
   }
 
@@ -77,7 +72,7 @@ export default function useMarkImageGenerator() {
     const marksToGenerate = []
 
     for (const mark of marks) {
-      const imgPath = getMarkImagePath(mark.id)
+      const imgPath = getMarkImagePathForMark(mark.id)
       const thumbExists = await checkFileExists(imgPath)
 
       if (thumbExists) {
@@ -119,7 +114,7 @@ export default function useMarkImageGenerator() {
         })
 
         try {
-          await ensureMarkThumb(mark)
+          await ensureMarkThumbLocal(mark)
         } catch (error) {
           console.error(`Failed to create thumb for mark ${mark.id}:`, error)
         }

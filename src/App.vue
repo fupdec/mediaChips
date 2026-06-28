@@ -162,7 +162,10 @@ async function initializeApp(server) {
 
   if (isPlayerWindow.value) {
     app.localhost = resolveApiBaseUrl({}, server)
-    isConfigLoaded.value = true
+    await loadConfig()
+    if (!isConfigLoaded.value) {
+      await fetchConfigFromServer()
+    }
     return
   }
 
@@ -192,7 +195,7 @@ async function loadConfig() {
       console.warn('⚠️ Failed to load config via get-config:', error);
     }
 
-    if (!isPlayerWindow.value) {
+    if (!isConfigLoaded.value) {
       setTimeout(() => {
         if (!isConfigLoaded.value) {
           console.warn('⚠️ Config not received via IPC, falling back to HTTP');
@@ -239,19 +242,19 @@ async function fetchConfigFromServer() {
 }
 
 function applyConfig(config) {
-  if (isConfigLoaded.value) {
-    return
-  }
+  const wasLoaded = isConfigLoaded.value
 
   app.localhost = resolveApiBaseUrl(config, currentServer.value)
   app.appVersion = config.appVersion
   app.dbPath = config.path
-  app.mediaPath = path.join(config.path, "media")
+  app.mediaPath = path.join(config.path, 'media')
   app.databases = config.databases
   app.config = config
 
-  console.log('✅ Config applied:', config)
-  isConfigLoaded.value = true
+  if (!wasLoaded) {
+    console.log('✅ Config applied:', config)
+    isConfigLoaded.value = true
+  }
 }
 
 function reconnect() {

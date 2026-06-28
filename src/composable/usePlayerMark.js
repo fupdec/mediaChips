@@ -1,9 +1,7 @@
-import {ref, computed, onMounted, onBeforeUnmount} from 'vue'
-import path from 'path-browserify'
+import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useEventBus} from '@/utils/eventBus'
-import {getLocalImage} from '@/services/fileService'
 import {checkColorForDarkText, getReadableDuration} from '@/services/formatUtils'
 import {
   formatMarkTimeRange,
@@ -12,6 +10,9 @@ import {
   getMarkTimelinePositionStyle,
   getMarkTimelineWidthStyle,
 } from '@/composable/playerMarkDisplay'
+import {
+  loadMarkImageDisplayUrl,
+} from '@/utils/markThumb'
 
 export function usePlayerMark(props, emit) {
   const appStore = useAppStore()
@@ -42,13 +43,13 @@ export function usePlayerMark(props, emit) {
   ))
 
   const getImg = async () => {
-    const imgPath = path.join(
-      appStore.mediaPath,
-      'videos/marks',
-      `${props.mark.id}.jpg`,
-    )
+    if (!appStore.mediaPath) return
 
-    thumb.value = await getLocalImage(imgPath)
+    thumb.value = await loadMarkImageDisplayUrl({
+      markId: props.mark.id,
+      mediaPath: appStore.mediaPath,
+      mediaId: playerStore.media?.id,
+    })
   }
 
   const jumpTo = () => {
@@ -70,6 +71,17 @@ export function usePlayerMark(props, emit) {
   onMounted(() => {
     eventBus.on('updateMarkImage', handleUpdateMarkImage)
     getImg()
+  })
+
+  watch(() => playerStore.media?.id, (mediaId, previousMediaId) => {
+    if (!mediaId || mediaId === previousMediaId) return
+    getImg()
+  })
+
+  watch(() => appStore.mediaPath, (mediaPath) => {
+    if (mediaPath) {
+      getImg()
+    }
   })
 
   onBeforeUnmount(() => {
