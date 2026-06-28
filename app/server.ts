@@ -1,3 +1,6 @@
+import type { Express } from 'express'
+import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo, ServerInitResult } from './types/server'
+import { apiErrorMessage, apiErrorStack } from '../api/types/errors'
 const {getBestLocalIp, getAllIps} = require('./server/network')
 const {initializeServerConfig} = require('./server/serverConfig')
 const {setupDatabase, warmupEmbeddingModel} = require('./server/database')
@@ -12,7 +15,7 @@ const {config, configPath, databasesPath} = initializeServerConfig({
   getAllIps,
 })
 
-const dbConfig = config.databases.find((i: any) => i.active)
+const dbConfig = config.databases.find((i: ServerDatabaseEntry) => i.active)
 const {db} = setupDatabase({databasesPath, dbConfig})
 warmupEmbeddingModel(db)
 
@@ -25,7 +28,7 @@ const {createTranscodeManager} = require('../api/services/transcode/transcodeSer
 const transcodeManager = createTranscodeManager({
   databasesPath,
   db,
-  getActiveDbId: () => config.databases.find((entry: any) => entry.active)?.id || null,
+  getActiveDbId: () => config.databases.find((entry: ServerDatabaseEntry) => entry.active)?.id || null,
 })
 
 registerBuiltinRoutes({
@@ -45,8 +48,8 @@ setupStaticApp(app)
 
 try {
   require('./tasks/websockets')(app, db)
-} catch (err: any) {
-  console.log('\x1b[33m%s\x1b[0m', '⚠️ WebSocket module not found:', err.message)
+} catch (err: unknown) {
+  console.log('\x1b[33m%s\x1b[0m', '⚠️ WebSocket module not found:', err instanceof Error ? apiErrorMessage(err) : String(err))
 }
 
 const {startServer, bindShutdownHandler, getListener} = createServerStarter({

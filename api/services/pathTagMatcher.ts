@@ -1,8 +1,8 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord, TagLike, MetaLike } from '../types/db'
 
 const { cleanComparable, tokenizeFilePath } = require('./pathTokenizer')
 
-function getTagTerms(tag: any) {
+function getTagTerms(tag: TagLike) {
   const synonyms = String(tag.synonyms || '')
     .split(',')
     .map(i => i.trim())
@@ -11,7 +11,7 @@ function getTagTerms(tag: any) {
   return [tag.name, ...synonyms].filter(Boolean)
 }
 
-function exactMatchPath(filePath: string, tag: any) {
+function exactMatchPath(filePath: string, tag: TagLike) {
   const parsed = tokenizeFilePath(filePath)
   const candidates = new Set([parsed.file, ...parsed.folders].map(cleanComparable).filter(Boolean))
   const tokensBySegment = new Map()
@@ -38,13 +38,22 @@ function exactMatchPath(filePath: string, tag: any) {
   })
 }
 
-async function matchPathToTags(db: ApiDb, filePath: any, mediaId: any, tags: any, metas: any, settings: Record<string, any> = {}) {
+async function matchPathToTags(
+  db: ApiDb,
+  filePath: string,
+  mediaId: unknown,
+  tags: TagLike[],
+  metas: MetaLike[],
+  settings: AnyRecord = {},
+) {
   const parserMetaIds = new Set(
     metas
-      .filter((meta: any) => meta.parser)
-      .map((meta: any) => Number(meta.id))
+      .filter((meta) => meta.parser)
+      .map((meta) => Number(meta.id))
   )
-  const requestedMetaIds = settings.metaIds?.length ? new Set(settings.metaIds.map(Number)) : null
+  const requestedMetaIds = Array.isArray(settings.metaIds) && settings.metaIds.length
+    ? new Set((settings.metaIds as unknown[]).map(Number))
+    : null
   const values = []
 
   for (const tag of tags) {

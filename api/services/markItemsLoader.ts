@@ -1,7 +1,14 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb } from '../types/db'
+import type { SequelizeInstance } from '../types/db'
+import type {
+  MarkLike,
+  MarkLoadOptions,
+  MarkSortKey,
+  MarkSortValue,
+} from '../types/markItems'
 
-function normalizeMark(mark: any) {
-  const json = mark.toJSON ? mark.toJSON() : mark
+function normalizeMark(mark: MarkLike | SequelizeInstance): MarkLike {
+  const json = typeof mark.toJSON === 'function' ? mark.toJSON() : mark as MarkLike
 
   if (json.media && !json.medium) {
     json.medium = json.media
@@ -10,7 +17,7 @@ function normalizeMark(mark: any) {
   return json
 }
 
-function matchesTypeFilter(mark: any, types: any) {
+function matchesTypeFilter(mark: MarkLike, types: Array<number | string>) {
   if (!types.length) return false
 
   if (mark.type === 'favorite' && types.includes('favorite')) return true
@@ -18,13 +25,13 @@ function matchesTypeFilter(mark: any, types: any) {
 
   if (mark.type === 'meta') {
     const metaId = mark.tag?.metaId
-    return types.some((type: any) => Number(type) === metaId)
+    return types.some((type) => Number(type) === Number(metaId))
   }
 
   return false
 }
 
-function matchesSearch(mark: any, search: any) {
+function matchesSearch(mark: MarkLike, search: string) {
   if (!search) return true
 
   const query = search.toLowerCase().trim()
@@ -35,10 +42,10 @@ function matchesSearch(mark: any, search: any) {
     mark.tag?.name,
   ]
 
-  return fields.some((value: any) => value && String(value).toLowerCase().includes(query))
+  return fields.some((value) => value && String(value).toLowerCase().includes(query))
 }
 
-function getSortValue(mark: any, sortBy: any) {
+function getSortValue(mark: MarkLike, sortBy: MarkSortKey | string): MarkSortValue {
   switch (sortBy) {
     case 'videoName':
       return (mark.medium?.name || mark.medium?.basename || '').toLowerCase()
@@ -54,15 +61,19 @@ function getSortValue(mark: any, sortBy: any) {
   }
 }
 
-function sortMarks(items: AnyRecord[], sortBy: any= 'time', sortDir: any= 'desc') {
+function sortMarks(
+  items: MarkLike[],
+  sortBy: MarkSortKey | string = 'time',
+  sortDir: 'asc' | 'desc' | string = 'desc',
+): MarkLike[] {
   const direction = sortDir === 'asc' ? 1 : -1
 
-  return [...items].sort((a: any, b: any) => {
+  return [...items].sort((a, b) => {
     const aVal = getSortValue(a, sortBy)
     const bVal = getSortValue(b, sortBy)
 
     if (typeof aVal === 'string' || typeof bVal === 'string') {
-      return aVal.localeCompare(bVal, undefined, {sensitivity: 'base'}) * direction
+      return String(aVal).localeCompare(String(bVal), undefined, {sensitivity: 'base'}) * direction
     }
 
     if (aVal === bVal) return (Number(a.id) || 0) - (Number(b.id) || 0)
@@ -83,7 +94,7 @@ async function getMarkFilterMetas(db: ApiDb) {
   })
 }
 
-async function loadMarkItems(db: ApiDb, options: Record<string, any> = {}) {
+async function loadMarkItems(db: ApiDb, options: MarkLoadOptions = {}) {
   const {
     types = [],
     sortBy = 'time',
@@ -103,7 +114,7 @@ async function loadMarkItems(db: ApiDb, options: Record<string, any> = {}) {
   })
 
   const allItems = marks.map(normalizeMark)
-  const filtered = allItems.filter((mark: any) => (
+  const filtered = allItems.filter((mark) => (
     matchesTypeFilter(mark, types) && matchesSearch(mark, search)
   ))
   const sorted = sortMarks(filtered, sortBy, sortDir)

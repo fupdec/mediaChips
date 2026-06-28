@@ -1,9 +1,12 @@
-module.exports = function (db) {
+import type { ApiDb, AnyRecord } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
+module.exports = function (db: ApiDb) {
   const { serializeCountries } = require('../utils/country')
   const {normalizeMetaIdParam, resolveMetaId} = require('../utils/metaId')
   const {serializeExtList} = require('../utils/ext')
   // Create and Save a new FilterRow
-  const create = async function (req, res) {
+  const create = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const filterObj = {...req.body.filter}
       const val = filterObj.val
@@ -21,7 +24,7 @@ module.exports = function (db) {
       }
 
       const allowedFields = ['param', 'type', 'cond', 'val', 'active', 'note', 'lock']
-      const payload: Record<string, any> = {}
+      const payload: AnyRecord = {}
       for (const key of allowedFields) {
         if (Object.prototype.hasOwnProperty.call(filterObj, key)) {
           payload[key] = filterObj[key]
@@ -84,31 +87,31 @@ module.exports = function (db) {
     } catch (err) {
       console.log(err)
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     }
   };
 
   // Find a single FilterRow with an id
-  const findOne = function (req, res) {
+  const findOne = function (req: ApiRequest, res: ApiResponse) {
     db.FilterRow
       .findOne({
         where: {
           id: req.params.id
         }
       })
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };
 
   // Update a FilterRow by the id in the request
-  const update = function (req, res) {
+  const update = function (req: ApiRequest, res: ApiResponse) {
     db.FilterRow
       .update(req.body, {
         where: {
@@ -118,15 +121,15 @@ module.exports = function (db) {
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };
 
   // Delete a FilterRow with the specified id in the request
-  const deleteOne = function (req, res) {
+  const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     db.FilterRow
       .destroy({
         where: {
@@ -136,9 +139,9 @@ module.exports = function (db) {
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };

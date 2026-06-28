@@ -1,3 +1,7 @@
+import type { TaskControllerShared } from '../../types/tasks'
+import type { AnyRecord } from '../../types/db'
+import { apiErrorMessage } from '../../types/errors'
+import type { ApiRequest, ApiResponse } from '../../types/http'
 const fs = require('fs')
 const path = require('path')
 const {rimraf} = require('rimraf')
@@ -5,12 +9,12 @@ const {readdir, stat} = require('fs/promises')
 const {machineId} = require('node-machine-id')
 const {getAppConfigPath} = require('../../utils/appConfigPath')
 
-module.exports = function createTasksDatabaseController(shared) {
+module.exports = function createTasksDatabaseController(shared: TaskControllerShared) {
   const {db, resolveGeneratedFolderPath} = shared
 
-  const rmrf = (folder) => rimraf(folder)
+  const rmrf = (folder: unknown) => rimraf(folder)
 
-  const deleteDb = async function (req, res) {
+  const deleteDb = async function (req: ApiRequest, res: ApiResponse) {
     const dbDir = path.join(db.path_databases, req.body.id)
     try {
       await rmrf(dbDir)
@@ -20,11 +24,11 @@ module.exports = function createTasksDatabaseController(shared) {
     }
   }
 
-  const getDirectorySize = async (directory) => {
+  const getDirectorySize = async (directory: string) => {
     if (!fs.existsSync(directory)) return 0
 
     const entries = await readdir(directory, {withFileTypes: true})
-    const sizes = await Promise.all(entries.map(async (entry) => {
+    const sizes = await Promise.all(entries.map(async (entry: import("fs").Dirent) => {
       const entryPath = path.join(directory, entry.name)
       if (entry.isDirectory()) return getDirectorySize(entryPath)
       if (entry.isFile()) {
@@ -34,10 +38,10 @@ module.exports = function createTasksDatabaseController(shared) {
       return 0
     }))
 
-    return sizes.reduce((sum, size) => sum + size, 0)
+    return sizes.reduce((sum: number, size: number) => sum + size, 0)
   }
 
-  const getDatabaseSizes = async function (req, res) {
+  const getDatabaseSizes = async function (req: ApiRequest, res: ApiResponse) {
     const ids = req.body?.ids
     if (!Array.isArray(ids) || !ids.length) {
       res.status(400).send({message: 'ids array is required'})
@@ -45,29 +49,29 @@ module.exports = function createTasksDatabaseController(shared) {
     }
 
     try {
-      const sizes: Record<string, any> = {}
+      const sizes: AnyRecord = {}
       await Promise.all(ids.map(async (id) => {
         const dbDir = path.join(db.path_databases, id)
         sizes[id] = await getDirectorySize(dbDir)
       }))
       res.status(201).send({sizes})
     } catch (err) {
-      res.status(400).send({message: err.message || String(err)})
+      res.status(400).send({message: apiErrorMessage(err) || String(err)})
     }
   }
 
-  const getFolderSize = async function (req, res) {
+  const getFolderSize = async function (req: ApiRequest, res: ApiResponse) {
     const dirPath = resolveGeneratedFolderPath(req.body.folder)
     if (!dirPath) {
       res.status(400).send({message: 'Unknown folder type'})
       return
     }
 
-    const dirSize = async (directory) => {
+    const dirSize = async (directory: string) => {
       if (!fs.existsSync(directory)) return 0
 
       const files = await readdir(directory)
-      const stats = files.map(file => stat(path.join(directory, file)))
+      const stats = files.map((file: unknown) => stat(path.join(directory, file)))
 
       return (await Promise.all(stats)).reduce((accumulator, {size}) => accumulator + size, 0)
     }
@@ -76,7 +80,7 @@ module.exports = function createTasksDatabaseController(shared) {
     res.status(201).send({size})
   }
 
-  const clearData = async function (req, res) {
+  const clearData = async function (req: ApiRequest, res: ApiResponse) {
     const imageType = req.body.imageType
     const delPath = resolveGeneratedFolderPath(imageType)
 
@@ -94,17 +98,17 @@ module.exports = function createTasksDatabaseController(shared) {
     }
   }
 
-  const getConfig = async (req, res) => {
+  const getConfig = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const configPath = getAppConfigPath()
       const config_json = JSON.parse(fs.readFileSync(configPath, 'utf8'))
       res.status(200).json(config_json)
     } catch (error) {
-      res.status(500).json({message: error.message || 'Failed to read config'})
+      res.status(500).json({message: apiErrorMessage(error) || 'Failed to read config'})
     }
   }
 
-  const getMachineId = async function (req, res) {
+  const getMachineId = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const id = await machineId()
       res.status(200).send(id)

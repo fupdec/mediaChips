@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.electron.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["electron/**/*.ts"]
+}

@@ -1,17 +1,20 @@
-module.exports = function (db) {
+import type { ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
+module.exports = function (db: ApiDb) {
   // Create and Save a new ValuesInMedia
-  const create = function (req, res) {
-    db.ValuesInMedia.bulkCreate(req.body).then(data => {
+  const create = function (req: ApiRequest, res: ApiResponse) {
+    db.ValuesInMedia.bulkCreate(req.body).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     })
   };
 
   // Retrieve all ValuesInMedia from the database.
-  const findAll = function (req, res) {
+  const findAll = function (req: ApiRequest, res: ApiResponse) {
     db.ValuesInMedia.findAll({
       where: {
         mediaId: req.query.mediaId
@@ -19,15 +22,15 @@ module.exports = function (db) {
       include: [db.Meta],
     }).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     })
   };
 
   // Удалить значение для медиа с конкретным ID и meta ID
-  const deleteOne = function (req, res) {
+  const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     db.ValuesInMedia.destroy({
       where: {
         mediaId: req.body.itemId,
@@ -35,24 +38,24 @@ module.exports = function (db) {
       }
     }).then(() => {
       res.sendStatus(201)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     })
   };
 
   // Delete a ValuesInMedia with the specified id in the request
-  const deleteAllValuesByMediaId = function (req, res) {
+  const deleteAllValuesByMediaId = function (req: ApiRequest, res: ApiResponse) {
     db.ValuesInMedia.destroy({
       where: {
         mediaId: req.params.id
       }
     }).then(() => {
       res.sendStatus(201)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     })
   };

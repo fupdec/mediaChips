@@ -1,7 +1,11 @@
+import type { TaskControllerShared, TagSuggestionItem } from '../../types/tasks'
+import type { AnyRecord } from '../../types/db'
+import { apiErrorMessage } from '../../types/errors'
+import type { ApiRequest, ApiResponse } from '../../types/http'
 const {matchPathToTags} = require('../../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../../services/tagSuggester')
 
-module.exports = function createTasksTaggingController(shared) {
+module.exports = function createTasksTaggingController(shared: TaskControllerShared) {
   const {
     db,
     Op,
@@ -10,16 +14,16 @@ module.exports = function createTasksTaggingController(shared) {
     getEmbeddingModel,
   } = shared
 
-  const suggestTagsFromPaths = async (req, res) => {
+  const suggestTagsFromPaths = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const settings = await getParserSettings({
         useML: req.query.useML ?? req.body?.settings?.useML,
       })
       const requestPaths = Array.isArray(req.body?.paths) ? req.body.paths : []
       const media = requestPaths.length > 0
-        ? requestPaths.map(item => ({
+        ? requestPaths.map((item: AnyRecord) => ({
           path: typeof item === 'string' ? item : item.path,
-        })).filter(item => item.path)
+        })).filter((item: AnyRecord) => item.path)
         : await db.Media.findAll({raw: true})
       const suggestions = await suggestTagsFromMedia(db, media, {
         ...settings,
@@ -29,17 +33,17 @@ module.exports = function createTasksTaggingController(shared) {
       })
 
       res.status(201).send({
-        words: suggestions.map(i => [i.word, Math.round(i.occurrences)]),
+        words: suggestions.map((i: TagSuggestionItem) => [i.word, Math.round(Number(i.occurrences || 0))]),
         suggestions,
       })
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while suggesting tags."
+        message: apiErrorMessage(err) || "Some error occurred while suggesting tags."
       })
     }
   }
 
-  const suggestTagsFromVideoFrames = async (req, res) => {
+  const suggestTagsFromVideoFrames = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const requestPaths = Array.isArray(req.body?.paths) ? req.body.paths : []
       const mediaTypeId = Number(req.body?.mediaTypeId || 1)
@@ -50,7 +54,7 @@ module.exports = function createTasksTaggingController(shared) {
         ? await db.Media.findAll({
           where: {
             path: {
-              [Op.in]: requestPaths.map(item => typeof item === 'string' ? item : item.path).filter(Boolean),
+              [Op.in]: requestPaths.map((item: AnyRecord) => typeof item === 'string' ? item : item.path).filter(Boolean),
             },
             mediaTypeId,
           },
@@ -74,7 +78,7 @@ module.exports = function createTasksTaggingController(shared) {
       })
 
       res.status(201).send({
-        words: result.suggestions.map(i => [i.word, i.occurrences]),
+        words: result.suggestions.map((i: TagSuggestionItem) => [i.word, i.occurrences]),
         suggestions: result.suggestions,
         frames: result.frames,
         media: result.media,
@@ -82,13 +86,13 @@ module.exports = function createTasksTaggingController(shared) {
       })
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while suggesting tags from video frames."
+        message: apiErrorMessage(err) || "Some error occurred while suggesting tags from video frames."
       })
     }
   }
 
-  const streamVideoObjectRecognition = async (req, res) => {
-    const writeEvent = (event) => {
+  const streamVideoObjectRecognition = async (req: ApiRequest, res: ApiResponse) => {
+    const writeEvent = (event: Record<string, unknown>) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
 
@@ -101,7 +105,7 @@ module.exports = function createTasksTaggingController(shared) {
       const mediaTypeId = Number(req.body?.mediaTypeId || 1)
       const locale = req.body?.locale || 'en'
       const pathValues = requestPaths
-        .map(item => typeof item === 'string' ? item : item.path)
+        .map((item: AnyRecord) => typeof item === 'string' ? item : item.path)
         .filter(Boolean)
 
       const media = pathValues.length > 0
@@ -117,7 +121,7 @@ module.exports = function createTasksTaggingController(shared) {
       const total = media.length
       let processed = 0
       let frames = 0
-      let suggestions = []
+      let suggestions: TagSuggestionItem[] = []
       const existingTags = req.body?.excludeExisting === false
         ? []
         : await db.Tag.findAll({raw: true})
@@ -143,13 +147,13 @@ module.exports = function createTasksTaggingController(shared) {
 
         frames += result.frames
         suggestions = getVideoClipTagger().aggregateFrameResults([
-          ...suggestions.flatMap(item => item.samples.map(sample => ({
+          ...suggestions.flatMap((item: TagSuggestionItem) => (item.samples || []).map((sample) => ({
             key: item.key,
             score: sample.score || item.confidence,
             mediaId: sample.mediaId,
             timestamp: sample.timestamp,
           }))),
-          ...result.suggestions.flatMap(item => item.samples.map(sample => ({
+          ...result.suggestions.flatMap((item: TagSuggestionItem) => (item.samples || []).map((sample) => ({
             key: item.key,
             score: sample.score || item.confidence,
             mediaId: sample.mediaId,
@@ -169,7 +173,7 @@ module.exports = function createTasksTaggingController(shared) {
 
       writeEvent({
         type: 'complete',
-        words: suggestions.map(i => [i.word, i.occurrences]),
+        words: suggestions.map((i: TagSuggestionItem) => [i.word, i.occurrences]),
         suggestions,
         frames,
         media: total,
@@ -179,13 +183,13 @@ module.exports = function createTasksTaggingController(shared) {
     } catch (err) {
       writeEvent({
         type: 'error',
-        message: err.message || "Some error occurred while recognizing video objects."
+        message: apiErrorMessage(err) || "Some error occurred while recognizing video objects."
       })
       res.end()
     }
   }
 
-  const parsePathTags = async (req, res) => {
+  const parsePathTags = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const paths = Array.isArray(req.body.paths) ? req.body.paths : []
       const settings = await getParserSettings(req.body.settings || {})
@@ -194,7 +198,7 @@ module.exports = function createTasksTaggingController(shared) {
         db.Meta.findAll({raw: true}),
       ])
 
-      let values = []
+      let values: AnyRecord[] = []
       for (const item of paths) {
         if (!item?.path || !item?.mediaId) continue
         const parsed = await matchPathToTags(db, item.path, item.mediaId, tags, metas, {
@@ -204,57 +208,57 @@ module.exports = function createTasksTaggingController(shared) {
         values.push(...parsed)
       }
 
-      res.status(201).send(values.map(i => ({
+      res.status(201).send(values.map((i: AnyRecord) => ({
         tagId: i.tagId,
         metaId: i.metaId,
         mediaId: i.mediaId,
       })))
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while parsing tags."
+        message: apiErrorMessage(err) || "Some error occurred while parsing tags."
       })
     }
   }
 
-  const parserStatus = async (req, res) => {
+  const parserStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const settings = await getParserSettings()
       res.status(201).send(getEmbeddingModel().getStatus(db, settings.useML))
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while checking parser status."
+        message: apiErrorMessage(err) || "Some error occurred while checking parser status."
       })
     }
   }
 
-  const downloadParserModel = async (req, res) => {
+  const downloadParserModel = async (req: ApiRequest, res: ApiResponse) => {
     try {
       await getEmbeddingModel().loadModel(db)
       res.status(201).send(getEmbeddingModel().getStatus(db, true))
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while downloading parser model."
+        message: apiErrorMessage(err) || "Some error occurred while downloading parser model."
       })
     }
   }
 
-  const clipModelStatus = async (req, res) => {
+  const clipModelStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
       res.status(201).send(getVideoClipTagger().getStatus(db))
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while checking CLIP model status."
+        message: apiErrorMessage(err) || "Some error occurred while checking CLIP model status."
       })
     }
   }
 
-  const downloadClipModel = async (req, res) => {
+  const downloadClipModel = async (req: ApiRequest, res: ApiResponse) => {
     try {
       await getVideoClipTagger().loadModel(db)
       res.status(201).send(getVideoClipTagger().getStatus(db))
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while downloading CLIP model."
+        message: apiErrorMessage(err) || "Some error occurred while downloading CLIP model."
       })
     }
   }

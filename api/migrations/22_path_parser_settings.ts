@@ -1,5 +1,6 @@
+import type { MigrationContext } from '../types/sequelize'
 module.exports = {
-  async up({context: queryInterface}) {
+  async up({ context: queryInterface }: MigrationContext) {
     const query = `INSERT INTO settings(option, value, createdAt, updatedAt)
                  VALUES
                    ('pathParser.useML', 'true', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -10,5 +11,5 @@ module.exports = {
     await queryInterface.sequelize.query(query)
   },
 
-  async down({context: queryInterface}) {},
+  async down({ context: queryInterface }: MigrationContext) {},
 }

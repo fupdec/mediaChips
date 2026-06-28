@@ -1,3 +1,11 @@
+import type { TaskControllerShared } from '../../types/tasks'
+import type { ApiRequest, ApiResponse } from '../../types/http'
+import type {
+  FfprobeDurationInfo,
+  VideoGridOptions,
+  VideoTimelineItem,
+} from '../../types/videoImagesGeneration'
+
 const os = require('os')
 const fs = require('fs')
 const axios = require('axios')
@@ -8,24 +16,24 @@ const {
   ffprobe,
 } = require('../../utils/ffmpeg')
 const {resolveExistingPath} = require('../../services/contentHash')
-const {resolveMediaInputPath, resolveActiveDbFilePath} = require('../../services/mediaPathResolver')
+const {resolveActiveDbFilePath} = require('../../services/mediaPathResolver')
 
-const formatMarkTimestamp = (time) => new Date(1000 * time).toISOString().substr(11, 12)
+const formatMarkTimestamp = (time: number) => new Date(1000 * time).toISOString().substr(11, 12)
 
-module.exports = function createTasksVideoPreviewController(shared) {
+module.exports = function createTasksVideoPreviewController(shared: TaskControllerShared) {
   const {db, dbPath, createThumbMiddle, createThumbCustom, getImageMedia} = shared
 
-  const createThumbForVideo = async function (req, res) {
+  const createThumbForVideo = async function (req: ApiRequest, res: ApiResponse) {
     createThumbMiddle(req.body.path, req.body.id)
-      .then(result => {
+      .then((result: string) => {
         res.status(201).send(result)
       })
-      .catch(e => {
+      .catch((e: unknown) => {
         res.status(400).send(e)
       })
   }
 
-  const createThumb = async function (req, res) {
+  const createThumb = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const resolvedInputPath = resolveActiveDbFilePath(req.body.inputPath, dbPath)
       if (!resolvedInputPath) {
@@ -68,7 +76,7 @@ module.exports = function createTasksVideoPreviewController(shared) {
     }
   }
 
-  const createGrid = async function (req, res) {
+  const createGrid = async function (req: ApiRequest, res: ApiResponse) {
     const gridsPath = path.join(dbPath, "/media/videos/grids/");
 
     if (!fs.existsSync(req.body.input)) {
@@ -87,7 +95,7 @@ module.exports = function createTasksVideoPreviewController(shared) {
       width: number
       tileCount: number
 
-      constructor(opts: Record<string, any>) {
+      constructor(opts: VideoGridOptions) {
         this.tmpDir = os.tmpdir()
         this.input = opts.input
         this.output = opts.output
@@ -97,15 +105,15 @@ module.exports = function createTasksVideoPreviewController(shared) {
         this.tileCount = this.rows * this.cols
       }
 
-      getVideoDuration(pathToFile) {
-        return ffprobe(pathToFile).then((info) => info.format.duration)
+      getVideoDuration(pathToFile: string) {
+        return ffprobe(pathToFile).then((info: FfprobeDurationInfo) => info.format.duration)
       }
 
-      makeLayout(i) {
+      makeLayout(i: number) {
         const currentColumn = i % this.cols
         const currentRow = Math.floor(i / this.cols)
-        let colSide = []
-        let rowSide = []
+        let colSide: string[] = []
+        let rowSide: string[] = []
         if (currentColumn === 0) colSide.push('0')
         else
           for (var j = 0; j < currentColumn; j++) colSide.push('w0')
@@ -115,19 +123,19 @@ module.exports = function createTasksVideoPreviewController(shared) {
         return `${colSide.join('+')}_${rowSide.join('+')}`
       }
 
-      async ffmpegSeekP(timestamp, intermediateOutput) {
+      async ffmpegSeekP(timestamp: string, intermediateOutput: string) {
         return extractVideoFrame({
           input: this.input,
           output: intermediateOutput,
           timestamp,
-        }).then((output) => new Promise((resolve) => {
+        }).then((output: unknown) => new Promise((resolve) => {
           setTimeout(() => {
             resolve(output)
           }, 500)
         }))
       }
 
-      async ffmpegCombineP(inputFiles, streams, layouts) {
+      async ffmpegCombineP(inputFiles: string[], streams: string[], layouts: string[]) {
         return combineVideoFrames({
           inputs: inputFiles,
           filterComplex: `${streams.join('')}xstack=inputs=${this.tileCount}:layout=${layouts.join('|')}[v];[v]scale=${Math.floor(this.width * this.cols)}:-1[scaled]`,
@@ -140,7 +148,7 @@ module.exports = function createTasksVideoPreviewController(shared) {
         if (typeof duration !== 'number') return false
         const durSlice = parseInt(String(duration / this.tileCount), 10)
 
-        let framePromises = []
+        let framePromises: Promise<unknown>[] = []
         for (var i = 0; i < this.tileCount; i++) {
           const timestamp = new Date(1000 * (i + 0.5) * durSlice).toISOString().substr(11, 8)
           const intermediateOutput = path.join(this.tmpDir, `thumb${i}.png`)
@@ -148,20 +156,20 @@ module.exports = function createTasksVideoPreviewController(shared) {
         }
 
         await Promise.all(framePromises)
-          .catch(err => {
+          .catch((err: unknown) => {
             // console.log(err)
           })
 
-        let inputFiles = []
-        let streams = []
-        let layouts = []
+        let inputFiles: string[] = []
+        let streams: string[] = []
+        let layouts: string[] = []
         for (var l = 0; l < this.tileCount; l++) {
           inputFiles.push(`${this.tmpDir}/thumb${l}.png`)
           streams.push(`[${l}:v]`)
           layouts.push(this.makeLayout(l))
         }
         await this.ffmpegCombineP(inputFiles, streams, layouts)
-          .catch(err => {
+          .catch((err: unknown) => {
             console.log(err)
           })
 
@@ -189,7 +197,7 @@ module.exports = function createTasksVideoPreviewController(shared) {
     }
   }
 
-  const createTimeline = async function (req, res) {
+  const createTimeline = async function (req: ApiRequest, res: ApiResponse) {
     const timelinesPath = path.join(dbPath, 'media', 'videos', 'timelines')
     if (!fs.existsSync(timelinesPath)) {
       fs.mkdirSync(timelinesPath, {recursive: true})
@@ -203,26 +211,26 @@ module.exports = function createTasksVideoPreviewController(shared) {
       return
     }
 
-    const video = {...req.body, path: resolvedVideoPath}
+    const video: VideoTimelineItem = {...req.body, path: resolvedVideoPath}
 
     class Timeline {
-      video: Record<string, any>
+      video: VideoTimelineItem
 
-      constructor(videoItem: Record<string, any>) {
+      constructor(videoItem: VideoTimelineItem) {
         this.video = videoItem
       }
 
-      getVideoDuration(pathToFile) {
-        return ffprobe(pathToFile).then((info) => info.format.duration)
+      getVideoDuration(pathToFile: string) {
+        return ffprobe(pathToFile).then((info: FfprobeDurationInfo) => info.format.duration)
       }
 
-      createFrame(timestamp, output) {
+      createFrame(timestamp: string, output: string) {
         return extractVideoFrame({
           input: this.video.path,
           output,
           timestamp,
           vf: 'scale=-1:180',
-        }).then((frameOutput) => new Promise((resolve) => {
+        }).then((frameOutput: unknown) => new Promise((resolve) => {
           setTimeout(() => {
             resolve(frameOutput)
           }, 500)
@@ -233,8 +241,8 @@ module.exports = function createTasksVideoPreviewController(shared) {
         const parts = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
         const duration = await this.getVideoDuration(this.video.path)
         if (typeof duration !== 'number') return false
-        const timestamps = parts.map(i => (new Date(Math.floor(duration * (i / 100) * 1000)).toISOString().substr(11, 8)))
-        let framePromises = []
+        const timestamps = parts.map((part) => (new Date(Math.floor(duration * (part / 100) * 1000)).toISOString().substr(11, 8)))
+        let framePromises: Promise<unknown>[] = []
 
         for (let i = 0; i < timestamps.length; i++) {
           let output = path.join(timelinesPath, `${this.video.id}_${parts[i]}.jpg`)
@@ -273,7 +281,7 @@ module.exports = function createTasksVideoPreviewController(shared) {
     }
   }
 
-  const createImage = async function (req, res) {
+  const createImage = async function (req: ApiRequest, res: ApiResponse) {
     try {
       let buf = Buffer.from(req.body.image, 'base64')
       const {outputPath, url, sizes} = req.body
@@ -295,7 +303,7 @@ module.exports = function createTasksVideoPreviewController(shared) {
     }
   }
 
-  const createMarkThumbForMark = async function (req, res) {
+  const createMarkThumbForMark = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const markId = Number(req.body.markId)
       const mediaId = Number(req.body.mediaId)
@@ -343,7 +351,7 @@ module.exports = function createTasksVideoPreviewController(shared) {
       }
 
       await createThumbCustom(
-        formatMarkTimestamp(mark.time),
+        formatMarkTimestamp(Number(mark.time)),
         resolvedInputPath,
         outputPath,
         180,

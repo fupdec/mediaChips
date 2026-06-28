@@ -1,3 +1,6 @@
+import type { ApiDb, AnyRecord } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
 const fs = require('fs')
 const path = require('path')
 const {
@@ -10,11 +13,11 @@ const {
   loadMediaBasicsByIds,
 } = require('../services/mediaItemsLoader')
 
-module.exports = function (db) {
+module.exports = function (db: ApiDb) {
   const dbPath = db.path
 
   // Retrieve all Media from the database.
-  const getAll = async function (req, res) {
+  const getAll = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
       const limit = Number(req.body.limit)
@@ -37,12 +40,12 @@ module.exports = function (db) {
       res.status(201).send(result)
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     }
   };
 
-  const getFilteredIds = async function (req, res) {
+  const getFilteredIds = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const result = await loadFilteredMediaIds(db, {
         mediaTypeId: req.body.mediaTypeId,
@@ -56,28 +59,28 @@ module.exports = function (db) {
       res.status(201).send(result)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving media ids.',
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving media ids.',
       })
     }
   }
 
-  const getBasicsByIds = async function (req, res) {
+  const getBasicsByIds = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
       const items = await loadMediaBasicsByIds(db, ids)
       res.status(201).send({items})
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving media.',
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving media.',
       })
     }
   }
 
-  const getThumbs = async function (req, res) {
+  const getThumbs = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
       const mediaType = String(req.body.mediaType || 'videos')
-      const thumbs: Record<string, any> = {}
+      const thumbs: AnyRecord = {}
       const basePath = path.join(dbPath, 'media', mediaType)
 
       for (const id of ids) {
@@ -94,12 +97,12 @@ module.exports = function (db) {
       res.status(201).send({thumbs})
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving thumbnails.',
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving thumbnails.',
       })
     }
   }
 
-  const getStats = async function (req, res) {
+  const getStats = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const [[row]] = await db.sequelize.query(`
         SELECT
@@ -114,16 +117,16 @@ module.exports = function (db) {
       })
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while performing query.',
+        message: apiErrorMessage(err) || 'Some error occurred while performing query.',
       })
     }
   }
 
   // Retrieve all Media from the database.
-  const findAll = function (req, res) {
+  const findAll = function (req: ApiRequest, res: ApiResponse) {
     db.sequelize.query(req.body.query, {
       raw: true
-    }).then(async data => {
+    }).then(async (data) => {
       const total = await db.Media.findAndCountAll({
         where: {
           mediaTypeId: req.body.mediaTypeId,
@@ -134,30 +137,30 @@ module.exports = function (db) {
         items: data[0],
         total: total.count,
       })
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // get one Media by ID.
-  const getOneById = function (req, res) {
+  const getOneById = function (req: ApiRequest, res: ApiResponse) {
     db.Media.findOne({
       where: {
         id: req.params.id,
       },
-    }).then(data => {
+    }).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // Find a single Media with an id
-  const numberOfMediaWithTag = function (req, res) {
+  const numberOfMediaWithTag = function (req: ApiRequest, res: ApiResponse) {
     db.Media.count({
       where: {
         mediaTypeId: req.query.mediaTypeId,
@@ -169,31 +172,31 @@ module.exports = function (db) {
         },
         required: true
       }]
-    }).then(number => {
+    }).then((number: number) => {
       res.status(201).send({
         count: number
       })
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     })
   };
 
   // Получаем все медиа подходящие под sql-запрос
-  const rawQuery = function (req, res) {
+  const rawQuery = function (req: ApiRequest, res: ApiResponse) {
     db.sequelize.query(req.body.query)
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
-      }).catch(err => {
+      }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // update file path, name, basename and ext by path
-  const updatePath = function (req, res) {
+  const updatePath = function (req: ApiRequest, res: ApiResponse) {
     const data = {
       path: req.body.path,
       basename: path.basename(req.body.path),
@@ -208,15 +211,15 @@ module.exports = function (db) {
       silent: true,
     }).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // Update a Media by the id in the request
-  const update = function (req, res) {
+  const update = function (req: ApiRequest, res: ApiResponse) {
     let silent = req.body.silent;
     db.Media.update(req.body, {
       where: {
@@ -225,15 +228,15 @@ module.exports = function (db) {
       silent: silent,
     }).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // Delete a media with the specified id in the request
-  const deleteOne = async function (req, res) {
+  const deleteOne = async function (req: ApiRequest, res: ApiResponse) {
     const id = req.body.id
 
     try {
@@ -267,7 +270,7 @@ module.exports = function (db) {
             console.log(`${filePath} is unavailable.`)
           }
         } catch (error) {
-          console.error(`Failed to delete media file ${filePath}:`, error.message)
+          console.error(`Failed to delete media file ${filePath}:`, apiErrorMessage(error))
         }
       }
 
@@ -275,7 +278,7 @@ module.exports = function (db) {
       res.sendStatus(201)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while performing query.',
+        message: apiErrorMessage(err) || 'Some error occurred while performing query.',
       })
     }
   };

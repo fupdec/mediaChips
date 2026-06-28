@@ -1,3 +1,12 @@
+import type { ApiDb, MediaLike } from '../../api/types/db'
+import type { ApiRequest, ApiResponse } from '../../api/types/http'
+import { apiErrorMessage, paramString } from '../../api/types/errors'
+import type {
+  BuiltinRoutesOptions,
+  FileResolverResult,
+  ResolveFilePathFn,
+} from '../types/builtinRoutes'
+import type { ServerDatabaseEntry } from '../types/server'
 const path = require('path')
 const fs = require('fs')
 const package_json = require('../../package.json')
@@ -7,10 +16,14 @@ const {isClientAbortError, safeJsonError} = require('./fileResolver')
 const {streamVideoFile} = require('../../api/services/transcode/streamVideoFile')
 const {parseMaxHeightOverride} = require('../../api/services/transcode/transcodeSettings')
 
-function resolveMediaVideoPath(db: any, resolveFilePath: any, mediaId: any) {
+function resolveMediaVideoPath(
+  db: ApiDb,
+  resolveFilePath: ResolveFilePathFn,
+  mediaId: string | number,
+): Promise<FileResolverResult> {
   return db.Media.findOne({
     where: {id: mediaId},
-  }).then((video: any) => {
+  }).then((video: MediaLike | null) => {
     if (!video || !video.path) {
       return {error: {status: 404, body: {message: 'Video not found in database'}}}
     }
@@ -35,8 +48,8 @@ function registerBuiltinRoutes({
   resolveFilePath,
   getStreamContentType,
   transcodeManager,
-}: any) {
-  app.get('/api/health', (req: any, res: any) => {
+}: BuiltinRoutesOptions) {
+  app.get('/api/health', (req: ApiRequest, res: ApiResponse) => {
     console.log('Health check from:', req.headers.origin || 'unknown origin')
     res.json({
       status: 'online',
@@ -46,12 +59,12 @@ function registerBuiltinRoutes({
       timestamp: new Date().toISOString(),
       ip: 'localhost',
       port: config.port,
-      taskRoutesLoaded: !routeLoadErrors.some((entry: any) => entry.routeFile === 'Task.routes'),
+      taskRoutesLoaded: !routeLoadErrors.some((entry) => entry.routeFile === 'Task.routes'),
       routeLoadErrors,
     })
   })
 
-  app.get('/api/ping', (req: any, res: any) => {
+  app.get('/api/ping', (req: ApiRequest, res: ApiResponse) => {
     res.json({
       pong: Date.now(),
       ip: 'localhost',
@@ -60,21 +73,21 @@ function registerBuiltinRoutes({
     })
   })
 
-  app.get('/api/getMachineId', async (req: any, res: any) => {
+  app.get('/api/getMachineId', async (req: ApiRequest, res: ApiResponse) => {
     try {
       const {machineId} = require('node-machine-id')
       const id = await machineId()
       res.status(200).send(id)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('getMachineId failed:', error)
       res.status(500).json({message: 'Failed to get machine id'})
     }
   })
 
-  app.get('/api/config', (req: any, res: any) => {
+  app.get('/api/config', (req: ApiRequest, res: ApiResponse) => {
     console.log('Config request from:', req.headers.origin || 'unknown origin')
 
-    const activeDb = config.databases.find((db: any) => db.active)
+    const activeDb = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.active)
     const requestHostname = req.hostname
     const frontendIp = requestHostname && !isLoopbackHost(requestHostname)
       ? requestHostname
@@ -100,10 +113,10 @@ function registerBuiltinRoutes({
     res.json(responseConfig)
   })
 
-  app.post('/api/update-config', (req: any, res: any) => {
+  app.post('/api/update-config', (req: ApiRequest, res: ApiResponse) => {
     Object.assign(config, req.body)
 
-    const activeDb = config.databases.find((db: any) => db.active)
+    const activeDb = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.active)
     if (activeDb) {
       config.path = path.join(databasesPath, activeDb.id)
     }
@@ -114,7 +127,7 @@ function registerBuiltinRoutes({
     res.json({success: true, message: 'Configuration updated'})
   })
 
-  app.post('/api/get-file', (req: any, res: any) => {
+  app.post('/api/get-file', (req: ApiRequest, res: ApiResponse) => {
     console.log('=== FILE REQUEST ===')
     console.log('Request body:', req.body)
 
@@ -159,7 +172,7 @@ function registerBuiltinRoutes({
       res.setHeader('Cache-Control', 'public, max-age=86400')
       res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition')
 
-      res.sendFile(resolvedPath, (err: any) => {
+      res.sendFile(resolvedPath, (err: unknown) => {
         if (!err) return
 
         if (isClientAbortError(err) || req.aborted || res.writableEnded) {
@@ -174,7 +187,7 @@ function registerBuiltinRoutes({
           const stats = fs.statSync(resolvedPath)
           const fileStream = fs.createReadStream(resolvedPath)
 
-          fileStream.on('error', (streamErr: any) => {
+          fileStream.on('error', (streamErr: Error) => {
             if (!isClientAbortError(streamErr)) {
               console.error('File stream error:', streamErr)
             }
@@ -190,20 +203,20 @@ function registerBuiltinRoutes({
 
           res.setHeader('Content-Length', stats.size)
           fileStream.pipe(res)
-        } catch (streamErr: any) {
+        } catch (streamErr: unknown) {
           safeJsonError(res, req, 500, {
             error: 'File stream error',
-            details: streamErr.message,
+            details: streamErr instanceof Error ? streamErr.message : String(streamErr),
           })
         }
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error processing file:', err)
-      safeJsonError(res, req, 500, {error: 'Server error', details: err.message})
+      safeJsonError(res, req, 500, {error: 'Server error', details: err instanceof Error ? apiErrorMessage(err) : String(err)})
     }
   })
 
-  app.post('/api/check-file', (req: any, res: any) => {
+  app.post('/api/check-file', (req: ApiRequest, res: ApiResponse) => {
     const filePath = req.body.url
 
     if (!filePath) {
@@ -216,20 +229,20 @@ function registerBuiltinRoutes({
     })
   })
 
-  app.post('/api/switch-database', (req: any, res: any) => {
+  app.post('/api/switch-database', (req: ApiRequest, res: ApiResponse) => {
     const {databaseId} = req.body
 
     if (!databaseId) {
       return res.status(400).json({error: 'Database ID required'})
     }
 
-    const database = config.databases.find((db: any) => db.id === databaseId)
+    const database = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.id === databaseId)
     if (!database) {
       return res.status(404).json({error: 'Database not found'})
     }
 
-    config.databases.forEach((db: any) => {
-      db.active = false
+    config.databases.forEach((dbEntry: ServerDatabaseEntry) => {
+      dbEntry.active = false
     })
 
     database.active = true
@@ -245,7 +258,7 @@ function registerBuiltinRoutes({
     })
   })
 
-  app.post('/api/resolve-path', (req: any, res: any) => {
+  app.post('/api/resolve-path', (req: ApiRequest, res: ApiResponse) => {
     const {filePath} = req.body
 
     if (!filePath) {
@@ -286,7 +299,7 @@ function registerBuiltinRoutes({
     })
   })
 
-  router.get('/api/video/:id/playable', async (req: any, res: any) => {
+  router.get('/api/video/:id/playable', async (req: ApiRequest, res: ApiResponse) => {
     if (!transcodeManager) {
       return res.json({
         mode: 'direct',
@@ -299,12 +312,18 @@ function registerBuiltinRoutes({
     }
 
     try {
-      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, paramString(req.params.id))
       if (resolved.error) {
         return res.status(resolved.error.status).json(resolved.error.body)
       }
 
-      const plan = await transcodeManager.getPlaybackPlan(resolved.videoPath)
+      if (!resolved.videoPath) {
+        return res.status(404).json({message: "Video file doesn't exist"})
+      }
+
+      const videoPath = resolved.videoPath
+
+      const plan = await transcodeManager.getPlaybackPlan(videoPath)
       let url = `/api/video/${req.params.id}?source=auto`
 
       if (plan.streamPlayback) {
@@ -323,13 +342,13 @@ function registerBuiltinRoutes({
         reason: plan.reason,
         playability: plan.playability,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Playable check error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Failed to analyze video'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Failed to analyze video'})
     }
   })
 
-  router.delete('/api/transcode/streams', (req: any, res: any) => {
+  router.delete('/api/transcode/streams', (req: ApiRequest, res: ApiResponse) => {
     if (!transcodeManager) {
       return res.json({stopped: false})
     }
@@ -337,40 +356,48 @@ function registerBuiltinRoutes({
     try {
       transcodeManager.stopAllLiveStreams()
       res.json({stopped: true})
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Live transcode stop-all error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Failed to stop live transcode streams'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Failed to stop live transcode streams'})
     }
   })
 
-  router.delete('/api/video/:id/transcode/stream', async (req: any, res: any) => {
+  router.delete('/api/video/:id/transcode/stream', async (req: ApiRequest, res: ApiResponse) => {
     if (!transcodeManager) {
       return res.json({stopped: false})
     }
 
     try {
-      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, paramString(req.params.id))
       if (resolved.error) {
         return res.status(resolved.error.status).json(resolved.error.body)
       }
 
+      if (!resolved.videoPath) {
+        return res.status(404).json({message: "Video file doesn't exist"})
+      }
+
       const stopped = transcodeManager.stopLiveStream(resolved.videoPath)
       res.json({stopped})
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Live transcode stop error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Failed to stop live transcode stream'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Failed to stop live transcode stream'})
     }
   })
 
-  router.get('/api/video/:id/transcode/stream', async (req: any, res: any) => {
+  router.get('/api/video/:id/transcode/stream', async (req: ApiRequest, res: ApiResponse) => {
     if (!transcodeManager) {
       return res.status(503).json({message: 'Transcoding is unavailable'})
     }
 
     try {
-      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, paramString(req.params.id))
       if (resolved.error) {
         return res.status(resolved.error.status).json(resolved.error.body)
+      }
+
+      if (!resolved.videoPath) {
+        return res.status(404).json({message: "Video file doesn't exist"})
       }
 
       const startTime = Math.max(0, Number(req.query.start) || 0)
@@ -382,13 +409,13 @@ function registerBuiltinRoutes({
       }
 
       await transcodeManager.streamLive(req, res, resolved.videoPath, streamOptions)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Live transcode stream error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Failed to start live transcode stream'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Failed to start live transcode stream'})
     }
   })
 
-  router.get('/api/video/:id/transcode/status', async (req: any, res: any) => {
+  router.get('/api/video/:id/transcode/status', async (req: ApiRequest, res: ApiResponse) => {
     res.setHeader('Deprecation', 'true')
     res.setHeader('Link', `</api/video/${req.params.id}/playable>; rel="successor-version"`)
 
@@ -406,9 +433,13 @@ function registerBuiltinRoutes({
     }
 
     try {
-      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, paramString(req.params.id))
       if (resolved.error) {
         return res.status(resolved.error.status).json(resolved.error.body)
+      }
+
+      if (!resolved.videoPath) {
+        return res.status(404).json({message: "Video file doesn't exist"})
       }
 
       const status = await transcodeManager.getTranscodeStatus(resolved.videoPath)
@@ -418,26 +449,26 @@ function registerBuiltinRoutes({
           ? `/api/video/${req.params.id}/transcode/stream`
           : null,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Transcode status error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Failed to get transcode status'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Failed to get transcode status'})
     }
   })
 
-  router.get('/api/transcode/cache', (req: any, res: any) => {
+  router.get('/api/transcode/cache', (req: ApiRequest, res: ApiResponse) => {
     if (!transcodeManager) {
       return res.json({bytes: 0, files: 0, entries: 0})
     }
 
     try {
       res.json(transcodeManager.getCacheStatsForActiveDb())
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Transcode cache stats error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Failed to read transcode cache stats'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Failed to read transcode cache stats'})
     }
   })
 
-  router.delete('/api/transcode/cache', (req: any, res: any) => {
+  router.delete('/api/transcode/cache', (req: ApiRequest, res: ApiResponse) => {
     if (!transcodeManager) {
       return res.json({removed: 0, bytes: 0})
     }
@@ -445,19 +476,23 @@ function registerBuiltinRoutes({
     try {
       const result = transcodeManager.clearCacheForActiveDb()
       res.json(result)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Transcode cache clear error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Failed to clear transcode cache'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Failed to clear transcode cache'})
     }
   })
 
-  router.get('/api/video/:id', async (req: any, res: any) => {
+  router.get('/api/video/:id', async (req: ApiRequest, res: ApiResponse) => {
     const source = String(req.query.source || 'auto').toLowerCase()
 
     try {
-      const resolved = await resolveMediaVideoPath(db, resolveFilePath, req.params.id)
+      const resolved = await resolveMediaVideoPath(db, resolveFilePath, paramString(req.params.id))
       if (resolved.error) {
         return res.status(resolved.error.status).json(resolved.error.body)
+      }
+
+      if (!resolved.videoPath) {
+        return res.status(404).json({message: "Video file doesn't exist"})
       }
 
       let streamPath = resolved.videoPath
@@ -479,9 +514,9 @@ function registerBuiltinRoutes({
       }
 
       streamVideoFile(req, res, streamPath, contentType)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Video streaming error:', err)
-      safeJsonError(res, req, 500, {message: err.message || 'Database error'})
+      safeJsonError(res, req, 500, {message: err instanceof Error ? apiErrorMessage(err) : String(err) || 'Database error'})
     }
   })
 }

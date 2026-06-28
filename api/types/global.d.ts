@@ -1,3 +1,4 @@
+import type { AnyRecord } from '../types/db'
 export {}
 
 declare global {
@@ -13,4 +14,4 @@ declare global {
   }
 }
 
-export type AnyRecord = Record<string, any>
+export type { AnyRecord } from './db'

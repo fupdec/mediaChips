@@ -1,4 +1,10 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { FilterLike, AnyRecord } from '../types/db'
+import type {
+  FilterCondition,
+  MediaFilterOptions,
+  MediaFilterQueryResult,
+  SqlParamBinder,
+} from '../types/mediaFilter'
 
 const {resolveMetaId} = require('../utils/metaId')
 const {normalizeExt, parseExtList} = require('../utils/ext')
@@ -68,26 +74,27 @@ const NAVIGATION_SELECT = `SELECT
   media.viewedAt,
   videoMetadata.time`
 
-function isActiveFilter(filter: any) {
+function isActiveFilter(filter: FilterLike) {
   const active = filter.active === true || filter.active === 1 || filter.active === '1'
   return active && filter.cond
 }
 
-function normalizeActiveFilters(filters: any= []) {
+function normalizeActiveFilters(filters: FilterLike[] = []) {
   return (filters || []).filter(isActiveFilter)
 }
 
-function sqlColumn(param: any) {
-  if (MEDIA_COLUMNS.has(param)) return `media.${param}`
-  if (VIDEO_COLUMNS.has(param)) return `videoMetadata.${param}`
-  if (DIMENSION_COLUMNS.has(param)) {
-    return `COALESCE(videoMetadata.${param}, imageMetadata.${param})`
+function sqlColumn(param: string | number) {
+  const key = String(param)
+  if (MEDIA_COLUMNS.has(key)) return `media.${key}`
+  if (VIDEO_COLUMNS.has(key)) return `videoMetadata.${key}`
+  if (DIMENSION_COLUMNS.has(key)) {
+    return `COALESCE(videoMetadata.${key}, imageMetadata.${key})`
   }
-  if (IMAGE_ONLY_COLUMNS.has(param)) return `imageMetadata.${param}`
+  if (IMAGE_ONLY_COLUMNS.has(key)) return `imageMetadata.${key}`
   return null
 }
 
-function compareNumberSql(columnExpr: any, cond: any, valueKey: any) {
+function compareNumberSql(columnExpr: string, cond: FilterCondition, valueKey: string) {
   const valueExpr = `CAST(${columnExpr} AS REAL)`
   switch (cond) {
     case 'equal':
@@ -113,7 +120,7 @@ function compareNumberSql(columnExpr: any, cond: any, valueKey: any) {
   }
 }
 
-function buildDateComparison(columnExpr: any, cond: any, value: any, nextParam: any) {
+function buildDateComparison(columnExpr: string, cond: FilterCondition, value: unknown, nextParam: SqlParamBinder) {
   const valueKey = nextParam(value)
   const columnTime = `CAST(strftime('%s', ${columnExpr}) AS INTEGER)`
   const filterTime = `CAST(strftime('%s', ${valueKey}) AS INTEGER)`
@@ -142,7 +149,7 @@ function buildDateComparison(columnExpr: any, cond: any, value: any, nextParam: 
   }
 }
 
-function buildStringComparison(columnExpr: any, cond: any, val: any, nextParam: any) {
+function buildStringComparison(columnExpr: string, cond: FilterCondition, val: unknown, nextParam: SqlParamBinder) {
   if (cond === 'is null') {
     return `(${columnExpr} IS NULL OR ${columnExpr} = '')`
   }
@@ -166,7 +173,7 @@ function buildStringComparison(columnExpr: any, cond: any, val: any, nextParam: 
   return null
 }
 
-function buildMetaValueClause(metaId: any, filter: any, nextParam: any) {
+function buildMetaValueClause(metaId: number | string, filter: FilterLike, nextParam: SqlParamBinder) {
   const {type, cond, val} = filter
   const metaKey = nextParam(metaId)
   const valueColumn = `(SELECT vim.value FROM valuesInMedia vim WHERE vim.mediaId = media.id AND vim.metaId = ${metaKey} LIMIT 1)`
@@ -204,14 +211,14 @@ function buildMetaValueClause(metaId: any, filter: any, nextParam: any) {
   return null
 }
 
-function isTagArrayFilter(filter: any) {
+function isTagArrayFilter(filter: FilterLike) {
   return (filter.type === 'array' || filter.type === 'select')
     && filter.param !== 'country'
     && filter.param !== 'ext'
     && resolveMetaId(filter.param) !== null
 }
 
-function buildExtArrayClause(filter: any, nextParam: any) {
+function buildExtArrayClause(filter: FilterLike, nextParam: SqlParamBinder) {
   const {cond, val} = filter
   const exts = parseExtList(val)
 
@@ -223,7 +230,7 @@ function buildExtArrayClause(filter: any, nextParam: any) {
   }
   if (!exts.length) return null
 
-  const extKeys = exts.map((ext: any) => nextParam(ext))
+  const extKeys = exts.map((ext: unknown) => nextParam(ext))
   const listExpr = extKeys.join(', ')
   const columnExpr = `LOWER(media.ext)`
 
@@ -245,22 +252,22 @@ function buildExtArrayClause(filter: any, nextParam: any) {
   }
 }
 
-function canUseTagArrayJoin(filter: any) {
+function canUseTagArrayJoin(filter: FilterLike) {
   if (!isTagArrayFilter(filter)) return false
 
   const tagIds = Array.isArray(filter.val)
-    ? filter.val.filter((id: any) => id !== null && id !== undefined && id !== '')
+    ? filter.val.filter((id: unknown) => id !== null && id !== undefined && id !== '')
     : []
 
   return (filter.cond === 'in' || filter.cond === 'in all') && tagIds.length > 0
 }
 
-function buildTagArrayJoin(filter: any, alias: any, nextParam: any) {
+function buildTagArrayJoin(filter: FilterLike, alias: string, nextParam: SqlParamBinder) {
   if (!canUseTagArrayJoin(filter)) return null
 
   const metaId = resolveMetaId(filter.param)
   const {cond, val} = filter
-  const tagIds = Array.isArray(val) ? val.filter((id: any) => id !== null && id !== undefined && id !== '') : []
+  const tagIds = Array.isArray(val) ? val.filter((id: unknown) => id !== null && id !== undefined && id !== '') : []
   const metaKey = nextParam(metaId)
 
   if (cond === 'in all' && tagIds.length > 1) {
@@ -282,10 +289,10 @@ function buildTagArrayJoin(filter: any, alias: any, nextParam: any) {
   return `INNER JOIN tagsInMedia ${alias} ON ${alias}.mediaId = media.id AND ${alias}.metaId = ${metaKey} AND ${alias}.tagId IN (${tagsKey})`
 }
 
-function buildTagArrayClause(metaId: any, filter: any, nextParam: any) {
+function buildTagArrayClause(metaId: number | string, filter: FilterLike, nextParam: SqlParamBinder) {
   const {cond, val} = filter
   const metaKey = nextParam(metaId)
-  const tagIds = Array.isArray(val) ? val.filter((id: any) => id !== null && id !== undefined && id !== '') : []
+  const tagIds = Array.isArray(val) ? val.filter((id: unknown) => id !== null && id !== undefined && id !== '') : []
 
   if (cond === 'is null') {
     return `NOT EXISTS (
@@ -357,7 +364,7 @@ function buildTagArrayClause(metaId: any, filter: any, nextParam: any) {
   return null
 }
 
-function buildFilterClause(filter: any, nextParam: any) {
+function buildFilterClause(filter: FilterLike, nextParam: SqlParamBinder) {
   const {param, type, cond, val} = filter
   const metaId = resolveMetaId(param)
 
@@ -371,6 +378,8 @@ function buildFilterClause(filter: any, nextParam: any) {
   if (metaId !== null) {
     return buildMetaValueClause(metaId, filter, nextParam)
   }
+
+  if (param === undefined || param === null) return null
 
   const columnExpr = sqlColumn(param)
   if (!columnExpr) return null
@@ -404,7 +413,7 @@ function buildFilterClause(filter: any, nextParam: any) {
   return null
 }
 
-function canUseSqlMediaFilters(options: Record<string, any> = {}) {
+function canUseSqlMediaFilters(options: MediaFilterOptions = {}) {
   if (options.find_duplicates) return false
   if (options.sortBy === 'shuffle') return false
 
@@ -422,12 +431,12 @@ function canUseSqlMediaFilters(options: Record<string, any> = {}) {
   return true
 }
 
-function buildMediaFilterQuery(filters: any= [], options: Record<string, any> = {}) {
+function buildMediaFilterQuery(filters: FilterLike[] = [], options: MediaFilterOptions = {}): MediaFilterQueryResult {
   const {mediaTypeId, ids = []} = options
-  const replacements: Record<string, any> = {mediaTypeId}
+  const replacements: AnyRecord = {mediaTypeId}
   let paramIndex = 0
 
-  const nextParam = (value: any) => {
+  const nextParam: SqlParamBinder = (value) => {
     const key = `f${paramIndex}`
     paramIndex += 1
     replacements[key] = value
@@ -451,7 +460,7 @@ function buildMediaFilterQuery(filters: any= [], options: Record<string, any> = 
       joinIndex += 1
       if (filter.cond === 'in') {
         const tagIds = Array.isArray(filter.val)
-          ? filter.val.filter((id: any) => id !== null && id !== undefined && id !== '')
+          ? filter.val.filter((id: unknown) => id !== null && id !== undefined && id !== '')
           : []
         if (tagIds.length > 1) {
           needsDistinct = true
@@ -476,27 +485,29 @@ function buildMediaFilterQuery(filters: any= [], options: Record<string, any> = 
   }
 }
 
-function requiresMetadataJoinForSort(sortBy: any) {
+function requiresMetadataJoinForSort(sortBy: string) {
   return VIDEO_COLUMNS.has(sortBy)
     || DIMENSION_COLUMNS.has(sortBy)
     || IMAGE_ONLY_COLUMNS.has(sortBy)
 }
 
-function filterRequiresMetadataJoin(filter: any) {
+function filterRequiresMetadataJoin(filter: FilterLike) {
   const metaId = resolveMetaId(filter.param)
   if (metaId !== null) return false
   if (filter.type === 'array' || filter.type === 'select') return false
+  if (filter.param === undefined || filter.param === null) return false
 
-  return VIDEO_COLUMNS.has(filter.param)
-    || DIMENSION_COLUMNS.has(filter.param)
-    || IMAGE_ONLY_COLUMNS.has(filter.param)
+  const param = String(filter.param)
+  return VIDEO_COLUMNS.has(param)
+    || DIMENSION_COLUMNS.has(param)
+    || IMAGE_ONLY_COLUMNS.has(param)
 }
 
-function requiresMetadataJoinForFilters(filters: any= []) {
+function requiresMetadataJoinForFilters(filters: FilterLike[] = []) {
   return normalizeActiveFilters(filters).some(filterRequiresMetadataJoin)
 }
 
-function getMediaFromClause(needsMetadataJoin: any, joinSql: any= '') {
+function getMediaFromClause(needsMetadataJoin: boolean, joinSql: string = '') {
   const tagJoins = joinSql ? `\n${joinSql}` : ''
 
   if (needsMetadataJoin) {
@@ -508,7 +519,7 @@ LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId`
   return tagJoins ? `FROM media${tagJoins}` : 'FROM media'
 }
 
-function getSortExpression(sortBy: any) {
+function getSortExpression(sortBy: string) {
   return SORT_COLUMNS[sortBy as keyof typeof SORT_COLUMNS] || SORT_COLUMNS.id
 }
 

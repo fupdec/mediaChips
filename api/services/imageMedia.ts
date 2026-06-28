@@ -1,4 +1,4 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { JimpImage, ProcessAndSaveImageOptions } from '../types/imageMedia'
 
 const fs = require('fs')
 const path = require('path')
@@ -7,35 +7,36 @@ const {Jimp} = require('jimp')
 const THUMB_HEIGHT = 320
 const THUMB_JPEG_QUALITY = 85
 
-async function writeJpeg(image: any, outputPath: any, quality: any= THUMB_JPEG_QUALITY) {
+async function writeJpeg(image: JimpImage, outputPath: string, quality = THUMB_JPEG_QUALITY) {
   const buffer = await image.getBuffer('image/jpeg', {quality})
   await fs.promises.writeFile(outputPath, buffer)
 }
 
-const getImageMetadata = async (pathToFile: any) => {
+const getImageMetadata = async (pathToFile: string) => {
   try {
-    const image = await Jimp.read(pathToFile)
+    const image = await Jimp.read(pathToFile) as JimpImage
     return {
       width: image.width,
       height: image.height,
       orientation: 1,
     }
-  } catch (error: any) {
-    console.error(`Image metadata extraction failed for ${pathToFile}:`, error.message)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(`Image metadata extraction failed for ${pathToFile}:`, message)
     return null
   }
 }
 
-const ensureImageThumbDir = (dbPath: any) => {
+const ensureImageThumbDir = (dbPath: string) => {
   const outputDir = path.join(dbPath, 'media/images/thumbs')
   fs.mkdirSync(outputDir, {recursive: true})
   return outputDir
 }
 
-const createImageThumb = async (pathToFile: any, id: any, dbPath: any) => {
+const createImageThumb = async (pathToFile: string, id: string | number, dbPath: string) => {
   const outputDir = ensureImageThumbDir(dbPath)
   const outputPath = path.join(outputDir, `${id}.jpg`)
-  const image = await Jimp.read(pathToFile)
+  const image = await Jimp.read(pathToFile) as JimpImage
 
   if (image.height > THUMB_HEIGHT) {
     await image.resize({h: THUMB_HEIGHT})
@@ -45,8 +46,8 @@ const createImageThumb = async (pathToFile: any, id: any, dbPath: any) => {
   return outputPath
 }
 
-async function processAndSaveImage({buffer, outputPath, sizes}: any) {
-  let image = await Jimp.read(buffer)
+async function processAndSaveImage({buffer, outputPath, sizes}: ProcessAndSaveImageOptions) {
+  let image = await Jimp.read(buffer) as JimpImage
   const width = image.width
   const height = image.height
   const aspectRatio = width / height

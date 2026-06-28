@@ -263,7 +263,7 @@ const tags = [
   },
 ]
 
-function getLocalizedLabel(tag: AnyRecord, locale: any= 'en') {
+function getLocalizedLabel(tag: AnyRecord, locale = 'en') {
   const labels = tag.labels as Record<string, string> | undefined
   return labels?.[locale] || labels?.en || tag.key
 }

@@ -1,18 +1,26 @@
+import type { ApiDb, AnyRecord } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
+import { paramString } from '../types/errors'
 const fs = require("fs")
 const path = require('path')
 
-module.exports = function (db) {
+module.exports = function (db: ApiDb) {
   const metaFolder = path.join(db.path, 'meta')
   // Create and Save a new Meta
-  const create = function (req, res) {
+  const create = function (req: ApiRequest, res: ApiResponse) {
     db.Meta.create(req.body, {
         include: [db.PageSetting],
         raw: true
       })
-      .then(async data => {
-        const m = data.dataValues
+      .then(async (data) => {
+        const m = data.dataValues as AnyRecord | undefined
+        if (!m) {
+          res.status(201).send(data)
+          return
+        }
         if (m.type == 'array') {
-          const dir = path.join(metaFolder, m.id.toString())
+          const dir = path.join(metaFolder, String(m.id))
           if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
           const [cf, isC] = await db.SavedFilter.findOrCreate({
@@ -35,78 +43,78 @@ module.exports = function (db) {
 
         res.status(201).send(data)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }
 
   // Retrieve all Metas from the database.
-  const findAll = function (req, res) {
+  const findAll = function (req: ApiRequest, res: ApiResponse) {
     db.Meta.findAll()
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
-      }).catch(err => {
+      }).catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }
 
   // Find a single Meta with an id
-  const findOne = function (req, res) {
+  const findOne = function (req: ApiRequest, res: ApiResponse) {
     db.Meta.findOne({
         where: {
           id: req.params.id
         },
       })
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
-      }).catch(err => {
+      }).catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }
 
   // Find the lats added Meta
-  const findLatest = function (req, res) {
+  const findLatest = function (req: ApiRequest, res: ApiResponse) {
     db.Meta.findAll({
         limit: 1,
         order: [
           ['createdAt', 'DESC']
         ]
       })
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
-      }).catch(err => {
+      }).catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }
 
   // Update a Meta by the id in the request
-  const update = function (req, res) {
+  const update = function (req: ApiRequest, res: ApiResponse) {
     db.Meta
       .update(req.body, {
         where: {
-          id: parseInt(req.params.id)
+          id: parseInt(paramString(req.params.id), 10)
         }
       })
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }
 
   // Delete a Meta with the specified id in the request
-  const deleteOne = function (req, res) {
+  const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     db.Meta
       .destroy({
         where: {
@@ -121,9 +129,9 @@ module.exports = function (db) {
         })
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }

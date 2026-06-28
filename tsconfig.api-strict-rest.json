@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.api.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": [
+    "api/controllers/**/*.ts",
+    "api/routes/**/*.ts",
+    "api/models/**/*.ts",
+    "api/migrations/**/*.ts",
+    "api/index.ts",
+    "api/types/**/*.ts"
+  ]
+}

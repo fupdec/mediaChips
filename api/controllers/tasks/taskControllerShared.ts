@@ -1,48 +1,57 @@
+import type { AnyRecord } from '../../types/db'
+import type {
+  EmbeddingModelService,
+  ImageMediaService,
+  VideoClipTaggerService,
+  VideoImagesGenerationService,
+} from '../../types/tasks'
+import type { ApiRequest, ApiResponse } from '../../types/http'
+import type { ApiDb } from '../../types/db'
 const path = require('path')
 const {
   extractVideoFrame,
   extractVideoThumbnail,
 } = require('../../utils/ffmpeg')
 
-function lazyService(modulePath) {
-  let cached
-  return () => {
-    if (!cached) cached = require(modulePath)
+function lazyService<T = AnyRecord>(modulePath: string) {
+  let cached: T | undefined
+  return (): T => {
+    if (!cached) cached = require(modulePath) as T
     return cached
   }
 }
 
-const getVideoClipTagger = lazyService('../../services/videoClipTagger')
-const getEmbeddingModel = lazyService('../../services/embeddingModel')
-const getImageMedia = lazyService('../../services/imageMedia')
-const getVideoImagesGeneration = lazyService('../../services/videoImagesGeneration')
+const getVideoClipTagger = lazyService<VideoClipTaggerService>('../../services/videoClipTagger')
+const getEmbeddingModel = lazyService<EmbeddingModelService>('../../services/embeddingModel')
+const getImageMedia = lazyService<ImageMediaService>('../../services/imageMedia')
+const getVideoImagesGeneration = lazyService<VideoImagesGenerationService>('../../services/videoImagesGeneration')
 
-const GENERATED_MEDIA_FOLDERS = {
+const GENERATED_MEDIA_FOLDERS: Record<string, string> = {
   timelines: 'media/videos/timelines',
   grids: 'media/videos/grids',
   marks: 'media/videos/marks',
   'image-thumbs': 'media/images/thumbs',
 }
 
-const resolveGeneratedFolderPath = (dbPath, folderKey) => {
+const resolveGeneratedFolderPath = (dbPath: string, folderKey: string) => {
   const relativePath = GENERATED_MEDIA_FOLDERS[folderKey]
   if (!relativePath) return null
   return path.join(dbPath, relativePath)
 }
 
-module.exports = function createTaskControllerShared(db) {
+module.exports = function createTaskControllerShared(db: ApiDb) {
   const dbPath = db.path
   const Op = db.Sequelize.Op
   const Sequelize = db.Sequelize
 
-  const withTimeout = (promise, ms, label) => Promise.race([
+  const withTimeout = (promise: Promise<unknown>, ms: number, label: string) => Promise.race([
     promise,
-    new Promise((_, reject) => {
+    new Promise((_ : unknown, reject: (reason?: unknown) => void) => {
       setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
     }),
   ])
 
-  const createStreamAbortSignal = (req, res) => {
+  const createStreamAbortSignal = (req: ApiRequest, res: ApiResponse) => {
     let stopped = false
     const stop = () => {
       stopped = true
@@ -67,23 +76,24 @@ module.exports = function createTaskControllerShared(db) {
     'pathParser.clusterThreshold': 0.88,
   }
 
-  const parseBooleanSetting = value => {
+  const parseBooleanSetting = (value: unknown) => {
     if (typeof value === 'boolean') return value
     if (typeof value === 'number') return value === 1
     return String(value).toLowerCase() === 'true'
   }
 
-  const getParserSettings = async (overrides: Record<string, any> = {}) => {
+  const getParserSettings = async (overrides: AnyRecord = {}) => {
     const options = Object.keys(parserSettingDefaults)
     const rows = await db.Setting.findAll({
       where: {option: options},
       raw: true,
     })
 
-    const settings = {...parserSettingDefaults}
+    const settings: Record<string, boolean | number> = {...parserSettingDefaults}
     for (const row of rows) {
-      if (row.option === 'pathParser.useML') settings[row.option] = parseBooleanSetting(row.value)
-      else settings[row.option] = Number(row.value)
+      const option = String(row.option)
+      if (option === 'pathParser.useML') settings[option] = parseBooleanSetting(row.value)
+      else settings[option] = Number(row.value)
     }
 
     return {
@@ -94,7 +104,7 @@ module.exports = function createTaskControllerShared(db) {
     }
   }
 
-  const createThumbMiddle = (pathToFile, id) => {
+  const createThumbMiddle = (pathToFile: string, id: unknown) => {
     const outputPath = path.join(dbPath, 'media/videos/thumbs', `${id}.jpg`)
     return withTimeout(
       extractVideoThumbnail({input: pathToFile, outputPath, height: 320}),
@@ -103,7 +113,7 @@ module.exports = function createTaskControllerShared(db) {
     ).then(() => 'success')
   }
 
-  const createThumbCustom = (timestamp, inputPath, outputPath, width) => {
+  const createThumbCustom = (timestamp: unknown, inputPath: string, outputPath: string, width: number) => {
     return extractVideoFrame({
       input: inputPath,
       output: outputPath,
@@ -124,7 +134,7 @@ module.exports = function createTaskControllerShared(db) {
     getEmbeddingModel,
     getImageMedia,
     getVideoImagesGeneration,
-    resolveGeneratedFolderPath: (folderKey) => resolveGeneratedFolderPath(dbPath, folderKey),
+    resolveGeneratedFolderPath: (folderKey: string) => resolveGeneratedFolderPath(dbPath!, folderKey),
     createThumbMiddle,
     createThumbCustom,
   }

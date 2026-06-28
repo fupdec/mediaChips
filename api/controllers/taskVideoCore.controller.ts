@@ -1,3 +1,7 @@
+import type { FfprobeInfo } from '../types/tasks'
+import type { AnyRecord, ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
 const fs = require('fs')
 const path = require('path')
 const {machineId} = require('node-machine-id')
@@ -10,10 +14,10 @@ const {
   iterateVideoImagesGeneration,
 } = require('../services/videoImagesGeneration')
 
-module.exports = function taskVideoCoreController(db) {
+module.exports = function taskVideoCoreController(db: ApiDb) {
   const dbPath = db.path
 
-  const createStreamAbortSignal = (req, res) => {
+  const createStreamAbortSignal = (req: ApiRequest, res: ApiResponse) => {
     let stopped = false
     const stop = () => {
       stopped = true
@@ -29,24 +33,24 @@ module.exports = function taskVideoCoreController(db) {
     return () => stopped
   }
 
-  const checkFileExists = async (req, res) => {
+  const checkFileExists = async (req: ApiRequest, res: ApiResponse) => {
     const filePath = normalizeMediaPath(req.body.path)
     const resolved = filePath ? await resolveExistingPath(filePath) : null
     if (resolved) res.sendStatus(201)
     else res.sendStatus(400)
   }
 
-  const getConfig = async (req, res) => {
+  const getConfig = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const configPath = getAppConfigPath()
       const configJson = JSON.parse(fs.readFileSync(configPath, 'utf8'))
       res.status(200).json(configJson)
     } catch (error) {
-      res.status(500).json({message: error.message || 'Failed to read config'})
+      res.status(500).json({message: apiErrorMessage(error) || 'Failed to read config'})
     }
   }
 
-  const getMachineId = async (req, res) => {
+  const getMachineId = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const id = await machineId()
       res.status(200).send(id)
@@ -56,7 +60,7 @@ module.exports = function taskVideoCoreController(db) {
     }
   }
 
-  const createTimeline = async (req, res) => {
+  const createTimeline = async (req: ApiRequest, res: ApiResponse) => {
     const timelinesPath = path.join(dbPath, 'media', 'videos', 'timelines')
     if (!fs.existsSync(timelinesPath)) {
       fs.mkdirSync(timelinesPath, {recursive: true})
@@ -71,32 +75,32 @@ module.exports = function taskVideoCoreController(db) {
     const video = {...req.body, path: resolvedVideoPath}
 
     class Timeline {
-      video: Record<string, any>
+      video: AnyRecord
 
-      constructor(videoItem: Record<string, any>) {
+      constructor(videoItem: AnyRecord) {
         this.video = videoItem
       }
 
-      getVideoDuration(pathToFile) {
-        return ffprobe(pathToFile).then((info) => info.format.duration)
+      getVideoDuration(pathToFile: string) {
+        return ffprobe(pathToFile).then((info: FfprobeInfo) => info.format.duration)
       }
 
-      createFrame(timestamp, output) {
+      createFrame(timestamp: string, output: string) {
         return extractVideoFrame({
           input: this.video.path,
           output,
           timestamp,
           vf: 'scale=-1:180',
-        }).then((frameOutput) => new Promise((resolve) => {
+        }).then((frameOutput: unknown) => new Promise((resolve) => {
           setTimeout(() => resolve(frameOutput), 500)
         }))
       }
 
       async generate() {
         const parts = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
-        const duration = await this.getVideoDuration(this.video.path)
+        const duration = await this.getVideoDuration(String(this.video.path))
         if (typeof duration !== 'number') return false
-        const timestamps = parts.map((i) => (
+        const timestamps = parts.map((i: number) => (
           new Date(Math.floor(duration * (i / 100) * 1000)).toISOString().substr(11, 8)
         ))
         const framePromises = timestamps.map((timestamp, index) => {
@@ -125,20 +129,20 @@ module.exports = function taskVideoCoreController(db) {
     }
   }
 
-  const videoImagesGenerationStatus = async (req, res) => {
+  const videoImagesGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const status = await getVideoImagesGenerationStatus(db, dbPath)
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while checking video images generation status.',
+        message: apiErrorMessage(err) || 'Some error occurred while checking video images generation status.',
       })
     }
   }
 
-  const streamVideoImagesGeneration = async (req, res) => {
+  const streamVideoImagesGeneration = async (req: ApiRequest, res: ApiResponse) => {
     const imageType = String(req.query.type || '').toLowerCase()
-    const writeEvent = (event) => {
+    const writeEvent = (event: Record<string, unknown>) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
 
@@ -160,7 +164,7 @@ module.exports = function taskVideoCoreController(db) {
     } catch (err) {
       writeEvent({
         type: 'error',
-        message: err.message || 'Some error occurred while generating video images.',
+        message: apiErrorMessage(err) || 'Some error occurred while generating video images.',
       })
       res.end()
     }

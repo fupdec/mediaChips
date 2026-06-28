@@ -1,7 +1,8 @@
+import type { MigrationContext } from '../types/sequelize'
 const {Sequelize} = require('sequelize')
 
 module.exports = {
-  async up({context: queryInterface}) {
+  async up({ context: queryInterface }: MigrationContext) {
     const tableDefinition = await queryInterface.describeTable('media')
 
     if (!tableDefinition.contentHash) {
@@ -23,7 +24,7 @@ module.exports = {
     }
   },
 
-  async down({context: queryInterface}) {
+  async down({ context: queryInterface }: MigrationContext) {
     const indexes = await queryInterface.showIndex('media')
     const hasContentHashIndex = indexes.some(
       (index) => index.name === 'media_content_hash_idx',

@@ -1,4 +1,16 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb } from '../types/db'
+import type { ClipClassifierModel, ModelStatus } from '../types/mlModels'
+import type {
+  ClipClassificationRow,
+  ClipFrame,
+  ClipPromptEntry,
+  ClipTaggerBatchResult,
+  ClipTaggerMediaItem,
+  ClipTaggerOptions,
+  ClipTagSuggestion,
+  ClipTagSuggestionSample,
+  ExtractFramesResult,
+} from '../types/videoClipTagger'
 
 const fs = require('fs')
 const os = require('os')
@@ -12,9 +24,9 @@ const {
 
 const CLIP_MODEL = 'Xenova/clip-vit-base-patch32'
 
-let classifier: any = null
-let loadingPromise: any = null
-let lastError: any = null
+let classifier: ClipClassifierModel | null = null
+let loadingPromise: Promise<ClipClassifierModel> | null = null
+let lastError: Error | null = null
 
 function getWritableModelCacheDir(db: ApiDb) {
   const base = db?.path_databases || process.app_folder || path.join(__dirname, '../../app_storage')
@@ -44,6 +56,7 @@ function hasDownloadedModel(db: ApiDb) {
   const stack = [cacheDir]
   while (stack.length) {
     const dir = stack.pop()
+    if (!dir) continue
     const entries = fs.readdirSync(dir, {withFileTypes: true})
     for (const entry of entries) {
       const entryPath = path.join(dir, entry.name)
@@ -57,7 +70,7 @@ function hasDownloadedModel(db: ApiDb) {
   return false
 }
 
-async function loadModel(db: ApiDb) {
+async function loadModel(db: ApiDb): Promise<ClipClassifierModel> {
   if (classifier) return classifier
   if (loadingPromise) return loadingPromise
 
@@ -76,12 +89,12 @@ async function loadModel(db: ApiDb) {
 
       classifier = await pipeline('zero-shot-image-classification', CLIP_MODEL, {
         quantized: true,
-      })
+      }) as ClipClassifierModel
       lastError = null
       return classifier
-    } catch (error: any) {
-      lastError = error
-      throw error
+    } catch (error: unknown) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      throw lastError
     } finally {
       loadingPromise = null
     }
@@ -90,7 +103,7 @@ async function loadModel(db: ApiDb) {
   return loadingPromise
 }
 
-function getStatus(db: ApiDb, enabled: any= true) {
+function getStatus(db: ApiDb, enabled: boolean = true): ModelStatus {
   if (!enabled) return {status: 'disabled', model: CLIP_MODEL}
   if (classifier) return {status: 'loaded', model: CLIP_MODEL, path: getModelCacheDir(db)}
   if (loadingPromise) return {status: 'loading', model: CLIP_MODEL, path: getModelCacheDir(db)}
@@ -119,7 +132,7 @@ async function getVideoDuration(filePath: string) {
   return duration
 }
 
-function createFrame(input: any, output: any, timestamp: any, width: any= 384) {
+function createFrame(input: string, output: string, timestamp: string, width: number = 384) {
   return extractVideoFrame({
     input,
     output,
@@ -128,11 +141,11 @@ function createFrame(input: any, output: any, timestamp: any, width: any= 384) {
   })
 }
 
-function formatTimestamp(seconds: any) {
+function formatTimestamp(seconds: number) {
   return new Date(Math.floor(seconds) * 1000).toISOString().substr(11, 8)
 }
 
-function getFrameTimestamps(duration: any, count: any) {
+function getFrameTimestamps(duration: number, count: number) {
   const safeCount = Math.max(1, Math.min(Number(count || 4), 10))
   const ratios = safeCount === 1
     ? [0.5]
@@ -141,19 +154,22 @@ function getFrameTimestamps(duration: any, count: any) {
   return ratios.map(ratio => formatTimestamp(duration * ratio))
 }
 
-async function extractFrames(media: AnyRecord[], options: Record<string, any> = {}) {
+async function extractFrames(
+  media: ClipTaggerMediaItem[],
+  options: ClipTaggerOptions = {},
+): Promise<ExtractFramesResult> {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mediachips-clip-tags-'))
-  const frames: AnyRecord[] = []
+  const frames: ClipFrame[] = []
   const frameWidth = Number(options.frameWidth || 384)
   const framesPerVideo = Number(options.framesPerVideo || 4)
 
   for (const item of media) {
     if (!item?.path || !fs.existsSync(item.path)) continue
 
-    let duration
+    let duration: number
     try {
       duration = await getVideoDuration(String(item.path))
-    } catch (error: any) {
+    } catch {
       continue
     }
 
@@ -161,14 +177,14 @@ async function extractFrames(media: AnyRecord[], options: Record<string, any> = 
     for (let index = 0; index < timestamps.length; index++) {
       const output = path.join(tmpDir, `${item.id ?? index}_${index}.jpg`)
       try {
-        await createFrame(item.path, output, timestamps[index], frameWidth)
+        await createFrame(String(item.path), output, timestamps[index], frameWidth)
         frames.push({
           framePath: output,
           mediaId: item.id,
-          mediaPath: item.path,
+          mediaPath: String(item.path),
           timestamp: timestamps[index],
         })
-      } catch (error: any) {
+      } catch {
         // Broken frames should not block suggestions for the rest of the import.
       }
     }
@@ -177,18 +193,21 @@ async function extractFrames(media: AnyRecord[], options: Record<string, any> = 
   return {tmpDir, frames}
 }
 
-async function extractFramesForMedia(item: AnyRecord, options: Record<string, any> = {}) {
+async function extractFramesForMedia(
+  item: ClipTaggerMediaItem,
+  options: ClipTaggerOptions = {},
+): Promise<ExtractFramesResult> {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mediachips-clip-tags-'))
-  const frames: AnyRecord[] = []
+  const frames: ClipFrame[] = []
   const frameWidth = Number(options.frameWidth || 384)
   const framesPerVideo = Number(options.framesPerVideo || 4)
 
   if (!item?.path || !fs.existsSync(item.path)) return {tmpDir, frames}
 
-  let duration
+  let duration: number
   try {
     duration = await getVideoDuration(String(item.path))
-  } catch (error: any) {
+  } catch {
     return {tmpDir, frames}
   }
 
@@ -196,14 +215,14 @@ async function extractFramesForMedia(item: AnyRecord, options: Record<string, an
   for (let index = 0; index < timestamps.length; index++) {
     const output = path.join(tmpDir, `${item.id || 'media'}_${index}.jpg`)
     try {
-      await createFrame(item.path, output, timestamps[index], frameWidth)
+      await createFrame(String(item.path), output, timestamps[index], frameWidth)
       frames.push({
         framePath: output,
         mediaId: item.id,
-        mediaPath: item.path,
+        mediaPath: String(item.path),
         timestamp: timestamps[index],
       })
-    } catch (error: any) {
+    } catch {
       // Broken frames should not block suggestions for the rest of the import.
     }
   }
@@ -217,13 +236,18 @@ function normalizeName(value: unknown) {
     .toLowerCase()
 }
 
-async function classifyFrame(model: any, frame: any, promptEntries: any, options: Record<string, any> = {}) {
+async function classifyFrame(
+  model: ClipClassifierModel,
+  frame: ClipFrame,
+  promptEntries: ClipPromptEntry[],
+  options: ClipTaggerOptions = {},
+): Promise<ClipClassificationRow[]> {
   const topK = Number(options.topK || 8)
   const minScore = Number(options.minScore || 0.03)
-  const promptToKey = new Map(promptEntries.map((entry: any) => [entry.prompt, entry.key]))
-  const output = await model(frame.framePath, promptEntries.map((entry: any) => entry.prompt))
+  const promptToKey = new Map(promptEntries.map((entry) => [entry.prompt, entry.key]))
+  const output = await model(frame.framePath, promptEntries.map((entry) => entry.prompt))
   const rows = Array.isArray(output) ? output : []
-  const bestByKey = new Map()
+  const bestByKey = new Map<string, ClipClassificationRow>()
 
   for (const row of rows) {
     const key = promptToKey.get(row.label)
@@ -243,15 +267,19 @@ async function classifyFrame(model: any, frame: any, promptEntries: any, options
   }
 
   return [...bestByKey.values()]
-    .sort((a: any, b: any) => b.score - a.score)
+    .sort((a, b) => b.score - a.score)
     .filter(row => row.score >= minScore)
     .slice(0, topK)
 }
 
-function aggregateFrameResults(frameResults: any, locale: any, existingTags: any= []) {
-  const existing = new Set(existingTags.map((tag: any) => normalizeName(tag.name)))
-  const tagByKey = new Map(tags.map((tag: any) => [tag.key, tag]))
-  const grouped = new Map()
+function aggregateFrameResults(
+  frameResults: ClipClassificationRow[][],
+  locale: string,
+  existingTags: Array<{ name?: string }> = [],
+): ClipTagSuggestion[] {
+  const existing = new Set(existingTags.map((tag) => normalizeName(tag.name)))
+  const tagByKey = new Map(tags.map((tag: { key: string }) => [tag.key, tag]))
+  const grouped = new Map<string, ClipTagSuggestion>()
 
   for (const row of frameResults.flat()) {
     const tag = tagByKey.get(row.key)
@@ -267,8 +295,8 @@ function aggregateFrameResults(frameResults: any, locale: any, existingTags: any
       canonical: getLocalizedLabel(tag, 'en'),
       occurrences: 0,
       confidence: 0,
-      samples: [],
-      mediaIds: [],
+      samples: [] as ClipTagSuggestionSample[],
+      mediaIds: [] as unknown[],
     }
 
     current.occurrences += 1
@@ -286,17 +314,21 @@ function aggregateFrameResults(frameResults: any, locale: any, existingTags: any
   }
 
   return [...grouped.values()]
-    .sort((a: any, b: any) => (b.occurrences - a.occurrences) || (b.confidence - a.confidence))
+    .sort((a, b) => (b.occurrences - a.occurrences) || (b.confidence - a.confidence))
 }
 
-function cleanup(tmpDir: any) {
+function cleanup(tmpDir: string | null) {
   if (tmpDir && fs.existsSync(tmpDir)) {
     fs.rmSync(tmpDir, {recursive: true, force: true})
   }
 }
 
-async function suggestTagsFromVideoFrames(db: ApiDb, media: any, options: Record<string, any> = {}) {
-  let tmpDir = null
+async function suggestTagsFromVideoFrames(
+  db: ApiDb,
+  media: ClipTaggerMediaItem[],
+  options: ClipTaggerOptions = {},
+): Promise<ClipTaggerBatchResult> {
+  let tmpDir: string | null = null
 
   try {
     const extracted = await extractFrames(media, options)
@@ -312,8 +344,8 @@ async function suggestTagsFromVideoFrames(db: ApiDb, media: any, options: Record
     }
 
     const model = await loadModel(db)
-    const promptEntries = getPromptEntries()
-    const frameResults = []
+    const promptEntries = getPromptEntries() as ClipPromptEntry[]
+    const frameResults: ClipClassificationRow[][] = []
 
     for (const frame of extracted.frames) {
       frameResults.push(await classifyFrame(model, frame, promptEntries, options))
@@ -321,7 +353,7 @@ async function suggestTagsFromVideoFrames(db: ApiDb, media: any, options: Record
 
     const existingTags = options.excludeExisting === false
       ? []
-      : (options.tags || await db.Tag.findAll({raw: true}))
+      : ((options.tags || await db.Tag.findAll({raw: true})) as Array<{ name?: string }>)
 
     const suggestions = aggregateFrameResults(frameResults, options.locale || 'en', existingTags)
       .slice(0, Number(options.limit || 50))
@@ -337,8 +369,12 @@ async function suggestTagsFromVideoFrames(db: ApiDb, media: any, options: Record
   }
 }
 
-async function classifyMedia(db: ApiDb, item: any, options: Record<string, any> = {}) {
-  let tmpDir = null
+async function classifyMedia(
+  db: ApiDb,
+  item: ClipTaggerMediaItem,
+  options: ClipTaggerOptions = {},
+): Promise<ClipTaggerBatchResult> {
+  let tmpDir: string | null = null
 
   try {
     const extracted = await extractFramesForMedia(item, options)
@@ -354,8 +390,8 @@ async function classifyMedia(db: ApiDb, item: any, options: Record<string, any> 
     }
 
     const model = await loadModel(db)
-    const promptEntries = getPromptEntries()
-    const frameResults = []
+    const promptEntries = getPromptEntries() as ClipPromptEntry[]
+    const frameResults: ClipClassificationRow[][] = []
 
     for (const frame of extracted.frames) {
       frameResults.push(await classifyFrame(model, frame, promptEntries, options))
@@ -363,7 +399,7 @@ async function classifyMedia(db: ApiDb, item: any, options: Record<string, any> 
 
     const existingTags = options.excludeExisting === false
       ? []
-      : (options.tags || await db.Tag.findAll({raw: true}))
+      : ((options.tags || await db.Tag.findAll({raw: true})) as Array<{ name?: string }>)
 
     const suggestions = aggregateFrameResults(frameResults, options.locale || 'en', existingTags)
       .slice(0, Number(options.limit || 50))

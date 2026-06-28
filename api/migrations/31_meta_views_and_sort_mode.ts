@@ -1,7 +1,8 @@
+import type { MigrationContext } from '../types/sequelize'
 const {Sequelize} = require('sequelize')
 
 module.exports = {
-  async up({context: queryInterface}) {
+  async up({ context: queryInterface }: MigrationContext) {
     const tableDefinition = await queryInterface.describeTable('meta')
 
     if (!tableDefinition.views) {
@@ -17,5 +18,5 @@ module.exports = {
     await queryInterface.sequelize.query(query)
   },
 
-  async down({context: queryInterface}) {},
+  async down({ context: queryInterface }: MigrationContext) {},
 }

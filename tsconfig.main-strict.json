@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.main.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["main.ts", "types/electron-main.d.ts"]
+}

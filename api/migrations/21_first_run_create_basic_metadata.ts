@@ -1,8 +1,10 @@
+import type { MigrationContext } from '../types/sequelize'
+import type { AnyRecord } from '../types/db'
 const path = require('path');
 const { Sequelize } = require('sequelize');
 
 module.exports = {
-  async up({ context: queryInterface }) {
+  async up({ context: queryInterface }: MigrationContext) {
     try {
       const now = new Date();
 
@@ -16,7 +18,7 @@ module.exports = {
         }
       );
 
-      const count = existingMetaCount[0].count;
+      const count = Number((existingMetaCount as AnyRecord[])[0]?.count ?? 0)
 
       if (count > 0) {
         console.log(`Миграция пропущена: в таблице meta уже есть ${count} записей`);
@@ -67,10 +69,10 @@ module.exports = {
       };
 
       // 2. Фильтруем только те поля, которые существуют в таблице
-      const filteredMetaData: Record<string, any> = {};
-      Object.keys(metaRecord).forEach(key => {
+      const filteredMetaData: AnyRecord = {};
+      Object.keys(metaRecord).forEach((key: string) => {
         if (metaColumns[key] !== undefined) {
-          filteredMetaData[key] = metaRecord[key];
+          filteredMetaData[key] = (metaRecord as any)[key];
         }
       });
 
@@ -84,7 +86,7 @@ module.exports = {
       const metaValues = Object.values(filteredMetaData);
 
       // Экранируем имена полей
-      const escapedFields = metaFields.map(field => {
+      const escapedFields = metaFields.map((field: string) => {
         // Экранируем поле "order" и другие потенциально зарезервированные слова
         const reservedWords = ['order', 'group', 'select', 'insert', 'update', 'delete', 'where'];
         if (reservedWords.includes(field.toLowerCase())) {
@@ -133,18 +135,18 @@ module.exports = {
       const tables = await queryInterface.showAllTables();
       if (tables.includes('metaInMediaTypes')) {
         const metaInMediaTypesColumns = await queryInterface.describeTable('metaInMediaTypes');
-        const filteredMetaInMediaTypesData: Record<string, any> = {};
+        const filteredMetaInMediaTypesData: AnyRecord = {};
 
-        Object.keys(metaInMediaTypesRecord).forEach(key => {
+        Object.keys(metaInMediaTypesRecord).forEach((key: string) => {
           if (metaInMediaTypesColumns[key] !== undefined) {
-            filteredMetaInMediaTypesData[key] = metaInMediaTypesRecord[key];
+            filteredMetaInMediaTypesData[key] = (metaInMediaTypesRecord as any)[key];
           }
         });
 
         // Экранируем поле "order" и для этой таблицы
         const metaInMediaTypesFields = Object.keys(filteredMetaInMediaTypesData);
         const metaInMediaTypesValues = Object.values(filteredMetaInMediaTypesData);
-        const escapedMetaInMediaTypesFields = metaInMediaTypesFields.map(field => {
+        const escapedMetaInMediaTypesFields = metaInMediaTypesFields.map((field: string) => {
           if (field.toLowerCase() === 'order') {
             return `"${field}"`;
           }
@@ -224,10 +226,10 @@ module.exports = {
       console.log('Структура таблицы tags:', Object.keys(tagColumns));
 
       // Используем bulkInsert для тегов (здесь не должно быть проблем с зарезервированными словами)
-      const filteredTagsData = tagsData.map(tagRecord => {
-        const filteredTagData: Record<string, any> = {};
+      const filteredTagsData = tagsData.map((tagRecord: AnyRecord) => {
+        const filteredTagData: AnyRecord = {};
 
-        Object.keys(tagRecord).forEach(key => {
+        Object.keys(tagRecord).forEach((key: string) => {
           if (tagColumns[key] !== undefined) {
             filteredTagData[key] = tagRecord[key];
           } else {
@@ -250,7 +252,7 @@ module.exports = {
       return {
         metaId: metaId,
         mediaTypeId: mediaTypeId,
-        tags: tagsData.map(tag => tag.name)
+        tags: tagsData.map((tag: AnyRecord) => tag.name)
       };
 
     } catch (error) {
@@ -259,7 +261,7 @@ module.exports = {
     }
   },
 
-  async down({ context: queryInterface }) {
+  async down({ context: queryInterface }: MigrationContext) {
     try {
       console.log('Начинаем откат миграции...');
 

@@ -1,3 +1,14 @@
+import type { ApiDb } from '../../api/types/db'
+import type {
+  DiskSpaceError,
+  MoveFileResult,
+  MoveItemInput,
+  MoveProgressHandler,
+  PrepareMoveItemsResult,
+  PreparedMoveItem,
+  PreparedRenameItem,
+} from '../types/moveFile'
+
 const fs = require('fs').promises
 const fssync = require('fs')
 const path = require('path')
@@ -10,7 +21,7 @@ const ERROR_CODES = {
   ACCESS_DENIED: 'ACCESS_DENIED',
   DB_NOT_FOUND: 'DB_NOT_FOUND',
   UNKNOWN: 'UNKNOWN',
-}
+} as const
 
 type MoveFileError = Error & {
   code?: string
@@ -18,7 +29,7 @@ type MoveFileError = Error & {
   available?: number
 }
 
-async function getFreeDiskSpace(targetPath: any) {
+async function getFreeDiskSpace(targetPath: string): Promise<number | null> {
   try {
     const dir = (await fs.stat(targetPath).catch(() => null))?.isDirectory()
       ? targetPath
@@ -30,7 +41,7 @@ async function getFreeDiskSpace(targetPath: any) {
   }
 }
 
-async function isCrossDevice(sourcePath: any, destinationPath: any) {
+async function isCrossDevice(sourcePath: string, destinationPath: string): Promise<boolean> {
   try {
     const sourceStat = await fs.stat(sourcePath)
     const destDir = path.dirname(destinationPath)
@@ -42,14 +53,18 @@ async function isCrossDevice(sourcePath: any, destinationPath: any) {
   }
 }
 
-async function copyFileWithProgress(sourcePath: any, destinationPath: any, onProgress: any) {
+async function copyFileWithProgress(
+  sourcePath: string,
+  destinationPath: string,
+  onProgress?: MoveProgressHandler,
+): Promise<void> {
   const { size } = await fs.stat(sourcePath)
   let transferred = 0
 
   const readStream = fssync.createReadStream(sourcePath)
   const writeStream = fssync.createWriteStream(destinationPath)
 
-  readStream.on('data', (chunk: any) => {
+  readStream.on('data', (chunk: Buffer) => {
     transferred += chunk.length
     if (onProgress) onProgress(transferred, size)
   })
@@ -58,7 +73,11 @@ async function copyFileWithProgress(sourcePath: any, destinationPath: any, onPro
   if (onProgress) onProgress(size, size)
 }
 
-async function moveFile(sourcePath: any, destinationPath: any, onProgress: any) {
+async function moveFile(
+  sourcePath: string,
+  destinationPath: string,
+  onProgress?: MoveProgressHandler,
+): Promise<MoveFileResult> {
   if (!(await fs.stat(sourcePath).catch(() => null))) {
     const err: MoveFileError = new Error('Source file not found')
     err.code = ERROR_CODES.NOT_FOUND
@@ -129,8 +148,8 @@ async function moveFile(sourcePath: any, destinationPath: any, onProgress: any) 
   }
 }
 
-async function prepareMoveItems(db: any, items: any) {
-  const prepared = []
+async function prepareMoveItems(db: ApiDb, items: MoveItemInput[]): Promise<PrepareMoveItemsResult> {
+  const prepared: PreparedMoveItem[] = []
   let totalBytes = 0
   let bytesNeedingCopy = 0
 
@@ -144,7 +163,7 @@ async function prepareMoveItems(db: any, items: any) {
       continue
     }
 
-    const oldPath = media.dataValues.path
+    const oldPath = String(media.dataValues?.path ?? media.path ?? '')
     const fileName = path.basename(oldPath)
     const newPath = path.join(item.folder, fileName)
 
@@ -207,19 +226,24 @@ async function prepareMoveItems(db: any, items: any) {
   return { prepared, totalBytes, bytesNeedingCopy }
 }
 
-async function checkBatchDiskSpace(prepared: any, bytesNeedingCopy: any) {
+async function checkBatchDiskSpace(
+  prepared: PreparedMoveItem[],
+  bytesNeedingCopy: number,
+): Promise<DiskSpaceError | null> {
   if (bytesNeedingCopy <= 0) return null
 
-  const spaceByRoot = new Map()
+  const spaceByRoot = new Map<string, number>()
 
   for (const item of prepared) {
-    if (!item.crossDevice || item.error) continue
+    if (!item.crossDevice || item.error || !item.newPath || item.size == null) continue
     const root = path.parse(item.newPath).root
     spaceByRoot.set(root, (spaceByRoot.get(root) || 0) + item.size)
   }
 
   for (const [root, required] of spaceByRoot) {
-    const samplePath = prepared.find((i: any) => i.newPath && path.parse(i.newPath).root === root)?.newPath
+    const samplePath = prepared.find(
+      (entry) => entry.newPath && path.parse(entry.newPath).root === root,
+    )?.newPath
     if (!samplePath) continue
 
     const freeSpace = await getFreeDiskSpace(samplePath)
@@ -231,15 +255,15 @@ async function checkBatchDiskSpace(prepared: any, bytesNeedingCopy: any) {
   return null
 }
 
-function estimateSeconds(totalBytes: any, bytesNeedingCopy: any) {
+function estimateSeconds(totalBytes: number, bytesNeedingCopy: number): number {
   const renameBytes = totalBytes - bytesNeedingCopy
-  const copySpeed = 80 * 1024 * 1024 // ~80 MB/s conservative estimate
+  const copySpeed = 80 * 1024 * 1024
   const copySeconds = bytesNeedingCopy / copySpeed
   const renameSeconds = renameBytes > 0 ? Math.min(2, Math.ceil(renameBytes / (5 * 1024 * 1024 * 1024))) : 0
   return Math.max(1, Math.ceil(copySeconds + renameSeconds))
 }
 
-async function prepareRename(oldPath: any, newPath: any) {
+async function prepareRename(oldPath: string, newPath: string): Promise<PreparedRenameItem> {
   const fileName = path.basename(newPath)
   const folder = path.dirname(newPath)
 
@@ -289,8 +313,8 @@ async function prepareRename(oldPath: any, newPath: any) {
   }
 }
 
-async function checkRenameDiskSpace(prepared: any) {
-  if (!prepared.crossDevice) return null
+async function checkRenameDiskSpace(prepared: PreparedRenameItem): Promise<DiskSpaceError | null> {
+  if (!prepared.crossDevice || prepared.size == null || !prepared.newPath) return null
 
   const freeSpace = await getFreeDiskSpace(prepared.newPath)
   if (freeSpace !== null && freeSpace < prepared.size) {

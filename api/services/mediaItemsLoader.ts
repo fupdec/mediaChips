@@ -1,4 +1,10 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord, FilterLike } from '../types/db'
+import type {
+  LoadedMediaItem,
+  MediaId,
+  MediaLoadOptions,
+  NavigationMediaItem,
+} from '../types/mediaFilter'
 
 const {filterItems} = require('../../app/tasks/items.js')
 const {
@@ -11,7 +17,7 @@ const {
   requiresMetadataJoinForSort,
 } = require('./mediaFilterSql')
 
-function buildFilteredTotalsSql(fromClause: any, whereClause: any, needsDistinct: any) {
+function buildFilteredTotalsSql(fromClause: string, whereClause: string, needsDistinct: boolean) {
   if (!needsDistinct) {
     return `SELECT COUNT(*) AS totalFiltered,
       COALESCE(SUM(media.filesize), 0) AS totalFilesize
@@ -28,7 +34,7 @@ function buildFilteredTotalsSql(fromClause: any, whereClause: any, needsDistinct
     )`
 }
 
-function buildFilteredCountSql(fromClause: any, whereClause: any, needsDistinct: any) {
+function buildFilteredCountSql(fromClause: string, whereClause: string, needsDistinct: boolean) {
   if (!needsDistinct) {
     return `SELECT COUNT(*) AS totalFiltered
       ${fromClause}
@@ -43,7 +49,7 @@ function buildFilteredCountSql(fromClause: any, whereClause: any, needsDistinct:
     )`
 }
 
-function buildMediaIdSelect(needsDistinct: any) {
+function buildMediaIdSelect(needsDistinct: boolean) {
   return needsDistinct ? 'SELECT DISTINCT media.id' : 'SELECT media.id'
 }
 
@@ -60,7 +66,7 @@ FROM media
 LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
 LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId`
 
-const toNavigationItem = (item: any) => ({
+const toNavigationItem = (item: NavigationMediaItem) => ({
   id: item.id,
   path: item.path,
   name: item.name,
@@ -78,14 +84,14 @@ const toNavigationItem = (item: any) => ({
   time: item.time,
 })
 
-const createItemShell = (row: any) => ({
+const createItemShell = (row: AnyRecord): LoadedMediaItem => ({
   ...row,
   tags: [],
   values: [],
   key: String(row.id),
 })
 
-async function fetchBaseMediaRows(db: ApiDb, mediaTypeId: any, ids: any= []) {
+async function fetchBaseMediaRows(db: ApiDb, mediaTypeId: MediaId | null | undefined, ids: MediaId[] = []) {
   if (ids.length) {
     const [rows] = await db.sequelize.query(
       `${MEDIA_BASE_SELECT} WHERE media.id IN (:ids)`,
@@ -103,10 +109,10 @@ async function fetchBaseMediaRows(db: ApiDb, mediaTypeId: any, ids: any= []) {
   return rows
 }
 
-async function attachMediaRelations(db: ApiDb, items: any, mediaTypeId: any, ids: any= []) {
+async function attachMediaRelations(db: ApiDb, items: LoadedMediaItem[], mediaTypeId: MediaId | null | undefined, ids: MediaId[] = []) {
   if (!items.length) return items
 
-  const mediaIds = items.map((item: any) => item.id)
+  const mediaIds = items.map((item: LoadedMediaItem | NavigationMediaItem | AnyRecord) => item.id)
   const idSet = new Set(mediaIds)
   const useIdFilter = ids.length > 0
 
@@ -160,12 +166,12 @@ async function attachMediaRelations(db: ApiDb, items: any, mediaTypeId: any, ids
   return items
 }
 
-function orderRowsByIds(rows: AnyRecord[], ids: any) {
-  const rowsById = new Map(rows.map((row: any) => [row.id, row]))
-  return ids.map((id: any) => rowsById.get(id)).filter(Boolean)
+function orderRowsByIds(rows: AnyRecord[], ids: MediaId[]): AnyRecord[] {
+  const rowsById = new Map(rows.map((row: AnyRecord) => [row.id, row]))
+  return ids.map((id: MediaId) => rowsById.get(id)).filter((row): row is AnyRecord => row != null)
 }
 
-async function loadMediaItemsLegacy(db: ApiDb, options: Record<string, any> = {}) {
+async function loadMediaItemsLegacy(db: ApiDb, options: MediaLoadOptions = {}) {
   const {
     mediaTypeId,
     ids = [],
@@ -196,17 +202,18 @@ async function loadMediaItemsLegacy(db: ApiDb, options: Record<string, any> = {}
 
   const totalFiltered = filtered.length
   const totalFilesize = filtered.reduce(
-    (sum: number, item: any) => sum + (Number(item.filesize) || 0),
+    (sum: number, item: LoadedMediaItem) => sum + (Number(item.filesize) || 0),
     0,
   )
 
-  const shouldPaginate = !ids.length && limit > 0 && limit < 101
+  const numericLimit = limit ?? 0
+  const shouldPaginate = !ids.length && numericLimit > 0 && numericLimit < 101
   let pageItems = filtered
 
   if (shouldPaginate) {
     const safePage = Math.max(1, Number(page) || 1)
-    const offset = (safePage - 1) * limit
-    pageItems = filtered.slice(offset, offset + limit)
+    const offset = (safePage - 1) * numericLimit
+    pageItems = filtered.slice(offset, offset + numericLimit)
   }
 
   return {
@@ -216,12 +223,12 @@ async function loadMediaItemsLegacy(db: ApiDb, options: Record<string, any> = {}
     totalFilesize,
     navigation: includeNavigation ? filtered.map(toNavigationItem) : undefined,
     page: shouldPaginate ? Math.max(1, Number(page) || 1) : 1,
-    limit: shouldPaginate ? limit : totalFiltered,
-    pages: shouldPaginate ? Math.max(1, Math.ceil(totalFiltered / limit)) : 1,
+    limit: shouldPaginate ? numericLimit : totalFiltered,
+    pages: shouldPaginate ? Math.max(1, Math.ceil(totalFiltered / numericLimit)) : 1,
   }
 }
 
-async function loadMediaItemsSql(db: ApiDb, options: Record<string, any> = {}) {
+async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
   const {
     mediaTypeId,
     ids = [],
@@ -249,9 +256,10 @@ async function loadMediaItemsSql(db: ApiDb, options: Record<string, any> = {}) {
   const fromForSort = getMediaFromClause(joinForFilters || joinForSort, joinSql)
   const idSelect = buildMediaIdSelect(needsDistinct)
 
-  const shouldPaginate = !ids.length && limit > 0 && limit < 101
+  const numericLimit = limit ?? 0
+  const shouldPaginate = !ids.length && numericLimit > 0 && numericLimit < 101
   const safePage = Math.max(1, Number(page) || 1)
-  const pageLimit = shouldPaginate ? limit : null
+  const pageLimit = shouldPaginate ? numericLimit : null
   const queryReplacements = {...replacements}
 
   let idQuery = `${idSelect}
@@ -261,7 +269,7 @@ async function loadMediaItemsSql(db: ApiDb, options: Record<string, any> = {}) {
 
   if (shouldPaginate) {
     queryReplacements.limit = pageLimit
-    queryReplacements.offset = (safePage - 1) * pageLimit
+    queryReplacements.offset = (safePage - 1) * (pageLimit ?? 0)
     idQuery += ' LIMIT :limit OFFSET :offset'
   }
 
@@ -297,7 +305,7 @@ async function loadMediaItemsSql(db: ApiDb, options: Record<string, any> = {}) {
     totalFilesize = Number(totals.totalFilesize) || 0
   }
 
-  const pageIds = idRows.map((row: any) => row.id)
+  const pageIds: MediaId[] = idRows.map((row: AnyRecord) => row.id as MediaId)
 
   let navigation
   if (includeNavigation) {
@@ -321,7 +329,7 @@ async function loadMediaItemsSql(db: ApiDb, options: Record<string, any> = {}) {
   let items = orderedRows.map(createItemShell)
   await attachMediaRelations(db, items, mediaTypeId, pageIds)
 
-  const result: Record<string, any> = {
+  const result: AnyRecord = {
     items,
     total: totalUnfiltered,
     totalFiltered,
@@ -332,27 +340,27 @@ async function loadMediaItemsSql(db: ApiDb, options: Record<string, any> = {}) {
   }
 
   if (!skipTotals && shouldPaginate && totalFiltered != null) {
-    result.pages = Math.max(1, Math.ceil(totalFiltered / pageLimit))
+    result.pages = Math.max(1, Math.ceil(totalFiltered / (pageLimit ?? numericLimit)))
   }
 
   return result
 }
 
-async function loadMediaItems(db: ApiDb, options: Record<string, any> = {}) {
+async function loadMediaItems(db: ApiDb, options: MediaLoadOptions = {}) {
   if (canUseSqlMediaFilters(options)) {
     return loadMediaItemsSql(db, options)
   }
   return loadMediaItemsLegacy(db, options)
 }
 
-async function loadMediaPool(db: ApiDb, mediaTypeId: any) {
+async function loadMediaPool(db: ApiDb, mediaTypeId: MediaId | null | undefined) {
   const rows = await fetchBaseMediaRows(db, mediaTypeId)
   const items = rows.map(createItemShell)
   await attachMediaRelations(db, items, mediaTypeId)
   return items
 }
 
-async function getFilteredMediaSummary(db: ApiDb, options: Record<string, any> = {}) {
+async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}) {
   const {
     mediaTypeId,
     filters = [],
@@ -372,7 +380,7 @@ async function getFilteredMediaSummary(db: ApiDb, options: Record<string, any> =
 
     return {
       count: result.totalFiltered,
-      previewIds: result.items.slice(0, previewLimit).map((item: any) => item.id),
+      previewIds: result.items.slice(0, previewLimit).map((item: LoadedMediaItem | NavigationMediaItem | AnyRecord) => item.id),
     }
   }
 
@@ -386,7 +394,7 @@ async function getFilteredMediaSummary(db: ApiDb, options: Record<string, any> =
 
     return {
       count: result.totalFiltered,
-      previewIds: result.items.slice(0, previewLimit).map((item: any) => item.id),
+      previewIds: result.items.slice(0, previewLimit).map((item: LoadedMediaItem | NavigationMediaItem | AnyRecord) => item.id),
     }
   }
 
@@ -420,11 +428,11 @@ async function getFilteredMediaSummary(db: ApiDb, options: Record<string, any> =
 
   return {
     count: Number(totals.totalFiltered) || 0,
-    previewIds: previewRows.map((row: any) => row.id),
+    previewIds: previewRows.map((row: AnyRecord) => row.id),
   }
 }
 
-async function loadFilteredMediaIds(db: ApiDb, options: Record<string, any> = {}) {
+async function loadFilteredMediaIds(db: ApiDb, options: MediaLoadOptions = {}) {
   if (options.find_duplicates || !canUseSqlMediaFilters(options)) {
     const result = await loadMediaItemsLegacy(db, {
       ...options,
@@ -433,7 +441,7 @@ async function loadFilteredMediaIds(db: ApiDb, options: Record<string, any> = {}
     })
 
     return {
-      ids: result.items.map((item: any) => item.id),
+      ids: result.items.map((item: LoadedMediaItem | NavigationMediaItem | AnyRecord) => item.id),
       totalFiltered: result.totalFiltered,
       totalFilesize: result.totalFilesize,
     }
@@ -453,7 +461,7 @@ async function loadFilteredMediaIds(db: ApiDb, options: Record<string, any> = {}
     })
 
     return {
-      ids: result.items.map((item: any) => item.id),
+      ids: result.items.map((item: LoadedMediaItem | NavigationMediaItem | AnyRecord) => item.id),
       totalFiltered: result.totalFiltered,
       totalFilesize: result.totalFilesize,
     }
@@ -485,13 +493,13 @@ async function loadFilteredMediaIds(db: ApiDb, options: Record<string, any> = {}
   const idRows = idQuery[0]
 
   return {
-    ids: idRows.map((row: any) => row.id),
+    ids: idRows.map((row: AnyRecord) => row.id),
     totalFiltered: Number(totals.totalFiltered) || 0,
     totalFilesize: Number(totals.totalFilesize) || 0,
   }
 }
 
-async function loadMediaBasicsByIds(db: ApiDb, ids: any= []) {
+async function loadMediaBasicsByIds(db: ApiDb, ids: MediaId[] = []) {
   if (!ids.length) return []
 
   const [rows] = await db.sequelize.query(
@@ -504,7 +512,7 @@ async function loadMediaBasicsByIds(db: ApiDb, ids: any= []) {
   return rows
 }
 
-async function loadMediaPlaylistItems(db: ApiDb, ids: any= []) {
+async function loadMediaPlaylistItems(db: ApiDb, ids: MediaId[] = []) {
   if (!ids.length) return []
 
   const [rows] = await db.sequelize.query(
@@ -520,7 +528,7 @@ async function loadMediaPlaylistItems(db: ApiDb, ids: any= []) {
   return orderedRows.map(createItemShell)
 }
 
-async function loadMediaForPlayback(db: ApiDb, ids: any= []) {
+async function loadMediaForPlayback(db: ApiDb, ids: MediaId[] = []) {
   if (!ids.length) return []
 
   const rows = await fetchBaseMediaRows(db, null, ids)

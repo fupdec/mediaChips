@@ -1,3 +1,6 @@
+import type { TaskControllerShared } from '../../types/tasks'
+import { apiErrorMessage, asApiError } from '../../types/errors'
+import type { ApiRequest, ApiResponse } from '../../types/http'
 const path = require('path')
 const {exec} = require('child_process')
 const {readdir, lstat} = require('fs/promises')
@@ -5,15 +8,15 @@ const {resolveExistingPath} = require('../../services/contentHash')
 const {normalizeMediaPath} = require('../../utils/normalizeUserPath')
 const {unlinkResolvedPath} = require('../../services/localAssetCleanup')
 
-module.exports = function createTasksFileController(shared) {
-  const checkFileExists = async function (req, res) {
+module.exports = function createTasksFileController(shared: TaskControllerShared) {
+  const checkFileExists = async function (req: ApiRequest, res: ApiResponse) {
     const filePath = normalizeMediaPath(req.body.path)
     const resolved = filePath ? await resolveExistingPath(filePath) : null
     if (resolved) res.sendStatus(201)
     else res.sendStatus(400)
   }
 
-  const renameFile = async function (req, res) {
+  const renameFile = async function (req: ApiRequest, res: ApiResponse) {
     const { old_path, new_path } = req.body
     const { moveFile, prepareRename, checkRenameDiskSpace } = require('../../../app/tasks/moveFile')
 
@@ -45,24 +48,25 @@ module.exports = function createTasksFileController(shared) {
 
       await moveFile(old_path, new_path)
       res.sendStatus(201)
-    } catch (error) {
-      console.log('ERROR: ' + error.message)
+    } catch (error: unknown) {
+      const apiErr = asApiError(error)
+      console.log('ERROR: ' + apiErr.message)
       res.status(400).send({
-        code: error.code || 'UNKNOWN',
-        message: error.message,
-        required: error.required,
-        available: error.available,
+        code: apiErr.code || 'UNKNOWN',
+        message: apiErr.message,
+        required: apiErr.required,
+        available: apiErr.available,
         fileName: path.basename(new_path),
         folder: path.dirname(new_path),
       })
     }
   }
 
-  const openPath = async function (req, res) {
+  const openPath = async function (req: ApiRequest, res: ApiResponse) {
     let entryPath = path.normalize(req.body.path)
     if (req.body.isDir) entryPath = path.dirname(entryPath)
 
-    const fail = (message) => res.status(400).send({message})
+    const fail = (message: string) => res.status(400).send({message})
 
     try {
       const {shell} = require('electron')
@@ -79,14 +83,14 @@ module.exports = function createTasksFileController(shared) {
         ? `start "" ${JSON.stringify(entryPath)}`
         : `xdg-open ${JSON.stringify(entryPath)}`
 
-    exec(command, (err) => {
-      if (err) return fail(err.message)
+    exec(command, (err: unknown) => {
+      if (err) return fail(apiErrorMessage(err))
       res.sendStatus(201)
     })
   }
 
-  const getFileList = async function (req, res) {
-    async function findInDir(rootDir, regex, excluded) {
+  const getFileList = async function (req: ApiRequest, res: ApiResponse) {
+    async function findInDir(rootDir: string, regex: RegExp, excluded: string[]) {
       const fileList = []
       const stack = [rootDir]
       let scanned = 0
@@ -104,7 +108,7 @@ module.exports = function createTasksFileController(shared) {
         for (const file of files) {
           const filePath = path.join(dir, file.name)
 
-          if (excluded.some(exclude => filePath.includes(exclude))) {
+          if (excluded.some((exclude: string) => filePath.includes(exclude))) {
             continue
           }
 
@@ -153,7 +157,7 @@ module.exports = function createTasksFileController(shared) {
     res.status(201).send(fileList)
   }
 
-  const deleteFile = async function (req, res) {
+  const deleteFile = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const deleted = await unlinkResolvedPath(req.body.path)
 

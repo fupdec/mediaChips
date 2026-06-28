@@ -1,3 +1,5 @@
+import type { MigrationContext } from '../types/sequelize'
+import type { AnyRecord } from '../types/db'
 const path = require('path')
 const {
   Sequelize
@@ -5,11 +7,9 @@ const {
 const _ = require('lodash')
 
 module.exports = {
-  async up({
-             context: queryInterface
-           }) {
+  async up({ context: queryInterface }: MigrationContext) {
     return queryInterface.describeTable('media')
-      .then(async tableDefinition => {
+      .then(async (tableDefinition: AnyRecord) => {
         if (tableDefinition.name) {
           return Promise.resolve();
         } else {
@@ -37,10 +37,10 @@ module.exports = {
             ),
           ]);
 
-          let media_all = await queryInterface.sequelize.models.media.findAll({raw: true});
+          let media_all = await (queryInterface.sequelize.models as any).media.findAll({raw: true});
 
-          let media_modified = media_all.map(i => {
-            let j: Record<string, any> = {}
+          let media_modified = media_all.map((i: AnyRecord) => {
+            let j: AnyRecord = {}
             let filepath = i.path;
             filepath = _.replace(filepath, /'/g, "''")
             filepath = _.replace(filepath, /`/g, "``")
@@ -71,9 +71,7 @@ module.exports = {
       }).catch((err) => console.log(err));
   },
 
-  async down({
-               context: queryInterface
-             }) {
+  async down({ context: queryInterface }: MigrationContext) {
     // return Promise.all([
     //   queryInterface.removeColumn('media', 'name'),
     //   queryInterface.removeColumn('media', 'basename'),

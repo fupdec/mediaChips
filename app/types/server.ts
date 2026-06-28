@@ -11,6 +11,7 @@ export interface ServerConfig {
   ips?: string[]
   hostname?: string
   path?: string
+  appVersion?: string
   databases: ServerDatabaseEntry[]
 }
 
@@ -26,6 +27,11 @@ export interface NetworkIpInfo {
   netmask?: string
   cidr?: string
   isLinkLocal?: boolean
+}
+
+export interface NetworkHelpers {
+  getBestLocalIp: () => string
+  getAllIps: () => NetworkIpInfo[]
 }
 
 export interface ServerInitResult {

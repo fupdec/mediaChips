@@ -1,3 +1,6 @@
+import type { BrowserWindow as BrowserWindowInstance, WebContents, IpcMainInvokeEvent, IpcMainEvent } from 'electron'
+
+import { apiErrorMessage } from './api/types/errors'
 const {
   app,
   BrowserWindow,
@@ -37,18 +40,18 @@ const isWindows = os.type() === 'Windows_NT'
 const TEMP_FORCE_WIN_ELECTRON_UI = false
 const useWinElectronFrame = isWindows || TEMP_FORCE_WIN_ELECTRON_UI
 
-let win = null
-let loading = null
-let player = null
+let win: BrowserWindowInstance | null = null
+let loading: BrowserWindowInstance | null = null
+let player: BrowserWindowInstance | null = null
 let suppressZoomChangedEvent = false
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-const bindZoomChangedListener = (browserWindow) => {
+const bindZoomChangedListener = (browserWindow: BrowserWindowInstance) => {
   if (!browserWindow || browserWindow.isDestroyed()) return
 
   const {webContents} = browserWindow
 
-  webContents.on('before-input-event', (event, input) => {
+  webContents.on('before-input-event', (event: Electron.Event, input: Electron.Input) => {
     if (
       input.type === 'gesturePinchBegin'
       || input.type === 'gesturePinchUpdate'
@@ -68,7 +71,7 @@ const bindZoomChangedListener = (browserWindow) => {
   })
 }
 
-const setWebContentsZoomFactor = (webContents, factor) => {
+const setWebContentsZoomFactor = (webContents: WebContents, factor: unknown) => {
   if (!webContents || webContents.isDestroyed()) return 1
 
   const clamped = Math.min(3, Math.max(0.5, Number(factor) || 1))
@@ -78,7 +81,7 @@ const setWebContentsZoomFactor = (webContents, factor) => {
   return clamped
 }
 
-const sendConfigToWindow = (browserWindow) => {
+const sendConfigToWindow = (browserWindow: BrowserWindowInstance) => {
   if (!browserWindow || browserWindow.isDestroyed()) return
   browserWindow.webContents.send('config', server.config)
 }
@@ -101,41 +104,42 @@ const createWindow = () => {
       backgroundThrottling: false,
     },
   })
-  win.loadURL(`http://localhost:${server.config.port}/`)
-  win.on('closed', () => {
+  const mainWindow = win!
+  mainWindow.loadURL(`http://localhost:${server.config.port}/`)
+  mainWindow.on('closed', () => {
     if (process.platform !== 'darwin') app.quit()
     else win = null
   })
-  win.on('maximize', () => {
-    win.webContents.send('maximize')
+  mainWindow.on('maximize', () => {
+    mainWindow.webContents.send('maximize')
   })
-  win.on('unmaximize', () => {
-    win.webContents.send('unmaximize')
+  mainWindow.on('unmaximize', () => {
+    mainWindow.webContents.send('unmaximize')
   })
-  win.on('enter-full-screen', () => {
-    win.webContents.send('enter-full-screen')
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow.webContents.send('enter-full-screen')
   })
-  win.on('leave-full-screen', () => {
-    win.webContents.send('leave-full-screen')
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow.webContents.send('leave-full-screen')
   })
-  win.on('blur', () => {
-    win.webContents.send('blur')
+  mainWindow.on('blur', () => {
+    mainWindow.webContents.send('blur')
   })
-  win.on('focus', () => {
-    win.webContents.send('focus')
+  mainWindow.on('focus', () => {
+    mainWindow.webContents.send('focus')
   })
-  bindZoomChangedListener(win)
-  win.once('ready-to-show', () => {
-    win.show()
+  bindZoomChangedListener(mainWindow)
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show()
   })
-  win.webContents.on('did-finish-load', () => {
-    sendConfigToWindow(win)
+  mainWindow.webContents.on('did-finish-load', () => {
+    sendConfigToWindow(mainWindow)
     // Renderer may mount after the first paint; resend config for late listeners.
-    setTimeout(() => sendConfigToWindow(win), 500)
-    setTimeout(() => sendConfigToWindow(win), 2000)
+    setTimeout(() => sendConfigToWindow(mainWindow), 500)
+    setTimeout(() => sendConfigToWindow(mainWindow), 2000)
     setTimeout(warmupPlayerWindow, 1500)
     if (isDevelopment) {
-      // win.webContents.openDevTools();
+      // mainWindow.webContents.openDevTools();
     }
   })
 }
@@ -147,19 +151,19 @@ ipcMain.handle('get-machine-id', async () => {
   return machineId()
 })
 
-ipcMain.handle('setZoomFactor', (event, factor) => {
+ipcMain.handle('setZoomFactor', (event: IpcMainInvokeEvent, factor: unknown) => {
   const browserWindow = BrowserWindow.fromWebContents(event.sender)
   if (!browserWindow || browserWindow.isDestroyed()) return 1
   return setWebContentsZoomFactor(browserWindow.webContents, factor)
 })
 
-ipcMain.handle('getZoomFactor', (event) => {
+ipcMain.handle('getZoomFactor', (event: IpcMainInvokeEvent) => {
   const browserWindow = BrowserWindow.fromWebContents(event.sender)
   if (!browserWindow || browserWindow.isDestroyed()) return 1
   return browserWindow.webContents.getZoomFactor()
 })
 
-ipcMain.handle('checkFileExists', async (_event, data) => {
+ipcMain.handle('checkFileExists', async (_event: IpcMainInvokeEvent, data: Record<string, unknown>) => {
   const {normalizeMediaPath} = require('./api/utils/normalizeUserPath')
   const {resolveExistingPath} = require('./api/services/contentHash')
   const rawPath = typeof data === 'string' ? data : data?.path
@@ -173,7 +177,7 @@ ipcMain.handle('checkFileExists', async (_event, data) => {
   }
 })
 
-ipcMain.handle('openPath', async (event, data) => {
+ipcMain.handle('openPath', async (_event: IpcMainInvokeEvent, data: Record<string, unknown>) => {
   let entryPath = typeof data === 'string' ? data : data?.path
   if (!entryPath) return {error: 'Path is required'}
 
@@ -184,7 +188,7 @@ ipcMain.handle('openPath', async (event, data) => {
   return error ? {error} : {success: true}
 })
 
-ipcMain.handle('dialog:saveFile', async (event, options: { defaultPath?: string; content?: string; filters?: Array<{ name: string; extensions: string[] }> } = {}) => {
+ipcMain.handle('dialog:saveFile', async (_event: IpcMainInvokeEvent, options: { defaultPath?: string; content?: string; filters?: Array<{ name: string; extensions: string[] }> } = {}) => {
   const result = await dialog.showSaveDialog({
     defaultPath: options.defaultPath,
     filters: options.filters || [{name: 'All Files', extensions: ['*']}],
@@ -222,28 +226,29 @@ const createLoadingWindow = () => {
       contextIsolation: false
     },
   })
-  loading.hide()
+  const loadingWindow = loading!
+  loadingWindow.hide()
   if (isDevelopment) {
-    loading.once('show', () => {
-      win.webContents.on('did-finish-load', () => {
+    loadingWindow.once('show', () => {
+      win?.webContents.on('did-finish-load', () => {
         console.log('App loaded')
-        win.show()
-        loading.hide()
+        win?.show()
+        loading?.hide()
       })
     })
   } else {
     createProtocol('app')
-    loading.once('show', () => {
-      win.webContents.on('did-finish-load', () => {
+    loadingWindow.once('show', () => {
+      win?.webContents.on('did-finish-load', () => {
         console.log('App loaded')
-        win.show()
-        loading.hide()
+        win?.show()
+        loading?.hide()
         loading = null
       })
     })
   }
-  loading.loadURL(path.join('file://', __dirname, 'dist', 'loading.html'))
-  loading.webContents.on('did-finish-load', () => {
+  loadingWindow.loadURL(path.join('file://', __dirname, 'dist', 'loading.html'))
+  loadingWindow.webContents.on('did-finish-load', () => {
     // loading.show()
   })
 }
@@ -307,25 +312,25 @@ ipcMain.handle('closePlayer', () => {
   }
 })
 
-ipcMain.handle('maximize', (event, args) => {
+ipcMain.handle('maximize', (_event: IpcMainInvokeEvent, args: unknown) => {
   if (args === 'player') {
-    player.maximize()
+    player?.maximize()
   } else {
-    win.maximize()
+    win?.maximize()
   }
 })
-ipcMain.handle('unmaximize', (event, args) => {
+ipcMain.handle('unmaximize', (_event: IpcMainInvokeEvent, args: unknown) => {
   if (args === 'player') {
-    player.unmaximize()
+    player?.unmaximize()
   } else {
-    win.unmaximize()
+    win?.unmaximize()
   }
 })
-ipcMain.handle('minimize', (event, args) => {
+ipcMain.handle('minimize', (_event: IpcMainInvokeEvent, args: unknown) => {
   if (args === 'player') {
-    player.minimize()
+    player?.minimize()
   } else {
-    win.minimize()
+    win?.minimize()
   }
 })
 ipcMain.handle('relaunch', () => {
@@ -424,12 +429,12 @@ let systemMenu = Menu.buildFromTemplate([
 Menu.setApplicationMenu(systemMenu)
 
 function lockApp() {
-  win.webContents.send('lockApp')
-  player.webContents.send('stop-playing-video')
+  win?.webContents.send('lockApp')
+  player?.webContents.send('stop-playing-video')
 }
 
 function aboutApp() {
-  win.webContents.send('aboutApp')
+  win?.webContents.send('aboutApp')
 }
 
 process.on('uncaughtException', (error: NodeJS.ErrnoException) => {
@@ -445,7 +450,7 @@ process.on('uncaughtException', (error: NodeJS.ErrnoException) => {
 });
 
 // folder selection dialog and getting their paths
-ipcMain.handle('showOpenDialog', async (event, properties) => {
+ipcMain.handle('showOpenDialog', async (_event: IpcMainInvokeEvent, properties: unknown) => {
   console.log('showOpenDialog called with properties:', properties);
 
   // Check that properties is an array
@@ -459,7 +464,7 @@ ipcMain.handle('showOpenDialog', async (event, properties) => {
     if (typeof properties === 'string') {
       dialogProperties = [properties];
     } else if (typeof properties === 'object' && properties !== null) {
-      dialogProperties = Object.keys(properties).filter(key => properties[key] === true);
+      dialogProperties = Object.keys(properties).filter(key => (properties as Record<string, unknown>)[key] === true);
     }
   }
 
@@ -486,20 +491,20 @@ ipcMain.handle('showOpenDialog', async (event, properties) => {
       message: 'Directories selected successfully'
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in showOpenDialog:', error);
     return {
       error: true,
-      message: error.message,
+      message: error instanceof Error ? apiErrorMessage(error) : String(error),
       filePaths: []
     };
   }
 });
 
 // player window
-let pendingPlayerPayload = null
+let pendingPlayerPayload: unknown = null
 let isPlayerRendererReady = false
-let playerWarmupTimer = null
+let playerWarmupTimer: ReturnType<typeof setTimeout> | null = null
 
 function getPlayerWindowOptions() {
   return {
@@ -521,7 +526,7 @@ function getPlayerWindowOptions() {
   }
 }
 
-function setupPlayerWindowEvents(browserWindow) {
+function setupPlayerWindowEvents(browserWindow: BrowserWindowInstance) {
   browserWindow.on('maximize', () => {
     browserWindow.webContents.send('maximize')
   })
@@ -561,12 +566,13 @@ function createPlayerWindow() {
 
   isPlayerRendererReady = false
   player = new BrowserWindow(getPlayerWindowOptions())
-  setupPlayerWindowEvents(player)
-  player.loadURL(`http://localhost:${server.config.port}/?player=true`)
-  return player
+  const playerWindow = player!
+  setupPlayerWindowEvents(playerWindow)
+  playerWindow.loadURL(`http://localhost:${server.config.port}/?player=true`)
+  return playerWindow
 }
 
-function deliverPlayerPayload(data) {
+function deliverPlayerPayload(data: unknown) {
   if (!player || player.isDestroyed()) return
 
   sendConfigToWindow(player)
@@ -591,7 +597,7 @@ function warmupPlayerWindow() {
   createPlayerWindow()
 }
 
-ipcMain.on('player-ready', (event) => {
+ipcMain.on('player-ready', (event: IpcMainEvent) => {
   if (!player || player.isDestroyed() || event.sender !== player.webContents) return
 
   isPlayerRendererReady = true
@@ -603,8 +609,8 @@ ipcMain.on('player-ready', (event) => {
 })
 
 // for passing state between windows
-let temporaryStore
-ipcMain.on('open-player', async (event, data) => {
+let temporaryStore: unknown
+ipcMain.on('open-player', async (_event: IpcMainEvent, data: Record<string, unknown>) => {
   temporaryStore = data.store
 
   if (!player || player.isDestroyed()) {
@@ -621,18 +627,18 @@ ipcMain.on('open-player', async (event, data) => {
   pendingPlayerPayload = data
   if (!player.isVisible()) player.show()
 })
-ipcMain.on('getItemsFromDb', async (event, data) => {
-  win.webContents.send('getItemsFromDb', data)
+ipcMain.on('getItemsFromDb', async (_event: IpcMainEvent, data: unknown) => {
+  win?.webContents.send('getItemsFromDb', data)
 })
-ipcMain.on('updateVideoFrames', async (event, id) => {
-  win.webContents.send('updateVideoFrames', id)
+ipcMain.on('updateVideoFrames', async (_event: IpcMainEvent, id: unknown) => {
+  win?.webContents.send('updateVideoFrames', id)
 })
-ipcMain.on('removeEntitiesFromState', async (event, data) => {
-  win.webContents.send('removeEntitiesFromState', data)
+ipcMain.on('removeEntitiesFromState', async (_event: IpcMainEvent, data: unknown) => {
+  win?.webContents.send('removeEntitiesFromState', data)
 })
 ipcMain.on('stop-playing-video', async () => {
-  player.webContents.send('stop-playing-video')
+  player?.webContents.send('stop-playing-video')
 })
 ipcMain.on('setFullScreen', async () => {
-  player.setFullScreen(false)
+  player?.setFullScreen(false)
 })

@@ -1,3 +1,7 @@
+import type { TaskControllerShared } from '../../types/tasks'
+import type { AnyRecord } from '../../types/db'
+import { apiErrorMessage } from '../../types/errors'
+import type { ApiRequest, ApiResponse } from '../../types/http'
 const path = require('path')
 const {
   getContentHashBackfillStatus,
@@ -8,7 +12,7 @@ const {
   iterateMissingMediaSearch,
 } = require('../../services/missingMediaFinder')
 
-module.exports = function createTasksMaintenanceController(shared) {
+module.exports = function createTasksMaintenanceController(shared: TaskControllerShared) {
   const {
     db,
     dbPath,
@@ -16,31 +20,31 @@ module.exports = function createTasksMaintenanceController(shared) {
     getVideoImagesGeneration,
   } = shared
 
-  const contentHashBackfillStatus = async (req, res) => {
+  const contentHashBackfillStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const status = await getContentHashBackfillStatus(db)
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while checking content hash status."
+        message: apiErrorMessage(err) || "Some error occurred while checking content hash status."
       })
     }
   }
 
-  const videoImagesGenerationStatus = async (req, res) => {
+  const videoImagesGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const status = await getVideoImagesGeneration().getVideoImagesGenerationStatus(db, dbPath)
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while checking video images generation status.',
+        message: apiErrorMessage(err) || 'Some error occurred while checking video images generation status.',
       })
     }
   }
 
-  const streamVideoImagesGeneration = async (req, res) => {
+  const streamVideoImagesGeneration = async (req: ApiRequest, res: ApiResponse) => {
     const imageType = String(req.query.type || '').toLowerCase()
-    const writeEvent = (event) => {
+    const writeEvent = (event: Record<string, unknown>) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
 
@@ -62,14 +66,14 @@ module.exports = function createTasksMaintenanceController(shared) {
     } catch (err) {
       writeEvent({
         type: 'error',
-        message: err.message || 'Some error occurred while generating video images.',
+        message: apiErrorMessage(err) || 'Some error occurred while generating video images.',
       })
       res.end()
     }
   }
 
-  const streamContentHashBackfill = async (req, res) => {
-    const writeEvent = (event) => {
+  const streamContentHashBackfill = async (req: ApiRequest, res: ApiResponse) => {
+    const writeEvent = (event: Record<string, unknown>) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
 
@@ -91,25 +95,25 @@ module.exports = function createTasksMaintenanceController(shared) {
     } catch (err) {
       writeEvent({
         type: 'error',
-        message: err.message || "Some error occurred while backfilling content hashes."
+        message: apiErrorMessage(err) || "Some error occurred while backfilling content hashes."
       })
       res.end()
     }
   }
 
-  const missingMediaStatus = async (req, res) => {
+  const missingMediaStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const status = await getMissingMediaStatus(db)
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while checking missing media status."
+        message: apiErrorMessage(err) || "Some error occurred while checking missing media status."
       })
     }
   }
 
-  const streamFindMissingMedia = async (req, res) => {
-    const writeEvent = (event) => {
+  const streamFindMissingMedia = async (req: ApiRequest, res: ApiResponse) => {
+    const writeEvent = (event: Record<string, unknown>) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
 
@@ -132,13 +136,13 @@ module.exports = function createTasksMaintenanceController(shared) {
     } catch (err) {
       writeEvent({
         type: 'error',
-        message: err.message || "Some error occurred while searching for missing media."
+        message: apiErrorMessage(err) || "Some error occurred while searching for missing media."
       })
       res.end()
     }
   }
 
-  const relinkMissingMedia = async (req, res) => {
+  const relinkMissingMedia = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const matches = Array.isArray(req.body?.matches) ? req.body.matches : []
       let updated = 0
@@ -149,7 +153,7 @@ module.exports = function createTasksMaintenanceController(shared) {
 
         if (!filePath || !mediaId) continue
 
-        const data: Record<string, any> = {
+        const data: AnyRecord = {
           path: filePath,
           basename: path.basename(filePath),
           name: path.parse(filePath).name,
@@ -171,7 +175,7 @@ module.exports = function createTasksMaintenanceController(shared) {
       res.status(201).send({updated})
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while relinking missing media."
+        message: apiErrorMessage(err) || "Some error occurred while relinking missing media."
       })
     }
   }

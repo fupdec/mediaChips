@@ -1,14 +1,19 @@
+import type { AnyRecord } from '../../types/db'
+import type { Express } from 'express'
+import { apiErrorMessage } from '../../types/errors'
+import type { ApiRequest, ApiResponse } from '../../types/http'
+import type { ApiDb } from '../../types/db'
 const fs = require("fs")
 const path = require('path')
 const { rimraf } = require("rimraf")
 const StreamZip = require('node-stream-zip')
 const fse = require("fs-extra");
 
-module.exports = function (app, db) {
+module.exports = function (app: Express, db: ApiDb) {
   const dbPath = db.path
   const backupsPath = path.join(dbPath, 'backups')
 
-  const createBackup = function (req, res) {
+  const createBackup = function (req: ApiRequest, res: ApiResponse) {
     let currentdate = new Date(),
       date = currentdate.getDate(),
       month = currentdate.getMonth() + 1,
@@ -45,13 +50,13 @@ module.exports = function (app, db) {
     archive.finalize()
   };
 
-  const getBackups = function (req, res) {
-    let backups = []
+  const getBackups = function (req: ApiRequest, res: ApiResponse) {
+    let backups: AnyRecord[] = []
     if (!fs.existsSync(backupsPath)) {
       res.status(201).send(backups)
       return
     }
-    fs.readdirSync(backupsPath).forEach(file => {
+    fs.readdirSync(backupsPath).forEach((file: unknown) => {
       if (path.extname(file) !== '.zip') return false
       const pathToFile = path.join(backupsPath, file)
       const filestats = fs.statSync(pathToFile)
@@ -64,9 +69,9 @@ module.exports = function (app, db) {
     res.status(201).send(backups)
   };
 
-  const deleteBackup = function (req, res) {
+  const deleteBackup = function (req: ApiRequest, res: ApiResponse) {
     const backupPath = path.join(backupsPath, req.body.name + '.zip')
-    fs.unlink(backupPath, (err) => {
+    fs.unlink(backupPath, (err: unknown) => {
       if (err) {
         console.log(err)
         res.sendStatus(500)
@@ -74,7 +79,7 @@ module.exports = function (app, db) {
     })
   };
 
-  const restoreBackup = async (req, res) => {
+  const restoreBackup = async (req: ApiRequest, res: ApiResponse) => {
     const backupPath = path.join(backupsPath, req.body.name + '.zip')
     const dbFile = path.join(dbPath, 'db.sqlite')
     const mediaFiles = path.join(dbPath, 'media')
@@ -84,7 +89,7 @@ module.exports = function (app, db) {
     })
 
     const checkLowDbBackup = () => {
-      return new Promise(async (resolve, reject) => {
+      return new Promise(async (resolve: (value?: unknown) => void, reject: (reason?: unknown) => void) => {
         try {
           const entries = await zip.entries();
           let is_low_db = false;
@@ -111,20 +116,20 @@ module.exports = function (app, db) {
       // db.sequelize.close()
 
       // console.log('remove', dbFile)
-      fs.unlink(dbFile, (err) => {
+      fs.unlink(dbFile, (err: unknown) => {
         if (err) {
           console.log(err)
         }
       })
 
-      const rmrf = (folder) => rimraf(folder)
+      const rmrf = (folder: unknown) => rimraf(folder)
 
       // console.log('remove', mediaFiles)
       await rmrf(mediaFiles)
       // console.log('remove', metaFiles)
       await rmrf(metaFiles)
 
-      await zip.extract(null, dbPath).catch(e => {
+      await zip.extract(null, dbPath).catch((e: unknown) => {
         console.log(e)
         res.status(400).send(e)
       });
@@ -139,7 +144,7 @@ module.exports = function (app, db) {
     }
   };
 
-  const importBackup = async (req, res) => {
+  const importBackup = async (req: ApiRequest, res: ApiResponse) => {
     const {normalizeUserPath} = require('../../utils/normalizeUserPath')
     const fromPath = normalizeUserPath(req.body.path)
     if (!fromPath || !fs.existsSync(fromPath)) {
@@ -158,7 +163,7 @@ module.exports = function (app, db) {
     }
   };
 
-  const exportBackup = async (req, res) => {
+  const exportBackup = async (req: ApiRequest, res: ApiResponse) => {
     const archive = req.body?.archive
     const destDir = req.body?.path
 
@@ -186,7 +191,7 @@ module.exports = function (app, db) {
       console.log('Successfully exported backup to', toPath)
     } catch (err) {
       console.error('exportBackup error:', err)
-      res.status(400).send({ message: err.message || String(err) })
+      res.status(400).send({ message: apiErrorMessage(err) || String(err) })
     }
   };
 

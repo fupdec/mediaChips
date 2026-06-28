@@ -1,9 +1,14 @@
+import type { Express, Request, Response, NextFunction } from 'express'
 const path = require('path')
 const fs = require('fs')
 const history = require('connect-history-api-fallback')
 const express = require('express')
 const {normalizeApiPath} = require('../../api/utils/normalizeApiPath')
 const {createCorsMiddleware} = require('./constants')
+
+interface HistoryRewriteContext {
+  parsedUrl: { pathname?: string }
+}
 
 function createExpressApp() {
   const app = express()
@@ -17,7 +22,7 @@ function createExpressApp() {
 
   app.use(express.urlencoded({extended: true}))
 
-  app.use((req: any, res: any, next: any) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.url.startsWith('/api/')) {
       const normalized = normalizeApiPath(req.url)
       if (normalized !== req.url) {
@@ -27,7 +32,7 @@ function createExpressApp() {
     next()
   })
 
-  app.use((req: any, res: any, next: any) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     const url = req.originalUrl || req.url
     const isTranscodeStream = req.method === 'GET' && /\/api\/video\/\d+\/transcode\/stream(?:\?|$)/.test(url)
 
@@ -45,7 +50,7 @@ function createExpressApp() {
   return {app, router}
 }
 
-function setupStaticApp(app: any) {
+function setupStaticApp(app: Express) {
   const src = path.join(__dirname, '../../dist')
   const spaHistory = history({
     disableDotRule: true,
@@ -53,13 +58,13 @@ function setupStaticApp(app: any) {
     rewrites: [
       {
         from: /^\/api\/.*$/,
-        to(context: any) {
+        to(context: HistoryRewriteContext) {
           return context.parsedUrl.pathname
         },
       },
       {
         from: /^\/socket\.io\/.*$/,
-        to(context: any) {
+        to(context: HistoryRewriteContext) {
           return context.parsedUrl.pathname
         },
       },

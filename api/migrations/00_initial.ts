@@ -1,12 +1,12 @@
+import type { MigrationContext } from '../types/sequelize'
+import type { AnyRecord } from '../types/db'
 // const {
 // 	Sequelize
 // } = require('sequelize');
 const {loadDefaultSettingsList} = require('../utils/defaultSettings')
 
 module.exports = {
-  async up({
-             context: queryInterface
-           }) {
+  async up({ context: queryInterface }: MigrationContext) {
     await queryInterface.bulkInsert('mediaTypes',
       [{
         type: 'video',
@@ -56,7 +56,7 @@ module.exports = {
     );
     const settingsList = loadDefaultSettingsList()
 
-    let sets = settingsList.map(i => ({
+    let sets = settingsList.map((i: AnyRecord) => ({
       option: i.option,
       value: i.value,
       createdAt: new Date(),
@@ -66,9 +66,7 @@ module.exports = {
     await queryInterface.bulkInsert('settings', sets);
   },
 
-  async down({
-               context: queryInterface
-             }) {
+  async down({ context: queryInterface }: MigrationContext) {
     // await queryInterface.dropTable('settings');
     // await queryInterface.dropTable('media');
   },

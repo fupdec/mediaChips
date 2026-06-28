@@ -1,18 +1,30 @@
+import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo, ServerInitResult } from '../types/server'
 const fs = require('fs')
 const path = require('path')
 const os = require('os')
 const package_json = require('../../package.json')
 const {FIXED_PORT, ALLOW_LAN, BIND_HOST} = require('./constants')
+import type { Express } from 'express'
+import type { Server } from 'http'
+import type { AddressInfo } from 'net'
+import { errnoCode, errorMessage } from '../types/websockets'
 const {getBestLocalIp, getAllIps} = require('./network')
 
-function showSystemNotification(title: any, message: any) {
+interface ServerStarterOptions {
+  app: Express
+  config: ServerConfig
+  configPath: string
+  databasesPath: string
+}
+
+function showSystemNotification(title: string, message: string) {
   const isElectron = process.versions.electron
 
   if (isElectron) {
     try {
       const {dialog} = require('electron')
       dialog.showErrorBox(title, message)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to show system dialog:', err)
       console.error(`\x1b[31m${title}: ${message}\x1b[0m`)
     }
@@ -30,12 +42,12 @@ function showSystemNotification(title: any, message: any) {
   }
 }
 
-function isPortInUse(port: any) {
+function isPortInUse(port: number) {
   return new Promise((resolve) => {
     const net = require('net')
     const tester = net.createServer()
-      .once('error', (err: any) => {
-        if (err.code === 'EADDRINUSE') {
+      .once('error', (err: unknown) => {
+        if (errnoCode(err) === 'EADDRINUSE') {
           resolve(true)
         } else {
           resolve(false)
@@ -50,8 +62,8 @@ function isPortInUse(port: any) {
   })
 }
 
-function createServerStarter({app, config, configPath, databasesPath}: any) {
-  let listener: any
+function createServerStarter({app, config, configPath, databasesPath}: ServerStarterOptions) {
+  let listener: Server | undefined
 
   const startServer = async () => {
     const portToUse = FIXED_PORT
@@ -70,15 +82,18 @@ function createServerStarter({app, config, configPath, databasesPath}: any) {
     console.log('\x1b[33m%s\x1b[0m', `🚀 Starting server on ${BIND_HOST}:${portToUse}...`)
 
     listener = app.listen(portToUse, BIND_HOST, () => {
-      const actualPort = listener.address().port
+      const address = listener?.address()
+      const actualPort = typeof address === 'object' && address
+        ? (address as AddressInfo).port
+        : portToUse
 
       const bestIp = getBestLocalIp()
       config.ip = ALLOW_LAN ? bestIp : 'localhost'
-      config.ips = ALLOW_LAN ? getAllIps().map((ip: any) => ip.address) : []
+      config.ips = ALLOW_LAN ? getAllIps().map((ip: NetworkIpInfo) => ip.address) : []
       config.hostname = ALLOW_LAN ? os.hostname() : 'localhost'
       config.port = actualPort
 
-      const activeDb = config.databases.find((db: any) => db.active)
+      const activeDb = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.active)
       if (activeDb) {
         config.path = path.join(databasesPath, activeDb.id)
       }
@@ -92,7 +107,7 @@ function createServerStarter({app, config, configPath, databasesPath}: any) {
       console.log('\x1b[36m%s\x1b[0m', `   • Host:            ${config.hostname}`)
       console.log('\x1b[36m%s\x1b[0m', `   • Port:            ${actualPort}`)
       console.log('\x1b[36m%s\x1b[0m', `   • Primary IP:      ${bestIp}`)
-      console.log('\x1b[36m%s\x1b[0m', `   • All IPs:         ${config.ips.join(', ')}`)
+      console.log('\x1b[36m%s\x1b[0m', `   • All IPs:         ${(config.ips ?? []).join(', ')}`)
       console.log('\x1b[36m%s\x1b[0m', `   • Version:         ${package_json.version}`)
 
       if (activeDb) {
@@ -106,7 +121,7 @@ function createServerStarter({app, config, configPath, databasesPath}: any) {
 
       if (ALLOW_LAN && config.ips && config.ips.length > 0) {
         console.log('\x1b[36m%s\x1b[0m', '   2. Local network:')
-        config.ips.forEach((ip: any, index: any) => {
+        config.ips.forEach((ip: string, index: number) => {
           const iface = getAllIps()[index]?.interface || 'interface'
           console.log('\x1b[36m%s\x1b[0m', `      → http://${ip}:${actualPort} (${iface})`)
         })
@@ -126,8 +141,8 @@ function createServerStarter({app, config, configPath, databasesPath}: any) {
       process.server_config = config
     })
 
-    listener.on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
+    listener.on('error', (err: unknown) => {
+      if (errnoCode(err) === 'EADDRINUSE') {
         const errorTitle = 'Application startup error'
         const errorMessage = `Port ${portToUse} is already in use by another application.\n\nPlease close other applications using this port and restart the application.`
 
@@ -136,7 +151,7 @@ function createServerStarter({app, config, configPath, databasesPath}: any) {
         process.exit(1)
       } else {
         console.log('\x1b[31m%s\x1b[0m', '❌ Server error:', err)
-        showSystemNotification('Server error', err.message)
+        showSystemNotification('Server error', errorMessage(err))
         process.exit(1)
       }
     })

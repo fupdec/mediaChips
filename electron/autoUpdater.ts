@@ -2,6 +2,7 @@ import {app, ipcMain, shell, type BrowserWindow} from 'electron'
 import {execSync} from 'child_process'
 import {autoUpdater, type UpdateInfo, type ProgressInfo} from 'electron-updater'
 
+import { apiErrorMessage } from '../api/types/errors'
 export const RELEASES_URL = 'https://github.com/fupdec/MediaChips/releases/latest'
 const RELEASES_BASE = 'https://github.com/fupdec/MediaChips/releases/download'
 
@@ -209,7 +210,7 @@ export function initAppUpdater({getWindow}: { getWindow: GetWindowFn }): void {
       await autoUpdater.checkForUpdates()
       return {...currentState}
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
+      const message = error instanceof Error ? apiErrorMessage(error) : String(error)
       sendStatus({state: 'error', message})
       return {...currentState}
     }
@@ -223,7 +224,7 @@ export function initAppUpdater({getWindow}: { getWindow: GetWindowFn }): void {
       await autoUpdater.downloadUpdate()
       return {...currentState}
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
+      const message = error instanceof Error ? apiErrorMessage(error) : String(error)
       sendStatus({state: 'error', message})
       return {...currentState}
     }

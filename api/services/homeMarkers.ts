@@ -1,6 +1,6 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, SequelizeInstance, AnyRecord } from '../types/db'
 
-async function getRandomMarks(db: ApiDb, limit: any= 8) {
+async function getRandomMarks(db: ApiDb, limit = 8) {
   const total = await db.Mark.count()
   if (!total) return []
 
@@ -17,8 +17,8 @@ async function getRandomMarks(db: ApiDb, limit: any= 8) {
     limit: safeLimit,
   })
 
-  return marks.map((mark: any) => {
-    const json = mark.toJSON()
+  return marks.map((mark: SequelizeInstance) => {
+    const json = (mark.toJSON?.() ?? mark) as AnyRecord
 
     if (json.media && !json.medium) {
       json.medium = json.media

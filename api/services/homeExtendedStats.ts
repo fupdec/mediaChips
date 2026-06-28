@@ -76,7 +76,7 @@ async function getHomeExtendedStats(db: ApiDb) {
 
   return {
     total,
-    byType: byType.map((row: any) => ({
+    byType: byType.map((row: AnyRecord) => ({
       mediaTypeId: row.mediaTypeId,
       name: row.name,
       icon: row.icon,

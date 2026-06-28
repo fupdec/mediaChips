@@ -6,11 +6,11 @@ const {readdir, stat} = require('fs/promises')
 const {getContentHashBackfillStatus} = require('./contentHashBackfill')
 const {getVideoImagesGenerationStatus} = require('./videoImagesGeneration')
 
-async function getDirectorySize(directory: any) {
+async function getDirectorySize(directory: string) {
   if (!fs.existsSync(directory)) return 0
 
   const entries = await readdir(directory, {withFileTypes: true})
-  const sizes = await Promise.all(entries.map(async (entry: any) => {
+  const sizes = await Promise.all(entries.map(async (entry: import("fs").Dirent) => {
     const entryPath = path.join(directory, entry.name)
     if (entry.isDirectory()) return getDirectorySize(entryPath)
     if (entry.isFile()) {
@@ -20,11 +20,11 @@ async function getDirectorySize(directory: any) {
     return 0
   }))
 
-  return sizes.reduce((sum: any, size: any) => sum + size, 0)
+  return sizes.reduce((sum: number, size: number) => sum + size, 0)
 }
 
 async function getActiveDatabaseSize(db: ApiDb) {
-  const bytes = await getDirectorySize(db.path)
+  const bytes = await getDirectorySize(db.path ?? '')
 
   return {
     id: db.config?.id || null,
@@ -33,10 +33,10 @@ async function getActiveDatabaseSize(db: ApiDb) {
   }
 }
 
-function summarizeGeneratedImagesStatus(status: any) {
+function summarizeGeneratedImagesStatus(status: unknown) {
   const byType = status || {}
-  const totalPending = (Object.values(byType) as Record<string, any>[]).reduce(
-    (sum: number, item: Record<string, any>) => sum + Number(item?.pending || 0),
+  const totalPending = (Object.values(byType) as AnyRecord[]).reduce(
+    (sum: number, item: AnyRecord) => sum + Number(item?.pending || 0),
     0,
   )
 

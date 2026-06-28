@@ -1,21 +1,24 @@
-module.exports = function (db) {
+import type { ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
+module.exports = function (db: ApiDb) {
   // Find a single MetaSetting with an id
-  const findOne = function (req, res) {
+  const findOne = function (req: ApiRequest, res: ApiResponse) {
     db.MetaSetting.findOne({
       where: {
         metaId: req.params.id
       }
     }).then(async (data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // Update a MetaSetting by the id in the request
-  const update = function (req, res) {
+  const update = function (req: ApiRequest, res: ApiResponse) {
     db.MetaSetting
       .update(req.body, {
         where: {
@@ -25,9 +28,9 @@ module.exports = function (db) {
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };

@@ -1,13 +1,13 @@
+import type { MigrationContext } from '../types/sequelize'
+import type { AnyRecord } from '../types/db'
 const {
   Sequelize
 } = require('sequelize');
 
 module.exports = {
-  async up({
-             context: queryInterface
-           }) {
+  async up({ context: queryInterface }: MigrationContext) {
     return queryInterface.describeTable('metaSettings')
-      .then(async tableDefinition => {
+      .then(async (tableDefinition: AnyRecord) => {
         if (tableDefinition.sortBy) {
           return Promise.resolve();
         } else {
@@ -20,9 +20,7 @@ module.exports = {
       }).catch((err) => console.log(err));
   },
 
-  async down({
-               context: queryInterface
-             }) {
+  async down({ context: queryInterface }: MigrationContext) {
     // return Promise.all([
     //   queryInterface.removeColumn('media', 'name'),
     //   queryInterface.removeColumn('media', 'basename'),

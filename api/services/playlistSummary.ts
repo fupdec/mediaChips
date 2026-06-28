@@ -82,7 +82,7 @@ async function getManualPlaylistsSummary(db: ApiDb) {
   }
 
   return playlists
-    .map((playlist: any) => grouped.get(playlist.id))
+    .map((playlist: AnyRecord) => grouped.get(playlist.id))
     .filter(Boolean)
 }
 

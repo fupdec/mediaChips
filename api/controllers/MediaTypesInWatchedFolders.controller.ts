@@ -1,16 +1,19 @@
-module.exports = function (db) {
+import type { ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
+module.exports = function (db: ApiDb) {
   // Retrieve all MediaTypesInWatchedFolders from the database.
-  const findAll = function (req, res) {
+  const findAll = function (req: ApiRequest, res: ApiResponse) {
     db.MediaTypesInWatchedFolders
       .findAll({
         include: [db.MediaType, db.WatchedFolder]
       })
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };

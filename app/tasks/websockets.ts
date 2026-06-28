@@ -1,28 +1,46 @@
+import type { ApiDb, MediaLike } from '../../api/types/db'
+import type {
+  AppWebSocket,
+  ExpressWithWs,
+  MoveFilesWsMessage,
+  MovingWsMessage,
+  PreparedMoveItem,
+  RenameFileWsMessage,
+  WatchedFolderEntry,
+  WatcherExtensionsMap,
+  WatcherFolderReport,
+  WatcherWsMessage,
+  WsOutboundPayload,
+} from '../types/websockets'
+import { errorMessage, asMoveError } from '../types/websockets'
+import type { Request } from 'express'
+import type { Express } from 'express'
 const path = require("path");
 const _ = require("lodash");
 const chokidar = require("chokidar");
 const fs = require('fs').promises;
 const {isPathInsideFolder, pathsEquivalent} = require('../../api/utils/normalizeUserPath');
 
-const pathsMatch = (left: any, right: any) => pathsEquivalent(left, right)
+const pathsMatch = (left: string, right: string) => pathsEquivalent(left, right)
 
-module.exports = function (app: any, db: any) {
-  const expressWs = require('express-ws')(app)
+module.exports = function (app: Express, db: ApiDb) {
+  require('express-ws')(app)
+  const wsApp = app as ExpressWithWs
   // file watcher
-  app.ws('/watcher', (ws: any, req: any) => {
+  wsApp.ws('/watcher', (ws: AppWebSocket, req: Request) => {
     console.log('New WebSocket connection');
 
-    let watcher: any = null;
-    let watchedFolders: any[] = [];
-    let filesList: any[] = [];
+    let watcher: ReturnType<typeof chokidar.watch> | null = null;
+    let watchedFolders: WatchedFolderEntry[] = [];
+    let filesList: WatcherFolderReport[] = [];
 
     // Флаг для предотвращения многократной обработки
     let isProcessing = false;
     let pendingRefresh = false;
-    let debounceTimer: any = null;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Рекурсивная функция для поиска файлов
-    const findFilesRecursive = async (dir: any, extensions: any, depth = 0, maxDepth = 10, allFiles: any[] = []) => {
+    const findFilesRecursive = async (dir: string, extensions: string[], depth = 0, maxDepth = 10, allFiles: string[] = []) => {
       if (depth > maxDepth) {
         return allFiles;
       }
@@ -46,12 +64,12 @@ module.exports = function (app: any, db: any) {
                 allFiles.push(filePath);
               }
             }
-          } catch (statError: any) {
-            console.error(`Error accessing ${filePath}:`, statError.message);
+          } catch (statError: unknown) {
+            console.error(`Error accessing ${filePath}:`, errorMessage(statError));
           }
         }
-      } catch (readdirError: any) {
-        console.error(`Error reading directory ${dir}:`, readdirError.message);
+      } catch (readdirError: unknown) {
+        console.error(`Error reading directory ${dir}:`, errorMessage(readdirError));
       }
 
       return allFiles;
@@ -94,7 +112,7 @@ module.exports = function (app: any, db: any) {
               });
 
               // Получаем расширения для этого типа
-              const extensions = t.extensions.split(',').map((ext: any) => ext.trim().toLowerCase()).filter((ext: any) => ext);
+              const extensions = t.extensions.split(',').map((ext: string) => ext.trim().toLowerCase()).filter(Boolean)
 
               console.log(`Looking for files with extensions: ${extensions.join(', ')} in ${folderPath}`);
 
@@ -110,27 +128,27 @@ module.exports = function (app: any, db: any) {
 
               // Получаем файлы из базы данных для этой папки
               const filesInDb = media
-                .filter((x: any) => x.path && isPathInsideFolder(x.path, folderPath))
-                .map((x: any) => ({path: x.path, id: x.id}));
+                .filter((row: MediaLike) => row.path && isPathInsideFolder(String(row.path), folderPath))
+                .map((row: MediaLike) => ({path: String(row.path), id: row.id}));
 
               console.log(`Found ${filesInDb.length} files in database for folder ${folderPath}`);
 
               // Логируем первые несколько файлов из БД для отладки
               if (filesInDb.length > 0) {
-                console.log('First 5 files from DB:', filesInDb.slice(0, 5).map((f: any) => f.path));
+                console.log('First 5 files from DB:', filesInDb.slice(0, 5).map((f) => f.path));
               }
 
               // Находим потерянные файлы (в БД, но не в файловой системе)
               const lostFiles = filesInDb
-                .filter((x: any) => !filesInFolder.some(fsPath => pathsMatch(x.path, fsPath)))
-                .sort((a: any, b: any) => a.path.localeCompare(b.path));
+                .filter((entry) => !filesInFolder.some((fsPath) => pathsMatch(entry.path, fsPath)))
+                .sort((a, b) => a.path.localeCompare(b.path));
 
               console.log(`Lost files: ${lostFiles.length}`);
 
               // Находим новые файлы (в файловой системе, но не в БД)
               const newFiles = filesInFolder
-                .filter((x: any) => !filesInDb.some((dbFile: any) => pathsMatch(dbFile.path, x)))
-                .sort((a: any, b: any) => a.localeCompare(b));
+                .filter((filePath) => !filesInDb.some((dbFile) => pathsMatch(dbFile.path, filePath)))
+                .sort((a, b) => a.localeCompare(b));
 
               console.log(`New files: ${newFiles.length}`);
 
@@ -144,7 +162,7 @@ module.exports = function (app: any, db: any) {
                 lost: lostFiles,
                 new: newFiles
               });
-            } catch (error: any) {
+            } catch (error: unknown) {
               console.error(`Error processing type ${t.id}:`, error);
             }
           }
@@ -168,7 +186,7 @@ module.exports = function (app: any, db: any) {
           console.log(`Sending response with ${filesList.length} folders`);
           ws.send(JSON.stringify(response));
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error in getFilesList:', error);
       } finally {
         isProcessing = false;
@@ -189,7 +207,7 @@ module.exports = function (app: any, db: any) {
       }, 500); // 500ms debounce
     };
 
-    const startWatcher = (folders: any, extensions: any) => {
+    const startWatcher = (folders: WatchedFolderEntry[], extensions: WatcherExtensionsMap) => {
       // Закрываем существующий watcher если есть
       if (watcher) {
         watcher.close();
@@ -221,28 +239,28 @@ module.exports = function (app: any, db: any) {
 
       // Обработчики событий с debounce
       watcher
-        .on('add', (path: any) => {
-          console.log('File added:', path);
+        .on('add', (filePath: string) => {
+          console.log('File added:', filePath);
           debouncedGetFilesList();
         })
-        .on('change', (path: any) => {
-          console.log('File changed:', path);
+        .on('change', (filePath: string) => {
+          console.log('File changed:', filePath);
           debouncedGetFilesList();
         })
-        .on('unlink', (path: any) => {
-          console.log('File removed:', path);
+        .on('unlink', (filePath: string) => {
+          console.log('File removed:', filePath);
           debouncedGetFilesList();
         })
         .on('ready', async () => {
           console.log('Watcher ready, getting initial file list');
           await getFilesList();
         })
-        .on('error', (error: any) => {
+        .on('error', (error: unknown) => {
           console.error('Watcher error:', error);
         });
     };
 
-    const updateWatcher = (folders: any, extensions: any) => {
+    const updateWatcher = (folders: WatchedFolderEntry[], extensions: WatcherExtensionsMap) => {
       watchedFolders = folders;
 
       if (watcher) {
@@ -267,22 +285,22 @@ module.exports = function (app: any, db: any) {
       }
     };
 
-    ws.on('message', async (msg: any) => {
+    ws.on('message', async (rawMsg: unknown) => {
       try {
-        const data = JSON.parse(msg);
+        const data = JSON.parse(String(rawMsg)) as WatcherWsMessage;
         console.log('Received message type:', data.type);
 
         switch (data.type) {
           case 'start':
             watchedFolders = data.folders || [];
-            console.log('Starting with folders:', watchedFolders.map((f: any) => f.path));
+            console.log('Starting with folders:', watchedFolders.map((f) => f.path));
             console.log('Extensions:', JSON.stringify(data.extensions, null, 2));
             startWatcher(watchedFolders, data.extensions || {});
             break;
 
           case 'update':
             watchedFolders = data.folders || [];
-            console.log('Updating with folders:', watchedFolders.map((f: any) => f.path));
+            console.log('Updating with folders:', watchedFolders.map((f) => f.path));
             console.log('Extensions:', JSON.stringify(data.extensions, null, 2));
             updateWatcher(watchedFolders, data.extensions || {});
             break;
@@ -300,7 +318,7 @@ module.exports = function (app: any, db: any) {
             }
             break;
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error processing WebSocket message:', error);
       }
     });
@@ -315,13 +333,13 @@ module.exports = function (app: any, db: any) {
       }
     });
 
-    ws.on('error', (error: any) => {
+    ws.on('error', (error: unknown) => {
       console.error('WebSocket error:', error);
     });
   });
 
 // moving files
-  app.ws('/moving', (ws: any, req: any) => {
+  wsApp.ws('/moving', (ws: AppWebSocket, req: Request) => {
     const {
       moveFile,
       prepareMoveItems,
@@ -331,14 +349,14 @@ module.exports = function (app: any, db: any) {
       estimateSeconds,
     } = require('./moveFile')
 
-    const send = (payload: any) => {
+    const send = (payload: WsOutboundPayload) => {
       if (ws.readyState === 1) ws.send(JSON.stringify(payload))
     }
 
-    const moveFiles = async (msg: any) => {
+    const moveFiles = async (msg: MoveFilesWsMessage) => {
       const items = Array.isArray(msg.items) && msg.items.length
         ? msg.items
-        : (msg.ids || []).map((id: any) => ({ id, folder: msg.folder }))
+        : (msg.ids || []).map((id) => ({ id, folder: String(msg.folder || '') }))
 
       if (!items.length) {
         send({ type: 'close', moved: 0, failed: 0, total: 0 })
@@ -346,8 +364,8 @@ module.exports = function (app: any, db: any) {
       }
 
       const { prepared, totalBytes, bytesNeedingCopy } = await prepareMoveItems(db, items)
-      const validItems = prepared.filter((i: any) => !i.error)
-      const preErrors = prepared.filter((i: any) => i.error)
+      const validItems = prepared.filter((item: PreparedMoveItem) => !item.error)
+      const preErrors = prepared.filter((item: PreparedMoveItem) => item.error)
 
       const diskSpaceError = await checkBatchDiskSpace(prepared, bytesNeedingCopy)
       if (diskSpaceError) {
@@ -435,7 +453,7 @@ module.exports = function (app: any, db: any) {
         let fileStartBytes = bytesCopied
 
         try {
-          await moveFile(item.oldPath, item.newPath, (transferred: any, size: any) => {
+          await moveFile(item.oldPath, item.newPath, (transferred: number, size: number) => {
             const currentCopied = fileStartBytes + transferred
             const elapsed = (Date.now() - startedAt) / 1000
             const speed = elapsed > 0 ? currentCopied / elapsed : 0
@@ -461,22 +479,22 @@ module.exports = function (app: any, db: any) {
 
           try {
             await db.Media.update({ path: item.newPath }, { where: { id: item.id } })
-          } catch (dbError: any) {
+          } catch (dbError: unknown) {
             try {
               await moveFile(item.newPath, item.oldPath)
-            } catch (rollbackError: any) {
-              console.error(`Rollback failed for ${item.fileName}:`, rollbackError.message)
+            } catch (rollbackError: unknown) {
+              console.error(`Rollback failed for ${item.fileName}:`, errorMessage(rollbackError))
             }
 
             failed += 1
-            console.error(`Error updating database for ${item.fileName}:`, dbError.message)
+            console.error(`Error updating database for ${item.fileName}:`, errorMessage(dbError))
             send({
               type: 'error',
               id: item.id,
               fileName: item.fileName,
               folder: item.folder,
               code: 'DB_UPDATE',
-              message: dbError.message,
+              message: errorMessage(dbError),
             })
             continue
           }
@@ -490,19 +508,20 @@ module.exports = function (app: any, db: any) {
             folder: item.folder,
             newPath: item.newPath,
           })
-        } catch (error: any) {
+        } catch (error: unknown) {
           failed += 1
-          console.error(`Error moving file ${item.fileName}:`, error.message)
+          const moveError = asMoveError(error)
+          console.error(`Error moving file ${item.fileName}:`, moveError.message)
 
           send({
             type: 'error',
             id: item.id,
             fileName: item.fileName,
             folder: item.folder,
-            code: error.code || 'UNKNOWN',
-            required: error.required,
-            available: error.available,
-            message: error.message,
+            code: moveError.code || 'UNKNOWN',
+            required: moveError.required,
+            available: moveError.available,
+            message: moveError.message,
           })
         }
       }
@@ -517,7 +536,7 @@ module.exports = function (app: any, db: any) {
       })
     }
 
-    const renameFileOnDisk = async (msg: any) => {
+    const renameFileOnDisk = async (msg: RenameFileWsMessage) => {
       const oldPath = msg.old_path
       const newPath = msg.new_path
 
@@ -593,7 +612,7 @@ module.exports = function (app: any, db: any) {
         })
       } else {
         try {
-          await moveFile(prepared.oldPath, prepared.newPath, (transferred: any, size: any) => {
+          await moveFile(prepared.oldPath, prepared.newPath, (transferred: number, size: number) => {
             const elapsed = (Date.now() - startedAt) / 1000
             const speed = elapsed > 0 ? transferred / elapsed : 0
             const remainingBytes = Math.max(0, totalBytes - transferred)
@@ -621,17 +640,18 @@ module.exports = function (app: any, db: any) {
             folder: prepared.folder,
             newPath: prepared.newPath,
           })
-        } catch (error: any) {
+        } catch (error: unknown) {
           failed = 1
-          console.error(`Error renaming file ${prepared.fileName}:`, error.message)
+          const moveError = asMoveError(error)
+          console.error(`Error renaming file ${prepared.fileName}:`, moveError.message)
           send({
             type: 'error',
             fileName: prepared.fileName,
             folder: prepared.folder,
-            code: error.code || 'UNKNOWN',
-            required: error.required,
-            available: error.available,
-            message: error.message,
+            code: moveError.code || 'UNKNOWN',
+            required: moveError.required,
+            available: moveError.available,
+            message: moveError.message,
           })
         }
       }
@@ -646,18 +666,18 @@ module.exports = function (app: any, db: any) {
       })
     }
 
-    ws.on('message', async (msg: any) => {
+    ws.on('message', async (rawMsg: unknown) => {
       try {
-        msg = JSON.parse(msg)
-        switch (msg.type) {
+        const parsed = JSON.parse(String(rawMsg)) as MovingWsMessage
+        switch (parsed.type) {
           case 'move':
-            await moveFiles(msg)
+            await moveFiles(parsed)
             break
           case 'rename':
-            await renameFileOnDisk(msg)
+            await renameFileOnDisk(parsed)
             break
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Moving WebSocket error:', error)
         if (ws.readyState === 1) {
           ws.send(JSON.stringify({ type: 'close', moved: 0, failed: 0, total: 0, error: true }))

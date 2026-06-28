@@ -1,6 +1,9 @@
-module.exports = function (db) {
+import type { ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
+module.exports = function (db: ApiDb) {
   // Create and Save a new Folder
-  const create = async function (req, res) {
+  const create = async function (req: ApiRequest, res: ApiResponse) {
     const {
       folder,
       types
@@ -44,7 +47,7 @@ module.exports = function (db) {
   };
 
   // Update a Folder by the id in the request
-  const update = function (req, res) {
+  const update = function (req: ApiRequest, res: ApiResponse) {
     db.WatchedFolder
       .update(req.body, {
         where: {
@@ -54,15 +57,15 @@ module.exports = function (db) {
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };
 
   // Delete a Folder with the specified id in the request
-  const deleteOne = function (req, res) {
+  const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     db.WatchedFolder
       .destroy({
         where: {
@@ -72,9 +75,9 @@ module.exports = function (db) {
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };

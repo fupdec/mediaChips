@@ -1,7 +1,8 @@
+import type { AnyRecord } from './types/db'
 const Sequelize = require('sequelize');
 
-module.exports = function (sequelize) {
-  const db: Record<string, any> = {};
+module.exports = function (sequelize: import('sequelize').Sequelize) {
+  const db: AnyRecord = {};
 
   db.Sequelize = Sequelize;
   db.sequelize = sequelize;

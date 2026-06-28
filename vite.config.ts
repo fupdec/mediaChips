@@ -1,12 +1,32 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, type Plugin } from 'vitest/config'
+import type { Connect } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import path from 'path'
 
+function invalidUrlMiddleware(): Plugin {
+  return {
+    name: 'invalid-url-middleware',
+    configureServer(server) {
+      server.middlewares.use((req: Connect.IncomingMessage, res, next) => {
+        try {
+          req.url = decodeURI(req.url || '')
+        } catch {
+          res.statusCode = 400
+          res.end('Invalid URL')
+          return
+        }
+        next()
+      })
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     vue(),
-    vuetify({ autoImport: true })
+    vuetify({ autoImport: true }),
+    invalidUrlMiddleware(),
   ],
   resolve: {
     alias: {
@@ -23,19 +43,6 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-
-    // Middleware для обработки некорректных URL
-    middleware: (req, res, next) => {
-      try {
-        const decodedUrl = decodeURI(req.url)
-        req.url = decodedUrl
-      } catch {
-        res.statusCode = 400
-        res.end('Invalid URL')
-        return
-      }
-      next()
-    }
   },
   base: './',
   test: {

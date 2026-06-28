@@ -1,4 +1,7 @@
-module.exports = (app, db) => {
+import type { ApiDb } from '../types/db'
+import type { Express } from 'express'
+import { apiErrorMessage, apiErrorStack } from '../types/errors'
+module.exports = (app: Express, db: ApiDb) => {
   const router = require("express").Router();
 
   let Task;
@@ -7,7 +10,7 @@ module.exports = (app, db) => {
   } catch (err) {
     console.error(
       'Task.controller unavailable, using video core fallback:',
-      err.stack || err.message,
+      apiErrorStack(err) || apiErrorMessage(err),
     );
     Task = require("../controllers/taskVideoCore.controller")(db);
   }
@@ -18,7 +21,7 @@ module.exports = (app, db) => {
   } catch (err) {
     console.error(
       'Migration Task routes unavailable:',
-      err.stack || err.message,
+      apiErrorStack(err) || apiErrorMessage(err),
     );
   }
 
@@ -36,7 +39,7 @@ module.exports = (app, db) => {
     router.post("/migrateFromLowDb", TasksMigrateFromLowDb.migrateFromLowDb);
   }
 
-  const register = (method, route, handler) => {
+  const register = (method: keyof import('express').Router, route: string, handler: string) => {
     if (typeof Task?.[handler] === 'function') {
       router[method](route, Task[handler]);
     }

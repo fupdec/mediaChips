@@ -1,7 +1,9 @@
+import type { MigrationContext } from '../types/sequelize'
+import type { AnyRecord } from '../types/db'
 const {Sequelize} = require('sequelize')
 
 module.exports = {
-  async up({context: queryInterface}) {
+  async up({ context: queryInterface }: MigrationContext) {
     const tables = await queryInterface.showAllTables()
     if (!tables.includes('metaInMediaTypes')) {
       console.log('metaInMediaTypes table not found, skipping migration 26')
@@ -13,8 +15,8 @@ module.exports = {
       {type: Sequelize.QueryTypes.SELECT},
     )
 
-    const videoType = mediaTypes.find((row) => row.type === 'video')
-    const imageType = mediaTypes.find((row) => row.type === 'image')
+    const videoType = (mediaTypes as AnyRecord[]).find((row: AnyRecord) => row.type === 'video')
+    const imageType = (mediaTypes as AnyRecord[]).find((row: AnyRecord) => row.type === 'image')
 
     if (!videoType || !imageType) {
       console.log('Video or image media type not found, skipping migration 26')
@@ -37,7 +39,7 @@ module.exports = {
     const tableColumns = await queryInterface.describeTable('metaInMediaTypes')
     const now = new Date()
 
-    for (const row of videoAssignments) {
+    for (const row of videoAssignments as AnyRecord[]) {
       const record = {
         metaId: row.metaId,
         mediaTypeId: imageType.id,
@@ -48,7 +50,7 @@ module.exports = {
         updatedAt: now,
       }
 
-      const filteredRecord: Record<string, any> = {}
+      const filteredRecord: AnyRecord = {}
       for (const [key, value] of Object.entries(record)) {
         if (tableColumns[key] !== undefined) {
           filteredRecord[key] = value
@@ -57,7 +59,7 @@ module.exports = {
 
       const fields = Object.keys(filteredRecord)
       const values = Object.values(filteredRecord)
-      const escapedFields = fields.map((field) => {
+      const escapedFields = fields.map((field: string) => {
         if (field.toLowerCase() === 'order') return `"${field}"`
         return field
       })

@@ -1,14 +1,19 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb } from '../types/db'
+import type {
+  EmbeddingVector,
+  FeatureExtractionModel,
+  ModelStatus,
+} from '../types/mlModels'
 
 const fs = require('fs')
 const path = require('path')
 
 const DEFAULT_MODEL = 'Xenova/all-MiniLM-L6-v2'
 
-let extractor: any = null
-let loadingPromise: any = null
-let lastError: any = null
-const textEmbeddingCache = new Map()
+let extractor: FeatureExtractionModel | null = null
+let loadingPromise: Promise<FeatureExtractionModel> | null = null
+let lastError: Error | null = null
+const textEmbeddingCache = new Map<string, EmbeddingVector>()
 
 function getModelsRoot(db: ApiDb) {
   if (process.resourcesPath) {
@@ -31,6 +36,7 @@ function hasDownloadedModel(db: ApiDb) {
   const stack = [cacheDir]
   while (stack.length) {
     const dir = stack.pop()
+    if (!dir) continue
     const entries = fs.readdirSync(dir, { withFileTypes: true })
     for (const entry of entries) {
       const entryPath = path.join(dir, entry.name)
@@ -42,7 +48,7 @@ function hasDownloadedModel(db: ApiDb) {
   return false
 }
 
-async function loadModel(db: ApiDb) {
+async function loadModel(db: ApiDb): Promise<FeatureExtractionModel> {
   if (extractor) return extractor
   if (loadingPromise) return loadingPromise
 
@@ -61,12 +67,12 @@ async function loadModel(db: ApiDb) {
 
       extractor = await pipeline('feature-extraction', DEFAULT_MODEL, {
         quantized: true,
-      })
+      }) as FeatureExtractionModel
       lastError = null
       return extractor
-    } catch (error: any) {
-      lastError = error
-      throw error
+    } catch (error: unknown) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      throw lastError
     } finally {
       loadingPromise = null
     }
@@ -75,9 +81,9 @@ async function loadModel(db: ApiDb) {
   return loadingPromise
 }
 
-async function embedText(db: ApiDb, text: any) {
+async function embedText(db: ApiDb, text: unknown): Promise<EmbeddingVector> {
   const normalized = String(text || '').trim().toLowerCase()
-  if (textEmbeddingCache.has(normalized)) return textEmbeddingCache.get(normalized)
+  if (textEmbeddingCache.has(normalized)) return textEmbeddingCache.get(normalized)!
 
   const model = await loadModel(db)
   const output = await model(normalized, {
@@ -90,7 +96,7 @@ async function embedText(db: ApiDb, text: any) {
   return embedding
 }
 
-function cosineSimilarity(a: any, b: any) {
+function cosineSimilarity(a: EmbeddingVector, b: EmbeddingVector): number {
   if (!a?.length || !b?.length || a.length !== b.length) return 0
 
   let dot = 0
@@ -106,7 +112,7 @@ function cosineSimilarity(a: any, b: any) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB))
 }
 
-function getStatus(db: ApiDb, useML: any) {
+function getStatus(db: ApiDb, useML: boolean): ModelStatus {
   if (!useML) return { status: 'disabled', model: DEFAULT_MODEL }
   if (extractor) return { status: 'loaded', model: DEFAULT_MODEL, path: getModelCacheDir(db) }
   if (loadingPromise) return { status: 'downloading', model: DEFAULT_MODEL, path: getModelCacheDir(db) }

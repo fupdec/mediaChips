@@ -1,9 +1,11 @@
+import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo, NetworkHelpers } from '../types/server'
+import { apiErrorMessage, apiErrorStack } from '../../api/types/errors'
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const {FIXED_PORT, ALLOW_LAN} = require('./constants')
 
-function initializeServerConfig({getBestLocalIp, getAllIps}: any) {
+function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
   let app_folder
   const is_electron_running = process.versions.electron
 
@@ -18,7 +20,7 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: any) {
       try {
         fs.renameSync(oldDbPath, newDbPath)
         console.log('Data successfully preserved and moved to app_storage')
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error while preserving data:', err)
       }
     }
@@ -41,7 +43,7 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: any) {
     } else {
       throw new Error('Config file not found')
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log('\x1b[33m%s\x1b[0m', 'Creating new config...')
     config = {
       port: FIXED_PORT,
@@ -58,11 +60,11 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: any) {
   const bestIp = getBestLocalIp()
 
   config.ip = ALLOW_LAN ? bestIp : 'localhost'
-  config.ips = ALLOW_LAN ? allIpsInfo.map((ip: any) => ip.address) : []
+  config.ips = ALLOW_LAN ? allIpsInfo.map((ip: NetworkIpInfo) => ip.address) : []
   config.hostname = ALLOW_LAN ? os.hostname() : 'localhost'
   config.port = FIXED_PORT
 
-  const activeDb = config.databases.find((db: any) => db.active)
+  const activeDb = config.databases.find((db: ServerDatabaseEntry) => db.active)
   if (!activeDb) {
     console.error('\x1b[31m%s\x1b[0m', '❌ No active database!')
     if (config.databases.length > 0) {
@@ -83,7 +85,7 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: any) {
     databasesPath = path.join(__dirname, '../../app_storage')
   }
 
-  const currentActiveDb = config.databases.find((db: any) => db.active)
+  const currentActiveDb = config.databases.find((db: ServerDatabaseEntry) => db.active)
   if (currentActiveDb) {
     config.path = path.join(databasesPath, currentActiveDb.id)
     console.log('\x1b[36m%s\x1b[0m', `Active database: ${currentActiveDb.name} (${currentActiveDb.id})`)
@@ -109,7 +111,7 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: any) {
   }
 }
 
-function createStorageDirectories(config: any, databasesPath: any) {
+function createStorageDirectories(config: ServerConfig, databasesPath: string) {
   let userDirs = [databasesPath]
 
   for (const db of config.databases) {
@@ -134,8 +136,8 @@ function createStorageDirectories(config: any, databasesPath: any) {
     if (!fs.existsSync(dir)) {
       try {
         fs.mkdirSync(dir, {recursive: true})
-      } catch (err: any) {
-        console.log('\x1b[31m%s\x1b[0m', `❌ Error creating directory ${dir}:`, err.message)
+      } catch (err: unknown) {
+        console.log('\x1b[31m%s\x1b[0m', `❌ Error creating directory ${dir}:`, err instanceof Error ? apiErrorMessage(err) : String(err))
       }
     }
   }

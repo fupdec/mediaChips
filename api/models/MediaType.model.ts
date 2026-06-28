@@ -1,4 +1,6 @@
-module.exports = (sequelize, Sequelize) => {
+import type { Sequelize } from 'sequelize'
+import type { SequelizeModule } from '../types/sequelize'
+module.exports = (sequelize: Sequelize, Sequelize: SequelizeModule) => {
   const MediaType = sequelize.define(
     'mediaType', {
       name: Sequelize.TEXT,

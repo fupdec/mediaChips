@@ -1,14 +1,17 @@
+import type { ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
 const {getHomeMedia} = require('../services/homeMedia')
 const {getRandomMarks} = require('../services/homeMarkers')
 const {getHomeHealth} = require('../services/homeHealth')
 const {getHomeExtendedStats} = require('../services/homeExtendedStats')
 
-function parseLimit(value, fallback, max = 24) {
+function parseLimit(value: unknown, fallback: number, max = 24) {
   return Math.min(Math.max(Number(value) || fallback, 1), max)
 }
 
-module.exports = (db) => {
-  const getMedia = async function (req, res) {
+module.exports = (db: ApiDb) => {
+  const getMedia = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const limits = {
         continue: parseLimit(req.query.continueLimit ?? req.query.limit, 12),
@@ -19,41 +22,41 @@ module.exports = (db) => {
       res.status(200).send(data)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving home media.',
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving home media.',
       })
     }
   }
 
-  const getMarkers = async function (req, res) {
+  const getMarkers = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const limit = parseLimit(req.query.limit, 8, 16)
       const marks = await getRandomMarks(db, limit)
       res.status(200).send({marks})
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving home markers.',
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving home markers.',
       })
     }
   }
 
-  const getHealth = async function (req, res) {
+  const getHealth = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const data = await getHomeHealth(db)
       res.status(200).send(data)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving home health.',
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving home health.',
       })
     }
   }
 
-  const getExtendedStats = async function (req, res) {
+  const getExtendedStats = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const data = await getHomeExtendedStats(db)
       res.status(200).send(data)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving extended stats.',
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving extended stats.',
       })
     }
   }

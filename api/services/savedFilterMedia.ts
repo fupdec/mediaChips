@@ -1,4 +1,11 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord, FilterLike } from '../types/db'
+import type { SequelizeInstance } from '../types/db'
+import type {
+  SavedFilterBasic,
+  SavedFilterId,
+  SavedFilterMediaOptions,
+  TagsByRowIdMap,
+} from '../types/savedFilterMedia'
 
 const {Op} = require('sequelize')
 const {parseCountries} = require('../utils/country')
@@ -10,8 +17,8 @@ const {
   getFilteredMediaSummary,
 } = require('./mediaItemsLoader')
 
-function normalizeFilterRow(row: AnyRecord, tagsByRowId: any= null) {
-  const normalized = {...row}
+function normalizeFilterRow(row: FilterLike, tagsByRowId: TagsByRowIdMap | null = null): FilterLike {
+  const normalized: FilterLike = {...row}
 
   if (normalized.param != null) {
     normalized.param = normalizeMetaIdParam(normalized.param)
@@ -28,8 +35,8 @@ function normalizeFilterRow(row: AnyRecord, tagsByRowId: any= null) {
   }
 
   if (normalized.type === 'array' && normalized.param !== 'country' && normalized.param !== 'ext') {
-    const tags = tagsByRowId?.get(normalized.id) || []
-    normalized.val = tags.map((tag: any) => tag.tagId)
+    const tags = tagsByRowId?.get(Number(normalized.id)) || []
+    normalized.val = tags.map((tag) => tag.tagId)
   } else if (normalized.param === 'country' && normalized.val) {
     normalized.val = parseCountries(normalized.val)
   } else if (normalized.param === 'ext' && normalized.val) {
@@ -40,13 +47,15 @@ function normalizeFilterRow(row: AnyRecord, tagsByRowId: any= null) {
   return cleaned
 }
 
-async function loadSavedFilterRows(db: ApiDb, savedFilterId: any) {
+async function loadSavedFilterRows(db: ApiDb, savedFilterId: SavedFilterId): Promise<FilterLike[]> {
   const filtersMap = await loadSavedFilterRowsBatch(db, [savedFilterId])
-  return filtersMap.get(savedFilterId) || []
+  return filtersMap.get(Number(savedFilterId)) || []
 }
 
-async function loadSavedFilterRowsBatch(db: ApiDb, savedFilterIds: any) {
-  const filtersBySavedFilterId = new Map<number, any[]>(savedFilterIds.map((id: any) => [id, []]))
+async function loadSavedFilterRowsBatch(db: ApiDb, savedFilterIds: SavedFilterId[]) {
+  const filtersBySavedFilterId = new Map<number, FilterLike[]>(
+    savedFilterIds.map((id: SavedFilterId) => [Number(id), []]),
+  )
   if (!savedFilterIds.length) return filtersBySavedFilterId
 
   const links = await db.FilterRowsInSavedFilter.findAll({
@@ -54,16 +63,19 @@ async function loadSavedFilterRowsBatch(db: ApiDb, savedFilterIds: any) {
     include: [db.FilterRow],
   })
 
-  const rowIds = []
-  const linkEntries = []
+  const rowIds: number[] = []
+  const linkEntries: Array<{ filterId: SavedFilterId; filterRow: FilterLike }> = []
 
   for (const link of links) {
-    const filterRow = (link.filterRow as any)?.get?.({plain: true}) || link.filterRow
+    const filterRowInstance = link.filterRow as SequelizeInstance | FilterLike | undefined
+    const filterRow = (typeof filterRowInstance?.get === 'function'
+      ? filterRowInstance.get({plain: true})
+      : filterRowInstance) as FilterLike | undefined
     if (!filterRow) continue
 
-    rowIds.push(filterRow.id)
+    rowIds.push(Number(filterRow.id))
     linkEntries.push({
-      filterId: link.filterId,
+      filterId: link.filterId as SavedFilterId,
       filterRow,
     })
   }
@@ -75,10 +87,14 @@ async function loadSavedFilterRowsBatch(db: ApiDb, savedFilterIds: any) {
     })
     : []
 
-  const tagsByRowId = new Map()
+  const tagsByRowId: TagsByRowIdMap = new Map()
   for (const tag of tagRows) {
-    if (!tagsByRowId.has(tag.rowId)) tagsByRowId.set(tag.rowId, [])
-    tagsByRowId.get(tag.rowId).push(tag)
+    const rowId = Number(tag.rowId)
+    if (!tagsByRowId.has(rowId)) tagsByRowId.set(rowId, [])
+    tagsByRowId.get(rowId)!.push({
+      rowId: tag.rowId as number | string,
+      tagId: tag.tagId as number | string,
+    })
   }
 
   for (const {filterId, filterRow} of linkEntries) {
@@ -97,7 +113,11 @@ async function getVideoMediaTypeId(db: ApiDb) {
   return videoType?.id || null
 }
 
-async function getFilteredMediaForSavedFilter(db: ApiDb, savedFilterId: any, options: Record<string, any> = {}) {
+async function getFilteredMediaForSavedFilter(
+  db: ApiDb,
+  savedFilterId: SavedFilterId,
+  options: SavedFilterMediaOptions = {},
+) {
   const {
     mediaTypeId = await getVideoMediaTypeId(db),
     sortBy = 'id',
@@ -132,7 +152,11 @@ async function getFilteredMediaForSavedFilter(db: ApiDb, savedFilterId: any, opt
   }
 }
 
-async function getSavedFilterPlaylistSummary(db: ApiDb, savedFilterId: any, options: Record<string, any> = {}) {
+async function getSavedFilterPlaylistSummary(
+  db: ApiDb,
+  savedFilterId: SavedFilterId,
+  options: SavedFilterMediaOptions = {},
+) {
   const {
     mediaTypeId = await getVideoMediaTypeId(db),
     sortBy = 'id',
@@ -157,7 +181,7 @@ async function getSavedFilterPlaylistSummary(db: ApiDb, savedFilterId: any, opti
   })
 }
 
-async function getDynamicPlaylistsBasic(db: ApiDb) {
+async function getDynamicPlaylistsBasic(db: ApiDb): Promise<SavedFilterBasic[]> {
   const mediaTypeId = await getVideoMediaTypeId(db)
   if (!mediaTypeId) return []
 
@@ -171,9 +195,9 @@ async function getDynamicPlaylistsBasic(db: ApiDb) {
     raw: true,
   })
 
-  return savedFilters.map((savedFilter: any) => ({
-    id: savedFilter.id,
-    name: savedFilter.name,
+  return savedFilters.map((savedFilter) => ({
+    id: savedFilter.id as SavedFilterId,
+    name: savedFilter.name as string | null | undefined,
   }))
 }
 
@@ -194,7 +218,7 @@ async function getDynamicPlaylistsSummary(db: ApiDb) {
 
   const filtersBySavedFilterId = await loadSavedFilterRowsBatch(
     db,
-    savedFilters.map((savedFilter: any) => savedFilter.id),
+    savedFilters.map((savedFilter) => savedFilter.id as SavedFilterId),
   )
 
   const summaries = await Promise.all(savedFilters.map(async (savedFilter) => {
@@ -220,7 +244,11 @@ async function getDynamicPlaylistsSummary(db: ApiDb) {
   return summaries
 }
 
-async function getFilteredMediaForPlayback(db: ApiDb, savedFilterId: any, options: Record<string, any> = {}) {
+async function getFilteredMediaForPlayback(
+  db: ApiDb,
+  savedFilterId: SavedFilterId,
+  options: SavedFilterMediaOptions = {},
+) {
   const {
     mediaTypeId = await getVideoMediaTypeId(db),
     sortBy = 'id',

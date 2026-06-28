@@ -1,4 +1,4 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { PathToken, TokenizeOptions, TokenizeResult } from '../types/pathTokenizer'
 
 const path = require('path')
 
@@ -41,7 +41,7 @@ function normalizeToken(value: unknown) {
     .replace(/[^a-zа-яё0-9]+/giu, '')
 }
 
-function splitSegment(segment: any) {
+function splitSegment(segment: unknown) {
   const base = String(segment || '')
     .replace(/([a-zа-яё])([A-ZА-ЯЁ])/g, '$1 $2')
     .replace(/([A-ZА-ЯЁ]+)([A-ZА-ЯЁ][a-zа-яё])/g, '$1 $2')
@@ -50,20 +50,20 @@ function splitSegment(segment: any) {
   return base.split(/\s+/).filter(Boolean)
 }
 
-function isNoiseToken(token: any, options: Record<string, any> = {}) {
+function isNoiseToken(token: string, options: TokenizeOptions = {}) {
   const minLength = options.minLength || 3
   if (!token || token.length < minLength) return true
   if (STOP_WORDS.has(token)) return true
   return NOISE_PATTERNS.some(pattern => pattern.test(token))
 }
 
-function tokenizeSegment(segment: any, options: Record<string, any> = {}) {
+function tokenizeSegment(segment: unknown, options: TokenizeOptions = {}) {
   return splitSegment(segment)
     .map(normalizeToken)
     .filter(token => !isNoiseToken(token, options))
 }
 
-function tokenizeFilePath(filePath: string, options: Record<string, any> = {}) {
+function tokenizeFilePath(filePath: string, options: TokenizeOptions = {}): TokenizeResult {
   const parsed = path.parse(String(filePath || ''))
   const withoutExt = filePath ? String(filePath).slice(0, String(filePath).length - parsed.ext.length) : ''
   const segments = withoutExt.split(/[\/\\]/).filter(Boolean)
@@ -72,7 +72,7 @@ function tokenizeFilePath(filePath: string, options: Record<string, any> = {}) {
 
   const folderWeight = Number(options.folderWeight || 1.5)
   const fileWeight = Number(options.fileWeight || 1)
-  const tokens = []
+  const tokens: PathToken[] = []
 
   for (const folder of folders) {
     for (const token of tokenizeSegment(folder, options)) {

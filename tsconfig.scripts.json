@@ -6,12 +6,12 @@
     "outDir": ".scripts-build",
     "rootDir": "scripts",
     "moduleDetection": "force",
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": false,
     "ignoreDeprecations": "6.0",
     "types": ["node"]
   },
-  "include": ["scripts/**/*.ts"]
+  "include": ["scripts/sign-native-modules.ts", "scripts/download-parser-model.ts"]
 }

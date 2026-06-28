@@ -1,4 +1,4 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord } from '../types/db'
 
 const MEDIA_HOME_SELECT = `SELECT media.id,
   media.path,
@@ -20,7 +20,7 @@ const MEDIA_HOME_FROM = `FROM media
 LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
 LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId`
 
-const mapHomeItem = (row: any) => ({
+const mapHomeItem = (row: AnyRecord) => ({
   id: row.id,
   path: row.path,
   name: row.name,
@@ -41,7 +41,7 @@ const mapHomeItem = (row: any) => ({
   key: String(row.id),
 })
 
-async function getContinueWatching(db: ApiDb, limit: any= 12) {
+async function getContinueWatching(db: ApiDb, limit = 12) {
   const [rows] = await db.sequelize.query(
     `${MEDIA_HOME_SELECT}
      ${MEDIA_HOME_FROM}
@@ -59,7 +59,7 @@ async function getContinueWatching(db: ApiDb, limit: any= 12) {
   return rows.map(mapHomeItem)
 }
 
-async function getFavoriteMedia(db: ApiDb, limit: any= 12) {
+async function getFavoriteMedia(db: ApiDb, limit = 12) {
   const [rows] = await db.sequelize.query(
     `${MEDIA_HOME_SELECT}
      ${MEDIA_HOME_FROM}
@@ -71,7 +71,7 @@ async function getFavoriteMedia(db: ApiDb, limit: any= 12) {
   return rows.map(mapHomeItem)
 }
 
-async function getTopViewedMedia(db: ApiDb, limit: any= 12) {
+async function getTopViewedMedia(db: ApiDb, limit = 12) {
   const [rows] = await db.sequelize.query(
     `${MEDIA_HOME_SELECT}
      ${MEDIA_HOME_FROM}
@@ -83,7 +83,7 @@ async function getTopViewedMedia(db: ApiDb, limit: any= 12) {
   return rows.map(mapHomeItem)
 }
 
-async function getHomeMedia(db: ApiDb, limits: Record<string, any> = {}) {
+async function getHomeMedia(db: ApiDb, limits: AnyRecord = {}) {
   const continueLimit = Math.min(Math.max(Number(limits.continue) || 12, 1), 24)
   const favoritesLimit = Math.min(Math.max(Number(limits.favorites) || 12, 1), 24)
   const topViewsLimit = Math.min(Math.max(Number(limits.topViews) || 12, 1), 24)

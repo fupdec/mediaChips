@@ -1,29 +1,32 @@
-module.exports = function (db) {
+import type { ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
+module.exports = function (db: ApiDb) {
   // Create and Save a new Tab
-  const create = function (req, res) {
-    db.Tab.create(req.body).then(data => {
+  const create = function (req: ApiRequest, res: ApiResponse) {
+    db.Tab.create(req.body).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     })
   };
 
   // Retrieve all Tabs from the database.
-  const findAll = function (req, res) {
+  const findAll = function (req: ApiRequest, res: ApiResponse) {
     db.Tab.findAll()
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
-      }).catch(err => {
+      }).catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }
 
   // Update a Tab by the id in the request
-  const update = function (req, res) {
+  const update = function (req: ApiRequest, res: ApiResponse) {
     db.Tab
       .update(req.body, {
         where: {
@@ -33,15 +36,15 @@ module.exports = function (db) {
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };
 
   // Delete a Tab with the specified id in the request
-  const deleteOne = function (req, res) {
+  const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     db.Tab
       .destroy({
         where: {
@@ -51,9 +54,9 @@ module.exports = function (db) {
       .then(() => {
         res.sendStatus(201)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   };

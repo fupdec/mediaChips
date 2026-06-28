@@ -1,8 +1,11 @@
+import type { ApiDb } from '../../api/types/db'
+import type { ServerDatabaseEntry } from '../types/server'
+import { apiErrorMessage, apiErrorStack } from '../../api/types/errors'
 const path = require('path')
 const fs = require('fs')
 const {Umzug, SequelizeStorage} = require('umzug')
 
-function setupDatabase({databasesPath, dbConfig}: any) {
+function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbConfig: ServerDatabaseEntry | undefined }) {
   if (!dbConfig) {
     console.error('\x1b[31m%s\x1b[0m', '❌ No active database to connect to!')
     process.exit(1)
@@ -31,7 +34,7 @@ function setupDatabase({databasesPath, dbConfig}: any) {
     sequelize.authenticate()
     console.log('\x1b[36m%s\x1b[0m', '✅ Database connection successful')
     console.log('\x1b[36m%s\x1b[0m', `Database ID: ${db.config.id}`)
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log('\x1b[31m%s\x1b[0m', '❌ Database connection error: ', e)
   }
 
@@ -42,7 +45,7 @@ function setupDatabase({databasesPath, dbConfig}: any) {
       const migrations_folder = path.join(__dirname, '../../api/migrations/')
       if (fs.existsSync(migrations_folder)) {
         let migrations_list = fs.readdirSync(migrations_folder)
-        migrations_list = migrations_list.sort().map((i: any) => {
+        migrations_list = migrations_list.sort().map((i: unknown) => {
           const file_path = path.join(migrations_folder, i)
           const functions = require(file_path)
           return {...{name: i}, ...functions}
@@ -65,24 +68,24 @@ function setupDatabase({databasesPath, dbConfig}: any) {
       await sequelize.query('PRAGMA synchronous = NORMAL')
       await sequelize.query('PRAGMA temp_store = MEMORY')
       await sequelize.query('PRAGMA cache_size = -64000')
-    } catch (migrationError: any) {
-      console.log('\x1b[33m%s\x1b[0m', '⚠️ Migration error:', migrationError.message)
+    } catch (migrationError: unknown) {
+      console.log('\x1b[33m%s\x1b[0m', '⚠️ Migration error:', migrationError instanceof Error ? migrationError.message : String(migrationError))
     }
-  }).catch((err: any) => {
-    console.log('\x1b[33m%s\x1b[0m', '⚠️ Database sync error:', err.message)
+  }).catch((err: unknown) => {
+    console.log('\x1b[33m%s\x1b[0m', '⚠️ Database sync error:', err instanceof Error ? apiErrorMessage(err) : String(err))
   })
 
   return {sequelize, db}
 }
 
-function warmupEmbeddingModel(db: any) {
+function warmupEmbeddingModel(db: ApiDb) {
   try {
     const embeddingModel = require('../../api/services/embeddingModel')
-    embeddingModel.loadModel(db).catch((err: any) => {
-      console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup skipped:', err.message)
+    embeddingModel.loadModel(db).catch((err: unknown) => {
+      console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup skipped:', err instanceof Error ? apiErrorMessage(err) : String(err))
     })
-  } catch (err: any) {
-    console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup unavailable:', err.message)
+  } catch (err: unknown) {
+    console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup unavailable:', err instanceof Error ? apiErrorMessage(err) : String(err))
   }
 }
 

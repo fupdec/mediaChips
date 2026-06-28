@@ -20,7 +20,7 @@ interface ActiveStream {
   proc: ChildProcess
   res: Response
   req: Request
-  pipe: any
+  pipe: { destroy?: () => void; on: (event: string, listener: (error: unknown) => void) => void } | null
   stopped: boolean
   onClientAbort: (() => void) | null
   onSocketClose: (() => void) | null
@@ -262,7 +262,7 @@ function createLiveStreamRegistry() {
 
     if (proc.stdout) {
       active.pipe = proc.stdout.pipe(res, {end: true})
-      active.pipe.on('error', (error: unknown) => {
+      active.pipe?.on('error', (error: unknown) => {
         if (!isIgnorableStreamError(error as NodeJS.ErrnoException)) {
           console.error('Live transcode pipe error:', error)
         }

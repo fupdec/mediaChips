@@ -21,19 +21,20 @@ async function getContentHashBackfillStatus(db: ApiDb) {
   }
 }
 
-async function backfillMediaContentHash(db: ApiDb, media: any) {
-  const resolvedPath = await resolveExistingPath(media.path)
+async function backfillMediaContentHash(db: ApiDb, media: AnyRecord) {
+  const mediaPath = String(media.path || '')
+  const resolvedPath = await resolveExistingPath(mediaPath)
 
   if (!resolvedPath) {
     return {
       status: 'missing',
       id: media.id,
-      path: media.path,
+      path: mediaPath,
     }
   }
 
   try {
-    const contentHash = await computeContentHashForPath(media.path)
+    const contentHash = await computeContentHashForPath(mediaPath)
 
     await db.Media.update(
       {contentHash},
@@ -43,14 +44,14 @@ async function backfillMediaContentHash(db: ApiDb, media: any) {
     return {
       status: 'hashed',
       id: media.id,
-      path: media.path,
+      path: mediaPath,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       status: 'failed',
       id: media.id,
-      path: media.path,
-      message: error.message,
+      path: mediaPath,
+      message: error instanceof Error ? error.message : String(error),
     }
   }
 }

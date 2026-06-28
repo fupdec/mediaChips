@@ -1,4 +1,4 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb } from '../types/db'
 
 const fs = require('fs')
 const path = require('path')
@@ -24,7 +24,7 @@ async function unlinkResolvedPath(filePath: string) {
   return true
 }
 
-function deleteVideoGeneratedAssets(dbPath: string, mediaId: any, markIds: any= []) {
+function deleteVideoGeneratedAssets(dbPath: string, mediaId: unknown, markIds: unknown[] = []) {
   const mediaPath = path.join(dbPath, 'media/videos')
 
   unlinkIfExists(path.join(mediaPath, 'thumbs', `${mediaId}.jpg`))
@@ -39,20 +39,20 @@ function deleteVideoGeneratedAssets(dbPath: string, mediaId: any, markIds: any= 
   }
 }
 
-function deleteImageGeneratedAssets(dbPath: string, mediaId: any) {
+function deleteImageGeneratedAssets(dbPath: string, mediaId: unknown) {
   unlinkIfExists(path.join(dbPath, 'media/images/thumbs', `${mediaId}.jpg`))
 }
 
-function deleteMarkGeneratedAsset(dbPath: string, markId: any) {
+function deleteMarkGeneratedAsset(dbPath: string, markId: unknown) {
   unlinkIfExists(path.join(dbPath, 'media/videos/marks', `${markId}.jpg`))
 }
 
-async function deleteTagGeneratedAssets(dbPath: string, metaId: any, tagId: any) {
+async function deleteTagGeneratedAssets(dbPath: string, metaId: unknown, tagId: unknown) {
   if (!metaId || !tagId) return
 
   const metaPath = path.join(dbPath, 'meta', String(metaId))
   const prefix = `${tagId}_`
-  const deleted = new Set()
+  const deleted = new Set<string>()
 
   if (fs.existsSync(metaPath)) {
     const files = await readdir(metaPath)
@@ -75,7 +75,12 @@ async function deleteTagGeneratedAssets(dbPath: string, metaId: any, tagId: any)
   }
 }
 
-async function deleteMediaGeneratedAssets(db: ApiDb, dbPath: any, media: any, mediaType: any) {
+async function deleteMediaGeneratedAssets(
+  db: ApiDb,
+  dbPath: string,
+  media: { id: unknown },
+  mediaType: string,
+) {
   const assetFolder = getMediaDeleteAssetFolder(mediaType)
 
   if (assetFolder === 'videos') {
@@ -88,7 +93,7 @@ async function deleteMediaGeneratedAssets(db: ApiDb, dbPath: any, media: any, me
     deleteVideoGeneratedAssets(
       dbPath,
       media.id,
-      marks.map((mark: any) => mark.id),
+      marks.map((mark) => mark.id),
     )
     return
   }

@@ -1,14 +1,17 @@
+import type { ApiDb, AnyRecord } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
 const {parseItemsFromDb, filterItems} = require('../../app/tasks/items.js')
 const {
   deleteMarkGeneratedAsset,
   deleteTagGeneratedAssets,
 } = require('../services/localAssetCleanup')
 
-module.exports = function (db) {
+module.exports = function (db: ApiDb) {
   const dbPath = db.path
 
   // Retrieve all Tags from the database.
-  const getAllForItems = async function (req, res) {
+  const getAllForItems = async function (req: ApiRequest, res: ApiResponse) {
     const metaId = Number(req.body.metaId)
     if (!Number.isFinite(metaId)) {
       return res.status(400).send({
@@ -17,10 +20,10 @@ module.exports = function (db) {
     }
 
     const ids = Array.isArray(req.body.ids)
-      ? req.body.ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+      ? req.body.ids.map((id: unknown) => Number(id)).filter((id: unknown) => Number.isFinite(id))
       : []
 
-    const replacements: Record<string, any> = {metaId}
+    const replacements: AnyRecord = {metaId}
     let query = `SELECT tags.*, tags_in_tags.tag_tags, values_in_tags.tag_values
                  FROM tags
                           LEFT JOIN (SELECT tagsInTags.parentTagId                                     id,
@@ -54,27 +57,27 @@ module.exports = function (db) {
       console.log(err)
 
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     }
   };
 
   // Create and Save a new Tag
-  const create = function (req, res) {
-    db.Tag.bulkCreate(req.body).then(data => {
+  const create = function (req: ApiRequest, res: ApiResponse) {
+    db.Tag.bulkCreate(req.body).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     })
   };
 
   // Retrieve all Tag from the database.
-  const findAll = function (req, res) {
+  const findAll = function (req: ApiRequest, res: ApiResponse) {
     db.sequelize.query(req.body.query, {
       raw: true
-    }).then(async data => {
+    }).then(async (data) => {
       const total = await db.Tag.findAndCountAll({
         where: {
           metaId: req.body.metaId,
@@ -86,66 +89,66 @@ module.exports = function (db) {
         items: data[0],
         total: total.count,
       })
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // Find a single Tag with an id
-  const findOne = function (req, res) {
+  const findOne = function (req: ApiRequest, res: ApiResponse) {
     db.Tag.findOne({
       where: {
         id: req.params.id
       }
-    }).then(data => {
+    }).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
-  const getCount = async function (req, res) {
+  const getCount = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const count = await db.Tag.count()
       res.status(200).send({count})
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while performing query.',
+        message: apiErrorMessage(err) || 'Some error occurred while performing query.',
       })
     }
   }
 
   // Retrieve all Tag from the database.
-  const getAll = function (req, res) {
+  const getAll = function (req: ApiRequest, res: ApiResponse) {
     db.Tag.findAll({
       raw: true
-    }).then(data => {
+    }).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // Retrieve all Tag from the database.
-  const rawQuery = function (req, res) {
+  const rawQuery = function (req: ApiRequest, res: ApiResponse) {
     db.sequelize.query(req.body.query)
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
-      }).catch(err => {
+      }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // Update a Tag by the id in the request
-  const update = function (req, res) {
+  const update = function (req: ApiRequest, res: ApiResponse) {
     let silent = req.body.silent;
     db.Tag.update(req.body, {
       where: {
@@ -154,15 +157,15 @@ module.exports = function (db) {
       silent: silent,
     }).then((data) => {
       res.status(201).send(data)
-    }).catch(err => {
+    }).catch((err: unknown) => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving media."
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
 
   // delete an Tag by the id
-  const deleteOne = async function (req, res) {
+  const deleteOne = async function (req: ApiRequest, res: ApiResponse) {
     const id = req.body.id
 
     try {
@@ -200,7 +203,7 @@ module.exports = function (db) {
       res.sendStatus(201)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while performing query.',
+        message: apiErrorMessage(err) || 'Some error occurred while performing query.',
       })
     }
   };

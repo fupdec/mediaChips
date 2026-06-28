@@ -1,9 +1,9 @@
+import type { ServerConfig } from '../types/server'
 const path = require('path')
 const fs = require('fs')
 const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
 const {pathVariants} = require('../../api/services/contentHash')
 import type { Request, Response } from 'express'
-import type { ServerConfig } from '../types/server'
 
 const STREAM_MIME_TYPES = {
   '.mp4': 'video/mp4',

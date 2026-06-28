@@ -6,7 +6,7 @@
     "outDir": ".api-build",
     "rootDir": "api",
     "moduleDetection": "force",
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": false,

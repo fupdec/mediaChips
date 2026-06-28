@@ -1,10 +1,11 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord, MediaLike } from '../types/db'
+import type { MissingMediaSearchOptions } from '../types/missingMediaFinder'
 
 const path = require('path')
 const {readdir, stat} = require('fs/promises')
 const {computeContentHash, fileExists} = require('./contentHash')
 
-async function loadMissingMedia(db: ApiDb, options: Record<string, any> = {}) {
+async function loadMissingMedia(db: ApiDb, options: MissingMediaSearchOptions = {}) {
   const {shouldStop = () => false, onProgress} = options
   const all = await db.Media.findAll({
     raw: true,
@@ -35,20 +36,20 @@ async function getMissingMediaStatus(db: ApiDb) {
   return {
     total: await db.Media.count(),
     missing: missing.length,
-    withHash: missing.filter((item: any) => item.contentHash).length,
-    withoutHash: missing.filter((item: any) => !item.contentHash).length,
+    withHash: missing.filter((item: AnyRecord) => item.contentHash).length,
+    withoutHash: missing.filter((item: AnyRecord) => !item.contentHash).length,
   }
 }
 
-function buildExtensionRegex(mediaTypes: any) {
+function buildExtensionRegex(mediaTypes: Array<{ extensions?: string }>) {
   const extensions = new Set()
 
   for (const mediaType of mediaTypes) {
     String(mediaType.extensions || '')
       .split(',')
-      .map((ext: any) => ext.trim().toLowerCase())
+      .map((ext: string) => ext.trim().toLowerCase())
       .filter(Boolean)
-      .forEach((ext: any) => extensions.add(ext.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+      .forEach((ext: string) => extensions.add(ext.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   }
 
   if (!extensions.size) {
@@ -58,7 +59,10 @@ function buildExtensionRegex(mediaTypes: any) {
   return new RegExp(`\\.(${Array.from(extensions).join('|')})$`, 'i')
 }
 
-async function* walkMediaFiles(rootDirs: any, {extensionRegex, shouldStop = () => false}: {extensionRegex: any; shouldStop?: () => boolean}) {
+async function* walkMediaFiles(
+  rootDirs: string[],
+  {extensionRegex, shouldStop = () => false}: {extensionRegex: RegExp; shouldStop?: () => boolean},
+) {
   const stack = [...rootDirs]
   let scanned = 0
 
@@ -91,7 +95,7 @@ async function* walkMediaFiles(rootDirs: any, {extensionRegex, shouldStop = () =
   }
 }
 
-function buildMissingIndexes(missingMedia: any) {
+function buildMissingIndexes(missingMedia: AnyRecord[]) {
   const byHash = new Map()
   const bySizeNoHash = new Map()
   const targetSizes = new Set()
@@ -117,7 +121,7 @@ function buildMissingIndexes(missingMedia: any) {
   return {byHash, bySizeNoHash, targetSizes}
 }
 
-function pickWeakCandidate(candidates: AnyRecord[], foundPath: any) {
+function pickWeakCandidate(candidates: AnyRecord[], foundPath: string) {
   if (!candidates.length) return null
   if (candidates.length === 1) return candidates[0]
 
@@ -133,14 +137,14 @@ function pickWeakCandidate(candidates: AnyRecord[], foundPath: any) {
   return null
 }
 
-async function* iterateMissingMediaSearch(db: ApiDb, options: Record<string, any> = {}) {
+async function* iterateMissingMediaSearch(db: ApiDb, options: MissingMediaSearchOptions = {}) {
   const {
     folders = [],
     shouldStop = () => false,
   } = options
 
   const rootDirs = folders
-    .map((folder: any) => path.resolve(String(folder)))
+    .map((folder) => path.resolve(String(folder)))
     .filter(Boolean)
 
   if (!rootDirs.length) {
@@ -203,10 +207,10 @@ async function* iterateMissingMediaSearch(db: ApiDb, options: Record<string, any
 
   const {byHash, bySizeNoHash, targetSizes} = buildMissingIndexes(missingMedia)
   const mediaTypes = await db.MediaType.findAll({raw: true})
-  const extensionRegex = buildExtensionRegex(mediaTypes)
+  const extensionRegex = buildExtensionRegex(mediaTypes as Array<{ extensions?: string }>)
   const knownPaths = new Set(
     (await db.Media.findAll({attributes: ['path'], raw: true}))
-      .map((item: any) => item.path.toLowerCase()),
+      .map((item) => String((item as AnyRecord).path || '').toLowerCase()),
   )
 
   const matchedMediaIds = new Set()
@@ -283,7 +287,7 @@ async function* iterateMissingMediaSearch(db: ApiDb, options: Record<string, any
 
     if (byHash.has(contentHash)) {
       const candidates = byHash.get(contentHash)
-        .filter((item: any) => !matchedMediaIds.has(item.id))
+        .filter((item: AnyRecord) => !matchedMediaIds.has(item.id))
       if (candidates.length === 1) {
         match = candidates[0]
         confidence = 'hash'
@@ -296,7 +300,7 @@ async function* iterateMissingMediaSearch(db: ApiDb, options: Record<string, any
       }
     } else {
       const candidates = (bySizeNoHash.get(filesize) || [])
-        .filter((item: any) => !matchedMediaIds.has(item.id))
+        .filter((item: AnyRecord) => !matchedMediaIds.has(item.id))
       const weak = pickWeakCandidate(candidates, filePath)
 
       if (weak) {

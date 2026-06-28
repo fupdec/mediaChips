@@ -1,4 +1,5 @@
-import type { ServerConfig } from './server'
+import type { Express } from 'express'
+import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo, ServerInitResult } from './server'
 
 declare global {
   var serverConfig: ServerConfig | undefined

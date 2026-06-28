@@ -1,10 +1,20 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord } from '../types/db'
+import type { SequelizeModelStatic } from '../types/db'
+import type {
+  BulkItemId,
+  BulkItemType,
+  BulkMetaEditOptions,
+  BulkMetaEditResult,
+  BulkMetaModels,
+  MetaEditChange,
+  PresetEditChange,
+} from '../types/bulkMetaEdit'
 
 const {Op} = require('sequelize')
 
 const BATCH_SIZE = 200
 
-function chunkArray(items: AnyRecord[], size: any= BATCH_SIZE) {
+function chunkArray<T>(items: T[], size: number = BATCH_SIZE): T[][] {
   const chunks = []
   for (let index = 0; index < items.length; index += size) {
     chunks.push(items.slice(index, index + size))
@@ -12,7 +22,7 @@ function chunkArray(items: AnyRecord[], size: any= BATCH_SIZE) {
   return chunks
 }
 
-function getModels(db: ApiDb, itemType: any) {
+function getModels(db: ApiDb, itemType: BulkItemType): BulkMetaModels | null {
   if (itemType === 'media') {
     return {
       tagsModel: db.TagsInMedia,
@@ -33,7 +43,12 @@ function getModels(db: ApiDb, itemType: any) {
   return null
 }
 
-async function destroyTagsForMeta(tagsModel: any, itemIdField: any, itemIds: any, metaId: any) {
+async function destroyTagsForMeta(
+  tagsModel: SequelizeModelStatic,
+  itemIdField: string,
+  itemIds: BulkItemId[],
+  metaId: number,
+) {
   for (const batch of chunkArray(itemIds)) {
     await tagsModel.destroy({
       where: {
@@ -44,7 +59,13 @@ async function destroyTagsForMeta(tagsModel: any, itemIdField: any, itemIds: any
   }
 }
 
-async function destroyValuesForMeta(valuesModel: any, itemIdField: any, valueItemIdField: any, itemIds: any, metaId: any) {
+async function destroyValuesForMeta(
+  valuesModel: SequelizeModelStatic,
+  itemIdField: string,
+  valueItemIdField: string | undefined,
+  itemIds: BulkItemId[],
+  metaId: number,
+) {
   for (const batch of chunkArray(itemIds)) {
     await valuesModel.destroy({
       where: {
@@ -55,7 +76,13 @@ async function destroyValuesForMeta(valuesModel: any, itemIdField: any, valueIte
   }
 }
 
-function buildTagRows(itemType: any, itemIdField: any, itemIds: any, metaId: any, tagIds: any) {
+function buildTagRows(
+  itemType: BulkItemType,
+  itemIdField: string,
+  itemIds: BulkItemId[],
+  metaId: number,
+  tagIds: BulkItemId[],
+): AnyRecord[] {
   const rows = []
 
   for (const itemId of itemIds) {
@@ -71,16 +98,16 @@ function buildTagRows(itemType: any, itemIdField: any, itemIds: any, metaId: any
   return rows
 }
 
-function buildValueRows(itemType: any, itemIds: any, metaId: any, value: any) {
+function buildValueRows(itemType: BulkItemType, itemIds: BulkItemId[], metaId: number, value: unknown): AnyRecord[] {
   if (itemType === 'media') {
-    return itemIds.map((itemId: any) => ({
+    return itemIds.map((itemId: BulkItemId) => ({
       mediaId: itemId,
       metaId,
       value,
     }))
   }
 
-  return itemIds.map((itemId: any) => ({
+  return itemIds.map((itemId: BulkItemId) => ({
     tagId: itemId,
     metaId,
     value,
@@ -89,7 +116,7 @@ function buildValueRows(itemType: any, itemIds: any, metaId: any, value: any) {
 
 const PRESET_FIELDS = new Set(['rating', 'favorite', 'views'])
 
-function normalizePresetValue(field: any, editType: any, value: any) {
+function normalizePresetValue(field: string, editType: number, value: unknown) {
   if (editType === 1) {
     if (field === 'favorite') return false
     return 0
@@ -103,7 +130,12 @@ function normalizePresetValue(field: any, editType: any, value: any) {
   return Number.isFinite(numeric) ? numeric : 0
 }
 
-async function applyPresetBulkEdit(db: ApiDb, itemType: any, itemIds: any, presetChanges: any= []) {
+async function applyPresetBulkEdit(
+  db: ApiDb,
+  itemType: BulkItemType,
+  itemIds: BulkItemId[],
+  presetChanges: PresetEditChange[] = [],
+) {
   const Model = itemType === 'media' ? db.Media : db.Tag
   let appliedChanges = 0
 
@@ -111,7 +143,7 @@ async function applyPresetBulkEdit(db: ApiDb, itemType: any, itemIds: any, prese
     const editType = Number(change.editType)
     if (!editType || editType === 3) continue
 
-    const field = change.field
+    const field = String(change.field || '')
     if (!PRESET_FIELDS.has(field)) continue
 
     const value = normalizePresetValue(field, editType, change.value)
@@ -129,7 +161,8 @@ async function applyPresetBulkEdit(db: ApiDb, itemType: any, itemIds: any, prese
   return appliedChanges
 }
 
-async function applyBulkMetaEdit(db: ApiDb, {itemType, itemIds = [], changes = [], presetChanges = []}: any) {
+async function applyBulkMetaEdit(db: ApiDb, options: BulkMetaEditOptions): Promise<BulkMetaEditResult> {
+  const {itemType, itemIds = [], changes = [], presetChanges = []} = options
   const models = getModels(db, itemType)
   if (!models) {
     throw new Error(`Unsupported item type: ${itemType}`)

@@ -1,4 +1,6 @@
-module.exports = (app, db) => {
+import type { ApiDb } from '../types/db'
+import type { Express } from 'express'
+module.exports = (app: Express, db: ApiDb) => {
   const SavedFilter = require("../controllers/SavedFilter.controller")(db);
   const router = require("express").Router();
 

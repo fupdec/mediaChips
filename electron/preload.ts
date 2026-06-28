@@ -1,3 +1,6 @@
+import type { IpcRendererEvent } from 'electron'
+import type { IpcCallback, IpcListener, ListenerSubscription } from './types/ipc'
+
 const {
   contextBridge,
   ipcRenderer,
@@ -72,13 +75,13 @@ const validOnChannels = [
   'zoom-changed',
 ];
 
-type PlayVideoListener = (event: unknown, data: unknown) => void
+type PlayVideoListener = (event: IpcRendererEvent | null, data: unknown) => void
 
-const listenerSubscriptions = new Map()
+const listenerSubscriptions = new Map<IpcCallback, ListenerSubscription>()
 let pendingPlayVideo: unknown = null
 const playVideoListeners = new Set<PlayVideoListener>()
 
-ipcRenderer.on('play-video', (event, ...args) => {
+ipcRenderer.on('play-video', (event: IpcRendererEvent, ...args: unknown[]) => {
   const data = args.length > 0 ? args[0] : null;
   if (playVideoListeners.size === 0) {
     pendingPlayVideo = data;
@@ -90,10 +93,12 @@ ipcRenderer.on('play-video', (event, ...args) => {
   }
 });
 
+type FileLike = { path?: string }
+
 // Экспортируем API с разными пространствами имен
 contextBridge.exposeInMainWorld('electronAPI', {
   // Для отправки сообщений
-  send: (channel, data) => {
+  send: (channel: string, data: unknown) => {
     if (validSendChannels.includes(channel)) {
       console.log(`[IPC] Sending to ${channel}:`, data);
       ipcRenderer.send(channel, data);
@@ -102,7 +107,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
-  getPathForFile: (file) => {
+  getPathForFile: (file: FileLike | null | undefined) => {
     if (!file) return ''
 
     try {
@@ -114,23 +119,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Для вызова с ожиданием ответа
-  invoke: (channel, data) => {
+  invoke: (channel: string, data: unknown) => {
     if (validInvokeChannels.includes(channel)) {
       console.log(`[IPC] Invoking ${channel}:`, data);
 
       // Специальная обработка для showOpenDialog
       if (channel === 'showOpenDialog') {
+        let normalized = data
         // Убеждаемся, что передаем массив
-        if (!Array.isArray(data)) {
+        if (!Array.isArray(normalized)) {
           console.warn('[IPC] showOpenDialog: data должен быть массивом, преобразую...');
-          if (typeof data === 'string') {
-            data = [data];
-          } else if (typeof data === 'object' && data !== null) {
-            data = Object.keys(data).filter(key => data[key] === true);
+          if (typeof normalized === 'string') {
+            normalized = [normalized];
+          } else if (typeof normalized === 'object' && normalized !== null) {
+            normalized = Object.keys(normalized as Record<string, unknown>).filter(
+              key => (normalized as Record<string, unknown>)[key] === true,
+            );
           } else {
-            data = [];
+            normalized = [];
           }
         }
+        return ipcRenderer.invoke(channel, normalized);
       }
 
       return ipcRenderer.invoke(channel, data);
@@ -140,13 +149,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Для получения сообщений
-  on: (channel, callback) => {
+  on: (channel: string, callback: IpcCallback) => {
     if (validOnChannels.includes(channel)) {
       console.log(`[IPC] Setting up listener for ${channel}`);
 
       // Создаем специальный обработчик для play-video
       if (channel === 'play-video') {
-        const subscription = (event, data) => {
+        const subscription: PlayVideoListener = (event, data) => {
           callback(event, data);
         };
         playVideoListeners.add(subscription);
@@ -164,7 +173,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         };
       } else {
         // Для остальных каналов передаем как есть
-        const subscription = (event, ...args) => {
+        const subscription: IpcListener = (event, ...args) => {
           console.log(`[IPC] Received from ${channel}:`, args);
           callback(...args);
         };
@@ -181,28 +190,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => {};
   },
 
-  removeListener: (channel, callback) => {
+  removeListener: (channel: string, callback: IpcCallback) => {
     const entry = listenerSubscriptions.get(callback);
     if (entry && entry.channel === channel) {
       if (entry.isPlayVideo) {
-        playVideoListeners.delete(entry.subscription);
+        playVideoListeners.delete(entry.subscription as PlayVideoListener);
       } else {
-        ipcRenderer.removeListener(channel, entry.subscription);
+        ipcRenderer.removeListener(channel, entry.subscription as IpcListener);
       }
       listenerSubscriptions.delete(callback);
     }
   },
 
   // Для получения одного сообщения
-  once: (channel, callback) => {
+  once: (channel: string, callback: IpcCallback) => {
     if (validOnChannels.includes(channel)) {
       // Специальная обработка для play-video
       if (channel === 'play-video') {
-        ipcRenderer.once(channel, (event, ...args) => {
+        ipcRenderer.once(channel, (event: IpcRendererEvent, ...args: unknown[]) => {
           callback(event, args.length > 0 ? args[0] : null);
         });
       } else {
-        ipcRenderer.once(channel, (event, ...args) => callback(...args));
+        ipcRenderer.once(channel, (event: IpcRendererEvent, ...args: unknown[]) => callback(...args));
       }
     }
   },
@@ -213,8 +222,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     install: () => ipcRenderer.invoke('updater:install'),
     getState: () => ipcRenderer.invoke('updater:get-state'),
     isSupported: () => ipcRenderer.invoke('updater:is-supported'),
-    onStatus: (callback) => {
-      const subscription = (_event, payload) => callback(payload)
+    onStatus: (callback: (payload: unknown) => void) => {
+      const subscription = (_event: IpcRendererEvent, payload: unknown) => callback(payload)
       ipcRenderer.on('updater:status', subscription)
       return () => ipcRenderer.removeListener('updater:status', subscription)
     },
@@ -223,12 +232,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 // Экспортируем утилиты как отдельные глобальные объекты
 contextBridge.exposeInMainWorld('operableAPI', {
-  openPath: (path) => ipcRenderer.invoke('openPath', path),
-  checkFileExists: (path) => ipcRenderer.invoke('checkFileExists', path),
-  deleteLocalFile: (path) => ipcRenderer.invoke('deleteLocalFile', path),
-  createThumb: (time, videoPath, imgPath, width) =>
+  openPath: (path: string) => ipcRenderer.invoke('openPath', path),
+  checkFileExists: (path: string) => ipcRenderer.invoke('checkFileExists', path),
+  deleteLocalFile: (path: string) => ipcRenderer.invoke('deleteLocalFile', path),
+  createThumb: (time: number, videoPath: string, imgPath: string, width: number) =>
     ipcRenderer.invoke('createThumb', { time, videoPath, imgPath, width }),
-  setNotification: (notification) => ipcRenderer.invoke('setNotification', notification)
+  setNotification: (notification: unknown) => ipcRenderer.invoke('setNotification', notification)
 });
 
 contextBridge.exposeInMainWorld('readableAPI', {
@@ -259,37 +268,42 @@ contextBridge.exposeInMainWorld('os', {
   homedir: () => os.homedir()
 });
 
+type OpenPathPayload = string | { path: string; wait?: boolean }
+type CheckFilePayload = string | { path: string; skipDir?: boolean }
+
 // Единый API для удобства (если $operable уже определен плагином, это не перезапишет его)
 contextBridge.exposeInMainWorld('$electronOperable', {
-  openPath: (path, wait = false) => {
+  openPath: (path: OpenPathPayload, wait = false) => {
     if (typeof path === 'string') {
       return ipcRenderer.invoke('openPath', { path, wait });
     }
     return ipcRenderer.invoke('openPath', path);
   },
-  checkFileExists: (path, skipDir = false) => {
+  checkFileExists: (path: CheckFilePayload, skipDir = false) => {
     if (typeof path === 'string') {
       return ipcRenderer.invoke('checkFileExists', { path, skipDir });
     }
     return ipcRenderer.invoke('checkFileExists', path);
   },
-  deleteLocalFile: (path) => ipcRenderer.invoke('deleteLocalFile', path),
-  createThumb: (time, videoPath, imgPath, width) =>
+  deleteLocalFile: (path: string) => ipcRenderer.invoke('deleteLocalFile', path),
+  createThumb: (time: number, videoPath: string, imgPath: string, width: number) =>
     ipcRenderer.invoke('createThumb', { time, videoPath, imgPath, width }),
-  setNotification: (notification) => ipcRenderer.invoke('setNotification', notification),
-  showOpenDialog: (properties) => {
+  setNotification: (notification: unknown) => ipcRenderer.invoke('setNotification', notification),
+  showOpenDialog: (properties: string[] | string | Record<string, unknown> | null | undefined) => {
+    let normalized = properties
     // Убеждаемся, что передаем массив
-    if (!Array.isArray(properties)) {
+    if (!Array.isArray(normalized)) {
       console.warn('[IPC] showOpenDialog: преобразую свойства в массив...');
-      if (typeof properties === 'string') {
-        properties = [properties];
-      } else if (typeof properties === 'object' && properties !== null) {
-        properties = Object.keys(properties).filter(key => properties[key] === true);
+      if (typeof normalized === 'string') {
+        normalized = [normalized];
+      } else if (typeof normalized === 'object' && normalized !== null) {
+        const record = normalized as Record<string, unknown>
+        normalized = Object.keys(record).filter(key => record[key] === true);
       } else {
-        properties = ['openDirectory'];
+        normalized = ['openDirectory'];
       }
     }
-    return ipcRenderer.invoke('showOpenDialog', properties);
+    return ipcRenderer.invoke('showOpenDialog', normalized);
   },
   getDateForDB: () => ipcRenderer.invoke('getDateForDB')
 });

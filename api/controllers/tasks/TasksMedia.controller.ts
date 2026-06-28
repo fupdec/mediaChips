@@ -1,3 +1,7 @@
+import type { TaskControllerShared, FfprobeInfo } from '../../types/tasks'
+import type { AnyRecord } from '../../types/db'
+import { apiErrorMessage } from '../../types/errors'
+import type { ApiRequest, ApiResponse } from '../../types/http'
 const fs = require('fs')
 const path = require('path')
 const {stat} = require('fs/promises')
@@ -15,7 +19,7 @@ const {
   buildPathLookupVariants,
 } = require('../../utils/normalizeUserPath')
 
-module.exports = function createTasksMediaController(shared) {
+module.exports = function createTasksMediaController(shared: TaskControllerShared) {
   const {
     db,
     dbPath,
@@ -27,14 +31,14 @@ module.exports = function createTasksMediaController(shared) {
     createThumbMiddle,
   } = shared
 
-  const findMediaByPath = async (pathToFile) => {
+  const findMediaByPath = async (pathToFile: string) => {
     const variants = buildPathLookupVariants(pathToFile)
 
     if (!variants.length) return null
 
     return db.Media.findOne({
       where: {
-        [Op.or]: variants.map((variant) => ({
+        [Op.or]: variants.map((variant: string) => ({
           path: Sequelize.where(
             Sequelize.fn('LOWER', Sequelize.col('path')),
             '=',
@@ -45,7 +49,11 @@ module.exports = function createTasksMediaController(shared) {
     })
   }
 
-  const addMediaToDb = async (rawPathToFile, mediaType, is_check_duplicates) => {
+  const addMediaToDb = async (
+    rawPathToFile: string,
+    mediaType: { id: unknown },
+    is_check_duplicates: boolean,
+  ) => {
     const pathToFile = normalizeMediaPath(rawPathToFile)
     const resolvedPath = await resolveExistingPath(pathToFile)
 
@@ -73,7 +81,7 @@ module.exports = function createTasksMediaController(shared) {
     try {
       contentHash = await computeContentHashForPath(resolvedPath)
     } catch (error) {
-      console.error(`Content hash failed for ${pathToFile}:`, error.message)
+      console.error(`Content hash failed for ${pathToFile}:`, apiErrorMessage(error))
     }
 
     if (is_check_duplicates && contentHash) {
@@ -107,7 +115,7 @@ module.exports = function createTasksMediaController(shared) {
               break
             }
           } catch (error) {
-            console.error(`Content hash failed for ${candidate.path}:`, error.message)
+            console.error(`Content hash failed for ${candidate.path}:`, apiErrorMessage(error))
           }
         }
       }
@@ -131,7 +139,7 @@ module.exports = function createTasksMediaController(shared) {
             const correctedHash = await computeContentHashForPath(duplicate_by_hash.path)
             await duplicate_by_hash.update({contentHash: correctedHash})
           } catch (error) {
-            console.error(`Content hash correction failed for ${duplicate_by_hash.path}:`, error.message)
+            console.error(`Content hash correction failed for ${duplicate_by_hash.path}:`, apiErrorMessage(error))
           }
 
           duplicate_by_hash = null
@@ -156,7 +164,7 @@ module.exports = function createTasksMediaController(shared) {
 
     const storedPath = resolvedPath
 
-    const defaults: Record<string, any> = {
+    const defaults: AnyRecord = {
       filesize: filesize,
       ext: path.extname(storedPath),
       basename: path.basename(storedPath),
@@ -194,9 +202,9 @@ module.exports = function createTasksMediaController(shared) {
     }
   }
 
-  const getVideoMetadata = async (pathToFile) => {
+  const getVideoMetadata = async (pathToFile: string) => {
     try {
-      const info = await withTimeout(ffprobe(pathToFile), 60000, 'ffprobe')
+      const info = await withTimeout(ffprobe(pathToFile), 60000, 'ffprobe') as FfprobeInfo
       if (info.format.duration < 1) {
         throw new Error('duration less than 1 sec.')
       }
@@ -209,7 +217,7 @@ module.exports = function createTasksMediaController(shared) {
         width = stream.width
         height = stream.height
         codec = stream.codec_name
-        fps = Math.ceil(stream.nb_frames / info.format.duration)
+        fps = Math.ceil((stream.nb_frames ?? 0) / info.format.duration)
         break
       }
 
@@ -227,9 +235,9 @@ module.exports = function createTasksMediaController(shared) {
     }
   }
 
-  const getAudioMetadata = async (pathToFile) => {
+  const getAudioMetadata = async (pathToFile: string) => {
     try {
-      const info = await withTimeout(ffprobe(pathToFile), 60000, 'ffprobe')
+      const info = await withTimeout(ffprobe(pathToFile), 60000, 'ffprobe') as FfprobeInfo
       if (!info?.format?.duration || info.format.duration < 1) {
         throw new Error('duration less than 1 sec.')
       }
@@ -265,7 +273,7 @@ module.exports = function createTasksMediaController(shared) {
     withTimeout,
   })
 
-  const sendAddMediaResponse = (res, result: Record<string, any>) => {
+  const sendAddMediaResponse = (res: ApiResponse, result: AnyRecord) => {
     const {media, isCreated, duplicate} = result
     if (isCreated) {
       res.status(201).send(media)
@@ -278,7 +286,7 @@ module.exports = function createTasksMediaController(shared) {
     })
   }
 
-  const addMedia = async function (req, res) {
+  const addMedia = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const pathToFile = req.body.path
       const mediaType = req.body.type
@@ -294,7 +302,7 @@ module.exports = function createTasksMediaController(shared) {
     } catch (error) {
       console.error('addMedia failed:', error)
       res.status(400).send({
-        message: error.message || String(error),
+        message: apiErrorMessage(error) || String(error),
       })
     }
   }
@@ -304,7 +312,7 @@ module.exports = function createTasksMediaController(shared) {
   const addMediaAudio = addMedia
   const addMediaText = addMedia
 
-  const updateMediaInfo = async (req, res) => {
+  const updateMediaInfo = async (req: ApiRequest, res: ApiResponse) => {
     const media_id = req.body.id
 
     try {
@@ -318,7 +326,7 @@ module.exports = function createTasksMediaController(shared) {
 
         await mediaPostProcess.refreshMediaInfo(media, mediaType)
 
-        const stats = fs.statSync(media.dataValues.path)
+        const stats = fs.statSync(String(media.dataValues?.path ?? media.path))
         const filesize = stats.size
 
         await db.Media.update({
@@ -334,7 +342,7 @@ module.exports = function createTasksMediaController(shared) {
     }
   }
 
-  const searchMediaByPath = function (req, res) {
+  const searchMediaByPath = function (req: ApiRequest, res: ApiResponse) {
     db.Media
       .findAll({
         where: {
@@ -343,41 +351,41 @@ module.exports = function createTasksMediaController(shared) {
           },
         },
       })
-      .then(data => {
+      .then((data) => {
         res.status(201).send(data)
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         res.status(500).send({
-          message: err.message || "Some error occurred while performing query."
+          message: apiErrorMessage(err) || "Some error occurred while performing query."
         })
       })
   }
 
-  const updateMediaMultiple = async function (req, res) {
+  const updateMediaMultiple = async function (req: ApiRequest, res: ApiResponse) {
     const mediaFiles = req.body.mediaFiles;
-    const promises = mediaFiles.map(i => {
+    const promises = mediaFiles.map((i: AnyRecord) => {
       return db.Media.update(i, {where: {id: i.id}});
     });
     await Promise.all(promises);
     res.sendStatus(201);
   }
 
-  const getMostPopularWordsFromMedia = async (req, res) => {
+  const getMostPopularWordsFromMedia = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const settings = await getParserSettings()
       const data = await db.Media.findAll({raw: true})
 
-      const parsed = data.map(i => {
+      const parsed = data.map((i: AnyRecord) => {
         const tokenized = tokenizeFilePath(i.path, {
           folderWeight: settings.folderWeight,
         })
         return {
           folders: tokenized.tokens
-            .filter(token => token.source === 'folder')
-            .map(token => token.token),
+            .filter((token: AnyRecord) => token.source === 'folder')
+            .map((token: AnyRecord) => token.token),
           file: tokenized.tokens
-            .filter(token => token.source === 'file')
-            .map(token => token.token)
+            .filter((token: AnyRecord) => token.source === 'file')
+            .map((token: AnyRecord) => token.token)
             .join(' '),
           tokens: tokenized.tokens,
         }
@@ -386,7 +394,7 @@ module.exports = function createTasksMediaController(shared) {
       res.status(201).send(parsed)
     } catch (err) {
       res.status(500).send({
-        message: err.message || "Some error occurred while performing query."
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     }
   }

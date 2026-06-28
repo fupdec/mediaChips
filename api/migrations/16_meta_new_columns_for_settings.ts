@@ -1,3 +1,5 @@
+import type { MigrationContext } from '../types/sequelize'
+import type { AnyRecord } from '../types/db'
 const path = require('path')
 const {
   Sequelize
@@ -5,11 +7,9 @@ const {
 const _ = require('lodash')
 
 module.exports = {
-  async up({
-             context: queryInterface
-           }) {
+  async up({ context: queryInterface }: MigrationContext) {
     return queryInterface.describeTable('meta')
-      .then(async tableDefinition => {
+      .then(async (tableDefinition: AnyRecord) => {
         if (tableDefinition.synonyms) {
           return Promise.resolve();
         } else {
@@ -208,7 +208,7 @@ module.exports = {
             ),
           ]);
 
-          let meta_settings = await queryInterface.sequelize.models.metaSetting.findAll({raw: true});
+          let meta_settings = await (queryInterface.sequelize.models as any).metaSetting.findAll({raw: true});
 
           let values = ''
           for (let i = 0; i < meta_settings.length; i++) {
@@ -250,9 +250,7 @@ module.exports = {
       }).catch((err) => console.log(err));
   },
 
-  async down({
-               context: queryInterface
-             }) {
+  async down({ context: queryInterface }: MigrationContext) {
     // return Promise.all([
     //   queryInterface.removeColumn('media', 'name'),
     //   queryInterface.removeColumn('media', 'basename'),

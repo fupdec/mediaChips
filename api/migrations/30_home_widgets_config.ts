@@ -1,5 +1,6 @@
+import type { MigrationContext } from '../types/sequelize'
 module.exports = {
-  async up({context: queryInterface}) {
+  async up({ context: queryInterface }: MigrationContext) {
     const defaultConfig = JSON.stringify({
       order: [
         'stats',
@@ -39,5 +40,5 @@ module.exports = {
     await queryInterface.sequelize.query(query)
   },
 
-  async down({context: queryInterface}) {},
+  async down({ context: queryInterface }: MigrationContext) {},
 }

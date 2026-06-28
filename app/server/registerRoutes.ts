@@ -1,3 +1,6 @@
+import type { ApiDb } from '../../api/types/db'
+import type { Express } from 'express'
+import { apiErrorMessage, apiErrorStack } from '../../api/types/errors'
 const ROUTE_FILES = [
   'PinnedMeta.routes',
   'Home.routes',
@@ -29,21 +32,21 @@ const ROUTE_FILES = [
   'WatchedFolder.routes',
 ]
 
-function registerApiRoutes(app: any, db: any) {
+function registerApiRoutes(app: Express, db: ApiDb) {
   const routeLoadErrors = []
 
   for (const routeFile of ROUTE_FILES) {
     try {
       require(`../../api/routes/${routeFile}`)(app, db)
-    } catch (err: any) {
+    } catch (err: unknown) {
       routeLoadErrors.push({
         routeFile,
-        message: err.message,
+        message: err instanceof Error ? apiErrorMessage(err) : String(err),
       })
       console.error(
         '\x1b[31m%s\x1b[0m',
         `Failed to register route ${routeFile}:`,
-        err.stack || err.message,
+        err instanceof Error ? (apiErrorStack(err) || apiErrorMessage(err)) : String(err),
       )
     }
   }

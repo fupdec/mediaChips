@@ -1,7 +1,10 @@
+import type { ApiDb } from '../types/db'
+import { apiErrorMessage } from '../types/errors'
+import type { ApiRequest, ApiResponse } from '../types/http'
 const {applyBulkMetaEdit} = require('../services/bulkMetaEdit')
 
-module.exports = function (db) {
-  const apply = async function (req, res) {
+module.exports = function (db: ApiDb) {
+  const apply = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const itemType = req.body.itemType
       const itemIds = Array.isArray(req.body.itemIds) ? req.body.itemIds.filter(Boolean) : []
@@ -26,7 +29,7 @@ module.exports = function (db) {
       res.status(201).send(result)
     } catch (err) {
       res.status(500).send({
-        message: err.message || 'Some error occurred while applying bulk edits.',
+        message: apiErrorMessage(err) || 'Some error occurred while applying bulk edits.',
       })
     }
   }

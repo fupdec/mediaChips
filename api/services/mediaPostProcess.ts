@@ -1,4 +1,10 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, MediaLike } from '../types/db'
+import type {
+  MediaId,
+  MediaPostProcessorDeps,
+  MediaTypeLike,
+  ImageMetadataResult,
+} from '../types/mediaPostProcess'
 
 const {
   isVideoMediaType,
@@ -14,9 +20,9 @@ function createMediaPostProcessor({
   getImageMedia,
   createThumbMiddle,
   withTimeout,
-}: any) {
-  async function processVideoMedia(media: any) {
-    const videoPath = media.path
+}: MediaPostProcessorDeps) {
+  async function processVideoMedia(media: MediaLike) {
+    const videoPath = String(media.path || '')
     const metadata = await getVideoMetadata(videoPath)
 
     if (metadata) {
@@ -33,21 +39,21 @@ function createMediaPostProcessor({
 
     try {
       await createThumbMiddle(videoPath, media.id)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Thumbnail generation failed for ${videoPath}:`, error)
     }
   }
 
-  async function processImageMedia(media: any) {
-    const imagePath = media.path
+  async function processImageMedia(media: MediaLike) {
+    const imagePath = String(media.path || '')
     const metadata = await withTimeout(
       getImageMedia().getImageMetadata(imagePath),
       60000,
       'image metadata',
-    ).catch((error: any) => {
-      console.error(`Image metadata extraction failed for ${imagePath}:`, error.message)
+    ).catch((error: unknown) => {
+      console.error(`Image metadata extraction failed for ${imagePath}:`, error instanceof Error ? error.message : String(error))
       return null
-    })
+    }) as ImageMetadataResult | null
 
     if (metadata) {
       await db.ImageMetadata.create({
@@ -64,13 +70,13 @@ function createMediaPostProcessor({
         120000,
         'image thumbnail',
       )
-    } catch (error: any) {
-      console.error(`Thumbnail generation failed for ${imagePath}:`, error.message)
+    } catch (error: unknown) {
+      console.error(`Thumbnail generation failed for ${imagePath}:`, error instanceof Error ? error.message : String(error))
     }
   }
 
-  async function processAudioMedia(media: any) {
-    const audioPath = media.path
+  async function processAudioMedia(media: MediaLike) {
+    const audioPath = String(media.path || '')
     const metadata = await getAudioMetadata(audioPath)
 
     if (metadata) {
@@ -83,7 +89,7 @@ function createMediaPostProcessor({
     }
   }
 
-  async function processNewMedia(media: MediaLike, mediaType: any) {
+  async function processNewMedia(media: MediaLike, mediaType: MediaTypeLike) {
     if (isVideoMediaType(mediaType)) {
       await processVideoMedia(media)
       return
@@ -99,7 +105,7 @@ function createMediaPostProcessor({
     }
   }
 
-  async function refreshVideoMedia(mediaId: any, mediaPath: any) {
+  async function refreshVideoMedia(mediaId: MediaId, mediaPath: string) {
     const metadata = await getVideoMetadata(mediaPath)
 
     if (metadata) {
@@ -116,7 +122,7 @@ function createMediaPostProcessor({
     }
   }
 
-  async function refreshImageMedia(mediaId: any, mediaPath: any) {
+  async function refreshImageMedia(mediaId: MediaId, mediaPath: string) {
     const metadata = await getImageMedia().getImageMetadata(mediaPath)
 
     if (metadata) {
@@ -130,12 +136,12 @@ function createMediaPostProcessor({
 
     try {
       await getImageMedia().createImageThumb(mediaPath, mediaId, dbPath)
-    } catch (error: any) {
-      console.error(`Thumbnail regeneration failed for media ${mediaId}:`, error.message)
+    } catch (error: unknown) {
+      console.error(`Thumbnail regeneration failed for media ${mediaId}:`, error instanceof Error ? error.message : String(error))
     }
   }
 
-  async function refreshAudioMedia(mediaId: any, mediaPath: any) {
+  async function refreshAudioMedia(mediaId: MediaId, mediaPath: string) {
     const metadata = await getAudioMetadata(mediaPath)
 
     if (metadata) {
@@ -148,9 +154,9 @@ function createMediaPostProcessor({
     }
   }
 
-  async function refreshMediaInfo(media: MediaLike, mediaType: any) {
-    const mediaPath = (media as any).dataValues?.path || media.path
-    const mediaId = media.id
+  async function refreshMediaInfo(media: MediaLike, mediaType: MediaTypeLike) {
+    const mediaPath = String((media as { dataValues?: { path?: string } }).dataValues?.path ?? media.path ?? '')
+    const mediaId = media.id as MediaId
 
     if (isVideoMediaType(mediaType)) {
       await refreshVideoMedia(mediaId, mediaPath)
