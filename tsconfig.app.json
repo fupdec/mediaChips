@@ -10,6 +10,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": false,
+    "incremental": true,
+    "tsBuildInfoFile": ".cache/tsc/app.tsbuildinfo",
     "ignoreDeprecations": "6.0",
     "types": ["node"]
   },

@@ -6,6 +6,7 @@ node_modules
 /.api-build
 /.main-build
 /.scripts-build
+/.cache
 /app/**/*.js
 /api/**/*.js
 /shared/**/*.js

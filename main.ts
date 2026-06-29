@@ -44,6 +44,24 @@ let loading: BrowserWindowInstance | null = null
 let player: BrowserWindowInstance | null = null
 let suppressZoomChangedEvent = false
 const isDevelopment = process.env.NODE_ENV !== 'production'
+const useViteDevServer = isDevelopment && process.env.MEDIA_CHIPS_VITE_DEV !== '0'
+
+const getRendererUrl = (search = '') => {
+  const port = useViteDevServer
+    ? Number(process.env.VITE_DEV_SERVER_PORT || 3000)
+    : server.config.port
+  const suffix = search
+    ? (search.startsWith('?') ? search : `?${search}`)
+    : ''
+  return `http://localhost:${port}/${suffix}`
+}
+
+const getLoadingPageUrl = () => {
+  if (useViteDevServer) {
+    return `file://${path.join(__dirname, 'public/loading.html')}`
+  }
+  return `file://${path.join(__dirname, 'dist/loading.html')}`
+}
 
 const bindZoomChangedListener = (browserWindow: BrowserWindowInstance) => {
   if (!browserWindow || browserWindow.isDestroyed()) return
@@ -104,7 +122,7 @@ const createWindow = () => {
     },
   })
   const mainWindow = win!
-  mainWindow.loadURL(`http://localhost:${server.config.port}/`)
+  mainWindow.loadURL(getRendererUrl())
   mainWindow.on('closed', () => {
     if (process.platform !== 'darwin') app.quit()
     else win = null
@@ -246,7 +264,7 @@ const createLoadingWindow = () => {
       })
     })
   }
-  loadingWindow.loadURL(path.join('file://', __dirname, 'dist', 'loading.html'))
+  loadingWindow.loadURL(getLoadingPageUrl())
   loadingWindow.webContents.on('did-finish-load', () => {
     // loading.show()
   })
@@ -567,7 +585,7 @@ function createPlayerWindow() {
   player = new BrowserWindow(getPlayerWindowOptions())
   const playerWindow = player!
   setupPlayerWindowEvents(playerWindow)
-  playerWindow.loadURL(`http://localhost:${server.config.port}/?player=true`)
+  playerWindow.loadURL(getRendererUrl('?player=true'))
   return playerWindow
 }
 

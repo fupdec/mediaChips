@@ -4,12 +4,14 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": ".api-build",
-    "rootDir": "api",
+    "rootDir": ".",
     "moduleDetection": "force",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": false,
+    "incremental": true,
+    "tsBuildInfoFile": ".cache/tsc/api.tsbuildinfo",
     "ignoreDeprecations": "6.0",
     "types": ["node"],
     "baseUrl": ".",
@@ -17,5 +19,5 @@
       "@shared/*": ["shared/*"]
     }
   },
-  "include": ["api/**/*.ts"]
+  "include": ["api/**/*.ts", "shared/**/*.ts"]
 }
