@@ -570,9 +570,9 @@ const es = {
       data_scraper: 'Extractor de datos',
     },
     field_pinning: {
-      title: 'Dónde aparecen los campos de metadatos',
-      view_by_media: 'Por tipo de medio',
-      view_by_tags: 'Por categoría de etiquetas',
+      title: 'Fijación de campos de metadatos',
+      view_by_media: 'Tipos de medio',
+      view_by_tags: 'Categorías de etiquetas',
       select_media_type: 'Seleccione un tipo de medio de la lista',
       select_tag_category: 'Seleccione una categoría de etiquetas de la lista',
       no_tag_categories: 'Aún no hay categorías de etiquetas. Cree primero un campo de tipo Etiquetas en Metadatos personalizados.',

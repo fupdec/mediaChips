@@ -570,9 +570,9 @@ const cn = {
       data_scraper: '数据抓取',
     },
     field_pinning: {
-      title: '元数据字段显示位置',
-      view_by_media: '按媒体类型',
-      view_by_tags: '按标签分类',
+      title: '固定元数据字段',
+      view_by_media: '媒体类型',
+      view_by_tags: '标签分类',
       select_media_type: '从列表中选择媒体类型',
       select_tag_category: '从列表中选择标签分类',
       no_tag_categories: '尚无标签分类。请先在自定义元数据中创建“标签”类型字段。',

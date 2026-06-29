@@ -570,9 +570,9 @@ const en = {
       data_scraper: 'Data scraper',
     },
     field_pinning: {
-      title: 'Where metadata fields appear',
-      view_by_media: 'By media type',
-      view_by_tags: 'By tag category',
+      title: 'Pinning metadata fields',
+      view_by_media: 'Media types',
+      view_by_tags: 'Tag categories',
       select_media_type: 'Select a media type from the list',
       select_tag_category: 'Select a tag category from the list',
       no_tag_categories: 'No tag categories yet. Create a Tags-type field in Custom metadata first.',

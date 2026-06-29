@@ -5,55 +5,57 @@
       icon="shape-outline"
     />
 
-    <div class="d-flex align-center flex-wrap ga-2">
-      <v-btn
-        color="success"
-        rounded="xl"
-        variant="flat"
-        prepend-icon="mdi-plus"
-        :text="t('meta.dialogs.add_new_meta')"
-        @click="openCreateDialog"
-      ></v-btn>
+    <div class="meta-toolbar">
+      <div class="meta-toolbar__actions d-flex align-center flex-wrap ga-2">
+        <v-btn
+          color="success"
+          rounded="xl"
+          variant="flat"
+          prepend-icon="mdi-plus"
+          :text="t('meta.dialogs.add_new_meta')"
+          @click="openCreateDialog"
+        ></v-btn>
 
-      <v-btn
-        variant="text"
-        size="small"
-        color="primary"
-        class="meta-docs-link"
-        @click="showMetaDocs"
-      >
-        <v-icon start size="18">mdi-help-circle-outline</v-icon>
-        {{ t('meta.dialogs.custom_metadata_docs') }}
-      </v-btn>
+        <v-btn
+          variant="text"
+          size="small"
+          color="primary"
+          class="meta-docs-link"
+          @click="showMetaDocs"
+        >
+          <v-icon start size="18">mdi-help-circle-outline</v-icon>
+          {{ t('meta.dialogs.custom_metadata_docs') }}
+        </v-btn>
+      </div>
+
+      <div v-if="initiated && meta.length" class="meta-toolbar__filters d-flex align-center flex-wrap ga-4">
+        <v-text-field
+          v-model="search"
+          append-inner-icon="mdi-magnify"
+          :placeholder="t('common.quick_search_placeholder')"
+          hide-details
+          autofocus
+          clearable
+          variant="filled"
+          density="compact"
+          max-width="300"
+        ></v-text-field>
+
+        <v-select
+          :model-value="sortMode"
+          @update:model-value="setSortMode"
+          :items="sortOptions"
+          :label="t('settings_labels.meta.sort_label')"
+          hide-details
+          variant="filled"
+          density="compact"
+          max-width="260"
+        ></v-select>
+      </div>
     </div>
 
     <div v-if="!meta.length" class="meta-empty text-medium-emphasis mt-3">
       {{ t('meta.dialogs.meta_missing_add_first') }}
-    </div>
-
-    <div v-if="initiated && meta.length" class="d-flex align-center flex-wrap ga-4 mb-2">
-      <v-text-field
-        v-model="search"
-        append-inner-icon="mdi-magnify"
-        :placeholder="t('common.quick_search_placeholder')"
-        hide-details
-        autofocus
-        clearable
-        variant="filled"
-        density="compact"
-        max-width="300"
-      ></v-text-field>
-
-      <v-select
-        :model-value="sortMode"
-        @update:model-value="setSortMode"
-        :items="sortOptions"
-        :label="t('settings_labels.meta.sort_label')"
-        hide-details
-        variant="filled"
-        density="compact"
-        max-width="260"
-      ></v-select>
     </div>
 
     <v-card
@@ -190,6 +192,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.meta-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
 .meta-empty {
   text-align: center;
 }

@@ -10,18 +10,22 @@ export type PinnedMetaWithMeta = PinnedMetaRow & {
   meta: MetaRow | null
 }
 
-function attachMetaRows(db: DrizzleClient, rows: PinnedMetaRow[]): PinnedMetaWithMeta[] {
+function attachMetaRows(
+  db: DrizzleClient,
+  rows: PinnedMetaRow[],
+  metaIdField: 'metaId' | 'pinnedMetaId',
+): PinnedMetaWithMeta[] {
   if (!rows.length) return []
 
-  const metaIds = [...new Set(rows.map((row) => row.metaId))]
-  const metaRows = metaIds.length
-    ? db.select().from(meta).where(inArray(meta.id, metaIds)).all()
+  const lookupIds = [...new Set(rows.map((row) => row[metaIdField]))]
+  const metaRows = lookupIds.length
+    ? db.select().from(meta).where(inArray(meta.id, lookupIds)).all()
     : []
   const metaById = new Map(metaRows.map((row) => [row.id, row]))
 
   return rows.map((row) => ({
     ...row,
-    meta: metaById.get(row.metaId) ?? null,
+    meta: metaById.get(row[metaIdField]) ?? null,
   }))
 }
 
@@ -75,7 +79,7 @@ export function createPinnedMetaRepository(db: DrizzleClient) {
         ? db.select().from(pinnedMetas).where(and(...conditions)).orderBy(asc(pinnedMetas.order)).all()
         : db.select().from(pinnedMetas).orderBy(asc(pinnedMetas.order)).all()
 
-      return attachMetaRows(db, rows)
+      return attachMetaRows(db, rows, 'pinnedMetaId')
     },
 
     findAllByPinnedMetaId(pinnedMetaId: number): PinnedMetaWithMeta[] {
@@ -84,7 +88,7 @@ export function createPinnedMetaRepository(db: DrizzleClient) {
         .where(eq(pinnedMetas.pinnedMetaId, pinnedMetaId))
         .all()
 
-      return attachMetaRows(db, rows)
+      return attachMetaRows(db, rows, 'metaId')
     },
 
     update(metaId: number, pinnedMetaId: number, data: Partial<PinnedMetaRow>): void {
