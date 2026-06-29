@@ -33,6 +33,12 @@ export {
   createWatchedFoldersRepository,
 } from './repositories'
 export {applySqlitePragmas} from './pragmas'
+export {
+  dropAllSqliteTables,
+  ensureLegacyDrizzleBaseline,
+  resetSqliteDatabase,
+  runDrizzleMigrations,
+} from './drizzleMigrations'
 export {bootstrapDatabase, resetDatabaseAndRunMigrations} from './migrationRunner'
 export {smokeTestDrizzle} from './smoke'
 export {bindNamedParameters, queryAll, queryAllAsync, queryGet} from './utils/rawQuery'

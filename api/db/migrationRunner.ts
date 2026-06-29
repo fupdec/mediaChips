@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const {Umzug, SequelizeStorage} = require('umzug')
 const {createMigrationSequelize} = require('./sequelizeSchema')
+const {resetSqliteDatabase, runDrizzleMigrations} = require('./drizzleMigrations')
 
 async function runUmzugMigrations(sequelize: import('sequelize').Sequelize) {
   const migrationsFolder = path.join(__dirname, '../migrations/')
@@ -37,11 +38,12 @@ async function applyMigrationPragmas(sequelize: import('sequelize').Sequelize) {
 }
 
 export async function bootstrapDatabase(dbPath: string) {
+  runDrizzleMigrations(dbPath)
+
   const sequelize = createMigrationSequelize(dbPath)
 
   try {
     await sequelize.authenticate()
-    await sequelize.sync()
     await runUmzugMigrations(sequelize)
     await applyMigrationPragmas(sequelize)
   } finally {
@@ -50,10 +52,12 @@ export async function bootstrapDatabase(dbPath: string) {
 }
 
 export async function resetDatabaseAndRunMigrations(dbPath: string) {
+  resetSqliteDatabase(dbPath)
+  runDrizzleMigrations(dbPath)
+
   const sequelize = createMigrationSequelize(dbPath)
 
   try {
-    await sequelize.sync({force: true})
     await runUmzugMigrations(sequelize)
     await applyMigrationPragmas(sequelize)
   } finally {
