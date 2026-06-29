@@ -8,13 +8,13 @@ import type {
 
 const {filterItems} = require('../../app/tasks/items.js')
 const {
-  buildMediaFilterQuery,
-  canUseSqlMediaFilters,
+  canUseSqlMediaLoader,
   getMediaFromClause,
   getNavigationSelect,
   getSortExpression,
   requiresMetadataJoinForFilters,
   requiresMetadataJoinForSort,
+  resolveMediaFilterQuery,
 } = require('./mediaFilterSql')
 
 function buildFilteredTotalsSql(fromClause: string, whereClause: string, needsDistinct: boolean) {
@@ -241,7 +241,13 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
     skipTotals = false,
   } = options
 
-  const filterQuery = buildMediaFilterQuery(filters, {mediaTypeId, ids})
+  const filterQuery = resolveMediaFilterQuery({
+    mediaTypeId,
+    ids,
+    filters,
+    find_duplicates: options.find_duplicates,
+    duplicates_by: options.duplicates_by,
+  })
   if (!filterQuery.ok) {
     return loadMediaItemsLegacy(db, options)
   }
@@ -347,7 +353,7 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
 }
 
 async function loadMediaItems(db: ApiDb, options: MediaLoadOptions = {}) {
-  if (canUseSqlMediaFilters(options)) {
+  if (canUseSqlMediaLoader(options)) {
     return loadMediaItemsSql(db, options)
   }
   return loadMediaItemsLegacy(db, options)
@@ -371,7 +377,7 @@ async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}
     duplicates_by = 'filesize',
   } = options
 
-  if (find_duplicates || !canUseSqlMediaFilters(options)) {
+  if (!canUseSqlMediaLoader(options)) {
     const result = await loadMediaItemsLegacy(db, {
       ...options,
       limit: null,
@@ -384,7 +390,12 @@ async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}
     }
   }
 
-  const filterQuery = buildMediaFilterQuery(filters, {mediaTypeId, ids: []})
+  const filterQuery = resolveMediaFilterQuery({
+    mediaTypeId,
+    filters,
+    find_duplicates,
+    duplicates_by,
+  })
   if (!filterQuery.ok) {
     const result = await loadMediaItemsLegacy(db, {
       ...options,
@@ -433,7 +444,7 @@ async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}
 }
 
 async function loadFilteredMediaIds(db: ApiDb, options: MediaLoadOptions = {}) {
-  if (options.find_duplicates || !canUseSqlMediaFilters(options)) {
+  if (!canUseSqlMediaLoader(options)) {
     const result = await loadMediaItemsLegacy(db, {
       ...options,
       limit: null,
@@ -452,7 +463,13 @@ async function loadFilteredMediaIds(db: ApiDb, options: MediaLoadOptions = {}) {
     filters = [],
   } = options
 
-  const filterQuery = buildMediaFilterQuery(filters, {mediaTypeId, ids: []})
+  const filterQuery = resolveMediaFilterQuery({
+    mediaTypeId,
+    filters,
+    ids: [],
+    find_duplicates: options.find_duplicates,
+    duplicates_by: options.duplicates_by,
+  })
   if (!filterQuery.ok) {
     const result = await loadMediaItemsLegacy(db, {
       ...options,

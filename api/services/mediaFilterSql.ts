@@ -504,9 +504,79 @@ function buildFilterClause(filter: FilterLike, nextParam: SqlParamBinder) {
   return null
 }
 
-function canUseSqlMediaFilters(options: MediaFilterOptions = {}) {
-  if (options.find_duplicates) return false
+function buildDuplicatesFilterQuery(options: MediaFilterOptions & { duplicates_by?: string } = {}): MediaFilterQueryResult {
+  const {mediaTypeId, ids = []} = options
+  const duplicatesBy = options.duplicates_by || 'filesize'
 
+  if (mediaTypeId == null || mediaTypeId === '') {
+    return {ok: false}
+  }
+
+  const replacements: AnyRecord = {mediaTypeId}
+  const clauses = ['media.mediaTypeId = :mediaTypeId']
+
+  if (ids.length) {
+    replacements.ids = ids
+    clauses.push('media.id IN (:ids)')
+  }
+
+  if (duplicatesBy === 'path') {
+    clauses.push(`media.path IS NOT NULL AND media.path != ''`)
+    clauses.push(`EXISTS (
+      SELECT 1 FROM media dup
+      WHERE dup.id != media.id
+        AND dup.mediaTypeId = :mediaTypeId
+        AND dup.path = media.path
+    )`)
+  } else if (duplicatesBy === 'contentHash') {
+    clauses.push(`media.contentHash IS NOT NULL AND media.contentHash != ''`)
+    clauses.push(`EXISTS (
+      SELECT 1 FROM media dup
+      WHERE dup.id != media.id
+        AND dup.mediaTypeId = :mediaTypeId
+        AND dup.contentHash = media.contentHash
+    )`)
+  } else {
+    clauses.push(`media.filesize > 0`)
+    clauses.push(`EXISTS (
+      SELECT 1 FROM media dup
+      WHERE dup.id != media.id
+        AND dup.mediaTypeId = :mediaTypeId
+        AND dup.filesize = media.filesize
+    )`)
+  }
+
+  return {
+    ok: true,
+    whereSql: clauses.join(' AND '),
+    joinSql: '',
+    needsDistinct: false,
+    replacements,
+  }
+}
+
+function resolveMediaFilterQuery(options: MediaFilterOptions & {
+  filters?: FilterLike[]
+  duplicates_by?: string
+} = {}): MediaFilterQueryResult {
+  if (options.find_duplicates) {
+    return buildDuplicatesFilterQuery(options)
+  }
+
+  return buildMediaFilterQuery(options.filters || [], {
+    mediaTypeId: options.mediaTypeId,
+    ids: options.ids || [],
+  })
+}
+
+function canUseSqlMediaLoader(options: MediaFilterOptions & {
+  filters?: FilterLike[]
+  duplicates_by?: string
+} = {}) {
+  return resolveMediaFilterQuery(options).ok
+}
+
+function canUseSqlMediaFilters(options: MediaFilterOptions = {}) {
   const filters = normalizeActiveFilters(options.filters)
   for (const filter of filters) {
     if (canUseTagArrayJoin(filter)) {
@@ -622,10 +692,13 @@ function getNavigationSelect() {
 
 module.exports = {
   buildMediaFilterQuery,
+  buildDuplicatesFilterQuery,
+  resolveMediaFilterQuery,
   buildCountryArrayClause,
   buildTagCountryMatchSql,
   buildStringComparison,
   canUseSqlMediaFilters,
+  canUseSqlMediaLoader,
   filterRequiresMetadataJoin,
   getMediaFromClause,
   getMediaFromJoin,
@@ -638,10 +711,13 @@ module.exports = {
 
 export {
   buildMediaFilterQuery,
+  buildDuplicatesFilterQuery,
+  resolveMediaFilterQuery,
   buildCountryArrayClause,
   buildTagCountryMatchSql,
   buildStringComparison,
   canUseSqlMediaFilters,
+  canUseSqlMediaLoader,
   filterRequiresMetadataJoin,
   getMediaFromClause,
   getMediaFromJoin,
