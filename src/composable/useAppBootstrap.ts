@@ -79,6 +79,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
       }, {})
 
       settingsStore.updateMultiple(sets)
+      await registrationStore.migrateRegistrationFromDbIfNeeded()
       cleanupStalePlayerRoute()
       store.isServerError = false
     } catch {
@@ -324,6 +325,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
       store.is_app_ready = false
       isAppReady.value = false
       itemsStore.$reset()
+      await registrationStore.reloadRegistrationFromConfig()
       await loadMainAppData()
       if (!store.isServerError) {
         eventBus.emit('updatePage')

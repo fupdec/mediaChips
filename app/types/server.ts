@@ -12,6 +12,7 @@ export interface ServerConfig {
   hostname?: string
   path?: string
   appVersion?: string
+  registration?: string
   databases: ServerDatabaseEntry[]
 }
 

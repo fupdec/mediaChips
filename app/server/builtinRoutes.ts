@@ -110,6 +110,7 @@ function registerBuiltinRoutes({
       },
       allowLanAccess: isLanAccessEnabled(),
       allowLanAccessEnvLocked: isLanAccessEnvLocked(),
+      registration: typeof config.registration === 'string' ? config.registration : '',
     }
 
     res.json(responseConfig)

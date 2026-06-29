@@ -5,7 +5,7 @@ import { useAppStore } from '@/stores/app'
 import { useNotificationsStore } from '@/stores/notifications'
 import { resolveApiBaseUrl } from '@/utils/apiBaseUrl'
 import { setOption } from '@/services/settingsService'
-import { updateConfig } from '@/services/configService'
+import { refreshServerConfig, updateConfig } from '@/services/configService'
 import { parseLicenseActivateResponse, parseLicenseInfo } from '@/schemas/license'
 import type { LicenseInfo } from '@/types/stores'
 
@@ -122,6 +122,34 @@ async function fetchMachineIdViaHttp() {
   return null
 }
 
+function isValidRegistrationString(value: unknown): value is string {
+  return typeof value === 'string' && value.length >= 10
+}
+
+function readRegistrationFromConfig(): string | null {
+  const appStore = useAppStore()
+  const registration = appStore.config?.registration
+  return isValidRegistrationString(registration) ? registration : null
+}
+
+function readRegistrationFromDbSettings(): string | null {
+  try {
+    const registration = useSettingsStore().registration
+    return isValidRegistrationString(registration) ? registration : null
+  } catch {
+    return null
+  }
+}
+
+function parseRegistrationString(registration: string): LicenseInfo | '' {
+  try {
+    return JSON.parse(registration) as LicenseInfo
+  } catch (parseError) {
+    console.error('Registration parse error:', parseError)
+    return ''
+  }
+}
+
 export const useRegistrationStore = defineStore('useRegistrationStore', {
   state: (): RegistrationState => ({
     machineId: null,
@@ -129,19 +157,86 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
     _regInfoCache: null,
   }),
   actions: {
+    invalidateRegInfoCache() {
+      this._regInfoCache = null
+    },
+
     async updateRegInfo(value: string | LicenseInfo) {
       try {
         const registration = typeof value === 'string' ? value : JSON.stringify(value)
 
         this._regInfoCache = JSON.parse(registration) as LicenseInfo
-        useSettingsStore().registration = registration
 
-        await setOption(registration, 'registration')
-        await updateConfig({ registration: '' })
+        await updateConfig({ registration })
+
+        const appStore = useAppStore()
+        appStore.config = {
+          ...appStore.config,
+          registration,
+        }
+
+        const settingsStore = useSettingsStore()
+        if (settingsStore.registration) {
+          settingsStore.registration = ''
+          await setOption('', 'registration')
+        }
       } catch (error) {
         console.error('Failed to update registration info:', error)
         throw error
       }
+    },
+
+    async clearRegistration() {
+      this._regInfoCache = null
+
+      await updateConfig({ registration: '' })
+
+      const appStore = useAppStore()
+      appStore.config = {
+        ...appStore.config,
+        registration: '',
+      }
+
+      const settingsStore = useSettingsStore()
+      settingsStore.registration = ''
+      await setOption('', 'registration')
+    },
+
+    async migrateRegistrationFromDbIfNeeded() {
+      const configRegistration = readRegistrationFromConfig()
+      const dbRegistration = readRegistrationFromDbSettings()
+
+      if (configRegistration) {
+        if (dbRegistration && dbRegistration !== configRegistration) {
+          const settingsStore = useSettingsStore()
+          settingsStore.registration = ''
+          await setOption('', 'registration')
+        }
+        return
+      }
+
+      if (!dbRegistration) {
+        return
+      }
+
+      await updateConfig({ registration: dbRegistration })
+
+      const appStore = useAppStore()
+      appStore.config = {
+        ...appStore.config,
+        registration: dbRegistration,
+      }
+      this._regInfoCache = parseRegistrationString(dbRegistration) || null
+
+      const settingsStore = useSettingsStore()
+      settingsStore.registration = ''
+      await setOption('', 'registration')
+    },
+
+    async reloadRegistrationFromConfig() {
+      this.invalidateRegInfoCache()
+      await refreshServerConfig()
+      await this.migrateRegistrationFromDbIfNeeded()
     },
 
     async ensureMachineId() {
@@ -268,40 +363,19 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
           return this._regInfoCache
         }
 
-        let registration: string | null = null
-
-        try {
-          const settingsStore = useSettingsStore()
-
-          if (settingsStore.registration) {
-            registration = settingsStore.registration
-          }
-        } catch (e) {
-          const err = e as Error
-          console.warn('Failed to get registration from stores:', err.message)
-        }
-
-        if (!registration || registration.length < 10) {
+        const registration = readRegistrationFromConfig() || readRegistrationFromDbSettings()
+        if (!registration) {
           return ''
         }
 
-        try {
-          const parsed = JSON.parse(registration) as LicenseInfo
-          this._regInfoCache = parsed
-          return parsed
-        } catch (parseError) {
-          console.error('Registration parse error:', parseError)
-          console.warn('Clearing invalid registration data')
-
-          try {
-            const settingsStore = useSettingsStore()
-            settingsStore.registration = ''
-          } catch {
-            // ignore
-          }
-
+        const parsed = parseRegistrationString(registration)
+        if (!parsed || typeof parsed !== 'object') {
+          console.warn('Invalid registration data in config')
           return ''
         }
+
+        this._regInfoCache = parsed
+        return parsed
       } catch (error) {
         console.error('regInfo getter error', error)
         return ''
