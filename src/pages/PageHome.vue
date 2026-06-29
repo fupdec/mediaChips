@@ -79,10 +79,8 @@
       v-for="widgetId in orderedEnabledWidgets"
       :key="widgetId"
       :widget-id="widgetId"
-      :continue-watching="continueWatching"
-      :favorites="favorites"
-      :top-views="topViews"
       :limits="limits"
+      :media-widgets-enabled="mediaWidgetsEnabled"
       :on-open-media="openMediaItem"
       :on-open-continue="openContinueItem"
       :on-open-continue-list="openContinueList"
@@ -93,15 +91,14 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue"
-import {typedApi} from "@/services/typedApi"
+import {computed, onBeforeUnmount, ref, watch} from "vue"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
 import {useItemsStore} from "@/stores/items"
 import {useEventBus} from "@/utils/eventBus"
 import {useHomeWidgets} from '@/composable/useHomeWidgets'
-import {loadHomeMediaThumbs} from "@/utils/homeMediaThumbs"
+import {invalidateHomeMediaCache, useHomeMedia} from '@/composable/useHomeMedia'
 import {useOpenMediaList} from "@/utils/openMediaList"
 import {findMediaTypeById, isAudioMediaType, isTextMediaType, isVideoMediaType} from "@/utils/mediaType"
 import HomeWidgetRenderer from '@/components/widgets/HomeWidgetRenderer.vue'
@@ -117,48 +114,29 @@ const eventBus = useEventBus()
 const {t} = useI18n()
 const {openMediaList} = useOpenMediaList()
 const {orderedEnabledWidgets, limits, isWidgetEnabled} = useHomeWidgets()
+const { loadHomeMedia } = useHomeMedia()
 
-const continueWatching = ref<MediaItem[]>([])
-const favorites = ref<MediaItem[]>([])
-const topViews = ref<MediaItem[]>([])
 const showWidgetsDialog = ref(false)
 
 const apiUrl = computed(() => store.localhost)
 
-const shouldLoadMedia = computed(() =>
-  isWidgetEnabled('continue') || isWidgetEnabled('favorites') || isWidgetEnabled('topViews'),
-)
+const mediaWidgetsEnabled = computed(() => ({
+  continue: isWidgetEnabled('continue'),
+  favorites: isWidgetEnabled('favorites'),
+  topViews: isWidgetEnabled('topViews'),
+}))
 
-async function loadHomeMedia() {
-  if (!shouldLoadMedia.value) {
-    continueWatching.value = []
-    favorites.value = []
-    topViews.value = []
-    return
-  }
+async function reloadHomeMediaIfNeeded() {
+  const enabled = mediaWidgetsEnabled.value
+  if (!enabled.continue && !enabled.favorites && !enabled.topViews) return
 
-  try {
-    const response = await typedApi.getHomeMedia({
-      continueLimit: limits.value.continue,
-      favoritesLimit: limits.value.favorites,
-      topViewsLimit: limits.value.topViews,
-    })
-    const data = response.data
-
-    continueWatching.value = data.continueWatching || []
-    favorites.value = data.favorites || []
-    topViews.value = data.topViews || []
-
-    const allItems = [
-      ...continueWatching.value,
-      ...favorites.value,
-      ...topViews.value,
-    ]
-
-    await loadHomeMediaThumbs(allItems, store.mediaTypes, store.mediaPath)
-  } catch (error) {
-    console.error(error)
-  }
+  invalidateHomeMediaCache()
+  await loadHomeMedia({
+    limits: limits.value,
+    loadContinue: enabled.continue,
+    loadFavorites: enabled.favorites,
+    loadTopViews: enabled.topViews,
+  })
 }
 
 async function openMediaItem(item: MediaItem) {
@@ -220,13 +198,16 @@ async function hideAlert() {
 }
 
 watch(
-  () => [limits.value.continue, limits.value.favorites, limits.value.topViews, shouldLoadMedia.value],
-  () => loadHomeMedia(),
+  () => [
+    limits.value.continue,
+    limits.value.favorites,
+    limits.value.topViews,
+    mediaWidgetsEnabled.value.continue,
+    mediaWidgetsEnabled.value.favorites,
+    mediaWidgetsEnabled.value.topViews,
+  ],
+  () => reloadHomeMediaIfNeeded(),
 )
-
-onMounted(() => {
-  loadHomeMedia()
-})
 
 onBeforeUnmount(() => {
   setOption('0', "show_salutation")

@@ -133,6 +133,35 @@ describe('validateQuery', () => {
     })
   })
 
+  it('logs validation failures in development', () => {
+    const previousNodeEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const middleware = validateBody(PathPayloadSchema)
+    const req = {
+      method: 'POST',
+      path: '/api/check-file',
+      body: {},
+    }
+    const res = createMockResponse()
+    const next = vi.fn()
+
+    middleware(req as never, res as never, next)
+
+    expect(warn).toHaveBeenCalledWith(
+      '[validateBody] Invalid request',
+      expect.objectContaining({
+        method: 'POST',
+        path: '/api/check-file',
+        source: 'body',
+      }),
+    )
+
+    warn.mockRestore()
+    process.env.NODE_ENV = previousNodeEnv
+  })
+
   it('works when req.query is read-only (Express 5 router)', () => {
     const middleware = validateQuery(HomeMediaQuerySchema)
     const req = { query: { continueLimit: '12' } }

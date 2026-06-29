@@ -1,43 +1,91 @@
 <template>
-  <WidgetTotalStats v-if="widgetId === 'stats'" class="mt-2 mb-4"/>
-  <WidgetExtendedStats v-else-if="widgetId === 'extendedStats'"/>
-  <WidgetQuickActions v-else-if="widgetId === 'quickActions'"/>
-  <WidgetMediaRow
+  <WidgetLazyMount
+    v-if="widgetId === 'stats'"
+    class="mt-2 mb-4"
+    min-height="88px"
+  >
+    <WidgetTotalStats class="mb-0"/>
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
+    v-else-if="widgetId === 'extendedStats'"
+    min-height="120px"
+  >
+    <WidgetExtendedStats/>
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
+    v-else-if="widgetId === 'quickActions'"
+    min-height="96px"
+  >
+    <WidgetQuickActions/>
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
     v-else-if="widgetId === 'continue'"
-    :title="t('home.widgets.continue_watching')"
-    icon="mdi-history"
-    :items="continueWatching"
-    variant="continue"
-    @open="onOpenContinue"
-    @view-all="onOpenContinueList"
-  />
-  <WidgetMediaRow
+    min-height="180px"
+    @activate="ensureHomeMediaLoaded"
+  >
+    <WidgetMediaRow
+      :title="t('home.widgets.continue_watching')"
+      icon="mdi-history"
+      :items="continueWatching"
+      variant="continue"
+      @open="onOpenContinue"
+      @view-all="onOpenContinueList"
+    />
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
     v-else-if="widgetId === 'favorites'"
-    :title="t('home.widgets.favorites')"
-    icon="mdi-heart"
-    :items="favorites"
-    variant="favorite"
-    @open="onOpenMedia"
-    @view-all="onOpenFavoritesList"
-  />
-  <WidgetMediaRow
+    min-height="180px"
+    @activate="ensureHomeMediaLoaded"
+  >
+    <WidgetMediaRow
+      :title="t('home.widgets.favorites')"
+      icon="mdi-heart"
+      :items="favorites"
+      variant="favorite"
+      @open="onOpenMedia"
+      @view-all="onOpenFavoritesList"
+    />
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
     v-else-if="widgetId === 'topViews'"
-    :title="t('home.widgets.top_views')"
-    icon="mdi-eye"
-    :items="topViews"
-    variant="views"
-    @open="onOpenMedia"
-    @view-all="onOpenTopViewsList"
-  />
-  <WidgetRandomMarkers
+    min-height="180px"
+    @activate="ensureHomeMediaLoaded"
+  >
+    <WidgetMediaRow
+      :title="t('home.widgets.top_views')"
+      icon="mdi-eye"
+      :items="topViews"
+      variant="views"
+      @open="onOpenMedia"
+      @view-all="onOpenTopViewsList"
+    />
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
     v-else-if="widgetId === 'markers'"
-    :limit="limits?.markers ?? 8"
-  />
-  <WidgetHealthAlerts v-else-if="widgetId === 'health'"/>
-  <WidgetTopTags
+    min-height="180px"
+  >
+    <WidgetRandomMarkers :limit="limits?.markers ?? 8"/>
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
+    v-else-if="widgetId === 'health'"
+    min-height="120px"
+  >
+    <WidgetHealthAlerts/>
+  </WidgetLazyMount>
+
+  <WidgetLazyMount
     v-else-if="widgetId === 'topTags'"
-    :limit="limits?.topTags ?? 10"
-  />
+    min-height="180px"
+  >
+    <WidgetTopTags :limit="limits?.topTags ?? 10"/>
+  </WidgetLazyMount>
 </template>
 
 <script setup lang="ts">
@@ -49,15 +97,19 @@ import WidgetQuickActions from '@/components/widgets/WidgetQuickActions.vue'
 import WidgetMediaRow from '@/components/widgets/WidgetMediaRow.vue'
 import WidgetRandomMarkers from '@/components/widgets/WidgetRandomMarkers.vue'
 import WidgetHealthAlerts from '@/components/widgets/WidgetHealthAlerts.vue'
-import type { HomeMediaItem, HomeWidgetLimits } from '@/types/widgets'
+import WidgetLazyMount from '@/components/widgets/WidgetLazyMount.vue'
+import { useHomeMedia } from '@/composable/useHomeMedia'
+import type { HomeWidgetLimits } from '@/types/widgets'
 import type { MediaItem } from '@/types/stores'
 
-defineProps<{
+const props = defineProps<{
   widgetId: string
-  continueWatching?: HomeMediaItem[]
-  favorites?: HomeMediaItem[]
-  topViews?: HomeMediaItem[]
   limits?: HomeWidgetLimits
+  mediaWidgetsEnabled: {
+    continue: boolean
+    favorites: boolean
+    topViews: boolean
+  }
   onOpenMedia: (item: MediaItem) => void | Promise<void>
   onOpenContinue: (item: MediaItem) => void | Promise<void>
   onOpenContinueList: () => void
@@ -66,4 +118,14 @@ defineProps<{
 }>()
 
 const {t} = useI18n()
+const { continueWatching, favorites, topViews, loadHomeMedia } = useHomeMedia()
+
+function ensureHomeMediaLoaded() {
+  void loadHomeMedia({
+    limits: props.limits ?? {},
+    loadContinue: props.mediaWidgetsEnabled.continue,
+    loadFavorites: props.mediaWidgetsEnabled.favorites,
+    loadTopViews: props.mediaWidgetsEnabled.topViews,
+  })
+}
 </script>

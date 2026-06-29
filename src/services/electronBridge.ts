@@ -23,7 +23,7 @@ export async function checkFileExistsElectron(filePath: string): Promise<boolean
   if (!operable?.checkFileExists) return null
 
   const exists = await operable.checkFileExists(filePath)
-  return exists ? true : null
+  return Boolean(exists)
 }
 
 export async function showElectronOpenDialog(

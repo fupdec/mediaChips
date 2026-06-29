@@ -1,8 +1,13 @@
 import { z } from 'zod'
-import { FilterObjectSchema, optionalCoercedBooleanSchema } from './entities'
+import { FilterObjectSchema } from './entities'
+import {
+  optionalCoercedBooleanSchema,
+  optionalCoercedNumberSchema,
+  optionalNullableCoercedNumberSchema,
+} from './coercion'
 
-const optionalCoercedNumber = z.coerce.number().optional()
 const optionalCoercedBoolean = optionalCoercedBooleanSchema
+const optionalCoercedNumber = optionalCoercedNumberSchema
 
 export const ItemsListRequestSchema = z.object({
   metaId: optionalCoercedNumber,
@@ -21,7 +26,7 @@ export const ItemsListRequestSchema = z.object({
 
 export const MediaIdsRequestSchema = z.object({
   metaId: optionalCoercedNumber,
-  mediaTypeId: z.coerce.number().nullable().optional(),
+  mediaTypeId: optionalNullableCoercedNumberSchema,
   filters: z.array(FilterObjectSchema).optional(),
   sortBy: z.string().optional(),
   direction: z.string().optional(),
