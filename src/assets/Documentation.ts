@@ -112,7 +112,21 @@ export const docs = [
     icon: 'mdi-cog',
     selector: ['[href="/settings"]'],
     children: [
-      { id: 'settings.general', name: 'General', icon: 'mdi-application-cog-outline' },
+      {
+        id: 'settings.general',
+        name: 'General',
+        icon: 'mdi-application-cog-outline',
+        selector: ['[href="/settings"]', '#settings-doc-tab-general'],
+        children: [
+          { id: 'player.formats', name: 'Player', icon: 'mdi-play-circle' },
+          {
+            id: 'sets.tools.video_preview',
+            name: 'Video preview',
+            icon: 'mdi-image-area',
+            selector: ['[href="/settings"]', '#video_preview'],
+          },
+        ],
+      },
       {
         id: 'settings.appearance',
         name: 'Appearance',
@@ -144,34 +158,11 @@ export const docs = [
       {
         id: 'settings.files',
         name: 'Files',
-        icon: 'mdi-file-cog-outline',
+        icon: 'mdi-folder-cog-outline',
         selector: ['[href="/settings"]', '#settings-doc-tab-files'],
         children: [
-          { id: 'sets.tools.watched_folders', name: 'Watched folders', icon: 'mdi-folder-eye-outline' },
           { id: 'sets.tools.bulk_paths', name: 'Bulk path editing', icon: 'mdi-find-replace' },
-          { id: 'settings.files.content_hash', name: 'Content hash backfill', icon: 'mdi-fingerprint' },
-          { id: 'settings.files.find_missing', name: 'Find missing files', icon: 'mdi-file-search-outline' },
-          {
-            id: 'settings.files.generated_previews',
-            name: 'Generated previews',
-            icon: 'mdi-image-auto-adjust',
-            selector: ['[href="/settings"]', '#settings-generate-video-images'],
-          },
-        ],
-      },
-      {
-        id: 'settings.video',
-        name: 'Video',
-        icon: 'mdi-video-outline',
-        selector: ['[href="/settings"]', '#settings-doc-tab-video'],
-        children: [
-          { id: 'player.formats', name: 'Player', icon: 'mdi-play-circle' },
-          {
-            id: 'sets.tools.video_preview',
-            name: 'Video preview',
-            icon: 'mdi-image-area',
-            selector: ['[href="/settings"]', '#video_preview'],
-          },
+          { id: 'sets.tools.watched_folders', name: 'Watched folders', icon: 'mdi-folder-eye-outline' },
         ],
       },
       {
@@ -195,6 +186,14 @@ export const docs = [
               { id: 'database.backups.create', name: 'Creating backups', icon: 'mdi-database-plus' },
               { id: 'database.backups.restore', name: 'Restoring backups', icon: 'mdi-database-refresh' },
             ],
+          },
+          { id: 'settings.files.content_hash', name: 'Content hash backfill', icon: 'mdi-fingerprint' },
+          { id: 'settings.files.find_missing', name: 'Find missing files', icon: 'mdi-file-search-outline' },
+          {
+            id: 'settings.files.generated_previews',
+            name: 'Generated previews',
+            icon: 'mdi-image-auto-adjust',
+            selector: ['[href="/settings"]', '#settings-generate-video-images'],
           },
         ],
       },

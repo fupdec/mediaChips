@@ -268,7 +268,7 @@ function openImageGenerationSettings() {
   router.push({
     path: '/settings',
     query: {
-      tab: 'files',
+      tab: 'database',
       section: 'generate_video_images',
     },
   })
@@ -278,7 +278,7 @@ function openImageThumbsGenerationSettings() {
   router.push({
     path: '/settings',
     query: {
-      tab: 'files',
+      tab: 'database',
       section: 'generate_image_thumbs',
     },
   })

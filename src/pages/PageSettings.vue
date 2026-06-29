@@ -2,173 +2,148 @@
   <div class="settings-page">
     <div class="settings-page-layout">
       <aside class="settings-page-layout__sidebar">
-        <v-tabs
+        <SettingsNav
           v-model="tab"
-          color="primary"
-          direction="vertical"
-          class="settings-page-layout__tabs"
-        >
-        <v-tab value="general" id="settings-doc-tab-general">
-          <v-icon start>mdi-application-cog-outline</v-icon>
-          {{ t("settings.tabs.general") }}
-        </v-tab>
-
-        <v-tab value="appearance" id="settings-doc-tab-appearance">
-          <v-icon start>mdi-brush-variant</v-icon>
-          {{ t("settings.tabs.appearance") }}
-        </v-tab>
-
-        <v-tab value="library" id="settings-doc-tab-library">
-          <v-icon start>mdi-bookshelf</v-icon>
-          {{ t("settings.tabs.library") }}
-        </v-tab>
-
-        <v-tab value="files" id="settings-doc-tab-files">
-          <v-icon start>mdi-file-cog-outline</v-icon>
-          {{ t("settings.tabs.files") }}
-        </v-tab>
-
-        <v-tab value="video" id="settings-doc-tab-video">
-          <v-icon start>mdi-video-outline</v-icon>
-          {{ t("settings.tabs.video") }}
-        </v-tab>
-
-        <v-tab value="database" id="settings-doc-tab-database">
-          <v-icon start>mdi-database-outline</v-icon>
-          {{ t("settings.tabs.database") }}
-        </v-tab>
-
-        <v-tab value="about" id="settings-doc-tab-about">
-          <v-icon start>mdi-information-variant</v-icon>
-          {{ t("settings.tabs.about") }}
-        </v-tab>
-        </v-tabs>
+          :items="navItems"
+        />
       </aside>
 
       <div ref="contentRef" class="settings-page-layout__content">
         <v-container max-width="960" class="settings-page-layout__container">
-        <div v-if="tab === 'general'">
-          <SettingsList>
-            <SettingsSection>
-              <SettingsGeneral/>
-            </SettingsSection>
+          <SettingsTabHeader
+            :title="activeNavItem.label"
+            :description="activeNavItem.description"
+            :icon="activeNavItem.icon"
+          />
 
-            <SettingsSection>
-              <SettingsLogin/>
-            </SettingsSection>
-          </SettingsList>
-        </div>
+          <div v-if="tab === 'general'">
+            <SettingsList>
+              <SettingsSection>
+                <SettingsGeneral/>
+              </SettingsSection>
 
-        <div v-else-if="tab === 'appearance'">
-          <SettingsList>
-            <SettingsSection padded>
-              <SettingsAppearanceDarkMode/>
-              <SettingsAppearanceZoom/>
-            </SettingsSection>
+              <SettingsSection>
+                <SettingsLocale/>
+              </SettingsSection>
 
-            <SettingsSection padded>
-              <SettingsAppearanceThemeColors/>
-            </SettingsSection>
+              <SettingsSection>
+                <SettingsLogin/>
+              </SettingsSection>
 
-            <SettingsSection padded>
-              <SettingsAppearanceCards/>
-            </SettingsSection>
+              <SettingsGroupLabel :title="t('settings.groups.playback')"/>
 
-            <SettingsSection padded>
-              <SettingsAppearancePage/>
-            </SettingsSection>
+              <SettingsSection>
+                <SettingsVideoPlayer/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <SettingsSfwMode/>
-            </SettingsSection>
-          </SettingsList>
-        </div>
+              <SettingsSection>
+                <SettingsVideoPreview/>
+              </SettingsSection>
+            </SettingsList>
+          </div>
 
-        <div v-else-if="tab === 'files'">
-          <SettingsList>
-            <SettingsSection>
-              <SettingsWatchedFolders/>
-            </SettingsSection>
+          <div v-else-if="tab === 'appearance'">
+            <SettingsList>
+              <SettingsSection padded>
+                <SettingsAppearanceDarkMode/>
+                <SettingsAppearanceZoom/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <SettingsBulkPathEditing/>
-            </SettingsSection>
+              <SettingsSection padded>
+                <SettingsAppearanceThemeColors/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <SettingsContentHashBackfill/>
-            </SettingsSection>
+              <SettingsSection padded>
+                <SettingsAppearanceCards/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <SettingsFindMissingMedia/>
-            </SettingsSection>
+              <SettingsSection padded>
+                <SettingsAppearancePage/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <SettingsGenerateVideoImages/>
-            </SettingsSection>
+              <SettingsSection>
+                <SettingsSfwMode/>
+              </SettingsSection>
+            </SettingsList>
+          </div>
 
-            <SettingsSection>
-              <SettingsGenerateImageThumbs/>
-            </SettingsSection>
+          <div v-else-if="tab === 'library'">
+            <SettingsList>
+              <SettingsMeta/>
 
-            <SettingsSection>
-              <SettingsClearGeneratedImages/>
-            </SettingsSection>
-          </SettingsList>
-        </div>
+              <SettingsMediaTypes/>
 
-        <div v-else-if="tab === 'library'">
-          <SettingsList>
-            <SettingsMeta/>
+              <SettingsMetaAssignment/>
 
-            <SettingsMediaTypes/>
+              <SettingsSection>
+                <SettingsDataScraper/>
+              </SettingsSection>
 
-            <SettingsMetaAssignment/>
+              <SettingsSection>
+                <SettingsQuickTags/>
+              </SettingsSection>
+            </SettingsList>
+          </div>
 
-            <SettingsSection>
-              <SettingsDataScraper/>
-            </SettingsSection>
+          <div v-else-if="tab === 'files'">
+            <SettingsList>
+              <SettingsSection>
+                <SettingsBulkPathEditing/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <SettingsQuickTags/>
-            </SettingsSection>
-          </SettingsList>
-        </div>
+              <SettingsSection>
+                <SettingsWatchedFolders/>
+              </SettingsSection>
+            </SettingsList>
+          </div>
 
-        <div v-else-if="tab === 'video'">
-          <SettingsList>
-            <SettingsSection>
-              <SettingsVideoPlayer/>
-            </SettingsSection>
+          <div v-else-if="tab === 'database'">
+            <SettingsList>
+              <SettingsGroupLabel :title="t('settings.groups.storage')"/>
 
-            <SettingsSection>
-              <SettingsVideoPreview/>
-            </SettingsSection>
-          </SettingsList>
-        </div>
+              <SettingsSection>
+                <SettingsOpenDataFolder/>
+              </SettingsSection>
 
-        <div v-else-if="tab === 'database'">
-          <SettingsList>
-            <SettingsSection>
-              <SettingsOpenDataFolder/>
-            </SettingsSection>
+              <SettingsSection>
+                <SettingsDatabases/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <SettingsDatabases/>
-            </SettingsSection>
-          </SettingsList>
-        </div>
+              <SettingsGroupLabel :title="t('settings.groups.maintenance')"/>
 
-        <div v-else-if="tab === 'about'">
-          <SettingsList>
-            <SettingsSection>
-              <SettingsRegistration/>
-            </SettingsSection>
+              <SettingsSection>
+                <SettingsContentHashBackfill/>
+              </SettingsSection>
 
-            <SettingsSection>
-              <About/>
-            </SettingsSection>
-          </SettingsList>
-        </div>
+              <SettingsSection>
+                <SettingsFindMissingMedia/>
+              </SettingsSection>
+
+              <SettingsSection>
+                <SettingsGenerateVideoImages/>
+              </SettingsSection>
+
+              <SettingsSection>
+                <SettingsGenerateImageThumbs/>
+              </SettingsSection>
+
+              <SettingsSection>
+                <SettingsClearGeneratedImages/>
+              </SettingsSection>
+            </SettingsList>
+          </div>
+
+          <div v-else-if="tab === 'about'">
+            <SettingsList>
+              <SettingsSection>
+                <SettingsRegistration/>
+              </SettingsSection>
+
+              <SettingsSection>
+                <About/>
+              </SettingsSection>
+            </SettingsList>
+          </div>
         </v-container>
       </div>
     </div>
@@ -176,11 +151,14 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, watch, nextTick, defineAsyncComponent} from "vue"
-import {useRoute} from "vue-router"
+import {computed, ref, onMounted, watch, nextTick, defineAsyncComponent} from "vue"
+import {useRoute, useRouter} from "vue-router"
 import {useI18n} from "vue-i18n"
 import SettingsList from "@/components/ui/SettingsList.vue"
 import SettingsSection from "@/components/ui/SettingsSection.vue"
+import SettingsNav, {type SettingsNavItem} from "@/components/settings/SettingsNav.vue"
+import SettingsTabHeader from "@/components/settings/SettingsTabHeader.vue"
+import SettingsGroupLabel from "@/components/settings/SettingsGroupLabel.vue"
 import SettingsAppearanceThemeColors
   from "@/components/settings/appearance/SettingsAppearanceThemeColors.vue"
 import SettingsAppearanceCards
@@ -248,6 +226,9 @@ const SettingsFindMissingMedia = defineAsyncComponent(() =>
 const SettingsGeneral = defineAsyncComponent(() =>
   import("@/components/settings/general/SettingsGeneral.vue")
 )
+const SettingsLocale = defineAsyncComponent(() =>
+  import("@/components/settings/general/SettingsLocale.vue")
+)
 const SettingsRegistration = defineAsyncComponent(() =>
   import("@/components/settings/about/SettingsRegistration.vue")
 )
@@ -260,12 +241,71 @@ const TAB_ALIASES: Record<string, string> = {
   meta: "library",
   media: "library",
   assignment: "library",
+  video: "general",
 }
+
+const NAV_ITEMS: SettingsNavItem[] = [
+  {
+    value: "general",
+    icon: "mdi-application-cog-outline",
+    labelKey: "settings.tabs.general",
+    descKey: "settings.tabs_desc.general",
+    docId: "settings-doc-tab-general",
+  },
+  {
+    value: "appearance",
+    icon: "mdi-brush-variant",
+    labelKey: "settings.tabs.appearance",
+    descKey: "settings.tabs_desc.appearance",
+    docId: "settings-doc-tab-appearance",
+  },
+  {
+    value: "library",
+    icon: "mdi-bookshelf",
+    labelKey: "settings.tabs.library",
+    descKey: "settings.tabs_desc.library",
+    docId: "settings-doc-tab-library",
+  },
+  {
+    value: "files",
+    icon: "mdi-folder-cog-outline",
+    labelKey: "settings.tabs.files",
+    descKey: "settings.tabs_desc.files",
+    docId: "settings-doc-tab-files",
+  },
+  {
+    value: "database",
+    icon: "mdi-database-outline",
+    labelKey: "settings.tabs.database",
+    descKey: "settings.tabs_desc.database",
+    docId: "settings-doc-tab-database",
+  },
+  {
+    value: "about",
+    icon: "mdi-information-variant",
+    labelKey: "settings.tabs.about",
+    descKey: "settings.tabs_desc.about",
+    docId: "settings-doc-tab-about",
+  },
+]
 
 const tab = ref("general")
 const contentRef = ref<HTMLElement | null>(null)
+const applyingRoute = ref(false)
 const route = useRoute()
+const router = useRouter()
 const {t} = useI18n()
+
+const navItems = NAV_ITEMS
+
+const activeNavItem = computed(() => {
+  const item = NAV_ITEMS.find(entry => entry.value === tab.value) || NAV_ITEMS[0]
+  return {
+    label: t(item.labelKey),
+    description: t(item.descKey),
+    icon: item.icon,
+  }
+})
 
 const SETTINGS_SECTION_IDS: Record<string, string> = {
   generate_video_images: "settings-generate-video-images",
@@ -302,34 +342,53 @@ function scrollToSettingsSection(sectionId: string, attempts = 12) {
 }
 
 function applyRouteSettings() {
+  applyingRoute.value = true
+
   const section = String(route.query.section || "")
 
-  if (section === "generate_video_images" || section === "generate_image_thumbs") {
-    tab.value = "files"
+  if (
+    section === "generate_video_images"
+    || section === "generate_image_thumbs"
+    || section === "backups"
+  ) {
+    tab.value = "database"
   } else if (section === "field_pinning") {
     tab.value = "library"
   } else if (section === "video_preview") {
-    tab.value = "video"
-  } else if (section === "backups") {
-    tab.value = "database"
+    tab.value = "general"
   } else if (route.query.tab) {
     tab.value = resolveTab(String(route.query.tab))
   }
 
-  const sectionId = SETTINGS_SECTION_IDS[String(route.query.section || "")]
-  if (!sectionId) return
+  const sectionId = SETTINGS_SECTION_IDS[section]
 
   nextTick(() => {
-    scrollToSettingsSection(sectionId)
+    if (sectionId) {
+      scrollToSettingsSection(sectionId)
+    }
+    applyingRoute.value = false
   })
+}
+
+function syncTabToRoute(nextTab: string) {
+  const currentTab = resolveTab(String(route.query.tab || "general"))
+  const currentSection = String(route.query.section || "")
+
+  if (currentTab === nextTab && !currentSection) return
+
+  const query: Record<string, string> = {tab: nextTab}
+
+  router.replace({path: "/settings", query})
 }
 
 onMounted(applyRouteSettings)
 
-watch(tab, () => {
+watch(tab, (nextTab) => {
   if (contentRef.value) {
     contentRef.value.scrollTop = 0
   }
+  if (applyingRoute.value) return
+  syncTabToRoute(nextTab)
 })
 
 watch(() => route.fullPath, applyRouteSettings)
@@ -349,35 +408,21 @@ watch(() => route.fullPath, applyRouteSettings)
   display: flex;
   align-items: stretch;
   flex: 1 1 auto;
-  gap: 24px;
+  gap: 28px;
   width: 100%;
   min-height: 0;
-  max-width: 1200px;
+  max-width: 1180px;
   margin-inline: auto;
-  padding: 8px 16px 0;
+  padding: 12px 20px 0;
   overflow: hidden;
   box-sizing: border-box;
 }
 
 .settings-page-layout__sidebar {
-  flex: 0 0 220px;
+  flex: 0 0 248px;
   min-height: 0;
   overflow-y: auto;
   padding-top: 4px;
-}
-
-.settings-page-layout__tabs {
-  width: 100%;
-}
-
-.settings-page-layout__tabs :deep(.v-tab) {
-  justify-content: flex-start;
-  text-transform: none;
-  letter-spacing: normal;
-}
-
-.settings-page-layout__tabs :deep(.v-tab__slider) {
-  transition: none !important;
 }
 
 .settings-page-layout__content {
@@ -392,7 +437,7 @@ watch(() => route.fullPath, applyRouteSettings)
 .settings-page-layout__container {
   width: 100%;
   padding-inline: 0;
-  padding-bottom: 16px;
+  padding-bottom: 24px;
 }
 
 @media (max-width: 959px) {
@@ -404,10 +449,10 @@ watch(() => route.fullPath, applyRouteSettings)
 
   .settings-page-layout {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     height: auto;
     overflow: visible;
-    padding-top: 0;
+    padding: 8px 12px 0;
   }
 
   .settings-page-layout__sidebar {

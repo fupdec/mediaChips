@@ -4,7 +4,7 @@
       :type="SETTINGS.allowLanAccess === '1' ? 'info' : 'warning'"
       variant="tonal"
       density="compact"
-      class="text-body-2 mb-8"
+      class="text-body-2 mb-3"
       rounded="xl"
     >
       <div>
@@ -23,7 +23,7 @@
         rounded="xl"
         size="small"
         variant="outlined"
-        class="mt-2"
+        class="mt-1"
       >
         <v-icon start size="small">mdi-content-copy</v-icon>
         <span>{{ t('settings_labels.general.copy_link') }}:</span>
@@ -38,8 +38,6 @@
       :disabled="lanAccessEnvLocked"
       @update="refreshNetworkConfig"
     />
-
-    <settings-locale></settings-locale>
 
     <!-- EXACT TYPING SWITCH -->
     <settings-switch
@@ -78,7 +76,6 @@ import {useSettingsStore} from '@/stores/settings'
 import {refreshServerConfig} from '@/services/configService'
 
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
-import SettingsLocale from "@/components/settings/general/SettingsLocale.vue";
 
 const {t} = useI18n({useScope: 'global'})
 
