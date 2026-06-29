@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { meta } from '../schema/meta'
 import { valuesInTags } from '../schema/valuesInTag'
@@ -36,6 +36,17 @@ export function createValuesInTagRepository(db: DrizzleClient) {
 
     deleteByTagId(tagId: number): void {
       db.delete(valuesInTags).where(eq(valuesInTags.tagId, tagId)).run()
+    },
+
+    deleteByTagIdsAndMeta(tagIds: number[], metaId: number): void {
+      if (!tagIds.length) return
+
+      db.delete(valuesInTags)
+        .where(and(
+          inArray(valuesInTags.tagId, tagIds),
+          eq(valuesInTags.metaId, metaId),
+        ))
+        .run()
     },
   }
 }

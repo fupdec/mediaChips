@@ -1,13 +1,4 @@
-import type { SequelizeModelStatic } from './db'
-
 export type BulkItemType = 'media' | 'tag'
-
-export interface BulkMetaModels {
-  tagsModel: SequelizeModelStatic
-  valuesModel: SequelizeModelStatic
-  itemIdField: string
-  valueItemIdField?: string
-}
 
 export type BulkItemId = number | string
 

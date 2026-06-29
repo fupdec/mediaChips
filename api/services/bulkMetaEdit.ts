@@ -1,16 +1,19 @@
-import type { ApiDb, AnyRecord } from '../types/db'
-import type { SequelizeModelStatic } from '../types/db'
+import type { ApiDb } from '../types/db'
 import type {
   BulkItemId,
   BulkItemType,
   BulkMetaEditOptions,
   BulkMetaEditResult,
-  BulkMetaModels,
   MetaEditChange,
   PresetEditChange,
 } from '../types/bulkMetaEdit'
 
-const {Op} = require('sequelize')
+const {createMediaRepository} = require('../db/repositories/media')
+const {createTagsRepository} = require('../db/repositories/tags')
+const {createTagsInMediaRepository} = require('../db/repositories/tagsInMedia')
+const {createTagsInTagRepository} = require('../db/repositories/tagsInTag')
+const {createValuesInMediaRepository} = require('../db/repositories/valuesInMedia')
+const {createValuesInTagRepository} = require('../db/repositories/valuesInTag')
 
 const BATCH_SIZE = 200
 
@@ -22,75 +25,20 @@ function chunkArray<T>(items: T[], size: number = BATCH_SIZE): T[][] {
   return chunks
 }
 
-function getModels(db: ApiDb, itemType: BulkItemType): BulkMetaModels | null {
-  if (itemType === 'media') {
-    return {
-      tagsModel: db.TagsInMedia,
-      valuesModel: db.ValuesInMedia,
-      itemIdField: 'mediaId',
-    }
-  }
-
-  if (itemType === 'tag') {
-    return {
-      tagsModel: db.TagsInTag,
-      valuesModel: db.ValuesInTag,
-      itemIdField: 'parentTagId',
-      valueItemIdField: 'tagId',
-    }
-  }
-
-  return null
-}
-
-async function destroyTagsForMeta(
-  tagsModel: SequelizeModelStatic,
-  itemIdField: string,
-  itemIds: BulkItemId[],
-  metaId: number,
-) {
-  for (const batch of chunkArray(itemIds)) {
-    await tagsModel.destroy({
-      where: {
-        [itemIdField]: {[Op.in]: batch},
-        metaId,
-      },
-    })
-  }
-}
-
-async function destroyValuesForMeta(
-  valuesModel: SequelizeModelStatic,
-  itemIdField: string,
-  valueItemIdField: string | undefined,
-  itemIds: BulkItemId[],
-  metaId: number,
-) {
-  for (const batch of chunkArray(itemIds)) {
-    await valuesModel.destroy({
-      where: {
-        [valueItemIdField || itemIdField]: {[Op.in]: batch},
-        metaId,
-      },
-    })
-  }
-}
-
 function buildTagRows(
   itemType: BulkItemType,
-  itemIdField: string,
-  itemIds: BulkItemId[],
+  itemIds: number[],
   metaId: number,
   tagIds: BulkItemId[],
-): AnyRecord[] {
+) {
   const rows = []
 
   for (const itemId of itemIds) {
     for (const tagId of tagIds) {
       if (itemType === 'media') {
-        rows.push({mediaId: itemId, metaId, tagId})
+        rows.push({mediaId: itemId, metaId, tagId: Number(tagId)})
       } else {
-        rows.push({parentTagId: itemId, metaId, tagId})
+        rows.push({parentTagId: itemId, metaId, tagId: Number(tagId)})
       }
     }
   }
@@ -98,19 +46,19 @@ function buildTagRows(
   return rows
 }
 
-function buildValueRows(itemType: BulkItemType, itemIds: BulkItemId[], metaId: number, value: unknown): AnyRecord[] {
-  if (itemType === 'media') {
-    return itemIds.map((itemId: BulkItemId) => ({
-      mediaId: itemId,
-      metaId,
-      value,
-    }))
-  }
+function buildMediaValueRows(itemIds: number[], metaId: number, value: unknown) {
+  return itemIds.map((itemId) => ({
+    mediaId: itemId,
+    metaId,
+    value: String(value ?? ''),
+  }))
+}
 
-  return itemIds.map((itemId: BulkItemId) => ({
+function buildTagValueRows(itemIds: number[], metaId: number, value: unknown) {
+  return itemIds.map((itemId) => ({
     tagId: itemId,
     metaId,
-    value,
+    value: String(value ?? ''),
   }))
 }
 
@@ -133,10 +81,11 @@ function normalizePresetValue(field: string, editType: number, value: unknown) {
 async function applyPresetBulkEdit(
   db: ApiDb,
   itemType: BulkItemType,
-  itemIds: BulkItemId[],
+  itemIds: number[],
   presetChanges: PresetEditChange[] = [],
 ) {
-  const Model = itemType === 'media' ? db.Media : db.Tag
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
   let appliedChanges = 0
 
   for (const change of presetChanges) {
@@ -150,9 +99,11 @@ async function applyPresetBulkEdit(
     const updatePayload = {[field]: value}
 
     for (const batch of chunkArray(itemIds)) {
-      await Model.update(updatePayload, {
-        where: {id: {[Op.in]: batch}},
-      })
+      if (itemType === 'media') {
+        mediaRepo.updateByIds(batch, updatePayload)
+      } else {
+        tagsRepo.updateByIds(batch, updatePayload)
+      }
     }
 
     appliedChanges += 1
@@ -163,17 +114,17 @@ async function applyPresetBulkEdit(
 
 async function applyBulkMetaEdit(db: ApiDb, options: BulkMetaEditOptions): Promise<BulkMetaEditResult> {
   const {itemType, itemIds = [], changes = [], presetChanges = []} = options
-  const models = getModels(db, itemType)
-  if (!models) {
-    throw new Error(`Unsupported item type: ${itemType}`)
-  }
 
-  const uniqueItemIds = [...new Set(itemIds.filter(Boolean))]
+  const uniqueItemIds = [...new Set(itemIds.filter(Boolean).map((id) => Number(id)))]
   if (!uniqueItemIds.length) {
     return {updated: 0, changes: 0}
   }
 
-  const {tagsModel, valuesModel, itemIdField, valueItemIdField} = models
+  const tagsInMediaRepo = createTagsInMediaRepository(db.drizzle)
+  const tagsInTagRepo = createTagsInTagRepository(db.drizzle)
+  const valuesInMediaRepo = createValuesInMediaRepository(db.drizzle)
+  const valuesInTagRepo = createValuesInTagRepository(db.drizzle)
+
   let appliedChanges = 0
 
   for (const change of changes) {
@@ -184,46 +135,64 @@ async function applyBulkMetaEdit(db: ApiDb, options: BulkMetaEditOptions): Promi
     const metaType = change.metaType
     const value = change.value
 
-    if (editType === 1 || editType === 2) {
-      if (metaType === 'array') {
-        await destroyTagsForMeta(tagsModel, itemIdField, uniqueItemIds, metaId)
-      } else {
-        await destroyValuesForMeta(
-          valuesModel,
-          itemIdField,
-          valueItemIdField,
-          uniqueItemIds,
-          metaId,
-        )
+    for (const batch of chunkArray(uniqueItemIds)) {
+      if (editType === 1 || editType === 2) {
+        if (metaType === 'array') {
+          if (itemType === 'media') {
+            tagsInMediaRepo.deleteByMediaIdsAndMeta(batch, metaId)
+          } else {
+            tagsInTagRepo.deleteByParentTagIdsAndMeta(batch, metaId)
+          }
+        } else if (itemType === 'media') {
+          valuesInMediaRepo.deleteByMediaIdsAndMeta(batch, metaId)
+        } else {
+          valuesInTagRepo.deleteByTagIdsAndMeta(batch, metaId)
+        }
       }
     }
 
     if (editType === 2) {
       if (metaType === 'array') {
         const tagIds = Array.isArray(value) ? value : []
-        const rows = buildTagRows(itemType, itemIdField, uniqueItemIds, metaId, tagIds)
+        const rows = buildTagRows(itemType, uniqueItemIds, metaId, tagIds)
 
         for (const batch of chunkArray(rows, 500)) {
           if (batch.length) {
-            await tagsModel.bulkCreate(batch, {ignoreDuplicates: true})
+            if (itemType === 'media') {
+              tagsInMediaRepo.bulkCreate(batch)
+            } else {
+              tagsInTagRepo.bulkCreate(batch)
+            }
+          }
+        }
+      } else if (itemType === 'media') {
+        const rows = buildMediaValueRows(uniqueItemIds, metaId, value)
+
+        for (const batch of chunkArray(rows, 500)) {
+          if (batch.length) {
+            valuesInMediaRepo.bulkCreate(batch)
           }
         }
       } else {
-        const rows = buildValueRows(itemType, uniqueItemIds, metaId, value)
+        const rows = buildTagValueRows(uniqueItemIds, metaId, value)
 
         for (const batch of chunkArray(rows, 500)) {
           if (batch.length) {
-            await valuesModel.bulkCreate(batch)
+            valuesInTagRepo.bulkCreate(batch)
           }
         }
       }
     } else if (editType === 3 && metaType === 'array') {
       const tagIds = Array.isArray(value) ? value : []
-      const rows = buildTagRows(itemType, itemIdField, uniqueItemIds, metaId, tagIds)
+      const rows = buildTagRows(itemType, uniqueItemIds, metaId, tagIds)
 
       for (const batch of chunkArray(rows, 500)) {
         if (batch.length) {
-          await tagsModel.bulkCreate(batch, {ignoreDuplicates: true})
+          if (itemType === 'media') {
+            tagsInMediaRepo.bulkCreate(batch)
+          } else {
+            tagsInTagRepo.bulkCreate(batch)
+          }
         }
       }
     }

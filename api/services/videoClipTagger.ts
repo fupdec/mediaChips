@@ -21,6 +21,7 @@ const {
   getPromptEntries,
   tags,
 } = require('./videoClipTagDictionary')
+const {createTagsRepository} = require('../db/repositories/tags')
 
 const CLIP_MODEL = 'Xenova/clip-vit-base-patch32'
 
@@ -353,7 +354,7 @@ async function suggestTagsFromVideoFrames(
 
     const existingTags = options.excludeExisting === false
       ? []
-      : ((options.tags || await db.Tag.findAll({raw: true})) as Array<{ name?: string }>)
+      : ((options.tags || createTagsRepository(db.drizzle, db.sqlite).findAllRaw()) as Array<{ name?: string }>)
 
     const suggestions = aggregateFrameResults(frameResults, options.locale || 'en', existingTags)
       .slice(0, Number(options.limit || 50))
@@ -399,7 +400,7 @@ async function classifyMedia(
 
     const existingTags = options.excludeExisting === false
       ? []
-      : ((options.tags || await db.Tag.findAll({raw: true})) as Array<{ name?: string }>)
+      : ((options.tags || createTagsRepository(db.drizzle, db.sqlite).findAllRaw()) as Array<{ name?: string }>)
 
     const suggestions = aggregateFrameResults(frameResults, options.locale || 'en', existingTags)
       .slice(0, Number(options.limit || 50))

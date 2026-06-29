@@ -23,12 +23,13 @@ const {
   ffprobe,
 } = require('../utils/ffmpeg')
 const {resolveExistingPath} = require('./contentHash')
+const {createMediaRepository} = require('../db/repositories/media')
+const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
+const {createMarksRepository} = require('../db/repositories/marks')
 
 async function getVideoMediaTypeId(db: ApiDb) {
-  const videoType = await db.MediaType.findOne({
-    where: {type: 'video'},
-    raw: true,
-  })
+  const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
+  const videoType = mediaTypesRepo.findByType('video')
   return videoType?.id || null
 }
 
@@ -347,6 +348,8 @@ async function loadGeneratedIdSet(dbPath: string, imageType: VideoImageType): Pr
 }
 
 async function getVideoImagesGenerationStatus(db: ApiDb, dbPath: string): Promise<VideoImagesGenerationStatus> {
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const marksRepo = createMarksRepository(db.drizzle)
   const videoTypeId = await getVideoMediaTypeId(db)
   const [
     previewIds,
@@ -360,17 +363,8 @@ async function getVideoImagesGenerationStatus(db: ApiDb, dbPath: string): Promis
     loadGeneratedIdSet(dbPath, 'grid'),
     loadGeneratedIdSet(dbPath, 'timeline'),
     loadGeneratedIdSet(dbPath, 'marks'),
-    videoTypeId
-      ? db.Media.findAll({
-        where: {mediaTypeId: videoTypeId},
-        attributes: ['id'],
-        raw: true,
-      })
-      : Promise.resolve([]),
-    db.Mark.findAll({
-      attributes: ['id'],
-      raw: true,
-    }),
+    Promise.resolve(videoTypeId ? mediaRepo.findIdsByMediaType(videoTypeId) : []),
+    Promise.resolve(marksRepo.findAllIds()),
   ])
 
   const videoTotal = videoRows.length
@@ -393,7 +387,8 @@ async function* iterateVideoImagesGeneration(
     force = false,
   }: VideoImageGenerationOptions = {},
 ): AsyncGenerator<VideoImageGenerationProgressEvent> {
-  const Op = db.Sequelize.Op
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const marksRepo = createMarksRepository(db.drizzle)
 
   if (!IMAGE_TYPES.includes(imageType)) {
     yield {type: 'error', message: `Unknown image type: ${imageType}`}
@@ -402,14 +397,14 @@ async function* iterateVideoImagesGeneration(
 
   let total = 0
   if (imageType === 'marks') {
-    total = await db.Mark.count()
+    total = marksRepo.countAll()
   } else {
     const videoTypeId = await getVideoMediaTypeId(db)
     if (!videoTypeId) {
       yield {type: 'complete', processed: 0, total: 0, created: 0, skipped: 0, missing: 0, failed: 0}
       return
     }
-    total = await db.Media.count({where: {mediaTypeId: videoTypeId}})
+    total = mediaRepo.countByMediaType(videoTypeId)
   }
 
   let processed = 0
@@ -434,27 +429,15 @@ async function* iterateVideoImagesGeneration(
     let item: VideoImageItem | null = null
 
     if (imageType === 'marks') {
-      const markRow = await db.Mark.findOne({
-        where: {id: {[Op.gt]: lastId}},
-        include: [db.Media],
-        order: [['id', 'ASC']],
-      })
+      const markRow = marksRepo.findNextWithMediaAfterId(lastId)
       if (!markRow) break
-      const markJson = typeof markRow.toJSON === 'function'
-        ? markRow.toJSON() as unknown as VideoImageItem
-        : markRow as unknown as VideoImageItem
-      markJson.media = markJson.media || markJson.Media
-      item = markJson
+      item = {
+        ...markRow,
+        media: markRow.media || undefined,
+      } as VideoImageItem
     } else {
       const videoTypeId = await getVideoMediaTypeId(db)
-      item = await db.Media.findOne({
-        where: {
-          mediaTypeId: videoTypeId,
-          id: {[Op.gt]: lastId},
-        },
-        order: [['id', 'ASC']],
-        raw: true,
-      }) as unknown as VideoImageItem | null
+      item = mediaRepo.findNextByMediaTypeAfterId(Number(videoTypeId), lastId) as VideoImageItem | null
       if (!item) break
     }
 

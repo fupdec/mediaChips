@@ -1,4 +1,4 @@
-import { count, eq } from 'drizzle-orm'
+import { count, eq, inArray } from 'drizzle-orm'
 import type Database from 'better-sqlite3'
 import type { DrizzleClient } from '../client'
 import { tags } from '../schema/tags'
@@ -66,6 +66,18 @@ export function createTagsRepository(db: DrizzleClient, sqlite: Database.Databas
       db.update(tags)
         .set(payload)
         .where(eq(tags.id, id))
+        .run()
+    },
+
+    updateByIds(ids: number[], data: Partial<TagInsert>): void {
+      if (!ids.length) return
+
+      db.update(tags)
+        .set({
+          ...data,
+          updatedAt: nowIso(),
+        })
+        .where(inArray(tags.id, ids))
         .run()
     },
 

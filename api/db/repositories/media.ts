@@ -234,5 +234,46 @@ export function createMediaRepository(db: DrizzleClient) {
         .map((row) => row.path)
         .filter((pathValue): pathValue is string => Boolean(pathValue))
     },
+
+    findIdsByMediaType(mediaTypeId: number): Array<{id: number}> {
+      return db.select({id: media.id})
+        .from(media)
+        .where(eq(media.mediaTypeId, mediaTypeId))
+        .all()
+    },
+
+    countByMediaType(mediaTypeId: number): number {
+      const row = db.select({count: count()})
+        .from(media)
+        .where(eq(media.mediaTypeId, mediaTypeId))
+        .get()
+      return Number(row?.count ?? 0)
+    },
+
+    findNextByMediaTypeAfterId(mediaTypeId: number, lastId: number): MediaRow | undefined {
+      return db.select()
+        .from(media)
+        .where(and(
+          eq(media.mediaTypeId, mediaTypeId),
+          gt(media.id, lastId),
+        ))
+        .orderBy(asc(media.id))
+        .limit(1)
+        .get()
+    },
+
+    updateByIds(ids: number[], data: Record<string, unknown>, options: {silent?: boolean} = {}): void {
+      if (!ids.length) return
+
+      const payload = pickMediaFields(data)
+      if (!options.silent) {
+        payload.updatedAt = nowIso()
+      }
+
+      db.update(media)
+        .set(payload)
+        .where(inArray(media.id, ids))
+        .run()
+    },
   }
 }

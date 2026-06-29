@@ -11,6 +11,7 @@ const {
   getMissingMediaStatus,
   iterateMissingMediaSearch,
 } = require('../../services/missingMediaFinder')
+const {createMediaRepository} = require('../../db/repositories/media')
 
 module.exports = function createTasksMaintenanceController(shared: TaskControllerShared) {
   const {
@@ -19,6 +20,8 @@ module.exports = function createTasksMaintenanceController(shared: TaskControlle
     createStreamAbortSignal,
     getVideoImagesGeneration,
   } = shared
+
+  const mediaRepo = createMediaRepository(db.drizzle)
 
   const contentHashBackfillStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
@@ -164,10 +167,7 @@ module.exports = function createTasksMaintenanceController(shared: TaskControlle
           data.contentHash = item.contentHash
         }
 
-        await db.Media.update(data, {
-          where: {id: mediaId},
-          silent: true,
-        })
+        mediaRepo.updateById(Number(mediaId), data, {silent: true})
 
         updated += 1
       }

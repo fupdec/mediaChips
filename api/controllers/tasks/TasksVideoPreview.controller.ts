@@ -17,11 +17,15 @@ const {
 } = require('../../utils/ffmpeg')
 const {resolveExistingPath} = require('../../services/contentHash')
 const {resolveActiveDbFilePath} = require('../../services/mediaPathResolver')
+const {createMarksRepository} = require('../../db/repositories/marks')
+const {createMediaRepository} = require('../../db/repositories/media')
 
 const formatMarkTimestamp = (time: number) => new Date(1000 * time).toISOString().substr(11, 12)
 
 module.exports = function createTasksVideoPreviewController(shared: TaskControllerShared) {
   const {db, dbPath, createThumbMiddle, createThumbCustom, getImageMedia} = shared
+  const marksRepo = createMarksRepository(db.drizzle)
+  const mediaRepo = createMediaRepository(db.drizzle)
 
   const createThumbForVideo = async function (req: ApiRequest, res: ApiResponse) {
     createThumbMiddle(req.body.path, req.body.id)
@@ -313,20 +317,14 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
         return
       }
 
-      const mark = await db.Mark.findOne({
-        where: {id: markId, mediaId},
-        raw: true,
-      })
+      const mark = marksRepo.findByIdAndMediaId(markId, mediaId)
 
       if (!mark) {
         res.status(404).send({message: 'Mark not found'})
         return
       }
 
-      const media = await db.Media.findOne({
-        where: {id: mediaId},
-        raw: true,
-      })
+      const media = mediaRepo.findById(mediaId)
 
       if (!media?.path) {
         res.status(404).send({message: 'Media not found'})

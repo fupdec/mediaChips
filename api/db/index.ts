@@ -12,6 +12,7 @@ export {
   createMarksRepository,
   createMediaInPlaylistsRepository,
   createMediaRepository,
+  createMediaTypesInWatchedFoldersRepository,
   createMediaTypesRepository,
   createMetaInMediaTypesRepository,
   createMetaRepository,

@@ -1,4 +1,4 @@
-import { asc, count, eq, sql } from 'drizzle-orm'
+import { and, asc, count, eq, gt, sql } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { marks } from '../schema/marks'
 import { media } from '../schema/media'
@@ -29,6 +29,37 @@ export function createMarksRepository(db: DrizzleClient) {
         .from(marks)
         .where(eq(marks.mediaId, Number(mediaId)))
         .all()
+    },
+
+    findByIdAndMediaId(markId: number, mediaId: number): MarkRow | undefined {
+      return db.select()
+        .from(marks)
+        .where(and(eq(marks.id, markId), eq(marks.mediaId, mediaId)))
+        .get()
+    },
+
+    findAllIds(): Array<{id: number}> {
+      return db.select({id: marks.id}).from(marks).all()
+    },
+
+    findNextWithMediaAfterId(lastId: number) {
+      const row = db.select()
+        .from(marks)
+        .where(gt(marks.id, lastId))
+        .orderBy(asc(marks.id))
+        .limit(1)
+        .get()
+
+      if (!row) return null
+
+      const medium = row.mediaId
+        ? db.select().from(media).where(eq(media.id, row.mediaId)).get()
+        : null
+
+      return {
+        ...row,
+        media: medium,
+      }
     },
 
     findIdsByTagId(tagId: unknown): Array<{id: number}> {
@@ -100,11 +131,6 @@ export function createMarksRepository(db: DrizzleClient) {
 
     deleteById(id: number): void {
       db.delete(marks).where(eq(marks.id, id)).run()
-    },
-
-    countAll(): number {
-      const row = db.select({count: count()}).from(marks).get()
-      return Number(row?.count ?? 0)
     },
 
     findRandomWithRelations(limit: number) {

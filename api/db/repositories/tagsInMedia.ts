@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { meta } from '../schema/meta'
 import { tags } from '../schema/tags'
@@ -81,6 +81,17 @@ export function createTagsInMediaRepository(db: DrizzleClient) {
       db.delete(tagsInMedia)
         .where(and(
           eq(tagsInMedia.mediaId, mediaId),
+          eq(tagsInMedia.metaId, metaId),
+        ))
+        .run()
+    },
+
+    deleteByMediaIdsAndMeta(mediaIds: number[], metaId: number): void {
+      if (!mediaIds.length) return
+
+      db.delete(tagsInMedia)
+        .where(and(
+          inArray(tagsInMedia.mediaId, mediaIds),
           eq(tagsInMedia.metaId, metaId),
         ))
         .run()

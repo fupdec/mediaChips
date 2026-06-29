@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { meta } from '../schema/meta'
 import { valuesInMedia } from '../schema/valuesInMedia'
@@ -36,6 +36,17 @@ export function createValuesInMediaRepository(db: DrizzleClient) {
 
     deleteByMediaId(mediaId: number): void {
       db.delete(valuesInMedia).where(eq(valuesInMedia.mediaId, mediaId)).run()
+    },
+
+    deleteByMediaIdsAndMeta(mediaIds: number[], metaId: number): void {
+      if (!mediaIds.length) return
+
+      db.delete(valuesInMedia)
+        .where(and(
+          inArray(valuesInMedia.mediaId, mediaIds),
+          eq(valuesInMedia.metaId, metaId),
+        ))
+        .run()
     },
   }
 }
