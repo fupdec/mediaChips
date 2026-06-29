@@ -43,8 +43,7 @@ export default function taskVideoCoreController(db: ApiDb) {
   const checkFileExists = async (req: ApiRequest, res: ApiResponse) => {
     const filePath = normalizeMediaPath(req.body.path)
     const resolved = filePath ? await resolveExistingPath(filePath) : null
-    if (resolved) res.sendStatus(201)
-    else res.sendStatus(400)
+    res.status(200).json({ exists: Boolean(resolved) })
   }
 
   const getConfig = async (req: ApiRequest, res: ApiResponse) => {

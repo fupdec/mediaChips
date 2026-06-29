@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": ".shared-build",
+    "rootDir": ".",
+    "moduleDetection": "force",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "incremental": true,
+    "tsBuildInfoFile": ".cache/tsc/shared.tsbuildinfo",
+    "ignoreDeprecations": "6.0",
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
+  },
+  "include": ["shared/**/*.ts"]
+}

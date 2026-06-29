@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
 /dist
+/.shared-build
 /.electron-build
 /.app-build
 /.api-build

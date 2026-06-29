@@ -1,7 +1,7 @@
 import path from 'path-browserify'
 import { getLocalImage } from '@/services/fileService'
 
-const THUMB_SUBFOLDERS = ['grids', 'thumbs'] as const
+const THUMB_SUBFOLDERS = ['thumbs', 'grids'] as const
 const UNAVAILABLE_MARKER = 'unavailable.png'
 
 export async function loadMediaThumbUrl(

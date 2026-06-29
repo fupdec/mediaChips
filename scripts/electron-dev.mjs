@@ -4,8 +4,11 @@ import {createConnection} from 'net'
 import {dirname, join} from 'path'
 import {fileURLToPath} from 'url'
 import chokidar from 'chokidar'
+import {ensurePreferredNodeOrExit} from './resolve-node.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+ensurePreferredNodeOrExit(root)
+
 const vitePort = Number(process.env.VITE_DEV_SERVER_PORT || 3000)
 const watchPaths = [
   'main.ts',
@@ -21,6 +24,7 @@ let rebuildTimer = null
 let rebuildInFlight = false
 let restartPending = false
 let shuttingDown = false
+let pendingChanges = new Set()
 
 function runSync(command, args) {
   const result = spawnSync(command, args, {
@@ -99,16 +103,72 @@ function startElectron() {
   })
 }
 
-async function rebuildBackend() {
+function classifyChange(filePath) {
+  if (filePath === 'main.ts') return 'main'
+  if (filePath.startsWith('electron/')) return 'electron'
+  if (filePath.startsWith('shared/')) return 'shared'
+  if (filePath.startsWith('app/')) return 'app'
+  if (filePath.startsWith('api/')) return 'api'
+  return null
+}
+
+function resolveIncrementalBuildScripts(changedPaths) {
+  const groups = new Set()
+
+  for (const filePath of changedPaths) {
+    const group = classifyChange(filePath)
+    if (group) groups.add(group)
+  }
+
+  const sequential = []
+  const parallel = []
+
+  if (groups.has('shared')) sequential.push('build:shared')
+  if (groups.has('main')) parallel.push('build:main')
+  if (groups.has('electron')) parallel.push('build:electron')
+  if (groups.has('app')) parallel.push('build:app')
+  if (groups.has('api')) parallel.push('build:api')
+
+  return {sequential, parallel}
+}
+
+function runBuildScripts(scripts) {
+  if (!scripts.length) return
+
+  if (scripts.length === 1) {
+    runSync('npm', ['run', scripts[0]])
+    return
+  }
+
+  runSync('node', ['scripts/parallel-npm.mjs', ...scripts])
+}
+
+async function rebuildBackend(changedPaths = []) {
   if (rebuildInFlight) return
   rebuildInFlight = true
   restartPending = true
 
   try {
-    console.log('\n[electron-dev] rebuilding backend shell...')
+    const {sequential, parallel} = changedPaths.length
+      ? resolveIncrementalBuildScripts(changedPaths)
+      : {
+        sequential: ['build:shared'],
+        parallel: ['build:electron', 'build:main', 'build:app', 'build:api'],
+      }
+
+    const label = changedPaths.length
+      ? changedPaths.join(', ')
+      : 'full backend'
+
+    console.log(`\n[electron-dev] rebuilding (${label})...`)
     killProcess(electronProc)
     await new Promise((resolve) => setTimeout(resolve, 300))
-    runSync('npm', ['run', 'build:electron-artifacts'])
+
+    for (const script of sequential) {
+      runSync('npm', ['run', script])
+    }
+    runBuildScripts(parallel)
+
     if (!shuttingDown) {
       console.log('[electron-dev] restarting electron...')
       restartPending = false
@@ -120,11 +180,14 @@ async function rebuildBackend() {
   }
 }
 
-function scheduleBackendRebuild() {
+function scheduleBackendRebuild(filePath) {
   if (shuttingDown) return
+  pendingChanges.add(filePath)
   clearTimeout(rebuildTimer)
   rebuildTimer = setTimeout(() => {
-    rebuildBackend().catch((error) => {
+    const changes = [...pendingChanges]
+    pendingChanges.clear()
+    rebuildBackend(changes).catch((error) => {
       console.error('[electron-dev] rebuild failed:', error)
     })
   }, 1000)
@@ -139,7 +202,7 @@ function startBackendWatcher() {
   watcher.on('all', (event, filePath) => {
     if (!filePath || shuttingDown) return
     console.log(`[electron-dev] ${event} ${filePath}`)
-    scheduleBackendRebuild()
+    scheduleBackendRebuild(filePath)
   })
 
   return watcher

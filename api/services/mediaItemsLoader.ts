@@ -8,16 +8,33 @@ import type {
 import type { ParsedItem } from '../../app/types/items'
 import { queryAllAsync } from '../db/utils/rawQuery'
 import {
-  canUseSqlMediaLoader,
+  getMediaFilterSqlFallbackReason,
   getMediaFromClause,
   getNavigationSelect,
   getSortExpression,
+  normalizeActiveFilters,
   requiresMetadataJoinForFilters,
   requiresMetadataJoinForSort,
   resolveMediaFilterQuery,
 } from './mediaFilterSql'
 
 import { filterItems } from '../../app/tasks/items'
+
+function shouldLogLegacyMediaLoader() {
+  return process.env.NODE_ENV !== 'production'
+    || process.env.MEDIA_CHIPS_LOG_LEGACY_MEDIA_LOADER === '1'
+}
+
+function warnLegacyMediaLoader(reason: string, options: MediaLoadOptions = {}) {
+  if (!shouldLogLegacyMediaLoader()) return
+
+  const activeFilterCount = normalizeActiveFilters(options.filters).length
+  console.warn(
+    '[mediaItemsLoader] Using legacy JS filter path:',
+    reason,
+    `(mediaTypeId=${options.mediaTypeId ?? 'none'}, activeFilters=${activeFilterCount}, sortBy=${options.sortBy ?? 'id'})`,
+  )
+}
 
 function buildFilteredTotalsSql(fromClause: string, whereClause: string, needsDistinct: boolean) {
   if (!needsDistinct) {
@@ -173,7 +190,14 @@ function orderRowsByIds(rows: AnyRecord[], ids: MediaId[]): AnyRecord[] {
   return ids.map((id: MediaId) => rowsById.get(id)).filter((row): row is AnyRecord => row != null)
 }
 
-async function loadMediaItemsLegacy(db: ApiDb, options: MediaLoadOptions = {}) {
+async function loadMediaItemsLegacy(
+  db: ApiDb,
+  options: MediaLoadOptions = {},
+  fallbackReason?: string,
+) {
+  if (fallbackReason) {
+    warnLegacyMediaLoader(fallbackReason, options)
+  }
   const {
     mediaTypeId,
     ids = [],
@@ -251,7 +275,7 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
     duplicates_by: options.duplicates_by,
   })
   if (!filterQuery.ok) {
-    return loadMediaItemsLegacy(db, options)
+    return loadMediaItemsLegacy(db, options, filterQuery.reason)
   }
 
   const {whereSql, joinSql = '', needsDistinct = false, replacements} = filterQuery
@@ -346,10 +370,19 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
 }
 
 async function loadMediaItems(db: ApiDb, options: MediaLoadOptions = {}) {
-  if (canUseSqlMediaLoader(options)) {
+  const fallbackReason = getMediaFilterSqlFallbackReason({
+    mediaTypeId: options.mediaTypeId,
+    ids: options.ids,
+    filters: options.filters,
+    find_duplicates: options.find_duplicates,
+    duplicates_by: options.duplicates_by,
+  })
+
+  if (!fallbackReason) {
     return loadMediaItemsSql(db, options)
   }
-  return loadMediaItemsLegacy(db, options)
+
+  return loadMediaItemsLegacy(db, options, fallbackReason)
 }
 
 async function loadMediaPool(db: ApiDb, mediaTypeId: MediaId | null | undefined) {
@@ -370,12 +403,19 @@ async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}
     duplicates_by = 'filesize',
   } = options
 
-  if (!canUseSqlMediaLoader(options)) {
+  const fallbackReason = getMediaFilterSqlFallbackReason({
+    mediaTypeId,
+    filters,
+    find_duplicates,
+    duplicates_by,
+  })
+
+  if (fallbackReason) {
     const result = await loadMediaItemsLegacy(db, {
       ...options,
       limit: null,
       includeNavigation: false,
-    })
+    }, fallbackReason)
 
     return {
       count: result.totalFiltered,
@@ -394,7 +434,7 @@ async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}
       ...options,
       limit: null,
       includeNavigation: false,
-    })
+    }, filterQuery.reason)
 
     return {
       count: result.totalFiltered,
@@ -430,12 +470,19 @@ async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}
 }
 
 async function loadFilteredMediaIds(db: ApiDb, options: MediaLoadOptions = {}) {
-  if (!canUseSqlMediaLoader(options)) {
+  const fallbackReason = getMediaFilterSqlFallbackReason({
+    mediaTypeId: options.mediaTypeId,
+    filters: options.filters,
+    find_duplicates: options.find_duplicates,
+    duplicates_by: options.duplicates_by,
+  })
+
+  if (fallbackReason) {
     const result = await loadMediaItemsLegacy(db, {
       ...options,
       limit: null,
       includeNavigation: false,
-    })
+    }, fallbackReason)
 
     return {
       ids: result.items.map((item: LoadedMediaItem | NavigationMediaItem | AnyRecord) => item.id),
@@ -461,7 +508,7 @@ async function loadFilteredMediaIds(db: ApiDb, options: MediaLoadOptions = {}) {
       ...options,
       limit: null,
       includeNavigation: false,
-    })
+    }, filterQuery.reason)
 
     return {
       ids: result.items.map((item: LoadedMediaItem | NavigationMediaItem | AnyRecord) => item.id),

@@ -16,9 +16,7 @@ export async function checkFileExists(filePath: string) {
 
   try {
     const response = await typedApi.checkFileExists(filePath)
-    if (response.status === 200 || response.status === 201) {
-      return true
-    }
+    return response.data?.exists === true
   } catch {}
 
   try {

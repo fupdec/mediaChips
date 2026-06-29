@@ -22,6 +22,13 @@ export interface MediaFilterQuerySuccess {
 
 export interface MediaFilterQueryFailure {
   ok: false
+  reason: string
+  filter?: {
+    index?: number
+    param?: unknown
+    type?: string | null
+    cond?: string | null
+  }
 }
 
 export type MediaFilterQueryResult = MediaFilterQuerySuccess | MediaFilterQueryFailure

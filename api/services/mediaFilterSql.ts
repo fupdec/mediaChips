@@ -318,7 +318,14 @@ function buildExtArrayClause(filter: FilterLike, nextParam: SqlParamBinder) {
   if (cond === 'not null') {
     return `(media.ext IS NOT NULL AND media.ext != '')`
   }
-  if (!exts.length) return null
+  if (!exts.length) {
+    if (cond === 'in' || cond === 'in all') return '0 = 1'
+    if (cond === 'not in') return '1 = 1'
+    if (cond === 'not in all') {
+      return `(media.ext IS NOT NULL AND media.ext != '')`
+    }
+    return null
+  }
 
   const extKeys = exts.map((ext: unknown) => nextParam(ext))
   const listExpr = extKeys.join(', ')
@@ -503,12 +510,33 @@ function buildFilterClause(filter: FilterLike, nextParam: SqlParamBinder) {
   return null
 }
 
+function unsupportedFilterResult(
+  filter: FilterLike,
+  index: number,
+  reason: string,
+): MediaFilterQueryResult {
+  return {
+    ok: false,
+    reason,
+    filter: {
+      index,
+      param: filter.param,
+      type: filter.type,
+      cond: filter.cond,
+    },
+  }
+}
+
+function missingMediaTypeResult(): MediaFilterQueryResult {
+  return { ok: false, reason: 'Missing mediaTypeId' }
+}
+
 function buildDuplicatesFilterQuery(options: MediaFilterOptions & { duplicates_by?: string } = {}): MediaFilterQueryResult {
   const {mediaTypeId, ids = []} = options
   const duplicatesBy = options.duplicates_by || 'filesize'
 
   if (mediaTypeId == null || mediaTypeId === '') {
-    return {ok: false}
+    return missingMediaTypeResult()
   }
 
   const replacements: AnyRecord = {mediaTypeId}
@@ -575,6 +603,15 @@ function canUseSqlMediaLoader(options: MediaFilterOptions & {
   return resolveMediaFilterQuery(options).ok
 }
 
+function getMediaFilterSqlFallbackReason(options: MediaFilterOptions & {
+  filters?: FilterLike[]
+  duplicates_by?: string
+  find_duplicates?: boolean
+} = {}) {
+  const result = resolveMediaFilterQuery(options)
+  return result.ok ? null : result.reason
+}
+
 function canUseSqlMediaFilters(options: MediaFilterOptions = {}) {
   const filters = normalizeActiveFilters(options.filters)
   for (const filter of filters) {
@@ -590,6 +627,11 @@ function canUseSqlMediaFilters(options: MediaFilterOptions = {}) {
 
 function buildMediaFilterQuery(filters: FilterLike[] = [], options: MediaFilterOptions = {}): MediaFilterQueryResult {
   const {mediaTypeId, ids = []} = options
+
+  if (mediaTypeId == null || mediaTypeId === '') {
+    return missingMediaTypeResult()
+  }
+
   const replacements: AnyRecord = {mediaTypeId}
   let paramIndex = 0
 
@@ -610,7 +652,10 @@ function buildMediaFilterQuery(filters: FilterLike[] = [], options: MediaFilterO
     clauses.push('media.id IN (:ids)')
   }
 
-  for (const filter of normalizeActiveFilters(filters)) {
+  const activeFilters = normalizeActiveFilters(filters)
+
+  for (let filterIndex = 0; filterIndex < activeFilters.length; filterIndex += 1) {
+    const filter = activeFilters[filterIndex]
     const join = buildTagArrayJoin(filter, `tf${joinIndex}`, nextParam)
     if (join) {
       joins.push(join)
@@ -628,7 +673,11 @@ function buildMediaFilterQuery(filters: FilterLike[] = [], options: MediaFilterO
 
     const clause = buildFilterClause(filter, nextParam)
     if (!clause) {
-      return {ok: false}
+      return unsupportedFilterResult(
+        filter,
+        filterIndex,
+        `Unsupported SQL filter for param=${String(filter.param)} type=${String(filter.type)} cond=${String(filter.cond)}`,
+      )
     }
     clauses.push(`(${clause})`)
   }
@@ -698,6 +747,7 @@ module.exports = {
   buildStringComparison,
   canUseSqlMediaFilters,
   canUseSqlMediaLoader,
+  getMediaFilterSqlFallbackReason,
   filterRequiresMetadataJoin,
   getMediaFromClause,
   getMediaFromJoin,
@@ -717,6 +767,7 @@ export {
   buildStringComparison,
   canUseSqlMediaFilters,
   canUseSqlMediaLoader,
+  getMediaFilterSqlFallbackReason,
   filterRequiresMetadataJoin,
   getMediaFromClause,
   getMediaFromJoin,
