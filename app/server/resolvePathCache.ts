@@ -67,14 +67,6 @@ function clearResolvedPathCache(): void {
   resolvePathCache.clear()
 }
 
-module.exports = {
-  ResolvePathCache,
-  getCachedResolvedPath,
-  setCachedResolvedPath,
-  invalidateResolvedPath,
-  clearResolvedPathCache,
-}
-
 export {
   ResolvePathCache,
   getCachedResolvedPath,

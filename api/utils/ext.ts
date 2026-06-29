@@ -25,8 +25,3 @@ export {
   serializeExtList,
 }
 
-module.exports = {
-  normalizeExt,
-  parseExtList,
-  serializeExtList,
-}

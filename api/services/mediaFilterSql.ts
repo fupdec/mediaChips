@@ -738,26 +738,6 @@ function getNavigationSelect() {
   return NAVIGATION_SELECT
 }
 
-module.exports = {
-  buildMediaFilterQuery,
-  buildDuplicatesFilterQuery,
-  resolveMediaFilterQuery,
-  buildCountryArrayClause,
-  buildTagCountryMatchSql,
-  buildStringComparison,
-  canUseSqlMediaFilters,
-  canUseSqlMediaLoader,
-  getMediaFilterSqlFallbackReason,
-  filterRequiresMetadataJoin,
-  getMediaFromClause,
-  getMediaFromJoin,
-  getNavigationSelect,
-  getSortExpression,
-  normalizeActiveFilters,
-  requiresMetadataJoinForFilters,
-  requiresMetadataJoinForSort,
-}
-
 export {
   buildMediaFilterQuery,
   buildDuplicatesFilterQuery,

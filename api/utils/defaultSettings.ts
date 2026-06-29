@@ -10,8 +10,4 @@ function loadDefaultSettingsList(): DefaultSettingEntry[] {
   return Settings as DefaultSettingEntry[]
 }
 
-module.exports = {
-  loadDefaultSettingsList,
-}
-
 export { loadDefaultSettingsList }

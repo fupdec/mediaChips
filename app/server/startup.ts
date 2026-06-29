@@ -219,10 +219,4 @@ function createServerStarter({app, config, configPath, databasesPath}: ServerSta
   }
 }
 
-module.exports = {
-  createServerStarter,
-  showSystemNotification,
-  isPortInUse,
-}
-
 export { createServerStarter, showSystemNotification, isPortInUse }

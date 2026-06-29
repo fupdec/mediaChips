@@ -415,16 +415,6 @@ async function classifyMedia(
   }
 }
 
-module.exports = {
-  CLIP_MODEL,
-  aggregateFrameResults,
-  classifyMedia,
-  getStatus,
-  hasDownloadedModel,
-  loadModel,
-  suggestTagsFromVideoFrames,
-}
-
 export {
   CLIP_MODEL,
   aggregateFrameResults,

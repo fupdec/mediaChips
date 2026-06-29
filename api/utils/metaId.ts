@@ -25,9 +25,4 @@ function normalizeMetaIdParam(param: unknown): unknown {
   return metaId !== null ? metaId : param
 }
 
-module.exports = {
-  resolveMetaId,
-  normalizeMetaIdParam,
-}
-
 export { resolveMetaId, normalizeMetaIdParam }

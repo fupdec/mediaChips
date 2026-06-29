@@ -122,9 +122,4 @@ async function loadMarkItems(db: ApiDb, options: MarkLoadOptions = {}) {
   }
 }
 
-module.exports = {
-  getMarkFilterMetas,
-  loadMarkItems,
-}
-
 export { getMarkFilterMetas, loadMarkItems }

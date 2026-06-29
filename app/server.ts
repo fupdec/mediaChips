@@ -124,7 +124,5 @@ const serverExports = {
   resolveFilePath,
 }
 
-module.exports = serverExports
-
 export default serverExports
 export { config, app, resolveFilePath }

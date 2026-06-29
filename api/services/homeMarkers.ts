@@ -20,8 +20,4 @@ async function getRandomMarks(db: ApiDb, limit = 8) {
   })
 }
 
-module.exports = {
-  getRandomMarks,
-}
-
 export { getRandomMarks }

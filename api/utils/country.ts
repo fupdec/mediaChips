@@ -66,9 +66,3 @@ export {
   getCountryCode,
 }
 
-module.exports = {
-  COUNTRY_DELIMITER,
-  parseCountries,
-  serializeCountries,
-  getCountryCode,
-}

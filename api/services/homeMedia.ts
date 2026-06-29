@@ -94,13 +94,6 @@ async function getHomeMedia(db: ApiDb, limits: AnyRecord = {}): Promise<ParsedHo
   } as ParsedHomeMediaResponse
 }
 
-module.exports = {
-  getHomeMedia,
-  getContinueWatching,
-  getFavoriteMedia,
-  getTopViewedMedia,
-}
-
 export {
   getHomeMedia,
   getContinueWatching,

@@ -8,8 +8,4 @@ function getAppConfigPath(): string {
   return path.join(__dirname, '../../public/config.json')
 }
 
-module.exports = {
-  getAppConfigPath,
-}
-
 export { getAppConfigPath }

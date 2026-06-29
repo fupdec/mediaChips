@@ -100,16 +100,6 @@ async function applyLanAccessChange(enabled: boolean) {
   await serverDeps.restartListener()
 }
 
-module.exports = {
-  initLanAccess,
-  isLanAccessEnabled,
-  isLanAccessEnvLocked,
-  getBindHost,
-  syncNetworkConfig,
-  registerServerNetworkDeps,
-  applyLanAccessChange,
-}
-
 export {
   initLanAccess,
   isLanAccessEnabled,

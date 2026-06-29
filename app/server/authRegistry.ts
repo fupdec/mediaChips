@@ -17,9 +17,4 @@ function getAuthService(): ReturnType<typeof createAuthService> {
   return authService
 }
 
-module.exports = {
-  initAuthService,
-  getAuthService,
-}
-
 export { initAuthService, getAuthService }

@@ -85,9 +85,4 @@ function getAllIps() {
   return ips
 }
 
-module.exports = {
-  getBestLocalIp,
-  getAllIps,
-}
-
 export { getBestLocalIp, getAllIps }

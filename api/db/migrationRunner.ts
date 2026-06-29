@@ -12,7 +12,3 @@ export async function resetDatabaseAndRunMigrations(dbPath: string) {
   runPostMigrations(dbPath)
 }
 
-module.exports = {
-  bootstrapDatabase,
-  resetDatabaseAndRunMigrations,
-}

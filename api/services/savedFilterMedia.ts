@@ -259,17 +259,6 @@ async function getFilteredMediaForPlayback(
   }
 }
 
-module.exports = {
-  getDynamicPlaylistsBasic,
-  getDynamicPlaylistsSummary,
-  getSavedFilterPlaylistSummary,
-  getFilteredMediaForPlayback,
-  getFilteredMediaForSavedFilter,
-  getVideoMediaTypeId,
-  loadSavedFilterRows,
-  loadSavedFilterRowsBatch,
-}
-
 export {
   getDynamicPlaylistsBasic,
   getDynamicPlaylistsSummary,

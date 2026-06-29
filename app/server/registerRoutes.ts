@@ -88,7 +88,3 @@ export function registerApiRoutes(app: Express, db: ApiDb) {
 
 export default registerApiRoutes
 
-module.exports = {
-  ROUTE_FILES,
-  registerApiRoutes,
-}

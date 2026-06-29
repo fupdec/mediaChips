@@ -108,4 +108,3 @@ export function seedDemoMetadata(sqlite: Database.Database) {
   }
 }
 
-module.exports = {seedDemoMetadata}

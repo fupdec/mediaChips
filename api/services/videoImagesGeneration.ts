@@ -494,12 +494,6 @@ async function* iterateVideoImagesGeneration(
   }
 }
 
-module.exports = {
-  IMAGE_TYPES,
-  getVideoImagesGenerationStatus,
-  iterateVideoImagesGeneration,
-}
-
 export {
   IMAGE_TYPES,
   getVideoImagesGenerationStatus,

@@ -224,10 +224,4 @@ function registerAuthRoutes(app: Express, authService: AuthService) {
   })
 }
 
-module.exports = {
-  createAuthService,
-  createAuthMiddleware,
-  registerAuthRoutes,
-}
-
 export { createAuthService, createAuthMiddleware, registerAuthRoutes }

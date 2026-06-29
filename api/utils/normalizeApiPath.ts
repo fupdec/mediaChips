@@ -45,8 +45,4 @@ function normalizeApiPath(url = ''): string {
   return `/api/${canonical}${rest}`
 }
 
-module.exports = {
-  normalizeApiPath,
-}
-
 export { normalizeApiPath }

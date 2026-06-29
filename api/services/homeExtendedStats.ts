@@ -98,8 +98,4 @@ async function getHomeExtendedStats(db: ApiDb): Promise<ParsedExtendedStats> {
   } as unknown as ParsedExtendedStats
 }
 
-module.exports = {
-  getHomeExtendedStats,
-}
-
 export { getHomeExtendedStats }

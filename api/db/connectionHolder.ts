@@ -53,10 +53,3 @@ export function getSqliteProxy(): Database.Database {
   return sqliteProxy
 }
 
-module.exports = {
-  setActiveConnection,
-  getActiveConnection,
-  closeActiveConnection,
-  getDrizzleProxy,
-  getSqliteProxy,
-}

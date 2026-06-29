@@ -78,14 +78,6 @@ function isPathInsideFolder(filePath: string, folderPath: string): boolean {
   return !relative.startsWith('..') && !path.isAbsolute(relative)
 }
 
-module.exports = {
-  normalizeUserPath,
-  normalizeMediaPath,
-  pathsEquivalent,
-  buildPathLookupVariants,
-  isPathInsideFolder,
-}
-
 export {
   normalizeUserPath,
   normalizeMediaPath,

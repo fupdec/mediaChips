@@ -63,15 +63,6 @@ const verifyContentHashMatch = async (pathToFile: string, expectedHash: string |
   }
 }
 
-module.exports = {
-  computeContentHash,
-  computeContentHashForPath,
-  verifyContentHashMatch,
-  fileExists,
-  resolveExistingPath,
-  pathVariants,
-}
-
 export {
   computeContentHash,
   computeContentHashForPath,

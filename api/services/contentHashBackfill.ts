@@ -106,10 +106,4 @@ async function* iterateContentHashBackfill(
   }
 }
 
-module.exports = {
-  getContentHashBackfillStatus,
-  backfillMediaContentHash,
-  iterateContentHashBackfill,
-}
-
 export { getContentHashBackfillStatus, backfillMediaContentHash, iterateContentHashBackfill }

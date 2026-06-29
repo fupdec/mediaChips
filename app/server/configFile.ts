@@ -198,10 +198,3 @@ export function saveConfigFile(configPath: string, config: ConfigFileRecord | Se
   fs.renameSync(tempPath, configPath)
 }
 
-module.exports = {
-  getConfigBackupPath,
-  normalizeServerConfig,
-  loadConfigFile,
-  createDefaultConfig,
-  saveConfigFile,
-}

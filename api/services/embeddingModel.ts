@@ -130,15 +130,6 @@ function getStatus(db: ApiDb, useML: boolean): ModelStatus {
   }
 }
 
-module.exports = {
-  DEFAULT_MODEL,
-  cosineSimilarity,
-  embedText,
-  getStatus,
-  hasDownloadedModel,
-  loadModel,
-}
-
 export {
   DEFAULT_MODEL,
   cosineSimilarity,

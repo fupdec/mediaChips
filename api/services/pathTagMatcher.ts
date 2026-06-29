@@ -75,9 +75,4 @@ async function matchPathToTags(
   })
 }
 
-module.exports = {
-  exactMatchPath,
-  matchPathToTags,
-}
-
 export { exactMatchPath, matchPathToTags }

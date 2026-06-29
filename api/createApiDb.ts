@@ -25,4 +25,3 @@ export function createApiDb(options: CreateApiDbOptions): ApiDb {
 
 export { createApiDb as default }
 
-module.exports = { createApiDb }

@@ -151,16 +151,6 @@ async function processAndSaveImage({buffer, outputPath, sizes}: ProcessAndSaveIm
   return outputPath
 }
 
-module.exports = {
-  getImageMetadata,
-  createImageThumb,
-  ensureImageThumbDir,
-  processAndSaveImage,
-  readExifOrientation,
-  applyExifOrientation,
-  getDisplayDimensions,
-}
-
 export {
   getImageMetadata,
   createImageThumb,

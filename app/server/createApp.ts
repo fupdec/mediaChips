@@ -75,9 +75,4 @@ function setupStaticApp(app: Express) {
   app.use(spaHistory)
 }
 
-module.exports = {
-  createExpressApp,
-  setupStaticApp,
-}
-
 export { createExpressApp, setupStaticApp }

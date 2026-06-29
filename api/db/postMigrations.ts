@@ -26,4 +26,3 @@ export function runPostMigrations(dbPath: string) {
   }
 }
 
-module.exports = {runPostMigrations}

@@ -181,8 +181,4 @@ function createMediaPostProcessor({
   }
 }
 
-module.exports = {
-  createMediaPostProcessor,
-}
-
 export { createMediaPostProcessor }

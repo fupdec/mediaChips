@@ -28,17 +28,6 @@ const getMediaDeleteAssetFolder = (mediaType: MediaTypeLike) => {
   return null
 }
 
-module.exports = {
-  normalizeMediaTypeKey,
-  getMediaTypeKey,
-  isVideoMediaType,
-  isImageMediaType,
-  isAudioMediaType,
-  isTextMediaType,
-  isManagedMediaType,
-  getMediaDeleteAssetFolder,
-}
-
 export {
   normalizeMediaTypeKey,
   getMediaTypeKey,

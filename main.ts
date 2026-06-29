@@ -31,7 +31,8 @@ type AppServerExports = {
 
 process.electron_app = app
 
-const server = require('./app/server.js') as AppServerExports
+const serverModule = require('./app/server.js') as AppServerExports & { default?: AppServerExports }
+const server = (serverModule.default ?? serverModule) as AppServerExports
 const serverConfig = server.config
 
 const gotTheLock = app.requestSingleInstanceLock()

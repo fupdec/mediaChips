@@ -44,10 +44,4 @@ async function searchTagsByName(db: ApiDb, query: string, limit: unknown) {
      LIMIT :limit`, {pattern, limit: sqlLimit})
 }
 
-module.exports = {
-  searchMediaByName,
-  searchTagsByName,
-  MAX_LIMIT,
-}
-
 export { searchMediaByName, searchTagsByName, MAX_LIMIT }

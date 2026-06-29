@@ -57,8 +57,4 @@ function streamVideoFile(
   file.pipe(res)
 }
 
-module.exports = {
-  streamVideoFile,
-}
-
 export { streamVideoFile }

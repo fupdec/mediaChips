@@ -328,18 +328,6 @@ async function checkRenameDiskSpace(prepared: PreparedRenameItem): Promise<DiskS
   return null
 }
 
-module.exports = {
-  ERROR_CODES,
-  moveFile,
-  prepareMoveItems,
-  prepareRename,
-  checkBatchDiskSpace,
-  checkRenameDiskSpace,
-  estimateSeconds,
-  isCrossDevice,
-  getFreeDiskSpace,
-}
-
 export {
   ERROR_CODES,
   moveFile,

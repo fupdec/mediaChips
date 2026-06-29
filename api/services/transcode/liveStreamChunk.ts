@@ -45,10 +45,3 @@ export {
   getNextChunkStart,
 }
 
-module.exports = {
-  LIVE_STREAM_CHUNK_SECONDS,
-  LIVE_STREAM_PREFETCH_SECONDS,
-  getChunkStart,
-  getChunkDuration,
-  getNextChunkStart,
-}

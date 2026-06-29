@@ -6,9 +6,4 @@ async function resolveMediaInputPath(inputPath: string, dbPath: string) {
   return resolveActiveDbFilePath(inputPath, dbPath)
 }
 
-module.exports = {
-  resolveMediaInputPath,
-  resolveActiveDbFilePath,
-}
-
 export { resolveMediaInputPath, resolveActiveDbFilePath }

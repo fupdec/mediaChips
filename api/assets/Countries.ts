@@ -249,5 +249,4 @@ const Countries: CountryEntry[] = [
   {"name": "Zimbabwe", "code": "ZW"}
 ]
 
-module.exports = Countries
 export default Countries

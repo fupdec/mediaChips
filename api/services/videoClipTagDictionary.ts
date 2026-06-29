@@ -275,10 +275,4 @@ function getPromptEntries() {
   })))
 }
 
-module.exports = {
-  getLocalizedLabel,
-  getPromptEntries,
-  tags,
-}
-
 export { getLocalizedLabel, getPromptEntries, tags }

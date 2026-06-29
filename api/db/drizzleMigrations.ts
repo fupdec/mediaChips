@@ -138,9 +138,3 @@ export function resetSqliteDatabase(dbPath: string) {
   }
 }
 
-module.exports = {
-  ensureLegacyDrizzleBaseline,
-  dropAllSqliteTables,
-  runDrizzleMigrations,
-  resetSqliteDatabase,
-}

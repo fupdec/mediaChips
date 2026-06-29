@@ -87,8 +87,4 @@ async function getManualPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlayli
     .filter(Boolean) as unknown as ParsedDynamicPlaylistSummary[]
 }
 
-module.exports = {
-  getManualPlaylistsSummary,
-}
-
 export { getManualPlaylistsSummary }

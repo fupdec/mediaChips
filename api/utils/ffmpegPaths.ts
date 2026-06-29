@@ -26,12 +26,6 @@ function getFfprobePath(): string {
   return resolveBundledBinary(require('ffprobe-static').path)
 }
 
-module.exports = {
-  getFfmpegPath,
-  getFfprobePath,
-  resolveBundledBinary,
-}
-
 export {
   getFfmpegPath,
   getFfprobePath,

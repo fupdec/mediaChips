@@ -353,10 +353,4 @@ async function* iterateMissingMediaSearch(db: ApiDb, options: MissingMediaSearch
   }
 }
 
-module.exports = {
-  getMissingMediaStatus,
-  loadMissingMedia,
-  iterateMissingMediaSearch,
-}
-
 export { getMissingMediaStatus, loadMissingMedia, iterateMissingMediaSearch }

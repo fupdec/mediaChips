@@ -95,16 +95,6 @@ function cleanComparable(value: unknown) {
   return String(value || '').replace(/[^a-zа-яё0-9]/giu, '').toLowerCase()
 }
 
-module.exports = {
-  STOP_WORDS,
-  cleanComparable,
-  isNoiseToken,
-  normalizeToken,
-  splitSegment,
-  tokenizeFilePath,
-  tokenizeSegment,
-}
-
 export {
   STOP_WORDS,
   cleanComparable,

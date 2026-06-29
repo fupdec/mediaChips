@@ -64,6 +64,3 @@ function resolveActiveDbFilePath(filePath: string | null | undefined, dbPath: st
 
 export {resolveActiveDbFilePath}
 
-module.exports = {
-  resolveActiveDbFilePath,
-}

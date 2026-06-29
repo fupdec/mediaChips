@@ -143,13 +143,6 @@ function safeJsonError(
   res.status(status).json(payload)
 }
 
-module.exports = {
-  createFileResolver,
-  isClientAbortError,
-  safeJsonError,
-  clearResolvedPathCache,
-}
-
 export {
   createFileResolver,
   isClientAbortError,

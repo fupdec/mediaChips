@@ -97,4 +97,3 @@ export function runLegacyUpgrades(sqlite: Database.Database) {
   dedupeDefaultMediaTypes(sqlite)
 }
 
-module.exports = {runLegacyUpgrades}

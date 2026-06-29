@@ -100,16 +100,6 @@ async function deleteMediaGeneratedAssets(
   }
 }
 
-module.exports = {
-  deleteVideoGeneratedAssets,
-  deleteImageGeneratedAssets,
-  deleteMarkGeneratedAsset,
-  deleteTagGeneratedAssets,
-  deleteMediaGeneratedAssets,
-  unlinkIfExists,
-  unlinkResolvedPath,
-}
-
 export {
   deleteVideoGeneratedAssets,
   deleteImageGeneratedAssets,

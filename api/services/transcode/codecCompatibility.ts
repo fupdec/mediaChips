@@ -94,10 +94,3 @@ export {
   analyzeProbeResult,
 }
 
-module.exports = {
-  DIRECT_VIDEO_CONTAINERS,
-  DIRECT_AUDIO_CONTAINERS,
-  BROWSER_VIDEO_CODECS,
-  BROWSER_AUDIO_CODECS,
-  analyzeProbeResult,
-}

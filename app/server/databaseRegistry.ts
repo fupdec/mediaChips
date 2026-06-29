@@ -13,9 +13,4 @@ function getDatabaseManager(): DatabaseManager {
   return databaseManager
 }
 
-module.exports = {
-  initDatabaseManager,
-  getDatabaseManager,
-}
-
 export { initDatabaseManager, getDatabaseManager }

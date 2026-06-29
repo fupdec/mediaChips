@@ -188,17 +188,3 @@ export {
   trimCacheToLimit,
 }
 
-module.exports = {
-  buildCacheKey,
-  getCacheDir,
-  getCachePaths,
-  readCacheMeta,
-  writeCacheMeta,
-  resolveExistingCache,
-  ensureCacheDir,
-  listCacheEntries,
-  clearCacheExcept,
-  getCacheStats,
-  clearCache,
-  trimCacheToLimit,
-}

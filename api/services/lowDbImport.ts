@@ -255,8 +255,4 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
   }
 }
 
-module.exports = {
-  importLowDbData,
-}
-
 export { importLowDbData }

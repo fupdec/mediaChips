@@ -68,12 +68,3 @@ export {
   createCorsMiddleware,
 }
 
-module.exports = {
-  FIXED_PORT,
-  getAllowLan,
-  getBindHostForServer,
-  isLoopbackHost,
-  isPrivateIpv4,
-  isAllowedOrigin,
-  createCorsMiddleware,
-}

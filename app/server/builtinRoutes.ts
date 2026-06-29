@@ -521,8 +521,4 @@ function registerBuiltinRoutes({
   })
 }
 
-module.exports = {
-  registerBuiltinRoutes,
-}
-
 export { registerBuiltinRoutes }

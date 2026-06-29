@@ -288,12 +288,6 @@ class WatcherSyncEngine {
   }
 }
 
-module.exports = {
-  WatcherSyncEngine,
-  parseExtensions,
-  fileMatchesExtensions,
-}
-
 export {
   WatcherSyncEngine,
   parseExtensions,

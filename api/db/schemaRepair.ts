@@ -130,10 +130,3 @@ export function repairMissingTables(sqlite: Database.Database): string[] {
   return repaired
 }
 
-module.exports = {
-  repairSchemaColumns,
-  repairMissingTables,
-  hasColumn,
-  addColumnIfMissing,
-  hasTable,
-}

@@ -102,9 +102,4 @@ async function getHomeHealth(db: ApiDb): Promise<ParsedHomeHealth> {
   } as ParsedHomeHealth
 }
 
-module.exports = {
-  getHomeHealth,
-  getDuplicateCounts,
-}
-
 export { getHomeHealth, getDuplicateCounts }

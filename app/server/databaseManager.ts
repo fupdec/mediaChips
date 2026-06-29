@@ -117,6 +117,3 @@ export function createDatabaseManager(deps: DatabaseManagerDeps) {
 
 export type DatabaseManager = ReturnType<typeof createDatabaseManager>
 
-module.exports = {
-  createDatabaseManager,
-}

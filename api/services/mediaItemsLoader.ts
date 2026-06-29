@@ -577,17 +577,6 @@ async function loadMediaForPlayback(db: ApiDb, ids: MediaId[] = []) {
   return orderedRows.map(createItemShell)
 }
 
-module.exports = {
-  loadMediaItems,
-  loadMediaPool,
-  getFilteredMediaSummary,
-  loadFilteredMediaIds,
-  loadMediaBasicsByIds,
-  loadMediaPlaylistItems,
-  loadMediaForPlayback,
-  toNavigationItem,
-}
-
 export {
   loadMediaItems,
   loadMediaPool,

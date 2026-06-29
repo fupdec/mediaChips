@@ -146,9 +146,4 @@ function createStorageDirectories(config: ServerConfig, databasesPath: string) {
   }
 }
 
-module.exports = {
-  initializeServerConfig,
-  createStorageDirectories,
-}
-
 export { initializeServerConfig, createStorageDirectories }

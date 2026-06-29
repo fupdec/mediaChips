@@ -182,9 +182,4 @@ async function* iterateImageThumbsGeneration(
   }
 }
 
-module.exports = {
-  getImageThumbsGenerationStatus,
-  iterateImageThumbsGeneration,
-}
-
 export { getImageThumbsGenerationStatus, iterateImageThumbsGeneration }

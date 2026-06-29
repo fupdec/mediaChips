@@ -172,4 +172,3 @@ export function seedDefaults(sqlite: Database.Database) {
   seedSettings(sqlite)
 }
 
-module.exports = { seedDefaults }

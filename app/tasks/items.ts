@@ -265,7 +265,3 @@ const filterItems = (
 
 export { parseItemsFromDb, filterItems };
 
-module.exports = {
-  parseItemsFromDb,
-  filterItems,
-}

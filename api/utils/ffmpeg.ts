@@ -172,15 +172,6 @@ async function combineVideoFrames({
   await runFfmpeg(args)
 }
 
-module.exports = {
-  ffprobe,
-  runFfmpeg,
-  extractVideoFrame,
-  extractVideoThumbnail,
-  combineVideoFrames,
-  resolveThumbnailSeekSeconds,
-}
-
 export {
   ffprobe,
   runFfmpeg,

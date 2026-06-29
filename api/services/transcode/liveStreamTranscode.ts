@@ -309,10 +309,3 @@ export {
   isIgnorableStreamError,
 }
 
-module.exports = {
-  buildFfmpegLiveArgs,
-  buildSessionKey,
-  shouldRejectDuplicateStream,
-  createLiveStreamRegistry,
-  isIgnorableStreamError,
-}

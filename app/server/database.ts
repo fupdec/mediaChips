@@ -51,9 +51,4 @@ function warmupEmbeddingModel(db: ApiDb) {
   }
 }
 
-module.exports = {
-  setupDatabase,
-  warmupEmbeddingModel,
-}
-
 export { setupDatabase, warmupEmbeddingModel }

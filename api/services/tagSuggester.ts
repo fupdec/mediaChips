@@ -169,10 +169,4 @@ async function suggestTagsFromMedia(db: ApiDb, media: MediaLike[], settings: Any
   return clustered.slice(0, limit)
 }
 
-module.exports = {
-  countPathTokens,
-  getCandidatePhrases,
-  suggestTagsFromMedia,
-}
-
 export { countPathTokens, getCandidatePhrases, suggestTagsFromMedia }

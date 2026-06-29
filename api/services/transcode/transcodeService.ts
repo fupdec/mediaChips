@@ -280,9 +280,4 @@ function createTranscodeManager({databasesPath, getActiveDbId, db}: TranscodeMan
   }
 }
 
-module.exports = {
-  createTranscodeManager,
-  isAudioFilePath,
-}
-
 export { createTranscodeManager, isAudioFilePath }

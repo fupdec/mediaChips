@@ -55,14 +55,6 @@ function parseMaxHeightOverride(value: unknown): number | null | undefined {
   return num
 }
 
-module.exports = {
-  DEFAULTS,
-  getTranscodeSettings,
-  isTranscodeEnabled,
-  getMaxHeight,
-  parseMaxHeightOverride,
-}
-
 export {
   DEFAULTS,
   getTranscodeSettings,

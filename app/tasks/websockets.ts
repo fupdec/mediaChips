@@ -659,5 +659,4 @@ function registerWebSockets(app: Express, db: ApiDb) {
   })
 }
 
-module.exports = registerWebSockets
 export default registerWebSockets
