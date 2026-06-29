@@ -13,10 +13,14 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
 
   console.log('\x1b[36m%s\x1b[0m', `Connecting to database: ${dbConfig.name} (${dbConfig.id})`)
 
+  const dbPath = path.join(databasesPath, dbConfig.id, 'db.sqlite')
+  const {createDrizzleClient, smokeTestDrizzle} = require('../../api/db')
+  const drizzleConnection = createDrizzleClient(dbPath)
+
   const Sequelize = require('sequelize')
   const sqlite3 = require('../../api/utils/sqlite3-compat')
   const sequelize = new Sequelize({
-    storage: path.join(databasesPath, dbConfig.id, 'db.sqlite'),
+    storage: dbPath,
     dialect: 'sqlite',
     dialectModule: sqlite3,
     dialectOptions: {
@@ -25,10 +29,12 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
     logging: false,
   })
 
-  const db = require('../../api')(sequelize)
+  const db = require('../../api')(sequelize) as ApiDb
   db.config = dbConfig
   db.path_databases = databasesPath
   db.path = path.join(databasesPath, db.config.id)
+  db.drizzle = drizzleConnection.drizzle
+  db.sqlite = drizzleConnection.sqlite
 
   try {
     sequelize.authenticate()
@@ -65,10 +71,14 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
         console.log('\x1b[32m%s\x1b[0m', '✅ Migrations applied')
       }
 
+      await sequelize.query('PRAGMA foreign_keys = ON')
       await sequelize.query('PRAGMA journal_mode = WAL')
       await sequelize.query('PRAGMA synchronous = NORMAL')
       await sequelize.query('PRAGMA temp_store = MEMORY')
       await sequelize.query('PRAGMA cache_size = -64000')
+
+      const mediaCount = smokeTestDrizzle(db.drizzle)
+      console.log('\x1b[32m%s\x1b[0m', `✅ Drizzle connected (${mediaCount} media rows)`)
     } catch (migrationError: unknown) {
       console.log('\x1b[33m%s\x1b[0m', '⚠️ Migration error:', migrationError instanceof Error ? migrationError.message : String(migrationError))
     }
@@ -76,7 +86,7 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
     console.log('\x1b[33m%s\x1b[0m', '⚠️ Database sync error:', err instanceof Error ? apiErrorMessage(err) : String(err))
   })
 
-  return {sequelize, db}
+  return {sequelize, db, drizzleConnection}
 }
 
 function warmupEmbeddingModel(db: ApiDb) {

@@ -1,3 +1,6 @@
+import type { DrizzleClient } from '../db/client'
+import type Database from 'better-sqlite3'
+
 export type AnyRecord = Record<string, unknown>
 
 export type SequelizeModule = typeof import('sequelize')
@@ -56,6 +59,8 @@ export interface ApiDb {
   }
   sequelize: SequelizeConnection
   Sequelize: SequelizeModule
+  drizzle: DrizzleClient
+  sqlite: Database.Database
   Media: SequelizeModelStatic
   Mark: SequelizeModelStatic
   Tag: SequelizeModelStatic

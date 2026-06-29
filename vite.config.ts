@@ -49,7 +49,7 @@ export default defineConfig({
   base: './',
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.{js,ts}', 'shared/**/*.test.ts'],
+    include: ['src/**/*.test.{js,ts}', 'shared/**/*.test.ts', 'api/**/*.test.ts'],
   },
   build: {
     outDir: 'dist',
