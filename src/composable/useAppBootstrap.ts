@@ -24,6 +24,10 @@ import {useAppZoom} from '@/composable/useAppZoom'
 import {useSystemMenuActions} from '@/composable/useSystemMenuActions'
 import type {SystemMenuAction} from '@/types/systemMenu'
 import type { GetItemsFromDbEvent, RemoveEntitiesEvent } from '@/types/itemsPage'
+import {
+  setAppWindowFocused,
+  syncAppWindowFocusedFromDocument,
+} from '@/utils/windowFocus'
 
 interface UseAppBootstrapOptions {
   isPlayerWindow: Ref<boolean>
@@ -237,7 +241,32 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   let unsubscribeMenuAction: (() => void) | void | undefined
   let unsubscribeLockApp: (() => void) | void | undefined
   let unsubscribeZoomChanged: (() => void) | void | undefined
+  let unsubscribeWindowBlur: (() => void) | void | undefined
+  let unsubscribeWindowFocus: (() => void) | void | undefined
   let thumbBroadcastChannel: BroadcastChannel | null = null
+
+  function setupWindowFocusTracking(): void {
+    syncAppWindowFocusedFromDocument()
+
+    window.addEventListener('focus', syncAppWindowFocusedFromDocument)
+    window.addEventListener('blur', syncAppWindowFocusedFromDocument)
+    document.addEventListener('visibilitychange', syncAppWindowFocusedFromDocument)
+
+    if (store.isElectron && window.electronAPI?.on) {
+      unsubscribeWindowBlur = window.electronAPI.on('blur', () => setAppWindowFocused(false))
+      unsubscribeWindowFocus = window.electronAPI.on('focus', () => setAppWindowFocused(true))
+    }
+  }
+
+  function teardownWindowFocusTracking(): void {
+    window.removeEventListener('focus', syncAppWindowFocusedFromDocument)
+    window.removeEventListener('blur', syncAppWindowFocusedFromDocument)
+    document.removeEventListener('visibilitychange', syncAppWindowFocusedFromDocument)
+    unsubscribeWindowBlur?.()
+    unsubscribeWindowFocus?.()
+    unsubscribeWindowBlur = undefined
+    unsubscribeWindowFocus = undefined
+  }
 
   function setupPlayerElectronListeners(): void {
     if (!store.isElectron || !window.electronAPI?.on) return
@@ -398,6 +427,8 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   }
 
   onMounted(async () => {
+    setupWindowFocusTracking()
+
     if (isPlayerWindow.value) {
       await bootstrapPlayerWindow()
       return
@@ -421,6 +452,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     unsubscribeMenuAction?.()
     unsubscribeLockApp?.()
     unsubscribeZoomChanged?.()
+    teardownWindowFocusTracking()
 
     if (appZoom) {
       window.removeEventListener('keydown', appZoom.handleKeydown)

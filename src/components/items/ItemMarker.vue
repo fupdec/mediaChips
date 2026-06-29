@@ -35,7 +35,6 @@
         >
           <video
             ref="video"
-            autoplay
             :muted="muted"
             @error="playback_error = true"
             :class="{'video-playback-error': playback_error}"
@@ -97,6 +96,7 @@ import path from 'path-browserify'
 import {checkFileExists as checkPathExists, getLocalImage} from '@/services/fileService'
 import {getReadableDuration} from '@/services/formatUtils'
 import {toPlayableMediaItem} from '@/utils/mediaItem'
+import {isAppWindowFocused} from '@/utils/windowFocus'
 import type {MarkItem} from '@/types/stores'
 
 interface ItemMarkerMedium {
@@ -169,7 +169,7 @@ const time = computed(() => {
 
 // Метод для безопасного воспроизведения видео
 const safePlayVideo = () => {
-  if (!video.value || !is_hovered.value || playback_error.value) return
+  if (!video.value || !is_hovered.value || playback_error.value || !isAppWindowFocused()) return
 
   try {
     video.value.play().then(() => {
@@ -210,6 +210,12 @@ watch(is_hovered, (newVal) => {
   }
 })
 
+watch(() => appStore.window.focused, (focused) => {
+  if (!focused) {
+    stopPlayingPreview()
+  }
+})
+
 // Methods
 const getImg = async () => {
   try {
@@ -242,7 +248,7 @@ const checkMarkFileExists = async () => {
 }
 
 const playPreview = () => {
-  if (!is_file_exists.value || is_hovered.value) return
+  if (!is_file_exists.value || is_hovered.value || !isAppWindowFocused()) return
 
   is_hovered.value = true
 
@@ -253,7 +259,7 @@ const playPreview = () => {
   }
 
   previewTimeout.value = setTimeout(() => {
-    if (!video.value || !is_hovered.value) return
+    if (!video.value || !is_hovered.value || !isAppWindowFocused()) return
 
     try {
       // Сбрасываем ошибку воспроизведения
@@ -287,7 +293,7 @@ const playPreview = () => {
 
         // Устанавливаем обработчик canplay с проверкой
         video.value.oncanplay = () => {
-          if (video.value && is_hovered.value && !playback_error.value) {
+          if (video.value && is_hovered.value && !playback_error.value && isAppWindowFocused()) {
             safePlayVideo()
           }
         }

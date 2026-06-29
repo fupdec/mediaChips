@@ -60,8 +60,7 @@
 
       <!-- VIDEO PREVIEW -->
       <div
-        v-if="canMountVideoPreview"
-        v-show="showVideoPreview"
+        v-if="showVideoPreview"
         :style="{ animationDelay: `${SETTINGS.delayVideoPreview}ms` }"
         class="preview"
         @click.stop="play"
@@ -70,7 +69,6 @@
           ref="videoRef"
           :class="{ 'video-playback-error': playbackError }"
           :muted="muted"
-          autoplay
           loop
           @error="handleVideoError"
           @loadeddata="handleVideoLoaded"
@@ -204,6 +202,7 @@ import {isLikelyBrowserDirectVideo} from '@/utils/transcodeCompatibility'
 import {usePlayerStore} from '@/stores/player'
 import {getChunkStart} from '@/utils/liveStreamChunk'
 import {resolvePreviewVideoUrl, stopLiveTranscode} from '@/services/transcodeService'
+import {isAppWindowFocused} from '@/utils/windowFocus'
 import type {MediaItem} from '@/types/stores'
 
 type TimeoutMap = {
@@ -345,13 +344,6 @@ const showVideoPreview = computed(() =>
   SETTINGS.value.videoPreviewHover === 'video' &&
   props.isFileExists &&
   isHovered.value &&
-  !shouldBlockVideoPreview.value,
-)
-
-const canMountVideoPreview = computed(() =>
-  isViewCard.value &&
-  SETTINGS.value.videoPreviewHover === 'video' &&
-  props.isFileExists &&
   !shouldBlockVideoPreview.value,
 )
 
@@ -727,7 +719,7 @@ const waitForPreviewCanPlay = (video: HTMLVideoElement, token: number): Promise<
 const startPreviewPlayback = async () => {
   const token = ++previewPlaybackToken
   const video = videoRef.value
-  if (!video || !showVideoPreview.value) return
+  if (!video || !showVideoPreview.value || !isAppWindowFocused()) return
   if (playerStore.active && playerStore.liveTranscodeMediaId === props.media.id) return
 
   const videoSrc = await buildPreviewVideoUrl()
@@ -744,7 +736,7 @@ const startPreviewPlayback = async () => {
       await waitForPreviewCanPlay(video, token)
     }
 
-    if (token !== previewPlaybackToken || !showVideoPreview.value) return
+    if (token !== previewPlaybackToken || !showVideoPreview.value || !isAppWindowFocused()) return
 
     await video.play()
     playbackError.value = false
@@ -761,16 +753,17 @@ const startPreviewPlayback = async () => {
 
 const schedulePreviewPlayback = () => {
   clearTimeout(timeouts.z)
+  if (!isAppWindowFocused()) return
 
   const delay = Math.max(0, Number(SETTINGS.value.delayVideoPreview) || 0)
   timeouts.z = setTimeout(() => {
-    if (!showVideoPreview.value) return
+    if (!showVideoPreview.value || !isAppWindowFocused()) return
     void startPreviewPlayback()
   }, delay)
 }
 
 const handleMouseEnter = () => {
-  if (!props.isFileExists || isHovered.value) return
+  if (!props.isFileExists || isHovered.value || !isAppWindowFocused()) return
 
   clearTimeout(timeouts.leave)
   playbackError.value = false
@@ -938,7 +931,7 @@ watch(() => bigPreview.value, (value) => {
 
 watch(() => is_window_focused.value, (value) => {
   if (!value) {
-    stopPlayingPreview()
+    stopPlayingPreview({force: true})
   }
 })
 
