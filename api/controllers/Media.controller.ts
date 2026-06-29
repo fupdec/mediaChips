@@ -93,7 +93,7 @@ export default function (db: ApiDb) {
       const basePath = path.join(getDbPath(), 'media', mediaType)
 
       for (const id of ids) {
-        for (const folder of ['grids', 'thumbs']) {
+        for (const folder of ['thumbs', 'grids']) {
           const filePath = path.join(basePath, folder, `${id}.jpg`)
           if (!fs.existsSync(filePath)) continue
 
@@ -103,7 +103,7 @@ export default function (db: ApiDb) {
         }
       }
 
-      res.status(201).send({thumbs})
+      res.status(200).send({thumbs})
     } catch (err) {
       res.status(500).send({
         message: apiErrorMessage(err) || 'Some error occurred while retrieving thumbnails.',

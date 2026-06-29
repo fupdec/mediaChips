@@ -1,5 +1,6 @@
 import path from 'path-browserify'
 import { getLocalImage } from '@/services/fileService'
+import { typedApi } from '@/services/typedApi'
 
 const THUMB_SUBFOLDERS = ['thumbs', 'grids'] as const
 const UNAVAILABLE_MARKER = 'unavailable.png'
@@ -22,7 +23,7 @@ export async function loadMediaThumbUrl(
   return null
 }
 
-export async function loadMediaThumbUrls(
+async function loadMediaThumbUrlsIndividually(
   mediaPath: string,
   mediaTypeFolder: string,
   ids: Array<number | string>,
@@ -37,4 +38,34 @@ export async function loadMediaThumbUrls(
   }))
 
   return thumbs
+}
+
+export async function loadMediaThumbUrls(
+  mediaPath: string,
+  mediaTypeFolder: string,
+  ids: Array<number | string>,
+): Promise<Record<number | string, string>> {
+  const uniqueIds = [...new Set(ids.filter((id) => id != null))]
+  if (!uniqueIds.length) return {}
+
+  try {
+    const response = await typedApi.postMediaThumbs({
+      ids: uniqueIds,
+      mediaType: mediaTypeFolder,
+    })
+    const rawThumbs = response.data?.thumbs ?? {}
+    const thumbs: Record<number | string, string> = {}
+
+    for (const id of uniqueIds) {
+      const value = rawThumbs[id] ?? rawThumbs[String(id)]
+      if (typeof value === 'string' && value) {
+        thumbs[id] = value
+      }
+    }
+
+    return thumbs
+  } catch {
+    if (!mediaPath) return {}
+    return loadMediaThumbUrlsIndividually(mediaPath, mediaTypeFolder, uniqueIds)
+  }
 }

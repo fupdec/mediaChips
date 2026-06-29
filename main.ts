@@ -164,9 +164,7 @@ const createWindow = () => {
     mainWindow.webContents.send('focus')
   })
   bindZoomChangedListener(mainWindow)
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
-  })
+  bindMainWindowLoadedHandler(mainWindow)
   mainWindow.webContents.on('did-finish-load', () => {
     sendConfigToWindow(mainWindow)
     // Renderer may mount after the first paint; resend config for late listeners.
@@ -240,8 +238,32 @@ ipcMain.handle('toggleDevTools', () => {
   }
 })
 
-// TODO speed up loading window display
+// Show the splash window immediately, then reveal the main window once it loads.
+const bindMainWindowLoadedHandler = (mainWindow: BrowserWindowInstance) => {
+  const revealMainWindow = () => {
+    if (mainWindow.isDestroyed()) return
+
+    console.log('App loaded')
+    if (loading && !loading.isDestroyed()) {
+      loading.hide()
+      loading = null
+    }
+    mainWindow.show()
+  }
+
+  if (mainWindow.webContents.isLoading()) {
+    mainWindow.webContents.once('did-finish-load', revealMainWindow)
+    return
+  }
+
+  revealMainWindow()
+}
+
 const createLoadingWindow = () => {
+  if (!isDevelopment) {
+    createProtocol('app')
+  }
+
   loading = new BrowserWindow({
     width: 320,
     height: 320,
@@ -259,30 +281,12 @@ const createLoadingWindow = () => {
     },
   })
   const loadingWindow = loading!
-  loadingWindow.hide()
-  if (isDevelopment) {
-    loadingWindow.once('show', () => {
-      win?.webContents.on('did-finish-load', () => {
-        console.log('App loaded')
-        win?.show()
-        loading?.hide()
-      })
-    })
-  } else {
-    createProtocol('app')
-    loadingWindow.once('show', () => {
-      win?.webContents.on('did-finish-load', () => {
-        console.log('App loaded')
-        win?.show()
-        loading?.hide()
-        loading = null
-      })
-    })
-  }
-  loadingWindow.loadURL(getLoadingPageUrl())
-  loadingWindow.webContents.on('did-finish-load', () => {
-    // loading.show()
+
+  loadingWindow.once('ready-to-show', () => {
+    loadingWindow.show()
   })
+
+  loadingWindow.loadURL(getLoadingPageUrl())
 }
 
 app.on('second-instance', () => {

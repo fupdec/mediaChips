@@ -1,5 +1,5 @@
 import { getMediaDeleteAssetFolder } from '@/utils/mediaType'
-import { loadMediaThumbUrl } from '@/utils/mediaThumbLoader'
+import { loadMediaThumbUrls } from '@/utils/mediaThumbLoader'
 import type { MediaType } from '@/types/media'
 
 interface HomeMediaItem {
@@ -20,8 +20,24 @@ export async function loadHomeMediaThumbs(
 ): Promise<void> {
   if (!items?.length || !mediaPath) return
 
-  await Promise.all(items.map(async (item) => {
+  const grouped = new Map<string, HomeMediaItem[]>()
+
+  for (const item of items) {
     const folder = getThumbMediaType(mediaTypes, item.mediaTypeId)
-    item.thumb = await loadMediaThumbUrl(mediaPath, folder, item.id)
+    const group = grouped.get(folder) ?? []
+    group.push(item)
+    grouped.set(folder, group)
+  }
+
+  await Promise.all([...grouped.entries()].map(async ([folder, groupItems]) => {
+    const thumbsById = await loadMediaThumbUrls(
+      mediaPath,
+      folder,
+      groupItems.map((item) => item.id),
+    )
+
+    for (const item of groupItems) {
+      item.thumb = thumbsById[item.id] ?? null
+    }
   }))
 }

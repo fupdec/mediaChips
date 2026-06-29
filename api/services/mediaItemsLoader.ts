@@ -19,6 +19,11 @@ import {
 } from './mediaFilterSql'
 
 import { filterItems } from '../../app/tasks/items'
+import {
+  resolvePageLimit,
+  shouldPaginateMediaList,
+  slicePage,
+} from './mediaItemsPagination'
 
 function shouldLogLegacyMediaLoader() {
   return process.env.NODE_ENV !== 'production'
@@ -232,15 +237,11 @@ async function loadMediaItemsLegacy(
     0,
   )
 
-  const numericLimit = limit ?? 0
-  const shouldPaginate = !ids.length && numericLimit > 0 && numericLimit < 101
-  let pageItems = filtered
-
-  if (shouldPaginate) {
-    const safePage = Math.max(1, Number(page) || 1)
-    const offset = (safePage - 1) * numericLimit
-    pageItems = filtered.slice(offset, offset + numericLimit)
-  }
+  const pageLimit = resolvePageLimit(limit)
+  const shouldPaginate = shouldPaginateMediaList({ ids, limit })
+  const pageItems = shouldPaginate
+    ? slicePage(filtered, page, limit)
+    : filtered
 
   return {
     items: pageItems,
@@ -249,8 +250,10 @@ async function loadMediaItemsLegacy(
     totalFilesize,
     navigation: includeNavigation ? filtered.map(toNavigationItem) : undefined,
     page: shouldPaginate ? Math.max(1, Number(page) || 1) : 1,
-    limit: shouldPaginate ? numericLimit : totalFiltered,
-    pages: shouldPaginate ? Math.max(1, Math.ceil(totalFiltered / numericLimit)) : 1,
+    limit: shouldPaginate ? pageLimit : totalFiltered,
+    pages: shouldPaginate && pageLimit
+      ? Math.max(1, Math.ceil(totalFiltered / pageLimit))
+      : 1,
   }
 }
 
@@ -288,10 +291,9 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
   const fromForSort = getMediaFromClause(joinForFilters || joinForSort, joinSql)
   const idSelect = buildMediaIdSelect(needsDistinct)
 
-  const numericLimit = limit ?? 0
-  const shouldPaginate = !ids.length && numericLimit > 0 && numericLimit < 101
+  const pageLimit = resolvePageLimit(limit)
+  const shouldPaginate = shouldPaginateMediaList({ ids, limit })
   const safePage = Math.max(1, Number(page) || 1)
-  const pageLimit = shouldPaginate ? numericLimit : null
   const queryReplacements = {...replacements}
 
   let idQuery = `${idSelect}
@@ -299,9 +301,9 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
     ${whereClause}
     ORDER BY ${sortExpr} ${sortDir}`
 
-  if (shouldPaginate) {
+  if (shouldPaginate && pageLimit != null) {
     queryReplacements.limit = pageLimit
-    queryReplacements.offset = (safePage - 1) * (pageLimit ?? 0)
+    queryReplacements.offset = (safePage - 1) * pageLimit
     idQuery += ' LIMIT :limit OFFSET :offset'
   }
 
@@ -362,8 +364,8 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
     limit: shouldPaginate ? pageLimit : (totalFiltered ?? items.length),
   }
 
-  if (!skipTotals && shouldPaginate && totalFiltered != null) {
-    result.pages = Math.max(1, Math.ceil(totalFiltered / (pageLimit ?? numericLimit)))
+  if (!skipTotals && shouldPaginate && totalFiltered != null && pageLimit != null) {
+    result.pages = Math.max(1, Math.ceil(totalFiltered / pageLimit))
   }
 
   return result

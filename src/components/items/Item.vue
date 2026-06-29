@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="itemRootRef"
     :disabled="!reg && x > 14"
     @contextmenu.stop="showContextMenu"
     @mousedown="stopSmoothScroll($event)"
@@ -156,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, watch} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -170,6 +171,7 @@ import ItemPinnedMeta from '@/components/items/ItemPinnedMeta.vue'
 import ItemRating from '@/components/items/ItemRating.vue'
 import ItemFavorite from '@/components/items/ItemFavorite.vue'
 import useItemContextMenu from '@/composable/ItemContextMenu'
+import {useLazyInView} from '@/composable/useLazyInView'
 import {isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} from '@/utils/mediaType'
 import {checkFileExists as checkPathExists} from '@/services/fileService'
 import {hexToRgba} from '@/services/formatUtils'
@@ -210,6 +212,8 @@ const contextMenu = computed(() => contextMenuStore)
 
 const is_file_exists = ref(false)
 const big_preview = ref(false)
+const itemRootRef = ref<HTMLElement | null>(null)
+const { wasInView } = useLazyInView(itemRootRef, { rootMargin: '240px 0px' })
 
 const isVideoMedia = computed(() => isVideoMediaType(props.mediaType ?? undefined))
 const isImageMedia = computed(() => isImageMediaType(props.mediaType ?? undefined))
@@ -312,20 +316,14 @@ const toggleSelect = (e: MouseEvent) => {
   itemsStore.toggleSelect(e, props.item)
 }
 
-const checkVideoFileExists = async () => {
-  if (!mediaItem.value) return
-  is_file_exists.value = await checkPathExists(mediaItem.value.path ?? '')
-}
+watch(
+  () => [wasInView.value, mediaItem.value?.path] as const,
+  ([visible, path]) => {
+    if (!visible || !path) return
 
-onMounted(() => {
-  if (mediaItem.value) {
-    checkVideoFileExists()
-  }
-})
-
-watch(() => mediaItem.value?.path, () => {
-  if (mediaItem.value) {
-    checkVideoFileExists()
-  }
-})
+    void checkPathExists(path).then((exists) => {
+      is_file_exists.value = exists
+    })
+  },
+)
 </script>
