@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createWatchedFoldersRepository} = require('../db/repositories/watchedFolders')
-
-module.exports = function (db: ApiDb) {
+import { createWatchedFoldersRepository } from '../db/repositories/watchedFolders'
+export default function (db: ApiDb) {
   const watchedFoldersRepo = createWatchedFoldersRepository(db.drizzle)
 
   const create = async function (req: ApiRequest, res: ApiResponse) {

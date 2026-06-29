@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const SavedFilter = require("../controllers/SavedFilter.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createSavedFilterController from '../controllers/SavedFilter.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const SavedFilter = createSavedFilterController(db);
+  const router = express.Router();
 
   // Create a new SavedFilter
   router.post("/", SavedFilter.create);
@@ -27,6 +30,5 @@ module.exports = (app: Express, db: ApiDb) => {
   // Delete a SavedFilter with id
   router.delete("/:id", SavedFilter.deleteOne);
 
-
   app.use('/api/SavedFilter', router);
-};
+}

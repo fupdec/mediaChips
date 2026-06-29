@@ -4,13 +4,17 @@ import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
 import type { BackupEntry } from '@shared/api/responses'
 import type { ApiDb } from '../../types/db'
-const fs = require("fs")
-const path = require('path')
-const { rimraf } = require("rimraf")
-const StreamZip = require('node-stream-zip')
-const fse = require("fs-extra");
+import fs from 'fs'
+import path from 'path'
+import { rimraf } from 'rimraf'
+import StreamZip from 'node-stream-zip'
+import fse from 'fs-extra'
+import archiver from 'archiver'
+import { getDatabaseManager } from '../../../app/server/databaseRegistry'
+import createTasksMigrateFromLowDbController from './TasksMigrateFromLowDb.controller'
+import { normalizeUserPath } from '../../utils/normalizeUserPath'
 
-module.exports = function (app: Express, db: ApiDb) {
+export default function (app: Express, db: ApiDb) {
   const getDbPath = () => {
     if (!db.path) {
       throw new Error('Database path is not configured')
@@ -20,7 +24,7 @@ module.exports = function (app: Express, db: ApiDb) {
   const getBackupsPath = () => path.join(getDbPath(), 'backups')
 
   const createBackup = function (req: ApiRequest, res: ApiResponse) {
-    let currentdate = new Date(),
+    const currentdate = new Date(),
       date = currentdate.getDate(),
       month = currentdate.getMonth() + 1,
       hours = currentdate.getHours(),
@@ -36,7 +40,6 @@ module.exports = function (app: Express, db: ApiDb) {
       metaFiles = path.join(getDbPath(), 'meta'),
       dbFile = path.join(getDbPath(), 'db.sqlite')
 
-    const archiver = require('archiver')
     const archive = archiver('zip')
     const outputPath = path.join(getBackupsPath(), backupName + '.zip')
     const output = fs.createWriteStream(outputPath)
@@ -63,12 +66,13 @@ module.exports = function (app: Express, db: ApiDb) {
       res.status(201).send(backups)
       return
     }
-    fs.readdirSync(backupsPath).forEach((file: unknown) => {
-      if (path.extname(file) !== '.zip') return false
-      const pathToFile = path.join(backupsPath, file)
+    fs.readdirSync(backupsPath).forEach((file) => {
+      const fileName = String(file)
+      if (path.extname(fileName) !== '.zip') return
+      const pathToFile = path.join(backupsPath, fileName)
       const filestats = fs.statSync(pathToFile)
-      let info: BackupEntry = {
-        date: path.parse(file).name,
+      const info: BackupEntry = {
+        date: path.parse(fileName).name,
         size: (filestats.size / 1024 / 1024).toFixed(2)
       }
       backups.push(info)
@@ -77,7 +81,7 @@ module.exports = function (app: Express, db: ApiDb) {
   };
 
   const deleteBackup = function (req: ApiRequest, res: ApiResponse) {
-    const backupPath = path.join(getBackupsPath(), req.body.name + '.zip')
+    const backupPath = path.join(getBackupsPath(), String(req.body.name) + '.zip')
     fs.unlink(backupPath, (err: unknown) => {
       if (err) {
         console.log(err)
@@ -88,7 +92,7 @@ module.exports = function (app: Express, db: ApiDb) {
 
   const restoreBackup = async (req: ApiRequest, res: ApiResponse) => {
     const dbPath = getDbPath()
-    const backupPath = path.join(getBackupsPath(), req.body.name + '.zip')
+    const backupPath = path.join(getBackupsPath(), String(req.body.name) + '.zip')
     const dbFile = path.join(dbPath, 'db.sqlite')
     const mediaFiles = path.join(dbPath, 'media')
     const metaFiles = path.join(dbPath, 'meta')
@@ -113,14 +117,13 @@ module.exports = function (app: Express, db: ApiDb) {
         }
       })
     }
-    const is_low_db_backup = await checkLowDbBackup();
-    const {getDatabaseManager} = require('../../../app/server/databaseRegistry')
+    const is_low_db_backup = await checkLowDbBackup()
 
     try {
       if (is_low_db_backup) {
         await zip.close()
         getDatabaseManager().closeConnection()
-        const tasksLowDb = require('./TasksMigrateFromLowDb.controller')(db)
+        const tasksLowDb = createTasksMigrateFromLowDbController(db)
         await tasksLowDb.migrateFromLowDb(backupPath)
         await getDatabaseManager().reloadCurrentDatabase()
         res.sendStatus(201)
@@ -131,7 +134,7 @@ module.exports = function (app: Express, db: ApiDb) {
 
       getDatabaseManager().removeSqliteFiles(dbFile)
 
-      const rmrf = (folder: unknown) => rimraf(folder)
+      const rmrf = (folder: string) => rimraf(folder)
       await rmrf(mediaFiles)
       await rmrf(metaFiles)
 
@@ -158,9 +161,8 @@ module.exports = function (app: Express, db: ApiDb) {
   };
 
   const importBackup = async (req: ApiRequest, res: ApiResponse) => {
-    const {normalizeUserPath} = require('../../utils/normalizeUserPath')
-    const fromPath = normalizeUserPath(req.body.path)
-    if (!fromPath || !fs.existsSync(fromPath)) {
+    const fromPath = normalizeUserPath(String(req.body.path ?? ''))
+    if (typeof fromPath !== 'string' || !fromPath || !fs.existsSync(fromPath)) {
       res.status(400).send({message: 'File not found'})
       return
     }
@@ -177,19 +179,19 @@ module.exports = function (app: Express, db: ApiDb) {
   };
 
   const exportBackup = async (req: ApiRequest, res: ApiResponse) => {
-    const archive = req.body?.archive
-    const destDir = req.body?.path
+    const archiveName = String(req.body?.archive ?? '')
+    const destDir = String(req.body?.path ?? '')
 
-    if (!archive || !destDir) {
+    if (!archiveName || !destDir) {
       res.status(400).send({ message: 'Archive name and destination path are required' })
       return
     }
 
-    const fromPath = path.join(getBackupsPath(), archive + '.zip')
-    const toPath = path.join(destDir, archive + '.zip')
+    const fromPath = path.join(getBackupsPath(), archiveName + '.zip')
+    const toPath = path.join(destDir, archiveName + '.zip')
 
     if (!fs.existsSync(fromPath)) {
-      res.status(400).send({ message: `Backup not found: ${archive}` })
+      res.status(400).send({ message: `Backup not found: ${archiveName}` })
       return
     }
 

@@ -1,6 +1,5 @@
 import type { ApiDb } from '../../api/types/db'
-
-const {createAuthService} = require('./auth')
+import { createAuthService } from './auth'
 
 let authService: ReturnType<typeof createAuthService> | null = null
 
@@ -22,3 +21,5 @@ module.exports = {
   initAuthService,
   getAuthService,
 }
+
+export { initAuthService, getAuthService }

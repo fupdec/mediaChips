@@ -5,23 +5,23 @@ import type {
   OldIdMapping,
   SettingOptionRow,
 } from '../types/migration'
-
-const {createMediaRepository} = require('../db/repositories/media')
-const {createVideoMetadataRepository} = require('../db/repositories/videoMetadata')
-const {createSettingsRepository} = require('../db/repositories/settings')
-const {createMetaRepository} = require('../db/repositories/meta')
-const {createTagsRepository} = require('../db/repositories/tags')
-const {createMetaInMediaTypesRepository} = require('../db/repositories/metaInMediaTypes')
-const {createPlaylistsRepository} = require('../db/repositories/playlists')
-const {createMediaInPlaylistsRepository} = require('../db/repositories/mediaInPlaylists')
-const {createMarksRepository} = require('../db/repositories/marks')
-const {createTagsInMediaRepository} = require('../db/repositories/tagsInMedia')
-const {createValuesInMediaRepository} = require('../db/repositories/valuesInMedia')
-const {createPinnedMetaRepository} = require('../db/repositories/pinnedMeta')
-const {createTagsInTagRepository} = require('../db/repositories/tagsInTag')
-const {createValuesInTagRepository} = require('../db/repositories/valuesInTag')
-const {createWatchedFoldersRepository} = require('../db/repositories/watchedFolders')
-const {createMediaTypesInWatchedFoldersRepository} = require('../db/repositories/mediaTypesInWatchedFolders')
+import { createMediaRepository } from '../db/repositories/media'
+import { createVideoMetadataRepository } from '../db/repositories/videoMetadata'
+import { createSettingsRepository } from '../db/repositories/settings'
+import { createMetaRepository } from '../db/repositories/meta'
+import { createTagsRepository } from '../db/repositories/tags'
+import { createMetaInMediaTypesRepository } from '../db/repositories/metaInMediaTypes'
+import { createPlaylistsRepository } from '../db/repositories/playlists'
+import { createMediaInPlaylistsRepository } from '../db/repositories/mediaInPlaylists'
+import { createMarksRepository } from '../db/repositories/marks'
+import { createTagsInMediaRepository } from '../db/repositories/tagsInMedia'
+import { createValuesInMediaRepository } from '../db/repositories/valuesInMedia'
+import { createPinnedMetaRepository } from '../db/repositories/pinnedMeta'
+import { createTagsInTagRepository } from '../db/repositories/tagsInTag'
+import { createValuesInTagRepository } from '../db/repositories/valuesInTag'
+import { createWatchedFoldersRepository } from '../db/repositories/watchedFolders'
+import { createMediaTypesInWatchedFoldersRepository } from '../db/repositories/mediaTypesInWatchedFolders'
+import { loadDefaultSettingsList } from '../utils/defaultSettings'
 
 async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
   const mediaRepo = createMediaRepository(db.drizzle)
@@ -42,7 +42,7 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
   const mediaTypesInWatchedFoldersRepo = createMediaTypesInWatchedFoldersRepository(db.drizzle)
 
   mediaRepo.bulkCreate(obj.videos)
-  let mediaIds: OldIdMapping[] = mediaRepo.findOldIdMappings()
+  const mediaIds: OldIdMapping[] = mediaRepo.findOldIdMappings()
 
   const videoMetadata = obj.videoMetadata
     .map((video: AnyRecord) => {
@@ -57,9 +57,8 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
     })
     .filter(Boolean)
 
-  videoMetadataRepo.bulkCreate(videoMetadata)
+  videoMetadataRepo.bulkCreate(videoMetadata as Parameters<typeof videoMetadataRepo.bulkCreate>[0])
 
-  const {loadDefaultSettingsList} = require('../utils/defaultSettings')
   const settings = obj.settings
   const settingsList = loadDefaultSettingsList()
   const allowed = settingsList.map((i: SettingOptionRow) => i.option)
@@ -85,7 +84,7 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
     }
   }
 
-  let metaIds: OldIdMapping[] = metaRepo.findOldIdMappings()
+  const metaIds = metaRepo.findOldIdMappings() as OldIdMapping[]
 
   for (const tags of obj.tags) {
     for (const i in tags) {
@@ -96,18 +95,18 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
         ...it,
         metaId: meta.id,
       }))
-      tagsRepo.bulkCreate(newTags)
+      tagsRepo.bulkCreate(newTags as Parameters<typeof tagsRepo.bulkCreate>[0])
     }
   }
 
-  let tagsIds: OldIdMapping[] = tagsRepo.findOldIdMappings()
+  const tagsIds = tagsRepo.findOldIdMappings() as OldIdMapping[]
 
   for (const i of (obj.settings.metaAssignedToVideos as Array<{ id: unknown }>)) {
     const meta = metaIds.find((x) => x.oldId === i.id)
     if (!meta) continue
     metaInMediaTypesRepo.create({
       mediaTypeId: 1,
-      metaId: meta.id,
+      metaId: Number(meta.id),
     })
   }
 
@@ -124,7 +123,7 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
 
       mediaInPlaylistsRepo.create({
         playlistId: p.id,
-        mediaId: media.id,
+        mediaId: Number(media.id),
         order: playlistVideos.indexOf(videoOldId),
       })
     }
@@ -181,8 +180,8 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
     }
   }
 
-  if (tagsInMedia.length) tagsInMediaRepo.bulkCreate(tagsInMedia)
-  if (valuesInMedia.length) valuesInMediaRepo.bulkCreate(valuesInMedia)
+  if (tagsInMedia.length) tagsInMediaRepo.bulkCreate(tagsInMedia as Parameters<typeof tagsInMediaRepo.bulkCreate>[0])
+  if (valuesInMedia.length) valuesInMediaRepo.bulkCreate(valuesInMedia as Parameters<typeof valuesInMediaRepo.bulkCreate>[0])
 
   const pinnedMeta: AnyRecord[] = []
   for (const c of obj.pinnedMeta) {
@@ -200,7 +199,7 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
       })
     }
   }
-  pinnedMetaRepo.bulkCreate(pinnedMeta)
+  pinnedMetaRepo.bulkCreate(pinnedMeta as Parameters<typeof pinnedMetaRepo.bulkCreate>[0])
 
   const tagsInTag: AnyRecord[] = []
   const valuesInTag: AnyRecord[] = []
@@ -237,15 +236,15 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
     }
   }
 
-  if (tagsInTag.length) tagsInTagRepo.bulkCreate(tagsInTag)
-  if (valuesInTag.length) valuesInTagRepo.bulkCreate(valuesInTag)
+  if (tagsInTag.length) tagsInTagRepo.bulkCreate(tagsInTag as Parameters<typeof tagsInTagRepo.bulkCreate>[0])
+  if (valuesInTag.length) valuesInTagRepo.bulkCreate(valuesInTag as Parameters<typeof valuesInTagRepo.bulkCreate>[0])
 
   for (const folder of obj.watchedFolders) {
     const {folder: folderRow} = watchedFoldersRepo.findOrCreateByPath(
       String(folder.path ?? ''),
-      folder.name,
+      folder.name != null ? String(folder.name) : null,
     )
-    watchedFoldersRepo.updateById(folderRow.id, {watch: folder.watch})
+    watchedFoldersRepo.updateById(folderRow.id, {watch: Boolean(folder.watch)})
     mediaTypesInWatchedFoldersRepo.findOrCreate(folderRow.id, 1)
   }
 
@@ -259,3 +258,5 @@ async function importLowDbData(db: ApiDb, obj: LowDbImportObject) {
 module.exports = {
   importLowDbData,
 }
+
+export { importLowDbData }

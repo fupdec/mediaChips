@@ -3,7 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
   },
-  "include": ["main.ts", "types/electron-main.d.ts"]
+  "include": ["main.ts", "types/electron-main.d.ts", "app/types/**/*.d.ts"]
 }

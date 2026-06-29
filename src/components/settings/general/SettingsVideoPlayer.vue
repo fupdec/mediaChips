@@ -5,17 +5,11 @@ import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
 import {useSettingsStore} from '@/stores/settings'
 import {useAppStore} from '@/stores/app'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
-import {typedApi} from '@/services/typedApi'
 import {fetchTranscodeCacheStats} from '@/services/transcodeService'
+import {typedApi} from '@/services/typedApi'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
 import {computed, onMounted, ref} from 'vue'
-
-interface TranscodeCacheStats {
-  bytes?: number
-  removed?: number
-}
 
 const SETTINGS = useSettingsStore()
 const appStore = useAppStore()
@@ -31,7 +25,7 @@ const cacheUsageLabel = computed(() =>
 
 const loadCacheStats = async () => {
   try {
-    const stats = await fetchTranscodeCacheStats(apiClient) as TranscodeCacheStats
+    const stats = await fetchTranscodeCacheStats()
     cacheBytes.value = stats?.bytes || 0
   } catch {
     cacheBytes.value = 0
@@ -42,7 +36,7 @@ const clearTranscodeCache = async () => {
   clearingCache.value = true
 
   try {
-    const response = await typedApi.clearTranscodeCache<TranscodeCacheStats>()
+    const response = await typedApi.clearTranscodeCache()
     cacheBytes.value = 0
     setNotification({
       type: 'success',

@@ -5,24 +5,23 @@ import type {
   VideoGridOptions,
   VideoTimelineItem,
 } from '../../types/videoImagesGeneration'
-
-const os = require('os')
-const fs = require('fs')
-const axios = require('axios')
-const path = require('path')
-const {
+import { createMarksRepository } from '../../db/repositories/marks'
+import { createMediaRepository } from '../../db/repositories/media'
+import os from 'os'
+import fs from 'fs'
+import axios from 'axios'
+import path from 'path'
+import {
   combineVideoFrames,
   extractVideoFrame,
   ffprobe,
-} = require('../../utils/ffmpeg')
-const {resolveExistingPath} = require('../../services/contentHash')
-const {resolveActiveDbFilePath} = require('../../services/mediaPathResolver')
-const {createMarksRepository} = require('../../db/repositories/marks')
-const {createMediaRepository} = require('../../db/repositories/media')
+} from '../../utils/ffmpeg'
+import { resolveExistingPath } from '../../services/contentHash'
+import { resolveActiveDbFilePath } from '../../services/mediaPathResolver'
 
 const formatMarkTimestamp = (time: number) => new Date(1000 * time).toISOString().substr(11, 12)
 
-module.exports = function createTasksVideoPreviewController(shared: TaskControllerShared) {
+export default function createTasksVideoPreviewController(shared: TaskControllerShared) {
   const {db, dbPath, createThumbMiddle, createThumbCustom, getImageMedia} = shared
   const marksRepo = createMarksRepository(db.drizzle)
   const mediaRepo = createMediaRepository(db.drizzle)
@@ -81,7 +80,7 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
   }
 
   const createGrid = async function (req: ApiRequest, res: ApiResponse) {
-    const gridsPath = path.join(dbPath, "/media/videos/grids/");
+    const gridsPath = path.join(dbPath ?? '', '/media/videos/grids/')
 
     if (!fs.existsSync(req.body.input)) {
       res.status(400).send({
@@ -110,20 +109,20 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
       }
 
       getVideoDuration(pathToFile: string) {
-        return ffprobe(pathToFile).then((info: FfprobeDurationInfo) => info.format.duration)
+        return ffprobe(pathToFile).then((info) => (info as FfprobeDurationInfo).format.duration)
       }
 
       makeLayout(i: number) {
         const currentColumn = i % this.cols
         const currentRow = Math.floor(i / this.cols)
-        let colSide: string[] = []
-        let rowSide: string[] = []
+        const colSide: string[] = []
+        const rowSide: string[] = []
         if (currentColumn === 0) colSide.push('0')
         else
-          for (var j = 0; j < currentColumn; j++) colSide.push('w0')
+          for (let j = 0; j < currentColumn; j++) colSide.push('w0')
         if (currentRow === 0) rowSide.push('0')
         else
-          for (var k = 0; k < currentRow; k++) rowSide.push('h0')
+          for (let k = 0; k < currentRow; k++) rowSide.push('h0')
         return `${colSide.join('+')}_${rowSide.join('+')}`
       }
 
@@ -152,8 +151,8 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
         if (typeof duration !== 'number') return false
         const durSlice = parseInt(String(duration / this.tileCount), 10)
 
-        let framePromises: Promise<unknown>[] = []
-        for (var i = 0; i < this.tileCount; i++) {
+        const framePromises: Promise<unknown>[] = []
+        for (let i = 0; i < this.tileCount; i++) {
           const timestamp = new Date(1000 * (i + 0.5) * durSlice).toISOString().substr(11, 8)
           const intermediateOutput = path.join(this.tmpDir, `thumb${i}.png`)
           framePromises.push(this.ffmpegSeekP(timestamp, intermediateOutput))
@@ -164,10 +163,10 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
             // console.log(err)
           })
 
-        let inputFiles: string[] = []
-        let streams: string[] = []
-        let layouts: string[] = []
-        for (var l = 0; l < this.tileCount; l++) {
+        const inputFiles: string[] = []
+        const streams: string[] = []
+        const layouts: string[] = []
+        for (let l = 0; l < this.tileCount; l++) {
           inputFiles.push(`${this.tmpDir}/thumb${l}.png`)
           streams.push(`[${l}:v]`)
           layouts.push(this.makeLayout(l))
@@ -202,7 +201,7 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
   }
 
   const createTimeline = async function (req: ApiRequest, res: ApiResponse) {
-    const timelinesPath = path.join(dbPath, 'media', 'videos', 'timelines')
+    const timelinesPath = path.join(dbPath ?? '', 'media', 'videos', 'timelines')
     if (!fs.existsSync(timelinesPath)) {
       fs.mkdirSync(timelinesPath, {recursive: true})
     }
@@ -225,7 +224,7 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
       }
 
       getVideoDuration(pathToFile: string) {
-        return ffprobe(pathToFile).then((info: FfprobeDurationInfo) => info.format.duration)
+        return ffprobe(pathToFile).then((info) => (info as FfprobeDurationInfo).format.duration)
       }
 
       createFrame(timestamp: string, output: string) {
@@ -246,10 +245,10 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
         const duration = await this.getVideoDuration(this.video.path)
         if (typeof duration !== 'number') return false
         const timestamps = parts.map((part) => (new Date(Math.floor(duration * (part / 100) * 1000)).toISOString().substr(11, 8)))
-        let framePromises: Promise<unknown>[] = []
+        const framePromises: Promise<unknown>[] = []
 
         for (let i = 0; i < timestamps.length; i++) {
-          let output = path.join(timelinesPath, `${this.video.id}_${parts[i]}.jpg`)
+          const output = path.join(timelinesPath, `${this.video.id}_${parts[i]}.jpg`)
           framePromises.push(this.createFrame(timestamps[i], output))
         }
 
@@ -337,7 +336,7 @@ module.exports = function createTasksVideoPreviewController(shared: TaskControll
         return
       }
 
-      const marksDir = path.join(dbPath, 'media/videos/marks')
+      const marksDir = path.join(dbPath ?? '', 'media/videos/marks')
       if (!fs.existsSync(marksDir)) {
         fs.mkdirSync(marksDir, {recursive: true})
       }

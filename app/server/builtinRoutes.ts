@@ -7,17 +7,18 @@ import type {
   ResolveFilePathFn,
 } from '../types/builtinRoutes'
 import type { ServerDatabaseEntry } from '../types/server'
-const path = require('path')
-const fs = require('fs')
-const {createMediaRepository} = require('../../api/db/repositories/media')
-const package_json = require('../../package.json')
-const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
-const {isLanAccessEnabled, isLanAccessEnvLocked} = require('./lanAccess')
-const {isLoopbackHost} = require('./constants')
-const {saveConfigFile} = require('./configFile')
-const {isClientAbortError, safeJsonError} = require('./fileResolver')
-const {streamVideoFile} = require('../../api/services/transcode/streamVideoFile')
-const {parseMaxHeightOverride} = require('../../api/services/transcode/transcodeSettings')
+import path from 'path'
+import fs from 'fs'
+import { createMediaRepository } from '../../api/db/repositories/media'
+import { normalizeMediaPath } from '../../api/utils/normalizeUserPath'
+import { isLanAccessEnabled, isLanAccessEnvLocked } from './lanAccess'
+import { isLoopbackHost } from './constants'
+import { saveConfigFile } from './configFile'
+import { isClientAbortError, safeJsonError } from './fileResolver'
+import { streamVideoFile } from '../../api/services/transcode/streamVideoFile'
+import { parseMaxHeightOverride } from '../../api/services/transcode/transcodeSettings'
+import { getDatabaseManager } from './databaseRegistry'
+import packageJson from '../../package.json'
 
 function resolveMediaVideoPath(
   db: ApiDb,
@@ -54,7 +55,7 @@ function registerBuiltinRoutes({
     res.json({
       status: 'online',
       service: 'mediachips-server',
-      version: package_json.version,
+      version: packageJson.version,
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
       ip: 'localhost',
@@ -75,7 +76,7 @@ function registerBuiltinRoutes({
 
   app.get('/api/getMachineId', async (req: ApiRequest, res: ApiResponse) => {
     try {
-      const {machineId} = require('node-machine-id')
+      const { machineId } = await import('node-machine-id')
       const id = await machineId()
       res.status(200).send(id)
     } catch (error: unknown) {
@@ -98,7 +99,7 @@ function registerBuiltinRoutes({
       ips: config.ips,
       hostname: config.hostname,
       port: config.port,
-      appVersion: package_json.version || '1.0.0',
+      appVersion: packageJson.version || '1.0.0',
       path: activeDb ? path.join(databasesPath, activeDb.id) : '',
       databases: config.databases || [],
       activeDatabase: activeDb,
@@ -240,7 +241,6 @@ function registerBuiltinRoutes({
     }
 
     try {
-      const {getDatabaseManager} = require('./databaseRegistry')
       const database = await getDatabaseManager().switchToDatabase(String(databaseId))
 
       res.json({
@@ -404,7 +404,7 @@ function registerBuiltinRoutes({
       const maxHeightOverride = parseMaxHeightOverride(req.query.maxHeight)
       const streamOptions: { startTime: number; maxHeight?: number } = { startTime }
 
-      if (maxHeightOverride !== undefined) {
+      if (maxHeightOverride != null) {
         streamOptions.maxHeight = maxHeightOverride
       }
 
@@ -524,3 +524,5 @@ function registerBuiltinRoutes({
 module.exports = {
   registerBuiltinRoutes,
 }
+
+export { registerBuiltinRoutes }

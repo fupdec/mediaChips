@@ -1,11 +1,11 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
-const {getMarkFilterMetas, loadMarkItems} = require('../services/markItemsLoader')
-const {deleteMarkGeneratedAsset} = require('../services/localAssetCleanup')
-const {createMarksRepository} = require('../db/repositories/marks')
+import { createMarksRepository } from '../db/repositories/marks'
+import { getMarkFilterMetas, loadMarkItems } from '../services/markItemsLoader'
+import { deleteMarkGeneratedAsset } from '../services/localAssetCleanup'
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const marksRepo = createMarksRepository(db.drizzle)
   const getDbPath = () => db.path!
 

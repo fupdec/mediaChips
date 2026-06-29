@@ -1,13 +1,13 @@
 import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo, NetworkHelpers } from '../types/server'
 import { apiErrorMessage, apiErrorStack } from '../../api/types/errors'
-const path = require('path')
-const fs = require('fs')
-const os = require('os')
-const {FIXED_PORT} = require('./constants')
-const {loadConfigFile, createDefaultConfig, saveConfigFile} = require('./configFile')
+import path from 'path'
+import fs from 'fs'
+import os from 'os'
+import { loadConfigFile, createDefaultConfig, saveConfigFile } from './configFile'
+import { FIXED_PORT } from './ports'
 
 function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
-  let app_folder
+  let app_folder: string | undefined
   const is_electron_running = process.versions.electron
 
   if (is_electron_running) {
@@ -29,7 +29,7 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
 
   let configPath
   if (is_electron_running) {
-    configPath = path.join(app_folder, '/config.json')
+    configPath = path.join(app_folder!, '/config.json')
   } else {
     configPath = path.join(__dirname, '../../public/config.json')
   }
@@ -83,7 +83,7 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
 
   let databasesPath
   if (is_electron_running) {
-    databasesPath = path.join(app_folder, '/app_storage')
+    databasesPath = path.join(app_folder!, '/app_storage')
   } else {
     databasesPath = path.join(__dirname, '../../app_storage')
   }
@@ -150,3 +150,5 @@ module.exports = {
   initializeServerConfig,
   createStorageDirectories,
 }
+
+export { initializeServerConfig, createStorageDirectories }

@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const TagsInMedia = require("../controllers/TagsInMedia.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createTagsInMediaController from '../controllers/TagsInMedia.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const TagsInMedia = createTagsInMediaController(db);
+  const router = express.Router();
 
   // Create many TagsInMedia
   router.post("/", TagsInMedia.bulkCreate);
@@ -23,4 +26,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.delete("/:id", TagsInMedia.deleteOne);
 
   app.use('/api/TagsInMedia', router);
-};
+}

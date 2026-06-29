@@ -263,9 +263,9 @@ const tags = [
   },
 ]
 
-function getLocalizedLabel(tag: AnyRecord, locale = 'en') {
+function getLocalizedLabel(tag: AnyRecord, locale = 'en'): string {
   const labels = tag.labels as Record<string, string> | undefined
-  return labels?.[locale] || labels?.en || tag.key
+  return String(labels?.[locale] || labels?.en || tag.key || '')
 }
 
 function getPromptEntries() {
@@ -280,3 +280,5 @@ module.exports = {
   getPromptEntries,
   tags,
 }
+
+export { getLocalizedLabel, getPromptEntries, tags }

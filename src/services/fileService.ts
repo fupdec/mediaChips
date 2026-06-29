@@ -2,34 +2,14 @@ import path from 'path-browserify'
 import { normalizePastedFilePath } from '@/utils/filePathInput'
 import { getApiBaseUrl } from '@/services/apiClient'
 import { typedApi } from '@/services/typedApi'
-
-async function checkFileExistsViaElectron(filePath: string): Promise<boolean | null> {
-  if (typeof window === 'undefined') return null
-
-  const electronOperable = (window as Window & {
-    $electronOperable?: { checkFileExists?: (path: string) => Promise<boolean> }
-    operableAPI?: { checkFileExists?: (path: string) => Promise<boolean> }
-  })
-
-  if (electronOperable.$electronOperable?.checkFileExists) {
-    const exists = await electronOperable.$electronOperable.checkFileExists(filePath)
-    if (exists) return true
-  }
-
-  if (electronOperable.operableAPI?.checkFileExists) {
-    const exists = await electronOperable.operableAPI.checkFileExists(filePath)
-    if (exists) return true
-  }
-
-  return null
-}
+import { checkFileExistsElectron } from '@/services/electronBridge'
 
 export async function checkFileExists(filePath: string) {
   const normalized = normalizePastedFilePath(filePath)
   filePath = typeof normalized === 'string' ? normalized : filePath
   if (!filePath) return false
 
-  const electronResult = await checkFileExistsViaElectron(filePath)
+  const electronResult = await checkFileExistsElectron(filePath)
   if (electronResult === true) return true
 
   if (!getApiBaseUrl()) return false

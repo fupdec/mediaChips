@@ -1,31 +1,33 @@
 import {
   getChunkStart,
 } from '@/utils/liveStreamChunk'
+import { typedApi } from '@/services/typedApi'
+import {
+  apiVideoStream,
+  apiVideoTranscodeStream,
+} from '@shared/api/routes'
+import type { PlayableInfo } from '@shared/schemas/transcode'
+
 const LIVE_STREAM_RETRY_DELAY_MS = 400
 
-type ApiClient = typeof import('@/services/apiClient').apiClient
 type BuildApiUrl = (path: string, baseUrl?: string) => string
 
-interface PlayableInfo {
-  mode?: string
-  transcodeRequired?: boolean
-  streamPlayback?: boolean
+export type { PlayableInfo, TranscodeCacheStats } from '@shared/schemas/transcode'
+
+export function fetchPlayableInfo(mediaId: number): Promise<PlayableInfo> {
+  return typedApi.getVideoPlayable(mediaId).then((response) => response.data)
 }
 
-export function fetchPlayableInfo(client: ApiClient, mediaId: number) {
-  return client.get<PlayableInfo>(`/api/video/${mediaId}/playable`).then((response) => response.data)
+export function stopLiveTranscode(mediaId: number) {
+  return typedApi.stopLiveTranscodeStream(mediaId).then((response) => response.data)
 }
 
-export function stopLiveTranscode(client: ApiClient, mediaId: number) {
-  return client.delete(`/api/video/${mediaId}/transcode/stream`).then((response) => response.data)
-}
-
-export function fetchTranscodeCacheStats(client: ApiClient) {
-  return client.get('/api/transcode/cache').then((response) => response.data)
+export function fetchTranscodeCacheStats() {
+  return typedApi.getTranscodeCacheStats().then((response) => response.data)
 }
 
 export function buildVideoStreamUrl(buildApiUrl: BuildApiUrl, mediaId: number, source = 'auto') {
-  return `${buildApiUrl(`/api/video/${mediaId}`)}?source=${source}&time=${Math.random()}`
+  return `${buildApiUrl(apiVideoStream(mediaId))}?source=${source}&time=${Math.random()}`
 }
 
 export function buildLiveStreamUrl(
@@ -44,7 +46,7 @@ export function buildLiveStreamUrl(
     params.set('maxHeight', String(maxHeight))
   }
 
-  return `${buildApiUrl(`/api/video/${mediaId}/transcode/stream`)}?${params.toString()}`
+  return `${buildApiUrl(apiVideoTranscodeStream(mediaId))}?${params.toString()}`
 }
 
 export class UnsupportedPlaybackError extends Error {
@@ -58,13 +60,12 @@ export class UnsupportedPlaybackError extends Error {
 }
 
 export async function resolvePreviewVideoUrl(
-  client: ApiClient,
   buildApiUrl: BuildApiUrl,
   mediaId: number,
   startSeconds = 0,
 ) {
   try {
-    const playable = await fetchPlayableInfo(client, mediaId)
+    const playable = await fetchPlayableInfo(mediaId)
     if (playable.mode === 'unsupported') {
       return null
     }

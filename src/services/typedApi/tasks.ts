@@ -47,11 +47,17 @@ import {
   parseTab,
   parseWatchedFolderLinks,
 } from '@shared/schemas'
-import { validated } from './validate'
+import {
+  AddMediaRequestSchema,
+  DatabaseSizesRequestSchema,
+  PathPayloadSchema,
+} from '@shared/schemas/requests'
+import { validated, validateRequest } from './validate'
 
 export const tasksApi = {
   checkFileExists(path: string) {
-    return apiClient.post(API_ROUTES.taskCheckFileExists, { path }).then((res) => ({
+    const body = validateRequest(PathPayloadSchema, { path })
+    return apiClient.post(API_ROUTES.taskCheckFileExists, body).then((res) => ({
       ...res,
       data: validated(parseFileExistsResponse, res.data),
     }))
@@ -112,7 +118,8 @@ export const tasksApi = {
   },
 
   addMedia(body: AddMediaPayload) {
-    return apiClient.post('/api/Task/addMedia', body).then((res) => ({
+    const payload = validateRequest(AddMediaRequestSchema, body)
+    return apiClient.post('/api/Task/addMedia', payload).then((res) => ({
       ...res,
       data: validated(parseAddMediaResponse, res.data),
     }))
@@ -199,8 +206,9 @@ export const tasksApi = {
     return apiClient.post(API_ROUTES.taskUpdateMediaMultiple, body)
   },
 
-  getDatabaseSizes(body: DatabaseSizesPayload = {}) {
-    return apiClient.post(API_ROUTES.taskGetDatabaseSizes, body).then((res) => ({
+  getDatabaseSizes(body: DatabaseSizesPayload) {
+    const payload = validateRequest(DatabaseSizesRequestSchema, body)
+    return apiClient.post(API_ROUTES.taskGetDatabaseSizes, payload).then((res) => ({
       ...res,
       data: validated(parseDatabaseSizesResponse, res.data),
     }))
@@ -233,10 +241,6 @@ export const tasksApi = {
       ...res,
       data: validated(parseClipModelStatus, res.data),
     }))
-  },
-
-  clearTranscodeCache<T = Record<string, unknown>>() {
-    return apiClient.delete<T>(API_ROUTES.transcodeCache)
   },
 
   createTab(body: TabCreatePayload) {

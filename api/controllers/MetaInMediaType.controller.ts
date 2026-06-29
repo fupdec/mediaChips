@@ -4,15 +4,14 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { MetaAssignmentOrderPayload, PinMetaAssignmentPayload } from '@shared/api/payloads'
 
-const {createMetaInMediaTypesRepository} = require('../db/repositories/metaInMediaTypes')
-
+import { createMetaInMediaTypesRepository } from '../db/repositories/metaInMediaTypes'
 function parseOptionalInt(value: unknown): number | undefined {
   if (value == null || value === '') return undefined
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const metaInMediaTypesRepo = createMetaInMediaTypesRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {

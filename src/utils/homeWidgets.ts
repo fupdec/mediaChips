@@ -78,7 +78,7 @@ export function mergeHomeWidgetsConfig(parsed: Partial<HomeWidgetsConfig> = {}):
   const base = cloneDefaultConfig()
   const known = new Set<string>(HOME_WIDGET_IDS)
 
-  let order = Array.isArray(parsed.order)
+  const order = Array.isArray(parsed.order)
     ? parsed.order.filter((id): id is HomeWidgetId => known.has(id))
     : [...base.order]
 

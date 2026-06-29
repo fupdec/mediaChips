@@ -1,7 +1,6 @@
 import type Database from 'better-sqlite3'
 import { nowIso } from './utils/timestamps'
-
-const {loadDefaultSettingsList} = require('../utils/defaultSettings')
+import { loadDefaultSettingsList } from '../utils/defaultSettings'
 
 const IMAGE_EXTENSIONS = 'jpg,jpeg,bmp,png,webp,gif,tiff,tif,heic,avif,svg'
 
@@ -173,4 +172,4 @@ export function seedDefaults(sqlite: Database.Database) {
   seedSettings(sqlite)
 }
 
-module.exports = {seedDefaults}
+module.exports = { seedDefaults }

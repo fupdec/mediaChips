@@ -1,10 +1,10 @@
 import type { Express, Request, Response, NextFunction } from 'express'
-const path = require('path')
-const fs = require('fs')
-const history = require('connect-history-api-fallback')
-const express = require('express')
-const {normalizeApiPath} = require('../../api/utils/normalizeApiPath')
-const {createCorsMiddleware} = require('./constants')
+import path from 'path'
+import fs from 'fs'
+import history from 'connect-history-api-fallback'
+import express from 'express'
+import { normalizeApiPath } from '../../api/utils/normalizeApiPath'
+import { createCorsMiddleware } from './constants'
 
 interface HistoryRewriteContext {
   parsedUrl: { pathname?: string }
@@ -59,13 +59,13 @@ function setupStaticApp(app: Express) {
       {
         from: /^\/api\/.*$/,
         to(context: HistoryRewriteContext) {
-          return context.parsedUrl.pathname
+          return context.parsedUrl.pathname ?? '/'
         },
       },
       {
         from: /^\/socket\.io\/.*$/,
         to(context: HistoryRewriteContext) {
-          return context.parsedUrl.pathname
+          return context.parsedUrl.pathname ?? '/'
         },
       },
     ],
@@ -79,3 +79,5 @@ module.exports = {
   createExpressApp,
   setupStaticApp,
 }
+
+export { createExpressApp, setupStaticApp }

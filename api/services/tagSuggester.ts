@@ -1,8 +1,8 @@
 import type { ApiDb, AnyRecord, MediaLike, TagLike } from '../types/db'
 import type { PathToken, TokenizeOptions } from '../types/pathTokenizer'
-
-const { cosineSimilarity, embedText } = require('./embeddingModel')
-const { tokenizeFilePath } = require('./pathTokenizer')
+import { cosineSimilarity, embedText } from './embeddingModel'
+import { tokenizeFilePath } from './pathTokenizer'
+import { createTagsRepository } from '../db/repositories/tags'
 
 interface TagCandidate {
   word: string
@@ -159,7 +159,7 @@ async function suggestTagsFromMedia(db: ApiDb, media: MediaLike[], settings: Any
   })
 
   if (settings.excludeExisting !== false) {
-    const tags = settings.tags || require('../db/repositories/tags').createTagsRepository(db.drizzle, db.sqlite).findAllRaw()
+    const tags = settings.tags || createTagsRepository(db.drizzle, db.sqlite).findAllRaw()
     candidates = filterExistingTags(candidates, tags as TagLike[])
   }
 
@@ -174,3 +174,5 @@ module.exports = {
   getCandidatePhrases,
   suggestTagsFromMedia,
 }
+
+export { countPathTokens, getCandidatePhrases, suggestTagsFromMedia }

@@ -5,15 +5,14 @@ import { getRequestBody } from '../types/http'
 import type { MetaAssignmentOrderPayload, PinChildMetaPayload } from '@shared/api/payloads'
 import { paramString } from '../types/errors'
 
-const {createPinnedMetaRepository} = require('../db/repositories/pinnedMeta')
-
+import { createPinnedMetaRepository } from '../db/repositories/pinnedMeta'
 function parseOptionalInt(value: unknown): number | undefined {
   if (value == null || value === '') return undefined
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const pinnedMetaRepo = createPinnedMetaRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {

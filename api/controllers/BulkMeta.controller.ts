@@ -1,23 +1,12 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
-const {applyBulkMetaEdit} = require('../services/bulkMetaEdit')
+import { applyBulkMetaEdit } from '../services/bulkMetaEdit'
 
-module.exports = function (db: ApiDb) {
+export default function createBulkMetaController(db: ApiDb) {
   const apply = async function (req: ApiRequest, res: ApiResponse) {
     try {
-      const itemType = req.body.itemType
-      const itemIds = Array.isArray(req.body.itemIds) ? req.body.itemIds.filter(Boolean) : []
-      const changes = Array.isArray(req.body.changes) ? req.body.changes : []
-      const presetChanges = Array.isArray(req.body.presetChanges) ? req.body.presetChanges : []
-
-      if (!['media', 'tag'].includes(itemType)) {
-        return res.status(400).send({message: 'itemType must be media or tag'})
-      }
-
-      if (!itemIds.length) {
-        return res.status(400).send({message: 'itemIds are required'})
-      }
+      const { itemType, itemIds, changes, presetChanges } = req.body
 
       const result = await applyBulkMetaEdit(db, {
         itemType,

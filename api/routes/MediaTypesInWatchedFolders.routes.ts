@@ -1,11 +1,14 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const MediaTypesInWatchedFolders = require("../controllers/MediaTypesInWatchedFolders.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createMediaTypesInWatchedFoldersController from '../controllers/MediaTypesInWatchedFolders.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const MediaTypesInWatchedFolders = createMediaTypesInWatchedFoldersController(db);
+  const router = express.Router();
 
   // Retrieve all MediaTypesInWatchedFolders
   router.get("/", MediaTypesInWatchedFolders.findAll);
 
   app.use('/api/MediaTypesInWatchedFolders', router);
-};
+}

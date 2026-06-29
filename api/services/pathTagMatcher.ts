@@ -1,6 +1,6 @@
 import type { ApiDb, AnyRecord, TagLike, MetaLike } from '../types/db'
 
-const { cleanComparable, tokenizeFilePath } = require('./pathTokenizer')
+import { cleanComparable, tokenizeFilePath } from './pathTokenizer'
 
 function getTagTerms(tag: TagLike) {
   const synonyms = String(tag.synonyms || '')
@@ -79,3 +79,5 @@ module.exports = {
   exactMatchPath,
   matchPathToTags,
 }
+
+export { exactMatchPath, matchPathToTags }

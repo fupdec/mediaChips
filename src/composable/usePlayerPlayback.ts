@@ -14,7 +14,7 @@ import {
   isAudioMediaType,
   isAudioFilePath,
 } from '@/utils/mediaType'
-import {apiClient, buildApiUrl} from '@/services/apiClient'
+import {buildApiUrl} from '@/services/apiClient'
 import {typedApi} from '@/services/typedApi'
 import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
@@ -308,7 +308,7 @@ export function usePlayerPlayback({
 
   const stopLiveTranscodeSession = (mediaId: number | null = currentLiveMediaId) => {
     if (mediaId == null) return Promise.resolve()
-    return stopLiveTranscode(apiClient, mediaId).catch((error) => {
+    return stopLiveTranscode(mediaId).catch((error) => {
       console.warn('Failed to stop live transcode session:', error)
     })
   }
@@ -465,7 +465,7 @@ export function usePlayerPlayback({
   const resolveVideoSource = async (mediaId: number, startTime = 0) => {
     await clearLiveTranscodeHandlers()
 
-    const playable = await fetchPlayableInfo(apiClient, mediaId)
+    const playable = await fetchPlayableInfo(mediaId)
 
     if (playable.mode === 'unsupported') {
       throw new UnsupportedPlaybackError()

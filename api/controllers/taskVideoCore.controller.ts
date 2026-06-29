@@ -2,23 +2,26 @@ import type { FfprobeInfo } from '../types/tasks'
 import type { AnyRecord, ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
-const fs = require('fs')
-const path = require('path')
-const {machineId} = require('node-machine-id')
-const {extractVideoFrame, ffprobe} = require('../utils/ffmpeg')
-const {resolveExistingPath} = require('../services/contentHash')
-const {normalizeMediaPath} = require('../utils/normalizeUserPath')
-const {getAppConfigPath} = require('../utils/appConfigPath')
-const {
+import fs from 'fs'
+import path from 'path'
+import { machineId } from 'node-machine-id'
+import { extractVideoFrame, ffprobe } from '../utils/ffmpeg'
+import { resolveExistingPath } from '../services/contentHash'
+import { normalizeMediaPath } from '../utils/normalizeUserPath'
+import { getAppConfigPath } from '../utils/appConfigPath'
+import {
   getVideoImagesGenerationStatus,
   iterateVideoImagesGeneration,
-} = require('../services/videoImagesGeneration')
-const {
+} from '../services/videoImagesGeneration'
+import type { VideoImageType } from '../types/videoImagesGeneration'
+import {
   getImageThumbsGenerationStatus,
   iterateImageThumbsGeneration,
-} = require('../services/imageThumbsGeneration')
+} from '../services/imageThumbsGeneration'
+import { loadConfigFile, createDefaultConfig } from '../../app/server/configFile'
+import { getImageMetadata, createImageThumb } from '../services/imageMedia'
 
-module.exports = function taskVideoCoreController(db: ApiDb) {
+export default function taskVideoCoreController(db: ApiDb) {
   const getDbPath = () => db.path!
 
   const createStreamAbortSignal = (req: ApiRequest, res: ApiResponse) => {
@@ -47,7 +50,6 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
   const getConfig = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const configPath = getAppConfigPath()
-      const {loadConfigFile, createDefaultConfig} = require('../../app/server/configFile')
       const result = loadConfigFile(configPath)
       const configJson = result.config || createDefaultConfig()
       res.status(200).json(configJson)
@@ -88,12 +90,12 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
       }
 
       getVideoDuration(pathToFile: string) {
-        return ffprobe(pathToFile).then((info: FfprobeInfo) => info.format.duration)
+        return ffprobe(pathToFile).then((info) => (info as FfprobeInfo).format.duration)
       }
 
       createFrame(timestamp: string, output: string) {
         return extractVideoFrame({
-          input: this.video.path,
+          input: String(this.video.path),
           output,
           timestamp,
           vf: 'scale=-1:180',
@@ -147,7 +149,6 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
   }
 
   const streamImageThumbsGeneration = async (req: ApiRequest, res: ApiResponse) => {
-    const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
     const writeEvent = (event: Record<string, unknown>) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
@@ -159,11 +160,14 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
 
       const shouldStop = createStreamAbortSignal(req, res)
 
-      for await (const event of iterateImageThumbsGeneration(db, getDbPath(), {getImageMetadata, createImageThumb}, {
+      for await (const event of iterateImageThumbsGeneration(db, getDbPath(), {
+        getImageMetadata,
+        createImageThumb: createImageThumb as unknown as (path: string, id: unknown, dbPath: string) => Promise<void>,
+      }, {
         shouldStop,
         force: String(req.query.force || '').toLowerCase() === 'true',
       })) {
-        writeEvent(event)
+        writeEvent(event as unknown as Record<string, unknown>)
       }
 
       res.end()
@@ -188,7 +192,7 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
   }
 
   const streamVideoImagesGeneration = async (req: ApiRequest, res: ApiResponse) => {
-    const imageType = String(req.query.type || '').toLowerCase()
+    const imageType = String(req.query.type || '').toLowerCase() as VideoImageType
     const writeEvent = (event: Record<string, unknown>) => {
       res.write(`${JSON.stringify(event)}\n`)
     }
@@ -204,7 +208,7 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
         shouldStop,
         force: String(req.query.force || '').toLowerCase() === 'true',
       })) {
-        writeEvent(event)
+        writeEvent(event as unknown as Record<string, unknown>)
       }
 
       res.end()

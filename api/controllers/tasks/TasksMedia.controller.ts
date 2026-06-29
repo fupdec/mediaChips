@@ -3,26 +3,27 @@ import type { AnyRecord } from '../../types/db'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
 import type { MediaPathFile } from '@shared/api/responses'
-const fs = require('fs')
-const path = require('path')
-const {stat} = require('fs/promises')
-const {ffprobe} = require('../../utils/ffmpeg')
-const {tokenizeFilePath} = require('../../services/pathTokenizer')
-const {
+import { createMediaRepository } from '../../db/repositories/media'
+import { createMediaTypesRepository } from '../../db/repositories/mediaTypes'
+import { createMediaPostProcessor } from '../../services/mediaPostProcess'
+import fs from 'fs'
+import path from 'path'
+import { stat } from 'fs/promises'
+import { ffprobe } from '../../utils/ffmpeg'
+import { tokenizeFilePath } from '../../services/pathTokenizer'
+import {
   computeContentHashForPath,
   fileExists,
   verifyContentHashMatch,
   resolveExistingPath,
-} = require('../../services/contentHash')
-const {
+} from '../../services/contentHash'
+import {
   normalizeMediaPath,
   pathsEquivalent,
   buildPathLookupVariants,
-} = require('../../utils/normalizeUserPath')
-const {createMediaRepository} = require('../../db/repositories/media')
-const {createMediaTypesRepository} = require('../../db/repositories/mediaTypes')
+} from '../../utils/normalizeUserPath'
 
-module.exports = function createTasksMediaController(shared: TaskControllerShared) {
+export default function createTasksMediaController(shared: TaskControllerShared) {
   const {
     db,
     dbPath,
@@ -55,8 +56,8 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
       throw new Error(`File not found: ${pathToFile}`)
     }
 
-    let stats = await stat(resolvedPath)
-    let filesize = stats.size;
+    const stats = await stat(resolvedPath)
+    const filesize = stats.size;
 
     const existingByPath = await findMediaByPath(pathToFile)
 
@@ -190,7 +191,7 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
       const duration = Math.floor(info.format.duration)
 
       let width, height, codec, fps
-      for (let stream of info.streams) {
+      for (const stream of info.streams) {
         if (stream.codec_type !== 'video') continue
         width = stream.width
         height = stream.height
@@ -240,13 +241,12 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
     }
   }
 
-  const {createMediaPostProcessor} = require('../../services/mediaPostProcess')
   const mediaPostProcess = createMediaPostProcessor({
     db,
     dbPath,
     getVideoMetadata,
     getAudioMetadata,
-    getImageMedia,
+    getImageMedia: getImageMedia as unknown as import('../../types/mediaPostProcess').MediaPostProcessorDeps['getImageMedia'],
     createThumbMiddle,
     withTimeout,
   })
@@ -272,7 +272,7 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
 
       const result = await addMediaToDb(pathToFile, mediaType, is_check_duplicates)
 
-      if (result.isCreated) {
+      if (result.isCreated && result.media) {
         await mediaPostProcess.processNewMedia(result.media, mediaType)
       }
 
@@ -340,16 +340,16 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
       const data = mediaRepo.findAllRaw()
 
       const parsed = data.map((i: AnyRecord) => {
-        const tokenized = tokenizeFilePath(i.path, {
+        const tokenized = tokenizeFilePath(String(i.path), {
           folderWeight: settings.folderWeight,
         })
         return {
           folders: tokenized.tokens
-            .filter((token: AnyRecord) => token.source === 'folder')
-            .map((token: AnyRecord) => token.token),
+            .filter((token) => token.source === 'folder')
+            .map((token) => token.token),
           file: tokenized.tokens
-            .filter((token: AnyRecord) => token.source === 'file')
-            .map((token: AnyRecord) => token.token)
+            .filter((token) => token.source === 'file')
+            .map((token) => token.token)
             .join(' '),
           tokens: tokenized.tokens,
         }

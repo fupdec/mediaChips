@@ -1,8 +1,8 @@
 import type { ServerConfig, ServerDatabaseEntry } from '../types/server'
 import { apiErrorMessage } from '../../api/types/errors'
-const fs = require('fs')
-const path = require('path')
-const {FIXED_PORT} = require('./constants')
+import fs from 'fs'
+import path from 'path'
+import { FIXED_PORT } from './ports'
 
 export type ConfigFileRecord = ServerConfig & Record<string, unknown>
 

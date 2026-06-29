@@ -1,15 +1,15 @@
+import type { TagLike, AnyRecord, MetaLike } from '../../types/db'
 import type { TaskControllerShared, TagSuggestionItem } from '../../types/tasks'
-import type { AnyRecord } from '../../types/db'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
 import type { ParsePathTagEntry } from '@shared/api/responses'
-const {matchPathToTags} = require('../../services/pathTagMatcher')
-const {suggestTagsFromMedia} = require('../../services/tagSuggester')
-const {createTagsRepository} = require('../../db/repositories/tags')
-const {createMetaRepository} = require('../../db/repositories/meta')
-const {createMediaRepository} = require('../../db/repositories/media')
+import { createTagsRepository } from '../../db/repositories/tags'
+import { createMetaRepository } from '../../db/repositories/meta'
+import { createMediaRepository } from '../../db/repositories/media'
+import { matchPathToTags } from '../../services/pathTagMatcher'
+import { suggestTagsFromMedia } from '../../services/tagSuggester'
 
-module.exports = function createTasksTaggingController(shared: TaskControllerShared) {
+export default function createTasksTaggingController(shared: TaskControllerShared) {
   const {
     db,
     getParserSettings,
@@ -195,10 +195,10 @@ module.exports = function createTasksTaggingController(shared: TaskControllerSha
         Promise.resolve(metaRepo.findAll()),
       ])
 
-      let values: AnyRecord[] = []
+      const values: AnyRecord[] = []
       for (const item of paths) {
         if (!item?.path || !item?.mediaId) continue
-        const parsed = await matchPathToTags(db, item.path, item.mediaId, tags, metas, {
+        const parsed = await matchPathToTags(db, item.path, item.mediaId, tags as TagLike[], metas as MetaLike[], {
           ...settings,
           metaIds: req.body.metaIds,
         })

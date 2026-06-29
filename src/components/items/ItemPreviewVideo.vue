@@ -188,7 +188,7 @@ import {useContextMenu} from '@/stores/contextMenu'
 import {useEventBus} from '@/utils/eventBus'
 import _ from 'lodash'
 import type {Handler} from 'mitt'
-import {apiClient, buildApiUrl} from '@/services/apiClient'
+import {buildApiUrl} from '@/services/apiClient'
 import {typedApi} from '@/services/typedApi'
 import {createThumb as createVideoThumb, getLocalImage} from '@/services/fileService'
 import {
@@ -635,7 +635,7 @@ const isIgnorablePreviewError = (error: unknown): boolean => {
 }
 
 const buildPreviewVideoUrl = () =>
-  resolvePreviewVideoUrl(apiClient, buildApiUrl, props.media.id, progress.value || 0)
+  resolvePreviewVideoUrl(buildApiUrl, props.media.id, progress.value || 0)
 
 const getPreviewStreamStart = (url: string): string | null => {
   try {
@@ -648,7 +648,7 @@ const getPreviewStreamStart = (url: string): string | null => {
 const stopPreviewLiveTranscode = () => {
   if (!previewUsesLiveStream.value) return
   previewUsesLiveStream.value = false
-  stopLiveTranscode(apiClient, props.media.id).catch(() => {})
+  stopLiveTranscode(props.media.id).catch(() => {})
 }
 
 const syncPreviewVideoPosition = async (targetTime: number) => {

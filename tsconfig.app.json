@@ -8,12 +8,17 @@
     "moduleDetection": "force",
     "strict": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "declaration": false,
     "incremental": true,
     "tsBuildInfoFile": ".cache/tsc/app.tsbuildinfo",
     "ignoreDeprecations": "6.0",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
   },
-  "include": ["app/**/*.ts"]
+  "include": ["app/**/*.ts", "app/types/**/*.d.ts", "shared/**/*.ts", "api/types/**/*.d.ts"]
 }

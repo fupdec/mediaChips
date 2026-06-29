@@ -4,11 +4,11 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 import { paramString } from '../types/errors'
 
-const {getManualPlaylistsSummary} = require('../services/playlistSummary')
-const {createPlaylistsRepository} = require('../db/repositories/playlists')
-const {createMediaInPlaylistsRepository} = require('../db/repositories/mediaInPlaylists')
+import { createPlaylistsRepository } from '../db/repositories/playlists'
+import { createMediaInPlaylistsRepository } from '../db/repositories/mediaInPlaylists'
+import { getManualPlaylistsSummary } from '../services/playlistSummary'
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const playlistsRepo = createPlaylistsRepository(db.drizzle)
   const mediaInPlaylistsRepo = createMediaInPlaylistsRepository(db.drizzle)
 

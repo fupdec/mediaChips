@@ -225,13 +225,6 @@ import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
 import {reloadApplicationAfterDatabaseChange} from '@/services/configService'
 
-interface OpenDialogResult {
-  canceled?: boolean
-  error?: boolean
-  message?: string
-  filePaths?: string[]
-}
-
 /* ---------- UI ---------- */
 
 const {xs} = useDisplay()
@@ -439,7 +432,7 @@ async function exportBackup() {
 }
 
 async function chooseDir() {
-  const res = await window.electronAPI?.invoke?.('showOpenDialog', ['openDirectory']) as OpenDialogResult | undefined
+  const res = await window.electronAPI?.invoke?.('showOpenDialog', ['openDirectory'])
   if (res?.filePaths?.length) {
     folderPath.value = res.filePaths[0]
     isFolderExists.value = true
@@ -447,7 +440,7 @@ async function chooseDir() {
 }
 
 async function chooseFile() {
-  const res = await window.electronAPI?.invoke?.('showOpenDialog', ['openFile']) as OpenDialogResult | undefined
+  const res = await window.electronAPI?.invoke?.('showOpenDialog', ['openFile'])
   if (res?.filePaths?.length) {
     filePath.value = res.filePaths[0]
     isFileExists.value = true

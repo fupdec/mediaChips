@@ -1,24 +1,24 @@
-import type { ApiDb } from '../types/db'
+import type { ApiDb, FilterLike } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { ItemsListRequest, DeleteEntityOnePayload, EntityUpdatePayload } from '@shared/api/responses'
 import type { MediaPathUpdatePayload, MediaThumbsRequestPayload } from '@shared/api/payloads'
-const fs = require('fs')
-const path = require('path')
-const {
+import { createMediaRepository } from '../db/repositories/media'
+import { createMediaTypesRepository } from '../db/repositories/mediaTypes'
+import fs from 'fs'
+import path from 'path'
+import {
   deleteMediaGeneratedAssets,
   unlinkResolvedPath,
-} = require('../services/localAssetCleanup')
-const {
+} from '../services/localAssetCleanup'
+import {
   loadMediaItems,
   loadFilteredMediaIds,
   loadMediaBasicsByIds,
-} = require('../services/mediaItemsLoader')
-const {createMediaRepository} = require('../db/repositories/media')
-const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
+} from '../services/mediaItemsLoader'
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const mediaRepo = createMediaRepository(db.drizzle)
   const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
   const getDbPath = () => db.path!
@@ -33,7 +33,7 @@ module.exports = function (db: ApiDb) {
       const result = await loadMediaItems(db, {
         mediaTypeId: body.mediaTypeId,
         ids,
-        filters: body.filters,
+        filters: body.filters as unknown as FilterLike[] | undefined,
         sortBy: body.sortBy,
         direction: body.direction,
         find_duplicates: body.find_duplicates,
@@ -57,7 +57,7 @@ module.exports = function (db: ApiDb) {
       const body = getRequestBody<ItemsListRequest>(req)
       const result = await loadFilteredMediaIds(db, {
         mediaTypeId: body.mediaTypeId,
-        filters: body.filters,
+        filters: body.filters as unknown as FilterLike[] | undefined,
         sortBy: body.sortBy,
         direction: body.direction,
         find_duplicates: body.find_duplicates,
@@ -197,7 +197,7 @@ module.exports = function (db: ApiDb) {
         const filePath = media.path || body.path
 
         try {
-          const deleted = await unlinkResolvedPath(filePath)
+          const deleted = await unlinkResolvedPath(String(filePath ?? ''))
           if (!deleted) {
             console.log(`${filePath} is unavailable.`)
           }

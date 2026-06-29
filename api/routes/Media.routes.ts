@@ -1,38 +1,41 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const Media = require("../controllers/Media.controller")(db);
-  const router = require("express").Router();
 
-  // Retrieve a single Media with id
-  router.get("/numberOfMediaWithTag", Media.numberOfMediaWithTag);
+import express from 'express'
+import {  validateBody, validateQuery  } from '../middleware/validateBody'
+import { 
+  ItemsListRequestSchema,
+  MediaIdsRequestSchema,
+  MediaBasicsRequestSchema,
+  MediaThumbsRequestSchema,
+  MediaPathUpdateRequestSchema,
+  DeleteEntityOneRequestSchema,
+  MediaTagCountQuerySchema,
+ } from '../../shared/schemas/requests'
+import createMediaController from '../controllers/Media.controller'
 
-  // get all media
-  router.post("/items", Media.getAll);
 
-  // get filtered media ids (for bulk selection)
-  router.post("/ids", Media.getFilteredIds);
 
-  // get minimal media rows by ids (for bulk delete, etc.)
-  router.post("/basics", Media.getBasicsByIds);
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const Media = createMediaController(db);
+  const router = express.Router();
 
-  // batch playlist/media thumbs
-  router.post("/thumbs", Media.getThumbs);
+  router.get("/numberOfMediaWithTag", validateQuery(MediaTagCountQuerySchema), Media.numberOfMediaWithTag);
 
-  // get all media
+  router.post("/items", validateBody(ItemsListRequestSchema), Media.getAll);
+  router.post("/ids", validateBody(MediaIdsRequestSchema), Media.getFilteredIds);
+  router.post("/basics", validateBody(MediaBasicsRequestSchema), Media.getBasicsByIds);
+  router.post("/thumbs", validateBody(MediaThumbsRequestSchema), Media.getThumbs);
+
   router.get("/get-stats", Media.getStats);
 
-  // update file path, name, basename and ext by path
-  router.post("/updatePath", Media.updatePath);
-  
-  // Update a Media with id
+  router.post("/updatePath", validateBody(MediaPathUpdateRequestSchema), Media.updatePath);
+
   router.put("/:id", Media.update);
 
-  // get a Media with id
   router.get("/:id", Media.getOneById);
 
-  // delete a Media with id
-  router.post("/deleteOne", Media.deleteOne);
+  router.post("/deleteOne", validateBody(DeleteEntityOneRequestSchema), Media.deleteOne);
 
   app.use('/api/Media', router);
-};
+}

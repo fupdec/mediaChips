@@ -1,10 +1,11 @@
 import type { ApiDb } from '../../api/types/db'
 import type { ServerDatabaseEntry } from '../types/server'
 import { apiErrorMessage } from '../../api/types/errors'
-const path = require('path')
-const {createDrizzleClient, smokeTestDrizzle} = require('../../api/db')
-const createApiDb = require('../../api')
-const {bootstrapDatabase} = require('../../api/db/migrationRunner')
+import path from 'path'
+import { createDrizzleClient, smokeTestDrizzle } from '../../api/db'
+import { bootstrapDatabase } from '../../api/db/migrationRunner'
+import { createApiDb } from '../../api/createApiDb'
+import { loadModel } from '../../api/services/embeddingModel'
 
 function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbConfig: ServerDatabaseEntry | undefined }) {
   if (!dbConfig) {
@@ -22,7 +23,7 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
     config: dbConfig,
     path: path.join(databasesPath, dbConfig.id),
     path_databases: databasesPath,
-  }) as ApiDb
+  })
 
   console.log('\x1b[36m%s\x1b[0m', '✅ Database connection successful')
   console.log('\x1b[36m%s\x1b[0m', `Database ID: ${db.config?.id}`)
@@ -42,8 +43,7 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
 
 function warmupEmbeddingModel(db: ApiDb) {
   try {
-    const embeddingModel = require('../../api/services/embeddingModel')
-    embeddingModel.loadModel(db).catch((err: unknown) => {
+    loadModel(db).catch((err: unknown) => {
       console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup skipped:', err instanceof Error ? apiErrorMessage(err) : String(err))
     })
   } catch (err: unknown) {
@@ -55,3 +55,5 @@ module.exports = {
   setupDatabase,
   warmupEmbeddingModel,
 }
+
+export { setupDatabase, warmupEmbeddingModel }

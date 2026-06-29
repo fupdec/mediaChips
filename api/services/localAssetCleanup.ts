@@ -1,10 +1,10 @@
 import type { ApiDb } from '../types/db'
-
-const fs = require('fs')
-const path = require('path')
-const {readdir} = require('fs/promises')
-const {resolveExistingPath} = require('./contentHash')
-const {getMediaDeleteAssetFolder} = require('../utils/mediaType')
+import fs from 'fs'
+import path from 'path'
+import { readdir } from 'fs/promises'
+import { resolveExistingPath } from './contentHash'
+import { getMediaDeleteAssetFolder } from '../utils/mediaType'
+import { createMarksRepository } from '../db/repositories/marks'
 
 const TIMELINE_PARTS = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
 const TAG_IMAGE_SUFFIXES = ['main', 'avatar', 'alt', 'header', 'custom1', 'custom2']
@@ -81,7 +81,6 @@ async function deleteMediaGeneratedAssets(
   media: { id: unknown },
   mediaType: string,
 ) {
-  const {createMarksRepository} = require('../db/repositories/marks')
   const marksRepo = createMarksRepository(db.drizzle)
   const assetFolder = getMediaDeleteAssetFolder(mediaType)
 
@@ -102,6 +101,16 @@ async function deleteMediaGeneratedAssets(
 }
 
 module.exports = {
+  deleteVideoGeneratedAssets,
+  deleteImageGeneratedAssets,
+  deleteMarkGeneratedAsset,
+  deleteTagGeneratedAssets,
+  deleteMediaGeneratedAssets,
+  unlinkIfExists,
+  unlinkResolvedPath,
+}
+
+export {
   deleteVideoGeneratedAssets,
   deleteImageGeneratedAssets,
   deleteMarkGeneratedAsset,

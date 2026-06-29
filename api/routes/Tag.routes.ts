@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const Tag = require("../controllers/Tag.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createTagController from '../controllers/Tag.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const Tag = createTagController(db);
+  const router = express.Router();
 
   // Create a new Tag
   router.post("/", Tag.create);
@@ -26,4 +29,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.post("/deleteOne", Tag.deleteOne);
 
   app.use('/api/Tag', router);
-};
+}

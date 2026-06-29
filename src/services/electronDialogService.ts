@@ -1,38 +1,13 @@
-interface OpenDialogResult {
-  canceled?: boolean
-  error?: boolean
-  message?: string
-  filePaths?: string[]
-}
+import { showElectronOpenDialog } from '@/services/electronBridge'
+
+export type { OpenDialogResult } from '@/services/electronBridge'
 
 export async function showOpenDialog(properties: string[] | string | Record<string, boolean> | null) {
-  let resultPaths = ''
-
   try {
-    if (!window.electronAPI) {
-      console.error('electronAPI не доступен')
-      return
-    }
-
-    if (!window.electronAPI.invoke) {
-      console.error('electronAPI.invoke не доступен')
-      return
-    }
-
-    let dialogProperties: string[] = []
-
-    if (Array.isArray(properties)) {
-      dialogProperties = properties
-    } else if (typeof properties === 'string') {
-      dialogProperties = [properties]
-    } else if (typeof properties === 'object' && properties !== null) {
-      dialogProperties = Object.keys(properties).filter((key) => properties[key] === true)
-    }
-
-    const result = await window.electronAPI.invoke('showOpenDialog', dialogProperties) as OpenDialogResult | null
+    const result = await showElectronOpenDialog(properties)
 
     if (!result) {
-      console.error('Результат пустой или undefined')
+      console.error('electronAPI не доступен')
       return
     }
 
@@ -46,7 +21,7 @@ export async function showOpenDialog(properties: string[] | string | Record<stri
     }
 
     if (result.filePaths?.length) {
-      resultPaths = result.filePaths.join('\n')
+      return result.filePaths.join('\n')
     }
   } catch (error) {
     const err = error as Error
@@ -54,5 +29,5 @@ export async function showOpenDialog(properties: string[] | string | Record<stri
     console.error('Стек ошибки:', err.stack)
   }
 
-  return resultPaths
+  return ''
 }

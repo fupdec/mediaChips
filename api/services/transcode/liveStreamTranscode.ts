@@ -1,9 +1,8 @@
 import type {ChildProcess} from 'child_process'
 import type {Request, Response} from 'express'
-
-const {spawn} = require('child_process')
-const {getFfmpegPath} = require('../../utils/ffmpegPaths')
-const {isClientAbortError} = require('../../../app/server/fileResolver')
+import { spawn } from 'child_process'
+import { getFfmpegPath } from '../../utils/ffmpegPaths'
+import { isClientAbortError } from '../../../app/server/fileResolver'
 
 interface LiveStreamOptions {
   inputPath: string

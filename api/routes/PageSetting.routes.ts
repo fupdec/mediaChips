@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const PageSetting = require("../controllers/PageSetting.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createPageSettingController from '../controllers/PageSetting.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const PageSetting = createPageSettingController(db);
+  const router = express.Router();
 
   // Find or Create a new PageSetting
   router.post("/", PageSetting.create);
@@ -14,4 +17,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.put("/", PageSetting.update);
 
   app.use('/api/PageSetting', router);
-};
+}

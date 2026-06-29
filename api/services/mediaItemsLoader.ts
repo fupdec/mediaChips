@@ -5,10 +5,9 @@ import type {
   MediaLoadOptions,
   NavigationMediaItem,
 } from '../types/mediaFilter'
-
-const {filterItems} = require('../../app/tasks/items.js')
-const {queryAllAsync} = require('../db/utils/rawQuery')
-const {
+import type { ParsedItem } from '../../app/types/items'
+import { queryAllAsync } from '../db/utils/rawQuery'
+import {
   canUseSqlMediaLoader,
   getMediaFromClause,
   getNavigationSelect,
@@ -16,7 +15,9 @@ const {
   requiresMetadataJoinForFilters,
   requiresMetadataJoinForSort,
   resolveMediaFilterQuery,
-} = require('./mediaFilterSql')
+} from './mediaFilterSql'
+
+import { filterItems } from '../../app/tasks/items'
 
 function buildFilteredTotalsSql(fromClause: string, whereClause: string, needsDistinct: boolean) {
   if (!needsDistinct) {
@@ -187,14 +188,14 @@ async function loadMediaItemsLegacy(db: ApiDb, options: MediaLoadOptions = {}) {
   } = options
 
   const rows = await fetchBaseMediaRows(db, mediaTypeId, ids)
-  let items = rows.map(createItemShell)
+  const items = rows.map(createItemShell)
   await attachMediaRelations(db, items, mediaTypeId, ids)
 
   const totalUnfiltered = items.length
   const filtered = filterItems(
     filters,
     'media',
-    items,
+    items as ParsedItem[],
     sortBy,
     direction,
     find_duplicates,
@@ -324,7 +325,7 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
     ? await fetchBaseMediaRows(db, mediaTypeId, pageIds)
     : []
   const orderedRows = orderRowsByIds(rows, pageIds)
-  let items = orderedRows.map(createItemShell)
+  const items = orderedRows.map(createItemShell)
   await attachMediaRelations(db, items, mediaTypeId, pageIds)
 
   const result: AnyRecord = {
@@ -530,6 +531,17 @@ async function loadMediaForPlayback(db: ApiDb, ids: MediaId[] = []) {
 }
 
 module.exports = {
+  loadMediaItems,
+  loadMediaPool,
+  getFilteredMediaSummary,
+  loadFilteredMediaIds,
+  loadMediaBasicsByIds,
+  loadMediaPlaylistItems,
+  loadMediaForPlayback,
+  toNavigationItem,
+}
+
+export {
   loadMediaItems,
   loadMediaPool,
   getFilteredMediaSummary,

@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const Setting = require("../controllers/Setting.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createSettingController from '../controllers/Setting.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const Setting = createSettingController(db);
+  const router = express.Router();
 
   // Retrieve all options from the database
   router.get("/", Setting.findAll);
@@ -14,4 +17,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.put("/:option", Setting.update);
 
   app.use('/api/Setting', router);
-};
+}

@@ -1,6 +1,5 @@
 import type { PathToken, TokenizeOptions, TokenizeResult } from '../types/pathTokenizer'
-
-const path = require('path')
+import path from 'path'
 
 const NOISE_PATTERNS = [
   /^(?:19|20)\d{2}$/,
@@ -97,6 +96,16 @@ function cleanComparable(value: unknown) {
 }
 
 module.exports = {
+  STOP_WORDS,
+  cleanComparable,
+  isNoiseToken,
+  normalizeToken,
+  splitSegment,
+  tokenizeFilePath,
+  tokenizeSegment,
+}
+
+export {
   STOP_WORDS,
   cleanComparable,
   isNoiseToken,

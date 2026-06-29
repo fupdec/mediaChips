@@ -1,8 +1,9 @@
 import type { ApiDb } from '../../api/types/db'
 import type { Express, Request, Response, NextFunction } from 'express'
-const {createSettingsRepository} = require('../../api/db/repositories/settings')
-
-const crypto = require('crypto')
+import crypto from 'crypto'
+import { createSettingsRepository } from '../../api/db/repositories/settings'
+import { validateBody } from '../../api/middleware/validateBody'
+import { AuthLoginRequestSchema } from '../../shared/schemas/requests'
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const SETTINGS_CACHE_MS = 10_000
@@ -190,7 +191,7 @@ function registerAuthRoutes(app: Express, authService: AuthService) {
     }
   })
 
-  app.post('/api/auth/login', async (req: Request, res: Response) => {
+  app.post('/api/auth/login', validateBody(AuthLoginRequestSchema), async (req: Request, res: Response) => {
     try {
       const required = await authService.isAuthRequired()
       const password = req.body?.password
@@ -228,3 +229,5 @@ module.exports = {
   createAuthMiddleware,
   registerAuthRoutes,
 }
+
+export { createAuthService, createAuthMiddleware, registerAuthRoutes }

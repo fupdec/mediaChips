@@ -7,11 +7,12 @@ import type {
 } from '../../types/tasks'
 import type { ApiRequest, ApiResponse } from '../../types/http'
 import type { ApiDb } from '../../types/db'
-const path = require('path')
-const {
+import path from 'path'
+import {
   extractVideoFrame,
   extractVideoThumbnail,
-} = require('../../utils/ffmpeg')
+} from '../../utils/ffmpeg'
+import { createSettingsRepository } from '../../db/repositories/settings'
 
 function lazyService<T = AnyRecord>(modulePath: string) {
   let cached: T | undefined
@@ -39,7 +40,7 @@ const resolveGeneratedFolderPath = (dbPath: string, folderKey: string) => {
   return path.join(dbPath, relativePath)
 }
 
-module.exports = function createTaskControllerShared(db: ApiDb) {
+export default function createTaskControllerShared(db: ApiDb) {
   const getDbPath = () => db.path!
 
   const withTimeout = (promise: Promise<unknown>, ms: number, label: string) => Promise.race([
@@ -82,7 +83,6 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
 
   const getParserSettings = async (overrides: AnyRecord = {}) => {
     const options = Object.keys(parserSettingDefaults)
-    const {createSettingsRepository} = require('../../db/repositories/settings')
     const rows = createSettingsRepository(db.drizzle).findByOptions(options)
 
     const settings: Record<string, boolean | number> = {...parserSettingDefaults}
@@ -113,7 +113,7 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
     return extractVideoFrame({
       input: inputPath,
       output: outputPath,
-      timestamp,
+      timestamp: timestamp != null ? String(timestamp) : undefined,
       vf: `scale=-1:${width}`,
     })
   }

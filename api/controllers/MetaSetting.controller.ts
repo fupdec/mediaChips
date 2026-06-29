@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createMetaSettingsRepository} = require('../db/repositories/metaSettings')
-
-module.exports = function (db: ApiDb) {
+import { createMetaSettingsRepository } from '../db/repositories/metaSettings'
+export default function (db: ApiDb) {
   const metaSettingsRepo = createMetaSettingsRepository(db.drizzle)
 
   const findOne = function (req: ApiRequest, res: ApiResponse) {

@@ -1,9 +1,9 @@
 import type { ApiDb } from '../../api/types/db'
 import type { ServerConfig, NetworkIpInfo } from '../types/server'
-const {createSettingsRepository} = require('../../api/db/repositories/settings')
-const fs = require('fs')
-const os = require('os')
-const {saveConfigFile} = require('./configFile')
+import fs from 'fs'
+import os from 'os'
+import { createSettingsRepository } from '../../api/db/repositories/settings'
+import { saveConfigFile } from './configFile'
 
 const LAN_ENABLED_VALUES = ['1', 'true', 'yes', 'on']
 
@@ -101,6 +101,16 @@ async function applyLanAccessChange(enabled: boolean) {
 }
 
 module.exports = {
+  initLanAccess,
+  isLanAccessEnabled,
+  isLanAccessEnvLocked,
+  getBindHost,
+  syncNetworkConfig,
+  registerServerNetworkDeps,
+  applyLanAccessChange,
+}
+
+export {
   initLanAccess,
   isLanAccessEnabled,
   isLanAccessEnvLocked,

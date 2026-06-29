@@ -1,10 +1,10 @@
-const nodeCrypto = require('crypto')
-const fs = require('fs')
-const path = require('path')
+import crypto from 'crypto'
+import fs from 'fs'
+import path from 'path'
 
 function buildCacheKey(filePath: string, stat: {mtimeMs: number; size: number}) {
   const payload = `${filePath}|${stat.mtimeMs}|${stat.size}`
-  return nodeCrypto.createHash('sha256').update(payload).digest('hex')
+  return crypto.createHash('sha256').update(payload).digest('hex')
 }
 
 function getCacheDir(databasesPath: string, dbId: string) {

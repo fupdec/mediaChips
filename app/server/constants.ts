@@ -1,8 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
-
-const {getBindHost, isLanAccessEnabled} = require('./lanAccess')
-
-const FIXED_PORT = 12321
+import { FIXED_PORT } from './ports'
+import { getBindHost, isLanAccessEnabled } from './lanAccess'
 
 function getAllowLan(): boolean {
   return isLanAccessEnabled()

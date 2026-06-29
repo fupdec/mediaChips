@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createPageSettingsRepository} = require('../db/repositories/pageSettings')
-
-module.exports = function (db: ApiDb) {
+import { createPageSettingsRepository } from '../db/repositories/pageSettings'
+export default function (db: ApiDb) {
   const pageSettingsRepo = createPageSettingsRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {

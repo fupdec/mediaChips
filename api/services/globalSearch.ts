@@ -1,6 +1,5 @@
 import type { ApiDb } from '../types/db'
-
-const {queryAll} = require('../db/utils/rawQuery')
+import { queryAll } from '../db/utils/rawQuery'
 
 const MAX_LIMIT = 200
 
@@ -50,3 +49,5 @@ module.exports = {
   searchTagsByName,
   MAX_LIMIT,
 }
+
+export { searchMediaByName, searchTagsByName, MAX_LIMIT }

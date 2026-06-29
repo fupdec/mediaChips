@@ -6,6 +6,8 @@ import {
   parseSettings,
   parseTags,
 } from '@shared/schemas'
+import { FilterObjectSchema } from '@shared/schemas/entities'
+import { ItemsListRequestSchema } from '@shared/schemas/requests'
 
 describe('shared schemas', () => {
   it('parses media types', () => {
@@ -37,5 +39,46 @@ describe('shared schemas', () => {
 
   it('rejects invalid media type payloads', () => {
     expect(() => parseMediaTypes([{ id: 'bad' }])).toThrow()
+  })
+
+  it('coerces sqlite-style filter booleans', () => {
+    const filter = FilterObjectSchema.parse({
+      id: 1,
+      param: 17,
+      type: 'array',
+      cond: 'in all',
+      val: [717],
+      note: null,
+      active: 1,
+      lock: 0,
+    })
+    expect(filter.active).toBe(true)
+    expect(filter.lock).toBe(false)
+  })
+
+  it('accepts items list requests with legacy filter values', () => {
+    const payload = ItemsListRequestSchema.parse({
+      mediaTypeId: '1',
+      page: '1',
+      limit: 20,
+      filters: [{
+        id: 1,
+        param: 17,
+        type: 'array',
+        cond: 'in all',
+        val: [717],
+        note: null,
+        active: 1,
+        lock: false,
+        metaId: null,
+      }],
+      sortBy: 'createdAt',
+      direction: 'desc',
+      find_duplicates: 0,
+    })
+    expect(payload.mediaTypeId).toBe(1)
+    expect(payload.filters?.[0]?.active).toBe(true)
+    expect(payload.filters?.[0]?.metaId).toBeNull()
+    expect(payload.find_duplicates).toBe(false)
   })
 })

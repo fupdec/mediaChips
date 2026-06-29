@@ -3,9 +3,8 @@ import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import { paramString } from '../types/errors'
 
-const {createVideoMetadataRepository} = require('../db/repositories/videoMetadata')
-
-module.exports = function (db: ApiDb) {
+import { createVideoMetadataRepository } from '../db/repositories/videoMetadata'
+export default function (db: ApiDb) {
   const videoMetadataRepo = createVideoMetadataRepository(db.drizzle)
 
   const findOne = function (req: ApiRequest, res: ApiResponse) {

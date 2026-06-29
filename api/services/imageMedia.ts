@@ -1,9 +1,8 @@
 import type { JimpImage, ProcessAndSaveImageOptions } from '../types/imageMedia'
-
-const fs = require('fs')
-const path = require('path')
-const exifr = require('exifr')
-const {Jimp} = require('jimp')
+import fs from 'fs'
+import path from 'path'
+import exifr from 'exifr'
+import { Jimp } from 'jimp'
 
 const THUMB_HEIGHT = 320
 const THUMB_JPEG_QUALITY = 85
@@ -16,7 +15,7 @@ async function writeJpeg(image: JimpImage, outputPath: string, quality = THUMB_J
 async function readExifOrientation(pathToFile: string): Promise<number> {
   try {
     const orientation = await exifr.orientation(pathToFile)
-    if (Number.isInteger(orientation) && orientation >= 1 && orientation <= 8) {
+    if (typeof orientation === 'number' && Number.isInteger(orientation) && orientation >= 1 && orientation <= 8) {
       return orientation
     }
   } catch {
@@ -68,7 +67,7 @@ async function applyExifOrientation(image: JimpImage, orientation: number) {
 
 const getImageMetadata = async (pathToFile: string) => {
   try {
-    const image = await Jimp.read(pathToFile) as JimpImage
+    const image = await Jimp.read(pathToFile) as unknown as JimpImage
     const orientation = await readExifOrientation(pathToFile)
     const display = getDisplayDimensions(image.width, image.height, orientation)
 
@@ -94,7 +93,7 @@ const createImageThumb = async (pathToFile: string, id: string | number, dbPath:
   const outputDir = ensureImageThumbDir(dbPath)
   const outputPath = path.join(outputDir, `${id}.jpg`)
   const orientation = await readExifOrientation(pathToFile)
-  const image = await Jimp.read(pathToFile) as JimpImage
+  const image = await Jimp.read(pathToFile) as unknown as JimpImage
 
   await applyExifOrientation(image, orientation)
 
@@ -107,7 +106,7 @@ const createImageThumb = async (pathToFile: string, id: string | number, dbPath:
 }
 
 async function processAndSaveImage({buffer, outputPath, sizes}: ProcessAndSaveImageOptions) {
-  let image = await Jimp.read(buffer) as JimpImage
+  const image = await Jimp.read(buffer) as unknown as JimpImage
   const width = image.width
   const height = image.height
   const aspectRatio = width / height
@@ -153,6 +152,16 @@ async function processAndSaveImage({buffer, outputPath, sizes}: ProcessAndSaveIm
 }
 
 module.exports = {
+  getImageMetadata,
+  createImageThumb,
+  ensureImageThumbDir,
+  processAndSaveImage,
+  readExifOrientation,
+  applyExifOrientation,
+  getDisplayDimensions,
+}
+
+export {
   getImageMetadata,
   createImageThumb,
   ensureImageThumbDir,

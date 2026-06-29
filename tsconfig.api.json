@@ -19,5 +19,5 @@
       "@shared/*": ["shared/*"]
     }
   },
-  "include": ["api/**/*.ts", "shared/**/*.ts"]
+  "include": ["api/**/*.ts", "api/types/**/*.d.ts", "shared/**/*.ts"]
 }

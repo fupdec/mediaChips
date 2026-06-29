@@ -5,6 +5,7 @@ import { mediaApi } from './media'
 import { metaApi } from './meta'
 import { pagesApi } from './pages'
 import { tasksApi } from './tasks'
+import { transcodeApi } from './transcode'
 
 export const typedApi = {
   ...bootstrapApi,
@@ -14,6 +15,7 @@ export const typedApi = {
   ...mediaApi,
   ...metaApi,
   ...tasksApi,
+  ...transcodeApi,
 }
 
 export type TypedApi = typeof typedApi

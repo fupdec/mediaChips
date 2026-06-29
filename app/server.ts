@@ -1,35 +1,37 @@
-import type { Express } from 'express'
-import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo, ServerInitResult } from './types/server'
-import { apiErrorMessage, apiErrorStack } from '../api/types/errors'
-const {getBestLocalIp, getAllIps} = require('./server/network')
-const {initializeServerConfig} = require('./server/serverConfig')
-const {setupDatabase, warmupEmbeddingModel} = require('./server/database')
-const {createExpressApp, setupStaticApp} = require('./server/createApp')
-const {initAuthService} = require('./server/authRegistry')
-const {createAuthMiddleware, registerAuthRoutes} = require('./server/auth')
-const {registerApiRoutes} = require('./server/registerRoutes')
-const {createFileResolver} = require('./server/fileResolver')
-const {registerBuiltinRoutes} = require('./server/builtinRoutes')
-const {createServerStarter} = require('./server/startup')
-const {
+import type { ServerDatabaseEntry, NetworkIpInfo } from './types/server'
+import type { TranscodeManager } from './types/builtinRoutes'
+import { apiErrorMessage } from '../api/types/errors'
+import { getBestLocalIp, getAllIps } from './server/network'
+import { initializeServerConfig } from './server/serverConfig'
+import { setupDatabase, warmupEmbeddingModel } from './server/database'
+import { createExpressApp, setupStaticApp } from './server/createApp'
+import { initAuthService, getAuthService } from './server/authRegistry'
+import { createAuthMiddleware, registerAuthRoutes } from './server/auth'
+import { registerApiRoutes } from './server/registerRoutes'
+import { createFileResolver } from './server/fileResolver'
+import { registerBuiltinRoutes } from './server/builtinRoutes'
+import { createServerStarter } from './server/startup'
+import {
   initLanAccess,
   registerServerNetworkDeps,
   syncNetworkConfig,
   isLanAccessEnabled,
-} = require('./server/lanAccess')
+} from './server/lanAccess'
+import { createDatabaseManager } from './server/databaseManager'
+import { initDatabaseManager } from './server/databaseRegistry'
+import { createTranscodeManager } from '../api/services/transcode/transcodeService'
+import registerWebSockets from './tasks/websockets'
 
-const {config, configPath, databasesPath} = initializeServerConfig({
+const networkHelpers = {
   getBestLocalIp,
-  getAllIps,
-})
+  getAllIps: getAllIps as () => NetworkIpInfo[],
+}
+
+const {config, configPath, databasesPath} = initializeServerConfig(networkHelpers)
 
 const dbConfig = config.databases.find((i: ServerDatabaseEntry) => i.active)
-const {db, drizzleConnection} = setupDatabase({databasesPath, dbConfig})
+const {db} = setupDatabase({databasesPath, dbConfig})
 warmupEmbeddingModel(db)
-
-const {createDatabaseManager} = require('./server/databaseManager')
-const {initDatabaseManager} = require('./server/databaseRegistry')
-const {getAuthService} = require('./server/authRegistry')
 
 const {app, router} = createExpressApp()
 const authService = initAuthService(db)
@@ -39,13 +41,12 @@ registerAuthRoutes(app, authService)
 const routeLoadErrors = registerApiRoutes(app, db)
 
 const {resolveFilePath, getStreamContentType} = createFileResolver({config, databasesPath})
-const {createTranscodeManager} = require('../api/services/transcode/transcodeService')
 
 const transcodeManager = createTranscodeManager({
   databasesPath,
   db,
   getActiveDbId: () => config.databases.find((entry: ServerDatabaseEntry) => entry.active)?.id || null,
-})
+}) as unknown as TranscodeManager
 
 const databaseManager = createDatabaseManager({
   db,
@@ -79,7 +80,7 @@ registerBuiltinRoutes({
 setupStaticApp(app)
 
 try {
-  require('./tasks/websockets')(app, db)
+  registerWebSockets(app, db)
 } catch (err: unknown) {
   console.log('\x1b[33m%s\x1b[0m', '⚠️ WebSocket module not found:', err instanceof Error ? apiErrorMessage(err) : String(err))
 }
@@ -92,14 +93,13 @@ const {startServer, restartNetworkListener, bindShutdownHandler, getListener} = 
 })
 
 async function bootstrapServer() {
-  await initLanAccess(db, {getBestLocalIp, getAllIps})
-  syncNetworkConfig(config, isLanAccessEnabled(), {getBestLocalIp, getAllIps})
+  await initLanAccess(db, networkHelpers)
+  syncNetworkConfig(config, isLanAccessEnabled(), networkHelpers)
 
   registerServerNetworkDeps({
     config,
     configPath,
-    getBestLocalIp,
-    getAllIps,
+    ...networkHelpers,
     restartListener: restartNetworkListener,
   })
 
@@ -115,7 +115,7 @@ bootstrapServer().catch((err: unknown) => {
 global.serverConfig = config
 global.serverApp = app
 
-module.exports = {
+const serverExports = {
   config,
   app,
   get listener() {
@@ -123,3 +123,8 @@ module.exports = {
   },
   resolveFilePath,
 }
+
+module.exports = serverExports
+
+export default serverExports
+export { config, app, resolveFilePath }

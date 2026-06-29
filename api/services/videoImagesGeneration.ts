@@ -11,21 +11,20 @@ import type {
   VideoImageTypeStatus,
   VideoTimelineItem,
 } from '../types/videoImagesGeneration'
-
-const fs = require('fs')
-const {readdir} = require('fs/promises')
-const os = require('os')
-const path = require('path')
-const {
+import fs from 'fs'
+import { readdir } from 'fs/promises'
+import os from 'os'
+import path from 'path'
+import {
   combineVideoFrames,
   extractVideoFrame,
   extractVideoThumbnail,
   ffprobe,
-} = require('../utils/ffmpeg')
-const {resolveExistingPath} = require('./contentHash')
-const {createMediaRepository} = require('../db/repositories/media')
-const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
-const {createMarksRepository} = require('../db/repositories/marks')
+} from '../utils/ffmpeg'
+import { resolveExistingPath } from './contentHash'
+import { createMediaRepository } from '../db/repositories/media'
+import { createMediaTypesRepository } from '../db/repositories/mediaTypes'
+import { createMarksRepository } from '../db/repositories/marks'
 
 async function getVideoMediaTypeId(db: ApiDb) {
   const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
@@ -115,7 +114,7 @@ class VideoGrid {
   }
 
   getVideoDuration(pathToFile: string) {
-    return ffprobe(pathToFile).then((info: FfprobeDurationInfo) => info.format.duration)
+    return ffprobe(pathToFile).then((info) => (info as FfprobeDurationInfo).format.duration)
   }
 
   makeLayout(i: number) {
@@ -187,7 +186,7 @@ class VideoTimeline {
   }
 
   getVideoDuration(pathToFile: string) {
-    return ffprobe(pathToFile).then((info: FfprobeDurationInfo) => info.format.duration)
+    return ffprobe(pathToFile).then((info) => (info as FfprobeDurationInfo).format.duration)
   }
 
   createFrame(timestamp: string, output: string) {
@@ -496,6 +495,12 @@ async function* iterateVideoImagesGeneration(
 }
 
 module.exports = {
+  IMAGE_TYPES,
+  getVideoImagesGenerationStatus,
+  iterateVideoImagesGeneration,
+}
+
+export {
   IMAGE_TYPES,
   getVideoImagesGenerationStatus,
   iterateVideoImagesGeneration,

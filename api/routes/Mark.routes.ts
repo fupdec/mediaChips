@@ -1,26 +1,28 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const Mark = require("../controllers/Mark.controller")(db);
-  const router = require("express").Router();
 
-  // Create a new Mark
+import express from 'express'
+import {  validateBody  } from '../middleware/validateBody'
+import {  ItemsListRequestSchema  } from '../../shared/schemas/requests'
+import createMarkController from '../controllers/Mark.controller'
+
+
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const Mark = createMarkController(db);
+  const router = express.Router();
+
   router.post("/", Mark.create);
 
-  // Retrieve all Mark for video from the database.
   router.get("/video/:id", Mark.findAllForVideo);
 
-  // Retrieve all Marks from the database.
   router.get("/", Mark.findAll);
 
-  // Retrieve marks with filtering, sorting and pagination
-  router.post("/items", Mark.getItems);
+  router.post("/items", validateBody(ItemsListRequestSchema), Mark.getItems);
 
-  // Retrieve metas available for mark type filtering
   router.get("/filter-metas", Mark.getFilterMetas);
 
-  // Delete a Mark with id
   router.delete("/:id", Mark.deleteOne);
 
   app.use('/api/Mark', router);
-};
+}

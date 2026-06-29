@@ -1,0 +1,58 @@
+import type {
+  ElectronBridgeAPI,
+  ElectronOperableAPI,
+  OpenDialogResult,
+} from '@shared/electron/ipc'
+
+export function isElectron(): boolean {
+  return typeof window !== 'undefined' && Boolean(window.electronAPI)
+}
+
+export function getElectronAPI(): ElectronBridgeAPI | undefined {
+  if (typeof window === 'undefined') return undefined
+  return window.electronAPI
+}
+
+export function getElectronOperable(): ElectronOperableAPI | undefined {
+  if (typeof window === 'undefined') return undefined
+  return window.$electronOperable ?? window.operableAPI
+}
+
+export async function checkFileExistsElectron(filePath: string): Promise<boolean | null> {
+  const operable = getElectronOperable()
+  if (!operable?.checkFileExists) return null
+
+  const exists = await operable.checkFileExists(filePath)
+  return exists ? true : null
+}
+
+export async function showElectronOpenDialog(
+  properties: string[] | string | Record<string, boolean> | null,
+): Promise<OpenDialogResult | null> {
+  const api = getElectronAPI()
+  if (!api?.invoke) return null
+
+  let dialogProperties: string[] = []
+  if (Array.isArray(properties)) {
+    dialogProperties = properties
+  } else if (typeof properties === 'string') {
+    dialogProperties = [properties]
+  } else if (typeof properties === 'object' && properties !== null) {
+    dialogProperties = Object.keys(properties).filter((key) => properties[key] === true)
+  }
+
+  return api.invoke('showOpenDialog', dialogProperties)
+}
+
+export type {
+  CheckFileExistsPayload,
+  ElectronBridgeAPI,
+  ElectronOperableAPI,
+  OpenDialogResult,
+  OpenPathPayload,
+  OpenPathResult,
+  PlayVideoPayload,
+  SaveFileDialogOptions,
+  SaveFileDialogResult,
+  UpdaterState,
+} from '@shared/electron/ipc'

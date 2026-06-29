@@ -619,13 +619,13 @@ export const useItemsStore = defineStore('items', {
       }
 
       const id = item.id;
-      let selection = this.selection;
+      const selection = this.selection;
       // выделяем предметы при зажатой кнопке shift
       if (e && e.shiftKey) {
         const last = this.selected_last;
         if (last && selection.length) {
-          let index_last = this.entities.findIndex(i => i.id === last);
-          let index_current = this.entities.findIndex(i => i.id === id);
+          const index_last = this.entities.findIndex(i => i.id === last);
+          const index_current = this.entities.findIndex(i => i.id === id);
 
           if (index_last > -1 && index_current > -1) {
             let start = index_current;
@@ -636,10 +636,10 @@ export const useItemsStore = defineStore('items', {
               end = index_current;
             }
 
-            let section = this.entities.slice(start, end + 1);
-            let ids = section.map(i => i.id);
+            const section = this.entities.slice(start, end + 1);
+            const ids = section.map(i => i.id);
 
-            for (let i of ids) {
+            for (const i of ids) {
               if (selection.includes(i)) {
                 const x = selection.findIndex((j) => j == i);
                 if (x > -1) selection.splice(x, 1);

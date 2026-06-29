@@ -195,4 +195,24 @@ describe('typedApi', () => {
     const tags = await typedApi.searchTags({ q: 'Actor' })
     expect(tags.data[0]?.metaId).toBe(1)
   })
+
+  it('validates video playable info', async () => {
+    mockGet.mockResolvedValue(mockAxiosResponse({
+      mode: 'stream',
+      transcodeRequired: true,
+      streamPlayback: true,
+    }))
+
+    const response = await typedApi.getVideoPlayable(12)
+    expect(mockGet).toHaveBeenCalledWith('/api/video/12/playable')
+    expect(response.data.transcodeRequired).toBe(true)
+  })
+
+  it('validates transcode cache stats', async () => {
+    mockGet.mockResolvedValue(mockAxiosResponse({ bytes: 4096, files: 2, entries: 2 }))
+
+    const response = await typedApi.getTranscodeCacheStats()
+    expect(mockGet).toHaveBeenCalledWith(API_ROUTES.transcodeCache)
+    expect(response.data.bytes).toBe(4096)
+  })
 })

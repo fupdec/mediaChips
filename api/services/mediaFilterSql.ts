@@ -5,10 +5,9 @@ import type {
   MediaFilterQueryResult,
   SqlParamBinder,
 } from '../types/mediaFilter'
-
-const {resolveMetaId} = require('../utils/metaId')
-const {normalizeExt, parseExtList} = require('../utils/ext')
-const {COUNTRY_DELIMITER} = require('../utils/country')
+import { resolveMetaId } from '../utils/metaId'
+import { normalizeExt, parseExtList } from '../utils/ext'
+import { COUNTRY_DELIMITER } from '../utils/country'
 
 const COUNTRY_DELIMITER_SQL = `char(${COUNTRY_DELIMITER.charCodeAt(0)})`
 
@@ -311,7 +310,7 @@ function buildCountryArrayClause(filter: FilterLike, nextParam: SqlParamBinder) 
 
 function buildExtArrayClause(filter: FilterLike, nextParam: SqlParamBinder) {
   const {cond, val} = filter
-  const exts = parseExtList(val)
+  const exts = parseExtList(val as string | string[] | null | undefined)
 
   if (cond === 'is null') {
     return `(media.ext IS NULL OR media.ext = '')`

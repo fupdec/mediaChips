@@ -2,22 +2,22 @@ import type { TaskControllerShared } from '../../types/tasks'
 import type { AnyRecord } from '../../types/db'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
-const path = require('path')
-const {
+import { createMediaRepository } from '../../db/repositories/media'
+import path from 'path'
+import {
   getContentHashBackfillStatus,
   iterateContentHashBackfill,
-} = require('../../services/contentHashBackfill')
-const {
+} from '../../services/contentHashBackfill'
+import {
   getMissingMediaStatus,
   iterateMissingMediaSearch,
-} = require('../../services/missingMediaFinder')
-const {
+} from '../../services/missingMediaFinder'
+import {
   getImageThumbsGenerationStatus,
   iterateImageThumbsGeneration,
-} = require('../../services/imageThumbsGeneration')
-const {createMediaRepository} = require('../../db/repositories/media')
+} from '../../services/imageThumbsGeneration'
 
-module.exports = function createTasksMaintenanceController(shared: TaskControllerShared) {
+export default function createTasksMaintenanceController(shared: TaskControllerShared) {
   const {
     db,
     getDbPath,
@@ -41,7 +41,7 @@ module.exports = function createTasksMaintenanceController(shared: TaskControlle
 
   const imageThumbsGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
-      const status = await getImageThumbsGenerationStatus(db, getDbPath())
+      const status = await getImageThumbsGenerationStatus(db, getDbPath() ?? '')
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
@@ -62,7 +62,10 @@ module.exports = function createTasksMaintenanceController(shared: TaskControlle
 
       const shouldStop = createStreamAbortSignal(req, res)
 
-      for await (const event of iterateImageThumbsGeneration(db, getDbPath(), getImageMedia(), {
+      for await (const event of iterateImageThumbsGeneration(db, getDbPath() ?? '', getImageMedia() as unknown as {
+        getImageMetadata: (path: string) => Promise<unknown>
+        createImageThumb: (path: string, id: unknown, dbPath: string) => Promise<void>
+      }, {
         shouldStop,
         force: String(req.query.force || '').toLowerCase() === 'true',
       })) {

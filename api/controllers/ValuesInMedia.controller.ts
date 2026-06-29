@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createValuesInMediaRepository} = require('../db/repositories/valuesInMedia')
-
-module.exports = function (db: ApiDb) {
+import { createValuesInMediaRepository } from '../db/repositories/valuesInMedia'
+export default function (db: ApiDb) {
   const valuesInMediaRepo = createValuesInMediaRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {

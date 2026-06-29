@@ -1,12 +1,12 @@
 import type { ApiDb } from '../types/db'
-import { apiErrorMessage } from '../types/errors'
+import { apiErrorMessage, paramString } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {getAuthService} = require('../../app/server/authRegistry')
-const {applyLanAccessChange, isLanAccessEnvLocked} = require('../../app/server/lanAccess')
-const {createSettingsRepository} = require('../db/repositories/settings')
+import { createSettingsRepository } from '../db/repositories/settings'
+import { getAuthService } from '../../app/server/authRegistry'
+import { applyLanAccessChange, isLanAccessEnvLocked } from '../../app/server/lanAccess'
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const settingsRepo = createSettingsRepository(db.drizzle)
 
   const findAll = async function (req: ApiRequest, res: ApiResponse) {
@@ -15,7 +15,7 @@ module.exports = function (db: ApiDb) {
       const data = settingsRepo.findAll()
       const settings = await authService.loadSecuritySettings()
       const sanitized = authService.sanitizeSettingRows(
-        data,
+        data as Parameters<typeof authService.sanitizeSettingRows>[0],
         settings.passwordProtection,
         authService.isRequestAuthenticated(req),
       )
@@ -30,10 +30,10 @@ module.exports = function (db: ApiDb) {
   const findOne = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const authService = getAuthService()
-      const data = settingsRepo.findByOption(req.params.option)
+      const data = settingsRepo.findByOption(paramString(req.params.option))
       const settings = await authService.loadSecuritySettings()
       const sanitized = authService.sanitizeSettingRow(
-        data,
+        (data ?? null) as Parameters<typeof authService.sanitizeSettingRow>[0],
         settings.passwordProtection,
         authService.isRequestAuthenticated(req),
       )
@@ -49,7 +49,7 @@ module.exports = function (db: ApiDb) {
     if (!req.body) return res.sendStatus(400)
 
     try {
-      settingsRepo.upsertByOption(req.params.option, req.body.value)
+      settingsRepo.upsertByOption(paramString(req.params.option), req.body.value)
 
       if (req.params.option === 'phrase' || req.params.option === 'passwordProtection') {
         getAuthService().invalidateSettingsCache()

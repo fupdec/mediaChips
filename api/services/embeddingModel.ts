@@ -4,9 +4,8 @@ import type {
   FeatureExtractionModel,
   ModelStatus,
 } from '../types/mlModels'
-
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
 const DEFAULT_MODEL = 'Xenova/all-MiniLM-L6-v2'
 
@@ -132,6 +131,15 @@ function getStatus(db: ApiDb, useML: boolean): ModelStatus {
 }
 
 module.exports = {
+  DEFAULT_MODEL,
+  cosineSimilarity,
+  embedText,
+  getStatus,
+  hasDownloadedModel,
+  loadModel,
+}
+
+export {
   DEFAULT_MODEL,
   cosineSimilarity,
   embedText,

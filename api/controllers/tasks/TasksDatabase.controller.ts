@@ -3,20 +3,21 @@ import type { AnyRecord } from '../../types/db'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
 import type { DatabaseSizesResponse } from '@shared/api/responses'
-const fs = require('fs')
-const path = require('path')
-const {rimraf} = require('rimraf')
-const {readdir, stat} = require('fs/promises')
-const {machineId} = require('node-machine-id')
-const {getAppConfigPath} = require('../../utils/appConfigPath')
+import fs from 'fs'
+import path from 'path'
+import { rimraf } from 'rimraf'
+import { readdir, stat } from 'fs/promises'
+import { machineId } from 'node-machine-id'
+import { getAppConfigPath } from '../../utils/appConfigPath'
+import { loadConfigFile, createDefaultConfig } from '../../../app/server/configFile'
 
-module.exports = function createTasksDatabaseController(shared: TaskControllerShared) {
+export default function createTasksDatabaseController(shared: TaskControllerShared) {
   const {db, resolveGeneratedFolderPath} = shared
 
-  const rmrf = (folder: unknown) => rimraf(folder)
+  const rmrf = (folder: string) => rimraf(folder)
 
   const deleteDb = async function (req: ApiRequest, res: ApiResponse) {
-    const dbDir = path.join(db.path_databases, req.body.id)
+    const dbDir = path.join(db.path_databases ?? '', String(req.body.id))
     try {
       await rmrf(dbDir)
       res.status(201).send('successfully deleted')
@@ -25,7 +26,7 @@ module.exports = function createTasksDatabaseController(shared: TaskControllerSh
     }
   }
 
-  const getDirectorySize = async (directory: string) => {
+  const getDirectorySize = async (directory: string): Promise<number> => {
     if (!fs.existsSync(directory)) return 0
 
     const entries = await readdir(directory, {withFileTypes: true})
@@ -43,16 +44,12 @@ module.exports = function createTasksDatabaseController(shared: TaskControllerSh
   }
 
   const getDatabaseSizes = async function (req: ApiRequest, res: ApiResponse) {
-    const ids = req.body?.ids
-    if (!Array.isArray(ids) || !ids.length) {
-      res.status(400).send({message: 'ids array is required'})
-      return
-    }
+    const ids = req.body.ids as Array<string | number>
 
     try {
       const sizes: DatabaseSizesResponse['sizes'] = {}
       await Promise.all(ids.map(async (id) => {
-        const dbDir = path.join(db.path_databases, id)
+        const dbDir = path.join(db.path_databases ?? '', String(id))
         sizes![id] = await getDirectorySize(dbDir)
       }))
       const payload: DatabaseSizesResponse = { sizes }
@@ -73,7 +70,7 @@ module.exports = function createTasksDatabaseController(shared: TaskControllerSh
       if (!fs.existsSync(directory)) return 0
 
       const files = await readdir(directory)
-      const stats = files.map((file: unknown) => stat(path.join(directory, file)))
+      const stats = files.map((file) => stat(path.join(directory, String(file))))
 
       return (await Promise.all(stats)).reduce((accumulator, {size}) => accumulator + size, 0)
     }
@@ -83,8 +80,7 @@ module.exports = function createTasksDatabaseController(shared: TaskControllerSh
   }
 
   const clearData = async function (req: ApiRequest, res: ApiResponse) {
-    const imageType = req.body.imageType
-    const delPath = resolveGeneratedFolderPath(imageType)
+    const delPath = resolveGeneratedFolderPath(String(req.body.imageType ?? ''))
 
     if (!delPath) {
       res.status(400).send({message: 'Unknown folder type'})
@@ -103,7 +99,6 @@ module.exports = function createTasksDatabaseController(shared: TaskControllerSh
   const getConfig = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const configPath = getAppConfigPath()
-      const {loadConfigFile, createDefaultConfig} = require('../../../app/server/configFile')
       const result = loadConfigFile(configPath)
       const config_json = result.config || createDefaultConfig()
       res.status(200).json(config_json)

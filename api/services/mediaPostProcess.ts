@@ -5,14 +5,13 @@ import type {
   MediaTypeLike,
   ImageMetadataResult,
 } from '../types/mediaPostProcess'
-
-const {
+import {
   isVideoMediaType,
   isImageMediaType,
   isAudioMediaType,
-} = require('../utils/mediaType')
-const {createVideoMetadataRepository} = require('../db/repositories/videoMetadata')
-const {createImageMetadataRepository} = require('../db/repositories/imageMetadata')
+} from '../utils/mediaType'
+import { createVideoMetadataRepository } from '../db/repositories/videoMetadata'
+import { createImageMetadataRepository } from '../db/repositories/imageMetadata'
 
 function createMediaPostProcessor({
   db,
@@ -114,7 +113,7 @@ function createMediaPostProcessor({
     const metadata = await getVideoMetadata(mediaPath)
 
     if (metadata) {
-      videoMetadataRepo.updateByMediaId(mediaId, {
+      videoMetadataRepo.updateByMediaId(Number(mediaId), {
         duration: metadata.duration,
         bitrate: metadata.bitrate,
         width: metadata.width,
@@ -130,7 +129,7 @@ function createMediaPostProcessor({
 
     if (metadata) {
       imageMetadataRepo.upsert({
-        mediaId,
+        mediaId: Number(mediaId),
         width: metadata.width,
         height: metadata.height,
         orientation: metadata.orientation,
@@ -149,7 +148,7 @@ function createMediaPostProcessor({
 
     if (metadata) {
       videoMetadataRepo.upsert({
-        mediaId,
+        mediaId: Number(mediaId),
         duration: metadata.duration,
         bitrate: metadata.bitrate,
         codec: metadata.codec,
@@ -185,3 +184,5 @@ function createMediaPostProcessor({
 module.exports = {
   createMediaPostProcessor,
 }
+
+export { createMediaPostProcessor }

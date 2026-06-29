@@ -1,15 +1,38 @@
 import type { BrowserWindow as BrowserWindowInstance, WebContents, IpcMainInvokeEvent, IpcMainEvent } from 'electron'
-
-import { apiErrorMessage } from './api/types/errors'
-const {
+import {
   app,
   BrowserWindow,
   ipcMain,
   Menu,
   dialog,
   shell,
-} = require('electron')
+} from 'electron'
+import os from 'os'
+import fs from 'fs'
+import path from 'path'
+import { machineId } from 'node-machine-id'
+
+import { apiErrorMessage } from './api/types/errors'
+import { initAppUpdater } from './electron/autoUpdater'
+import { normalizeMediaPath } from './api/utils/normalizeUserPath'
+import { resolveExistingPath } from './api/services/contentHash'
+
+type ServerWindowConfig = {
+  win?: { height?: number; width?: number }
+  player?: { height?: number; width?: number }
+}
+
+type AppServerExports = {
+  config: import('./app/types/server').ServerConfig & ServerWindowConfig
+  app: import('electron').App
+  listener?: { close(): void }
+  resolveFilePath?: unknown
+}
+
 process.electron_app = app
+
+const server = require('./app/server.js') as AppServerExports
+const serverConfig = server.config
 
 const gotTheLock = app.requestSingleInstanceLock()
 
@@ -17,10 +40,6 @@ if (!gotTheLock) {
   console.warn('MediaChips is already running. Exiting second instance.')
   process.exit(0)
 }
-
-const os = require('os')
-const fs = require('fs')
-const path = require('path')
 
 if (process.platform === 'win32') {
   const disableGpu = ['1', 'true', 'yes', 'on'].includes(
@@ -30,9 +49,6 @@ if (process.platform === 'win32') {
     app.disableHardwareAcceleration()
   }
 }
-
-const server = require('./app/server.js')
-const {initAppUpdater} = require('./electron/autoUpdater')
 
 const isWindows = os.type() === 'Windows_NT'
 // TEMP: match src/utils/debugWinElectronUi.js — remove when done debugging header UI
@@ -50,7 +66,7 @@ const useViteDevServer = isDevelopment && process.env.MEDIA_CHIPS_VITE_DEV !== '
 const getRendererUrl = (search = '') => {
   const port = useViteDevServer
     ? Number(process.env.VITE_DEV_SERVER_PORT || 3000)
-    : server.config.port
+    : serverConfig.port
   const suffix = search
     ? (search.startsWith('?') ? search : `?${search}`)
     : ''
@@ -107,12 +123,12 @@ const sendConfigToWindow = (browserWindow: BrowserWindowInstance) => {
 const createWindow = () => {
   win = new BrowserWindow({
     show: false,
-    height: server.config.win?.height || 720,
-    width: server.config.win?.width || 1280,
+    height: serverConfig.win?.height || 720,
+    width: serverConfig.win?.width || 1280,
     frame: !useWinElectronFrame,
     thickFrame: useWinElectronFrame,
-    titleBarStyle: os.type() === 'Darwin' && !useWinElectronFrame ? 'hidden' : 'default',
-    trafficLightPosition: os.type() === 'Darwin' && !useWinElectronFrame ? {x: 18, y: 15} : null,
+    titleBarStyle: (os.type() === 'Darwin' && !useWinElectronFrame ? 'hidden' : 'default') as 'hidden' | 'default',
+    trafficLightPosition: os.type() === 'Darwin' && !useWinElectronFrame ? {x: 18, y: 15} : undefined,
     backgroundColor: '#333',
     icon: path.join(__dirname, 'dist/icons', 'icon.png'),
     webPreferences: {
@@ -164,10 +180,7 @@ const createWindow = () => {
 
 ipcMain.handle('get-config', () => server.config)
 
-ipcMain.handle('get-machine-id', async () => {
-  const {machineId} = require('node-machine-id')
-  return machineId()
-})
+ipcMain.handle('get-machine-id', async () => machineId())
 
 ipcMain.handle('setZoomFactor', (event: IpcMainInvokeEvent, factor: unknown) => {
   const browserWindow = BrowserWindow.fromWebContents(event.sender)
@@ -182,8 +195,6 @@ ipcMain.handle('getZoomFactor', (event: IpcMainInvokeEvent) => {
 })
 
 ipcMain.handle('checkFileExists', async (_event: IpcMainInvokeEvent, data: Record<string, unknown>) => {
-  const {normalizeMediaPath} = require('./api/utils/normalizeUserPath')
-  const {resolveExistingPath} = require('./api/services/contentHash')
   const rawPath = typeof data === 'string' ? data : data?.path
   if (!rawPath) return false
 
@@ -195,12 +206,14 @@ ipcMain.handle('checkFileExists', async (_event: IpcMainInvokeEvent, data: Recor
   }
 })
 
-ipcMain.handle('openPath', async (_event: IpcMainInvokeEvent, data: Record<string, unknown>) => {
-  let entryPath = typeof data === 'string' ? data : data?.path
-  if (!entryPath) return {error: 'Path is required'}
+ipcMain.handle('openPath', async (_event: IpcMainInvokeEvent, data: Record<string, unknown> | string) => {
+  const rawPath = typeof data === 'string' ? data : data?.path
+  if (rawPath == null || rawPath === '') return {error: 'Path is required'}
 
-  entryPath = path.normalize(entryPath)
-  if (data?.isDir) entryPath = path.dirname(entryPath)
+  let entryPath = path.normalize(String(rawPath))
+  if (typeof data === 'object' && data !== null && data.isDir) {
+    entryPath = path.dirname(entryPath)
+  }
 
   const error = await shell.openPath(entryPath)
   return error ? {error} : {success: true}
@@ -403,7 +416,7 @@ function menuActionItem(label: string, action: string, accelerator?: string) {
   }
 }
 
-let systemMenu = Menu.buildFromTemplate([
+const systemMenu = Menu.buildFromTemplate([
   {
     label: 'File',
     submenu: [
@@ -592,10 +605,10 @@ function getPlayerWindowOptions() {
     frame: false,
     thickFrame: isWindows,
     show: false,
-    height: server.config.player?.height || 720,
-    width: server.config.player?.width || 1280,
-    titleBarStyle: 'hidden',
-    trafficLightPosition: os.type() === 'Darwin' ? {x: 12, y: 8} : null,
+    height: serverConfig.player?.height || 720,
+    width: serverConfig.player?.width || 1280,
+    titleBarStyle: 'hidden' as const,
+    trafficLightPosition: os.type() === 'Darwin' ? {x: 12, y: 8} : undefined,
     backgroundColor: '#000000',
     icon: path.join(__dirname, 'dist/icons', 'icon.png'),
     webPreferences: {
@@ -650,7 +663,7 @@ function createPlayerWindow() {
   if (player && !player.isDestroyed()) return player
 
   isPlayerRendererReady = false
-  player = new BrowserWindow(getPlayerWindowOptions())
+  player = new BrowserWindow(getPlayerWindowOptions() as Electron.BrowserWindowConstructorOptions)
   const playerWindow = player!
   setupPlayerWindowEvents(playerWindow)
   playerWindow.loadURL(getRendererUrl('?player=true'))

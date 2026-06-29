@@ -29,3 +29,5 @@ module.exports = {
   resolveMetaId,
   normalizeMetaIdParam,
 }
+
+export { resolveMetaId, normalizeMetaIdParam }

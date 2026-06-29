@@ -1,8 +1,7 @@
 import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
-
-const crypto = require('crypto')
-const fs = require('fs')
-const {access} = require('fs/promises')
+import crypto from 'crypto'
+import fs from 'fs'
+import { access } from 'fs/promises'
 
 const pathVariants = (pathToFile: string): string[] => {
   const variants = new Set<string>()
@@ -65,6 +64,15 @@ const verifyContentHashMatch = async (pathToFile: string, expectedHash: string |
 }
 
 module.exports = {
+  computeContentHash,
+  computeContentHashForPath,
+  verifyContentHashMatch,
+  fileExists,
+  resolveExistingPath,
+  pathVariants,
+}
+
+export {
   computeContentHash,
   computeContentHashForPath,
   verifyContentHashMatch,

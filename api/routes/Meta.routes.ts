@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const Meta = require("../controllers/Meta.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createMetaController from '../controllers/Meta.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const Meta = createMetaController(db);
+  const router = express.Router();
 
   // Create a new Meta
   router.post("/", Meta.create);
@@ -23,4 +26,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.delete("/:id", Meta.deleteOne);
 
   app.use('/api/Meta', router);
-};
+}

@@ -5,5 +5,5 @@
     "noEmit": true,
     "rootDir": "."
   },
-  "include": ["electron/**/*.ts"]
+  "include": ["electron/**/*.ts", "shared/electron/**/*.ts"]
 }

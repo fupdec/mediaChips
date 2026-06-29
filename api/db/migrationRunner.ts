@@ -1,5 +1,5 @@
-const {runDrizzleMigrations, resetSqliteDatabase} = require('./drizzleMigrations')
-const {runPostMigrations} = require('./postMigrations')
+import { runDrizzleMigrations, resetSqliteDatabase } from './drizzleMigrations'
+import { runPostMigrations } from './postMigrations'
 
 export async function bootstrapDatabase(dbPath: string) {
   runDrizzleMigrations(dbPath)

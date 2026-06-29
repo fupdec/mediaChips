@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const Playlist = require("../controllers/Playlist.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createPlaylistController from '../controllers/Playlist.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const Playlist = createPlaylistController(db);
+  const router = express.Router();
 
   // Create a new Playlist
   router.post("/", Playlist.create);
@@ -20,4 +23,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.delete("/:id", Playlist.deleteOne);
 
   app.use('/api/Playlist', router);
-};
+}

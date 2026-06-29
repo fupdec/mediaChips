@@ -1,12 +1,11 @@
 import type { ApiDb } from '../types/db'
-
-const fs = require('fs')
-const path = require('path')
-const {readdir} = require('fs/promises')
-const {resolveExistingPath} = require('./contentHash')
-const {createMediaRepository} = require('../db/repositories/media')
-const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
-const {createImageMetadataRepository} = require('../db/repositories/imageMetadata')
+import fs from 'fs'
+import path from 'path'
+import { readdir } from 'fs/promises'
+import { resolveExistingPath } from './contentHash'
+import { createMediaRepository } from '../db/repositories/media'
+import { createMediaTypesRepository } from '../db/repositories/mediaTypes'
+import { createImageMetadataRepository } from '../db/repositories/imageMetadata'
 
 async function getImageMediaTypeId(db: ApiDb) {
   const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
@@ -82,7 +81,7 @@ async function generateImageThumb(
     const metadata = await imageMedia.getImageMetadata(imagePath) as {
       width?: number
       height?: number
-      orientation?: string
+      orientation?: number
     } | null
 
     if (metadata) {
@@ -111,9 +110,9 @@ async function* iterateImageThumbsGeneration(
   dbPath: string,
   imageMedia: {getImageMetadata: (path: string) => Promise<unknown>; createImageThumb: (path: string, id: unknown, dbPath: string) => Promise<void>},
   {
-    shouldStop = () => false,
+    shouldStop = (): boolean => false,
     force = false,
-  } = {},
+  }: {shouldStop?: () => boolean; force?: boolean} = {},
 ) {
   const mediaRepo = createMediaRepository(db.drizzle)
   const imageTypeId = await getImageMediaTypeId(db)
@@ -187,3 +186,5 @@ module.exports = {
   getImageThumbsGenerationStatus,
   iterateImageThumbsGeneration,
 }
+
+export { getImageThumbsGenerationStatus, iterateImageThumbsGeneration }

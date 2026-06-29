@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const Tab = require("../controllers/Tab.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createTabController from '../controllers/Tab.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const Tab = createTabController(db);
+  const router = express.Router();
 
   // Create a new Tab
   router.post("/", Tab.create);
@@ -17,4 +20,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.delete("/:id", Tab.deleteOne);
 
   app.use('/api/Tab', router);
-};
+}

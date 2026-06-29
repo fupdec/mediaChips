@@ -1,9 +1,10 @@
-import type {CountryEntry} from '../assets/Countries'
+import type { CountryEntry } from '../assets/Countries'
+import Countries from '../assets/Countries'
 
-const Countries: CountryEntry[] = require('../assets/Countries')
+const countryList = Countries as CountryEntry[]
 
 const COUNTRY_DELIMITER = '\x1E'
-const countryNames = new Set(Countries.map((country) => country.name))
+const countryNames = new Set(countryList.map((country) => country.name))
 
 function parseCountries(stored: string | null | undefined): string[] {
   if (!stored) return []
@@ -54,7 +55,7 @@ function serializeCountries(countries: string[] | null | undefined): string | nu
 }
 
 function getCountryCode(name: string): string {
-  const country = Countries.find((item) => item.name === name)
+  const country = countryList.find((item) => item.name === name)
   return country ? country.code : ''
 }
 

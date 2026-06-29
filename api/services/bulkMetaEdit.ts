@@ -8,12 +8,12 @@ import type {
   PresetEditChange,
 } from '../types/bulkMetaEdit'
 
-const {createMediaRepository} = require('../db/repositories/media')
-const {createTagsRepository} = require('../db/repositories/tags')
-const {createTagsInMediaRepository} = require('../db/repositories/tagsInMedia')
-const {createTagsInTagRepository} = require('../db/repositories/tagsInTag')
-const {createValuesInMediaRepository} = require('../db/repositories/valuesInMedia')
-const {createValuesInTagRepository} = require('../db/repositories/valuesInTag')
+import { createMediaRepository } from '../db/repositories/media'
+import { createTagsRepository } from '../db/repositories/tags'
+import { createTagsInMediaRepository } from '../db/repositories/tagsInMedia'
+import { createTagsInTagRepository } from '../db/repositories/tagsInTag'
+import { createValuesInMediaRepository } from '../db/repositories/valuesInMedia'
+import { createValuesInTagRepository } from '../db/repositories/valuesInTag'
 
 const BATCH_SIZE = 200
 
@@ -24,6 +24,9 @@ function chunkArray<T>(items: T[], size: number = BATCH_SIZE): T[][] {
   }
   return chunks
 }
+
+type MediaTagLinkRow = { mediaId: number; metaId: number; tagId: number }
+type TagTagLinkRow = { parentTagId: number; metaId: number; tagId: number }
 
 function buildTagRows(
   itemType: BulkItemType,
@@ -159,9 +162,9 @@ async function applyBulkMetaEdit(db: ApiDb, options: BulkMetaEditOptions): Promi
         for (const batch of chunkArray(rows, 500)) {
           if (batch.length) {
             if (itemType === 'media') {
-              tagsInMediaRepo.bulkCreate(batch)
+              tagsInMediaRepo.bulkCreate(batch as unknown as MediaTagLinkRow[])
             } else {
-              tagsInTagRepo.bulkCreate(batch)
+              tagsInTagRepo.bulkCreate(batch as unknown as TagTagLinkRow[])
             }
           }
         }
@@ -189,9 +192,9 @@ async function applyBulkMetaEdit(db: ApiDb, options: BulkMetaEditOptions): Promi
       for (const batch of chunkArray(rows, 500)) {
         if (batch.length) {
           if (itemType === 'media') {
-            tagsInMediaRepo.bulkCreate(batch)
+            tagsInMediaRepo.bulkCreate(batch as unknown as MediaTagLinkRow[])
           } else {
-            tagsInTagRepo.bulkCreate(batch)
+            tagsInTagRepo.bulkCreate(batch as unknown as TagTagLinkRow[])
           }
         }
       }
@@ -213,6 +216,6 @@ async function applyBulkMetaEdit(db: ApiDb, options: BulkMetaEditOptions): Promi
   }
 }
 
-module.exports = {
+export {
   applyBulkMetaEdit,
 }

@@ -42,7 +42,7 @@
               :hide-no-data="!search"
               :items="[]"
               :rules="[v => v.length > 0 || `At least one extension required`]"
-              :search-input.sync="search"
+              v-model:search-input="search"
               hide-selected
               label="Extensions"
               hint="File extension without dot, e.g. doc"

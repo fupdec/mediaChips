@@ -17,3 +17,5 @@ module.exports = {
   initDatabaseManager,
   getDatabaseManager,
 }
+
+export { initDatabaseManager, getDatabaseManager }

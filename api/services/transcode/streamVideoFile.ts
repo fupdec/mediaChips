@@ -1,7 +1,6 @@
 import type {Request, Response} from 'express'
-
-const fs = require('fs')
-const {isClientAbortError} = require('../../../app/server/fileResolver')
+import fs from 'fs'
+import { isClientAbortError } from '../../../app/server/fileResolver'
 
 function streamVideoFile(
   req: Request,
@@ -61,3 +60,5 @@ function streamVideoFile(
 module.exports = {
   streamVideoFile,
 }
+
+export { streamVideoFile }

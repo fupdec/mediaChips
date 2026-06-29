@@ -2,14 +2,14 @@ import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const { serializeCountries } = require('../utils/country')
-const {normalizeMetaIdParam, resolveMetaId} = require('../utils/metaId')
-const {serializeExtList} = require('../utils/ext')
-const {createFilterRowsRepository} = require('../db/repositories/filterRows')
-const {createFilterRowsInSavedFiltersRepository} = require('../db/repositories/filterRowsInSavedFilters')
-const {createTagsInFilterRowsRepository} = require('../db/repositories/tagsInFilterRows')
+import { createFilterRowsRepository } from '../db/repositories/filterRows'
+import { createFilterRowsInSavedFiltersRepository } from '../db/repositories/filterRowsInSavedFilters'
+import { createTagsInFilterRowsRepository } from '../db/repositories/tagsInFilterRows'
+import { serializeCountries } from '../utils/country'
+import { normalizeMetaIdParam, resolveMetaId } from '../utils/metaId'
+import { serializeExtList } from '../utils/ext'
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const filterRowsRepo = createFilterRowsRepository(db.drizzle)
   const filterRowsInSavedFiltersRepo = createFilterRowsInSavedFiltersRepository(db.drizzle)
   const tagsInFilterRowsRepo = createTagsInFilterRowsRepository(db.drizzle)

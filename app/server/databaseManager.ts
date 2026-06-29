@@ -1,11 +1,16 @@
 import type { ApiDb } from '../../api/types/db'
 import type { ServerConfig, ServerDatabaseEntry } from '../types/server'
 import { apiErrorMessage } from '../../api/types/errors'
-const path = require('path')
-const fs = require('fs')
-const {createDrizzleClient, closeActiveConnection, setActiveConnection} = require('../../api/db')
-const {bootstrapDatabase} = require('../../api/db/migrationRunner')
-const {saveConfigFile} = require('./configFile')
+import path from 'path'
+import fs from 'fs'
+import {
+  createDrizzleClient,
+  closeActiveConnection,
+  setActiveConnection,
+} from '../../api/db'
+import { bootstrapDatabase } from '../../api/db/migrationRunner'
+import { saveConfigFile } from './configFile'
+import { loadModel } from '../../api/services/embeddingModel'
 
 type TranscodeManagerLike = {
   stopAllLiveStreams(): void
@@ -35,8 +40,7 @@ function removeSqliteFiles(dbFilePath: string) {
 
 function warmupEmbeddingModel(db: ApiDb) {
   try {
-    const embeddingModel = require('../../api/services/embeddingModel')
-    embeddingModel.loadModel(db).catch((err: unknown) => {
+    loadModel(db).catch((err: unknown) => {
       console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup skipped:', err instanceof Error ? apiErrorMessage(err) : String(err))
     })
   } catch (err: unknown) {

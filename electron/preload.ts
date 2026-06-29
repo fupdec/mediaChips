@@ -1,86 +1,26 @@
 import type { IpcRendererEvent } from 'electron'
-import type { IpcCallback, IpcListener, ListenerSubscription } from './types/ipc'
-
-const {
+import {
   contextBridge,
   ipcRenderer,
   webUtils,
-} = require('electron');
-const os = require('os');
+} from 'electron'
+import os from 'os'
+import type { IpcCallback, IpcListener, ListenerSubscription } from './types/ipc'
+import {
+  IPC_INVOKE_CHANNELS,
+  IPC_ON_CHANNELS,
+  IPC_SEND_CHANNELS,
+} from '../shared/electron/ipc'
 
-// Белый список каналов для безопасности
-const validSendChannels = [
-  'open-player',
-  'getItemsFromDb',
-  'updateVideoFrames',
-  'removeEntitiesFromState',
-  'stop-playing-video',
-  'setFullScreen',
-  'player-ready',
-  'setNotification',
-  'maximize',
-  'unmaximize',
-  'enter-full-screen',
-  'leave-full-screen',
-  'blur',
-  'focus',
-  'config',
-  'closeApp',
-];
+const validSendChannels = [...IPC_SEND_CHANNELS]
 
-const validInvokeChannels = [
-  'openPath',
-  'showOpenDialog',
-  'getDateForDB',
-  'get-config',
-  'get-machine-id',
-  'dialog:openFile',
-  'dialog:saveFile',
-  'deleteLocalFile',
-  'createThumb',
-  'setNotification',
-  'maximize',
-  'unmaximize',
-  'minimize',
-  'relaunch',
-  'closePlayer',
-  'destroyPlayer',
-  'toggleDevTools',
-  'toggleMainFullscreen',
-  'findInPage',
-  'stopFindInPage',
-  'updater:check',
-  'updater:download',
-  'updater:install',
-  'updater:get-state',
-  'updater:is-supported',
-  'setZoomFactor',
-  'getZoomFactor',
-];
+const validInvokeChannels = [...IPC_INVOKE_CHANNELS]
 
-const validOnChannels = [
-  'play-video',
-  'getItemsFromDb',
-  'updateVideoFrames',
-  'removeEntitiesFromState',
-  'stop-playing-video',
-  'config',
-  'maximize',
-  'unmaximize',
-  'enter-full-screen',
-  'leave-full-screen',
-  'blur',
-  'focus',
-  'aboutApp',
-  'showDocumentation',
-  'showFeedback',
-  'menuAction',
-  'lockApp',
-  'navigationBack',
-  'navigationForward',
-  'updater:status',
-  'zoom-changed',
-];
+const validOnChannels = [...IPC_ON_CHANNELS]
+
+function includesChannel(channels: readonly string[], channel: string): boolean {
+  return channels.includes(channel)
+}
 
 type PlayVideoListener = (event: IpcRendererEvent | null, data: unknown) => void
 
@@ -106,7 +46,7 @@ type FileLike = { path?: string }
 contextBridge.exposeInMainWorld('electronAPI', {
   // Для отправки сообщений
   send: (channel: string, data: unknown) => {
-    if (validSendChannels.includes(channel)) {
+    if (includesChannel(validSendChannels, channel)) {
       console.log(`[IPC] Sending to ${channel}:`, data);
       ipcRenderer.send(channel, data);
     } else {
@@ -118,7 +58,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     if (!file) return ''
 
     try {
-      return webUtils.getPathForFile(file)
+      return webUtils.getPathForFile(file as File)
     } catch (error) {
       console.warn('[IPC] getPathForFile failed:', error)
       return file.path || ''
@@ -127,7 +67,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Для вызова с ожиданием ответа
   invoke: (channel: string, data: unknown) => {
-    if (validInvokeChannels.includes(channel)) {
+    if (includesChannel(validInvokeChannels, channel)) {
       console.log(`[IPC] Invoking ${channel}:`, data);
 
       // Специальная обработка для showOpenDialog
@@ -157,7 +97,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Для получения сообщений
   on: (channel: string, callback: IpcCallback) => {
-    if (validOnChannels.includes(channel)) {
+    if (includesChannel(validOnChannels, channel)) {
       console.log(`[IPC] Setting up listener for ${channel}`);
 
       // Создаем специальный обработчик для play-video
@@ -211,7 +151,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Для получения одного сообщения
   once: (channel: string, callback: IpcCallback) => {
-    if (validOnChannels.includes(channel)) {
+    if (includesChannel(validOnChannels, channel)) {
       // Специальная обработка для play-video
       if (channel === 'play-video') {
         ipcRenderer.once(channel, (event: IpcRendererEvent, ...args: unknown[]) => {

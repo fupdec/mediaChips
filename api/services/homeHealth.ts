@@ -1,15 +1,14 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedHomeHealth } from '@shared/schemas/home'
+import fs from 'fs'
+import path from 'path'
+import { readdir, stat } from 'fs/promises'
+import { getContentHashBackfillStatus } from './contentHashBackfill'
+import { getVideoImagesGenerationStatus } from './videoImagesGeneration'
+import { getImageThumbsGenerationStatus } from './imageThumbsGeneration'
+import { queryGet } from '../db/utils/rawQuery'
 
-const fs = require('fs')
-const path = require('path')
-const {readdir, stat} = require('fs/promises')
-const {getContentHashBackfillStatus} = require('./contentHashBackfill')
-const {getVideoImagesGenerationStatus} = require('./videoImagesGeneration')
-const {getImageThumbsGenerationStatus} = require('./imageThumbsGeneration')
-const {queryGet} = require('../db/utils/rawQuery')
-
-async function getDirectorySize(directory: string) {
+async function getDirectorySize(directory: string): Promise<number> {
   if (!fs.existsSync(directory)) return 0
 
   const entries = await readdir(directory, {withFileTypes: true})
@@ -107,3 +106,5 @@ module.exports = {
   getHomeHealth,
   getDuplicateCounts,
 }
+
+export { getHomeHealth, getDuplicateCounts }

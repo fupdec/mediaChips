@@ -14,13 +14,22 @@ import type {
 import { errorMessage, asMoveError } from '../types/websockets'
 import type { Request } from 'express'
 import type { Express } from 'express'
-const {createMediaRepository} = require('../../api/db/repositories/media')
-const path = require("path");
-const chokidar = require("chokidar");
-const {WatcherSyncEngine} = require('./watcherSync');
+import path from 'path'
+import chokidar from 'chokidar'
+import expressWs from 'express-ws'
+import { createMediaRepository } from '../../api/db/repositories/media'
+import { WatcherSyncEngine } from './watcherSync'
+import {
+  moveFile,
+  prepareMoveItems,
+  prepareRename,
+  checkBatchDiskSpace,
+  checkRenameDiskSpace,
+  estimateSeconds,
+} from './moveFile'
 
-module.exports = function (app: Express, db: ApiDb) {
-  require('express-ws')(app)
+function registerWebSockets(app: Express, db: ApiDb) {
+  expressWs(app)
   const wsApp = app as ExpressWithWs
   // file watcher
   wsApp.ws('/watcher', (ws: AppWebSocket, req: Request) => {
@@ -184,8 +193,8 @@ module.exports = function (app: Express, db: ApiDb) {
 
       // Создаем маски для отслеживания
       const foldersMasked = [];
-      for (let folder in extensions) {
-        for (let ext of extensions[folder]) {
+      for (const folder in extensions) {
+        for (const ext of extensions[folder]) {
           foldersMasked.push(path.join(folder, '**', `*.${ext}`));
         }
       }
@@ -236,8 +245,8 @@ module.exports = function (app: Express, db: ApiDb) {
       if (watcher) {
         // Создаем маски для добавления
         const foldersMasked = [];
-        for (let folder in extensions) {
-          for (let ext of extensions[folder]) {
+        for (const folder in extensions) {
+          for (const ext of extensions[folder]) {
             foldersMasked.push(path.join(folder, '**', `*.${ext}`));
           }
         }
@@ -312,15 +321,6 @@ module.exports = function (app: Express, db: ApiDb) {
 
 // moving files
   wsApp.ws('/moving', (ws: AppWebSocket, req: Request) => {
-    const {
-      moveFile,
-      prepareMoveItems,
-      prepareRename,
-      checkBatchDiskSpace,
-      checkRenameDiskSpace,
-      estimateSeconds,
-    } = require('./moveFile')
-
     const send = (payload: WsOutboundPayload) => {
       if (ws.readyState === 1) ws.send(JSON.stringify(payload))
     }
@@ -366,7 +366,7 @@ module.exports = function (app: Express, db: ApiDb) {
             id: item.id,
             fileName: item.fileName,
             folder: item.folder,
-            code: item.error.code,
+            code: item.error?.code ?? 'UNKNOWN',
           })
         }
 
@@ -401,7 +401,7 @@ module.exports = function (app: Express, db: ApiDb) {
           id: item.id,
           fileName: item.fileName,
           folder: item.folder,
-          code: item.error.code,
+          code: item.error?.code ?? 'UNKNOWN',
         })
       }
 
@@ -409,7 +409,7 @@ module.exports = function (app: Express, db: ApiDb) {
         processed += 1
 
         if (item.skip) {
-          bytesCopied += item.size
+          bytesCopied += item.size ?? 0
           moved += 1
           send({
             type: 'success',
@@ -422,10 +422,10 @@ module.exports = function (app: Express, db: ApiDb) {
           continue
         }
 
-        let fileStartBytes = bytesCopied
+        const fileStartBytes = bytesCopied
 
         try {
-          await moveFile(item.oldPath, item.newPath, (transferred: number, size: number) => {
+          await moveFile(String(item.oldPath), String(item.newPath), (transferred: number, size: number) => {
             const currentCopied = fileStartBytes + transferred
             const elapsed = (Date.now() - startedAt) / 1000
             const speed = elapsed > 0 ? currentCopied / elapsed : 0
@@ -447,13 +447,13 @@ module.exports = function (app: Express, db: ApiDb) {
             })
           })
 
-          bytesCopied += item.size
+          bytesCopied += item.size ?? 0
 
           try {
-            createMediaRepository(db.drizzle).updateById(item.id, {path: item.newPath})
+            createMediaRepository(db.drizzle).updateById(Number(item.id), {path: String(item.newPath)})
           } catch (dbError: unknown) {
             try {
-              await moveFile(item.newPath, item.oldPath)
+              await moveFile(String(item.newPath), String(item.oldPath))
             } catch (rollbackError: unknown) {
               console.error(`Rollback failed for ${item.fileName}:`, errorMessage(rollbackError))
             }
@@ -658,3 +658,6 @@ module.exports = function (app: Express, db: ApiDb) {
     })
   })
 }
+
+module.exports = registerWebSockets
+export default registerWebSockets

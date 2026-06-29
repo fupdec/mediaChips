@@ -1,14 +1,19 @@
 import type { TaskControllerShared } from '../../types/tasks'
 import { apiErrorMessage, asApiError } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
-const path = require('path')
-const {exec} = require('child_process')
-const {readdir, lstat} = require('fs/promises')
-const {resolveExistingPath} = require('../../services/contentHash')
-const {normalizeMediaPath} = require('../../utils/normalizeUserPath')
-const {unlinkResolvedPath} = require('../../services/localAssetCleanup')
+import path from 'path'
+import { exec } from 'child_process'
+import { readdir, lstat } from 'fs/promises'
+import { resolveExistingPath } from '../../services/contentHash'
+import { normalizeMediaPath } from '../../utils/normalizeUserPath'
+import { unlinkResolvedPath } from '../../services/localAssetCleanup'
+import {
+  moveFile,
+  prepareRename,
+  checkRenameDiskSpace,
+} from '../../../app/tasks/moveFile'
 
-module.exports = function createTasksFileController(shared: TaskControllerShared) {
+export default function createTasksFileController(shared: TaskControllerShared) {
   const checkFileExists = async function (req: ApiRequest, res: ApiResponse) {
     const filePath = normalizeMediaPath(req.body.path)
     const resolved = filePath ? await resolveExistingPath(filePath) : null
@@ -18,7 +23,6 @@ module.exports = function createTasksFileController(shared: TaskControllerShared
 
   const renameFile = async function (req: ApiRequest, res: ApiResponse) {
     const { old_path, new_path } = req.body
-    const { moveFile, prepareRename, checkRenameDiskSpace } = require('../../../app/tasks/moveFile')
 
     try {
       const prepared = await prepareRename(old_path, new_path)
@@ -69,10 +73,12 @@ module.exports = function createTasksFileController(shared: TaskControllerShared
     const fail = (message: string) => res.status(400).send({message})
 
     try {
-      const {shell} = require('electron')
-      const error = await shell.openPath(entryPath)
-      if (error) return fail(error)
-      return res.sendStatus(201)
+      const electron = await import('electron').catch(() => null)
+      if (electron?.shell) {
+        const error = await electron.shell.openPath(entryPath)
+        if (error) return fail(error)
+        return res.sendStatus(201)
+      }
     } catch (_) {
       // Non-Electron environment (e.g. standalone API dev server)
     }
@@ -97,6 +103,7 @@ module.exports = function createTasksFileController(shared: TaskControllerShared
 
       while (stack.length) {
         const dir = stack.pop()
+        if (!dir) continue
         let files
 
         try {
@@ -153,7 +160,7 @@ module.exports = function createTasksFileController(shared: TaskControllerShared
       return
     }
 
-    let fileList = await findInDir(entryPath, regex, excluded)
+    const fileList = await findInDir(entryPath, regex, excluded)
     res.status(201).send(fileList)
   }
 

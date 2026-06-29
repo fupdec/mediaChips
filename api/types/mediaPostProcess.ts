@@ -18,7 +18,7 @@ export interface AudioMetadataResult {
 export interface ImageMetadataResult {
   width?: number
   height?: number
-  orientation?: string
+  orientation?: number
 }
 
 export interface ImageMediaHelper {

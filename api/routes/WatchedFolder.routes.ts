@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const WatchedFolder = require("../controllers/WatchedFolder.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createWatchedFolderController from '../controllers/WatchedFolder.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const WatchedFolder = createWatchedFolderController(db);
+  const router = express.Router();
 
   // Create a new WatchedFolder
   router.post("/", WatchedFolder.create);
@@ -14,4 +17,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.delete("/:id", WatchedFolder.deleteOne);
 
   app.use('/api/WatchedFolder', router);
-};
+}

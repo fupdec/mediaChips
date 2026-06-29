@@ -38,3 +38,14 @@ module.exports = {
   isManagedMediaType,
   getMediaDeleteAssetFolder,
 }
+
+export {
+  normalizeMediaTypeKey,
+  getMediaTypeKey,
+  isVideoMediaType,
+  isImageMediaType,
+  isAudioMediaType,
+  isTextMediaType,
+  isManagedMediaType,
+  getMediaDeleteAssetFolder,
+}

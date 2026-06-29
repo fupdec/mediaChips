@@ -1,4 +1,4 @@
-const os = require('os')
+import os from 'os'
 
 type NetworkInterfaces = Record<string, import('os').NetworkInterfaceInfo[] | undefined>
 
@@ -76,7 +76,7 @@ function getAllIps() {
           interface: name,
           mac: iface.mac,
           netmask: iface.netmask,
-          cidr: iface.cidr,
+          cidr: iface.cidr ?? undefined,
         })
       }
     }
@@ -89,3 +89,5 @@ module.exports = {
   getBestLocalIp,
   getAllIps,
 }
+
+export { getBestLocalIp, getAllIps }

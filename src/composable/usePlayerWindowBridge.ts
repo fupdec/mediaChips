@@ -5,6 +5,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useEventBus } from '@/utils/eventBus'
 import { isStandalonePlayerRoute } from '@/utils/playerWindow'
 import type { MediaItem } from '@/types/stores'
+import type { PlayVideoPayload } from '@/services/electronBridge'
 import type {
   PlayerWindowBridgeAttachOptions,
   UsePlayerWindowBridgeOptions,
@@ -71,13 +72,9 @@ export function usePlayerWindowBridge({
 
     if (window.electronAPI?.on) {
       const handlePlayVideo = (...args: unknown[]) => {
-        const data = args[1] as {
-          video?: MediaItem
-          videos?: MediaItem[]
-          time?: number
-        } | undefined
+        const data = args[1] as PlayVideoPayload | undefined
         if (data?.video) {
-          onPlayVideo(data.video, data.videos ?? [], data.time)
+          onPlayVideo(data.video as MediaItem, (data.videos ?? []) as MediaItem[], data.time)
           return
         }
         onInvalidPlayData?.()

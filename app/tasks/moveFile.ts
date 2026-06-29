@@ -8,12 +8,12 @@ import type {
   PreparedMoveItem,
   PreparedRenameItem,
 } from '../types/moveFile'
-const {createMediaRepository} = require('../../api/db/repositories/media')
-const fs = require('fs').promises
-const fssync = require('fs')
-const path = require('path')
-const { pipeline } = require('stream/promises')
-const {clearResolvedPathCache} = require('../server/resolvePathCache')
+import { promises as fs } from 'fs'
+import fssync from 'fs'
+import path from 'path'
+import { pipeline } from 'stream/promises'
+import { createMediaRepository } from '../../api/db/repositories/media'
+import { clearResolvedPathCache } from '../server/resolvePathCache'
 
 const ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',
@@ -329,6 +329,18 @@ async function checkRenameDiskSpace(prepared: PreparedRenameItem): Promise<DiskS
 }
 
 module.exports = {
+  ERROR_CODES,
+  moveFile,
+  prepareMoveItems,
+  prepareRename,
+  checkBatchDiskSpace,
+  checkRenameDiskSpace,
+  estimateSeconds,
+  isCrossDevice,
+  getFreeDiskSpace,
+}
+
+export {
   ERROR_CODES,
   moveFile,
   prepareMoveItems,

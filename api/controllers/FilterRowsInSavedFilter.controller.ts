@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createFilterRowsInSavedFiltersRepository} = require('../db/repositories/filterRowsInSavedFilters')
-
-module.exports = function (db: ApiDb) {
+import { createFilterRowsInSavedFiltersRepository } from '../db/repositories/filterRowsInSavedFilters'
+export default function (db: ApiDb) {
   const filterRowsInSavedFiltersRepo = createFilterRowsInSavedFiltersRepository(db.drizzle)
 
   const findAll = function (req: ApiRequest, res: ApiResponse) {

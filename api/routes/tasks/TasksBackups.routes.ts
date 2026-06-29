@@ -1,8 +1,11 @@
 import type { ApiDb } from '../../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const TasksBackups = require("../../controllers/tasks/TasksBackups.controller")(app, db);
-  const router = require("express").Router();
+import express from 'express'
+import createTasksBackupsController from '../../controllers/tasks/TasksBackups.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const TasksBackups = createTasksBackupsController(app, db);
+  const router = express.Router();
 
   router.get("/createBackup", TasksBackups.createBackup);
 
@@ -18,4 +21,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.post("/exportBackup", TasksBackups.exportBackup);
 
   app.use('/api/TasksBackups', router);
-};
+}

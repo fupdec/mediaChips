@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createMediaTypesInWatchedFoldersRepository} = require('../db/repositories/mediaTypesInWatchedFolders')
-
-module.exports = function (db: ApiDb) {
+import { createMediaTypesInWatchedFoldersRepository } from '../db/repositories/mediaTypesInWatchedFolders'
+export default function (db: ApiDb) {
   const mediaTypesInWatchedFoldersRepo = createMediaTypesInWatchedFoldersRepository(db.drizzle)
 
   const findAll = function (req: ApiRequest, res: ApiResponse) {

@@ -216,9 +216,6 @@ interface FolderFormData {
   selectedTypes: number[]
 }
 
-interface OpenDialogResult {
-  filePaths?: string[]
-}
 
 const appStore = useAppStore()
 const watcherStore = useWatcherStore()
@@ -294,7 +291,7 @@ const chooseDirectory = async () => {
   if (!isElectron || !window.electronAPI?.invoke) return
 
   try {
-    const result = await window.electronAPI.invoke('showOpenDialog', ['openDirectory']) as OpenDialogResult
+    const result = await window.electronAPI.invoke('showOpenDialog', ['openDirectory'])
     if (result?.filePaths?.length) {
       folderData.value.path = result.filePaths[0]
       // Set default name from path if not specified

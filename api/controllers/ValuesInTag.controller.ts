@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createValuesInTagRepository} = require('../db/repositories/valuesInTag')
-
-module.exports = function (db: ApiDb) {
+import { createValuesInTagRepository } from '../db/repositories/valuesInTag'
+export default function (db: ApiDb) {
   const valuesInTagRepo = createValuesInTagRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {

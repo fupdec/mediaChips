@@ -4,16 +4,16 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 import type { SavedFilterMediaResponse, SavedFilterSummaryResponse } from '@shared/api/responses'
 import { paramString } from '../types/errors'
 
-const {
+import { createSavedFiltersRepository } from '../db/repositories/savedFilters'
+import {
   getDynamicPlaylistsBasic,
   getDynamicPlaylistsSummary,
   getSavedFilterPlaylistSummary,
   getFilteredMediaForPlayback,
   getFilteredMediaForSavedFilter,
-} = require('../services/savedFilterMedia')
-const {createSavedFiltersRepository} = require('../db/repositories/savedFilters')
+} from '../services/savedFilterMedia'
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {

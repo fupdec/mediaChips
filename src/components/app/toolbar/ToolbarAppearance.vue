@@ -201,7 +201,7 @@ interface MetaVisibilityPayload {
 const toggleMetaVisibility = async (metaItem: AssignedMeta) => {
   try {
     const data: MetaVisibilityPayload = {
-      data: {show: !Boolean(metaItem.show)},
+      data: {show: !metaItem.show},
     }
 
     if (itemsStore.type === 'tag') {

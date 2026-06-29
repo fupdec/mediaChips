@@ -1,13 +1,12 @@
 import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
-
-const path = require('path')
-const fs = require('fs')
-const {normalizeMediaPath} = require('../utils/normalizeUserPath')
-const {pathVariants} = require('./contentHash')
-const {
+import path from 'path'
+import fs from 'fs'
+import { normalizeMediaPath } from '../utils/normalizeUserPath'
+import { pathVariants } from './contentHash'
+import {
   getCachedResolvedPath,
   setCachedResolvedPath,
-} = require('../../app/server/resolvePathCache')
+} from '../../app/server/resolvePathCache'
 
 function resolveExistingPath(candidates: string[]): string | null {
   for (const candidate of candidates) {

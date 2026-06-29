@@ -1,5 +1,5 @@
-const path = require('path')
-const {pathVariants} = require('../services/contentHash')
+import path from 'path'
+import { pathVariants } from '../services/contentHash'
 
 function normalizeUserPath(value: unknown): unknown {
   if (value == null || typeof value !== 'string') return value
@@ -79,6 +79,14 @@ function isPathInsideFolder(filePath: string, folderPath: string): boolean {
 }
 
 module.exports = {
+  normalizeUserPath,
+  normalizeMediaPath,
+  pathsEquivalent,
+  buildPathLookupVariants,
+  isPathInsideFolder,
+}
+
+export {
   normalizeUserPath,
   normalizeMediaPath,
   pathsEquivalent,

@@ -1,18 +1,19 @@
-import type { ApiDb } from '../types/db'
+import type { ApiDb, FilterLike } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import type { DeleteEntityOnePayload, EntityUpdatePayload } from '@shared/api/responses'
 import type { CreateTagPayload, TagItemsListRequest } from '@shared/api/payloads'
 import { getRequestBody } from '../types/http'
-const {parseItemsFromDb, filterItems} = require('../../app/tasks/items.js')
-const {
+import { createTagsRepository, type TagInsert } from '../db/repositories/tags'
+import { createMarksRepository } from '../db/repositories/marks'
+import {
   deleteMarkGeneratedAsset,
   deleteTagGeneratedAssets,
-} = require('../services/localAssetCleanup')
-const {createTagsRepository} = require('../db/repositories/tags')
-const {createMarksRepository} = require('../db/repositories/marks')
+} from '../services/localAssetCleanup'
+import { parseItemsFromDb, filterItems } from '../../app/tasks/items'
+import type { DbItemRow } from '../../app/types/items'
 
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
   const marksRepo = createMarksRepository(db.drizzle)
   const getDbPath = () => db.path!
@@ -32,14 +33,14 @@ module.exports = function (db: ApiDb) {
 
     try {
       const data = tagsRepo.getItemsForMeta(metaId, ids)
-      const items_all = parseItemsFromDb(data)
+      const items_all = parseItemsFromDb(data as DbItemRow[])
       const items_filtered = filterItems(
-        body.filters,
+        (body.filters ?? []) as unknown as FilterLike[],
         'tags',
         items_all,
-        body.sortBy,
-        body.direction,
-        body.find_duplicates,
+        body.sortBy ?? 'id',
+        body.direction ?? 'desc',
+        body.find_duplicates ?? false,
       )
       res.status(201).send({items: items_filtered, total: items_all.length})
     } catch (err) {
@@ -99,8 +100,8 @@ module.exports = function (db: ApiDb) {
   const update = function (req: ApiRequest, res: ApiResponse) {
     try {
       const body = getRequestBody<EntityUpdatePayload>(req)
-      const silent = body.silent
-      tagsRepo.updateById(Number(req.params.id), body, {silent: Boolean(silent)})
+      const { silent, ...updates } = body
+      tagsRepo.updateById(Number(req.params.id), updates as Partial<TagInsert>, {silent: Boolean(silent)})
       res.status(201).send([1])
     } catch (err: unknown) {
       res.status(500).send({

@@ -1,13 +1,13 @@
 import type { ServerConfig } from '../types/server'
-const path = require('path')
-const fs = require('fs')
-const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
-const {pathVariants} = require('../../api/services/contentHash')
-const {
+import path from 'path'
+import fs from 'fs'
+import { normalizeMediaPath } from '../../api/utils/normalizeUserPath'
+import { pathVariants } from '../../api/services/contentHash'
+import {
   getCachedResolvedPath,
   setCachedResolvedPath,
   clearResolvedPathCache,
-} = require('./resolvePathCache')
+} from './resolvePathCache'
 import type { Request, Response } from 'express'
 
 const STREAM_MIME_TYPES = {
@@ -123,13 +123,14 @@ function createFileResolver({config, databasesPath}: FileResolverOptions) {
   }
 }
 
-function isClientAbortError(err: NodeJS.ErrnoException | null | undefined): boolean {
-  const code = err?.code
+function isClientAbortError(err: unknown): boolean {
+  const errno = err as NodeJS.ErrnoException | null | undefined
+  const code = errno?.code
   return code === 'ECONNABORTED'
     || code === 'ECONNRESET'
     || code === 'EPIPE'
     || code === 'ERR_STREAM_WRITE_AFTER_END'
-    || err?.message === 'Request aborted'
+    || errno?.message === 'Request aborted'
 }
 
 function safeJsonError(
@@ -143,6 +144,13 @@ function safeJsonError(
 }
 
 module.exports = {
+  createFileResolver,
+  isClientAbortError,
+  safeJsonError,
+  clearResolvedPathCache,
+}
+
+export {
   createFileResolver,
   isClientAbortError,
   safeJsonError,

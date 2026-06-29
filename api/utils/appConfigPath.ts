@@ -1,4 +1,4 @@
-const path = require('path')
+import path from 'path'
 
 function getAppConfigPath(): string {
   if (process.versions.electron && process.app_folder) {
@@ -11,3 +11,5 @@ function getAppConfigPath(): string {
 module.exports = {
   getAppConfigPath,
 }
+
+export { getAppConfigPath }

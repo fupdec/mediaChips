@@ -1,5 +1,5 @@
-const {spawn} = require('child_process')
-const {getFfmpegPath, getFfprobePath} = require('./ffmpegPaths')
+import { spawn } from 'child_process'
+import { getFfmpegPath, getFfprobePath } from './ffmpegPaths'
 
 interface FfprobeStream {
   codec_type?: string
@@ -173,6 +173,15 @@ async function combineVideoFrames({
 }
 
 module.exports = {
+  ffprobe,
+  runFfmpeg,
+  extractVideoFrame,
+  extractVideoThumbnail,
+  combineVideoFrames,
+  resolveThumbnailSeekSeconds,
+}
+
+export {
   ffprobe,
   runFfmpeg,
   extractVideoFrame,

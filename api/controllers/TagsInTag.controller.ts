@@ -2,9 +2,8 @@ import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createTagsInTagRepository} = require('../db/repositories/tagsInTag')
-
-module.exports = function (db: ApiDb) {
+import { createTagsInTagRepository } from '../db/repositories/tagsInTag'
+export default function (db: ApiDb) {
   const tagsInTagRepo = createTagsInTagRepository(db.drizzle)
 
   const bulkCreate = function (req: ApiRequest, res: ApiResponse) {

@@ -6,9 +6,8 @@ import type {
   MarkSortKey,
   MarkSortValue,
 } from '../types/markItems'
-
-const {createMarksRepository} = require('../db/repositories/marks')
-const {createMetaRepository} = require('../db/repositories/meta')
+import { createMarksRepository } from '../db/repositories/marks'
+import { createMetaRepository } from '../db/repositories/meta'
 
 function normalizeMark(mark: MarkLike): MarkLike {
   const json = {...mark} as MarkLike
@@ -102,7 +101,7 @@ async function loadMarkItems(db: ApiDb, options: MarkLoadOptions = {}) {
 
   const marks = marksRepo.findAllWithRelations()
 
-  const allItems = marks.map((mark: MarkLike) => normalizeMark(mark))
+  const allItems = marks.map((mark) => normalizeMark(mark as MarkLike))
   const filtered = allItems.filter((mark: MarkLike) => (
     matchesTypeFilter(mark, types) && matchesSearch(mark, search)
   ))
@@ -127,3 +126,5 @@ module.exports = {
   getMarkFilterMetas,
   loadMarkItems,
 }
+
+export { getMarkFilterMetas, loadMarkItems }

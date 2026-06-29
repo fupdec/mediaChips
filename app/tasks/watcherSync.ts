@@ -1,19 +1,18 @@
 import type { ApiDb, MediaLike } from '../../api/types/db'
-const {createMediaRepository} = require('../../api/db/repositories/media')
 import type {
   WatchedFolderEntry,
   WatchedMediaTypeEntry,
   WatcherFileEntry,
   WatcherFolderReport,
 } from '../types/websockets'
-
-const path = require('path')
-const fs = require('fs').promises
-const {
+import path from 'path'
+import { promises as fs } from 'fs'
+import { createMediaRepository } from '../../api/db/repositories/media'
+import {
   isPathInsideFolder,
   pathsEquivalent,
   normalizeMediaPath,
-} = require('../../api/utils/normalizeUserPath')
+} from '../../api/utils/normalizeUserPath'
 
 const pathsMatch = (left: string, right: string) => pathsEquivalent(left, right)
 

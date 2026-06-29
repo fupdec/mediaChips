@@ -1,17 +1,17 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
-const {getHomeMedia} = require('../services/homeMedia')
-const {getRandomMarks} = require('../services/homeMarkers')
-const {getHomeHealth} = require('../services/homeHealth')
-const {getHomeExtendedStats} = require('../services/homeExtendedStats')
-const {searchMediaByName, searchTagsByName} = require('../services/globalSearch')
+import { getHomeMedia } from '../services/homeMedia'
+import { getRandomMarks } from '../services/homeMarkers'
+import { getHomeHealth } from '../services/homeHealth'
+import { getHomeExtendedStats } from '../services/homeExtendedStats'
+import { searchMediaByName, searchTagsByName } from '../services/globalSearch'
 
 function parseLimit(value: unknown, fallback: number, max = 24) {
   return Math.min(Math.max(Number(value) || fallback, 1), max)
 }
 
-module.exports = (db: ApiDb) => {
+export default (db: ApiDb) => {
   const getMedia = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const limits = {

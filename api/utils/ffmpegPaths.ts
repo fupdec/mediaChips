@@ -1,4 +1,4 @@
-const fs = require('fs')
+import fs from 'fs'
 
 function resolveBundledBinary(modulePath: string | null | undefined): string {
   if (!modulePath) return modulePath as string
@@ -27,6 +27,12 @@ function getFfprobePath(): string {
 }
 
 module.exports = {
+  getFfmpegPath,
+  getFfprobePath,
+  resolveBundledBinary,
+}
+
+export {
   getFfmpegPath,
   getFfprobePath,
   resolveBundledBinary,

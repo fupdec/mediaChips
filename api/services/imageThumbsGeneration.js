@@ -1,20 +1,25 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = require('fs');
-const path = require('path');
-const { readdir } = require('fs/promises');
-const { resolveExistingPath } = require('./contentHash');
-const { createMediaRepository } = require('../db/repositories/media');
-const { createMediaTypesRepository } = require('../db/repositories/mediaTypes');
-const { createImageMetadataRepository } = require('../db/repositories/imageMetadata');
+exports.getImageThumbsGenerationStatus = getImageThumbsGenerationStatus;
+exports.iterateImageThumbsGeneration = iterateImageThumbsGeneration;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const promises_1 = require("fs/promises");
+const contentHash_1 = require("./contentHash");
+const media_1 = require("../db/repositories/media");
+const mediaTypes_1 = require("../db/repositories/mediaTypes");
+const imageMetadata_1 = require("../db/repositories/imageMetadata");
 async function getImageMediaTypeId(db) {
-    const mediaTypesRepo = createMediaTypesRepository(db.drizzle);
+    const mediaTypesRepo = (0, mediaTypes_1.createMediaTypesRepository)(db.drizzle);
     const imageType = mediaTypesRepo.findByType('image');
     return imageType?.id || null;
 }
-const getThumbPath = (dbPath, id) => path.join(dbPath, 'media/images/thumbs', `${id}.jpg`);
+const getThumbPath = (dbPath, id) => path_1.default.join(dbPath, 'media/images/thumbs', `${id}.jpg`);
 function hasImageThumb(dbPath, id) {
-    return fs.existsSync(getThumbPath(dbPath, id));
+    return fs_1.default.existsSync(getThumbPath(dbPath, id));
 }
 function buildStatus(total, generated) {
     return {
@@ -24,10 +29,10 @@ function buildStatus(total, generated) {
     };
 }
 async function loadGeneratedThumbIds(dbPath) {
-    const dirPath = path.join(dbPath, 'media/images/thumbs');
-    if (!fs.existsSync(dirPath))
+    const dirPath = path_1.default.join(dbPath, 'media/images/thumbs');
+    if (!fs_1.default.existsSync(dirPath))
         return new Set();
-    const files = await readdir(dirPath);
+    const files = await (0, promises_1.readdir)(dirPath);
     const ids = new Set();
     for (const file of files) {
         if (file.endsWith('.jpg')) {
@@ -37,7 +42,7 @@ async function loadGeneratedThumbIds(dbPath) {
     return ids;
 }
 async function getImageThumbsGenerationStatus(db, dbPath) {
-    const mediaRepo = createMediaRepository(db.drizzle);
+    const mediaRepo = (0, media_1.createMediaRepository)(db.drizzle);
     const imageTypeId = await getImageMediaTypeId(db);
     const [thumbIds, imageRows] = await Promise.all([
         loadGeneratedThumbIds(dbPath),
@@ -51,8 +56,8 @@ async function getImageThumbsGenerationStatus(db, dbPath) {
     return buildStatus(imageRows.length, generated);
 }
 async function generateImageThumb(db, dbPath, item, imageMedia, { force = false } = {}) {
-    const imageMetadataRepo = createImageMetadataRepository(db.drizzle);
-    const imagePath = await resolveExistingPath(String(item.path || ''));
+    const imageMetadataRepo = (0, imageMetadata_1.createImageMetadataRepository)(db.drizzle);
+    const imagePath = await (0, contentHash_1.resolveExistingPath)(String(item.path || ''));
     if (!imagePath) {
         return { status: 'missing', id: item.id, path: item.path };
     }
@@ -82,7 +87,7 @@ async function generateImageThumb(db, dbPath, item, imageMedia, { force = false 
     }
 }
 async function* iterateImageThumbsGeneration(db, dbPath, imageMedia, { shouldStop = () => false, force = false, } = {}) {
-    const mediaRepo = createMediaRepository(db.drizzle);
+    const mediaRepo = (0, media_1.createMediaRepository)(db.drizzle);
     const imageTypeId = await getImageMediaTypeId(db);
     if (!imageTypeId) {
         yield { type: 'complete', processed: 0, total: 0, created: 0, skipped: 0, missing: 0, failed: 0 };

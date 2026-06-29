@@ -189,3 +189,5 @@ const Settings = [  {
 ]
 
 export default Settings
+
+module.exports = Settings

@@ -58,7 +58,7 @@ const props = defineProps({
 
 const route = useRoute()
 
-const windowType = computed(() => !!route.query.player ? 'player' : 'main')
+const windowType = computed(() => route.query.player ? 'player' : 'main')
 
 const emit = defineEmits(['minimize', 'maximize', 'unmaximize', 'close'])
 

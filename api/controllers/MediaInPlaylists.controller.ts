@@ -2,9 +2,8 @@ import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 
-const {createMediaInPlaylistsRepository} = require('../db/repositories/mediaInPlaylists')
-
-module.exports = function (db: ApiDb) {
+import { createMediaInPlaylistsRepository } from '../db/repositories/mediaInPlaylists'
+export default function (db: ApiDb) {
   const mediaInPlaylistsRepo = createMediaInPlaylistsRepository(db.drizzle)
 
   const findAll = function (req: ApiRequest, res: ApiResponse) {

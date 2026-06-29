@@ -1,8 +1,7 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
-
-const {queryAll} = require('../db/utils/rawQuery')
-const {createPlaylistsRepository} = require('../db/repositories/playlists')
+import { queryAll } from '../db/utils/rawQuery'
+import { createPlaylistsRepository } from '../db/repositories/playlists'
 
 async function getManualPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlaylistSummary[]> {
   const playlistsRepo = createPlaylistsRepository(db.drizzle)
@@ -91,3 +90,5 @@ async function getManualPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlayli
 module.exports = {
   getManualPlaylistsSummary,
 }
+
+export { getManualPlaylistsSummary }

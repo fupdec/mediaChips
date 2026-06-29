@@ -6,9 +6,16 @@ import {
   playWhenReady,
   resolvePreviewVideoUrl,
 } from '@/services/transcodeService'
-import type { apiClient } from '@/services/apiClient'
 
-type ApiClient = typeof apiClient
+vi.mock('@/services/typedApi', () => ({
+  typedApi: {
+    getVideoPlayable: vi.fn(),
+  },
+}))
+
+import {typedApi} from '@/services/typedApi'
+
+const mockGetVideoPlayable = vi.mocked(typedApi.getVideoPlayable)
 
 describe('transcodeService urls', () => {
   const buildApiUrl = (path: string) => `http://localhost:12321${path}`
@@ -33,34 +40,40 @@ describe('transcodeService urls', () => {
 describe('resolvePreviewVideoUrl', () => {
   const buildApiUrl = (path: string) => `http://localhost:12321${path}`
 
-  it('uses live stream url when transcode is required', async () => {
-    const client = {
-      get: vi.fn().mockResolvedValue({
-        data: {transcodeRequired: true, mode: 'stream', streamPlayback: true},
-      }),
-    } as unknown as ApiClient
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
-    const url = await resolvePreviewVideoUrl(client, buildApiUrl, 15, 30)
+  it('uses live stream url when transcode is required', async () => {
+    mockGetVideoPlayable.mockResolvedValue({
+      data: {transcodeRequired: true, mode: 'stream', streamPlayback: true},
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as never,
+    })
+
+    const url = await resolvePreviewVideoUrl(buildApiUrl, 15, 30)
     expect(url).toContain('/api/video/15/transcode/stream')
     expect(url).toContain('start=30')
   })
 
   it('returns null when format is unsupported and transcode is disabled', async () => {
-    const client = {
-      get: vi.fn().mockResolvedValue({
-        data: {mode: 'unsupported', transcodeRequired: false},
-      }),
-    } as unknown as ApiClient
+    mockGetVideoPlayable.mockResolvedValue({
+      data: {mode: 'unsupported', transcodeRequired: false},
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as never,
+    })
 
-    expect(await resolvePreviewVideoUrl(client, buildApiUrl, 15)).toBeNull()
+    expect(await resolvePreviewVideoUrl(buildApiUrl, 15)).toBeNull()
   })
 
   it('falls back to direct stream url when playable check fails', async () => {
-    const client = {
-      get: vi.fn().mockRejectedValue(new Error('offline')),
-    } as unknown as ApiClient
+    mockGetVideoPlayable.mockRejectedValue(new Error('offline'))
 
-    const url = await resolvePreviewVideoUrl(client, buildApiUrl, 9)
+    const url = await resolvePreviewVideoUrl(buildApiUrl, 9)
     expect(url).toContain('/api/video/9?source=auto')
   })
 })

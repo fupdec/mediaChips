@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const ValuesInMedia = require("../controllers/ValuesInMedia.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createValuesInMediaController from '../controllers/ValuesInMedia.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const ValuesInMedia = createValuesInMediaController(db);
+  const router = express.Router();
 
   // Create a new ValuesInMedia
   router.post("/", ValuesInMedia.create);
@@ -17,4 +20,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.delete("/:id", ValuesInMedia.deleteAllValuesByMediaId);
 
   app.use('/api/ValuesInMedia', router);
-};
+}

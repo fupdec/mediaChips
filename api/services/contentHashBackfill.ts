@@ -1,7 +1,6 @@
 import type { ApiDb } from '../types/db'
-
-const {computeContentHashForPath, resolveExistingPath} = require('./contentHash')
-const {createMediaRepository} = require('../db/repositories/media')
+import { computeContentHashForPath, resolveExistingPath } from './contentHash'
+import { createMediaRepository } from '../db/repositories/media'
 
 async function getContentHashBackfillStatus(db: ApiDb) {
   const mediaRepo = createMediaRepository(db.drizzle)
@@ -47,7 +46,10 @@ async function backfillMediaContentHash(db: ApiDb, media: {id: unknown; path?: u
   }
 }
 
-async function* iterateContentHashBackfill(db: ApiDb, {shouldStop = () => false, force = false} = {}) {
+async function* iterateContentHashBackfill(
+  db: ApiDb,
+  {shouldStop = (): boolean => false, force = false}: {shouldStop?: () => boolean; force?: boolean} = {},
+) {
   const mediaRepo = createMediaRepository(db.drizzle)
   const total = mediaRepo.countForBackfill(force)
 
@@ -109,3 +111,5 @@ module.exports = {
   backfillMediaContentHash,
   iterateContentHashBackfill,
 }
+
+export { getContentHashBackfillStatus, backfillMediaContentHash, iterateContentHashBackfill }

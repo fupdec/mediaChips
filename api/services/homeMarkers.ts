@@ -1,6 +1,5 @@
 import type { ApiDb, AnyRecord } from '../types/db'
-
-const {createMarksRepository} = require('../db/repositories/marks')
+import { createMarksRepository } from '../db/repositories/marks'
 
 async function getRandomMarks(db: ApiDb, limit = 8) {
   const marksRepo = createMarksRepository(db.drizzle)
@@ -24,3 +23,5 @@ async function getRandomMarks(db: ApiDb, limit = 8) {
 module.exports = {
   getRandomMarks,
 }
+
+export { getRandomMarks }

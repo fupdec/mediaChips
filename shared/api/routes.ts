@@ -212,3 +212,15 @@ export function apiWatchedFolder(id: number | string) {
 export function apiMediaInPlaylists(id: number | string) {
   return `/api/mediaInPlaylists/${id}`
 }
+
+export function apiVideoPlayable(id: number | string) {
+  return `/api/video/${id}/playable`
+}
+
+export function apiVideoStream(id: number | string) {
+  return `/api/video/${id}`
+}
+
+export function apiVideoTranscodeStream(id: number | string) {
+  return `/api/video/${id}/transcode/stream`
+}

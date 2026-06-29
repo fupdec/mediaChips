@@ -48,3 +48,5 @@ function normalizeApiPath(url = ''): string {
 module.exports = {
   normalizeApiPath,
 }
+
+export { normalizeApiPath }

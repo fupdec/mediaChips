@@ -1,7 +1,6 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedHomeMediaResponse } from '@shared/schemas/home'
-
-const {queryAll} = require('../db/utils/rawQuery')
+import { queryAll } from '../db/utils/rawQuery'
 
 const MEDIA_HOME_SELECT = `SELECT media.id,
   media.path,
@@ -96,6 +95,13 @@ async function getHomeMedia(db: ApiDb, limits: AnyRecord = {}): Promise<ParsedHo
 }
 
 module.exports = {
+  getHomeMedia,
+  getContinueWatching,
+  getFavoriteMedia,
+  getTopViewedMedia,
+}
+
+export {
   getHomeMedia,
   getContinueWatching,
   getFavoriteMedia,

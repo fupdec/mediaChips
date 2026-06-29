@@ -2,22 +2,21 @@
 
 import _ from "lodash";
 import type { DbItemRow, ParsedItem, ParsedItemTags } from '../types/items'
-import type { AnyRecord } from '../../api/types/db'
 import type { FilterLike } from '../../api/types/db'
-const FilterCols = require('../configs/filter-cols')
-const { parseCountries } = require('../../api/utils/country')
-const { normalizeExt, parseExtList } = require('../../api/utils/ext')
+import FilterCols from '../configs/filter-cols'
+import { parseCountries } from '../../api/utils/country'
+import { normalizeExt, parseExtList } from '../../api/utils/ext'
 
 const parseItemsFromDb = (items: DbItemRow[]) => {
   const parseTagsAndValues = (item: DbItemRow): ParsedItemTags => {
-    let data: ParsedItemTags = {
+    const data: ParsedItemTags = {
       tags: [],
       values: [],
       key: `${item.id}_${Date.now()}`,
     }
 
-    let item_tags = item.media_tags || item.tag_tags;
-    let item_values = item.media_values || item.tag_values;
+    const item_tags = item.media_tags || item.tag_tags;
+    const item_values = item.media_values || item.tag_values;
 
     if (item_tags) {
       const tagRows = item_tags.split(/,(?=[^,]*\^)/).map((entry) => entry.split('^'));
@@ -40,8 +39,8 @@ const parseItemsFromDb = (items: DbItemRow[]) => {
     return data;
   }
 
-  let parsed: ParsedItem[] = []
-  for (let item of items) {
+  const parsed: ParsedItem[] = []
+  for (const item of items) {
     const parsedData = parseTagsAndValues(item);
 
     // удаляем ненужные ключи из предметов, где была строка с айдишниками
@@ -50,7 +49,7 @@ const parseItemsFromDb = (items: DbItemRow[]) => {
     delete item.tag_tags;
     delete item.tag_values;
 
-    let index = _.findIndex(parsed, {id: item.id});
+    const index = _.findIndex(parsed, {id: item.id});
     if (index > -1) {
       const existing = parsed[index]
       let tags = [...existing.tags, ...parsedData.tags]
@@ -93,31 +92,37 @@ const filterItems = (
   duplicates_by = 'filesize',
 ) => {
   // отсеиваем неактивные и без условий (в случае бага)
-  let filters = filters_all.filter((i: FilterLike) => {
+  const filters = filters_all.filter((i: FilterLike) => {
     const isActive = i.active === true || i.active === 1 || i.active === '1'
     return isActive && i.cond
   })
 
-  // Исправляем обращение к FilterCols
-  let videoCols = [];
-  if (FilterCols && FilterCols.video) {
-    videoCols = FilterCols.video.map((i: { param: string }) => i.param);
-  } else if (FilterCols.default && FilterCols.default.video) {
-    videoCols = FilterCols.default.video.map((i: { param: string }) => i.param);
+  let videoCols: string[] = [];
+  const filterCols = FilterCols as {
+    video?: Array<{ param: string }>
+    image?: Array<{ param: string }>
+    default?: { video?: Array<{ param: string }>; image?: Array<{ param: string }> }
+  }
+  if (filterCols.video) {
+    videoCols = filterCols.video.map((i) => i.param);
+  } else if (filterCols.default?.video) {
+    videoCols = filterCols.default.video.map((i) => i.param);
   }
 
-  let imageCols = [];
-  if (FilterCols && FilterCols.image) {
-    imageCols = FilterCols.image.map((i: { param: string }) => i.param);
-  } else if (FilterCols.default && FilterCols.default.image) {
-    imageCols = FilterCols.default.image.map((i: { param: string }) => i.param);
+  let imageCols: string[] = [];
+  if (filterCols.image) {
+    imageCols = filterCols.image.map((i) => i.param);
+  } else if (filterCols.default?.image) {
+    imageCols = filterCols.default.image.map((i) => i.param);
   }
 
   const mediaMetadataCols = [...new Set([...videoCols, ...imageCols])];
-  const isFilterByVideo = filters.some((i: FilterLike) => mediaMetadataCols.includes(i.param))
+  const isFilterByVideo = filters.some((i: FilterLike) => (
+    i.param != null && mediaMetadataCols.includes(String(i.param))
+  ))
   const isFilterByMetaValue = filters.some((i: FilterLike) => i.type !== 'array' && _.isNumber(i.param))
   const isFilterTypeArray = filters.some((i: FilterLike) => i.type === 'array')
-  let array_count = 0; // для подсчета фильтров с типом массив
+  const array_count = 0; // для подсчета фильтров с типом массив
 
   const filterItem = (item: ParsedItem) => {
     const compareNumber = (sign: string | undefined, filterValue: unknown, itemValue: unknown) => {
@@ -134,14 +139,14 @@ const filterItems = (
       return false
     }
 
-    let filters_matches = [];
+    const filters_matches = [];
 
-    for (let filter of filters) {
-      let by = filter.param
-      let cond = filter.cond
+    for (const filter of filters) {
+      const by = filter.param
+      const cond = filter.cond
       let val = filter.val
-      let type = filter.type
-      let flag = filter.flag
+      const type = filter.type
+      const flag = filter.flag
       let is_match = false;
       const metaId = resolveMetaId(by)
       let item_val
@@ -197,9 +202,9 @@ const filterItems = (
             tags = parseCountries(String(item.country))
           }
         } else if (by === 'ext') {
-          const normalizedExt = normalizeExt(item_val)
+          const normalizedExt = normalizeExt(item_val as string | null | undefined)
           if (normalizedExt) tags = [normalizedExt]
-          val = parseExtList(val)
+          val = parseExtList(val as string | string[] | null | undefined)
         } else if (metaId !== null) {
           tags = item.tags
             .filter((entry) => Number(entry.metaId) === metaId)
@@ -237,9 +242,9 @@ const filterItems = (
 
   if (find_duplicates) {
     const groupKey = duplicates_by === 'path' ? 'path' : 'filesize'
-    let grouped_items = _.groupBy(result, groupKey);
+    const grouped_items = _.groupBy(result, groupKey);
     let items_dups: ParsedItem[] = []
-    for (let key in grouped_items) {
+    for (const key in grouped_items) {
       if (grouped_items[key].length > 1) {
         items_dups = [...items_dups, ...grouped_items[key]];
       }
@@ -258,8 +263,9 @@ const filterItems = (
   return result;
 }
 
-// ✅ Правильный экспорт для ES модулей (Vite/Vue 3)
 export { parseItemsFromDb, filterItems };
 
-// ✅ Альтернативно можно экспортировать по умолчанию
-// export default { parseItemsFromDb, filterItems };
+module.exports = {
+  parseItemsFromDb,
+  filterItems,
+}

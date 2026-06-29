@@ -1,4 +1,4 @@
-const path = require('path')
+import path from 'path'
 
 const DIRECT_VIDEO_CONTAINERS = new Set(['.mp4', '.m4v', '.webm'])
 const DIRECT_AUDIO_CONTAINERS = new Set(['.mp3', '.m4a', '.aac', '.ogg', '.opus', '.webm', '.wav', '.flac'])

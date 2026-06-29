@@ -1,8 +1,11 @@
 import type { ApiDb } from '../types/db'
 import type { Express } from 'express'
-module.exports = (app: Express, db: ApiDb) => {
-  const MetaInMediaType = require("../controllers/MetaInMediaType.controller")(db);
-  const router = require("express").Router();
+import express from 'express'
+import createMetaInMediaTypeController from '../controllers/MetaInMediaType.controller'
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const MetaInMediaType = createMetaInMediaTypeController(db);
+  const router = express.Router();
 
   // Create a new MetaInMediaType
   router.post("/", MetaInMediaType.create);
@@ -17,4 +20,4 @@ module.exports = (app: Express, db: ApiDb) => {
   router.delete("/", MetaInMediaType.deleteOne);
 
   app.use('/api/MetaInMediaType', router);
-};
+}

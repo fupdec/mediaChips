@@ -1,16 +1,18 @@
 import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo } from '../types/server'
-const fs = require('fs')
-const path = require('path')
-const os = require('os')
-const package_json = require('../../package.json')
-const {FIXED_PORT, getBindHostForServer} = require('./constants')
-const {getBestLocalIp, getAllIps} = require('./network')
-const {isLanAccessEnabled, syncNetworkConfig} = require('./lanAccess')
-const {saveConfigFile} = require('./configFile')
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 import type { Express } from 'express'
 import type { Server } from 'http'
 import type { AddressInfo } from 'net'
+import net from 'net'
 import { errnoCode, errorMessage } from '../types/websockets'
+import { getBestLocalIp, getAllIps } from './network'
+import { isLanAccessEnabled, syncNetworkConfig } from './lanAccess'
+import { saveConfigFile } from './configFile'
+import { FIXED_PORT } from './ports'
+import { getBindHostForServer } from './constants'
+import packageJson from '../../package.json'
 
 interface ServerStarterOptions {
   app: Express
@@ -46,7 +48,6 @@ function showSystemNotification(title: string, message: string) {
 
 function isPortInUse(port: number, bindHost: string) {
   return new Promise((resolve) => {
-    const net = require('net')
     const tester = net.createServer()
       .once('error', (err: unknown) => {
         if (errnoCode(err) === 'EADDRINUSE') {
@@ -77,7 +78,7 @@ function createServerStarter({app, config, configPath, databasesPath}: ServerSta
     }
 
     saveConfigFile(configPath, config)
-    config.appVersion = package_json.version
+    config.appVersion = packageJson.version
     process.server_config = config
   }
 
@@ -93,7 +94,7 @@ function createServerStarter({app, config, configPath, databasesPath}: ServerSta
     console.log('\x1b[36m%s\x1b[0m', `   • Port:            ${actualPort}`)
     console.log('\x1b[36m%s\x1b[0m', `   • Primary IP:      ${config.ip}`)
     console.log('\x1b[36m%s\x1b[0m', `   • All IPs:         ${(config.ips ?? []).join(', ')}`)
-    console.log('\x1b[36m%s\x1b[0m', `   • Version:         ${package_json.version}`)
+    console.log('\x1b[36m%s\x1b[0m', `   • Version:         ${packageJson.version}`)
 
     const activeDb = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.active)
     if (activeDb) {
@@ -223,3 +224,5 @@ module.exports = {
   showSystemNotification,
   isPortInUse,
 }
+
+export { createServerStarter, showSystemNotification, isPortInUse }

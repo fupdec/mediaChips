@@ -9,6 +9,7 @@ declare global {
     interface Process {
       app_folder?: string
       server_config?: ServerConfig
+      resourcesPath?: string
       electron_app?: {
         getPath(name: string): string
       }

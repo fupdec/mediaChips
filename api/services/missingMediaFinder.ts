@@ -1,11 +1,10 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import type { MissingMediaSearchOptions } from '../types/missingMediaFinder'
-
-const path = require('path')
-const {readdir, stat} = require('fs/promises')
-const {computeContentHash, fileExists} = require('./contentHash')
-const {createMediaRepository} = require('../db/repositories/media')
-const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
+import path from 'path'
+import { readdir, stat } from 'fs/promises'
+import { computeContentHash, fileExists } from './contentHash'
+import { createMediaRepository } from '../db/repositories/media'
+import { createMediaTypesRepository } from '../db/repositories/mediaTypes'
 
 async function loadMissingMedia(db: ApiDb, options: MissingMediaSearchOptions = {}) {
   const mediaRepo = createMediaRepository(db.drizzle)
@@ -69,6 +68,7 @@ async function* walkMediaFiles(
 
   while (stack.length && !shouldStop()) {
     const dir = stack.pop()
+    if (!dir) continue
     let entries
 
     try {
@@ -128,7 +128,7 @@ function pickWeakCandidate(candidates: AnyRecord[], foundPath: string) {
 
   const foundBasename = path.basename(foundPath).toLowerCase()
   const basenameMatches = candidates.filter(
-    (item) => path.basename(item.path).toLowerCase() === foundBasename,
+    (item) => path.basename(String(item.path)).toLowerCase() === foundBasename,
   )
 
   if (basenameMatches.length === 1) {
@@ -358,3 +358,5 @@ module.exports = {
   loadMissingMedia,
   iterateMissingMediaSearch,
 }
+
+export { getMissingMediaStatus, loadMissingMedia, iterateMissingMediaSearch }

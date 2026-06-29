@@ -4,7 +4,16 @@ import type {
   OldIdMapping,
 } from '../../types/migration'
 import type { ApiRequest, ApiResponse } from '../../types/http'
-const fs = require("fs")
+import fs from 'fs'
+import fse from 'fs-extra'
+import path from 'path'
+import { rimraf } from 'rimraf'
+import StreamZip from 'node-stream-zip'
+import _ from 'lodash'
+import archiver from 'archiver'
+import { serializeCountries } from '../../utils/country'
+import { resetDatabaseAndRunMigrations } from '../../db/migrationRunner'
+import { importLowDbData } from '../../services/lowDbImport'
 
 function asLegacyString(value: unknown): string {
   return String(value ?? '')
@@ -13,15 +22,16 @@ function asLegacyString(value: unknown): string {
 function asLegacyRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? value as Record<string, unknown> : {}
 }
-const fse = require("fs-extra")
-const path = require('path')
-const { rimraf } = require("rimraf")
-const StreamZip = require('node-stream-zip')
-const _ = require("lodash");
-const { serializeCountries } = require('../../utils/country')
-const {resetDatabaseAndRunMigrations} = require('../../db/migrationRunner')
 
-module.exports = function (db: ApiDb) {
+function readJsonFile<T = unknown>(filePath: string): T {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8')) as T
+}
+
+function asLegacyArray(value: unknown): AnyRecord[] {
+  return Array.isArray(value) ? value as AnyRecord[] : []
+}
+
+export default function (db: ApiDb) {
   const getDbPath = () => db.path!
   const pathApp = process.app_folder
   let pathUserData;
@@ -75,8 +85,7 @@ module.exports = function (db: ApiDb) {
     // console.log('backup creation started')
     const pathBackup = path.join(getDbPath(), "/backups/" + backupName + ".zip")
     const output = fs.createWriteStream(pathBackup);
-    const archiver = require('archiver')
-    const archive = archiver("zip");
+    const archive = archiver('zip')
     console.log('Archive initialized.')
     output.on("close", async () => {
       console.log('\x1b[36m%s\x1b[0m', 'archive had created successfully.', 'color: #bada55');
@@ -146,7 +155,7 @@ module.exports = function (db: ApiDb) {
 
     // создаем заново все каталоги
     const createDefaultFoldersForDb = async () => {
-      let userDirs: AnyRecord[] = []
+      let userDirs: string[] = []
       const mediaPath = path.join(getDbPath(), 'media')
       const metaPath = path.join(getDbPath(), 'meta')
       const backupsPath = path.join(getDbPath(), 'backups')
@@ -154,14 +163,14 @@ module.exports = function (db: ApiDb) {
       const imagePath = path.join(mediaPath, 'images')
       const audioPath = path.join(mediaPath, 'audios')
       const textPath = path.join(mediaPath, 'texts')
-      let videoDirs = ['thumbs', 'marks', 'grids', 'timelines'].map((dirName: string) => (
+      const videoDirs = ['thumbs', 'marks', 'grids', 'timelines'].map((dirName: string) => (
         path.join(videoPath, dirName)
       ))
       userDirs = [...userDirs, ...[getDbPath(), mediaPath, metaPath, backupsPath]]
       userDirs = [...userDirs, ...[videoPath, imagePath, audioPath, textPath]]
       userDirs = [...userDirs, ...videoDirs]
 
-      for (let i of userDirs) {
+      for (const i of userDirs) {
         if (!fs.existsSync(i))
           try {
             fs.mkdirSync(i)
@@ -204,13 +213,13 @@ module.exports = function (db: ApiDb) {
 
     function createImportObject(): Promise<LowDbImportObject> {
       return new Promise((resolve) => {
-        const Videos = require(path.join(tempPath, 'databases', 'dbv.json'))
-        const Playlists = require(path.join(tempPath, 'databases', 'dbpl.json'))
-        const Marks = require(path.join(tempPath, 'databases', 'dbm.json'))
-        const Meta = require(path.join(tempPath, 'databases', 'meta.json'))
-        const Settings = require(path.join(tempPath, 'dbs.json'))
+        const Videos = readJsonFile(path.join(tempPath, 'databases', 'dbv.json')) as AnyRecord
+        const Playlists = readJsonFile(path.join(tempPath, 'databases', 'dbpl.json')) as AnyRecord
+        const Marks = readJsonFile(path.join(tempPath, 'databases', 'dbm.json')) as AnyRecord
+        const Meta = readJsonFile(path.join(tempPath, 'databases', 'meta.json')) as AnyRecord
+        const Settings = readJsonFile(path.join(tempPath, 'dbs.json')) as AnyRecord
 
-        let obj: LowDbImportObject = {
+        const obj: LowDbImportObject = {
           meta: [],
           tags: [],
           videos: [],
@@ -223,7 +232,7 @@ module.exports = function (db: ApiDb) {
           settings: Settings,
           watchedFolders: []
         }
-        obj.videos = Videos.videos.map((i: AnyRecord) => {
+        obj.videos = asLegacyArray(Videos.videos).map((i: AnyRecord) => {
           const pathStr = asLegacyString(i.path)
           const baseName = pathStr ? (pathStr.split('\\').pop()?.split('/').pop() ?? '') : ''
           return {
@@ -242,7 +251,7 @@ module.exports = function (db: ApiDb) {
             updatedAt: (new Date(asLegacyString(i.edit)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
           }
         })
-        obj.videoMetadata = Videos.videos.map((i: AnyRecord) => {
+        obj.videoMetadata = asLegacyArray(Videos.videos).map((i: AnyRecord) => {
           const resolution = asLegacyString(i.resolution)
           return {
             oldId: i.id,
@@ -251,7 +260,7 @@ module.exports = function (db: ApiDb) {
             height: +(resolution.match(/x(.*)/)?.[1] || 0),
           }
         })
-        obj.playlists = Playlists.playlists.map((i: AnyRecord) => ({
+        obj.playlists = asLegacyArray(Playlists.playlists).map((i: AnyRecord) => ({
           oldId: i.id,
           name: i.name,
           favorite: i.favorite || false,
@@ -259,7 +268,7 @@ module.exports = function (db: ApiDb) {
           createdAt: (new Date(asLegacyString(i.date)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
           updatedAt: (new Date(asLegacyString(i.edit)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
         }))
-        obj.marks = Marks.markers.map((i: AnyRecord) => {
+        obj.marks = asLegacyArray(Marks.markers).map((i: AnyRecord) => {
           const markType = asLegacyString(i.type).toLowerCase()
           const isFavoriteOrBookmark = ['favorite', 'bookmark'].includes(markType)
           return {
@@ -271,18 +280,19 @@ module.exports = function (db: ApiDb) {
           }
         })
         // get meta
-        for (let m of Meta.meta) {
+        for (const m of asLegacyArray(Meta.meta)) {
+          const settings = asLegacyRecord(m.settings)
           if (m.type === 'specific') continue
           if (m.type === 'simple') {
-            let sm = {
+            const sm = {
               oldId: m.id,
               type: m.dataType,
-              name: m.settings.name,
-              nameSingular: m.settings.name || null,
-              icon: m.settings.icon || 'shape',
-              hint: m.settings.hint || null,
-              createdAt: (new Date(m.date).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
-              updatedAt: (new Date(m.edit).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
+              name: settings.name,
+              nameSingular: settings.name || null,
+              icon: settings.icon || 'shape',
+              hint: settings.hint || null,
+              createdAt: (new Date(asLegacyString(m.date)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
+              updatedAt: (new Date(asLegacyString(m.edit)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
               metaSetting: {
                 ...{
                   "oldId": m.id,
@@ -303,7 +313,7 @@ module.exports = function (db: ApiDb) {
                   "nested": false,
                   "marks": false,
                 },
-                ...m.settings
+                ...settings
               },
               pageSetting: m.dataType == "array" ? {
                 page: 1
@@ -311,7 +321,7 @@ module.exports = function (db: ApiDb) {
             }
             obj.meta.push(sm)
             if (m.dataType === 'array') {
-              let tags = m.settings.items.map((i: AnyRecord) => ({
+              const tags = asLegacyArray(settings.items).map((i: AnyRecord) => ({
                 oldId: i.id,
                 name: i.name,
               }))
@@ -320,22 +330,22 @@ module.exports = function (db: ApiDb) {
               })
             }
           } else if (m.type === 'complex') {
-            let cm: AnyRecord = {
+            const cm: AnyRecord = {
               oldId: m.id,
               type: 'array',
-              name: m.settings.name,
-              nameSingular: m.settings.nameSingular,
-              icon: m.settings.icon || 'shape',
-              hint: m.settings.hint || null,
-              createdAt: (new Date(m.date).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
-              updatedAt: (new Date(m.edit).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
+              name: settings.name,
+              nameSingular: settings.nameSingular,
+              icon: settings.icon || 'shape',
+              hint: settings.hint || null,
+              createdAt: (new Date(asLegacyString(m.date)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
+              updatedAt: (new Date(asLegacyString(m.edit)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
             }
-            let metaSettings = m.settings
+            const metaSettings = {...settings}
             if (metaSettings.metaInCard) {
               obj.pinnedMeta.push({
                 metaId: m.id,
-                pinnedMetaId: metaSettings.metaInCard.map((i: AnyRecord) => i.id),
-                scraperField: metaSettings.metaInCard.map((i: AnyRecord) => i.scraperField),
+                pinnedMetaId: asLegacyArray(metaSettings.metaInCard).map((i: AnyRecord) => i.id),
+                scraperField: asLegacyArray(metaSettings.metaInCard).map((i: AnyRecord) => i.scraperField),
               })
             }
             delete metaSettings.metaInCard
@@ -346,7 +356,7 @@ module.exports = function (db: ApiDb) {
               page: 1
             }
             obj.meta.push(cm)
-            let cards = Meta.cards.filter((card: AnyRecord) => card.metaId == m.id).map((i: AnyRecord) => {
+            const cards = asLegacyArray(Meta.cards).filter((card: AnyRecord) => card.metaId == m.id).map((i: AnyRecord) => {
               const meta = asLegacyRecord(i.meta)
               const synonyms = meta.synonyms
               return {
@@ -356,27 +366,28 @@ module.exports = function (db: ApiDb) {
                 rating: meta.rating || 0,
                 favorite: meta.favorite || false,
                 bookmark: meta.bookmark || null,
-                country: serializeCountries(meta.country),
+                country: serializeCountries(meta.country as string[] | null | undefined),
                 color: meta.color || null,
                 views: i.views || 0,
                 createdAt: (new Date(asLegacyString(i.date)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
                 updatedAt: (new Date(asLegacyString(i.edit)).toISOString()).replace('T', ' ').replace('Z', ' +00:00'),
               }
             })
-            for (let z of cards) {
-              for (let y in z) {
-                if (typeof z[y] == 'string' && z[y].length == 0) delete z[y]
-                else if (z[y] === 0 || z[y] === '0') delete z[y]
-                else if (z[y] === null) delete z[y]
+            for (const z of cards) {
+              const card = z as AnyRecord
+              for (const y in card) {
+                if (typeof card[y] == 'string' && String(card[y]).length == 0) delete card[y]
+                else if (card[y] === 0 || card[y] === '0') delete card[y]
+                else if (card[y] === null) delete card[y]
               }
             }
               obj.tags.push({
                 [String(m.id)]: cards
               })
             const metaKeys = ['name', 'synonyms', 'favorite', 'rating', 'bookmark', 'country', 'color']
-            Meta.cards.filter((card: AnyRecord) => card.metaId == m.id).map((i: AnyRecord) => {
+            asLegacyArray(Meta.cards).filter((card: AnyRecord) => card.metaId == m.id).map((i: AnyRecord) => {
               const cardMeta = asLegacyRecord(i.meta)
-              let metas = Object.fromEntries(Object.entries(cardMeta).filter(([key]) => !metaKeys.includes(key)))
+              const metas = Object.fromEntries(Object.entries(cardMeta).filter(([key]) => !metaKeys.includes(key)))
               obj.metaInTags.push({
                 [String(i.id)]: metas
               })
@@ -385,17 +396,17 @@ module.exports = function (db: ApiDb) {
         }
         // get videos meta values and meta tags
         const videoKeys = ['path', 'duration', 'size', 'rating', 'favorite', 'date', 'resolution', 'edit', 'views', 'viewed', 'bookmark']
-        obj.onlyMeta = Videos.videos.map((i: AnyRecord) =>
+        obj.onlyMeta = asLegacyArray(Videos.videos).map((i: AnyRecord) =>
           Object.fromEntries(Object.entries(i).filter(([key]) => !videoKeys.includes(key)))
         )
-        for (let z of obj.onlyMeta) {
-          for (let y in z) {
+        for (const z of obj.onlyMeta) {
+          for (const y in z) {
             if (typeof z[y] == 'string' && z[y].length == 0) delete z[y]
             else if (z[y] === 0 || z[y] === '0') delete z[y]
             else if (z[y] === null) delete z[y]
           }
         }
-        obj.watchedFolders = Settings.folders
+        obj.watchedFolders = asLegacyArray(Settings.folders)
         resolve(obj)
       })
     }
@@ -410,14 +421,12 @@ module.exports = function (db: ApiDb) {
     console.log('Current data in tables was cleared')
     console.log('\x1b[36m%s\x1b[0m', 'Migrations applied.', 'color: #bada55');
 
-    const {importLowDbData} = require('../../services/lowDbImport')
-
     try {
       const {mediaIds, metaIds, tagsIds} = await importLowDbData(db, obj)
 
-      for (let id of metaIds) { // creating folders for meta images
-        let folderMetaOldId = path.join(metaNew, id.oldId)
-        let folderMetaNewId = path.join(metaNew, `${id.id}`)
+      for (const id of metaIds) { // creating folders for meta images
+        const folderMetaOldId = path.join(metaNew, String(id.oldId))
+        const folderMetaNewId = path.join(metaNew, `${id.id}`)
 
         if (fs.existsSync(folderMetaOldId))
           fs.renameSync(folderMetaOldId, folderMetaNewId)
@@ -439,10 +448,10 @@ module.exports = function (db: ApiDb) {
 
       function replaceMetaId(name: string) {
         const types = ["_main", "_alt", "_custom1", "_custom2", "_avatar", "_header"]
-        for (let type of types) {
+        for (const type of types) {
           if (!name.includes(type)) continue
-          let oldId = name.replace(type, '')
-          let found = tagsIds.find((x: OldIdMapping) => x.oldId === oldId)
+          const oldId = name.replace(type, '')
+          const found = tagsIds.find((x: OldIdMapping) => x.oldId === oldId)
           if (!found) continue
           name = found.id + type
           break
@@ -450,12 +459,12 @@ module.exports = function (db: ApiDb) {
         return name
       }
 
-      for (let imgPath of tree) { // renaming meta images
+      for (const imgPath of tree) { // renaming meta images
         // getting image name with type from path e.g. _main, _alt, _custom1
-        let nameOld = path.basename(imgPath, path.extname(imgPath))
+        const nameOld = path.basename(imgPath, path.extname(imgPath))
         // finding new id of meta
-        let nameNew = replaceMetaId(nameOld)
-        let newPath = imgPath.replace(nameOld, nameNew)
+        const nameNew = replaceMetaId(nameOld)
+        const newPath = imgPath.replace(nameOld, nameNew)
         if (fs.existsSync(imgPath)) fs.renameSync(imgPath, newPath)
       }
 
@@ -465,15 +474,15 @@ module.exports = function (db: ApiDb) {
       console.log('Renaming media files...');
 
       function replaceMediaId(name: string) {
-        let found = mediaIds.find((x: OldIdMapping) => x.oldId === name)
+        const found = mediaIds.find((x: OldIdMapping) => x.oldId === name)
         if (found) return found.id
         else return name
       }
 
-      for (let imgPath of tree) { // renaming media images
-        let nameOld = path.basename(imgPath, path.extname(imgPath))
-        let nameNew = String(replaceMediaId(nameOld))
-        let newPath = imgPath.replace(nameOld, nameNew)
+      for (const imgPath of tree) { // renaming media images
+        const nameOld = path.basename(imgPath, path.extname(imgPath))
+        const nameNew = String(replaceMediaId(nameOld))
+        const newPath = imgPath.replace(nameOld, nameNew)
         if (fs.existsSync(imgPath)) fs.renameSync(imgPath, newPath)
       }
       console.log('\x1b[36m%s\x1b[0m', 'Media files had renamed successfully.', 'color: #bada55');

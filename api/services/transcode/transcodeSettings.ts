@@ -1,3 +1,5 @@
+import { createSettingsRepository } from '../../db/repositories/settings'
+
 const DEFAULTS = {
   transcodeUnsupportedFormats: '1',
   transcodeMaxHeight: '1080',
@@ -19,7 +21,7 @@ async function getTranscodeSettings(db: TranscodeDb | null | undefined): Promise
   }
 
   try {
-    const rows = require('../../db/repositories/settings').createSettingsRepository(db.drizzle)
+    const rows = createSettingsRepository(db.drizzle)
       .findByOptions(Object.keys(DEFAULTS))
 
     for (const row of rows) {
@@ -54,6 +56,14 @@ function parseMaxHeightOverride(value: unknown): number | null | undefined {
 }
 
 module.exports = {
+  DEFAULTS,
+  getTranscodeSettings,
+  isTranscodeEnabled,
+  getMaxHeight,
+  parseMaxHeightOverride,
+}
+
+export {
   DEFAULTS,
   getTranscodeSettings,
   isTranscodeEnabled,

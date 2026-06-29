@@ -1,161 +1,132 @@
 import type { ApiDb } from '../types/db'
-import type { Express } from 'express'
+import type { Express, RequestHandler, Router } from 'express'
 import { apiErrorMessage, apiErrorStack } from '../types/errors'
-module.exports = (app: Express, db: ApiDb) => {
-  const router = require("express").Router();
+import express from 'express'
+import { validateBody, validateQuery } from '../middleware/validateBody'
+import {
+  PathPayloadSchema,
+  AddMediaRequestSchema,
+  ParsePathTagsRequestSchema,
+  RenameFileRequestSchema,
+  OpenPathRequestSchema,
+  GetFileListRequestSchema,
+  UpdateMediaInfoRequestSchema,
+  SearchMediaByPathRequestSchema,
+  UpdateMediaMultipleRequestSchema,
+  DatabaseSizesRequestSchema,
+  DeleteDbRequestSchema,
+  FolderSizeRequestSchema,
+  ClearDataRequestSchema,
+  CreateThumbRequestSchema,
+  CreateImageRequestSchema,
+  CreateMarkThumbRequestSchema,
+  VideoPreviewTaskRequestSchema,
+  SuggestTagsRequestSchema,
+  BackupNameRequestSchema,
+} from '../../shared/schemas/requests'
+import createTaskController from '../controllers/Task.controller'
+import createTaskVideoCoreController from '../controllers/taskVideoCore.controller'
+import createTasksMigrateFromLowDbController from '../controllers/tasks/TasksMigrateFromLowDb.controller'
 
-  let Task;
+type TaskHandlers = Record<string, RequestHandler | undefined>
+
+export default function registerRoutes(app: Express, db: ApiDb) {
+  const router = express.Router()
+
+  let Task: TaskHandlers
   try {
-    Task = require("../controllers/Task.controller")(db);
+    Task = createTaskController(db)
   } catch (err) {
     console.error(
       'Task.controller unavailable, using video core fallback:',
       apiErrorStack(err) || apiErrorMessage(err),
-    );
-    Task = require("../controllers/taskVideoCore.controller")(db);
+    )
+    Task = createTaskVideoCoreController(db)
   }
 
-  let TasksMigrateFromLowDb = null;
+  let TasksMigrateFromLowDb: TaskHandlers | null = null
   try {
-    TasksMigrateFromLowDb = require("../controllers/tasks/TasksMigrateFromLowDb.controller")(db);
+    TasksMigrateFromLowDb = createTasksMigrateFromLowDbController(db) as unknown as TaskHandlers
   } catch (err) {
     console.error(
       'Migration Task routes unavailable:',
       apiErrorStack(err) || apiErrorMessage(err),
-    );
+    )
   }
 
   if (TasksMigrateFromLowDb) {
-    // проверяем есть ли старая БД
-    router.post("/checkDataForMigrateFromLowDb", TasksMigrateFromLowDb.checkDataForMigrateFromLowDb);
-
-    // удалить все данные со старой версией БД
-    router.post("/cleanLowDb", TasksMigrateFromLowDb.cleanDataLowDb);
-
-    // создать бэкап со старой БД
-    router.post("/createBackupLowDb", TasksMigrateFromLowDb.createBackupLowDb);
-
-    // ...и мигрируем
-    router.post("/migrateFromLowDb", TasksMigrateFromLowDb.migrateFromLowDb);
+    router.post('/checkDataForMigrateFromLowDb', TasksMigrateFromLowDb.checkDataForMigrateFromLowDb!)
+    router.post('/cleanLowDb', TasksMigrateFromLowDb.cleanDataLowDb!)
+    router.post('/createBackupLowDb', TasksMigrateFromLowDb.createBackupLowDb!)
+    router.post('/migrateFromLowDb', TasksMigrateFromLowDb.migrateFromLowDb!)
   }
 
-  const register = (method: keyof import('express').Router, route: string, handler: string) => {
-    if (typeof Task?.[handler] === 'function') {
-      router[method](route, Task[handler]);
-    }
-  };
+  const register = (
+    method: 'get' | 'post',
+    route: string,
+    handler: string,
+    middleware?: RequestHandler | RequestHandler[],
+  ) => {
+    const taskHandler = Task[handler]
+    if (typeof taskHandler !== 'function') return
+    const middlewares = Array.isArray(middleware) ? middleware : middleware ? [middleware] : []
+    const routeHandler = router[method].bind(router) as Router['post']
+    routeHandler(route, ...middlewares, taskHandler)
+  }
 
-  // check if file exists on local machine
-  register('post', "/checkFileExists", 'checkFileExists');
+  register('post', '/checkFileExists', 'checkFileExists', validateBody(PathPayloadSchema))
+  register('post', '/renameFile', 'renameFile', validateBody(RenameFileRequestSchema))
+  register('post', '/openPath', 'openPath', validateBody(OpenPathRequestSchema))
+  register('post', '/getFileList', 'getFileList', validateBody(GetFileListRequestSchema))
 
-  // rename File
-  register('post', "/renameFile", 'renameFile');
+  register('post', '/addMedia', 'addMedia', validateBody(AddMediaRequestSchema))
+  register('post', '/addMediaVideo', 'addMediaVideo', validateBody(AddMediaRequestSchema))
+  register('post', '/addMediaImage', 'addMediaImage', validateBody(AddMediaRequestSchema))
+  register('post', '/addMediaAudio', 'addMediaAudio', validateBody(AddMediaRequestSchema))
+  register('post', '/addMediaText', 'addMediaText', validateBody(AddMediaRequestSchema))
 
-  // open folder in file explorer
-  register('post', "/openPath", 'openPath');
+  register('post', '/updateMediaInfo', 'updateMediaInfo', validateBody(UpdateMediaInfoRequestSchema))
+  register('post', '/createThumbForVideo', 'createThumbForVideo', validateBody(VideoPreviewTaskRequestSchema))
+  register('post', '/createThumb', 'createThumb', validateBody(CreateThumbRequestSchema))
+  register('post', '/createMarkThumbForMark', 'createMarkThumbForMark', validateBody(CreateMarkThumbRequestSchema))
+  register('post', '/createGrid', 'createGrid', validateBody(VideoPreviewTaskRequestSchema))
+  register('post', '/createTimeline', 'createTimeline', validateBody(VideoPreviewTaskRequestSchema))
 
-  // getting file list with specific extension in directory
-  register('post', "/getFileList", 'getFileList');
+  register('get', '/getConfig', 'getConfig')
+  register('get', '/getMachineId', 'getMachineId')
 
-  // adding media to database (type-specific post-processing is resolved from req.body.type)
-  register('post', "/addMedia", 'addMedia');
+  register('post', '/createImage', 'createImage', validateBody(CreateImageRequestSchema))
+  register('post', '/deleteFile', 'deleteFile', validateBody(PathPayloadSchema))
+  register('post', '/deleteDb', 'deleteDb', validateBody(DeleteDbRequestSchema))
+  register('post', '/getDatabaseSizes', 'getDatabaseSizes', validateBody(DatabaseSizesRequestSchema))
+  register('post', '/getFolderSize', 'getFolderSize', validateBody(FolderSizeRequestSchema))
+  register('post', '/clearData', 'clearData', validateBody(ClearDataRequestSchema))
+  register('post', '/searchMediaByPath', 'searchMediaByPath', validateBody(SearchMediaByPathRequestSchema))
+  register('post', '/updateMediaMultiple', 'updateMediaMultiple', validateBody(UpdateMediaMultipleRequestSchema))
 
-  // legacy aliases — delegate to addMedia
-  register('post', "/addMediaVideo", 'addMediaVideo');
-  register('post', "/addMediaImage", 'addMediaImage');
-  register('post', "/addMediaAudio", 'addMediaAudio');
-  register('post', "/addMediaText", 'addMediaText');
+  register('get', '/getMostPopularWordsFromMedia', 'getMostPopularWordsFromMedia')
+  register('get', '/suggestTagsFromPaths', 'suggestTagsFromPaths', validateQuery(SuggestTagsRequestSchema))
+  register('post', '/suggestTagsFromPaths', 'suggestTagsFromPaths', validateBody(SuggestTagsRequestSchema))
+  register('post', '/suggestTagsFromVideoFrames', 'suggestTagsFromVideoFrames', validateBody(SuggestTagsRequestSchema))
+  register('post', '/streamVideoObjectRecognition', 'streamVideoObjectRecognition', validateBody(SuggestTagsRequestSchema))
 
-  // обновить информацию о файле
-  register('post', "/updateMediaInfo", 'updateMediaInfo');
+  register('get', '/clipModelStatus', 'clipModelStatus')
+  register('post', '/downloadClipModel', 'downloadClipModel', validateBody(BackupNameRequestSchema))
 
-  // creating default thumbnail for video
-  register('post', "/createThumbForVideo", 'createThumbForVideo');
+  register('post', '/parsePathTags', 'parsePathTags', validateBody(ParsePathTagsRequestSchema))
 
-  // creating thumbnail for video
-  register('post', "/createThumb", 'createThumb');
+  register('get', '/parserStatus', 'parserStatus')
+  register('post', '/downloadParserModel', 'downloadParserModel', validateBody(BackupNameRequestSchema))
 
-  // creating thumbnail for player marker
-  register('post', "/createMarkThumbForMark", 'createMarkThumbForMark');
+  register('get', '/contentHashBackfillStatus', 'contentHashBackfillStatus')
+  register('post', '/streamContentHashBackfill', 'streamContentHashBackfill')
+  register('get', '/videoImagesGenerationStatus', 'videoImagesGenerationStatus')
+  register('post', '/streamVideoImagesGeneration', 'streamVideoImagesGeneration')
+  register('get', '/imageThumbsGenerationStatus', 'imageThumbsGenerationStatus')
+  register('post', '/streamImageThumbsGeneration', 'streamImageThumbsGeneration')
+  register('get', '/missingMediaStatus', 'missingMediaStatus')
+  register('post', '/streamFindMissingMedia', 'streamFindMissingMedia')
+  register('post', '/relinkMissingMedia', 'relinkMissingMedia')
 
-  // creating frames grid for video
-  register('post', "/createGrid", 'createGrid');
-
-  // creating frames timeline for video
-  register('post', "/createTimeline", 'createTimeline');
-
-  // check serial key
-  register('get', "/getConfig", 'getConfig');
-
-  // check serial key
-  register('get', "/getMachineId", 'getMachineId');
-
-  // creating image that recived from cropper
-  register('post', "/createImage", 'createImage');
-
-  // deleting file from database
-  register('post', "/deleteFile", 'deleteFile');
-
-  // deleting database
-  register('post', "/deleteDb", 'deleteDb');
-
-  // get database sizes
-  register('post', "/getDatabaseSizes", 'getDatabaseSizes');
-
-  // get folder Size
-  register('post', "/getFolderSize", 'getFolderSize');
-
-  // clear images, tables
-  register('post', "/clearData", 'clearData');
-
-  // search media file by path
-  register('post', "/searchMediaByPath", 'searchMediaByPath');
-
-  // update multiple media files
-  register('post', "/updateMediaMultiple", 'updateMediaMultiple');
-
-  // получить список популярных слов
-  register('get', "/getMostPopularWordsFromMedia", 'getMostPopularWordsFromMedia');
-
-  // suggest tags from tokenized media paths
-  register('get', "/suggestTagsFromPaths", 'suggestTagsFromPaths');
-  register('post', "/suggestTagsFromPaths", 'suggestTagsFromPaths');
-
-  // suggest localized tags by classifying extracted video frames with local CLIP
-  register('post', "/suggestTagsFromVideoFrames", 'suggestTagsFromVideoFrames');
-  register('post', "/streamVideoObjectRecognition", 'streamVideoObjectRecognition');
-
-  // check local CLIP model state for video object recognition
-  register('get', "/clipModelStatus", 'clipModelStatus');
-
-  // download and warm up the local CLIP model
-  register('post', "/downloadClipModel", 'downloadClipModel');
-
-  // parse tags from one or more file paths
-  register('post', "/parsePathTags", 'parsePathTags');
-
-  // check local parser model state
-  register('get', "/parserStatus", 'parserStatus');
-
-  // download and warm up the local parser model
-  register('post', "/downloadParserModel", 'downloadParserModel');
-
-  // content hash backfill for existing media
-  register('get', "/contentHashBackfillStatus", 'contentHashBackfillStatus');
-  register('post', "/streamContentHashBackfill", 'streamContentHashBackfill');
-
-  // batch generation of video preview images
-  register('get', "/videoImagesGenerationStatus", 'videoImagesGenerationStatus');
-  register('post', "/streamVideoImagesGeneration", 'streamVideoImagesGeneration');
-
-  // batch generation of image thumbnails
-  register('get', "/imageThumbsGenerationStatus", 'imageThumbsGenerationStatus');
-  register('post', "/streamImageThumbsGeneration", 'streamImageThumbsGeneration');
-
-  // find and relink missing media files on disk
-  register('get', "/missingMediaStatus", 'missingMediaStatus');
-  register('post', "/streamFindMissingMedia", 'streamFindMissingMedia');
-  register('post', "/relinkMissingMedia", 'relinkMissingMedia');
-
-  app.use('/api/Task', router);
-};
+  app.use('/api/Task', router)
+}

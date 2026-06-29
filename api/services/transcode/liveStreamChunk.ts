@@ -37,6 +37,14 @@ function getNextChunkStart(
   return next
 }
 
+export {
+  LIVE_STREAM_CHUNK_SECONDS,
+  LIVE_STREAM_PREFETCH_SECONDS,
+  getChunkStart,
+  getChunkDuration,
+  getNextChunkStart,
+}
+
 module.exports = {
   LIVE_STREAM_CHUNK_SECONDS,
   LIVE_STREAM_PREFETCH_SECONDS,

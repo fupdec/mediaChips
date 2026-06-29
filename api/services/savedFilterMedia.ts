@@ -5,28 +5,29 @@ import type {
   SavedFilterMediaOptions,
   TagsByRowIdMap,
 } from '../types/savedFilterMedia'
+import type { MediaId } from '../types/mediaFilter'
 import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 import type { SavedFilterMediaResponse, SavedFilterSummaryResponse } from '@shared/api/responses'
-
-const {parseCountries} = require('../utils/country')
-const {normalizeMetaIdParam} = require('../utils/metaId')
-const {parseExtList} = require('../utils/ext')
-const {
+import type { MediaItem } from '@shared/entities/media'
+import { parseCountries } from '../utils/country'
+import { normalizeMetaIdParam } from '../utils/metaId'
+import { parseExtList } from '../utils/ext'
+import {
   loadFilteredMediaIds,
   loadMediaPlaylistItems,
   getFilteredMediaSummary,
-} = require('./mediaItemsLoader')
-const {createSavedFiltersRepository} = require('../db/repositories/savedFilters')
-const {createFilterRowsInSavedFiltersRepository} = require('../db/repositories/filterRowsInSavedFilters')
-const {createFilterRowsRepository} = require('../db/repositories/filterRows')
-const {createTagsInFilterRowsRepository} = require('../db/repositories/tagsInFilterRows')
-const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
+} from './mediaItemsLoader'
+import { createSavedFiltersRepository } from '../db/repositories/savedFilters'
+import { createFilterRowsInSavedFiltersRepository } from '../db/repositories/filterRowsInSavedFilters'
+import { createFilterRowsRepository } from '../db/repositories/filterRows'
+import { createTagsInFilterRowsRepository } from '../db/repositories/tagsInFilterRows'
+import { createMediaTypesRepository } from '../db/repositories/mediaTypes'
 
 function normalizeFilterRow(row: FilterLike, tagsByRowId: TagsByRowIdMap | null = null): FilterLike {
   const normalized: FilterLike = {...row}
 
   if (normalized.param != null) {
-    normalized.param = normalizeMetaIdParam(normalized.param)
+    normalized.param = normalizeMetaIdParam(normalized.param) as FilterLike['param']
   }
 
   if (normalized.type === 'number' || normalized.type === 'rating') {
@@ -43,9 +44,9 @@ function normalizeFilterRow(row: FilterLike, tagsByRowId: TagsByRowIdMap | null 
     const tags = tagsByRowId?.get(Number(normalized.id)) || []
     normalized.val = tags.map((tag) => tag.tagId)
   } else if (normalized.param === 'country' && normalized.val) {
-    normalized.val = parseCountries(normalized.val)
+    normalized.val = parseCountries(String(normalized.val))
   } else if (normalized.param === 'ext' && normalized.val) {
-    normalized.val = parseExtList(normalized.val)
+    normalized.val = parseExtList(normalized.val as string | string[] | null | undefined)
   }
 
   const {createdAt, updatedAt, ...cleaned} = normalized
@@ -135,16 +136,16 @@ async function getFilteredMediaForSavedFilter(
     duplicates_by: 'filesize',
   })
 
-  const targetIds = previewLimit
+  const targetIds = (previewLimit
     ? idsResult.ids.slice(0, previewLimit)
-    : idsResult.ids
+    : idsResult.ids) as MediaId[]
 
   const items = await loadMediaPlaylistItems(db, targetIds)
 
   return {
-    items,
+    items: items as MediaItem[],
     count: idsResult.totalFiltered,
-    previewIds: idsResult.ids.slice(0, 4),
+    previewIds: idsResult.ids.slice(0, 4).map((id) => Number(id)),
   }
 }
 
@@ -171,10 +172,10 @@ async function getSavedFilterPlaylistSummary(
     filters,
     sortBy,
     direction,
-    previewLimit,
+    previewLimit: previewLimit ?? undefined,
     find_duplicates: false,
     duplicates_by: 'filesize',
-  })
+  }) as Promise<SavedFilterSummaryResponse>
 }
 
 async function getDynamicPlaylistsBasic(db: ApiDb): Promise<SavedFilterBasic[]> {
@@ -250,15 +251,26 @@ async function getFilteredMediaForPlayback(
     duplicates_by: 'filesize',
   })
 
-  const items = await loadMediaPlaylistItems(db, idsResult.ids)
+  const items = await loadMediaPlaylistItems(db, idsResult.ids as MediaId[])
 
   return {
-    items,
+    items: items as MediaItem[],
     count: idsResult.totalFiltered,
   }
 }
 
 module.exports = {
+  getDynamicPlaylistsBasic,
+  getDynamicPlaylistsSummary,
+  getSavedFilterPlaylistSummary,
+  getFilteredMediaForPlayback,
+  getFilteredMediaForSavedFilter,
+  getVideoMediaTypeId,
+  loadSavedFilterRows,
+  loadSavedFilterRowsBatch,
+}
+
+export {
   getDynamicPlaylistsBasic,
   getDynamicPlaylistsSummary,
   getSavedFilterPlaylistSummary,

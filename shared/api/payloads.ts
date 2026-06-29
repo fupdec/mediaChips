@@ -242,10 +242,19 @@ export interface MarkItemsRequestPayload {
 }
 
 export interface BulkMetaApplyPayload {
-  metaId?: number
-  tagIds?: number[]
-  mediaIds?: number[]
-  [key: string]: unknown
+  itemType: 'media' | 'tag'
+  itemIds: Array<number | string>
+  changes?: Array<{
+    editType?: number | string
+    metaId?: number | string
+    metaType?: string
+    value?: unknown
+  }>
+  presetChanges?: Array<{
+    editType?: number | string
+    field?: string
+    value?: unknown
+  }>
 }
 
 export interface ConfigUpdatePayload {

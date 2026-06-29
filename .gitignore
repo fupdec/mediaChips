@@ -22,6 +22,7 @@ node_modules
 .editorconfig
 server.log
 /public/config.json
+/public/config.json.bak
 .project
 yarn.lock
 *.tsbuildinfo

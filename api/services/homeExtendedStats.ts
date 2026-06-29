@@ -1,8 +1,7 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedExtendedStats } from '@shared/schemas/home'
-
-const {queryAll, queryGet} = require('../db/utils/rawQuery')
-const {createMediaRepository} = require('../db/repositories/media')
+import { queryAll, queryGet } from '../db/utils/rawQuery'
+import { createMediaRepository } from '../db/repositories/media'
 
 async function getHomeExtendedStats(db: ApiDb): Promise<ParsedExtendedStats> {
   const mediaRepo = createMediaRepository(db.drizzle)
@@ -102,3 +101,5 @@ async function getHomeExtendedStats(db: ApiDb): Promise<ParsedExtendedStats> {
 module.exports = {
   getHomeExtendedStats,
 }
+
+export { getHomeExtendedStats }

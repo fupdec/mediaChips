@@ -1,24 +1,23 @@
 import type {Request, Response} from 'express'
-
-const fs = require('fs')
-const path = require('path')
-const {ffprobe} = require('../../utils/ffmpeg')
-const {analyzeProbeResult} = require('./codecCompatibility')
-const {
+import fs from 'fs'
+import path from 'path'
+import { ffprobe } from '../../utils/ffmpeg'
+import { analyzeProbeResult } from './codecCompatibility'
+import {
   resolveExistingCache,
   getCacheStats,
   clearCache,
-} = require('./transcodeCache')
-const {
+} from './transcodeCache'
+import {
   getTranscodeSettings,
   isTranscodeEnabled,
   getMaxHeight,
-} = require('./transcodeSettings')
-const {createLiveStreamRegistry} = require('./liveStreamTranscode')
-const {
+} from './transcodeSettings'
+import { createLiveStreamRegistry } from './liveStreamTranscode'
+import {
   getChunkStart,
   getChunkDuration,
-} = require('./liveStreamChunk')
+} from './liveStreamChunk'
 
 const AUDIO_EXTENSIONS = new Set([
   '.mp3', '.wav', '.flac', '.ogg', '.m4a', '.aac', '.opus', '.wma',
@@ -101,8 +100,12 @@ function createTranscodeManager({databasesPath, getActiveDbId, db}: TranscodeMan
     const audioOnly = isAudioFilePath(filePath)
     const probe = await ffprobe(filePath)
     const duration = Number(probe.format?.duration || 0)
+    const analyzed = analyzeProbeResult(probe, filePath, {audioOnly})
     const result: PlayabilityResult = {
-      ...analyzeProbeResult(probe, filePath, {audioOnly}),
+      playable: analyzed.playable,
+      reason: analyzed.reason,
+      videoCodec: analyzed.videoCodec ?? null,
+      audioCodec: analyzed.audioCodec ?? null,
       duration,
     }
     setPlayabilityCacheEntry(cacheKey, result)
@@ -198,6 +201,10 @@ function createTranscodeManager({databasesPath, getActiveDbId, db}: TranscodeMan
     const audioOnly = options.audioOnly ?? isAudioFilePath(filePath)
     const maxHeight = options.maxHeight ?? getMaxHeight(settings)
     const dbId = getActiveDbId()
+    if (!dbId) {
+      res.status(404).json({message: 'No active database'})
+      return
+    }
     const cacheInfo = resolveExistingCache(databasesPath, dbId, filePath)
 
     if (!cacheInfo) {
@@ -277,3 +284,5 @@ module.exports = {
   createTranscodeManager,
   isAudioFilePath,
 }
+
+export { createTranscodeManager, isAudioFilePath }

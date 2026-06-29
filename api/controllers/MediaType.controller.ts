@@ -5,15 +5,23 @@ import { getRequestBody } from '../types/http'
 import type { MediaTypeWritePayload } from '@shared/api/payloads'
 import { paramString } from '../types/errors'
 
-const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
+import { createMediaTypesRepository, type MediaTypeInsert } from '../db/repositories/mediaTypes'
 
-module.exports = function (db: ApiDb) {
+function normalizeMediaTypePayload(body: MediaTypeWritePayload): Partial<MediaTypeInsert> {
+  const { hidden, ...rest } = body
+  return {
+    ...rest,
+    ...(hidden !== undefined ? { hidden: Boolean(hidden) } : {}),
+  }
+}
+
+export default function (db: ApiDb) {
   const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {
     try {
       const body = getRequestBody<MediaTypeWritePayload>(req)
-      const data = mediaTypesRepo.create(body)
+      const data = mediaTypesRepo.create(normalizeMediaTypePayload(body))
       res.status(201).send(data)
     } catch (err: unknown) {
       res.status(500).send({
@@ -47,7 +55,7 @@ module.exports = function (db: ApiDb) {
   const update = function (req: ApiRequest, res: ApiResponse) {
     try {
       const body = getRequestBody<MediaTypeWritePayload>(req)
-      mediaTypesRepo.updateById(parseInt(paramString(req.params.id), 10), body)
+      mediaTypesRepo.updateById(parseInt(paramString(req.params.id), 10), normalizeMediaTypePayload(body))
       res.sendStatus(201)
     } catch (err: unknown) {
       res.status(500).send({

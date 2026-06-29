@@ -4,9 +4,8 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 import type { TabCreatePayload, TabUpdatePayload } from '@shared/api/payloads'
 import { getRequestBody } from '../types/http'
 
-const {createTabsRepository} = require('../db/repositories/tabs')
-
-module.exports = function (db: ApiDb) {
+import { createTabsRepository } from '../db/repositories/tabs'
+export default function (db: ApiDb) {
   const tabsRepo = createTabsRepository(db.drizzle)
 
   const create = function (req: ApiRequest, res: ApiResponse) {

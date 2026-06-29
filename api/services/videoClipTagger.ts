@@ -11,17 +11,16 @@ import type {
   ClipTagSuggestionSample,
   ExtractFramesResult,
 } from '../types/videoClipTagger'
-
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
-const {extractVideoFrame, ffprobe} = require('../utils/ffmpeg')
-const {
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
+import { extractVideoFrame, ffprobe } from '../utils/ffmpeg'
+import {
   getLocalizedLabel,
   getPromptEntries,
   tags,
-} = require('./videoClipTagDictionary')
-const {createTagsRepository} = require('../db/repositories/tags')
+} from './videoClipTagDictionary'
+import { createTagsRepository } from '../db/repositories/tags'
 
 const CLIP_MODEL = 'Xenova/clip-vit-base-patch32'
 
@@ -417,6 +416,16 @@ async function classifyMedia(
 }
 
 module.exports = {
+  CLIP_MODEL,
+  aggregateFrameResults,
+  classifyMedia,
+  getStatus,
+  hasDownloadedModel,
+  loadModel,
+  suggestTagsFromVideoFrames,
+}
+
+export {
   CLIP_MODEL,
   aggregateFrameResults,
   classifyMedia,

@@ -75,4 +75,10 @@ module.exports = {
   clearResolvedPathCache,
 }
 
-export {}
+export {
+  ResolvePathCache,
+  getCachedResolvedPath,
+  setCachedResolvedPath,
+  invalidateResolvedPath,
+  clearResolvedPathCache,
+}

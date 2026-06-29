@@ -1,17 +1,17 @@
 import type { ApiDb } from '../types/db'
 import type { ApiRequest, ApiResponse } from '../types/http'
-const createTaskControllerShared = require('./tasks/taskControllerShared')
-const createTasksFileController = require('./tasks/TasksFile.controller')
-const createTasksMediaController = require('./tasks/TasksMedia.controller')
-const createTasksVideoPreviewController = require('./tasks/TasksVideoPreview.controller')
-const createTasksDatabaseController = require('./tasks/TasksDatabase.controller')
-const createTasksTaggingController = require('./tasks/TasksTagging.controller')
-const createTasksMaintenanceController = require('./tasks/TasksMaintenance.controller')
+import createTaskControllerShared from './tasks/taskControllerShared'
+import createTasksFileController from './tasks/TasksFile.controller'
+import createTasksMediaController from './tasks/TasksMedia.controller'
+import createTasksVideoPreviewController from './tasks/TasksVideoPreview.controller'
+import createTasksDatabaseController from './tasks/TasksDatabase.controller'
+import createTasksTaggingController from './tasks/TasksTagging.controller'
+import createTasksMaintenanceController from './tasks/TasksMaintenance.controller'
 
-module.exports = function (db: ApiDb) {
+export default function createTaskController(db: ApiDb) {
   const shared = createTaskControllerShared(db)
 
-  const importSavedFilters = (req: ApiRequest, res: ApiResponse) => {
+  const importSavedFilters = (_req: ApiRequest, _res: ApiResponse) => {
     // res.status(201).send(_saved_filters.savedFilters)
   }
 

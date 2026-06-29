@@ -1,5 +1,16 @@
 import { z } from 'zod'
 
+export const coercedBooleanSchema = z.union([
+  z.boolean(),
+  z.number(),
+  z.null(),
+  z.enum(['0', '1', 'true', 'false', 'TRUE', 'FALSE']),
+]).transform((value) => (
+  value === true || value === 1 || value === '1' || value === 'true' || value === 'TRUE'
+))
+
+export const optionalCoercedBooleanSchema = coercedBooleanSchema.optional()
+
 export const MediaTypeSchema = z.object({
   id: z.number(),
   type: z.string().optional(),
@@ -61,10 +72,10 @@ export const FilterObjectSchema = z.object({
   cond: z.string().nullable(),
   val: z.unknown().default(null),
   note: z.string().nullable(),
-  active: z.boolean(),
-  lock: z.boolean(),
-  removed: z.boolean().optional(),
-  metaId: z.number().optional(),
+  active: coercedBooleanSchema,
+  lock: coercedBooleanSchema,
+  removed: coercedBooleanSchema.optional(),
+  metaId: z.number().nullable().optional(),
 })
 
 export const MediaItemSchema = z.object({

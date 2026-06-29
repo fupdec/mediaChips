@@ -4,14 +4,13 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { Meta, MetaWritePayload } from '@shared/entities/meta'
 import { paramString } from '../types/errors'
-const fs = require("fs")
-const path = require('path')
+import { createMetaRepository } from '../db/repositories/meta'
+import fs from 'fs'
+import path from 'path'
 
-const {createMetaRepository} = require('../db/repositories/meta')
-
-module.exports = function (db: ApiDb) {
+export default function (db: ApiDb) {
   const metaRepo = createMetaRepository(db.drizzle)
-  const metaFolder = path.join(db.path, 'meta')
+  const metaFolder = path.join(db.path ?? '', 'meta')
 
   const create = function (req: ApiRequest, res: ApiResponse) {
     try {
@@ -80,7 +79,7 @@ module.exports = function (db: ApiDb) {
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     try {
       metaRepo.deleteById(Number(req.params.id))
-      const dir = path.join(metaFolder, req.params.id)
+      const dir = path.join(metaFolder, paramString(req.params.id))
       fs.rmSync(dir, {
         recursive: true,
         force: true

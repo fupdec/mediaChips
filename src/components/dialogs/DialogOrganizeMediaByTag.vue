@@ -152,9 +152,6 @@ interface MediaTagLink {
   tagId?: number
 }
 
-interface OpenDialogResult {
-  filePaths?: string[]
-}
 
 const {smAndDown} = useDisplay()
 const {t} = useI18n()
@@ -227,7 +224,7 @@ const remove = (meta: Meta, index: number) => {
 
 const chooseDir = async () => {
   try {
-    const result = await window.electronAPI?.invoke?.('showOpenDialog', ['openDirectory']) as OpenDialogResult | undefined
+    const result = await window.electronAPI?.invoke?.('showOpenDialog', ['openDirectory'])
     if (result?.filePaths?.length) {
       root_folder.value = result.filePaths[0] ?? null
       getExample()
