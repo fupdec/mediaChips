@@ -6,6 +6,7 @@ const path = require('path')
 const {readdir, stat} = require('fs/promises')
 const {getContentHashBackfillStatus} = require('./contentHashBackfill')
 const {getVideoImagesGenerationStatus} = require('./videoImagesGeneration')
+const {getImageThumbsGenerationStatus} = require('./imageThumbsGeneration')
 
 async function getDirectorySize(directory: string) {
   if (!fs.existsSync(directory)) return 0
@@ -78,17 +79,24 @@ async function getDuplicateCounts(db: ApiDb) {
 
 async function getHomeHealth(db: ApiDb): Promise<ParsedHomeHealth> {
   const dbPath = db.path
-  const [duplicates, contentHash, generatedImages, database] = await Promise.all([
+  const [duplicates, contentHash, videoImages, imageThumbs, database] = await Promise.all([
     getDuplicateCounts(db),
     getContentHashBackfillStatus(db),
-    getVideoImagesGenerationStatus(db, dbPath).then(summarizeGeneratedImagesStatus),
+    getVideoImagesGenerationStatus(db, dbPath),
+    getImageThumbsGenerationStatus(db, dbPath),
     getActiveDatabaseSize(db),
   ])
+
+  const generatedImages = summarizeGeneratedImagesStatus({
+    ...videoImages,
+    'image-thumbs': imageThumbs,
+  })
 
   return {
     duplicates,
     contentHash,
     generatedImages,
+    imageThumbs,
     database,
   } as ParsedHomeHealth
 }

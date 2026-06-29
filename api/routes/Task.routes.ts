@@ -148,6 +148,10 @@ module.exports = (app: Express, db: ApiDb) => {
   register('get', "/videoImagesGenerationStatus", 'videoImagesGenerationStatus');
   register('post', "/streamVideoImagesGeneration", 'streamVideoImagesGeneration');
 
+  // batch generation of image thumbnails
+  register('get', "/imageThumbsGenerationStatus", 'imageThumbsGenerationStatus');
+  register('post', "/streamImageThumbsGeneration", 'streamImageThumbsGeneration');
+
   // find and relink missing media files on disk
   register('get', "/missingMediaStatus", 'missingMediaStatus');
   register('post', "/streamFindMissingMedia", 'streamFindMissingMedia');

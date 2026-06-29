@@ -201,16 +201,36 @@ const visibleAlerts = computed((): HealthAlertItem[] => {
     })
   }
 
-  if (health.value.generatedImages.totalPending > 0) {
+  const videoImageTypes = ['preview', 'grid', 'timeline', 'marks']
+  const videoImagesPending = videoImageTypes.reduce(
+    (sum, key) => sum + Number(health.value.generatedImages.byType?.[key]?.pending || 0),
+    0,
+  )
+  const imageThumbsPending = Number(health.value.imageThumbs?.pending || 0)
+
+  if (videoImagesPending > 0) {
     alerts.push({
       id: 'generated-images',
       type: 'info',
       icon: 'mdi-image-off-outline',
       text: t('home.widgets.health_generated_images_pending', {
-        count: health.value.generatedImages.totalPending,
+        count: videoImagesPending,
       }),
       actionLabel: t('home.widgets.health_open_image_generation'),
       action: openImageGenerationSettings,
+    })
+  }
+
+  if (imageThumbsPending > 0) {
+    alerts.push({
+      id: 'image-thumbs',
+      type: 'info',
+      icon: 'mdi-image-outline',
+      text: t('home.widgets.health_image_thumbs_pending', {
+        count: imageThumbsPending,
+      }),
+      actionLabel: t('home.widgets.health_open_image_thumbs_generation'),
+      action: openImageThumbsGenerationSettings,
     })
   }
 
@@ -250,6 +270,16 @@ function openImageGenerationSettings() {
     query: {
       tab: 'files',
       section: 'generate_video_images',
+    },
+  })
+}
+
+function openImageThumbsGenerationSettings() {
+  router.push({
+    path: '/settings',
+    query: {
+      tab: 'files',
+      section: 'generate_image_thumbs',
     },
   })
 }

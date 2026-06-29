@@ -47,8 +47,13 @@ export const HomeHealthSchema = z.object({
     hashed: z.number(),
   }).optional(),
   generatedImages: z.object({
-    byType: z.record(z.string(), z.number()),
+    byType: z.record(z.string(), z.unknown()),
     totalPending: z.number(),
+  }).optional(),
+  imageThumbs: z.object({
+    total: z.number(),
+    generated: z.number(),
+    pending: z.number(),
   }).optional(),
   database: z.object({
     id: z.number().nullable(),

@@ -26,10 +26,17 @@ export interface ExtendedStatsUi {
   largestFiles: ExtendedStatsFileUi[]
 }
 
+export interface HomeHealthImageThumbsUi {
+  total: number
+  generated: number
+  pending: number
+}
+
 export interface HomeHealthDataUi {
   duplicates: { byFilesize: number; byContentHash: number }
   contentHash: { total: number; pending: number; hashed: number }
-  generatedImages: { byType: Record<string, number>; totalPending: number }
+  generatedImages: { byType: Record<string, unknown>; totalPending: number }
+  imageThumbs: HomeHealthImageThumbsUi
   database: { id: number | null; name: string | null; bytes: number | null }
 }
 
@@ -52,6 +59,7 @@ export function toHomeHealthUi(data: ParsedHomeHealth): HomeHealthDataUi {
     duplicates: data.duplicates ?? { byFilesize: 0, byContentHash: 0 },
     contentHash: data.contentHash ?? { total: 0, pending: 0, hashed: 0 },
     generatedImages: data.generatedImages ?? { byType: {}, totalPending: 0 },
+    imageThumbs: data.imageThumbs ?? { total: 0, generated: 0, pending: 0 },
     database: data.database ?? { id: null, name: null, bytes: null },
   }
 }
@@ -72,5 +80,6 @@ export const emptyHomeHealthUi = (): HomeHealthDataUi => ({
   duplicates: { byFilesize: 0, byContentHash: 0 },
   contentHash: { total: 0, pending: 0, hashed: 0 },
   generatedImages: { byType: {}, totalPending: 0 },
+  imageThumbs: { total: 0, generated: 0, pending: 0 },
   database: { id: null, name: null, bytes: null },
 })

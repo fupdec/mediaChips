@@ -2,6 +2,7 @@ import type { JimpImage, ProcessAndSaveImageOptions } from '../types/imageMedia'
 
 const fs = require('fs')
 const path = require('path')
+const exifr = require('exifr')
 const {Jimp} = require('jimp')
 
 const THUMB_HEIGHT = 320
@@ -12,13 +13,69 @@ async function writeJpeg(image: JimpImage, outputPath: string, quality = THUMB_J
   await fs.promises.writeFile(outputPath, buffer)
 }
 
+async function readExifOrientation(pathToFile: string): Promise<number> {
+  try {
+    const orientation = await exifr.orientation(pathToFile)
+    if (Number.isInteger(orientation) && orientation >= 1 && orientation <= 8) {
+      return orientation
+    }
+  } catch {
+    // EXIF is optional; fall back to the default orientation.
+  }
+
+  return 1
+}
+
+function getDisplayDimensions(width: number, height: number, orientation: number) {
+  if ([5, 6, 7, 8].includes(orientation)) {
+    return {width: height, height: width}
+  }
+
+  return {width, height}
+}
+
+async function applyExifOrientation(image: JimpImage, orientation: number) {
+  switch (orientation) {
+    case 2:
+      await image.flip({horizontal: true, vertical: false})
+      break
+    case 3:
+      await image.rotate(180)
+      break
+    case 4:
+      await image.flip({horizontal: false, vertical: true})
+      break
+    case 5:
+      await image.flip({horizontal: true, vertical: false})
+      await image.rotate(90)
+      break
+    case 6:
+      await image.rotate(90)
+      break
+    case 7:
+      await image.flip({horizontal: true, vertical: false})
+      await image.rotate(270)
+      break
+    case 8:
+      await image.rotate(270)
+      break
+    default:
+      break
+  }
+
+  return image
+}
+
 const getImageMetadata = async (pathToFile: string) => {
   try {
     const image = await Jimp.read(pathToFile) as JimpImage
+    const orientation = await readExifOrientation(pathToFile)
+    const display = getDisplayDimensions(image.width, image.height, orientation)
+
     return {
-      width: image.width,
-      height: image.height,
-      orientation: 1,
+      width: display.width,
+      height: display.height,
+      orientation,
     }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
@@ -36,7 +93,10 @@ const ensureImageThumbDir = (dbPath: string) => {
 const createImageThumb = async (pathToFile: string, id: string | number, dbPath: string) => {
   const outputDir = ensureImageThumbDir(dbPath)
   const outputPath = path.join(outputDir, `${id}.jpg`)
+  const orientation = await readExifOrientation(pathToFile)
   const image = await Jimp.read(pathToFile) as JimpImage
+
+  await applyExifOrientation(image, orientation)
 
   if (image.height > THUMB_HEIGHT) {
     await image.resize({h: THUMB_HEIGHT})
@@ -97,4 +157,7 @@ module.exports = {
   createImageThumb,
   ensureImageThumbDir,
   processAndSaveImage,
+  readExifOrientation,
+  applyExifOrientation,
+  getDisplayDimensions,
 }

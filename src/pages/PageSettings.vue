@@ -107,6 +107,10 @@
             </SettingsSection>
 
             <SettingsSection>
+              <SettingsGenerateImageThumbs/>
+            </SettingsSection>
+
+            <SettingsSection>
               <SettingsClearGeneratedImages/>
             </SettingsSection>
           </SettingsList>
@@ -232,6 +236,9 @@ const SettingsClearGeneratedImages = defineAsyncComponent(() =>
 const SettingsGenerateVideoImages = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsGenerateVideoImages.vue")
 )
+const SettingsGenerateImageThumbs = defineAsyncComponent(() =>
+  import("@/components/settings/database/SettingsGenerateImageThumbs.vue")
+)
 const SettingsContentHashBackfill = defineAsyncComponent(() =>
   import("@/components/settings/database/SettingsContentHashBackfill.vue")
 )
@@ -262,6 +269,7 @@ const {t} = useI18n()
 
 const SETTINGS_SECTION_IDS: Record<string, string> = {
   generate_video_images: "settings-generate-video-images",
+  generate_image_thumbs: "settings-generate-image-thumbs",
   field_pinning: "settings-meta-assignment",
   video_preview: "video_preview",
 }
@@ -295,7 +303,7 @@ function scrollToSettingsSection(sectionId: string, attempts = 12) {
 function applyRouteSettings() {
   const section = String(route.query.section || "")
 
-  if (section === "generate_video_images") {
+  if (section === "generate_video_images" || section === "generate_image_thumbs") {
     tab.value = "files"
   } else if (section === "field_pinning") {
     tab.value = "library"
