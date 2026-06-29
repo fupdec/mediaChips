@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed, ref, type HTMLAttributes} from 'vue'
 import Item from '@/components/items/Item.vue'
 import {useVirtualGridWindow} from '@/composable/useVirtualGridWindow'
 import type {MediaType} from '@/types/media'
@@ -49,7 +49,7 @@ const props = withDefaults(defineProps<{
   size?: number | string
   view?: number | string
   gapSize?: string
-  gridClasses?: string[]
+  gridClasses?: HTMLAttributes['class']
   imageGrid?: boolean
   wideImage?: boolean
   lineGrid?: boolean
@@ -63,7 +63,7 @@ const props = withDefaults(defineProps<{
   size: 3,
   view: 1,
   gapSize: 'default',
-  gridClasses: () => [],
+  gridClasses: undefined,
   imageGrid: false,
   wideImage: false,
   lineGrid: false,

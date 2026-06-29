@@ -58,8 +58,25 @@
       @jump="jumpToPage"
     />
 
+    <ItemsVirtualGrid
+      v-if="pageInitialized && ITEMS.itemsOnPage.length && useVirtualGrid"
+      :items="ITEMS.itemsOnPage"
+      :items-type="listItemType"
+      :meta="meta"
+      :media-type="mediaType"
+      :reg="reg"
+      :size="ITEMS.size"
+      :view="ITEMS.view"
+      :gap-size="SETTINGS.gapSize"
+      :grid-classes="itemsGridClasses"
+      :image-grid="isImageGrid"
+      :wide-image="isWideImage"
+      :line-grid="isLineGrid"
+      :chips-grid="isChipsGrid"
+    />
+
     <div
-      v-if="pageInitialized && ITEMS.itemsOnPage.length"
+      v-else-if="pageInitialized && ITEMS.itemsOnPage.length"
       :class="itemsGridClasses"
     >
       <Item
@@ -186,6 +203,7 @@ import type {Meta} from '@/types/stores'
 
 // Компоненты
 import Item from '@/components/items/Item.vue'
+import ItemsVirtualGrid from '@/components/items/ItemsVirtualGrid.vue'
 import Filters from '@/components/app/Filters.vue'
 import SavedFilters from '@/components/elements/FiltersSaved.vue'
 import FiltersChips from '@/components/elements/FiltersChips.vue'
@@ -200,6 +218,7 @@ import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {isVideoMediaType, isImageMediaType} from '@/utils/mediaType'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
+import {shouldUseVirtualGrid} from '@/utils/gridLayout'
 
 // Пропсы
 const props = defineProps<ItemsPageProps>()
@@ -327,6 +346,9 @@ const itemsGridClasses = computed(() => [
   {'wide-image': isWideImage.value},
   {'image-grid': isImageGrid.value},
 ])
+const useVirtualGrid = computed(() =>
+  shouldUseVirtualGrid(ITEMS.value.itemsOnPage.length, is_infinite_scroll.value),
+)
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
 const ENV = computed(() => ITEMS.value.environment)
