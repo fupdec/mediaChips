@@ -1,4 +1,4 @@
-import type { ApiDb, MediaLike } from '../../api/types/db'
+import type { ApiDb } from '../../api/types/db'
 import type {
   AppWebSocket,
   ExpressWithWs,
@@ -8,7 +8,6 @@ import type {
   RenameFileWsMessage,
   WatchedFolderEntry,
   WatcherExtensionsMap,
-  WatcherFolderReport,
   WatcherWsMessage,
   WsOutboundPayload,
 } from '../types/websockets'
@@ -16,12 +15,8 @@ import { errorMessage, asMoveError } from '../types/websockets'
 import type { Request } from 'express'
 import type { Express } from 'express'
 const path = require("path");
-const _ = require("lodash");
 const chokidar = require("chokidar");
-const fs = require('fs').promises;
-const {isPathInsideFolder, pathsEquivalent} = require('../../api/utils/normalizeUserPath');
-
-const pathsMatch = (left: string, right: string) => pathsEquivalent(left, right)
+const {WatcherSyncEngine} = require('./watcherSync');
 
 module.exports = function (app: Express, db: ApiDb) {
   require('express-ws')(app)
@@ -32,179 +27,151 @@ module.exports = function (app: Express, db: ApiDb) {
 
     let watcher: ReturnType<typeof chokidar.watch> | null = null;
     let watchedFolders: WatchedFolderEntry[] = [];
-    let filesList: WatcherFolderReport[] = [];
+    const syncEngine = new WatcherSyncEngine(db);
 
-    // Флаг для предотвращения многократной обработки
     let isProcessing = false;
-    let pendingRefresh = false;
+    let pendingFullSync = false;
+    let pendingDbRefresh = false;
+    let pendingFileEvents: Array<{ event: 'add' | 'unlink'; path: string }> = [];
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let lastFoldersConfigKey = '';
 
-    // Рекурсивная функция для поиска файлов
-    const findFilesRecursive = async (dir: string, extensions: string[], depth = 0, maxDepth = 10, allFiles: string[] = []) => {
-      if (depth > maxDepth) {
-        return allFiles;
+    const getFoldersConfigKey = (folders: WatchedFolderEntry[]) => JSON.stringify(
+      folders.map((folder) => ({
+        path: folder.path,
+        types: (folder.types || []).map((type) => ({
+          id: type.id,
+          extensions: type.extensions,
+        })),
+      })),
+    );
+
+    const sendReports = () => {
+      if (ws.readyState !== 1) {
+        return;
       }
 
-      try {
-        const files = await fs.readdir(dir);
-
-        for (const file of files) {
-          const filePath = path.join(dir, file);
-
-          try {
-            const stat = await fs.stat(filePath);
-
-            if (stat.isDirectory()) {
-              // Рекурсивно ищем в поддиректориях с увеличением глубины
-              await findFilesRecursive(filePath, extensions, depth + 1, maxDepth, allFiles);
-            } else if (stat.isFile()) {
-              const fileExt = path.extname(file).toLowerCase().slice(1);
-
-              if (extensions.length === 0 || extensions.includes(fileExt)) {
-                allFiles.push(filePath);
-              }
-            }
-          } catch (statError: unknown) {
-            console.error(`Error accessing ${filePath}:`, errorMessage(statError));
-          }
-        }
-      } catch (readdirError: unknown) {
-        console.error(`Error reading directory ${dir}:`, errorMessage(readdirError));
-      }
-
-      return allFiles;
+      const response = {
+        type: 'files',
+        data: syncEngine.getReports(),
+      };
+      ws.send(JSON.stringify(response));
     };
 
-    const getFilesList = async () => {
+    const processPendingFileEvents = () => {
+      if (!pendingFileEvents.length) {
+        return false;
+      }
+
+      const queuedEvents = pendingFileEvents;
+      pendingFileEvents = [];
+
+      let changed = false;
+      for (const fileEvent of queuedEvents) {
+        changed = syncEngine.applyFileEvent(fileEvent.event, fileEvent.path) || changed;
+      }
+
+      return changed;
+    };
+
+    const runFullSync = async () => {
       if (!watcher) {
         return;
       }
 
       if (isProcessing) {
-        pendingRefresh = true;
+        pendingFullSync = true;
         return;
       }
 
       isProcessing = true;
-      pendingRefresh = false;
+      pendingFullSync = false;
 
       try {
-        console.log('Getting files list for folders:', watchedFolders.map(f => f.path));
-
-        const newFilesList = [];
-
-        // Обрабатываем каждую отслеживаемую папку
-        for (let folder of watchedFolders) {
-          const types = folder.types || [];
-          const folderPath = folder.path;
-          let filesByType = [];
-
-          console.log(`Processing folder: ${folderPath}`);
-
-          for (let t of types) {
-            try {
-              // Получаем медиа из базы данных
-              const media = await db.Media.findAll({
-                where: {
-                  mediaTypeId: t.id
-                },
-                raw: true,
-              });
-
-              // Получаем расширения для этого типа
-              const extensions = t.extensions.split(',').map((ext: string) => ext.trim().toLowerCase()).filter(Boolean)
-
-              console.log(`Looking for files with extensions: ${extensions.join(', ')} in ${folderPath}`);
-
-              // Ищем файлы в файловой системе рекурсивно
-              const filesInFolder = await findFilesRecursive(folderPath, extensions);
-
-              console.log(`Found ${filesInFolder.length} files in filesystem for folder ${folderPath}`);
-
-              // Логируем первые несколько файлов для отладки
-              if (filesInFolder.length > 0) {
-                console.log('First 5 files found:', filesInFolder.slice(0, 5));
-              }
-
-              // Получаем файлы из базы данных для этой папки
-              const filesInDb = media
-                .filter((row: MediaLike) => row.path && isPathInsideFolder(String(row.path), folderPath))
-                .map((row: MediaLike) => ({path: String(row.path), id: row.id}));
-
-              console.log(`Found ${filesInDb.length} files in database for folder ${folderPath}`);
-
-              // Логируем первые несколько файлов из БД для отладки
-              if (filesInDb.length > 0) {
-                console.log('First 5 files from DB:', filesInDb.slice(0, 5).map((f) => f.path));
-              }
-
-              // Находим потерянные файлы (в БД, но не в файловой системе)
-              const lostFiles = filesInDb
-                .filter((entry) => !filesInFolder.some((fsPath) => pathsMatch(entry.path, fsPath)))
-                .sort((a, b) => a.path.localeCompare(b.path));
-
-              console.log(`Lost files: ${lostFiles.length}`);
-
-              // Находим новые файлы (в файловой системе, но не в БД)
-              const newFiles = filesInFolder
-                .filter((filePath) => !filesInDb.some((dbFile) => pathsMatch(dbFile.path, filePath)))
-                .sort((a, b) => a.localeCompare(b));
-
-              console.log(`New files: ${newFiles.length}`);
-
-              // Логируем первые несколько новых файлов для отладки
-              if (newFiles.length > 0) {
-                console.log('First 5 new files:', newFiles.slice(0, 5));
-              }
-
-              filesByType.push({
-                type: t,
-                lost: lostFiles,
-                new: newFiles
-              });
-            } catch (error: unknown) {
-              console.error(`Error processing type ${t.id}:`, error);
-            }
-          }
-
-          if (filesByType.length > 0) {
-            newFilesList.push({
-              folder: folder,
-              files: filesByType,
-            });
-          }
-        }
-
-        filesList = newFilesList;
-
-        // Отправляем результат клиенту
-        if (ws.readyState === 1) { // WebSocket.OPEN
-          const response = {
-            type: 'files',
-            data: filesList,
-          };
-          console.log(`Sending response with ${filesList.length} folders`);
-          ws.send(JSON.stringify(response));
-        }
+        await syncEngine.fullSync(watchedFolders);
+        sendReports();
       } catch (error: unknown) {
-        console.error('Error in getFilesList:', error);
+        console.error('Error in watcher full sync:', errorMessage(error));
       } finally {
         isProcessing = false;
-        if (pendingRefresh) {
-          pendingRefresh = false;
-          debouncedGetFilesList();
+
+        if (processPendingFileEvents()) {
+          sendReports();
+        }
+
+        if (pendingFullSync) {
+          pendingFullSync = false;
+          void runFullSync();
+        } else if (pendingDbRefresh) {
+          pendingDbRefresh = false;
+          void runDbRefresh();
         }
       }
     };
 
-    // Debounced версия getFilesList
-    const debouncedGetFilesList = () => {
+    const runDbRefresh = async () => {
+      if (!watcher) {
+        return;
+      }
+
+      if (isProcessing) {
+        pendingDbRefresh = true;
+        return;
+      }
+
+      isProcessing = true;
+
+      try {
+        syncEngine.setFolders(watchedFolders);
+        await syncEngine.refreshDbPaths();
+        sendReports();
+      } catch (error: unknown) {
+        console.error('Error in watcher db refresh:', errorMessage(error));
+      } finally {
+        isProcessing = false;
+
+        if (processPendingFileEvents()) {
+          sendReports();
+        }
+
+        if (pendingFullSync) {
+          pendingFullSync = false;
+          void runFullSync();
+        } else if (pendingDbRefresh) {
+          pendingDbRefresh = false;
+          void runDbRefresh();
+        }
+      }
+    };
+
+    const queueFileEvent = (event: 'add' | 'unlink', filePath: string) => {
+      pendingFileEvents.push({event, path: filePath});
+
+      if (isProcessing) {
+        return;
+      }
+
+      debouncedProcessFileEvents();
+    };
+
+    const processFileEvents = () => {
+      if (isProcessing) {
+        return;
+      }
+
+      const changed = processPendingFileEvents();
+      if (changed) {
+        sendReports();
+      }
+    };
+
+    const debouncedProcessFileEvents = () => {
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
       debounceTimer = setTimeout(() => {
-        getFilesList();
-      }, 500); // 500ms debounce
+        processFileEvents();
+      }, 500);
     };
 
     const startWatcher = (folders: WatchedFolderEntry[], extensions: WatcherExtensionsMap) => {
@@ -240,20 +207,14 @@ module.exports = function (app: Express, db: ApiDb) {
       // Обработчики событий с debounce
       watcher
         .on('add', (filePath: string) => {
-          console.log('File added:', filePath);
-          debouncedGetFilesList();
-        })
-        .on('change', (filePath: string) => {
-          console.log('File changed:', filePath);
-          debouncedGetFilesList();
+          queueFileEvent('add', filePath);
         })
         .on('unlink', (filePath: string) => {
-          console.log('File removed:', filePath);
-          debouncedGetFilesList();
+          queueFileEvent('unlink', filePath);
         })
         .on('ready', async () => {
-          console.log('Watcher ready, getting initial file list');
-          await getFilesList();
+          console.log('Watcher ready, running initial sync');
+          await runFullSync();
         })
         .on('error', (error: unknown) => {
           console.error('Watcher error:', error);
@@ -261,7 +222,15 @@ module.exports = function (app: Express, db: ApiDb) {
     };
 
     const updateWatcher = (folders: WatchedFolderEntry[], extensions: WatcherExtensionsMap) => {
+      const nextConfigKey = getFoldersConfigKey(folders);
+      const foldersUnchanged = Boolean(watcher && nextConfigKey === lastFoldersConfigKey);
       watchedFolders = folders;
+      lastFoldersConfigKey = nextConfigKey;
+
+      if (watcher && foldersUnchanged) {
+        void runDbRefresh();
+        return;
+      }
 
       if (watcher) {
         // Создаем маски для добавления
@@ -275,9 +244,8 @@ module.exports = function (app: Express, db: ApiDb) {
         console.log('Updating watcher with new masks:', foldersMasked);
         watcher.add(foldersMasked);
 
-        // Ждем немного и обновляем список файлов
         setTimeout(() => {
-          getFilesList();
+          void runFullSync();
         }, 1000);
       } else {
         // Если watcher не запущен, запускаем его
@@ -293,16 +261,16 @@ module.exports = function (app: Express, db: ApiDb) {
         switch (data.type) {
           case 'start':
             watchedFolders = data.folders || [];
+            lastFoldersConfigKey = getFoldersConfigKey(watchedFolders);
             console.log('Starting with folders:', watchedFolders.map((f) => f.path));
             console.log('Extensions:', JSON.stringify(data.extensions, null, 2));
             startWatcher(watchedFolders, data.extensions || {});
             break;
 
           case 'update':
-            watchedFolders = data.folders || [];
-            console.log('Updating with folders:', watchedFolders.map((f) => f.path));
+            console.log('Updating with folders:', (data.folders || []).map((f) => f.path));
             console.log('Extensions:', JSON.stringify(data.extensions, null, 2));
-            updateWatcher(watchedFolders, data.extensions || {});
+            updateWatcher(data.folders || [], data.extensions || {});
             break;
 
           case 'stop':
@@ -311,6 +279,9 @@ module.exports = function (app: Express, db: ApiDb) {
               watcher.close();
               watcher = null;
             }
+            syncEngine.reset();
+            pendingFileEvents = [];
+            lastFoldersConfigKey = '';
             if (ws.readyState === 1) {
               ws.send(JSON.stringify({
                 type: 'closed'
