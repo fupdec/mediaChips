@@ -89,14 +89,14 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, onBeforeUnmount, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import {useAppStore} from '@/stores/app'
 import {useI18n} from 'vue-i18n'
 import {useAppUpdater} from '@/composable/useAppUpdater'
 
 const appStore = useAppStore()
 const {t} = useI18n()
-const {status, lastCheckManual, ensureInitialized, check, download, install, dismiss, destroy} = useAppUpdater()
+const {status, lastCheckManual, ensureInitialized, check, download, install, dismiss} = useAppUpdater()
 
 const show = ref(false)
 const isDownloading = ref(false)
@@ -139,6 +139,14 @@ const message = computed(() => {
       return t('auto_update.error', {
         message: status.value.message || t('auto_update.error_unknown'),
       })
+    case 'disabled':
+      if (status.value.reason === 'dev') {
+        return t('auto_update.dev_hint')
+      }
+      if (status.value.reason === 'portable') {
+        return t('auto_update.portable_hint')
+      }
+      return t('auto_update.disabled_hint')
     default:
       return ''
   }
@@ -168,7 +176,7 @@ const snackbarTimeout = computed(() => {
 })
 
 const showDismiss = computed(() => (
-  ['available', 'available-manual', 'downloaded', 'downloaded-manual', 'error', 'up-to-date'].includes(status.value.state)
+  ['available', 'available-manual', 'downloaded', 'downloaded-manual', 'error', 'up-to-date', 'disabled'].includes(status.value.state)
 ))
 
 const dismissLabel = computed(() => (
@@ -181,17 +189,14 @@ const showFallbackDownload = computed(() => (
 ))
 
 watch(status, (value) => {
-  if (value.state === 'checking' && lastCheckManual.value) {
-    show.value = true
+  if (!lastCheckManual.value) {
+    if (['available', 'available-manual', 'downloading', 'downloaded', 'downloaded-manual', 'error'].includes(value.state)) {
+      show.value = true
+    }
     return
   }
 
-  if (['available', 'available-manual', 'downloading', 'downloaded', 'downloaded-manual', 'error'].includes(value.state)) {
-    show.value = true
-    return
-  }
-
-  if (value.state === 'up-to-date' && lastCheckManual.value) {
+  if (['checking', 'available', 'available-manual', 'downloading', 'downloaded', 'downloaded-manual', 'error', 'up-to-date', 'disabled'].includes(value.state)) {
     show.value = true
   }
 }, {deep: true})
@@ -226,9 +231,5 @@ onMounted(() => {
   if (appStore.isElectron && window.electronAPI?.updater) {
     ensureInitialized()
   }
-})
-
-onBeforeUnmount(() => {
-  destroy()
 })
 </script>

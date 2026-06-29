@@ -23,6 +23,7 @@
 
     <DialogDocumentation v-show="dialogsStore.documentation"/>
     <DialogFeedback v-if="dialogsStore.feedback"/>
+    <DialogFindInPage v-if="dialogsStore.findInPage.show"/>
     <DialogVersionHistory v-if="dialogsStore.versions"/>
 
     <DialogError v-if="dialogsStore.error.show"/>
@@ -126,6 +127,9 @@ const DialogDocumentation = defineAsyncComponent(() =>
 )
 const DialogFeedback = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogFeedback.vue')
+)
+const DialogFindInPage = defineAsyncComponent(() =>
+  import('@/components/dialogs/DialogFindInPage.vue')
 )
 const DialogVersionHistory = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogVersionHistory.vue')

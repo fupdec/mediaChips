@@ -14,6 +14,8 @@ export const useDialogsStore = defineStore('useDialogsStore', {
   state: () => ({
     documentation: false,
     feedback: false,
+    feedbackPreset: null as { subject?: string; message?: string } | null,
+    findInPage: { show: false },
     versions: false,
     mediaEditing: { show: false, media: null as MediaItem | null, mediaType: {} as Partial<MediaType> },
     tagEditing: { show: false, tag: null as Tag | null, meta: null as Meta | null, assigned: null as AssignedMeta[] | null, values: null as ValueInTagEntry[] | null },
@@ -62,6 +64,10 @@ export const useDialogsStore = defineStore('useDialogsStore', {
     },
     showAbout() {
       this.about.show = true
+    },
+    openFeedback(preset?: { subject?: string; message?: string }) {
+      this.feedbackPreset = preset || null
+      this.feedback = true
     },
     createPlaylistForMedia(mediaIds: number | number[]) {
       this.playlistAdd.mediaIds = Array.isArray(mediaIds) ? mediaIds : [mediaIds]

@@ -21,6 +21,8 @@ import {useMediaAdding} from '@/composable/AddingMedia'
 import {useAppUpdater} from '@/composable/useAppUpdater'
 import {useAppTheme} from '@/composable/useAppTheme'
 import {useAppZoom} from '@/composable/useAppZoom'
+import {useSystemMenuActions} from '@/composable/useSystemMenuActions'
+import type {SystemMenuAction} from '@/types/systemMenu'
 import type { GetItemsFromDbEvent, RemoveEntitiesEvent } from '@/types/itemsPage'
 
 interface UseAppBootstrapOptions {
@@ -42,6 +44,13 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   const dialogsStore = useDialogsStore()
   const eventBus = useEventBus()
   const {init: initAppUpdater} = useAppUpdater()
+  const {runSystemMenuAction} = useSystemMenuActions({
+    onLock: () => {
+      clearAuthToken()
+      void typedApi.logout().catch(() => {})
+      store.isLocked = true
+    },
+  })
   const {applyTheme} = useAppTheme()
   const {updateWatcher} = useWatcher(store.localhost)
   const {handleAddMedia, cleanupEventListeners} = useMediaAdding()
@@ -193,7 +202,11 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   }
 
   const handleShowFeedback = (): void => {
-    dialogsStore.feedback = true
+    dialogsStore.openFeedback()
+  }
+
+  const handleMenuAction = (action: unknown): void => {
+    void runSystemMenuAction(String(action) as SystemMenuAction)
   }
 
   const handleLockApp = (): void => {
@@ -220,6 +233,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   let unsubscribeAboutApp: (() => void) | void | undefined
   let unsubscribeShowDocumentation: (() => void) | void | undefined
   let unsubscribeShowFeedback: (() => void) | void | undefined
+  let unsubscribeMenuAction: (() => void) | void | undefined
   let unsubscribeLockApp: (() => void) | void | undefined
   let unsubscribeZoomChanged: (() => void) | void | undefined
   let thumbBroadcastChannel: BroadcastChannel | null = null
@@ -364,6 +378,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
       unsubscribeAboutApp = window.electronAPI?.on?.('aboutApp', handleAboutApp)
       unsubscribeShowDocumentation = window.electronAPI?.on?.('showDocumentation', handleShowDocumentation)
       unsubscribeShowFeedback = window.electronAPI?.on?.('showFeedback', handleShowFeedback)
+      unsubscribeMenuAction = window.electronAPI?.on?.('menuAction', handleMenuAction)
       unsubscribeLockApp = window.electronAPI?.on?.('lockApp', handleLockApp)
     }
   }
@@ -389,6 +404,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     unsubscribeAboutApp?.()
     unsubscribeShowDocumentation?.()
     unsubscribeShowFeedback?.()
+    unsubscribeMenuAction?.()
     unsubscribeLockApp?.()
     unsubscribeZoomChanged?.()
 

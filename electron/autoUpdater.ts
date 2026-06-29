@@ -204,6 +204,7 @@ export function initAppUpdater({getWindow}: { getWindow: GetWindowFn }): void {
 
   ipcMain.handle('updater:check', async () => {
     if (!isUpdaterSupported()) {
+      sendStatus({state: 'disabled', reason: getDisabledReason() || 'disabled'})
       return {...currentState}
     }
     try {

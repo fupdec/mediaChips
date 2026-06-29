@@ -29,7 +29,10 @@ export function useAppUpdater() {
     isSupported.value = await updater.isSupported()
 
     unsubscribeStatus = updater.onStatus((payload: UpdaterStatus) => {
-      status.value = payload
+      status.value = {
+        ...payload,
+        manualCheck: lastCheckManual.value,
+      }
     })
 
     const initial = await updater.getState()
@@ -51,11 +54,27 @@ export function useAppUpdater() {
 
   async function check({ manual = false }: { manual?: boolean } = {}) {
     await ensureInitialized()
-    if (!hasUpdaterApi()) return null
     lastCheckManual.value = manual
+
+    if (!hasUpdaterApi()) {
+      return null
+    }
+
+    if (!isSupported.value) {
+      status.value = {
+        ...status.value,
+        state: 'disabled',
+        manualCheck: manual,
+      }
+      return status.value
+    }
+
     const result = await window.electronAPI!.updater!.check()
-    status.value = result
-    return result
+    status.value = {
+      ...result,
+      manualCheck: manual,
+    }
+    return status.value
   }
 
   async function download() {
@@ -79,10 +98,7 @@ export function useAppUpdater() {
   }
 
   function destroy() {
-    unsubscribeStatus?.()
-    unsubscribeStatus = null
-    initialized = false
-    startupCheckScheduled = false
+    // Singleton composable: keep IPC listener alive for menu/About checks.
   }
 
   return {

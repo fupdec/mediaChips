@@ -272,6 +272,7 @@ const SETTINGS_SECTION_IDS: Record<string, string> = {
   generate_image_thumbs: "settings-generate-image-thumbs",
   field_pinning: "settings-meta-assignment",
   video_preview: "video_preview",
+  backups: "database_backups",
 }
 
 function resolveTab(routeTab: string) {
@@ -309,6 +310,8 @@ function applyRouteSettings() {
     tab.value = "library"
   } else if (section === "video_preview") {
     tab.value = "video"
+  } else if (section === "backups") {
+    tab.value = "database"
   } else if (route.query.tab) {
     tab.value = resolveTab(String(route.query.tab))
   }

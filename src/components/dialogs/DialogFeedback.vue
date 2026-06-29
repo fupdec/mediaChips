@@ -145,7 +145,7 @@
 
 <script setup lang="ts">
 import {apiClient} from "@/services/apiClient"
-import {computed, reactive, ref} from "vue"
+import {computed, reactive, ref, watch} from "vue"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {useDialogsStore} from "@/stores/dialogs"
@@ -168,6 +168,26 @@ const feedback = reactive({
 const isFeedbackSending = ref(false)
 const feedbackError = ref("")
 const maxScreenshotFiles = 3
+
+function applyFeedbackPreset() {
+  const preset = dialogsStore.feedbackPreset
+  feedback.subject = preset?.subject || ''
+  feedback.message = preset?.message || ''
+}
+
+watch(
+  () => dialogsStore.feedback,
+  (visible) => {
+    if (visible) {
+      applyFeedbackPreset()
+      return
+    }
+
+    feedbackError.value = ''
+    dialogsStore.feedbackPreset = null
+  },
+)
+
 const maxScreenshotSize = 5 * 1024 * 1024
 const allowedScreenshotTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"]
 const platformLabels: Record<string, string> = {

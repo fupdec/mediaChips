@@ -8,127 +8,13 @@
     app
   >
     <div class="app-menu-container">
-      <v-menu
-        bottom
-        offset-y
-        :offset="[1, -1]"
-        :transition="false"
-        min-width="150"
-        content-class="system-menu-dropdown"
-        class="system-menu"
-        :z-index="2000"
-      >
-
-      <template v-slot:activator="{ props }">
-        <v-btn
-          v-bind="props"
-          :ripple="false"
-          class="system-menu-btn"
-          height="32"
-          size="small"
-          variant="text"
-        >
-          {{ t('systemBar.menu_app') }}
-        </v-btn>
-      </template>
-
-      <v-list
-        density="compact"
-        class="context-menu"
-        :lines="false"
-        nav
-        rounded="lg"
-      >
-        <div class="wrapper">
-          <v-list-item
-            link
-            class="pr-3"
-            @click="lock"
-            :disabled="SETTINGS.passwordProtection !== '1'"
-          >
-            <v-list-item-title>
-              <v-icon class="mr-3">mdi-lock</v-icon>
-              {{ t('systemBar.lock') }}
-            </v-list-item-title>
-          </v-list-item>
-
-          <v-divider class="ma-1"/>
-
-          <v-list-item
-            link
-            class="pr-3"
-            @click="close"
-          >
-            <v-list-item-title>
-              <v-icon class="mr-3">mdi-logout</v-icon>
-              {{ t('common.exit') }}
-            </v-list-item-title>
-          </v-list-item>
-        </div>
-      </v-list>
-      </v-menu>
-
-      <v-menu
-        v-model="helpMenuOpen"
-        bottom
-        offset-y
-        :offset="[1, -1]"
-        :transition="false"
-        min-width="150"
-        content-class="system-menu-dropdown"
-        class="system-menu"
-        :z-index="2000"
-      >
-      <template v-slot:activator="{ props }">
-        <v-btn
-          v-bind="props"
-          :ripple="false"
-          class="system-menu-btn"
-          height="32"
-          size="small"
-          variant="text"
-        >
-          {{ t('systemBar.menu_help') }}
-        </v-btn>
-      </template>
-
-      <v-list
-        density="compact"
-        class="context-menu"
-        :lines="false"
-        nav
-        rounded="lg"
-      >
-        <div class="wrapper">
-          <v-list-item
-            link
-            class="pr-3"
-            @click="toggleDevTools"
-          >
-            <v-list-item-title class="system-menu-item-with-hotkey">
-              <span>
-                <v-icon class="mr-3">mdi-tools</v-icon>
-                {{ t('systemBar.toggle_dev_tools') }}
-              </span>
-              <v-hotkey keys="Ctrl+Shift+I" inline/>
-            </v-list-item-title>
-          </v-list-item>
-
-          <v-divider class="ma-1"/>
-
-          <v-list-item
-            link
-            class="pr-3"
-            @mouseup.stop="openAboutDialog"
-          >
-            <v-list-item-title>
-              <v-icon class="mr-3">mdi-information-variant</v-icon>
-              {{ t('settings.tabs.about') }}
-            </v-list-item-title>
-          </v-list-item>
-        </div>
-      </v-list>
-      </v-menu>
+      <SystemMenuDropdown
+        v-for="menu in SYSTEM_MENUS"
+        :key="menu.id"
+        :menu="menu"
+        :is-action-disabled="isActionDisabled"
+        @action="handleMenuAction"
+      />
     </div>
 
     <v-spacer></v-spacer>
@@ -138,7 +24,6 @@
     ></div>
     <v-spacer></v-spacer>
 
-    <!-- Импортируем компонент кнопок окна -->
     <WindowControls
       @minimize="minimize"
       @maximize="maximize"
@@ -150,14 +35,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted, nextTick} from 'vue'
+import {ref, computed, onMounted, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
-import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
-import {useSettingsStore} from '@/stores/settings'
-import {useDialogsStore} from '@/stores/dialogs'
 import {useHeaderBarStyle} from '@/composable/useHeaderBarStyle'
-import WindowControls from '@/components/ui/WindowControls.vue' // Импортируем компонент
+import {useSystemMenuActions} from '@/composable/useSystemMenuActions'
+import {SYSTEM_MENUS} from '@/types/systemMenu'
+import type {SystemMenuAction} from '@/types/systemMenu'
+import SystemMenuDropdown from '@/components/app/SystemMenuDropdown.vue'
+import WindowControls from '@/components/ui/WindowControls.vue'
 
 defineProps<{
   disabled?: boolean
@@ -167,28 +53,18 @@ const emit = defineEmits<{
   lock: []
 }>()
 
-// Реактивные переменные
 const maximized = ref(false)
-const helpMenuOpen = ref(false)
 
 const router = useRouter()
-const {t} = useI18n()
-
-// Хранилища Pinia
-const settingsStore = useSettingsStore()
 const appStore = useAppStore()
-const dialogsStore = useDialogsStore()
+const {runSystemMenuAction, isActionDisabled} = useSystemMenuActions({
+  onLock: () => emit('lock'),
+})
+const {colorRGBA, gradient} = useHeaderBarStyle('system')
 
-const {colorRGBA, gradient, barTheme} = useHeaderBarStyle('system')
-
-// Компьютеды
-const SETTINGS = computed(() => settingsStore)
 const app_title = computed(() => appStore.app_title || 'MediaChips')
 
-// Методы окон (теперь вызываются из WindowControls через emits)
-const minimize = () => {
-  // Эта функция вызывается через emit из WindowControls
-}
+const minimize = () => {}
 
 const maximize = () => {
   maximized.value = true
@@ -199,20 +75,11 @@ const unmaximize = () => {
 }
 
 const close = () => {
-  if (window.electronAPI?.send) {
-    window.electronAPI.send('closeApp')
-  }
+  window.electronAPI?.send?.('closeApp')
 }
 
-const lock = () => {
-  emit('lock')
-}
-
-const openAboutDialog = () => {
-  helpMenuOpen.value = false
-  nextTick(() => {
-    dialogsStore.showAbout()
-  })
+const handleMenuAction = (action: SystemMenuAction) => {
+  void runSystemMenuAction(action)
 }
 
 const back = () => {
@@ -223,13 +90,6 @@ const forward = () => {
   router.go(1)
 }
 
-const toggleDevTools = () => {
-  if (window.electronAPI?.invoke) {
-    window.electronAPI.invoke('toggleDevTools')
-  }
-}
-
-// Обработчики IPC событий
 const handleMaximize = () => {
   maximized.value = true
 }
@@ -246,7 +106,6 @@ const handleNavigationForward = () => {
   forward()
 }
 
-// Жизненный цикл
 onMounted(() => {
   if (window.electronAPI?.on) {
     window.electronAPI.on('maximize', handleMaximize)
@@ -291,7 +150,7 @@ onUnmounted(() => {
 
 .app-system-bar-title {
   position: absolute;
-  left: 120px;
+  left: 380px;
   right: 138px;
   text-align: center;
   font-size: 12px;
@@ -306,7 +165,7 @@ onUnmounted(() => {
     position: absolute;
     height: 100%;
     top: 3px;
-    left: 120px;
+    left: 380px;
     right: 138px;
     background-color: transparent;
     -webkit-app-region: drag;
@@ -331,11 +190,11 @@ onUnmounted(() => {
 }
 
 .system-menu-dropdown {
-  min-width: 150px !important;
+  min-width: 180px !important;
 }
 
 .system-bar-custom .context-menu {
-  min-width: 150px;
+  min-width: 180px;
 
   .system-menu-item-with-hotkey {
     display: flex;

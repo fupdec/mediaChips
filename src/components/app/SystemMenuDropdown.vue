@@ -1,0 +1,96 @@
+<template>
+  <v-menu
+    v-model="open"
+    bottom
+    offset-y
+    :offset="[1, -1]"
+    :transition="false"
+    min-width="180"
+    content-class="system-menu-dropdown"
+    class="system-menu"
+    :z-index="2000"
+  >
+    <template #activator="{ props: menuProps }">
+      <v-btn
+        v-bind="menuProps"
+        :ripple="false"
+        class="system-menu-btn"
+        height="32"
+        size="small"
+        variant="text"
+      >
+        {{ t(menu.labelKey) }}
+      </v-btn>
+    </template>
+
+    <v-list
+      density="compact"
+      class="context-menu"
+      :lines="false"
+      nav
+      rounded="lg"
+    >
+      <div class="wrapper">
+        <template
+          v-for="(item, index) in menu.items"
+          :key="`${menu.id}-${index}`"
+        >
+          <v-divider
+            v-if="item.divider"
+            class="ma-1"
+          />
+
+          <v-list-item
+            v-else-if="item.action"
+            link
+            class="pr-3"
+            :disabled="isActionDisabled(item.action)"
+            @mouseup.stop="handleItemClick(item.action)"
+          >
+            <v-list-item-title
+              :class="{'system-menu-item-with-hotkey': item.hotkey}"
+            >
+              <span>
+                <v-icon
+                  v-if="item.icon"
+                  class="mr-3"
+                >
+                  {{ item.icon }}
+                </v-icon>
+                {{ t(item.labelKey || '') }}
+              </span>
+              <v-hotkey
+                v-if="item.hotkey"
+                :keys="item.hotkey"
+                inline
+              />
+            </v-list-item-title>
+          </v-list-item>
+        </template>
+      </div>
+    </v-list>
+  </v-menu>
+</template>
+
+<script setup lang="ts">
+import {ref} from 'vue'
+import {useI18n} from 'vue-i18n'
+import type {SystemMenuConfig, SystemMenuAction} from '@/types/systemMenu'
+
+defineProps<{
+  menu: SystemMenuConfig
+  isActionDisabled: (action: SystemMenuAction) => boolean
+}>()
+
+const emit = defineEmits<{
+  action: [action: SystemMenuAction]
+}>()
+
+const {t} = useI18n()
+const open = ref(false)
+
+function handleItemClick(action: SystemMenuAction) {
+  open.value = false
+  emit('action', action)
+}
+</script>

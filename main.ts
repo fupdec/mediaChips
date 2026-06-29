@@ -355,36 +355,63 @@ ipcMain.handle('relaunch', () => {
   app.exit()
 })
 
+ipcMain.handle('toggleMainFullscreen', () => {
+  if (!win || win.isDestroyed()) return false
+  win.setFullScreen(!win.isFullScreen())
+  return win.isFullScreen()
+})
+
+ipcMain.handle('findInPage', async (_event: IpcMainInvokeEvent, payload: unknown) => {
+  const options = payload as { text?: string; forward?: boolean; findNext?: boolean }
+  const query = String(options?.text || '').trim()
+  if (!query || !win || win.isDestroyed()) {
+    return {matches: 0, activeMatchOrdinal: 0}
+  }
+
+  return new Promise((resolve) => {
+    const requestId = win!.webContents.findInPage(query, {
+      forward: options?.forward !== false,
+      findNext: Boolean(options?.findNext),
+    })
+
+    const onFound = (_event: Electron.Event, result: Electron.FoundInPageResult) => {
+      if (result.requestId !== requestId) return
+      win?.webContents.removeListener('found-in-page', onFound)
+      resolve(result)
+    }
+
+    win!.webContents.on('found-in-page', onFound)
+  })
+})
+
+ipcMain.handle('stopFindInPage', () => {
+  win?.webContents.stopFindInPage('clearSelection')
+})
+
+function sendMenuAction(action: string) {
+  win?.webContents.send('menuAction', action)
+}
+
+function menuActionItem(label: string, action: string, accelerator?: string) {
+  return {
+    label,
+    ...(accelerator ? {accelerator} : {}),
+    click() {
+      sendMenuAction(action)
+    },
+  }
+}
+
 let systemMenu = Menu.buildFromTemplate([
   {
-    label: 'App',
+    label: 'File',
     submenu: [
-      {
-        label: 'Lock',
-        id: 'lock',
-        enabled: true,
-        click() {
-          lockApp()
-        }
-      },
+      menuActionItem('Add Media', 'addMedia'),
       {type: 'separator'},
-      {
-        label: 'Exit',
-        accelerator: 'CommandOrControl+Q',
-        click() {
-          app.exit()
-        }
-      }
-    ]
-  },
-  {
-    label: 'View',
-    submenu: [
-      {role: 'zoomIn'},
-      {role: 'zoomOut'},
-      {role: 'resetZoom'},
+      menuActionItem('Import Backup...', 'importBackup'),
+      menuActionItem('Export Backup...', 'exportBackup'),
       {type: 'separator'},
-      {role: 'togglefullscreen'},
+      menuActionItem('Open Data Folder', 'openDataFolder'),
     ],
   },
   {
@@ -422,24 +449,64 @@ let systemMenu = Menu.buildFromTemplate([
         accelerator: 'CommandOrControl+A',
         role: 'selectAll',
       },
-    ]
+      menuActionItem('Find', 'find', 'CommandOrControl+F'),
+    ],
+  },
+  {
+    label: 'View',
+    submenu: [
+      menuActionItem('Global Search', 'globalSearch'),
+      menuActionItem('Toggle Theme', 'toggleTheme'),
+      {type: 'separator'},
+      {role: 'zoomIn'},
+      {role: 'zoomOut'},
+      {role: 'resetZoom'},
+      {type: 'separator'},
+      {role: 'togglefullscreen'},
+    ],
+  },
+  {
+    label: 'App',
+    submenu: [
+      menuActionItem('Settings', 'settings', 'CommandOrControl+,'),
+      {
+        label: 'Lock',
+        id: 'lock',
+        enabled: true,
+        click() {
+          lockApp()
+        },
+      },
+      {type: 'separator'},
+      menuActionItem('Restart', 'restart'),
+      {
+        label: 'Exit',
+        accelerator: 'CommandOrControl+Q',
+        click() {
+          app.exit()
+        },
+      },
+    ],
   },
   {
     label: 'Help',
     submenu: [
+      menuActionItem('Documentation', 'documentation'),
+      menuActionItem('Send Feedback', 'sendFeedback'),
+      menuActionItem('Keyboard Shortcuts', 'keyboardShortcuts'),
+      {type: 'separator'},
+      menuActionItem('Check for Updates', 'checkUpdates'),
+      menuActionItem('Version History', 'versionHistory'),
+      menuActionItem('Website', 'website'),
+      {type: 'separator'},
       {
         label: 'Toggle Developer Tools',
         accelerator: 'CommandOrControl+Shift+I',
         role: 'toggleDevTools',
       },
       {type: 'separator'},
-      {
-        label: 'About',
-        click() {
-          aboutApp()
-        }
-      },
-    ]
+      menuActionItem('About', 'about'),
+    ],
   },
 ])
 
@@ -448,10 +515,6 @@ Menu.setApplicationMenu(systemMenu)
 function lockApp() {
   win?.webContents.send('lockApp')
   player?.webContents.send('stop-playing-video')
-}
-
-function aboutApp() {
-  win?.webContents.send('aboutApp')
 }
 
 process.on('uncaughtException', (error: NodeJS.ErrnoException) => {
