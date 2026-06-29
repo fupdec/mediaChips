@@ -149,7 +149,3 @@ async function* iterateImageThumbsGeneration(db, dbPath, imageMedia, { shouldSto
         stopped: shouldStop(),
     };
 }
-module.exports = {
-    getImageThumbsGenerationStatus,
-    iterateImageThumbsGeneration,
-};
