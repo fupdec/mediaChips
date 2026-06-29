@@ -30,6 +30,7 @@ const currentServer: Ref<ServerInfo | null> = ref(null)
 const showManual = ref(false)
 const isDevBrowser = import.meta.env.DEV && !window.electronAPI
 let connectInFlight: Promise<void> | null = null
+let electronConfigListenerBound = false
 
 // Dedicated player window is Electron-only.
 const isPlayerWindow = ref(
@@ -178,12 +179,15 @@ async function loadConfig() {
   if (window.electronAPI) {
     console.log('⏳ Loading config from Electron...');
 
-    window.electronAPI?.on?.("config", (config: unknown) => {
-      if (!isConfigLoaded.value || isPlayerWindow.value) {
-        console.log('✅ Config received from Electron');
-        applyConfig(config as ServerConfigPayload);
-      }
-    });
+    if (!electronConfigListenerBound) {
+      electronConfigListenerBound = true
+      window.electronAPI?.on?.("config", (config: unknown) => {
+        if (!isConfigLoaded.value || isPlayerWindow.value) {
+          console.log('✅ Config received from Electron');
+          applyConfig(config as ServerConfigPayload);
+        }
+      });
+    }
 
     try {
       const config = await window.electronAPI?.invoke?.('get-config');

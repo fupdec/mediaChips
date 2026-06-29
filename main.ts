@@ -167,9 +167,6 @@ const createWindow = () => {
   bindMainWindowLoadedHandler(mainWindow)
   mainWindow.webContents.on('did-finish-load', () => {
     sendConfigToWindow(mainWindow)
-    // Renderer may mount after the first paint; resend config for late listeners.
-    setTimeout(() => sendConfigToWindow(mainWindow), 500)
-    setTimeout(() => sendConfigToWindow(mainWindow), 2000)
     setTimeout(warmupPlayerWindow, 1500)
     if (isDevelopment) {
       // mainWindow.webContents.openDevTools();

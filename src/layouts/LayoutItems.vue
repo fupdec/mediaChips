@@ -90,7 +90,6 @@
         :x="x"
       />
     </div>
-    <!-- TODO запоминать номер страницы и сохранять в БД -->
 
     <div
       v-if="pageInitialized && ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length >= ITEMS.totalFiltered && ITEMS.totalFiltered > 0"
