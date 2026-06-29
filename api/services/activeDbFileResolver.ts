@@ -4,17 +4,41 @@ const path = require('path')
 const fs = require('fs')
 const {normalizeMediaPath} = require('../utils/normalizeUserPath')
 const {pathVariants} = require('./contentHash')
+const {
+  getCachedResolvedPath,
+  setCachedResolvedPath,
+} = require('../../app/server/resolvePathCache')
+
+function resolveExistingPath(candidates: string[]): string | null {
+  for (const candidate of candidates) {
+    for (const variant of pathVariants(candidate)) {
+      if (fs.existsSync(variant)) {
+        return variant
+      }
+    }
+  }
+
+  return null
+}
 
 function resolveActiveDbFilePath(filePath: string | null | undefined, dbPath: string | null | undefined) {
   if (!filePath) return null
 
   const normalizedPath = normalizeMediaPath(filePath)
+  const cacheKey = dbPath ? `${dbPath}\0${normalizedPath}` : normalizedPath
+  const cached = getCachedResolvedPath(cacheKey)
+  if (cached) {
+    return cached
+  }
 
-  for (const variant of pathVariants(normalizedPath)) {
-    if (fs.existsSync(variant)) return variant
+  const directMatch = resolveExistingPath(pathVariants(normalizedPath))
+  if (directMatch) {
+    setCachedResolvedPath(cacheKey, directMatch)
+    return directMatch
   }
 
   if (path.isAbsolute(normalizedPath) && fs.existsSync(normalizedPath)) {
+    setCachedResolvedPath(cacheKey, normalizedPath)
     return normalizedPath
   }
 
@@ -24,21 +48,19 @@ function resolveActiveDbFilePath(filePath: string | null | undefined, dbPath: st
     .replace(/^\/+/, '')
     .replace(/^.*(?:databases|app_storage)[\\/]+[a-f0-9]{12}[\\/]+/i, '')
 
-  const possiblePaths = [
+  const resolved = resolveExistingPath([
     path.join(dbPath, 'media', cleanPath),
     path.join(dbPath, cleanPath),
     path.join(dbPath, 'meta', cleanPath),
     path.join(dbPath, 'media', normalizedPath),
     path.join(dbPath, normalizedPath),
-  ]
+  ])
 
-  for (const possiblePath of possiblePaths) {
-    for (const variant of pathVariants(possiblePath)) {
-      if (fs.existsSync(variant)) return variant
-    }
+  if (resolved) {
+    setCachedResolvedPath(cacheKey, resolved)
   }
 
-  return null
+  return resolved
 }
 
 export {resolveActiveDbFilePath}

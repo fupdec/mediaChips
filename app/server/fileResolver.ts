@@ -3,6 +3,11 @@ const path = require('path')
 const fs = require('fs')
 const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
 const {pathVariants} = require('../../api/services/contentHash')
+const {
+  getCachedResolvedPath,
+  setCachedResolvedPath,
+  clearResolvedPathCache,
+} = require('./resolvePathCache')
 import type { Request, Response } from 'express'
 
 const STREAM_MIME_TYPES = {
@@ -33,84 +38,88 @@ interface FileResolverOptions {
   databasesPath: string
 }
 
+function resolveExistingPath(candidates: string[]): string | null {
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate
+    }
+  }
+
+  return null
+}
+
+function buildDbRelativeCandidates(
+  databasesPath: string,
+  dbId: string,
+  normalizedPath: string,
+): string[] {
+  const cleanPath = normalizedPath
+    .replace(/^\/+/, '')
+    .replace(/^.*(?:databases|app_storage)[\\/]+[a-f0-9]{12}[\\/]+/i, '')
+
+  return [
+    path.join(databasesPath, dbId, 'media', cleanPath),
+    path.join(databasesPath, dbId, cleanPath),
+    path.join(databasesPath, dbId, 'meta', cleanPath),
+  ]
+}
+
 function createFileResolver({config, databasesPath}: FileResolverOptions) {
-  function resolveFilePath(filePath: string | null | undefined): string | null {
-    if (!filePath) return null
-
-    console.log('Resolving file path:', filePath)
-
+  function resolveFilePathUncached(filePath: string): string | null {
     const normalizedPath = normalizeMediaPath(filePath)
 
-    for (const variant of pathVariants(normalizedPath)) {
-      if (fs.existsSync(variant)) {
-        return variant
-      }
+    const directMatch = resolveExistingPath(pathVariants(normalizedPath))
+    if (directMatch) {
+      return directMatch
     }
 
-    if (path.isAbsolute(normalizedPath)) {
-      if (fs.existsSync(normalizedPath)) {
-        return normalizedPath
-      }
-
-      const dbIdRegex = /(?:databases|app_storage)[\\/]+([a-f0-9]{12})/i
-      const match = normalizedPath.match(dbIdRegex)
-
-      if (match) {
-        const dbIdInPath = match[1]
-        const dbExists = config.databases.find(db => db.id === dbIdInPath)
-
-        if (dbExists) {
-          console.log(`Database in path exists: ${dbIdInPath}, but file not found`)
-        }
-      }
+    if (path.isAbsolute(normalizedPath) && fs.existsSync(normalizedPath)) {
+      return normalizedPath
     }
 
     const activeDb = config.databases.find(db => db.active)
     if (activeDb) {
-      const cleanPath = normalizedPath
-        .replace(/^\/+/, '')
-        .replace(/^.*(?:databases|app_storage)[\\/]+[a-f0-9]{12}[\\/]+/i, '')
-
-      const possiblePaths = [
-        path.join(databasesPath, activeDb.id, 'media', cleanPath),
-        path.join(databasesPath, activeDb.id, cleanPath),
-        path.join(databasesPath, activeDb.id, 'meta', cleanPath),
-      ]
-
-      for (const possiblePath of possiblePaths) {
-        if (fs.existsSync(possiblePath)) {
-          console.log(`File found at path: ${possiblePath}`)
-          return possiblePath
-        }
+      const activeMatch = resolveExistingPath(
+        buildDbRelativeCandidates(databasesPath, activeDb.id, normalizedPath),
+      )
+      if (activeMatch) {
+        return activeMatch
       }
     }
 
     for (const db of config.databases) {
-      const cleanPath = normalizedPath
-        .replace(/^\/+/, '')
-        .replace(/^.*(?:databases|app_storage)[\\/]+[a-f0-9]{12}[\\/]+/i, '')
-
-      const possiblePaths = [
-        path.join(databasesPath, db.id, 'media', cleanPath),
-        path.join(databasesPath, db.id, cleanPath),
-        path.join(databasesPath, db.id, 'meta', cleanPath),
-      ]
-
-      for (const possiblePath of possiblePaths) {
-        if (fs.existsSync(possiblePath)) {
-          console.log(`File found in database ${db.name} (${db.id}): ${possiblePath}`)
-          return possiblePath
-        }
+      const dbMatch = resolveExistingPath(
+        buildDbRelativeCandidates(databasesPath, db.id, normalizedPath),
+      )
+      if (dbMatch) {
+        return dbMatch
       }
     }
 
-    console.log(`File not found: ${normalizedPath}`)
     return null
+  }
+
+  function resolveFilePath(filePath: string | null | undefined): string | null {
+    if (!filePath) return null
+
+    const cacheKey = normalizeMediaPath(filePath)
+    const cached = getCachedResolvedPath(cacheKey)
+    if (cached) {
+      return cached
+    }
+
+    const resolved = resolveFilePathUncached(filePath)
+    if (resolved) {
+      setCachedResolvedPath(cacheKey, resolved)
+    }
+
+    return resolved
   }
 
   return {
     resolveFilePath,
     getStreamContentType,
+    clearResolvedPathCache,
   }
 }
 
@@ -137,4 +146,5 @@ module.exports = {
   createFileResolver,
   isClientAbortError,
   safeJsonError,
+  clearResolvedPathCache,
 }

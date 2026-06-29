@@ -13,6 +13,7 @@ const fs = require('fs').promises
 const fssync = require('fs')
 const path = require('path')
 const { pipeline } = require('stream/promises')
+const {clearResolvedPathCache} = require('../server/resolvePathCache')
 
 const ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',
@@ -108,6 +109,7 @@ async function moveFile(
 
     await copyFileWithProgress(sourcePath, destinationPath, onProgress)
     await fs.unlink(sourcePath)
+    clearResolvedPathCache()
     return { crossDevice: true, size: fileSize }
   }
 
@@ -117,6 +119,7 @@ async function moveFile(
       const size = (await fs.stat(destinationPath)).size
       onProgress(size, size)
     }
+    clearResolvedPathCache()
     return { crossDevice: false, size: (await fs.stat(destinationPath)).size }
   } catch (error: unknown) {
     const nodeError = error as NodeJS.ErrnoException
@@ -133,6 +136,7 @@ async function moveFile(
 
       await copyFileWithProgress(sourcePath, destinationPath, onProgress)
       await fs.unlink(sourcePath)
+      clearResolvedPathCache()
       return { crossDevice: true, size: fileSize }
     }
 
