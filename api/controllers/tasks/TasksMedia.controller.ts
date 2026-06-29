@@ -19,35 +19,28 @@ const {
   pathsEquivalent,
   buildPathLookupVariants,
 } = require('../../utils/normalizeUserPath')
+const {createMediaRepository} = require('../../db/repositories/media')
+const {createMediaTypesRepository} = require('../../db/repositories/mediaTypes')
 
 module.exports = function createTasksMediaController(shared: TaskControllerShared) {
   const {
     db,
     dbPath,
-    Op,
-    Sequelize,
     withTimeout,
     getParserSettings,
     getImageMedia,
     createThumbMiddle,
   } = shared
 
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
+
   const findMediaByPath = async (pathToFile: string) => {
     const variants = buildPathLookupVariants(pathToFile)
 
     if (!variants.length) return null
 
-    return db.Media.findOne({
-      where: {
-        [Op.or]: variants.map((variant: string) => ({
-          path: Sequelize.where(
-            Sequelize.fn('LOWER', Sequelize.col('path')),
-            '=',
-            variant.toLowerCase(),
-          ),
-        })),
-      },
-    })
+    return mediaRepo.findByPathVariants(variants) ?? null
   }
 
   const addMediaToDb = async (
@@ -86,21 +79,10 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
     }
 
     if (is_check_duplicates && contentHash) {
-      let duplicate_by_hash = await db.Media.findOne({
-        where: {contentHash},
-      })
+      let duplicate_by_hash = mediaRepo.findByContentHash(contentHash)
 
       if (!duplicate_by_hash) {
-        const legacyCandidates = await db.Media.findAll({
-          where: {
-            filesize,
-            mediaTypeId: mediaType.id,
-            [Op.or]: [
-              {contentHash: null},
-              {contentHash: ''},
-            ],
-          },
-        })
+        const legacyCandidates = mediaRepo.findLegacyHashCandidates(filesize, mediaType.id)
 
         for (const candidate of legacyCandidates) {
           if (!(await fileExists(candidate.path))) {
@@ -109,10 +91,10 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
 
           try {
             const candidateHash = await computeContentHashForPath(candidate.path)
-            await candidate.update({contentHash: candidateHash})
+            mediaRepo.updateById(Number(candidate.id), {contentHash: candidateHash})
 
             if (candidateHash === contentHash) {
-              duplicate_by_hash = candidate
+              duplicate_by_hash = {...candidate, contentHash: candidateHash}
               break
             }
           } catch (error) {
@@ -138,12 +120,12 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
         if (!isSameContent) {
           try {
             const correctedHash = await computeContentHashForPath(duplicate_by_hash.path)
-            await duplicate_by_hash.update({contentHash: correctedHash})
+            mediaRepo.updateById(Number(duplicate_by_hash.id), {contentHash: correctedHash})
           } catch (error) {
             console.error(`Content hash correction failed for ${duplicate_by_hash.path}:`, apiErrorMessage(error))
           }
 
-          duplicate_by_hash = null
+          duplicate_by_hash = undefined
         }
       }
 
@@ -177,12 +159,7 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
       defaults.contentHash = contentHash
     }
 
-    const [media, isCreated] = await db.Media.findOrCreate({
-      where: {
-        path: storedPath,
-      },
-      defaults,
-    })
+    const {row: media, created: isCreated} = mediaRepo.findOrCreateByPath(storedPath, defaults)
 
     if (!isCreated) {
       return {
@@ -317,24 +294,19 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
     const media_id = req.body.id
 
     try {
-      const media = await db.Media.findOne({where: {id: media_id}})
+      const media = mediaRepo.findById(Number(media_id))
 
       if (media) {
-        const mediaType = await db.MediaType.findOne({
-          where: {id: media.mediaTypeId},
-          raw: true,
-        })
+        const mediaType = media.mediaTypeId
+          ? mediaTypesRepo.findById(media.mediaTypeId)
+          : undefined
 
         await mediaPostProcess.refreshMediaInfo(media, mediaType)
 
-        const stats = fs.statSync(String(media.dataValues?.path ?? media.path))
+        const stats = fs.statSync(String(media.path))
         const filesize = stats.size
 
-        await db.Media.update({
-          filesize,
-        }, {
-          where: {id: media_id},
-        })
+        mediaRepo.updateById(Number(media_id), {filesize})
       }
 
       res.status(201).send('success')
@@ -344,37 +316,28 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
   }
 
   const searchMediaByPath = function (req: ApiRequest, res: ApiResponse) {
-    db.Media
-      .findAll({
-        where: {
-          path: {
-            [Op.like]: `%${req.body.query}%`
-          },
-        },
+    try {
+      const data = mediaRepo.searchByPathLike(String(req.body.query || ''))
+      res.status(201).send(data as unknown as MediaPathFile[])
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then((data) => {
-        res.status(201).send(data as unknown as MediaPathFile[])
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   }
 
   const updateMediaMultiple = async function (req: ApiRequest, res: ApiResponse) {
     const mediaFiles = req.body.mediaFiles;
-    const promises = mediaFiles.map((i: AnyRecord) => {
-      return db.Media.update(i, {where: {id: i.id}});
-    });
-    await Promise.all(promises);
+    for (const item of mediaFiles) {
+      mediaRepo.updateById(Number(item.id), item)
+    }
     res.sendStatus(201);
   }
 
   const getMostPopularWordsFromMedia = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const settings = await getParserSettings()
-      const data = await db.Media.findAll({raw: true})
+      const data = mediaRepo.findAllRaw()
 
       const parsed = data.map((i: AnyRecord) => {
         const tokenized = tokenizeFilePath(i.path, {

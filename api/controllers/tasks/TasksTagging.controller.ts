@@ -7,15 +7,17 @@ const {matchPathToTags} = require('../../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../../services/tagSuggester')
 const {createTagsRepository} = require('../../db/repositories/tags')
 const {createMetaRepository} = require('../../db/repositories/meta')
+const {createMediaRepository} = require('../../db/repositories/media')
 
 module.exports = function createTasksTaggingController(shared: TaskControllerShared) {
   const {
     db,
-    Op,
     getParserSettings,
     getVideoClipTagger,
     getEmbeddingModel,
   } = shared
+
+  const mediaRepo = createMediaRepository(db.drizzle)
 
   const suggestTagsFromPaths = async (req: ApiRequest, res: ApiResponse) => {
     try {
@@ -27,7 +29,7 @@ module.exports = function createTasksTaggingController(shared: TaskControllerSha
         ? requestPaths.map((item: AnyRecord) => ({
           path: typeof item === 'string' ? item : item.path,
         })).filter((item: AnyRecord) => item.path)
-        : await db.Media.findAll({raw: true})
+        : mediaRepo.findAllRaw()
       const suggestions = await suggestTagsFromMedia(db, media, {
         ...settings,
         limit: req.query.limit ?? req.body?.limit,
@@ -53,21 +55,15 @@ module.exports = function createTasksTaggingController(shared: TaskControllerSha
       const mediaLimit = Math.max(1, Math.min(Number(req.body?.mediaLimit || 20), 100))
       const locale = req.body?.locale || 'en'
 
+      const pathValues = requestPaths
+        .map((item: AnyRecord) => typeof item === 'string' ? item : item.path)
+        .filter(Boolean)
+
       const media = requestPaths.length > 0
-        ? await db.Media.findAll({
-          where: {
-            path: {
-              [Op.in]: requestPaths.map((item: AnyRecord) => typeof item === 'string' ? item : item.path).filter(Boolean),
-            },
-            mediaTypeId,
-          },
-          raw: true,
-        })
-        : await db.Media.findAll({
-          where: {mediaTypeId},
+        ? mediaRepo.findByPaths(pathValues, mediaTypeId)
+        : mediaRepo.findByMediaType(mediaTypeId, {
           limit: mediaLimit,
-          order: [['createdAt', 'DESC']],
-          raw: true,
+          orderByCreatedDesc: true,
         })
 
       const result = await getVideoClipTagger().suggestTagsFromVideoFrames(db, media, {
@@ -112,13 +108,7 @@ module.exports = function createTasksTaggingController(shared: TaskControllerSha
         .filter(Boolean)
 
       const media = pathValues.length > 0
-        ? await db.Media.findAll({
-          where: {
-            path: {[Op.in]: pathValues},
-            mediaTypeId,
-          },
-          raw: true,
-        })
+        ? mediaRepo.findByPaths(pathValues, mediaTypeId)
         : []
 
       const total = media.length

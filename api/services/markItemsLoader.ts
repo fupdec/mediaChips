@@ -1,5 +1,4 @@
 import type { ApiDb } from '../types/db'
-import type { SequelizeInstance } from '../types/db'
 import type { Meta } from '@shared/entities/meta'
 import type {
   MarkLike,
@@ -8,8 +7,11 @@ import type {
   MarkSortValue,
 } from '../types/markItems'
 
-function normalizeMark(mark: MarkLike | SequelizeInstance): MarkLike {
-  const json = typeof mark.toJSON === 'function' ? mark.toJSON() : mark as MarkLike
+const {createMarksRepository} = require('../db/repositories/marks')
+const {createMetaRepository} = require('../db/repositories/meta')
+
+function normalizeMark(mark: MarkLike): MarkLike {
+  const json = {...mark} as MarkLike
 
   if (json.media && !json.medium) {
     json.medium = json.media
@@ -83,19 +85,12 @@ function sortMarks(
 }
 
 async function getMarkFilterMetas(db: ApiDb): Promise<Meta[]> {
-  return db.Meta.findAll({
-    where: {
-      marks: true,
-    },
-    order: [
-      ['order', 'ASC'],
-      ['name', 'ASC'],
-    ],
-    raw: true,
-  }) as unknown as Promise<Meta[]>
+  const metaRepo = createMetaRepository(db.drizzle)
+  return metaRepo.findMarkFilters() as unknown as Meta[]
 }
 
 async function loadMarkItems(db: ApiDb, options: MarkLoadOptions = {}) {
+  const marksRepo = createMarksRepository(db.drizzle)
   const {
     types = [],
     sortBy = 'time',
@@ -105,17 +100,10 @@ async function loadMarkItems(db: ApiDb, options: MarkLoadOptions = {}) {
     search = '',
   } = options
 
-  const marks = await db.Mark.findAll({
-    include: [{
-      model: db.Tag,
-      include: [{
-        model: db.Meta,
-      }],
-    }, db.Media],
-  })
+  const marks = marksRepo.findAllWithRelations()
 
-  const allItems = marks.map(normalizeMark)
-  const filtered = allItems.filter((mark) => (
+  const allItems = marks.map((mark: MarkLike) => normalizeMark(mark))
+  const filtered = allItems.filter((mark: MarkLike) => (
     matchesTypeFilter(mark, types) && matchesSearch(mark, search)
   ))
   const sorted = sortMarks(filtered, sortBy, sortDir)

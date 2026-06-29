@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, isNull } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { meta } from '../schema/meta'
 import { pageSettings } from '../schema/pageSettings'
@@ -38,6 +38,14 @@ export function createMetaRepository(db: DrizzleClient) {
 
     findLatest(limit = 1): MetaRow[] {
       return db.select().from(meta).orderBy(desc(meta.createdAt)).limit(limit).all()
+    },
+
+    findMarkFilters(): MetaRow[] {
+      return db.select()
+        .from(meta)
+        .where(eq(meta.marks, true))
+        .orderBy(asc(meta.order), asc(meta.name))
+        .all()
     },
 
     create(body: Record<string, unknown>): MetaRow {

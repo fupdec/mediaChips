@@ -10,9 +10,11 @@ const {
   deleteTagGeneratedAssets,
 } = require('../services/localAssetCleanup')
 const {createTagsRepository} = require('../db/repositories/tags')
+const {createMarksRepository} = require('../db/repositories/marks')
 
 module.exports = function (db: ApiDb) {
   const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
+  const marksRepo = createMarksRepository(db.drizzle)
   const dbPath = db.path
 
   const getAllForItems = async function (req: ApiRequest, res: ApiResponse) {
@@ -127,11 +129,7 @@ module.exports = function (db: ApiDb) {
         })
       }
 
-      const marks = await db.Mark.findAll({
-        where: {tagId: id},
-        attributes: ['id'],
-        raw: true,
-      })
+      const marks = marksRepo.findIdsByTagId(id)
 
       for (const mark of marks) {
         deleteMarkGeneratedAsset(dbPath, mark.id)

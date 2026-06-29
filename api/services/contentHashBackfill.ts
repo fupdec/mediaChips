@@ -1,18 +1,12 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb } from '../types/db'
 
 const {computeContentHashForPath, resolveExistingPath} = require('./contentHash')
+const {createMediaRepository} = require('../db/repositories/media')
 
 async function getContentHashBackfillStatus(db: ApiDb) {
-  const Op = db.Sequelize.Op
-  const total = await db.Media.count()
-  const pending = await db.Media.count({
-    where: {
-      [Op.or]: [
-        {contentHash: null},
-        {contentHash: ''},
-      ],
-    },
-  })
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const total = mediaRepo.countAll()
+  const pending = mediaRepo.countPendingContentHash()
 
   return {
     total,
@@ -21,7 +15,8 @@ async function getContentHashBackfillStatus(db: ApiDb) {
   }
 }
 
-async function backfillMediaContentHash(db: ApiDb, media: AnyRecord) {
+async function backfillMediaContentHash(db: ApiDb, media: {id: unknown; path?: unknown}) {
+  const mediaRepo = createMediaRepository(db.drizzle)
   const mediaPath = String(media.path || '')
   const resolvedPath = await resolveExistingPath(mediaPath)
 
@@ -35,11 +30,7 @@ async function backfillMediaContentHash(db: ApiDb, media: AnyRecord) {
 
   try {
     const contentHash = await computeContentHashForPath(mediaPath)
-
-    await db.Media.update(
-      {contentHash},
-      {where: {id: media.id}},
-    )
+    mediaRepo.updateById(Number(media.id), {contentHash})
 
     return {
       status: 'hashed',
@@ -57,17 +48,8 @@ async function backfillMediaContentHash(db: ApiDb, media: AnyRecord) {
 }
 
 async function* iterateContentHashBackfill(db: ApiDb, {shouldStop = () => false, force = false} = {}) {
-  const Op = db.Sequelize.Op
-  const where = force
-    ? {}
-    : {
-      [Op.or]: [
-        {contentHash: null},
-        {contentHash: ''},
-      ],
-    }
-
-  const total = await db.Media.count({where})
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const total = mediaRepo.countForBackfill(force)
 
   let processed = 0
   let hashed = 0
@@ -86,14 +68,7 @@ async function* iterateContentHashBackfill(db: ApiDb, {shouldStop = () => false,
   }
 
   while (!shouldStop()) {
-    const media = await db.Media.findOne({
-      where: {
-        ...where,
-        id: {[Op.gt]: lastId},
-      },
-      order: [['id', 'ASC']],
-      raw: true,
-    })
+    const media = mediaRepo.findNextForBackfill(lastId, force)
 
     if (!media) break
 

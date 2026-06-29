@@ -1,16 +1,16 @@
-import type { ApiDb, AnyRecord, MediaLike } from '../types/db'
+import type { ApiDb, AnyRecord } from '../types/db'
 import type { MissingMediaSearchOptions } from '../types/missingMediaFinder'
 
 const path = require('path')
 const {readdir, stat} = require('fs/promises')
 const {computeContentHash, fileExists} = require('./contentHash')
+const {createMediaRepository} = require('../db/repositories/media')
+const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
 
 async function loadMissingMedia(db: ApiDb, options: MissingMediaSearchOptions = {}) {
+  const mediaRepo = createMediaRepository(db.drizzle)
   const {shouldStop = () => false, onProgress} = options
-  const all = await db.Media.findAll({
-    raw: true,
-    order: [['id', 'ASC']],
-  })
+  const all = mediaRepo.findAllOrderedById()
 
   const missing = []
 
@@ -31,10 +31,11 @@ async function loadMissingMedia(db: ApiDb, options: MissingMediaSearchOptions = 
 }
 
 async function getMissingMediaStatus(db: ApiDb) {
+  const mediaRepo = createMediaRepository(db.drizzle)
   const missing = await loadMissingMedia(db)
 
   return {
-    total: await db.Media.count(),
+    total: mediaRepo.countAll(),
     missing: missing.length,
     withHash: missing.filter((item: AnyRecord) => item.contentHash).length,
     withoutHash: missing.filter((item: AnyRecord) => !item.contentHash).length,
@@ -138,6 +139,8 @@ function pickWeakCandidate(candidates: AnyRecord[], foundPath: string) {
 }
 
 async function* iterateMissingMediaSearch(db: ApiDb, options: MissingMediaSearchOptions = {}) {
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
   const {
     folders = [],
     shouldStop = () => false,
@@ -154,10 +157,7 @@ async function* iterateMissingMediaSearch(db: ApiDb, options: MissingMediaSearch
 
   yield {type: 'phase', phase: 'loading_missing'}
 
-  const allMedia = await db.Media.findAll({
-    raw: true,
-    order: [['id', 'ASC']],
-  })
+  const allMedia = mediaRepo.findAllOrderedById()
 
   const missingMedia = []
 
@@ -206,11 +206,10 @@ async function* iterateMissingMediaSearch(db: ApiDb, options: MissingMediaSearch
   }
 
   const {byHash, bySizeNoHash, targetSizes} = buildMissingIndexes(missingMedia)
-  const mediaTypes = await db.MediaType.findAll({raw: true})
+  const mediaTypes = mediaTypesRepo.findAll()
   const extensionRegex = buildExtensionRegex(mediaTypes as Array<{ extensions?: string }>)
   const knownPaths = new Set(
-    (await db.Media.findAll({attributes: ['path'], raw: true}))
-      .map((item) => String((item as AnyRecord).path || '').toLowerCase()),
+    mediaRepo.findPaths().map((item: string) => String(item || '').toLowerCase()),
   )
 
   const matchedMediaIds = new Set()

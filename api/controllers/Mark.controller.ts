@@ -3,67 +3,43 @@ import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 const {getMarkFilterMetas, loadMarkItems} = require('../services/markItemsLoader')
 const {deleteMarkGeneratedAsset} = require('../services/localAssetCleanup')
+const {createMarksRepository} = require('../db/repositories/marks')
 
 module.exports = function (db: ApiDb) {
+  const marksRepo = createMarksRepository(db.drizzle)
   const dbPath = db.path
-  // Create and Save a new Mark
+
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.Mark.create(req.body).then((data) => {
+    try {
+      const data = marksRepo.create(req.body)
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
-  // Retrieve all Mark for video from the database.
   const findAllForVideo = function (req: ApiRequest, res: ApiResponse) {
-    db.Mark.findAll({
-        where: {
-          mediaId: req.params.id
-        },
-        order: [
-          ['time', 'ASC']
-        ],
-        include: [db.Tag],
-        raw: true
+    try {
+      const marks = marksRepo.findAllForVideo(Number(req.params.id))
+      res.status(201).send(marks)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(async (marks) => {
-        for (let mark of marks) {
-          let meta = await db.Meta.findOne({
-            where: {
-              id: mark['tag.metaId']
-            },
-            raw: true
-          })
-          mark.meta = meta
-        }
-        res.status(201).send(marks)
-      }).catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // Retrieve all Marks from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.Mark.findAll({
-      include: [{
-        model: db.Tag,
-        include: [{
-          model: db.Meta,
-        }],
-      }, db.Media],
+    try {
+      const marks = marksRepo.findAllWithRelations()
+      res.status(201).send(marks)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then((marks) => {
-        res.status(201).send(marks)
-      }).catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   const getItems = function (req: ApiRequest, res: ApiResponse) {
@@ -90,26 +66,19 @@ module.exports = function (db: ApiDb) {
       })
   }
 
-  // Delete a Mark with the specified id in the request
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     const markId = req.params.id
 
     deleteMarkGeneratedAsset(dbPath, markId)
 
-    db.Mark
-      .destroy({
-        where: {
-          id: markId,
-        },
+    try {
+      marksRepo.deleteById(Number(markId))
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

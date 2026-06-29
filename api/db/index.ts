@@ -6,6 +6,10 @@ export {
   type DrizzleSchema,
 } from './client'
 export {
+  createImageMetadataRepository,
+  createMarksRepository,
+  createMediaRepository,
+  createMediaTypesRepository,
   createMetaInMediaTypesRepository,
   createMetaRepository,
   createMetaSettingsRepository,
@@ -18,8 +22,10 @@ export {
   createTabsRepository,
   createValuesInMediaRepository,
   createValuesInTagRepository,
+  createVideoMetadataRepository,
   createWatchedFoldersRepository,
 } from './repositories'
 export {applySqlitePragmas} from './pragmas'
 export {smokeTestDrizzle} from './smoke'
+export {bindNamedParameters, queryAll, queryAllAsync, queryGet} from './utils/rawQuery'
 export * as schema from './schema'

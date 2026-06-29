@@ -4,90 +4,67 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { MediaTypeWritePayload } from '@shared/api/payloads'
 import { paramString } from '../types/errors'
+
+const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
+
 module.exports = function (db: ApiDb) {
+  const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
+
   const create = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<MediaTypeWritePayload>(req)
-    db.MediaType.create(body).then((data) => {
+    try {
+      const body = getRequestBody<MediaTypeWritePayload>(req)
+      const data = mediaTypesRepo.create(body)
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   }
 
-  // Retrieve all MediaType from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.MediaType.findAll({
-        raw: true
+    try {
+      const data = mediaTypesRepo.findAll()
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then((data) => {
-        res.status(201).send(data)
-      }).catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // Find a single MediaType with an id
   const findOne = function (req: ApiRequest, res: ApiResponse) {
-    db.MediaType.findOne({
-        where: {
-          id: req.params.id
-        },
-        raw: true
+    try {
+      const data = mediaTypesRepo.findById(Number(req.params.id)) ?? null
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then((data) => {
-        res.status(201).send(data)
-      }).catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // Update a Media by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<MediaTypeWritePayload>(req)
-    db.MediaType
-      .update(body, {
-        where: {
-          id: parseInt(paramString(req.params.id), 10)
-        }
+    try {
+      const body = getRequestBody<MediaTypeWritePayload>(req)
+      mediaTypesRepo.updateById(parseInt(paramString(req.params.id), 10), body)
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   }
 
-  // Delete a Media with the specified id in the request
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.MediaType
-      .destroy({
-        where: {
-          id: req.params.id
-        }
+    try {
+      mediaTypesRepo.deleteById(Number(req.params.id))
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        // TODO remove folders with thumbs of media 
-        // const dir = path.join(metaFolder, req.params.id)
-        // fs.rmSync(dir, {
-        //   recursive: true,
-        //   force: true
-        // })
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   }
 
   return {

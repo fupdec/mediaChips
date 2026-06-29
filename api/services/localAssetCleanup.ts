@@ -81,19 +81,17 @@ async function deleteMediaGeneratedAssets(
   media: { id: unknown },
   mediaType: string,
 ) {
+  const {createMarksRepository} = require('../db/repositories/marks')
+  const marksRepo = createMarksRepository(db.drizzle)
   const assetFolder = getMediaDeleteAssetFolder(mediaType)
 
   if (assetFolder === 'videos') {
-    const marks = await db.Mark.findAll({
-      where: {mediaId: media.id},
-      attributes: ['id'],
-      raw: true,
-    })
+    const marks = marksRepo.findIdsByMediaId(media.id)
 
     deleteVideoGeneratedAssets(
       dbPath,
       media.id,
-      marks.map((mark) => mark.id),
+      marks.map((mark: {id: number}) => mark.id),
     )
     return
   }

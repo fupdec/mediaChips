@@ -1,4 +1,4 @@
-import type { ApiDb, MediaLike } from '../types/db'
+import type { ApiDb } from '../types/db'
 import type {
   MediaId,
   MediaPostProcessorDeps,
@@ -11,6 +11,8 @@ const {
   isImageMediaType,
   isAudioMediaType,
 } = require('../utils/mediaType')
+const {createVideoMetadataRepository} = require('../db/repositories/videoMetadata')
+const {createImageMetadataRepository} = require('../db/repositories/imageMetadata')
 
 function createMediaPostProcessor({
   db,
@@ -21,13 +23,16 @@ function createMediaPostProcessor({
   createThumbMiddle,
   withTimeout,
 }: MediaPostProcessorDeps) {
-  async function processVideoMedia(media: MediaLike) {
+  const videoMetadataRepo = createVideoMetadataRepository(db.drizzle)
+  const imageMetadataRepo = createImageMetadataRepository(db.drizzle)
+
+  async function processVideoMedia(media: {id?: unknown; path?: unknown}) {
     const videoPath = String(media.path || '')
     const metadata = await getVideoMetadata(videoPath)
 
     if (metadata) {
-      await db.VideoMetadata.create({
-        mediaId: media.id,
+      videoMetadataRepo.create({
+        mediaId: Number(media.id),
         duration: metadata.duration,
         bitrate: metadata.bitrate,
         width: metadata.width,
@@ -44,7 +49,7 @@ function createMediaPostProcessor({
     }
   }
 
-  async function processImageMedia(media: MediaLike) {
+  async function processImageMedia(media: {id?: unknown; path?: unknown}) {
     const imagePath = String(media.path || '')
     const metadata = await withTimeout(
       getImageMedia().getImageMetadata(imagePath),
@@ -56,8 +61,8 @@ function createMediaPostProcessor({
     }) as ImageMetadataResult | null
 
     if (metadata) {
-      await db.ImageMetadata.create({
-        mediaId: media.id,
+      imageMetadataRepo.create({
+        mediaId: Number(media.id),
         width: metadata.width,
         height: metadata.height,
         orientation: metadata.orientation,
@@ -75,13 +80,13 @@ function createMediaPostProcessor({
     }
   }
 
-  async function processAudioMedia(media: MediaLike) {
+  async function processAudioMedia(media: {id?: unknown; path?: unknown}) {
     const audioPath = String(media.path || '')
     const metadata = await getAudioMetadata(audioPath)
 
     if (metadata) {
-      await db.VideoMetadata.create({
-        mediaId: media.id,
+      videoMetadataRepo.create({
+        mediaId: Number(media.id),
         duration: metadata.duration,
         bitrate: metadata.bitrate,
         codec: metadata.codec,
@@ -89,7 +94,7 @@ function createMediaPostProcessor({
     }
   }
 
-  async function processNewMedia(media: MediaLike, mediaType: MediaTypeLike) {
+  async function processNewMedia(media: {id?: unknown; path?: unknown}, mediaType: MediaTypeLike) {
     if (isVideoMediaType(mediaType)) {
       await processVideoMedia(media)
       return
@@ -109,15 +114,13 @@ function createMediaPostProcessor({
     const metadata = await getVideoMetadata(mediaPath)
 
     if (metadata) {
-      await db.VideoMetadata.update({
+      videoMetadataRepo.updateByMediaId(mediaId, {
         duration: metadata.duration,
         bitrate: metadata.bitrate,
         width: metadata.width,
         height: metadata.height,
         codec: metadata.codec,
         fps: metadata.fps,
-      }, {
-        where: {mediaId: mediaId},
       })
     }
   }
@@ -126,8 +129,8 @@ function createMediaPostProcessor({
     const metadata = await getImageMedia().getImageMetadata(mediaPath)
 
     if (metadata) {
-      await db.ImageMetadata.upsert({
-        mediaId: mediaId,
+      imageMetadataRepo.upsert({
+        mediaId,
         width: metadata.width,
         height: metadata.height,
         orientation: metadata.orientation,
@@ -145,8 +148,8 @@ function createMediaPostProcessor({
     const metadata = await getAudioMetadata(mediaPath)
 
     if (metadata) {
-      await db.VideoMetadata.upsert({
-        mediaId: mediaId,
+      videoMetadataRepo.upsert({
+        mediaId,
         duration: metadata.duration,
         bitrate: metadata.bitrate,
         codec: metadata.codec,
@@ -154,8 +157,8 @@ function createMediaPostProcessor({
     }
   }
 
-  async function refreshMediaInfo(media: MediaLike, mediaType: MediaTypeLike) {
-    const mediaPath = String((media as { dataValues?: { path?: string } }).dataValues?.path ?? media.path ?? '')
+  async function refreshMediaInfo(media: {id?: unknown; path?: unknown; dataValues?: {path?: string}}, mediaType: MediaTypeLike) {
+    const mediaPath = String(media.dataValues?.path ?? media.path ?? '')
     const mediaId = media.id as MediaId
 
     if (isVideoMediaType(mediaType)) {

@@ -7,6 +7,7 @@ import type {
 } from '../types/mediaFilter'
 
 const {filterItems} = require('../../app/tasks/items.js')
+const {queryAllAsync} = require('../db/utils/rawQuery')
 const {
   canUseSqlMediaLoader,
   getMediaFromClause,
@@ -93,18 +94,18 @@ const createItemShell = (row: AnyRecord): LoadedMediaItem => ({
 
 async function fetchBaseMediaRows(db: ApiDb, mediaTypeId: MediaId | null | undefined, ids: MediaId[] = []) {
   if (ids.length) {
-    const [rows] = await db.sequelize.query(
+    const rows = await queryAllAsync(db,
       `${MEDIA_BASE_SELECT} WHERE media.id IN (:ids)`,
-      {replacements: {ids}},
+      {ids},
     )
     return rows
   }
 
   if (!mediaTypeId) return []
 
-  const [rows] = await db.sequelize.query(
+  const rows = await queryAllAsync(db,
     `${MEDIA_BASE_SELECT} WHERE media.mediaTypeId = :mediaTypeId`,
-    {replacements: {mediaTypeId}},
+    {mediaTypeId},
   )
   return rows
 }
@@ -134,8 +135,8 @@ async function attachMediaRelations(db: ApiDb, items: LoadedMediaItem[], mediaTy
     ? {mediaIds}
     : {mediaTypeId}
 
-  const [tagRows] = await db.sequelize.query(tagQuery, {replacements})
-  const [valueRows] = await db.sequelize.query(valueQuery, {replacements})
+  const tagRows = await queryAllAsync(db, tagQuery, replacements)
+  const valueRows = await queryAllAsync(db, valueQuery, replacements)
 
   const tagsByMediaId = new Map()
   const valuesByMediaId = new Map()
@@ -279,33 +280,27 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
     idQuery += ' LIMIT :limit OFFSET :offset'
   }
 
-  const queries = [db.sequelize.query(idQuery, {replacements: queryReplacements})]
+  const queries = [queryAllAsync(db, idQuery, queryReplacements)]
 
   if (!skipTotals) {
     queries.push(
-      db.sequelize.query(
-        buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct),
-        {replacements},
-      ),
-      db.sequelize.query(
-        `SELECT COUNT(*) AS totalUnfiltered
+      queryAllAsync(db, buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct), replacements),
+      queryAllAsync(db, `SELECT COUNT(*) AS totalUnfiltered
          FROM media
-         WHERE media.mediaTypeId = :mediaTypeId`,
-        {replacements: {mediaTypeId}},
-      ),
+         WHERE media.mediaTypeId = :mediaTypeId`, {mediaTypeId}),
     )
   }
 
   const results = await Promise.all(queries)
-  const [idRows] = results[0]
+  const idRows = results[0]
 
   let totalUnfiltered = null
   let totalFiltered = null
   let totalFilesize = null
 
   if (!skipTotals) {
-    const [[totals]] = results[1]
-    const [[unfiltered]] = results[2]
+    const totals = results[1][0] || {}
+    const unfiltered = results[2][0] || {}
     totalUnfiltered = Number(unfiltered.totalUnfiltered) || 0
     totalFiltered = Number(totals.totalFiltered) || 0
     totalFilesize = Number(totals.totalFilesize) || 0
@@ -318,13 +313,10 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
     const navSelect = needsDistinct
       ? getNavigationSelect().replace('SELECT', 'SELECT DISTINCT')
       : getNavigationSelect()
-    const [navRows] = await db.sequelize.query(
-      `${navSelect}
+    const navRows = await queryAllAsync(db, `${navSelect}
       ${fromForSort}
       ${whereClause}
-      ORDER BY ${sortExpr} ${sortDir}`,
-      {replacements},
-    )
+      ORDER BY ${sortExpr} ${sortDir}`, replacements)
     navigation = navRows.map(toNavigationItem)
   }
 
@@ -419,23 +411,16 @@ async function getFilteredMediaSummary(db: ApiDb, options: MediaLoadOptions = {}
   const sortDir = direction === 'asc' ? 'ASC' : 'DESC'
   const idSelect = buildMediaIdSelect(needsDistinct)
 
-  const [countQuery, previewQuery] = await Promise.all([
-    db.sequelize.query(
-      buildFilteredCountSql(fromForCount, whereClause, needsDistinct),
-      {replacements},
-    ),
-    db.sequelize.query(
-      `${idSelect}
+  const [countRows, previewRows] = await Promise.all([
+    queryAllAsync(db, buildFilteredCountSql(fromForCount, whereClause, needsDistinct), replacements),
+    queryAllAsync(db, `${idSelect}
       ${fromForSort}
       ${whereClause}
       ORDER BY ${sortExpr} ${sortDir}
-      LIMIT :previewLimit`,
-      {replacements: {...replacements, previewLimit}},
-    ),
+      LIMIT :previewLimit`, {...replacements, previewLimit}),
   ])
 
-  const totals = countQuery[0][0] || {}
-  const previewRows = previewQuery[0]
+  const totals = countRows[0] || {}
 
   return {
     count: Number(totals.totalFiltered) || 0,
@@ -492,22 +477,15 @@ async function loadFilteredMediaIds(db: ApiDb, options: MediaLoadOptions = {}) {
   const fromForSort = getMediaFromClause(joinForFilters || joinForSort, joinSql)
   const idSelect = buildMediaIdSelect(needsDistinct)
 
-  const [countQuery, idQuery] = await Promise.all([
-    db.sequelize.query(
-      buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct),
-      {replacements},
-    ),
-    db.sequelize.query(
-      `${idSelect}
+  const [countRows, idRows] = await Promise.all([
+    queryAllAsync(db, buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct), replacements),
+    queryAllAsync(db, `${idSelect}
       ${fromForSort}
       ${whereClause}
-      ORDER BY ${getSortExpression(options.sortBy || 'id')} ${options.direction === 'asc' ? 'ASC' : 'DESC'}`,
-      {replacements},
-    ),
+      ORDER BY ${getSortExpression(options.sortBy || 'id')} ${options.direction === 'asc' ? 'ASC' : 'DESC'}`, replacements),
   ])
 
-  const totals = countQuery[0][0] || {}
-  const idRows = idQuery[0]
+  const totals = countRows[0] || {}
 
   return {
     ids: idRows.map((row: AnyRecord) => row.id),
@@ -519,26 +497,24 @@ async function loadFilteredMediaIds(db: ApiDb, options: MediaLoadOptions = {}) {
 async function loadMediaBasicsByIds(db: ApiDb, ids: MediaId[] = []) {
   if (!ids.length) return []
 
-  const [rows] = await db.sequelize.query(
+  return queryAllAsync(db,
     `SELECT id, path, name, basename, filesize, mediaTypeId
      FROM media
      WHERE id IN (:ids)`,
-    {replacements: {ids}},
+    {ids},
   )
-
-  return rows
 }
 
 async function loadMediaPlaylistItems(db: ApiDb, ids: MediaId[] = []) {
   if (!ids.length) return []
 
-  const [rows] = await db.sequelize.query(
+  const rows = await queryAllAsync(db,
     `SELECT
       id, path, name, basename, ext, mediaTypeId,
       filesize, rating, favorite, views, viewedAt
      FROM media
      WHERE id IN (:ids)`,
-    {replacements: {ids}},
+    {ids},
   )
 
   const orderedRows = orderRowsByIds(rows, ids)

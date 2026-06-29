@@ -1,4 +1,4 @@
-import type { ApiDb, AnyRecord } from '../types/db'
+import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
@@ -15,11 +15,14 @@ const {
   loadFilteredMediaIds,
   loadMediaBasicsByIds,
 } = require('../services/mediaItemsLoader')
+const {createMediaRepository} = require('../db/repositories/media')
+const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
 
 module.exports = function (db: ApiDb) {
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
   const dbPath = db.path
 
-  // Retrieve all Media from the database.
   const getAll = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const body = getRequestBody<ItemsListRequest>(req)
@@ -86,7 +89,7 @@ module.exports = function (db: ApiDb) {
       const body = getRequestBody<MediaThumbsRequestPayload>(req)
       const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []
       const mediaType = String(body.mediaType || 'videos')
-      const thumbs: AnyRecord = {}
+      const thumbs: Record<string, string> = {}
       const basePath = path.join(dbPath, 'media', mediaType)
 
       for (const id of ids) {
@@ -110,17 +113,7 @@ module.exports = function (db: ApiDb) {
 
   const getStats = async function (req: ApiRequest, res: ApiResponse) {
     try {
-      const [[row]] = await db.sequelize.query(`
-        SELECT
-          COUNT(*) AS total,
-          COALESCE(SUM(filesize), 0) AS filesize
-        FROM media
-      `)
-
-      res.status(200).send({
-        total: Number(row?.total || 0),
-        filesize: Number(row?.filesize || 0),
-      })
+      res.status(200).send(mediaRepo.getStats(db))
     } catch (err) {
       res.status(500).send({
         message: apiErrorMessage(err) || 'Some error occurred while performing query.',
@@ -128,100 +121,65 @@ module.exports = function (db: ApiDb) {
     }
   }
 
-  // get one Media by ID.
   const getOneById = function (req: ApiRequest, res: ApiResponse) {
-    db.Media.findOne({
-      where: {
-        id: req.params.id,
-      },
-    }).then((data) => {
+    try {
+      const data = mediaRepo.findById(Number(req.params.id)) ?? null
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Find a single Media with an id
   const numberOfMediaWithTag = function (req: ApiRequest, res: ApiResponse) {
-    db.Media.count({
-      where: {
-        mediaTypeId: req.query.mediaTypeId,
-      },
-      include: [{
-        model: db.TagsInMedia,
-        where: {
-          tagId: req.query.tagId
-        },
-        required: true
-      }]
-    }).then((number: number) => {
-      res.status(201).send({
-        count: number
-      })
-    }).catch((err: unknown) => {
+    try {
+      const count = mediaRepo.countWithTag(req.query.mediaTypeId, req.query.tagId)
+      res.status(201).send({count})
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
-  };
-
-  // update file path, name, basename and ext by path
-  const updatePath = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<MediaPathUpdatePayload>(req)
-    const data = {
-      path: body.path,
-      basename: path.basename(String(body.path ?? '')),
-      name: path.parse(String(body.path ?? '')).name,
-      ext: path.extname(String(body.path ?? '')),
     }
+  };
 
-    db.Media.update(data, {
-      where: {
-        id: body.id,
-      },
-      silent: true,
-    }).then((data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
+  const updatePath = function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const body = getRequestBody<MediaPathUpdatePayload>(req)
+      const data = {
+        path: body.path,
+        basename: path.basename(String(body.path ?? '')),
+        name: path.parse(String(body.path ?? '')).name,
+        ext: path.extname(String(body.path ?? '')),
+      }
+
+      mediaRepo.updateById(Number(body.id), data, {silent: true})
+      res.status(201).send([1])
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Update a Media by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<EntityUpdatePayload>(req)
-    const silent = body.silent
-    db.Media.update(body, {
-      where: {
-        id: req.params.id,
-      },
-      silent: silent,
-    }).then((data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
+    try {
+      const body = getRequestBody<EntityUpdatePayload>(req)
+      mediaRepo.updateById(Number(req.params.id), body, {silent: Boolean(body.silent)})
+      res.status(201).send([1])
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Delete a media with the specified id in the request
   const deleteOne = async function (req: ApiRequest, res: ApiResponse) {
     const body = getRequestBody<DeleteEntityOnePayload>(req)
     const id = body.id
 
     try {
-      const media = await db.Media.findOne({
-        where: {id},
-        include: [{
-          model: db.MediaType,
-          attributes: ['id', 'type'],
-        }],
-      })
+      const media = mediaRepo.findById(Number(id))
 
       if (!media) {
         return res.status(404).send({
@@ -229,12 +187,11 @@ module.exports = function (db: ApiDb) {
         })
       }
 
-      const mediaType = media.MediaType || await db.MediaType.findOne({
-        where: {id: media.mediaTypeId},
-        raw: true,
-      })
+      const mediaType = media.mediaTypeId
+        ? mediaTypesRepo.findById(media.mediaTypeId)
+        : undefined
 
-      await deleteMediaGeneratedAssets(db, dbPath, media, mediaType)
+      await deleteMediaGeneratedAssets(db, dbPath, media, mediaType?.type || '')
 
       if (body.with_file) {
         const filePath = media.path || body.path
@@ -249,7 +206,7 @@ module.exports = function (db: ApiDb) {
         }
       }
 
-      await db.Media.destroy({where: {id}})
+      mediaRepo.deleteById(Number(id))
       res.sendStatus(201)
     } catch (err) {
       res.status(500).send({
