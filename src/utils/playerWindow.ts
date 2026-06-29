@@ -17,3 +17,8 @@ export function openSeparatePlayer(data: Record<string, unknown>): boolean {
 export function canOpenSeparatePlayer() {
   return Boolean(window.electronAPI?.send)
 }
+
+export async function destroySeparatePlayerWindow(): Promise<void> {
+  if (!window.electronAPI?.invoke) return
+  await window.electronAPI.invoke('destroyPlayer')
+}

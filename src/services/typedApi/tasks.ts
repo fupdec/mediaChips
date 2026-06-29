@@ -96,6 +96,10 @@ export const tasksApi = {
     return apiClient.post(API_ROUTES.updateConfig, data)
   },
 
+  switchDatabase(body: { databaseId: string }) {
+    return apiClient.post(API_ROUTES.switchDatabase, body)
+  },
+
   getFileList(body: GetFileListPayload) {
     return apiClient.post(API_ROUTES.taskGetFileList, body).then((res) => ({
       ...res,

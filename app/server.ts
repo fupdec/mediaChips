@@ -24,8 +24,12 @@ const {config, configPath, databasesPath} = initializeServerConfig({
 })
 
 const dbConfig = config.databases.find((i: ServerDatabaseEntry) => i.active)
-const {db} = setupDatabase({databasesPath, dbConfig})
+const {db, drizzleConnection} = setupDatabase({databasesPath, dbConfig})
 warmupEmbeddingModel(db)
+
+const {createDatabaseManager} = require('./server/databaseManager')
+const {initDatabaseManager} = require('./server/databaseRegistry')
+const {getAuthService} = require('./server/authRegistry')
 
 const {app, router} = createExpressApp()
 const authService = initAuthService(db)
@@ -42,6 +46,22 @@ const transcodeManager = createTranscodeManager({
   db,
   getActiveDbId: () => config.databases.find((entry: ServerDatabaseEntry) => entry.active)?.id || null,
 })
+
+const databaseManager = createDatabaseManager({
+  db,
+  config,
+  configPath,
+  databasesPath,
+  transcodeManager,
+  onDatabaseChanged: () => {
+    try {
+      getAuthService().invalidateSettingsCache()
+    } catch {
+      // auth service may not be initialized yet during startup
+    }
+  },
+})
+initDatabaseManager(databaseManager)
 
 registerBuiltinRoutes({
   app,

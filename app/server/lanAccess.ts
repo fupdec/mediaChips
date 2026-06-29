@@ -3,6 +3,7 @@ import type { ServerConfig, NetworkIpInfo } from '../types/server'
 const {createSettingsRepository} = require('../../api/db/repositories/settings')
 const fs = require('fs')
 const os = require('os')
+const {saveConfigFile} = require('./configFile')
 
 const LAN_ENABLED_VALUES = ['1', 'true', 'yes', 'on']
 
@@ -95,7 +96,7 @@ async function applyLanAccessChange(enabled: boolean) {
   if (!serverDeps) return
 
   syncNetworkConfig(serverDeps.config, enabled, serverDeps)
-  fs.writeFileSync(serverDeps.configPath, JSON.stringify(serverDeps.config, null, 2))
+  saveConfigFile(serverDeps.configPath, serverDeps.config)
   await serverDeps.restartListener()
 }
 

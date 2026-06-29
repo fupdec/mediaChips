@@ -3,6 +3,8 @@ import path from 'path-browserify'
 import { resolveApiBaseUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
 import { typedApi } from '@/services/typedApi'
+import { destroySeparatePlayerWindow } from '@/utils/playerWindow'
+import eventBus from '@/utils/eventBus'
 
 interface AppConfigResponse {
   appVersion?: string
@@ -62,4 +64,10 @@ export async function initConfig() {
   applyConfigToStore(config)
 
   return config
+}
+
+export async function reloadApplicationAfterDatabaseChange() {
+  await destroySeparatePlayerWindow()
+  await refreshServerConfig()
+  eventBus.$emit('app:database-changed')
 }

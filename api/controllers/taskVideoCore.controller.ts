@@ -15,7 +15,7 @@ const {
 } = require('../services/videoImagesGeneration')
 
 module.exports = function taskVideoCoreController(db: ApiDb) {
-  const dbPath = db.path
+  const getDbPath = () => db.path!
 
   const createStreamAbortSignal = (req: ApiRequest, res: ApiResponse) => {
     let stopped = false
@@ -43,7 +43,9 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
   const getConfig = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const configPath = getAppConfigPath()
-      const configJson = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+      const {loadConfigFile, createDefaultConfig} = require('../../app/server/configFile')
+      const result = loadConfigFile(configPath)
+      const configJson = result.config || createDefaultConfig()
       res.status(200).json(configJson)
     } catch (error) {
       res.status(500).json({message: apiErrorMessage(error) || 'Failed to read config'})
@@ -61,7 +63,7 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
   }
 
   const createTimeline = async (req: ApiRequest, res: ApiResponse) => {
-    const timelinesPath = path.join(dbPath, 'media', 'videos', 'timelines')
+    const timelinesPath = path.join(getDbPath(), 'media', 'videos', 'timelines')
     if (!fs.existsSync(timelinesPath)) {
       fs.mkdirSync(timelinesPath, {recursive: true})
     }
@@ -131,7 +133,7 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
 
   const videoImagesGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
-      const status = await getVideoImagesGenerationStatus(db, dbPath)
+      const status = await getVideoImagesGenerationStatus(db, getDbPath())
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
@@ -153,7 +155,7 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
 
       const shouldStop = createStreamAbortSignal(req, res)
 
-      for await (const event of iterateVideoImagesGeneration(db, dbPath, imageType, {
+      for await (const event of iterateVideoImagesGeneration(db, getDbPath(), imageType, {
         shouldStop,
         force: String(req.query.force || '').toLowerCase() === 'true',
       })) {

@@ -44,6 +44,7 @@ export type EventBusMap = {
   viewImage: ViewImageEvent
   transferScrapedInfo: void
   scraperGotImages: void
+  'app:database-changed': void
 } & Record<string, unknown>
 
 export type EventBusEvent = keyof EventBusMap

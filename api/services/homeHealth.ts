@@ -79,7 +79,8 @@ async function getDuplicateCounts(db: ApiDb) {
 }
 
 async function getHomeHealth(db: ApiDb): Promise<ParsedHomeHealth> {
-  const dbPath = db.path
+  const getDbPath = () => db.path!
+  const dbPath = getDbPath()
   const [duplicates, contentHash, videoImages, imageThumbs, database] = await Promise.all([
     getDuplicateCounts(db),
     getContentHashBackfillStatus(db),

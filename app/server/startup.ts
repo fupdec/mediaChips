@@ -6,6 +6,7 @@ const package_json = require('../../package.json')
 const {FIXED_PORT, getBindHostForServer} = require('./constants')
 const {getBestLocalIp, getAllIps} = require('./network')
 const {isLanAccessEnabled, syncNetworkConfig} = require('./lanAccess')
+const {saveConfigFile} = require('./configFile')
 import type { Express } from 'express'
 import type { Server } from 'http'
 import type { AddressInfo } from 'net'
@@ -75,7 +76,7 @@ function createServerStarter({app, config, configPath, databasesPath}: ServerSta
       config.path = path.join(databasesPath, activeDb.id)
     }
 
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+    saveConfigFile(configPath, config)
     config.appVersion = package_json.version
     process.server_config = config
   }

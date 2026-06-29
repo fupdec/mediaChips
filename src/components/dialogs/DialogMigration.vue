@@ -66,6 +66,7 @@
 import {ref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {typedApi} from "@/services/typedApi"
+import {reloadApplicationAfterDatabaseChange} from '@/services/configService'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useOperationsStore} from '@/stores/operations'
@@ -120,11 +121,8 @@ async function restoreBackup(backupName: string) {
   step.value = 4
 }
 
-function finish() {
-  if (isElectron.value) {
-    void window.electronAPI?.invoke?.("relaunch")
-  } else {
-    document.location.reload()
-  }
+async function finish() {
+  operationsStore.migrationLowDb.dialog = false
+  await reloadApplicationAfterDatabaseChange()
 }
 </script>

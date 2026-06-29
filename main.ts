@@ -42,6 +42,7 @@ const useWinElectronFrame = isWindows || TEMP_FORCE_WIN_ELECTRON_UI
 let win: BrowserWindowInstance | null = null
 let loading: BrowserWindowInstance | null = null
 let player: BrowserWindowInstance | null = null
+let suppressPlayerWarmup = false
 let suppressZoomChangedEvent = false
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const useViteDevServer = isDevelopment && process.env.MEDIA_CHIPS_VITE_DEV !== '0'
@@ -623,6 +624,10 @@ function setupPlayerWindowEvents(browserWindow: BrowserWindowInstance) {
     player = null
     isPlayerRendererReady = false
     pendingPlayerPayload = null
+    if (suppressPlayerWarmup) {
+      suppressPlayerWarmup = false
+      return
+    }
     schedulePlayerWarmup()
   })
 
@@ -676,6 +681,28 @@ function warmupPlayerWindow() {
   if (player && !player.isDestroyed()) return
   createPlayerWindow()
 }
+
+function destroyPlayerWindow() {
+  if (playerWarmupTimer) {
+    clearTimeout(playerWarmupTimer)
+    playerWarmupTimer = null
+  }
+
+  stopPlayerPlayback()
+
+  if (player && !player.isDestroyed()) {
+    suppressPlayerWarmup = true
+    player.destroy()
+  }
+
+  player = null
+  isPlayerRendererReady = false
+  pendingPlayerPayload = null
+}
+
+ipcMain.handle('destroyPlayer', () => {
+  destroyPlayerWindow()
+})
 
 ipcMain.on('player-ready', (event: IpcMainEvent) => {
   if (!player || player.isDestroyed() || event.sender !== player.webContents) return

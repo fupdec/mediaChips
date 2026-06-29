@@ -40,7 +40,7 @@ const resolveGeneratedFolderPath = (dbPath: string, folderKey: string) => {
 }
 
 module.exports = function createTaskControllerShared(db: ApiDb) {
-  const dbPath = db.path
+  const getDbPath = () => db.path!
 
   const withTimeout = (promise: Promise<unknown>, ms: number, label: string) => Promise.race([
     promise,
@@ -101,7 +101,7 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
   }
 
   const createThumbMiddle = (pathToFile: string, id: unknown) => {
-    const outputPath = path.join(dbPath, 'media/videos/thumbs', `${id}.jpg`)
+    const outputPath = path.join(getDbPath(), 'media/videos/thumbs', `${id}.jpg`)
     return withTimeout(
       extractVideoThumbnail({input: pathToFile, outputPath, height: 320}),
       120000,
@@ -120,7 +120,7 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
 
   return {
     db,
-    dbPath,
+    getDbPath,
     withTimeout,
     createStreamAbortSignal,
     getParserSettings,
@@ -128,7 +128,7 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
     getEmbeddingModel,
     getImageMedia,
     getVideoImagesGeneration,
-    resolveGeneratedFolderPath: (folderKey: string) => resolveGeneratedFolderPath(dbPath!, folderKey),
+    resolveGeneratedFolderPath: (folderKey: string) => resolveGeneratedFolderPath(getDbPath(), folderKey),
     createThumbMiddle,
     createThumbCustom,
   }

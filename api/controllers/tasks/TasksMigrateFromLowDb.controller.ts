@@ -22,7 +22,7 @@ const { serializeCountries } = require('../../utils/country')
 const {resetDatabaseAndRunMigrations} = require('../../db/migrationRunner')
 
 module.exports = function (db: ApiDb) {
-  const dbPath = db.path
+  const getDbPath = () => db.path!
   const pathApp = process.app_folder
   let pathUserData;
   if (!pathApp) {
@@ -73,7 +73,7 @@ module.exports = function (db: ApiDb) {
       settings = path.join(pathUserData, "dbs.json");
     // console.log('found data from v0.11.3 or older')
     // console.log('backup creation started')
-    const pathBackup = path.join(dbPath, "/backups/" + backupName + ".zip")
+    const pathBackup = path.join(getDbPath(), "/backups/" + backupName + ".zip")
     const output = fs.createWriteStream(pathBackup);
     const archiver = require('archiver')
     const archive = archiver("zip");
@@ -82,7 +82,7 @@ module.exports = function (db: ApiDb) {
       console.log('\x1b[36m%s\x1b[0m', 'archive had created successfully.', 'color: #bada55');
       if (req.body.is_copy_backups) {
         const pathBackupsOld = path.join(pathUserData, 'backups')
-        const pathBackupsNew = path.join(dbPath, 'backups')
+        const pathBackupsNew = path.join(getDbPath(), 'backups')
 
         if (fs.existsSync(pathUserData)) {
           try {
@@ -112,7 +112,7 @@ module.exports = function (db: ApiDb) {
 
   // importing old database from JSON
   const migrateFromLowDb = async function (backupPath: string) {
-    const tempPath = path.join(dbPath, 'temp')
+    const tempPath = path.join(getDbPath(), 'temp')
     if (fs.existsSync(tempPath)) {
       await rmrf(tempPath)
       fs.mkdirSync(tempPath)
@@ -138,8 +138,8 @@ module.exports = function (db: ApiDb) {
     console.log('\x1b[36m%s\x1b[0m', 'Archive with backup had extracted successfully.', 'color: #bada55');
 
     // очищаем папки с картинками новой БД
-    const path_media_new = path.join(dbPath, 'media')
-    const path_meta_new = path.join(dbPath, 'meta')
+    const path_media_new = path.join(getDbPath(), 'media')
+    const path_meta_new = path.join(getDbPath(), 'meta')
     await rmrf(path_media_new)
     await rmrf(path_meta_new)
     console.log('Current folders with media files had deleted.');
@@ -147,9 +147,9 @@ module.exports = function (db: ApiDb) {
     // создаем заново все каталоги
     const createDefaultFoldersForDb = async () => {
       let userDirs: AnyRecord[] = []
-      const mediaPath = path.join(dbPath, 'media')
-      const metaPath = path.join(dbPath, 'meta')
-      const backupsPath = path.join(dbPath, 'backups')
+      const mediaPath = path.join(getDbPath(), 'media')
+      const metaPath = path.join(getDbPath(), 'meta')
+      const backupsPath = path.join(getDbPath(), 'backups')
       const videoPath = path.join(mediaPath, 'videos')
       const imagePath = path.join(mediaPath, 'images')
       const audioPath = path.join(mediaPath, 'audios')
@@ -157,7 +157,7 @@ module.exports = function (db: ApiDb) {
       let videoDirs = ['thumbs', 'marks', 'grids', 'timelines'].map((dirName: string) => (
         path.join(videoPath, dirName)
       ))
-      userDirs = [...userDirs, ...[dbPath, mediaPath, metaPath, backupsPath]]
+      userDirs = [...userDirs, ...[getDbPath(), mediaPath, metaPath, backupsPath]]
       userDirs = [...userDirs, ...[videoPath, imagePath, audioPath, textPath]]
       userDirs = [...userDirs, ...videoDirs]
 
@@ -176,9 +176,9 @@ module.exports = function (db: ApiDb) {
 
     // move thumbs and meta images
     const thumbsOld = path.join(tempPath, 'media/thumbs')
-    const thumbsNew = path.join(dbPath, 'media/videos/thumbs')
+    const thumbsNew = path.join(getDbPath(), 'media/videos/thumbs')
     const metaOld = path.join(tempPath, 'media/meta')
-    const metaNew = path.join(dbPath, 'meta')
+    const metaNew = path.join(getDbPath(), 'meta')
 
     function moveDir(from: string, to: string) {
       return new Promise<string>(async (resolve, reject) => {
@@ -405,7 +405,7 @@ module.exports = function (db: ApiDb) {
     console.log('\x1b[36m%s\x1b[0m', 'Object prepared successfully.', 'color: #bada55');
 
     // очищаем таблицы новой БД
-    const dbSqlitePath = path.join(dbPath!, 'db.sqlite')
+    const dbSqlitePath = path.join(getDbPath()!, 'db.sqlite')
     await resetDatabaseAndRunMigrations(dbSqlitePath)
     console.log('Current data in tables was cleared')
     console.log('\x1b[36m%s\x1b[0m', 'Migrations applied.', 'color: #bada55');

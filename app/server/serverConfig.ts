@@ -4,6 +4,7 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const {FIXED_PORT} = require('./constants')
+const {loadConfigFile, createDefaultConfig, saveConfigFile} = require('./configFile')
 
 function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
   let app_folder
@@ -35,25 +36,27 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
 
   console.log('\x1b[33m%s\x1b[0m', '=== SERVER SETUP ===')
 
-  let config
-  try {
-    if (fs.existsSync(configPath)) {
-      config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+  const loadResult = loadConfigFile(configPath)
+  let config = loadResult.config
+
+  if (config) {
+    if (loadResult.source === 'main') {
       console.log('\x1b[33m%s\x1b[0m', `Config loaded from ${configPath}`)
-    } else {
-      throw new Error('Config file not found')
+    } else if (loadResult.source === 'backup') {
+      console.log('\x1b[33m%s\x1b[0m', `Config restored from backup for ${configPath}`)
+      if (loadResult.preservedCorruptedAs) {
+        console.log('\x1b[33m%s\x1b[0m', `Corrupted config preserved as ${loadResult.preservedCorruptedAs}`)
+      }
     }
-  } catch (e: unknown) {
+  } else {
     console.log('\x1b[33m%s\x1b[0m', 'Creating new config...')
-    config = {
-      port: FIXED_PORT,
-      databases: [{
-        id: Date.now().toString(16),
-        name: 'Default',
-        active: true,
-        createdAt: Date.now(),
-      }],
+    if (loadResult.preservedCorruptedAs) {
+      console.log('\x1b[33m%s\x1b[0m', `Corrupted config preserved as ${loadResult.preservedCorruptedAs}`)
     }
+    if (loadResult.error) {
+      console.log('\x1b[33m%s\x1b[0m', `Previous config error: ${loadResult.error}`)
+    }
+    config = createDefaultConfig()
   }
 
   const allIpsInfo = getAllIps()
@@ -95,7 +98,7 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
     config.path = path.join(databasesPath, config.databases[0]?.id || 'default')
   }
 
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+  saveConfigFile(configPath, config)
   console.log('\x1b[32m%s\x1b[0m', `✅ Config saved. Primary IP: ${bestIp}, Port: ${FIXED_PORT}`)
 
   createStorageDirectories(config, databasesPath)

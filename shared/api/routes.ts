@@ -29,6 +29,7 @@ export const API_ROUTES = {
   resolvePath: '/api/resolve-path',
   getFile: '/api/get-file',
   updateConfig: '/api/update-config',
+  switchDatabase: '/api/switch-database',
   taskCheckFileExists: '/api/Task/checkFileExists',
   taskCreateThumb: '/api/Task/createThumb',
   taskDeleteFile: '/api/Task/deleteFile',

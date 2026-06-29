@@ -21,7 +21,7 @@ const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
 module.exports = function (db: ApiDb) {
   const mediaRepo = createMediaRepository(db.drizzle)
   const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
-  const dbPath = db.path
+  const getDbPath = () => db.path!
 
   const getAll = async function (req: ApiRequest, res: ApiResponse) {
     try {
@@ -90,7 +90,7 @@ module.exports = function (db: ApiDb) {
       const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []
       const mediaType = String(body.mediaType || 'videos')
       const thumbs: Record<string, string> = {}
-      const basePath = path.join(dbPath, 'media', mediaType)
+      const basePath = path.join(getDbPath(), 'media', mediaType)
 
       for (const id of ids) {
         for (const folder of ['grids', 'thumbs']) {
@@ -191,7 +191,7 @@ module.exports = function (db: ApiDb) {
         ? mediaTypesRepo.findById(media.mediaTypeId)
         : undefined
 
-      await deleteMediaGeneratedAssets(db, dbPath, media, mediaType?.type || '')
+      await deleteMediaGeneratedAssets(db, getDbPath(), media, mediaType?.type || '')
 
       if (body.with_file) {
         const filePath = media.path || body.path

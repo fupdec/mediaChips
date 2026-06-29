@@ -76,6 +76,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
 
       settingsStore.updateMultiple(sets)
       cleanupStalePlayerRoute()
+      store.isServerError = false
     } catch {
       store.isServerError = true
     }
@@ -288,6 +289,19 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
       void handleAddMedia(typeof event === 'function' ? event as () => void : undefined)
     })
     eventBus.on('updateVideoFrames', handleUpdateVideoFrames)
+
+    eventBus.on('app:database-changed', async () => {
+      store.isServerError = false
+      store.is_app_ready = false
+      isAppReady.value = false
+      itemsStore.$reset()
+      await loadMainAppData()
+      if (!store.isServerError) {
+        eventBus.emit('updatePage')
+        await router.push('/')
+        await markAppReady()
+      }
+    })
   }
 
   async function markAppReady(): Promise<void> {

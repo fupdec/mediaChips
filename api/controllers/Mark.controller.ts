@@ -7,7 +7,7 @@ const {createMarksRepository} = require('../db/repositories/marks')
 
 module.exports = function (db: ApiDb) {
   const marksRepo = createMarksRepository(db.drizzle)
-  const dbPath = db.path
+  const getDbPath = () => db.path!
 
   const create = function (req: ApiRequest, res: ApiResponse) {
     try {
@@ -69,7 +69,7 @@ module.exports = function (db: ApiDb) {
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     const markId = req.params.id
 
-    deleteMarkGeneratedAsset(dbPath, markId)
+    deleteMarkGeneratedAsset(getDbPath(), markId)
 
     try {
       marksRepo.deleteById(Number(markId))

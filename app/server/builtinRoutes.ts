@@ -14,6 +14,7 @@ const package_json = require('../../package.json')
 const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
 const {isLanAccessEnabled, isLanAccessEnvLocked} = require('./lanAccess')
 const {isLoopbackHost} = require('./constants')
+const {saveConfigFile} = require('./configFile')
 const {isClientAbortError, safeJsonError} = require('./fileResolver')
 const {streamVideoFile} = require('../../api/services/transcode/streamVideoFile')
 const {parseMaxHeightOverride} = require('../../api/services/transcode/transcodeSettings')
@@ -122,7 +123,7 @@ function registerBuiltinRoutes({
       config.path = path.join(databasesPath, activeDb.id)
     }
 
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+    saveConfigFile(configPath, config)
     console.log('\x1b[36m%s\x1b[0m', `Config updated. Active database: ${activeDb?.name || 'none'}`)
 
     res.json({success: true, message: 'Configuration updated'})
@@ -230,33 +231,30 @@ function registerBuiltinRoutes({
     })
   })
 
-  app.post('/api/switch-database', (req: ApiRequest, res: ApiResponse) => {
+  app.post('/api/switch-database', async (req: ApiRequest, res: ApiResponse) => {
     const {databaseId} = req.body
 
     if (!databaseId) {
       return res.status(400).json({error: 'Database ID required'})
     }
 
-    const database = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.id === databaseId)
-    if (!database) {
-      return res.status(404).json({error: 'Database not found'})
+    try {
+      const {getDatabaseManager} = require('./databaseRegistry')
+      const database = await getDatabaseManager().switchToDatabase(String(databaseId))
+
+      res.json({
+        success: true,
+        message: `Database switched to ${database.name}`,
+        databaseId: database.id,
+        databaseName: database.name,
+      })
+    } catch (err: unknown) {
+      console.error('switch-database failed:', err)
+      res.status(500).json({
+        error: 'Failed to switch database',
+        details: err instanceof Error ? apiErrorMessage(err) : String(err),
+      })
     }
-
-    config.databases.forEach((dbEntry: ServerDatabaseEntry) => {
-      dbEntry.active = false
-    })
-
-    database.active = true
-    config.path = path.join(databasesPath, database.id)
-
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
-
-    res.json({
-      success: true,
-      message: `Database switched to ${database.name}`,
-      databaseId: database.id,
-      databaseName: database.name,
-    })
   })
 
   app.post('/api/resolve-path', (req: ApiRequest, res: ApiResponse) => {

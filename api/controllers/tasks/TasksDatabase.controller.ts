@@ -103,7 +103,9 @@ module.exports = function createTasksDatabaseController(shared: TaskControllerSh
   const getConfig = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const configPath = getAppConfigPath()
-      const config_json = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+      const {loadConfigFile, createDefaultConfig} = require('../../../app/server/configFile')
+      const result = loadConfigFile(configPath)
+      const config_json = result.config || createDefaultConfig()
       res.status(200).json(config_json)
     } catch (error) {
       res.status(500).json({message: apiErrorMessage(error) || 'Failed to read config'})

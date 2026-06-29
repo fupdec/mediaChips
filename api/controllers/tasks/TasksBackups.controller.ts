@@ -11,8 +11,13 @@ const StreamZip = require('node-stream-zip')
 const fse = require("fs-extra");
 
 module.exports = function (app: Express, db: ApiDb) {
-  const dbPath = db.path
-  const backupsPath = path.join(dbPath, 'backups')
+  const getDbPath = () => {
+    if (!db.path) {
+      throw new Error('Database path is not configured')
+    }
+    return db.path
+  }
+  const getBackupsPath = () => path.join(getDbPath(), 'backups')
 
   const createBackup = function (req: ApiRequest, res: ApiResponse) {
     let currentdate = new Date(),
@@ -27,13 +32,13 @@ module.exports = function (app: Express, db: ApiDb) {
         (hours > 9 ? hours : '0' + hours) + "-" +
         (mins > 9 ? mins : '0' + mins) + "-" +
         (secs > 9 ? secs : '0' + secs),
-      mediaFiles = path.join(dbPath, 'media'),
-      metaFiles = path.join(dbPath, 'meta'),
-      dbFile = path.join(dbPath, 'db.sqlite')
+      mediaFiles = path.join(getDbPath(), 'media'),
+      metaFiles = path.join(getDbPath(), 'meta'),
+      dbFile = path.join(getDbPath(), 'db.sqlite')
 
     const archiver = require('archiver')
     const archive = archiver('zip')
-    const outputPath = path.join(backupsPath, backupName + '.zip')
+    const outputPath = path.join(getBackupsPath(), backupName + '.zip')
     const output = fs.createWriteStream(outputPath)
     output.on('close', function () {
       res.sendStatus(201)
@@ -53,6 +58,7 @@ module.exports = function (app: Express, db: ApiDb) {
 
   const getBackups = function (req: ApiRequest, res: ApiResponse) {
     const backups: BackupEntry[] = []
+    const backupsPath = getBackupsPath()
     if (!fs.existsSync(backupsPath)) {
       res.status(201).send(backups)
       return
@@ -71,7 +77,7 @@ module.exports = function (app: Express, db: ApiDb) {
   };
 
   const deleteBackup = function (req: ApiRequest, res: ApiResponse) {
-    const backupPath = path.join(backupsPath, req.body.name + '.zip')
+    const backupPath = path.join(getBackupsPath(), req.body.name + '.zip')
     fs.unlink(backupPath, (err: unknown) => {
       if (err) {
         console.log(err)
@@ -81,7 +87,8 @@ module.exports = function (app: Express, db: ApiDb) {
   };
 
   const restoreBackup = async (req: ApiRequest, res: ApiResponse) => {
-    const backupPath = path.join(backupsPath, req.body.name + '.zip')
+    const dbPath = getDbPath()
+    const backupPath = path.join(getBackupsPath(), req.body.name + '.zip')
     const dbFile = path.join(dbPath, 'db.sqlite')
     const mediaFiles = path.join(dbPath, 'media')
     const metaFiles = path.join(dbPath, 'meta')
@@ -107,41 +114,46 @@ module.exports = function (app: Express, db: ApiDb) {
       })
     }
     const is_low_db_backup = await checkLowDbBackup();
-    if (is_low_db_backup) {
-      await zip.close();
-      const tasksLowDb = require('./TasksMigrateFromLowDb.controller')(db)
-      await tasksLowDb.migrateFromLowDb(backupPath)
-      res.sendStatus(201)
-    } else {
-      // закрываем соединение с БД
-      // db.sequelize.close()
+    const {getDatabaseManager} = require('../../../app/server/databaseRegistry')
 
-      // console.log('remove', dbFile)
-      fs.unlink(dbFile, (err: unknown) => {
-        if (err) {
-          console.log(err)
-        }
-      })
+    try {
+      if (is_low_db_backup) {
+        await zip.close()
+        getDatabaseManager().closeConnection()
+        const tasksLowDb = require('./TasksMigrateFromLowDb.controller')(db)
+        await tasksLowDb.migrateFromLowDb(backupPath)
+        await getDatabaseManager().reloadCurrentDatabase()
+        res.sendStatus(201)
+        return
+      }
+
+      getDatabaseManager().closeConnection()
+
+      getDatabaseManager().removeSqliteFiles(dbFile)
 
       const rmrf = (folder: unknown) => rimraf(folder)
-
-      // console.log('remove', mediaFiles)
       await rmrf(mediaFiles)
-      // console.log('remove', metaFiles)
       await rmrf(metaFiles)
 
-      await zip.extract(null, dbPath).catch((e: unknown) => {
-        console.log(e)
-        res.status(400).send(e)
-      });
+      await zip.extract(null, dbPath)
+      await zip.close()
 
-      await zip.close();
-      // console.log('unzip finished')
-
-      // подключаемся к БД снова
-      // app.connectDb()
-
+      await getDatabaseManager().reloadCurrentDatabase()
       res.sendStatus(201)
+    } catch (e: unknown) {
+      console.error('restoreBackup failed:', e)
+      try {
+        await getDatabaseManager().reloadCurrentDatabase()
+      } catch (reloadErr: unknown) {
+        console.error('restoreBackup reload failed:', reloadErr)
+      }
+      res.status(400).send({message: apiErrorMessage(e) || String(e)})
+    } finally {
+      try {
+        await zip.close()
+      } catch {
+        // archive may already be closed
+      }
     }
   };
 
@@ -153,7 +165,7 @@ module.exports = function (app: Express, db: ApiDb) {
       return
     }
     const archive = path.basename(fromPath)
-    const toPath = path.join(backupsPath, archive)
+    const toPath = path.join(getBackupsPath(), archive)
     try {
       fse.copySync(fromPath, toPath, {overwrite: false})
       res.sendStatus(201)
@@ -173,7 +185,7 @@ module.exports = function (app: Express, db: ApiDb) {
       return
     }
 
-    const fromPath = path.join(backupsPath, archive + '.zip')
+    const fromPath = path.join(getBackupsPath(), archive + '.zip')
     const toPath = path.join(destDir, archive + '.zip')
 
     if (!fs.existsSync(fromPath)) {

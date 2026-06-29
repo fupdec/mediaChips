@@ -134,6 +134,20 @@ const cn = {
       field_pinning: '字段固定',
       media: '媒体类型',
     },
+    tabs_desc: {
+      general: '网络访问、语言、安全和播放',
+      appearance: '主题、颜色和界面布局',
+      library: '元数据字段、媒体类型和标签',
+      files: '监视文件夹和文件路径',
+      database: '数据库、备份和库维护',
+      about: '注册和应用信息',
+    },
+    groups: {
+      playback: '播放',
+      storage: '存储',
+      maintenance: '维护',
+      localization: '本地化',
+    },
     path_parser: {
       title: '路径标签解析器',
       use_ml: '使用本地神经解析器',
@@ -700,6 +714,7 @@ const cn = {
       add_new_database: '添加新数据库',
       created: '创建于',
       database_activated: '数据库已激活。',
+      restore_complete: '恢复已成功完成。',
       restart_application: '请重启应用。',
       adding_database: '添加数据库',
       editing_database: '编辑数据库',

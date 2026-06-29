@@ -103,24 +103,6 @@
       @close="dialogActivateConfirm = false"
       @confirm="activateDb"
     />
-
-    <!-- Restart dialog -->
-    <v-dialog v-model="dialogSelected" max-width="400" persistent>
-      <v-card>
-        <v-card-text class="text-center pa-6">
-          {{ t('settings_labels.database.database_activated') }}<br/>
-          {{ t('settings_labels.database.restart_application') }}
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer/>
-          <v-btn color="success" variant="flat" @click="relaunchApp">
-            {{ t('common.ok') }}
-          </v-btn>
-          <v-spacer/>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
@@ -137,7 +119,7 @@ import SettingsBackups from '@/components/settings/database/SettingsBackups.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogConfirm from '@/components/dialogs/DialogConfirm.vue'
-import {updateConfig} from '@/services/configService'
+import {updateConfig, reloadApplicationAfterDatabaseChange} from '@/services/configService'
 import {
   getDateFromMs,
   getReadableFileSize,
@@ -163,7 +145,6 @@ const valid = ref(false)
 
 const dialogDb = ref(false)
 const dialogActivateConfirm = ref(false)
-const dialogSelected = ref(false)
 
 const headerText = ref('')
 const buttons = ref<DialogHeaderButton[]>([])
@@ -289,18 +270,18 @@ async function updateDb() {
 async function activateDb() {
   if (!db.value) return
 
-  const activeId = db.value.id
-  const databasesList = getConfigDatabases().map(i => ({
-    ...i,
-    active: i.id === activeId,
-  }))
-
-  setConfigDatabases(databasesList)
-  await updateConfig({databases: databasesList})
-  databases.value = databasesList
-
   dialogActivateConfirm.value = false
-  dialogSelected.value = true
+  dialogsStore.process.show = true
+
+  try {
+    await typedApi.switchDatabase({databaseId: db.value.id})
+    await reloadApplicationAfterDatabaseChange()
+    await loadDatabaseSizes()
+  } catch (error) {
+    console.error('Failed to activate database:', error)
+  } finally {
+    dialogsStore.process.show = false
+  }
 }
 
 async function confirmRemoving(item: DatabaseEntry) {
@@ -319,10 +300,6 @@ async function confirmRemoving(item: DatabaseEntry) {
     await updateConfig({databases: databasesList})
     databases.value = databasesList
   }
-}
-
-function relaunchApp() {
-  void window.electronAPI?.invoke?.('relaunch')
 }
 
 onMounted(loadDatabaseSizes)

@@ -1,5 +1,6 @@
 import type { ApiDb } from './types/db'
 import type { DrizzleConnection } from './db/client'
+import { setActiveConnection, getDrizzleProxy, getSqliteProxy } from './db/connectionHolder'
 
 export type CreateApiDbOptions = {
   drizzleConnection: DrizzleConnection
@@ -11,12 +12,14 @@ export type CreateApiDbOptions = {
 export function createApiDb(options: CreateApiDbOptions): ApiDb {
   const {drizzleConnection, config, path: dbPath, path_databases} = options
 
+  setActiveConnection(drizzleConnection)
+
   return {
     config,
     path: dbPath,
     path_databases,
-    drizzle: drizzleConnection.drizzle,
-    sqlite: drizzleConnection.sqlite,
+    drizzle: getDrizzleProxy(),
+    sqlite: getSqliteProxy(),
   }
 }
 

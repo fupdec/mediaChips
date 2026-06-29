@@ -104,7 +104,7 @@
 import {ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useTasksStore} from '@/stores/tasks'
-import {useApiBaseUrl} from '@/composables/useApiBaseUrl'
+import {useApiBaseUrl} from '@/composable/useApiBaseUrl'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 
 const {t} = useI18n()

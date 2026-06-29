@@ -6,6 +6,13 @@ export {
   type DrizzleSchema,
 } from './client'
 export {
+  closeActiveConnection,
+  getActiveConnection,
+  getDrizzleProxy,
+  getSqliteProxy,
+  setActiveConnection,
+} from './connectionHolder'
+export {
   createFilterRowsInSavedFiltersRepository,
   createFilterRowsRepository,
   createImageMetadataRepository,

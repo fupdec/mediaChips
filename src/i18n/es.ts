@@ -134,6 +134,20 @@ const es = {
       field_pinning: 'Fijación de campos',
       media: 'Tipos de medio',
     },
+    tabs_desc: {
+      general: 'Acceso de red, idioma, seguridad y reproducción',
+      appearance: 'Tema, colores y diseño de la interfaz',
+      library: 'Campos de metadatos, tipos de medio y etiquetas',
+      files: 'Carpetas vigiladas y rutas de archivos',
+      database: 'Bases de datos, copias de seguridad y mantenimiento',
+      about: 'Registro e información de la aplicación',
+    },
+    groups: {
+      playback: 'Reproducción',
+      storage: 'Almacenamiento',
+      maintenance: 'Mantenimiento',
+      localization: 'Localización',
+    },
     path_parser: {
       title: 'Analizador de etiquetas de ruta',
       use_ml: 'Usar analizador neuronal local',
@@ -700,6 +714,7 @@ const es = {
       add_new_database: 'Agregar nueva base de datos',
       created: 'Creado',
       database_activated: 'La base de datos está activada.',
+      restore_complete: 'Restauración completada correctamente.',
       restart_application: 'Reinicie la aplicación.',
       adding_database: 'Agregando base de datos',
       editing_database: 'Editando base de datos',

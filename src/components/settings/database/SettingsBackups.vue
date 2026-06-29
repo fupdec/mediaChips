@@ -101,8 +101,8 @@
     <DialogConfirm
       :dialog="dialogRestoreFinished"
       :closable="false"
-      :text="restartText"
-      @confirm="relaunchApp"
+      :text="restoreCompleteText"
+      @confirm="closeRestoreFinished"
     />
 
     <DialogDeleteConfirm
@@ -223,6 +223,7 @@ import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import {normalizePastedFilePath} from '@/utils/filePathInput'
 import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
+import {reloadApplicationAfterDatabaseChange} from '@/services/configService'
 
 interface OpenDialogResult {
   canceled?: boolean
@@ -308,11 +309,7 @@ const isSelectedSingle = computed(() => selected.value.length === 1)
 
 /* ---------- TEXT ---------- */
 
-const restartText = computed(() =>
-  isElectron.value
-    ? t('settings_labels.database.restore_complete_restart')
-    : t('settings_labels.database.restore_complete_manual_restart')
-)
+const restoreCompleteText = computed(() => t('settings_labels.database.restore_complete'))
 
 /* ---------- METHODS ---------- */
 
@@ -354,11 +351,21 @@ async function deleteBackups() {
 
 async function restoreBackup() {
   dialogsStore.process.show = true
-  await typedApi.restoreBackup({
-    name: selected.value[0].date,
-  })
-  dialogsStore.process.show = false
-  dialogRestoreFinished.value = true
+  try {
+    await typedApi.restoreBackup({
+      name: selected.value[0].date,
+    })
+    await reloadApplicationAfterDatabaseChange()
+    dialogRestoreFinished.value = true
+  } catch (error) {
+    console.error('Failed to restore backup:', error)
+  } finally {
+    dialogsStore.process.show = false
+  }
+}
+
+function closeRestoreFinished() {
+  dialogRestoreFinished.value = false
 }
 
 async function importBackup() {
@@ -429,12 +436,6 @@ async function exportBackup() {
   selected.value = []
   folderPath.value = ''
   await getBackups()
-}
-
-function relaunchApp() {
-  if (isElectron.value) {
-    void window.electronAPI?.invoke?.('relaunch')
-  }
 }
 
 async function chooseDir() {

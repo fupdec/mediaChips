@@ -134,6 +134,20 @@ const en = {
       field_pinning: 'Field pinning',
       media: 'Media types',
     },
+    tabs_desc: {
+      general: 'Network access, language, security and playback',
+      appearance: 'Theme, colors and interface layout',
+      library: 'Metadata fields, media types and tagging',
+      files: 'Watched folders and file paths',
+      database: 'Databases, backups and library maintenance',
+      about: 'Registration and app information',
+    },
+    groups: {
+      playback: 'Playback',
+      storage: 'Storage',
+      maintenance: 'Maintenance',
+      localization: 'Localization',
+    },
     path_parser: {
       title: 'Path tag parser',
       use_ml: 'Use local neural parser',
@@ -700,6 +714,7 @@ const en = {
       add_new_database: 'Add new database',
       created: 'Created',
       database_activated: 'The database is activated.',
+      restore_complete: 'Restore completed successfully.',
       restart_application: 'Please restart the application.',
       adding_database: 'Adding database',
       editing_database: 'Editing database',

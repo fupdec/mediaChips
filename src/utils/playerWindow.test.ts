@@ -4,6 +4,7 @@ import {
   isStandalonePlayerRoute,
   openSeparatePlayer,
   canOpenSeparatePlayer,
+  destroySeparatePlayerWindow,
 } from '@/utils/playerWindow'
 
 describe('playerWindow', () => {
@@ -58,6 +59,21 @@ describe('playerWindow', () => {
     it('is true in electron', () => {
       window.electronAPI = { send: vi.fn() }
       expect(canOpenSeparatePlayer()).toBe(true)
+    })
+  })
+
+  describe('destroySeparatePlayerWindow', () => {
+    it('does nothing in browser', async () => {
+      await expect(destroySeparatePlayerWindow()).resolves.toBeUndefined()
+    })
+
+    it('invokes destroyPlayer in electron', async () => {
+      const invoke = vi.fn().mockResolvedValue(undefined)
+      window.electronAPI = { invoke }
+
+      await destroySeparatePlayerWindow()
+
+      expect(invoke).toHaveBeenCalledWith('destroyPlayer')
     })
   })
 })

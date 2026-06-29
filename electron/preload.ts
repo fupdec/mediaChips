@@ -44,6 +44,7 @@ const validInvokeChannels = [
   'minimize',
   'relaunch',
   'closePlayer',
+  'destroyPlayer',
   'toggleDevTools',
   'toggleMainFullscreen',
   'findInPage',

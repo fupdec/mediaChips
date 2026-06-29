@@ -15,7 +15,7 @@ const {createMarksRepository} = require('../db/repositories/marks')
 module.exports = function (db: ApiDb) {
   const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
   const marksRepo = createMarksRepository(db.drizzle)
-  const dbPath = db.path
+  const getDbPath = () => db.path!
 
   const getAllForItems = async function (req: ApiRequest, res: ApiResponse) {
     const body = getRequestBody<TagItemsListRequest>(req)
@@ -132,10 +132,10 @@ module.exports = function (db: ApiDb) {
       const marks = marksRepo.findIdsByTagId(id)
 
       for (const mark of marks) {
-        deleteMarkGeneratedAsset(dbPath, mark.id)
+        deleteMarkGeneratedAsset(getDbPath(), mark.id)
       }
 
-      await deleteTagGeneratedAssets(dbPath, metaId, id)
+      await deleteTagGeneratedAssets(getDbPath(), metaId, id)
 
       tagsRepo.deleteById(Number(id))
       res.sendStatus(201)

@@ -1,0 +1,75 @@
+import type Database from 'better-sqlite3'
+
+type ColumnRepairSpec = {
+  table: string
+  column: string
+  definition: string
+}
+
+function hasTable(sqlite: Database.Database, tableName: string): boolean {
+  const row = sqlite.prepare(
+    `SELECT name FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1`,
+  ).get(tableName) as {name: string} | undefined
+
+  return Boolean(row)
+}
+
+function hasColumn(sqlite: Database.Database, tableName: string, columnName: string): boolean {
+  const columns = sqlite.pragma(`table_info(${tableName})`) as Array<{name: string}>
+  return columns.some((column) => column.name === columnName)
+}
+
+function addColumnIfMissing(
+  sqlite: Database.Database,
+  tableName: string,
+  columnName: string,
+  definition: string,
+): boolean {
+  if (!hasTable(sqlite, tableName) || hasColumn(sqlite, tableName, columnName)) {
+    return false
+  }
+
+  sqlite.exec(`ALTER TABLE "${tableName}" ADD COLUMN "${columnName}" ${definition}`)
+  return true
+}
+
+const SCHEMA_REPAIRS: ColumnRepairSpec[] = [
+  {table: 'meta', column: 'views', definition: 'integer DEFAULT 0'},
+  {table: 'meta', column: 'chipVariant', definition: "text DEFAULT 'flat'"},
+  {table: 'meta', column: 'chipLabel', definition: 'integer DEFAULT 0'},
+  {table: 'meta', column: 'sortBy', definition: "text DEFAULT 'createdAt'"},
+  {table: 'meta', column: 'sortDir', definition: "text DEFAULT 'asc'"},
+  {table: 'meta', column: 'imageAspectRatio', definition: 'real DEFAULT 1'},
+  {table: 'meta', column: 'isLink', definition: 'integer DEFAULT 0'},
+  {table: 'meta', column: 'ratingIcon', definition: "text DEFAULT 'star'"},
+  {table: 'meta', column: 'ratingIconEmpty', definition: "text DEFAULT 'star-outline'"},
+  {table: 'meta', column: 'ratingIconHalf', definition: "text DEFAULT 'star-half-full'"},
+  {table: 'meta', column: 'ratingMax', definition: 'integer DEFAULT 5'},
+  {table: 'meta', column: 'ratingColor', definition: "text DEFAULT '#ffab00'"},
+  {table: 'meta', column: 'ratingHalf', definition: 'integer DEFAULT 0'},
+  {table: 'media', column: 'basename', definition: 'text'},
+  {table: 'media', column: 'name', definition: 'text'},
+  {table: 'media', column: 'ext', definition: 'text'},
+  {table: 'media', column: 'views', definition: 'integer DEFAULT 0'},
+  {table: 'media', column: 'contentHash', definition: 'text'},
+  {table: 'media', column: 'viewedAt', definition: 'text'},
+  {table: 'tags', column: 'views', definition: 'integer DEFAULT 0'},
+]
+
+export function repairSchemaColumns(sqlite: Database.Database): string[] {
+  const repaired: string[] = []
+
+  for (const spec of SCHEMA_REPAIRS) {
+    if (addColumnIfMissing(sqlite, spec.table, spec.column, spec.definition)) {
+      repaired.push(`${spec.table}.${spec.column}`)
+    }
+  }
+
+  return repaired
+}
+
+module.exports = {
+  repairSchemaColumns,
+  hasColumn,
+  addColumnIfMissing,
+}

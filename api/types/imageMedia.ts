@@ -4,6 +4,8 @@ export interface JimpImage {
   getBuffer(mime: string, options?: { quality?: number }): Promise<Buffer>
   resize(options: { w?: number; h?: number }): Promise<JimpImage>
   crop(options: { x: number; y: number; w: number; h: number }): Promise<JimpImage>
+  flip(options: { horizontal: boolean; vertical: boolean }): Promise<JimpImage>
+  rotate(degrees: number): Promise<JimpImage>
 }
 
 export interface ImageSizeConstraints {
