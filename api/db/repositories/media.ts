@@ -146,6 +146,34 @@ export function createMediaRepository(db: DrizzleClient) {
         .get()
     },
 
+    bulkCreate(items: Array<Partial<MediaInsert>>): void {
+      if (!items.length) return
+
+      const timestamp = nowIso()
+      db.insert(media)
+        .values(items.map((item) => ({
+          path: item.path ?? '',
+          basename: item.basename ?? null,
+          name: item.name ?? null,
+          ext: item.ext ?? null,
+          filesize: item.filesize ?? 0,
+          contentHash: item.contentHash ?? null,
+          rating: item.rating ?? 0,
+          favorite: item.favorite ?? false,
+          bookmark: item.bookmark ?? null,
+          views: item.views ?? 0,
+          oldId: item.oldId ?? null,
+          mediaTypeId: item.mediaTypeId == null ? null : Number(item.mediaTypeId),
+          createdAt: item.createdAt ?? timestamp,
+          updatedAt: item.updatedAt ?? timestamp,
+        })))
+        .run()
+    },
+
+    findOldIdMappings(): Array<{id: number; oldId: string | null}> {
+      return db.select({id: media.id, oldId: media.oldId}).from(media).all()
+    },
+
     updateById(id: number, data: Record<string, unknown>, options: {silent?: boolean} = {}): void {
       const payload = pickMediaFields(data)
       if (!options.silent) {

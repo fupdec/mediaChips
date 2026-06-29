@@ -1,11 +1,8 @@
 import type { ApiDb, AnyRecord } from '../../types/db'
 import type {
   LowDbImportObject,
-  LowDbTagsByMetaId,
   OldIdMapping,
-  SettingOptionRow,
 } from '../../types/migration'
-import type { SequelizeInstance } from '../../types/db'
 import type { ApiRequest, ApiResponse } from '../../types/http'
 const fs = require("fs")
 
@@ -115,10 +112,6 @@ module.exports = function (db: ApiDb) {
 
   // importing old database from JSON
   const migrateFromLowDb = async function (backupPath: string) {
-    let tagsIds: OldIdMapping[] = []
-    let metaIds: OldIdMapping[] = []
-    let mediaIds: OldIdMapping[] = []
-
     const tempPath = path.join(dbPath, 'temp')
     if (fs.existsSync(tempPath)) {
       await rmrf(tempPath)
@@ -439,261 +432,11 @@ module.exports = function (db: ApiDb) {
       console.log('\x1b[36m%s\x1b[0m', 'Migrations applied.', 'color: #bada55');
     })
 
-    await db.Media.bulkCreate(obj.videos).then(async () => {
-      mediaIds = await db.Media.findAll({
-        attributes: ['id', 'oldId'],
-        raw: true
-      }) as unknown as OldIdMapping[]
+    const {importLowDbData} = require('../../services/lowDbImport')
 
-      let videoMetadata: AnyRecord[] = []
-      for (let video of obj.videoMetadata) {
-        let media = mediaIds.find((x: OldIdMapping) => x.oldId === video.oldId)
-        if (!media) continue
-        else videoMetadata.push({
-          ...{
-            mediaId: media.id
-          },
-          ...video
-        })
-      }
-      await db.VideoMetadata.bulkCreate(videoMetadata)
-    }).then(async () => {
-      const {loadDefaultSettingsList} = require('../../utils/defaultSettings')
-      const settings = obj.settings
+    try {
+      const {mediaIds, metaIds, tagsIds} = await importLowDbData(db, obj)
 
-      const settingsList = loadDefaultSettingsList()
-      let allowed = settingsList.map((i: SettingOptionRow) => i.option)
-
-      const filteredOptions = Object.keys(settings)
-        .filter((key: string) => allowed.includes(key))
-        .reduce((obj: Record<string, unknown>, key: string) => {
-          obj[key] = settings[key];
-          return obj;
-        }, {});
-
-      let options: AnyRecord[] = []
-      for (let option in filteredOptions) {
-        let value = filteredOptions[option]
-        options.push({
-          option: option,
-          value: value
-        })
-      }
-
-      await db.Setting.bulkCreate(options, {
-        updateOnDuplicate: ["value"]
-      })
-    }).then(async () => {
-      // importing meta
-      for (let m of obj.meta) {
-        await db.Meta.create(m, {
-          include: [db.MetaSetting, db.PageSetting]
-        }).then(async (cm: SequelizeInstance) => {
-          if (cm.type === 'array') {
-            const [cf, isC] = await db.SavedFilter.findOrCreate({
-              where: {
-                name: null,
-                metaId: cm.id
-              }
-            })
-
-            if (isC) {
-              await db.PageSetting.update({
-                filterId: cf.id
-              }, {
-                where: {
-                  metaId: cm.id
-                }
-              })
-            }
-          }
-        }).catch((e: unknown) => {
-          console.log(e)
-        })
-      }
-      // getting all old ids for meta
-      metaIds = await db.Meta.findAll({
-        attributes: ['id', 'oldId', 'type'],
-        raw: true
-      }) as unknown as OldIdMapping[]
-
-      for (let tags of obj.tags) {
-        for (let i in tags) {
-          const meta = metaIds.find((x: OldIdMapping) => x.oldId === i)
-          if (!meta) continue
-
-          let newTags = (tags as LowDbTagsByMetaId)[i].map((it: AnyRecord) => ({
-            ...{
-              metaId: meta.id
-            },
-            ...it
-          }))
-          await db.Tag.bulkCreate(newTags)
-        }
-      }
-
-      tagsIds = await db.Tag.findAll({
-        attributes: ['id', 'oldId'],
-        raw: true
-      }) as unknown as OldIdMapping[]
-    }).then(async () => {
-      for (let i of (obj.settings.metaAssignedToVideos as Array<{ id: unknown }>)) {
-        const meta = metaIds.find((x: OldIdMapping) => x.oldId === i.id)
-        if (!meta) continue
-        await db.MetaInMediaType.create({
-          mediaTypeId: 1,
-          metaId: meta.id
-        })
-      }
-    }).then(async () => {
-      await db.Playlist.bulkCreate(obj.playlists)
-    }).then(async () => {
-      for (let playlist of obj.playlists) {
-        const p = await db.Playlist.findOne({
-          where: {
-            oldId: playlist.oldId
-          }
-        })
-        if (p === null) continue
-        const playlistVideos = Array.isArray(playlist.videos) ? playlist.videos : []
-        for (let i of playlistVideos) {
-          let media = mediaIds.find((x: OldIdMapping) => x.oldId === i)
-          if (!media) continue
-          else await db.MediaInPlaylists.create({
-            playlistId: p.id,
-            mediaId: media.id,
-            order: playlistVideos.indexOf(i),
-          })
-        }
-      }
-    }).then(async () => {
-      let marks: AnyRecord[] = []
-      for (let mark of obj.marks) {
-        let found = mediaIds.find((x: OldIdMapping) => x.oldId === mark.videoId)
-        if (!found) continue
-        mark.mediaId = found.id
-        if (mark.type === 'favorite' && mark.text === '') mark.text = null
-        else if (mark.type === 'meta') {
-          let foundTag = tagsIds.find((x: OldIdMapping) => x.oldId === mark.oldTagId)
-          if (!foundTag) continue
-          else mark.tagId = foundTag.id
-        }
-        marks.push(mark)
-      }
-      await db.Mark.bulkCreate(marks)
-    }).then(async () => { // meta in videos
-      let tagsInMedia: AnyRecord[] = []
-      let valuesInMedia: AnyRecord[] = []
-      for (let videoMeta of obj.onlyMeta) {
-        let mVideo = mediaIds.find((x: OldIdMapping) => x.oldId === videoMeta.id)
-        if (!mVideo) continue
-
-        let onlyMetaFields = Object.fromEntries(Object.entries(videoMeta).filter(([key]) => !key.includes('id')))
-        for (let fieldName in onlyMetaFields) {
-          let m = metaIds.find((x: OldIdMapping) => x.oldId === fieldName)
-          if (!m) continue
-          else {
-            let val = onlyMetaFields[fieldName]
-            if (m.type === 'array') {
-              for (let tag of val as Array<string | number>) {
-                let metaTag = tagsIds.find((x: OldIdMapping) => x.oldId === tag)
-                if (!metaTag) continue
-                else {
-                  tagsInMedia.push({
-                    metaId: m.id,
-                    mediaId: mVideo.id,
-                    tagId: metaTag.id
-                  })
-                }
-              }
-            } else if (val !== null && val !== '' && val !== 0 && val !== '0') {
-              valuesInMedia.push({
-                value: val,
-                metaId: m.id,
-                mediaId: mVideo.id,
-              })
-            }
-          }
-        }
-      }
-      await db.TagsInMedia.bulkCreate(tagsInMedia)
-      await db.ValuesInMedia.bulkCreate(valuesInMedia)
-    }).then(async () => {
-      let pinnedMeta: AnyRecord[] = []
-      let cm = obj.pinnedMeta
-      for (let c of cm) {
-        let meta = metaIds.find((x: OldIdMapping) => x.oldId === c.metaId)
-        if (!meta) continue
-
-        for (let id of (c.pinnedMetaId as unknown[])) {
-          let child = metaIds.find((x: OldIdMapping) => x.oldId === id)
-          if (!child) continue
-
-          pinnedMeta.push({
-            metaId: meta.id,
-            pinnedMetaId: child.id,
-            scraperField: null,
-          })
-        }
-      }
-
-      await db.PinnedMeta.bulkCreate(pinnedMeta)
-    }).then(async () => { // tags in meta tags
-      let tagsInTag: AnyRecord[] = []
-      let valuesInTag: AnyRecord[] = []
-      for (let card of obj.metaInTags) {
-        for (let cardId in card) {
-          let metaTag = tagsIds.find((x: OldIdMapping) => x.oldId === cardId)
-          if (!metaTag) continue
-
-          for (let key in (card as Record<string, Record<string, unknown>>)[cardId]) {
-            let metaOfTag = metaIds.find((x: OldIdMapping) => x.oldId === key)
-            if (!metaOfTag) continue
-
-            let val = (card as Record<string, Record<string, unknown>>)[cardId][key]
-            if (metaOfTag.type === 'array') {
-              const tagOldIds = Array.isArray(val) ? val : []
-              for (let tagOldId of tagOldIds) {
-                let tag = tagsIds.find((x: OldIdMapping) => x.oldId === tagOldId)
-                if (tag) {
-                  tagsInTag.push({
-                    parentTagId: metaTag.id,
-                    tagId: tag.id,
-                    metaId: metaOfTag.id,
-                  })
-                }
-              }
-            } else if (val !== null && val !== '' && val !== 0 && val !== '0') {
-              valuesInTag.push({
-                value: val,
-                metaId: metaOfTag.id,
-                tagId: metaTag.id
-              })
-            }
-          }
-        }
-      }
-      await db.TagsInTag.bulkCreate(tagsInTag)
-      await db.ValuesInTag.bulkCreate(valuesInTag)
-    }).then(async () => { // watched Folders
-      for (let folder of obj.watchedFolders) {
-        const [folderRow] = await db.WatchedFolder.findOrCreate({
-          where: {
-            path: folder.path,
-          },
-          defaults: {
-            name: folder.name,
-            watch: folder.watch,
-          },
-        })
-        await db.MediaTypesInWatchedFolders.findOrCreate({
-          where: {
-            folderId: folderRow.id,
-            mediaTypeId: 1
-          }
-        })
-      }
-    }).then(() => {
       for (let id of metaIds) { // creating folders for meta images
         let folderMetaOldId = path.join(metaNew, id.oldId)
         let folderMetaNewId = path.join(metaNew, `${id.id}`)
@@ -701,7 +444,7 @@ module.exports = function (db: ApiDb) {
         if (fs.existsSync(folderMetaOldId))
           fs.renameSync(folderMetaOldId, folderMetaNewId)
       }
-    }).then(() => {
+
       console.log('\x1b[36m%s\x1b[0m', 'Object with data had imported into database.', 'color: #bada55');
 
       let tree: string[] = []
@@ -739,6 +482,7 @@ module.exports = function (db: ApiDb) {
       }
 
       // составляем массив с путями файлов для будущего переименования
+      tree = []
       mapDir(thumbsNew)
       console.log('Renaming media files...');
 
@@ -761,10 +505,10 @@ module.exports = function (db: ApiDb) {
       console.log('\x1b[36m%s\x1b[0m', 'All data has been successfully imported.', 'color: #bada55');
 
       return "All data has been successfully imported."
-    }).catch((e: unknown) => {
+    } catch (e: unknown) {
       console.log(e)
       return e
-    })
+    }
   };
 
   return {

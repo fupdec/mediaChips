@@ -15,11 +15,30 @@ export function createPlaylistsRepository(db: DrizzleClient) {
           name: data.name ?? null,
           favorite: data.favorite ?? false,
           oldId: data.oldId ?? null,
-          createdAt: timestamp,
-          updatedAt: timestamp,
+          createdAt: data.createdAt ?? timestamp,
+          updatedAt: data.updatedAt ?? timestamp,
         })
         .returning()
         .get()
+    },
+
+    bulkCreate(items: Array<Partial<PlaylistInsert>>): void {
+      if (!items.length) return
+
+      const timestamp = nowIso()
+      db.insert(playlists)
+        .values(items.map((item) => ({
+          name: item.name ?? null,
+          favorite: item.favorite ?? false,
+          oldId: item.oldId ?? null,
+          createdAt: item.createdAt ?? timestamp,
+          updatedAt: item.updatedAt ?? timestamp,
+        })))
+        .run()
+    },
+
+    findByOldId(oldId: unknown): PlaylistRow | undefined {
+      return db.select().from(playlists).where(eq(playlists.oldId, String(oldId ?? ''))).get()
     },
 
     findAll(): PlaylistRow[] {

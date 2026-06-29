@@ -44,5 +44,11 @@ export function createSettingsRepository(db: DrizzleClient) {
 
       return {created: true}
     },
+
+    bulkUpsertByOptions(items: Array<{option: string; value: unknown}>): void {
+      for (const item of items) {
+        this.upsertByOption(item.option, item.value)
+      }
+    },
   }
 }

@@ -15,6 +15,11 @@ export function createVideoMetadataRepository(db: DrizzleClient) {
       return db.insert(videoMetadata).values(data).returning().get()
     },
 
+    bulkCreate(items: VideoMetadataInsert[]): void {
+      if (!items.length) return
+      db.insert(videoMetadata).values(items).run()
+    },
+
     updateByMediaId(mediaId: number, data: Partial<VideoMetadataInsert>): void {
       db.update(videoMetadata)
         .set(data)

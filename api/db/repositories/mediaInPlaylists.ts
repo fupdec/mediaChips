@@ -43,6 +43,16 @@ export function createMediaInPlaylistsRepository(db: DrizzleClient) {
       return grouped
     },
 
+    create(payload: MediaInPlaylistInsert): void {
+      db.insert(mediaInPlaylists)
+        .values({
+          mediaId: payload.mediaId,
+          playlistId: payload.playlistId,
+          order: payload.order ?? null,
+        })
+        .run()
+    },
+
     findOrCreate(payload: MediaInPlaylistInsert): {row: MediaInPlaylistRow; created: boolean} {
       const existing = db.select()
         .from(mediaInPlaylists)

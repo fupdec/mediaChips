@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, isNull } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { meta } from '../schema/meta'
+import { metaSettings } from '../schema/metaSettings'
 import { pageSettings } from '../schema/pageSettings'
 import { savedFilters } from '../schema/savedFilters'
 import { nowIso } from '../utils/timestamps'
@@ -16,10 +17,27 @@ const META_COLUMNS = new Set([
   'ratingMax', 'ratingColor', 'ratingHalf', 'sortBy', 'sortDir',
 ])
 
+const META_SETTING_COLUMNS = new Set([
+  'synonyms', 'hidden', 'nested', 'marks', 'bookmark', 'parser', 'country', 'career',
+  'scraper', 'rating', 'favorite', 'chipOutlined', 'chipLabel', 'color',
+  'imageAspectRatio', 'isLink', 'ratingIcon', 'ratingIconEmpty', 'ratingIconHalf',
+  'ratingMax', 'ratingColor', 'ratingHalf', 'sortBy', 'sortDir',
+])
+
 function pickMetaFields(data: Record<string, unknown>): Partial<MetaInsert> {
   const picked: Partial<MetaInsert> = {}
   for (const [key, value] of Object.entries(data)) {
     if (META_COLUMNS.has(key)) {
+      (picked as Record<string, unknown>)[key] = value
+    }
+  }
+  return picked
+}
+
+function pickMetaSettingFields(data: Record<string, unknown>): Partial<typeof metaSettings.$inferInsert> {
+  const picked: Partial<typeof metaSettings.$inferInsert> = {}
+  for (const [key, value] of Object.entries(data)) {
+    if (META_SETTING_COLUMNS.has(key)) {
       (picked as Record<string, unknown>)[key] = value
     }
   }
@@ -48,19 +66,35 @@ export function createMetaRepository(db: DrizzleClient) {
         .all()
     },
 
+    findOldIdMappings(): Array<{id: number; oldId: string | null; type: string | null}> {
+      return db.select({
+        id: meta.id,
+        oldId: meta.oldId,
+        type: meta.type,
+      }).from(meta).all()
+    },
+
     create(body: Record<string, unknown>): MetaRow {
       const {pageSetting, pageSettings: pageSettingsList, metaSetting, ...rest} = body
-      void metaSetting
 
       const timestamp = nowIso()
       const row = db.insert(meta)
         .values({
           ...pickMetaFields(rest),
-          createdAt: timestamp,
-          updatedAt: timestamp,
+          createdAt: (rest.createdAt as string | undefined) ?? timestamp,
+          updatedAt: (rest.updatedAt as string | undefined) ?? timestamp,
         })
         .returning()
         .get()
+
+      if (metaSetting && typeof metaSetting === 'object') {
+        db.insert(metaSettings)
+          .values({
+            metaId: row.id,
+            ...pickMetaSettingFields(metaSetting as Record<string, unknown>),
+          })
+          .run()
+      }
 
       const nestedPageSetting = pageSetting ?? (Array.isArray(pageSettingsList) ? pageSettingsList[0] : null)
       if (nestedPageSetting && typeof nestedPageSetting === 'object') {

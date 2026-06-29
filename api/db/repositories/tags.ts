@@ -48,6 +48,10 @@ export function createTagsRepository(db: DrizzleClient, sqlite: Database.Databas
       return db.select().from(tags).all()
     },
 
+    findOldIdMappings(): Array<{id: number; oldId: string | null}> {
+      return db.select({id: tags.id, oldId: tags.oldId}).from(tags).all()
+    },
+
     findById(id: number): TagRow | undefined {
       return db.select().from(tags).where(eq(tags.id, id)).get()
     },

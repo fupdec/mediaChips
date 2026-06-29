@@ -46,6 +46,26 @@ export function createPinnedMetaRepository(db: DrizzleClient) {
         .get()
     },
 
+    bulkCreate(items: Array<{
+      metaId: number
+      pinnedMetaId: number
+      scraper?: string | null
+      show?: boolean | null
+      order?: number | null
+    }>): void {
+      if (!items.length) return
+
+      db.insert(pinnedMetas)
+        .values(items.map((item) => ({
+          metaId: item.metaId,
+          pinnedMetaId: item.pinnedMetaId,
+          scraper: item.scraper ?? null,
+          show: item.show ?? true,
+          order: item.order ?? null,
+        })))
+        .run()
+    },
+
     findAll(filters: {metaId?: number; pinnedMetaId?: number} = {}): PinnedMetaWithMeta[] {
       const conditions = []
       if (filters.metaId != null) conditions.push(eq(pinnedMetas.metaId, filters.metaId))

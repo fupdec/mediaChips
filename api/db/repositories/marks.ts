@@ -24,6 +24,21 @@ export function createMarksRepository(db: DrizzleClient) {
         .get()
     },
 
+    bulkCreate(items: Array<Partial<MarkInsert>>): void {
+      if (!items.length) return
+
+      db.insert(marks)
+        .values(items.map((item) => ({
+          type: item.type ?? null,
+          text: item.text ?? null,
+          time: item.time ?? null,
+          end: item.end ?? null,
+          tagId: item.tagId ?? null,
+          mediaId: item.mediaId ?? null,
+        })))
+        .run()
+    },
+
     findIdsByMediaId(mediaId: unknown): Array<{id: number}> {
       return db.select({id: marks.id})
         .from(marks)
