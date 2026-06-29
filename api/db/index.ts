@@ -40,6 +40,10 @@ export {
   runDrizzleMigrations,
 } from './drizzleMigrations'
 export {bootstrapDatabase, resetDatabaseAndRunMigrations} from './migrationRunner'
+export {runPostMigrations} from './postMigrations'
+export {seedDefaults} from './seedDefaults'
+export {seedDemoMetadata} from './seedDemoMetadata'
+export {runLegacyUpgrades} from './legacyUpgrades'
 export {smokeTestDrizzle} from './smoke'
 export {bindNamedParameters, queryAll, queryAllAsync, queryGet} from './utils/rawQuery'
 export * as schema from './schema'

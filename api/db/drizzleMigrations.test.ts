@@ -31,21 +31,23 @@ describe('drizzleMigrations', () => {
     const sqlite = new Database(dbPath)
     try {
       expect(sqlite.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='media'`).get()).toBeTruthy()
-      expect(sqlite.prepare(`SELECT COUNT(*) as count FROM __drizzle_migrations`).get()).toEqual({count: 1})
+      expect(sqlite.prepare(`SELECT COUNT(*) as count FROM __drizzle_migrations`).get()).toEqual({count: 2})
     } finally {
       sqlite.close()
     }
   })
 
-  it('baselines legacy databases without re-running initial schema', () => {
+  it('baselines umzug databases without re-running drizzle migrations', () => {
     const dbPath = createTempDbPath()
+    runDrizzleMigrations(dbPath)
+
     const sqlite = new Database(dbPath)
-
     try {
-      sqlite.exec(`CREATE TABLE media (id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT NOT NULL)`)
+      sqlite.exec(`CREATE TABLE IF NOT EXISTS SequelizeMeta (name TEXT PRIMARY KEY)`)
+      sqlite.exec(`INSERT INTO SequelizeMeta (name) VALUES ('00_initial.js')`)
+      sqlite.exec(`DELETE FROM __drizzle_migrations`)
       ensureLegacyDrizzleBaseline(sqlite)
-
-      expect(sqlite.prepare(`SELECT COUNT(*) as count FROM __drizzle_migrations`).get()).toEqual({count: 1})
+      expect(sqlite.prepare(`SELECT COUNT(*) as count FROM __drizzle_migrations`).get()).toEqual({count: 2})
     } finally {
       sqlite.close()
     }
@@ -54,7 +56,7 @@ describe('drizzleMigrations', () => {
 
     const reopened = new Database(dbPath)
     try {
-      expect(reopened.prepare(`SELECT COUNT(*) as count FROM __drizzle_migrations`).get()).toEqual({count: 1})
+      expect(reopened.prepare(`SELECT COUNT(*) as count FROM __drizzle_migrations`).get()).toEqual({count: 2})
     } finally {
       reopened.close()
     }

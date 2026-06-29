@@ -49,19 +49,40 @@ function ensureDrizzleMigrationsTable(sqlite: Database.Database) {
   `)
 }
 
+function stampMigrationIfMissing(sqlite: Database.Database, entry: JournalEntry) {
+  const sql = fs.readFileSync(migrationSqlPath(entry.tag), 'utf8')
+  const hash = hashMigrationSql(sql)
+  const exists = sqlite.prepare(
+    'SELECT 1 FROM __drizzle_migrations WHERE hash = ? LIMIT 1',
+  ).get(hash)
+
+  if (!exists) {
+    sqlite.prepare(
+      'INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)',
+    ).run(hash, entry.when)
+  }
+}
+
 export function ensureLegacyDrizzleBaseline(sqlite: Database.Database) {
-  if (!hasTable(sqlite, 'media') || hasTable(sqlite, '__drizzle_migrations')) {
+  if (!hasTable(sqlite, 'media')) {
     return
   }
 
-  const journal = readJournal()
-  const initialEntry = journal.entries[0]
-  if (!initialEntry) {
-    return
-  }
-
-  const sql = fs.readFileSync(migrationSqlPath(initialEntry.tag), 'utf8')
   ensureDrizzleMigrationsTable(sqlite)
+  const journal = readJournal()
+
+  if (hasTable(sqlite, 'SequelizeMeta')) {
+    const umzugCount = sqlite.prepare(
+      'SELECT COUNT(*) as count FROM SequelizeMeta',
+    ).get() as {count: number}
+
+    if (Number(umzugCount.count) > 0) {
+      for (const entry of journal.entries) {
+        stampMigrationIfMissing(sqlite, entry)
+      }
+      return
+    }
+  }
 
   const appliedCount = sqlite.prepare(
     'SELECT COUNT(*) as count FROM __drizzle_migrations',
@@ -71,9 +92,12 @@ export function ensureLegacyDrizzleBaseline(sqlite: Database.Database) {
     return
   }
 
-  sqlite.prepare(
-    'INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)',
-  ).run(hashMigrationSql(sql), initialEntry.when)
+  const initialEntry = journal.entries[0]
+  if (!initialEntry) {
+    return
+  }
+
+  stampMigrationIfMissing(sqlite, initialEntry)
 }
 
 export function dropAllSqliteTables(sqlite: Database.Database) {
