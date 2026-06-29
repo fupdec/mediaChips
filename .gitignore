@@ -16,6 +16,7 @@ node_modules
 /app_storage
 /models
 /databases
+/videos
 /release
 .editorconfig
 server.log
