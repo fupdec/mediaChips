@@ -35,6 +35,10 @@ export function createMediaTypesRepository(db: DrizzleClient) {
       return db.select().from(mediaTypes).where(eq(mediaTypes.id, id)).get()
     },
 
+    findByType(type: string): MediaTypeRow | undefined {
+      return db.select().from(mediaTypes).where(eq(mediaTypes.type, type)).get()
+    },
+
     updateById(id: number, data: Partial<MediaTypeInsert>): void {
       db.update(mediaTypes)
         .set({

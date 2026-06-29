@@ -6,8 +6,11 @@ export {
   type DrizzleSchema,
 } from './client'
 export {
+  createFilterRowsInSavedFiltersRepository,
+  createFilterRowsRepository,
   createImageMetadataRepository,
   createMarksRepository,
+  createMediaInPlaylistsRepository,
   createMediaRepository,
   createMediaTypesRepository,
   createMetaInMediaTypesRepository,
@@ -15,7 +18,10 @@ export {
   createMetaSettingsRepository,
   createPageSettingsRepository,
   createPinnedMetaRepository,
+  createPlaylistsRepository,
+  createSavedFiltersRepository,
   createSettingsRepository,
+  createTagsInFilterRowsRepository,
   createTagsInMediaRepository,
   createTagsInTagRepository,
   createTagsRepository,

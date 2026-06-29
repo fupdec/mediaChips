@@ -1,8 +1,12 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedExtendedStats } from '@shared/schemas/home'
 
+const {queryAll, queryGet} = require('../db/utils/rawQuery')
+const {createMediaRepository} = require('../db/repositories/media')
+
 async function getHomeExtendedStats(db: ApiDb): Promise<ParsedExtendedStats> {
-  const total = await db.Media.count()
+  const mediaRepo = createMediaRepository(db.drizzle)
+  const total = mediaRepo.countAll()
 
   if (!total) {
     return {
@@ -18,7 +22,7 @@ async function getHomeExtendedStats(db: ApiDb): Promise<ParsedExtendedStats> {
     }
   }
 
-  const [byType] = await db.sequelize.query(`
+  const byType = queryAll(db, `
     SELECT
       media.mediaTypeId,
       mediaTypes.name,
@@ -32,42 +36,42 @@ async function getHomeExtendedStats(db: ApiDb): Promise<ParsedExtendedStats> {
     ORDER BY count DESC
   `)
 
-  const [[ratingRow]] = await db.sequelize.query(`
+  const ratingRow = queryGet(db, `
     SELECT AVG(rating) AS avg
     FROM media
     WHERE rating > 0
-  `)
+  `) as {avg?: number} | undefined
 
-  const [[tagsRow]] = await db.sequelize.query(`
+  const tagsRow = queryGet(db, `
     SELECT COUNT(DISTINCT mediaId) AS count
     FROM tagsInMedia
-  `)
+  `) as {count?: number} | undefined
 
-  const [[ratedRow]] = await db.sequelize.query(`
+  const ratedRow = queryGet(db, `
     SELECT COUNT(*) AS count
     FROM media
     WHERE rating > 0
-  `)
+  `) as {count?: number} | undefined
 
-  const [[favoritesRow]] = await db.sequelize.query(`
+  const favoritesRow = queryGet(db, `
     SELECT COUNT(*) AS count
     FROM media
     WHERE favorite = 1
-  `)
+  `) as {count?: number} | undefined
 
-  const [[weekRow]] = await db.sequelize.query(`
+  const weekRow = queryGet(db, `
     SELECT COUNT(*) AS count
     FROM media
     WHERE createdAt >= datetime('now', '-7 days')
-  `)
+  `) as {count?: number} | undefined
 
-  const [[monthRow]] = await db.sequelize.query(`
+  const monthRow = queryGet(db, `
     SELECT COUNT(*) AS count
     FROM media
     WHERE createdAt >= datetime('now', '-30 days')
-  `)
+  `) as {count?: number} | undefined
 
-  const [largestFiles] = await db.sequelize.query(`
+  const largestFiles = queryAll(db, `
     SELECT id, name, basename, filesize, mediaTypeId
     FROM media
     WHERE filesize > 0

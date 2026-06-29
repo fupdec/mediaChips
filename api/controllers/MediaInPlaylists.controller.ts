@@ -1,75 +1,52 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+
+const {createMediaInPlaylistsRepository} = require('../db/repositories/mediaInPlaylists')
+
 module.exports = function (db: ApiDb) {
-  // Retrieve all MediaInPlaylists from the database.
+  const mediaInPlaylistsRepo = createMediaInPlaylistsRepository(db.drizzle)
+
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.MediaInPlaylists
-      .findAll({
-        where: {
-          playlistId: req.params.id
-        },
-        order: [['order', 'ASC']],
-        include: [db.Media, db.Playlist]
+    try {
+      const data = mediaInPlaylistsRepo.findByPlaylistId(Number(req.params.id))
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then((data) => {
-        res.status(201).send(data)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // add video to playlist
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.MediaInPlaylists.findOrCreate({
-      where: req.body,
-    })
-      .then((data) => {
-        res.status(201).send(data)
+    try {
+      const data = mediaInPlaylistsRepo.findOrCreate(req.body)
+      res.status(201).send([data.row, data.created])
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-
-  // update videos in playlist
   const update = async function (req: ApiRequest, res: ApiResponse) {
     const data = req.body;
     console.log(data);
-    // loop over the inputs and return an array of promises, one for each update
-    const promises = data.map((i: AnyRecord) => {
-      return db.MediaInPlaylists.update(i, {
-        where: {
-          mediaId: i.mediaId,
-          playlistId: i.playlistId
-        }
-      });
-    });
-    // resolve all the db calls at once
-    await Promise.all(promises);
+    for (const item of data) {
+      mediaInPlaylistsRepo.updateByKeys(Number(item.mediaId), Number(item.playlistId), item)
+    }
     res.sendStatus(201);
   };
 
-  // Delete a video from playlist by mediaId and playlistId
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.MediaInPlaylists
-      .destroy({
-        where: req.body,
+    try {
+      mediaInPlaylistsRepo.deleteByKeys(Number(req.body.mediaId), Number(req.body.playlistId))
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

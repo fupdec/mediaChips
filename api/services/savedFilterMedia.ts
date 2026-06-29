@@ -1,5 +1,4 @@
-import type { ApiDb, AnyRecord, FilterLike } from '../types/db'
-import type { SequelizeInstance } from '../types/db'
+import type { ApiDb, FilterLike } from '../types/db'
 import type {
   SavedFilterBasic,
   SavedFilterId,
@@ -9,7 +8,6 @@ import type {
 import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 import type { SavedFilterMediaResponse, SavedFilterSummaryResponse } from '@shared/api/responses'
 
-const {Op} = require('sequelize')
 const {parseCountries} = require('../utils/country')
 const {normalizeMetaIdParam} = require('../utils/metaId')
 const {parseExtList} = require('../utils/ext')
@@ -18,6 +16,11 @@ const {
   loadMediaPlaylistItems,
   getFilteredMediaSummary,
 } = require('./mediaItemsLoader')
+const {createSavedFiltersRepository} = require('../db/repositories/savedFilters')
+const {createFilterRowsInSavedFiltersRepository} = require('../db/repositories/filterRowsInSavedFilters')
+const {createFilterRowsRepository} = require('../db/repositories/filterRows')
+const {createTagsInFilterRowsRepository} = require('../db/repositories/tagsInFilterRows')
+const {createMediaTypesRepository} = require('../db/repositories/mediaTypes')
 
 function normalizeFilterRow(row: FilterLike, tagsByRowId: TagsByRowIdMap | null = null): FilterLike {
   const normalized: FilterLike = {...row}
@@ -55,39 +58,32 @@ async function loadSavedFilterRows(db: ApiDb, savedFilterId: SavedFilterId): Pro
 }
 
 async function loadSavedFilterRowsBatch(db: ApiDb, savedFilterIds: SavedFilterId[]) {
+  const filterRowsInSavedFiltersRepo = createFilterRowsInSavedFiltersRepository(db.drizzle)
+  const filterRowsRepo = createFilterRowsRepository(db.drizzle)
+  const tagsInFilterRowsRepo = createTagsInFilterRowsRepository(db.drizzle)
+
   const filtersBySavedFilterId = new Map<number, FilterLike[]>(
     savedFilterIds.map((id: SavedFilterId) => [Number(id), []]),
   )
   if (!savedFilterIds.length) return filtersBySavedFilterId
 
-  const links = await db.FilterRowsInSavedFilter.findAll({
-    where: {filterId: {[Op.in]: savedFilterIds}},
-    include: [db.FilterRow],
-  })
+  const links = filterRowsInSavedFiltersRepo.findByFilterIds(savedFilterIds.map((id) => Number(id)))
 
   const rowIds: number[] = []
   const linkEntries: Array<{ filterId: SavedFilterId; filterRow: FilterLike }> = []
 
   for (const link of links) {
-    const filterRowInstance = link.filterRow as SequelizeInstance | FilterLike | undefined
-    const filterRow = (typeof filterRowInstance?.get === 'function'
-      ? filterRowInstance.get({plain: true})
-      : filterRowInstance) as FilterLike | undefined
+    const filterRow = filterRowsRepo.findById(link.rowId)
     if (!filterRow) continue
 
     rowIds.push(Number(filterRow.id))
     linkEntries.push({
       filterId: link.filterId as SavedFilterId,
-      filterRow,
+      filterRow: filterRow as FilterLike,
     })
   }
 
-  const tagRows = rowIds.length
-    ? await db.TagsInFilterRow.findAll({
-      where: {rowId: {[Op.in]: rowIds}},
-      raw: true,
-    })
-    : []
+  const tagRows = tagsInFilterRowsRepo.findByRowIds(rowIds)
 
   const tagsByRowId: TagsByRowIdMap = new Map()
   for (const tag of tagRows) {
@@ -108,10 +104,8 @@ async function loadSavedFilterRowsBatch(db: ApiDb, savedFilterIds: SavedFilterId
 }
 
 async function getVideoMediaTypeId(db: ApiDb) {
-  const videoType = await db.MediaType.findOne({
-    where: {type: 'video'},
-    raw: true,
-  })
+  const mediaTypesRepo = createMediaTypesRepository(db.drizzle)
+  const videoType = mediaTypesRepo.findByType('video')
   return videoType?.id || null
 }
 
@@ -184,46 +178,31 @@ async function getSavedFilterPlaylistSummary(
 }
 
 async function getDynamicPlaylistsBasic(db: ApiDb): Promise<SavedFilterBasic[]> {
+  const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
   const mediaTypeId = await getVideoMediaTypeId(db)
   if (!mediaTypeId) return []
 
-  const savedFilters = await db.SavedFilter.findAll({
-    where: {
-      name: {[Op.not]: null},
-      mediaTypeId,
-    },
-    order: [['name', 'ASC']],
-    attributes: ['id', 'name'],
-    raw: true,
-  })
-
-  return savedFilters.map((savedFilter) => ({
+  return savedFiltersRepo.findDynamicPlaylists(mediaTypeId).map((savedFilter: {id: number; name: string | null}) => ({
     id: savedFilter.id as SavedFilterId,
-    name: savedFilter.name as string | null | undefined,
+    name: savedFilter.name,
   }))
 }
 
 async function getDynamicPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlaylistSummary[]> {
+  const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
   const mediaTypeId = await getVideoMediaTypeId(db)
   if (!mediaTypeId) return []
 
-  const savedFilters = await db.SavedFilter.findAll({
-    where: {
-      name: {[Op.not]: null},
-      mediaTypeId,
-    },
-    order: [['name', 'ASC']],
-    raw: true,
-  })
+  const savedFilters = savedFiltersRepo.findDynamicPlaylistsFull(mediaTypeId)
 
   if (!savedFilters.length) return []
 
   const filtersBySavedFilterId = await loadSavedFilterRowsBatch(
     db,
-    savedFilters.map((savedFilter) => savedFilter.id as SavedFilterId),
+    savedFilters.map((savedFilter: {id: number}) => savedFilter.id as SavedFilterId),
   )
 
-  const summaries = await Promise.all(savedFilters.map(async (savedFilter) => {
+  const summaries = await Promise.all(savedFilters.map(async (savedFilter: {id: number; name: string | null}) => {
     const filters = filtersBySavedFilterId.get(Number(savedFilter.id)) || []
     const summary = await getFilteredMediaSummary(db, {
       mediaTypeId,

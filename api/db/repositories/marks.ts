@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm'
+import { asc, count, eq, sql } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { marks } from '../schema/marks'
 import { media } from '../schema/media'
@@ -100,6 +100,46 @@ export function createMarksRepository(db: DrizzleClient) {
 
     deleteById(id: number): void {
       db.delete(marks).where(eq(marks.id, id)).run()
+    },
+
+    countAll(): number {
+      const row = db.select({count: count()}).from(marks).get()
+      return Number(row?.count ?? 0)
+    },
+
+    findRandomWithRelations(limit: number) {
+      const rows = db.select()
+        .from(marks)
+        .orderBy(sql`RANDOM()`)
+        .limit(limit)
+        .all()
+
+      const tagIds = [...new Set(rows.map((row) => row.tagId).filter((id): id is number => id != null))]
+      const mediaIds = [...new Set(rows.map((row) => row.mediaId).filter((id): id is number => id != null))]
+
+      const tagRows = tagIds.length ? db.select().from(tags).all().filter((tag) => tagIds.includes(tag.id)) : []
+      const mediaRows = mediaIds.length ? db.select().from(media).all().filter((item) => mediaIds.includes(item.id)) : []
+      const metaIds = [...new Set(tagRows.map((tag) => tag.metaId).filter((id): id is number => id != null))]
+      const metaRows = metaIds.length ? db.select().from(meta).all().filter((row) => metaIds.includes(row.id)) : []
+
+      const tagById = new Map(tagRows.map((tag) => [tag.id, tag]))
+      const mediaById = new Map(mediaRows.map((item) => [item.id, item]))
+      const metaById = new Map(metaRows.map((row) => [row.id, row]))
+
+      return rows.map((row) => {
+        const tag = row.tagId ? tagById.get(row.tagId) : null
+        const medium = row.mediaId ? mediaById.get(row.mediaId) : null
+        return {
+          ...row,
+          tag: tag
+            ? {
+              ...tag,
+              meta: tag.metaId ? metaById.get(tag.metaId) ?? null : null,
+            }
+            : null,
+          media: medium,
+        }
+      })
     },
   }
 }

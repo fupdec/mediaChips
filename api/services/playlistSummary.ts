@@ -1,16 +1,17 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 
+const {queryAll} = require('../db/utils/rawQuery')
+const {createPlaylistsRepository} = require('../db/repositories/playlists')
+
 async function getManualPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlaylistSummary[]> {
-  const playlists = await db.Playlist.findAll({
-    order: [['name', 'ASC']],
-    raw: true,
-  })
+  const playlistsRepo = createPlaylistsRepository(db.drizzle)
+  const playlists = playlistsRepo.findAll()
 
   if (!playlists.length) return []
 
-  const [rows] = await db.sequelize.query(
-    `SELECT
+  const rows = queryAll(db, `
+    SELECT
       mip.playlistId,
       mip.mediaId,
       mip.\`order\`,
@@ -33,8 +34,8 @@ async function getManualPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlayli
     INNER JOIN media ON media.id = mip.mediaId
     LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
     LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId
-    ORDER BY mip.playlistId ASC, mip.\`order\` ASC`,
-  )
+    ORDER BY mip.playlistId ASC, mip.\`order\` ASC
+  `)
 
   const grouped = new Map()
 

@@ -3,34 +3,40 @@ import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 import { paramString } from '../types/errors'
+
+const {getManualPlaylistsSummary} = require('../services/playlistSummary')
+const {createPlaylistsRepository} = require('../db/repositories/playlists')
+const {createMediaInPlaylistsRepository} = require('../db/repositories/mediaInPlaylists')
+
 module.exports = function (db: ApiDb) {
-  const {getManualPlaylistsSummary} = require('../services/playlistSummary')
-  // Create and Save a new Playlist
+  const playlistsRepo = createPlaylistsRepository(db.drizzle)
+  const mediaInPlaylistsRepo = createMediaInPlaylistsRepository(db.drizzle)
+
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.Playlist.create(req.body)
-      .then((data) => {
-        res.status(201).send(data)
+    try {
+      const data = playlistsRepo.create(req.body)
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // Retrieve all Playlists from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.Playlist.findAll({
-      include: [{
-        model: db.MediaInPlaylists,
-      }],
-    }).then(async (data) => {
+    try {
+      const playlists = playlistsRepo.findAll()
+      const grouped = mediaInPlaylistsRepo.findAllGroupedByPlaylist()
+      const data = playlists.map((playlist: {id: number}) => ({
+        ...playlist,
+        mediaInPlaylists: grouped.get(playlist.id) ?? [],
+      }))
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
   const findSummary = async function (req: ApiRequest, res: ApiResponse) {
@@ -44,37 +50,26 @@ module.exports = function (db: ApiDb) {
     }
   };
 
-  // Update a Playlist by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    db.Playlist.update(req.body, {
-      where: {
-        id: parseInt(paramString(req.params.id), 10),
-      },
-    }).then((data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
+    try {
+      playlistsRepo.updateById(parseInt(paramString(req.params.id), 10), req.body)
+      res.sendStatus(201)
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Delete a Playlist with the specified id in the request
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.Playlist
-      .destroy({
-        where: {
-          id: parseInt(paramString(req.params.id), 10),
-        },
+    try {
+      playlistsRepo.deleteById(parseInt(paramString(req.params.id), 10))
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

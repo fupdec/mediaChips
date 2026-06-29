@@ -1,6 +1,8 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedHomeMediaResponse } from '@shared/schemas/home'
 
+const {queryAll} = require('../db/utils/rawQuery')
+
 const MEDIA_HOME_SELECT = `SELECT media.id,
   media.path,
   media.name,
@@ -43,8 +45,7 @@ const mapHomeItem = (row: AnyRecord) => ({
 })
 
 async function getContinueWatching(db: ApiDb, limit = 12) {
-  const [rows] = await db.sequelize.query(
-    `${MEDIA_HOME_SELECT}
+  const rows = queryAll(db, `${MEDIA_HOME_SELECT}
      ${MEDIA_HOME_FROM}
      WHERE videoMetadata.time > 0
        AND media.viewedAt IS NOT NULL
@@ -54,33 +55,25 @@ async function getContinueWatching(db: ApiDb, limit = 12) {
          OR videoMetadata.time < videoMetadata.duration * 0.95
        )
      ORDER BY media.viewedAt DESC
-     LIMIT :limit`,
-    {replacements: {limit}},
-  )
+     LIMIT :limit`, {limit})
   return rows.map(mapHomeItem)
 }
 
 async function getFavoriteMedia(db: ApiDb, limit = 12) {
-  const [rows] = await db.sequelize.query(
-    `${MEDIA_HOME_SELECT}
+  const rows = queryAll(db, `${MEDIA_HOME_SELECT}
      ${MEDIA_HOME_FROM}
      WHERE media.favorite = 1
      ORDER BY media.viewedAt DESC, media.updatedAt DESC
-     LIMIT :limit`,
-    {replacements: {limit}},
-  )
+     LIMIT :limit`, {limit})
   return rows.map(mapHomeItem)
 }
 
 async function getTopViewedMedia(db: ApiDb, limit = 12) {
-  const [rows] = await db.sequelize.query(
-    `${MEDIA_HOME_SELECT}
+  const rows = queryAll(db, `${MEDIA_HOME_SELECT}
      ${MEDIA_HOME_FROM}
      WHERE media.views > 0
      ORDER BY media.views DESC, media.viewedAt DESC
-     LIMIT :limit`,
-    {replacements: {limit}},
-  )
+     LIMIT :limit`, {limit})
   return rows.map(mapHomeItem)
 }
 

@@ -1,21 +1,21 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+
+const {createFilterRowsInSavedFiltersRepository} = require('../db/repositories/filterRowsInSavedFilters')
+
 module.exports = function (db: ApiDb) {
-  // Retrieve all FilterRowsInSavedFilter from the database.
-  const findAll = async function (req: ApiRequest, res: ApiResponse) {
-    db.FilterRowsInSavedFilter.findAll({
-      where: {
-        filterId: req.query.filterId
-      },
-      include: [db.FilterRow],
-    }).then((data) => {
+  const filterRowsInSavedFiltersRepo = createFilterRowsInSavedFiltersRepository(db.drizzle)
+
+  const findAll = function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const data = filterRowsInSavedFiltersRepo.findByFilterId(Number(req.query.filterId))
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
   return {

@@ -1,4 +1,4 @@
-import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ApiDb, AnyRecord } from '../types/db'
 import type { ParsedHomeHealth } from '@shared/schemas/home'
 
 const fs = require('fs')
@@ -7,6 +7,7 @@ const {readdir, stat} = require('fs/promises')
 const {getContentHashBackfillStatus} = require('./contentHashBackfill')
 const {getVideoImagesGenerationStatus} = require('./videoImagesGeneration')
 const {getImageThumbsGenerationStatus} = require('./imageThumbsGeneration')
+const {queryGet} = require('../db/utils/rawQuery')
 
 async function getDirectorySize(directory: string) {
   if (!fs.existsSync(directory)) return 0
@@ -46,7 +47,7 @@ function summarizeGeneratedImagesStatus(status: unknown) {
 }
 
 async function getDuplicateCounts(db: ApiDb) {
-  const [[byFilesize]] = await db.sequelize.query(`
+  const byFilesize = queryGet(db, `
     SELECT COUNT(*) AS count
     FROM media m
     WHERE m.filesize > 0
@@ -56,9 +57,9 @@ async function getDuplicateCounts(db: ApiDb) {
         WHERE m2.id != m.id
           AND m2.filesize = m.filesize
       )
-  `)
+  `) as {count?: number} | undefined
 
-  const [[byContentHash]] = await db.sequelize.query(`
+  const byContentHash = queryGet(db, `
     SELECT COUNT(*) AS count
     FROM media m
     WHERE m.contentHash IS NOT NULL
@@ -69,7 +70,7 @@ async function getDuplicateCounts(db: ApiDb) {
         WHERE m2.id != m.id
           AND m2.contentHash = m.contentHash
       )
-  `)
+  `) as {count?: number} | undefined
 
   return {
     byFilesize: Number(byFilesize?.count || 0),
