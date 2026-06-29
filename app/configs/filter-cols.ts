@@ -1,4 +1,4 @@
-export const Cols = {
+const Cols = {
   "standart": [
     {
       "param": "rating",
@@ -196,4 +196,3 @@ export const Cols = {
 }
 
 export default Cols
-module.exports = Cols

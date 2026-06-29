@@ -1,6 +1,6 @@
 import {computed, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {setNotification} from '@/services/notificationService'
 import {parseFilePath} from '@/services/pathTagParser'
 import {transformTextToArray} from '@/services/formatUtils'
@@ -8,24 +8,12 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useTasksStore} from '@/stores/tasks'
 import {useEventBus} from '@/utils/eventBus'
+import type { ParsePathTagEntry } from '@shared/api/responses'
 import type { MediaType } from '@/types/media'
 import type { AddedMediaEntry } from '@/stores/tasks'
 
-const ADD_MEDIA_ENDPOINT = 'addMedia'
-
-interface AddMediaResponseData {
-  id?: number
-  duplicate?: unknown
-}
-
 interface TagInMediaCreateResponse extends Array<unknown> {
   1?: boolean
-}
-
-interface ParsePathTagEntry {
-  path: string
-  mediaId: number
-  [key: string]: unknown
 }
 
 interface SuggestTagEntry {
@@ -184,7 +172,7 @@ export const useMediaAdding = () => {
             total: paths.length,
           })
 
-          const response = await apiClient.post<string[]>('/api/Task/getFileList', {
+          const response = await typedApi.getFileList({
             path: entryPath,
             filter: regexString,
             excluded: task.value.is_exclude ? excluded : [],
@@ -231,16 +219,17 @@ export const useMediaAdding = () => {
         if (task.value.stopped) break
 
         try {
-          const response = await apiClient.post<AddMediaResponseData>(`/api/Task/${ADD_MEDIA_ENDPOINT}`, {
+          const response = await typedApi.addMedia({
             path: filePath,
             type: mediaType,
             is_check_duplicates: task.value.is_check_duplicates,
           })
 
           if (response.status === 202) {
+            const data = response.data
             task.value.duplicates.push({
               path: filePath,
-              duplicate: response.data.duplicate,
+              duplicate: data.duplicate,
             })
           } else if (response.status === 201) {
             task.value.added.push(filePath)
@@ -360,7 +349,7 @@ export const useMediaAdding = () => {
 
       let vals: ParsePathTagEntry[] = []
       try {
-        const parseResponse = await apiClient.post<ParsePathTagEntry[]>('/api/Task/parsePathTags', {
+        const parseResponse = await typedApi.parsePathTags({
           paths: chunk,
         })
         vals = parseResponse.data || []
@@ -369,7 +358,7 @@ export const useMediaAdding = () => {
         vals = chunk.flatMap((item) => parseFilePath(item.path, item.mediaId, {
           tags: appStore.tags,
           assigned: itemsStore.assigned,
-        }) as unknown as ParsePathTagEntry[])
+        }))
       }
 
       for (const valsChunk of chunkArray(vals, onlyNew ? 50 : 500)) {
@@ -377,11 +366,11 @@ export const useMediaAdding = () => {
 
         if (onlyNew) {
           for (const item of valsChunk) {
-            const response = await apiClient.post<TagInMediaCreateResponse>('/api/TagsInMedia/createOne', {data: item})
+            const response = await typedApi.createTagsInMediaOne({data: item})
             if (response.data?.[1]) parsedCount += 1
           }
         } else {
-          await apiClient.post('/api/TagsInMedia', valsChunk)
+          await typedApi.postTagsInMedia(valsChunk)
           parsedCount += valsChunk.length
         }
       }
@@ -440,7 +429,7 @@ export const useMediaAdding = () => {
 
     try {
       task.value.status = t('media.adding.suggesting_tags_from_paths')
-      const response = await apiClient.post<SuggestTagsResponse>('/api/Task/suggestTagsFromPaths', {
+      const response = await typedApi.suggestTagsFromPaths({
         paths: task.value.added,
         limit: 30,
         maxWords: 3,

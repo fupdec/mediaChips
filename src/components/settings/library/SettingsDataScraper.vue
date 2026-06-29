@@ -68,7 +68,7 @@ import {ref, computed, onMounted, defineAsyncComponent} from "vue"
 import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
-import {apiClient} from "@/services/apiClient"
+import {typedApi} from "@/services/typedApi"
 import _ from "lodash"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
@@ -98,14 +98,14 @@ async function updateSettings(meta: Meta | null | undefined) {
   const allMeta = store.meta || []
   for (const item of allMeta) {
     try {
-      await apiClient.put(`/api/Meta/${item.id}`, {scraper: false})
+      await typedApi.updateMeta(item.id, {scraper: false})
     } catch (error) {
       console.error("Error updating meta setting:", error)
     }
   }
 
   try {
-    await apiClient.put(`/api/Meta/${meta.id}`, {scraper: true})
+    await typedApi.updateMeta(meta.id, {scraper: true})
 
     eventBus.emit("getMeta")
   } catch (error) {

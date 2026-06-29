@@ -127,7 +127,7 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import type {DatabaseEntry, DatabaseSizesResponse} from '@/types/settings'
@@ -195,7 +195,7 @@ async function loadDatabaseSizes() {
   }
 
   try {
-    const {data} = await apiClient.post<DatabaseSizesResponse>('/api/task/getDatabaseSizes', {ids})
+    const {data} = await typedApi.getDatabaseSizes({ids})
     dbSizes.value = data.sizes || {}
   } catch (error) {
     console.error('Error loading database sizes:', error)
@@ -309,7 +309,7 @@ async function confirmRemoving(item: DatabaseEntry) {
   dialogsStore.confirm.text = 'The database will be permanently deleted. \n Are you sure?'
   dialogsStore.confirm.show = true
   dialogsStore.confirm.action = async () => {
-    await apiClient.post('/api/task/deleteDb', {
+    await typedApi.deleteDb({
       id: item.id,
     })
 

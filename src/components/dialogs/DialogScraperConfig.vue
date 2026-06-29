@@ -38,8 +38,8 @@
               <v-chip
                 size="small"
                 label
-                :prepend-icon="`mdi-${cm.meta.icon}`"
-                :append-icon="getIconDataType(cm.meta.type || '')"
+                :prepend-icon="`mdi-${cm.meta?.icon}`"
+                :append-icon="getIconDataType(cm.meta?.type || '')"
               >
                 {{ getMetaName(cm.meta, t) }}
               </v-chip>
@@ -83,7 +83,7 @@
                   label
                   class="px-2"
                   @click="remove(field.meta)"
-                  :prepend-icon="`mdi-${field.meta.meta.icon}`"
+                  :prepend-icon="`mdi-${field.meta.meta?.icon}`"
                 >
                   {{ getMetaName(field.meta.meta, t) }}
                   <span class="text-caption text-medium-emphasis pl-2">
@@ -116,13 +116,13 @@ import type {PropType} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {cloneDeep, sortBy} from 'lodash'
 import {getIconDataType} from '@/services/metaTypeUtils'
 import DialogHeader from "@/components/elements/DialogHeader.vue";
 import ScraperFields from "@/assets/ScraperFields";
 import {getMetaName} from "@/utils/metaI18n";
-import type {Meta} from '@/types/stores'
+import type {AssignedMeta, Meta} from '@/types/stores'
 
 interface ScraperFieldTemplate {
   name: string
@@ -132,16 +132,7 @@ interface ScraperFieldTemplate {
 }
 
 interface ScraperField extends ScraperFieldTemplate {
-  meta?: PinnedMetaEntry | null
-}
-
-interface PinnedMetaEntry {
-  id?: number
-  metaId?: number
-  pinnedMetaId?: number
-  scraper?: string | null
-  meta: Meta
-  [key: string]: unknown
+  meta?: AssignedMeta | null
 }
 
 const props = defineProps({
@@ -157,11 +148,11 @@ const store = useAppStore()
 const {xs} = useDisplay()
 const {t} = useI18n()
 
-const pinnedMetas = ref<PinnedMetaEntry[]>([])
-const pinnedMetasFree = ref<PinnedMetaEntry[]>([])
+const pinnedMetas = ref<AssignedMeta[]>([])
+const pinnedMetasFree = ref<AssignedMeta[]>([])
 const dragging = ref<string | null>(null)
 const scraperFields = ref<ScraperField[]>([])
-const draggedMeta = ref<PinnedMetaEntry | null>(null)
+const draggedMeta = ref<AssignedMeta | null>(null)
 
 const getScraperFieldName = (field: ScraperFieldTemplate) => t(`scraper.fields.${field.key}`, field.name)
 
@@ -171,14 +162,14 @@ function close() {
   emit('close')
 }
 
-function handleDragStart(meta: PinnedMetaEntry) {
+function handleDragStart(meta: AssignedMeta) {
   console.log(meta)
-  dragging.value = meta.meta.type || null
+  dragging.value = meta.meta?.type || null
   draggedMeta.value = meta
 }
 
 function handleDragover(field: ScraperField, event: DragEvent) {
-  if (field.meta || (draggedMeta.value && draggedMeta.value.meta.type !== field.type)) {
+  if (field.meta || (draggedMeta.value && draggedMeta.value.meta?.type !== field.type)) {
     event.dataTransfer!.dropEffect = 'none'
   } else {
     event.preventDefault()
@@ -188,12 +179,12 @@ function handleDragover(field: ScraperField, event: DragEvent) {
 async function handleDrop(field: ScraperField, index: number, event: DragEvent) {
   event.preventDefault()
 
-  if (!draggedMeta.value || field.meta || draggedMeta.value.meta.type !== field.type) {
+  if (!draggedMeta.value || field.meta || draggedMeta.value.meta?.type !== field.type) {
     return
   }
 
   try {
-    await apiClient.put('/api/PinnedMeta', {
+    await typedApi.updatePinnedMetaAssignment({
       data: {scraper: field.key},
       metaId: draggedMeta.value.metaId,
       pinnedMetaId: draggedMeta.value.pinnedMetaId
@@ -217,9 +208,9 @@ async function updateScraperFields() {
   }
 }
 
-async function remove(meta: PinnedMetaEntry) {
+async function remove(meta: AssignedMeta) {
   try {
-    await apiClient.put('/api/PinnedMeta', {
+    await typedApi.updatePinnedMetaAssignment({
       data: {scraper: null},
       metaId: meta.metaId,
       pinnedMetaId: meta.pinnedMetaId
@@ -233,9 +224,7 @@ async function remove(meta: PinnedMetaEntry) {
 
 async function getPinnedMeta() {
   try {
-    const res = await apiClient.get<PinnedMetaEntry[]>(
-      `/api/PinnedMeta?metaId=${props.meta?.id}`
-    )
+    const res = await typedApi.getPinnedChildMeta(props.meta?.id ?? 0)
 
     if (res.data?.length) {
       pinnedMetas.value = sortBy(res.data, ['meta.name'])

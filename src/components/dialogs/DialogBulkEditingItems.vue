@@ -171,7 +171,7 @@ import {ref, computed, onMounted, watch, defineAsyncComponent} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import dayjs from 'dayjs'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import {useItemsStore} from '@/stores/items'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -182,7 +182,7 @@ import {shouldReloadListAfterBulkAction} from '@/utils/resolveSelection'
 import {sortPinnedAssignmentItems} from '@/utils/pinnedMetaOrder'
 import {setNotification} from '@/services/notificationService'
 import {getErrorResponseData} from '@/types/vue'
-import type {AssignedMeta, Meta} from '@/types/stores'
+import type {Meta} from '@/types/stores'
 
 interface BulkEditFieldMeta extends Meta {
   ratingMax?: number
@@ -241,11 +241,7 @@ const datePicker = ref<{
 })
 
 const pinned = computed((): Meta[] => {
-  const assigned: AssignedMeta[] = Array.isArray(itemsStore.assigned)
-    ? itemsStore.assigned
-    : Object.values(itemsStore.assigned || {}) as AssignedMeta[]
-
-  return sortPinnedAssignmentItems(assigned)
+  return sortPinnedAssignmentItems(itemsStore.safeAssigned)
     .map((item) => item.meta)
     .filter((meta): meta is Meta => Boolean(meta))
 })
@@ -435,7 +431,7 @@ const save = async () => {
   saving.value = true
 
   try {
-    await apiClient.post('/api/bulk-meta/apply', {
+    await typedApi.applyBulkMeta({
       itemType: items_type,
       itemIds: selected_items_ids,
       changes,

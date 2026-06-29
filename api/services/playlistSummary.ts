@@ -1,6 +1,7 @@
 import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 
-async function getManualPlaylistsSummary(db: ApiDb) {
+async function getManualPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlaylistSummary[]> {
   const playlists = await db.Playlist.findAll({
     order: [['name', 'ASC']],
     raw: true,
@@ -83,7 +84,7 @@ async function getManualPlaylistsSummary(db: ApiDb) {
 
   return playlists
     .map((playlist: AnyRecord) => grouped.get(playlist.id))
-    .filter(Boolean)
+    .filter(Boolean) as unknown as ParsedDynamicPlaylistSummary[]
 }
 
 module.exports = {

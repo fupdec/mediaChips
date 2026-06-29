@@ -8,6 +8,7 @@ node_modules
 /.scripts-build
 /app/**/*.js
 /api/**/*.js
+/shared/**/*.js
 /api/assets/**/*.js
 /electron/*.js
 /main.js
@@ -21,7 +22,7 @@ server.log
 /public/config.json
 .project
 yarn.lock
-db.vuerd.json
+*.tsbuildinfo
 
 # local env files
 .env

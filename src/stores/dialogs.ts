@@ -4,7 +4,11 @@ import { useItemsStore } from '@/stores/items'
 import { getCurrentMediaType } from '@/utils/mediaType'
 import { BASE_MARK_TYPES, findAssignedMeta, isMetaMarkType, normalizeMarkTime } from '@/utils/markAdding'
 import type { MediaItem, Meta, Tag } from '@/types/stores'
+import type { AssignedMeta } from '@shared/entities/meta'
+import type { ValueInTagEntry } from '@shared/api/responses'
+import type { Tab } from '@shared/entities/tab'
 import type { MediaType } from '@/types/media'
+import type { ScraperMultiplePerformer } from '@/types/scraper'
 
 export const useDialogsStore = defineStore('useDialogsStore', {
   state: () => ({
@@ -12,12 +16,12 @@ export const useDialogsStore = defineStore('useDialogsStore', {
     feedback: false,
     versions: false,
     mediaEditing: { show: false, media: null as MediaItem | null, mediaType: {} as Partial<MediaType> },
-    tagEditing: { show: false, tag: null as Tag | null, meta: null as Meta | null, assigned: null as unknown, values: null as unknown },
+    tagEditing: { show: false, tag: null as Tag | null, meta: null as Meta | null, assigned: null as AssignedMeta[] | null, values: null as ValueInTagEntry[] | null },
     bulkEditingItems: false,
     markAdding: {
       show: false,
       type: 'favorite',
-      meta: {} as Meta | Record<string, unknown>,
+      meta: {} as Partial<Meta>,
       time: null as number | null,
       end: null as number | null,
       color: '#e91e63',
@@ -28,11 +32,11 @@ export const useDialogsStore = defineStore('useDialogsStore', {
     confirm: { show: false, text: null as string | null, action: null as (() => void) | null, checkBox: false, checkBoxText: '' },
     playlistAdd: { show: false, mediaIds: [] as number[] },
     process: { show: false, text: null as string | null },
-    tabEditing: { show: false, tab: null as Record<string, unknown> | null },
+    tabEditing: { show: false, tab: null as Tab | null },
     about: { show: false },
     scraperConfig: { show: false },
-    scraper: { show: false, images: [] as unknown[] },
-    scraperMultiple: { show: false, performers: [] as unknown[], progress: 0 },
+    scraper: { show: false, images: [] as string[] },
+    scraperMultiple: { show: false, performers: [] as ScraperMultiplePerformer[], progress: 0 },
   }),
   actions: {
     editMedia(media: MediaItem | null, mediaType: MediaType | null = null) {
@@ -52,7 +56,7 @@ export const useDialogsStore = defineStore('useDialogsStore', {
       this.tagEditing.meta = meta
       this.tagEditing.show = true
     },
-    editTab(tab: Record<string, unknown>) {
+    editTab(tab: Tab) {
       this.tabEditing.tab = tab
       this.tabEditing.show = true
     },

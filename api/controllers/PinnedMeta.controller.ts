@@ -1,11 +1,14 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import { getRequestBody } from '../types/http'
+import type { MetaAssignmentOrderPayload, PinChildMetaPayload } from '@shared/api/payloads'
 import { paramString } from '../types/errors'
 module.exports = function (db: ApiDb) {
   // Create and Save a new PinnedMeta
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.PinnedMeta.create(req.body)
+    const body = getRequestBody<PinChildMetaPayload>(req)
+    db.PinnedMeta.create(body)
       .then((data) => {
         res.status(201).send(data)
       })
@@ -57,10 +60,11 @@ module.exports = function (db: ApiDb) {
 
   // Update a PinnedMeta by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    db.PinnedMeta.update(req.body.data, {
+    const body = getRequestBody<MetaAssignmentOrderPayload>(req)
+    db.PinnedMeta.update(body.data, {
       where: {
-        metaId: req.body.metaId,
-        pinnedMetaId: req.body.pinnedMetaId
+        metaId: body.metaId,
+        pinnedMetaId: body.pinnedMetaId
       }
     }).then((data) => {
       res.status(201).send(data)

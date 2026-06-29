@@ -1,6 +1,7 @@
 import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ParsedExtendedStats } from '@shared/schemas/home'
 
-async function getHomeExtendedStats(db: ApiDb) {
+async function getHomeExtendedStats(db: ApiDb): Promise<ParsedExtendedStats> {
   const total = await db.Media.count()
 
   if (!total) {
@@ -91,7 +92,7 @@ async function getHomeExtendedStats(db: ApiDb) {
     addedLast7Days: Number(weekRow?.count || 0),
     addedLast30Days: Number(monthRow?.count || 0),
     largestFiles,
-  }
+  } as unknown as ParsedExtendedStats
 }
 
 module.exports = {

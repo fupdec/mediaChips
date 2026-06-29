@@ -18,6 +18,7 @@ import type {
   UseItemsPageEventsOptions,
 } from '@/types/itemsPage'
 import type { MediaItem } from '@/types/stores'
+import { normalizeEntityIds, normalizeRemoveEntitiesEvent } from '@/utils/eventPayloads'
 
 export function useItemsPageEvents({
   props,
@@ -75,10 +76,11 @@ export function useItemsPageEvents({
   const handleGetItemsFromDb: Handler = (event) => {
     const {ids, type} = event as GetItemsFromDbEvent
     if (props.items_type !== type) return
-    if (Array.isArray(ids) && ids.length === 0 && loader.value.is_busy) {
+    const normalizedIds = normalizeEntityIds(ids)
+    if (Array.isArray(normalizedIds) && normalizedIds.length === 0 && loader.value.is_busy) {
       return
     }
-    void getItemsFromDb(ids)
+    void getItemsFromDb(normalizedIds)
   }
 
   const handleSetItemsFilters: Handler = async (event) => {
@@ -113,7 +115,9 @@ export function useItemsPageEvents({
   }
 
   const handleRemoveEntitiesFromState: Handler = (event) => {
-    const {ids, type} = event as RemoveEntitiesEvent
+    const payload = normalizeRemoveEntitiesEvent(event as RemoveEntitiesEvent)
+    if (!payload) return
+    const {ids, type} = payload
     if (type !== props.items_type) return
 
     if (props.items_type === 'media') {

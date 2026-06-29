@@ -1,6 +1,7 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import type { SavedFilterMediaResponse, SavedFilterSummaryResponse } from '@shared/api/responses'
 import { paramString } from '../types/errors'
 module.exports = function (db: ApiDb) {
   // Create and Save a new SavedFilter
@@ -142,10 +143,11 @@ module.exports = function (db: ApiDb) {
   const getPlaylistSummary = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const data = await getSavedFilterPlaylistSummary(db, parseInt(paramString(req.params.id), 10))
-      res.status(201).send({
+      const payload: SavedFilterSummaryResponse = {
         count: Number(data.count) || 0,
         previewIds: data.previewIds || [],
-      })
+      }
+      res.status(201).send(payload)
     } catch (err) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving playlist summary."
@@ -159,10 +161,11 @@ module.exports = function (db: ApiDb) {
       const result = forPlayback
         ? await getFilteredMediaForPlayback(db, parseInt(paramString(req.params.id), 10))
         : await getFilteredMediaForSavedFilter(db, parseInt(paramString(req.params.id), 10))
-      res.status(201).send({
+      const payload: SavedFilterMediaResponse = {
         items: result.items,
         count: result.count,
-      })
+      }
+      res.status(201).send(payload)
     } catch (err) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving playlist media."

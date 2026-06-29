@@ -1,4 +1,9 @@
 import { normalizePastedFilePath } from '@/utils/filePathInput'
+import type { EventBusEvent, EventBusMap } from '@shared/events/map'
+
+interface EventBusLike {
+  emit: <K extends EventBusEvent>(event: K, payload?: EventBusMap[K]) => void
+}
 
 function getDroppedFilePath(file: File & { path?: string }): string {
   if (!file) return ''
@@ -67,10 +72,6 @@ interface MediaAddingStore {
     dialogProcess: boolean
     active: boolean
   }
-}
-
-interface EventBusLike {
-  emit: (event: string, ...args: unknown[]) => void
 }
 
 export function startDroppedMediaAdding({

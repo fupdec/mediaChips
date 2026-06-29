@@ -64,7 +64,7 @@ export function buildMarkPayload({
     type: tagId ? 'meta' : adding.type,
     time,
     end: end ?? undefined,
-    mediaId,
+    mediaId: Number(mediaId),
     ...data,
   }
 

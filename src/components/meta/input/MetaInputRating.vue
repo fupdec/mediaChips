@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 import type {RatingMeta} from '@/types/metaInput'
@@ -71,7 +71,7 @@ const getMeta = async () => {
     if (metaFromStore) {
       meta.value = metaFromStore as RatingMeta
     } else {
-      const response = await apiClient.get<RatingMeta>(`/api/meta/${props.meta_id}`)
+      const response = await typedApi.getMetaById(props.meta_id)
       meta.value = response.data
     }
   } catch (error) {

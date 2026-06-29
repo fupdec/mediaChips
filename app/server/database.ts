@@ -45,6 +45,7 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
       const migrations_folder = path.join(__dirname, '../../api/migrations/')
       if (fs.existsSync(migrations_folder)) {
         let migrations_list = fs.readdirSync(migrations_folder)
+          .filter((file: unknown) => typeof file === 'string' && file.endsWith('.js'))
         migrations_list = migrations_list.sort().map((i: unknown) => {
           const file_path = path.join(migrations_folder, i)
           const functions = require(file_path)

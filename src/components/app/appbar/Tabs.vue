@@ -50,7 +50,7 @@ import {useContextMenu} from '@/stores/contextMenu'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useRouter, useRoute} from 'vue-router'
 import draggable from 'vuedraggable'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import _ from 'lodash'
 import {useEventBus} from '@/utils/eventBus'
 import {useI18n} from 'vue-i18n'
@@ -105,7 +105,9 @@ function startDrag(tab: { oldIndex: number }) {
 
 const deleteTabs = async (tabsToDelete: Tab[]) => {
   for (const tab of tabsToDelete) {
-    await apiClient.delete(`/api/tab/${tab.id}`)
+    if (tab.id != null) {
+      await typedApi.deleteTab(Number(tab.id))
+    }
   }
 
   eventBus.emit('getTabs')
@@ -117,7 +119,7 @@ const closeTab = async (e: Event, tabId: number | string) => {
   if (route.query.tabId == tabId) {
     router.push('/')
   }
-  await apiClient.delete(`/api/tab/${tabId}`)
+  await typedApi.deleteTab(Number(tabId))
   eventBus.emit('getTabs')
 }
 
@@ -136,9 +138,9 @@ const endDrag = async () => {
   }))
 
   try {
-    const updatePromises = tabsWithOrder.map(tab =>
-      apiClient.put(`/api/tab/${tab.id}`, tab)
-    )
+    const updatePromises = tabsWithOrder
+      .filter((tab): tab is { id: number; order: number } => tab.id != null)
+      .map((tab) => typedApi.updateTab(tab.id, tab))
 
     await Promise.all(updatePromises)
     eventBus.emit('getTabs')

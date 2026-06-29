@@ -95,20 +95,20 @@
         </div>
 
         <MetaAssignmentPanel
-          v-else-if="viewMode === 'media'"
-          :key="`media_${selectedItem.id}`"
+          v-else-if="selectedMediaTypeItem"
+          :key="`media_${selectedMediaTypeItem.id}`"
           mode="from-media-type"
-          :media-type="selectedItem.raw"
+          :media-type="selectedMediaTypeItem"
           :show-warning="false"
           :show-anchor="false"
           @meta-updated="onAssignmentUpdated"
         />
 
         <MetaAssignmentPanel
-          v-else
-          :key="`meta_${selectedItem.id}`"
+          v-else-if="selectedMetaItem"
+          :key="`meta_${selectedMetaItem.id}`"
           mode="from-meta"
-          :meta="(selectedItem.raw as Meta)"
+          :meta="selectedMetaItem"
           :show-warning="false"
           :show-anchor="false"
           @pinned-meta-updated="onAssignmentUpdated"
@@ -123,7 +123,7 @@
 import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import orderBy from 'lodash/orderBy'
 import {useAppStore} from '@/stores/app'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
@@ -213,11 +213,25 @@ const selectedItem = computed(() => {
   return listItems.value.find((item) => item.id === id) || null
 })
 
+const selectedMediaTypeItem = computed((): MediaType | null => {
+  if (viewMode.value !== 'media') return null
+  const id = selectedIds.value[0]
+  if (!id) return null
+  return mediaTypes.value.find((item) => item.id === id) ?? null
+})
+
+const selectedMetaItem = computed((): Meta | null => {
+  if (viewMode.value !== 'tags') return null
+  const id = selectedIds.value[0]
+  if (!id) return null
+  return tagCategories.value.find((item) => item.id === id) ?? null
+})
+
 const loadAssignmentCounts = async () => {
   try {
     const [mediaTypeRows, pinnedMetaRows] = await Promise.all([
-      apiClient.get<MetaInMediaTypeRow[]>('/api/MetaInMediaType'),
-      apiClient.get<PinnedMetaRow[]>('/api/PinnedMeta'),
+      typedApi.getAllMetaInMediaType(),
+      typedApi.getAllPinnedMeta(),
     ])
 
     const fieldsByMedia: Record<number, number> = {}

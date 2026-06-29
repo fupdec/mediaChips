@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
@@ -89,25 +89,13 @@ import {
 import {getReadableFileSize} from '@/services/formatUtils'
 import {setOption} from '@/services/settingsService'
 import type { ExtendedStats, ExtendedStatsByType } from '@/types/widgets'
+import { emptyExtendedStatsUi, toExtendedStatsUi } from '@/types/widgets'
 
 const {t} = useI18n()
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
 
-const emptyStats = (): ExtendedStats => ({
-  total: 0,
-  byType: [],
-  averageRating: 0,
-  withTags: 0,
-  rated: 0,
-  favorites: 0,
-  addedLast7Days: 0,
-  addedLast30Days: 0,
-  largestFiles: [],
-})
-
-const stats = ref<ExtendedStats>(emptyStats())
-
+const stats = ref<ExtendedStats>(emptyExtendedStatsUi())
 const collapsed = ref(false)
 
 const summaryCards = computed(() => {
@@ -179,11 +167,8 @@ async function toggleCollapsed() {
 
 async function loadStats() {
   try {
-    const response = await apiClient.get<Partial<ExtendedStats>>('/api/home/extended-stats')
-    stats.value = {
-      ...emptyStats(),
-      ...(response.data || {}),
-    }
+    const response = await typedApi.getHomeExtendedStats()
+    stats.value = toExtendedStatsUi(response.data)
   } catch (error) {
     console.error(error)
   }

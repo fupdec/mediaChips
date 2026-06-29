@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import { getMediaDeleteAssetFolder } from '@/utils/mediaType'
 import type { MediaType } from '@/types/media'
 
@@ -31,7 +31,7 @@ export async function loadHomeMediaThumbs(
 
   await Promise.all([...idsByFolder.entries()].map(async ([mediaType, ids]) => {
     try {
-      const response = await apiClient.post<{ thumbs?: Record<number, string> }>('/api/media/thumbs', {
+      const response = await typedApi.postMediaThumbs({
         ids,
         mediaType,
       })

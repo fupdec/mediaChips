@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import {ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useEventBus} from '@/utils/eventBus'
 import TagsAdd from '@/components/app/appbar/elements/TagsAdd.vue'
 
@@ -54,7 +54,7 @@ async function openSuggestedTags() {
   message.value = ''
 
   try {
-    const res = await apiClient.post<SuggestTagsResponse>('/api/Task/suggestTagsFromPaths', {
+    const res = await typedApi.suggestTagsFromPaths({
       limit: 150,
       maxWords: 3,
       excludeExisting: true,

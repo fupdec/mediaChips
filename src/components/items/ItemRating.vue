@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import { useItemsStore } from '@/stores/items'
 import type {MediaItem, Tag} from '@/types/stores'
 
@@ -29,7 +29,7 @@ const itemsStore = useItemsStore()
 const rating = ref(props.item.rating as number | undefined)
 
 watch(rating, async (val) => {
-  await apiClient.put(`/api/${props.type}/${props.item.id}`, { rating: val })
+  await typedApi.updateEntity(props.type, props.item.id, { rating: val })
 
   itemsStore.updateItemField({
     id: props.item.id,

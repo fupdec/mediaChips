@@ -1,5 +1,6 @@
 import type { ApiDb } from '../types/db'
 import type { SequelizeInstance } from '../types/db'
+import type { Meta } from '@shared/entities/meta'
 import type {
   MarkLike,
   MarkLoadOptions,
@@ -81,7 +82,7 @@ function sortMarks(
   })
 }
 
-async function getMarkFilterMetas(db: ApiDb) {
+async function getMarkFilterMetas(db: ApiDb): Promise<Meta[]> {
   return db.Meta.findAll({
     where: {
       marks: true,
@@ -91,7 +92,7 @@ async function getMarkFilterMetas(db: ApiDb) {
       ['name', 'ASC'],
     ],
     raw: true,
-  })
+  }) as unknown as Promise<Meta[]>
 }
 
 async function loadMarkItems(db: ApiDb, options: MarkLoadOptions = {}) {

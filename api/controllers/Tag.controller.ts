@@ -1,6 +1,9 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import { getRequestBody } from '../types/http'
+import type { DeleteEntityOnePayload, EntityUpdatePayload } from '@shared/api/responses'
+import type { CreateTagPayload, SqlQueryPayload, TagItemsListRequest } from '@shared/api/payloads'
 const {parseItemsFromDb, filterItems} = require('../../app/tasks/items.js')
 const {
   deleteMarkGeneratedAsset,
@@ -12,15 +15,16 @@ module.exports = function (db: ApiDb) {
 
   // Retrieve all Tags from the database.
   const getAllForItems = async function (req: ApiRequest, res: ApiResponse) {
-    const metaId = Number(req.body.metaId)
+    const body = getRequestBody<TagItemsListRequest>(req)
+    const metaId = Number(body.metaId)
     if (!Number.isFinite(metaId)) {
       return res.status(400).send({
         message: 'metaId is required',
       })
     }
 
-    const ids = Array.isArray(req.body.ids)
-      ? req.body.ids.map((id: unknown) => Number(id)).filter((id: unknown) => Number.isFinite(id))
+    const ids = Array.isArray(body.ids)
+      ? body.ids.map((id: unknown) => Number(id)).filter((id: unknown) => Number.isFinite(id))
       : []
 
     const replacements: AnyRecord = {metaId}
@@ -45,12 +49,12 @@ module.exports = function (db: ApiDb) {
       const data = await db.sequelize.query(query, {replacements})
       const items_all = parseItemsFromDb(data[0])
       const items_filtered = filterItems(
-        req.body.filters,
+        body.filters,
         'tags',
         items_all,
-        req.body.sortBy,
-        req.body.direction,
-        req.body.find_duplicates,
+        body.sortBy,
+        body.direction,
+        body.find_duplicates,
       )
       res.status(201).send({items: items_filtered, total: items_all.length})
     } catch (err) {
@@ -64,7 +68,8 @@ module.exports = function (db: ApiDb) {
 
   // Create and Save a new Tag
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.Tag.bulkCreate(req.body).then((data) => {
+    const body = getRequestBody<CreateTagPayload[]>(req)
+    db.Tag.bulkCreate(body).then((data) => {
       res.status(201).send(data)
     }).catch((err: unknown) => {
       res.status(500).send({
@@ -75,12 +80,13 @@ module.exports = function (db: ApiDb) {
 
   // Retrieve all Tag from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.sequelize.query(req.body.query, {
+    const body = getRequestBody<SqlQueryPayload>(req)
+    db.sequelize.query(body.query, {
       raw: true
     }).then(async (data) => {
       const total = await db.Tag.findAndCountAll({
         where: {
-          metaId: req.body.metaId,
+          metaId: body.metaId,
         },
         raw: true
       })
@@ -137,7 +143,8 @@ module.exports = function (db: ApiDb) {
 
   // Retrieve all Tag from the database.
   const rawQuery = function (req: ApiRequest, res: ApiResponse) {
-    db.sequelize.query(req.body.query)
+    const body = getRequestBody<SqlQueryPayload>(req)
+    db.sequelize.query(body.query)
       .then((data) => {
         res.status(201).send(data)
       }).catch((err: unknown) => {
@@ -149,8 +156,9 @@ module.exports = function (db: ApiDb) {
 
   // Update a Tag by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    let silent = req.body.silent;
-    db.Tag.update(req.body, {
+    const body = getRequestBody<EntityUpdatePayload>(req)
+    const silent = body.silent
+    db.Tag.update(body, {
       where: {
         id: req.params.id,
       },
@@ -166,7 +174,8 @@ module.exports = function (db: ApiDb) {
 
   // delete an Tag by the id
   const deleteOne = async function (req: ApiRequest, res: ApiResponse) {
-    const id = req.body.id
+    const body = getRequestBody<DeleteEntityOnePayload>(req)
+    const id = body.id
 
     try {
       const tag = await db.Tag.findOne({

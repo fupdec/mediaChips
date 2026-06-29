@@ -2,6 +2,7 @@ import type { TaskControllerShared, FfprobeInfo } from '../../types/tasks'
 import type { AnyRecord } from '../../types/db'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
+import type { MediaPathFile } from '@shared/api/responses'
 const fs = require('fs')
 const path = require('path')
 const {stat} = require('fs/promises')
@@ -352,7 +353,7 @@ module.exports = function createTasksMediaController(shared: TaskControllerShare
         },
       })
       .then((data) => {
-        res.status(201).send(data)
+        res.status(201).send(data as unknown as MediaPathFile[])
       })
       .catch((err: unknown) => {
         res.status(500).send({

@@ -189,7 +189,7 @@ import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
 import _ from 'lodash'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getSavedFilters} from '@/services/filterService'
 import {
   getFilterObject,
@@ -479,7 +479,7 @@ const apply = async () => {
   const removed_filters = filters.value.filter(i => i.removed)
   for (let f of removed_filters) {
     if (f.id) {
-      await apiClient.delete(`/api/FilterRow/${f.id}`)
+      await typedApi.deleteFilterRow(f.id)
     }
   }
 
@@ -492,7 +492,7 @@ const addFilterRows = async (filterId: number | null | undefined, isSavedFilter 
   for (let f of filterRows) {
     if (isSavedFilter) f.id = null
     try {
-      await apiClient.post('/api/FilterRow', {
+      await typedApi.createFilterRow({
         filter: f,
         filterId: filterId,
         rowId: isSavedFilter ? null : f.id
@@ -512,7 +512,7 @@ const save = async () => {
   let savedFilter: SavedFilter = { id: 0 }
 
   try {
-    const response = await apiClient.post<SavedFilter | SavedFilter[]>('/api/SavedFilter', {
+    const response = await typedApi.createSavedFilter({
       name: filterName.value,
       mediaTypeId: ENV.value.media_type_id ?? null,
       metaId: ENV.value.meta_id ?? null,

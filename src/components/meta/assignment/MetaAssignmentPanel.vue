@@ -189,7 +189,7 @@ const anchorTypeLabel = computed(() => {
 
 const loadAllMeta = async () => {
   try {
-    allMeta.value = (await fetchAllMeta()) as Meta[]
+    allMeta.value = await fetchAllMeta()
   } catch (e) {
     console.error('Error loading meta:', e)
     allMeta.value = []
@@ -199,7 +199,7 @@ const loadAllMeta = async () => {
 const loadPinnedMedia = async () => {
   if (props.mode === 'from-meta' && props.meta?.id) {
     try {
-      pinnedMedia.value = await fetchPinnedMediaForMeta(props.meta.id) as MetaInMediaTypeAssignment[]
+      pinnedMedia.value = await fetchPinnedMediaForMeta(props.meta.id)
       emit('pinned-media-updated')
     } catch (e) {
       console.error('Error loading pinned media:', e)
@@ -210,7 +210,7 @@ const loadPinnedMedia = async () => {
 const loadPinnedMetaItems = async () => {
   if (props.mode === 'from-media-type' && props.mediaType?.id) {
     try {
-      pinnedMetaItems.value = await fetchPinnedMetaForMediaType(props.mediaType.id) as MetaInMediaTypeRow[]
+      pinnedMetaItems.value = await fetchPinnedMetaForMediaType(props.mediaType.id)
       emit('meta-updated', pinnedMetaItems.value)
     } catch (e) {
       console.error('Error loading pinned meta items:', e)
@@ -221,7 +221,7 @@ const loadPinnedMetaItems = async () => {
 const loadPinnedChildMeta = async () => {
   if (props.mode === 'from-meta' && props.meta?.id && isMetaTypeArray.value) {
     try {
-      pinnedChildMeta.value = await fetchPinnedChildMeta(props.meta.id) as PinnedChildMetaAssignment[]
+      pinnedChildMeta.value = await fetchPinnedChildMeta(props.meta.id)
       emit('pinned-meta-updated')
     } catch (e) {
       console.error('Error loading pinned child meta:', e)

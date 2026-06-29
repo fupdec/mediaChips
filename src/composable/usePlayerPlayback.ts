@@ -15,6 +15,7 @@ import {
   isAudioFilePath,
 } from '@/utils/mediaType'
 import {apiClient, buildApiUrl} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {checkFileExists} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
 import {ensureMarkThumb, getMarkImagePath} from '@/utils/markThumb'
@@ -227,12 +228,12 @@ export function usePlayerPlayback({
 
   const getMarks = async (media: MediaItem) => {
     try {
-      const res = await apiClient.get<PlayerMark[]>(`/api/Mark/video/${media.id}`)
+      const res = await typedApi.getMarksForVideo(media.id)
       playerStore.marks = res.data
 
       if (!media?.id || !appStore.mediaPath) return
 
-      for (const mark of res.data) {
+      for (const mark of playerStore.marks) {
         if (mark.id == null) continue
         const imgPath = getMarkImagePath(appStore.mediaPath, mark.id)
         const exists = await checkFileExists(imgPath)
@@ -265,7 +266,7 @@ export function usePlayerPlayback({
   }
 
   const getMetadata = async (media: MediaItem) => {
-    const res = await apiClient.get<Record<string, unknown>>(`/api/videoMetadata/${media.id}`)
+    const res = await typedApi.getVideoMetadata(media.id)
     playerStore.metadata = res.data
     playerStore.media = media
   }
@@ -722,7 +723,7 @@ export function usePlayerPlayback({
 
   const updatePlaybackTime = async (media: MediaItem) => {
     try {
-      await apiClient.put(`/api/videoMetadata/${media.id}`, {
+      await typedApi.updateVideoMetadata(media.id, {
         time: playerStore.currentTime,
       })
       updateItemVideo(media.id)
@@ -763,10 +764,8 @@ export function usePlayerPlayback({
 
     const mediaTypeId = media.mediaTypeId || getDefaultMediaTypeId(appStore.mediaTypes)
     try {
-      const res = await apiClient.get<Array<Record<string, unknown>>>('/api/MetaInMediaType', {
-        params: {mediaTypeId},
-      })
-      itemsStore.assigned = res.data as AssignedMeta[]
+      const res = await typedApi.getAllMetaInMediaType({mediaTypeId})
+      itemsStore.assigned = res.data
     } catch (e) {
       console.log('Error loading metadata:', e)
     }

@@ -7,7 +7,16 @@ type Locale = 'en' | 'ru' | 'cn' | 'es'
 
 export type { Locale }
 
+const LOCALES: Locale[] = ['en', 'ru', 'cn', 'es']
+
 const catalogs: Record<Locale, Record<string, unknown>> = { en, ru, cn, es }
+
+export function toLocale(value: string | undefined): Locale {
+  if (value && LOCALES.includes(value as Locale)) {
+    return value as Locale
+  }
+  return 'en'
+}
 
 function getByPath(obj: Record<string, unknown> | undefined, keyPath: string): unknown {
   return keyPath.split('.').reduce<unknown>((value, key) => {

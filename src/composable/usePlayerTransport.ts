@@ -4,7 +4,7 @@ import {useRoute} from 'vue-router'
 import {useDisplay} from 'vuetify'
 import _ from 'lodash'
 import path from 'path-browserify'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -269,8 +269,9 @@ export function usePlayerTransport({emit, jumpToMark}: UsePlayerTransportOptions
   const getVideo = async (): Promise<MediaItem | null> => {
     if (!video.value) return null
 
+    const mediaTypeId = video.value.mediaTypeId ?? getDefaultMediaTypeId(appStore.mediaTypes) ?? undefined
     const query = {
-      mediaTypeId: video.value.mediaTypeId || getDefaultMediaTypeId(appStore.mediaTypes),
+      mediaTypeId,
       filters: [],
       sortBy: 'createdAt',
       direction: 'asc',
@@ -279,8 +280,8 @@ export function usePlayerTransport({emit, jumpToMark}: UsePlayerTransportOptions
     }
 
     try {
-      const res = await apiClient.post<{ items: MediaItem[] }>('/api/media/items', query)
-      return res.data.items[0] ?? null
+      const res = await typedApi.getMediaItems(query)
+      return res.data.items?.[0] ?? null
     } catch (e) {
       console.log(e)
       return null
@@ -333,7 +334,7 @@ export function usePlayerTransport({emit, jumpToMark}: UsePlayerTransportOptions
 
     setTimeout(async () => {
       try {
-        await apiClient.post('/api/media/deleteOne', {
+        await typedApi.deleteMediaOne({
           type: 'videos',
           id: video_edit.id,
           with_file,

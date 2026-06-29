@@ -211,7 +211,7 @@
 import {ref, computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import type {BackupEntry} from '@/types/settings'
@@ -324,8 +324,8 @@ function manageBackups() {
 async function getBackups() {
   isLoaded.value = false
   try {
-    const {data} = await apiClient.get<BackupEntry[]>('/api/TasksBackups/getBackups')
-    backups.value = data
+    const {data} = await typedApi.getBackups()
+    backups.value = data || []
   } catch {
     backups.value = []
   }
@@ -335,7 +335,7 @@ async function getBackups() {
 
 async function createBackup() {
   dialogsStore.process.show = true
-  await apiClient.get('/api/TasksBackups/createBackup')
+  await typedApi.createBackup()
   await getBackups()
   dialogsStore.process.show = false
 }
@@ -343,7 +343,7 @@ async function createBackup() {
 async function deleteBackups() {
   dialogsStore.process.show = true
   for (const i of selected.value) {
-    await apiClient.post('/api/TasksBackups/deleteBackup', {
+    await typedApi.deleteBackup({
       name: i.date,
     })
   }
@@ -354,7 +354,7 @@ async function deleteBackups() {
 
 async function restoreBackup() {
   dialogsStore.process.show = true
-  await apiClient.post('/api/TasksBackups/restoreBackup', {
+  await typedApi.restoreBackup({
     name: selected.value[0].date,
   })
   dialogsStore.process.show = false
@@ -376,7 +376,7 @@ async function importBackup() {
   })
 
   try {
-    await apiClient.post('/api/TasksBackups/importBackup', {path})
+    await typedApi.importBackup({path})
     await getBackups()
     dialogImport.value = false
     filePath.value = ''
@@ -411,7 +411,7 @@ async function exportBackup() {
 
   try {
     for (const i of selected.value) {
-      await apiClient.post('/api/TasksBackups/exportBackup', {
+      await typedApi.exportBackup({
         archive: i.date,
         path,
       })

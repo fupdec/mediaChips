@@ -91,7 +91,7 @@ import type {PropType} from 'vue'
 import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getFilters} from '@/services/filterService'
 import {validateName} from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
@@ -184,7 +184,7 @@ const applyName = async () => {
   if (!valid.value || !props.playlist?.id) return
 
   try {
-    await apiClient.put(`/api/SavedFilter/${props.playlist.id}`, {
+    await typedApi.updateSavedFilter(props.playlist.id, {
       name: name.value,
     })
     emit('updatePlaylist')
@@ -204,9 +204,7 @@ const exportPlaylist = async () => {
   exporting.value = true
 
   try {
-    const response = await apiClient.get<{items?: MediaItem[]}>(`/api/SavedFilter/${props.playlist.id}/media`, {
-      params: {mode: 'play'},
-    })
+    const response = await typedApi.getSavedFilterMedia(props.playlist.id, {mode: 'play'})
     const videos = (response.data?.items || []).map((item: MediaItem) => ({
       medium: item,
       ...item,

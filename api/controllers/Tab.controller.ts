@@ -1,10 +1,14 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import type { TabCreatePayload, TabUpdatePayload } from '@shared/api/payloads'
+import { getRequestBody } from '../types/http'
+
 module.exports = function (db: ApiDb) {
   // Create and Save a new Tab
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.Tab.create(req.body).then((data) => {
+    const body = getRequestBody<TabCreatePayload>(req)
+    db.Tab.create(body).then((data) => {
       res.status(201).send(data)
     }).catch((err: unknown) => {
       res.status(500).send({
@@ -27,8 +31,9 @@ module.exports = function (db: ApiDb) {
 
   // Update a Tab by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
+    const body = getRequestBody<TabUpdatePayload>(req)
     db.Tab
-      .update(req.body, {
+      .update(body, {
         where: {
           id: req.params.id
         }

@@ -141,7 +141,12 @@ const search = ref("")
 const filtered_type = ref<string | null>(null)
 const metaTypes = ref<MetaTypeItem[]>(MetaTypes)
 
-const getMetaTypeItem = (raw: unknown): MetaTypeItem => raw as MetaTypeItem
+const getMetaTypeItem = (raw: unknown): MetaTypeItem => {
+  if (raw && typeof raw === 'object' && 'value' in raw && 'text' in raw) {
+    return raw as MetaTypeItem
+  }
+  return { value: '', text: '', icon: 'shape' }
+}
 
 // Computed
 const groups = computed(() => {

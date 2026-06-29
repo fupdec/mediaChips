@@ -1,5 +1,16 @@
 import type { Meta } from '@/types/stores'
 
+export interface ScraperPerformer {
+  slug?: string
+  posters?: unknown[]
+  [key: string]: unknown
+}
+
+export interface ScraperPerformerSearchResponse {
+  data?: ScraperPerformer[]
+  [key: string]: unknown
+}
+
 export interface ScraperPoster {
   id: string | number
   url: string

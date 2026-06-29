@@ -80,7 +80,7 @@ import type {PropType} from 'vue'
 import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getSavedFilters} from '@/services/filterService'
 import {validateName} from '@/services/formatUtils'
 
@@ -126,12 +126,14 @@ const openDialogDelete = (filter: SavedFilter) => {
 
 const deleteSavedFilter = async () => {
   const savedFilter = selected.value
-  if (!savedFilter) return
+  if (!savedFilter?.id) return
 
-  await apiClient.delete(`/api/SavedFilter/${savedFilter.id}`)
+  await typedApi.deleteSavedFilter(savedFilter.id)
 
   for (const row of savedFilter.filters || []) {
-    await apiClient.delete(`/api/FilterRow/${row.id}`)
+    if (row?.id) {
+      await typedApi.deleteFilterRow(row.id)
+    }
   }
 
   await getSavedFilters()
@@ -151,10 +153,7 @@ const updateFilterName = async () => {
   const savedFilter = selected.value
   if (!savedFilter?.id) return
 
-  await apiClient.put(
-    `/api/SavedFilter/${savedFilter.id}`,
-    {name: filterName.value},
-  )
+  await typedApi.updateSavedFilter(savedFilter.id, {name: filterName.value})
     .then(() => {
       dialogEditing.value = false
       getSavedFilters()

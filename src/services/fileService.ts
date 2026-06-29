@@ -1,6 +1,7 @@
 import path from 'path-browserify'
 import { normalizePastedFilePath } from '@/utils/filePathInput'
-import { apiClient, getApiBaseUrl } from '@/services/apiClient'
+import { getApiBaseUrl } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 
 async function checkFileExistsViaElectron(filePath: string): Promise<boolean | null> {
   if (typeof window === 'undefined') return null
@@ -34,16 +35,14 @@ export async function checkFileExists(filePath: string) {
   if (!getApiBaseUrl()) return false
 
   try {
-    const response = await apiClient.post('/api/Task/checkFileExists', {
-      path: filePath,
-    })
+    const response = await typedApi.checkFileExists(filePath)
     if (response.status === 200 || response.status === 201) {
       return true
     }
   } catch {}
 
   try {
-    const response = await apiClient.post<{ exists?: boolean }>('/api/resolve-path', { filePath })
+    const response = await typedApi.resolvePath(filePath)
     return Boolean(response.data?.exists)
   } catch {
     return false
@@ -52,15 +51,11 @@ export async function checkFileExists(filePath: string) {
 
 export async function getLocalImage(imgPath: string, outside?: boolean, cacheBust = false) {
   try {
-    const res = await apiClient.post<Blob>(
-      '/api/get-file',
-      {
-        url: imgPath,
-        outside,
-        ...(cacheBust ? { _t: Date.now() } : {}),
-      },
-      { responseType: 'blob' },
-    )
+    const res = await typedApi.getFileBlob({
+      url: imgPath,
+      outside,
+      ...(cacheBust ? { _t: Date.now() } : {}),
+    })
     return URL.createObjectURL(res.data)
   } catch {
     return path.join('/', 'images/unavailable.png')
@@ -74,7 +69,7 @@ export async function createThumb(
   width: number,
   overwrite?: boolean,
 ) {
-  return apiClient.post('/api/Task/createThumb', {
+  return typedApi.createThumb({
     timestamp,
     inputPath,
     outputPath,
@@ -84,9 +79,7 @@ export async function createThumb(
 }
 
 export async function deleteLocalFile(filePath: string) {
-  return apiClient.post('/api/Task/deleteFile', {
-    path: filePath,
-  })
+  return typedApi.deleteLocalFile(filePath)
 }
 
 export async function createImage(
@@ -104,7 +97,7 @@ export async function createImage(
     url = image
   }
 
-  return apiClient.post('/api/Task/createImage', {
+  return typedApi.createImage({
     image,
     outputPath,
     url,

@@ -1,10 +1,10 @@
 import _ from 'lodash'
 import { useSettingsStore } from '@/stores/settings'
-import { apiClient } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 import type { SettingsState } from '@/types/settings'
 
 export async function getOption(option: keyof SettingsState | string) {
-  return apiClient.get(`/api/Setting/${option}`)
+  return typedApi.getSetting(String(option))
 }
 
 export const setOption = _.debounce(async function setOption(
@@ -13,5 +13,5 @@ export const setOption = _.debounce(async function setOption(
 ) {
   const settings = useSettingsStore()
   settings[option] = value
-  return await apiClient.put(`/api/Setting/${option}`, { value })
+  return await typedApi.putSetting(String(option), String(value))
 }, 10)

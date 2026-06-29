@@ -1,6 +1,9 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import { getRequestBody } from '../types/http'
+import type { ItemsListRequest, DeleteEntityOnePayload, EntityUpdatePayload } from '@shared/api/responses'
+import type { MediaPathUpdatePayload, MediaThumbsRequestPayload, SqlQueryPayload } from '@shared/api/payloads'
 const fs = require('fs')
 const path = require('path')
 const {
@@ -19,22 +22,23 @@ module.exports = function (db: ApiDb) {
   // Retrieve all Media from the database.
   const getAll = async function (req: ApiRequest, res: ApiResponse) {
     try {
-      const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
-      const limit = Number(req.body.limit)
-      const page = Number(req.body.page) || 1
+      const body = getRequestBody<ItemsListRequest>(req)
+      const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []
+      const limit = Number(body.limit)
+      const page = Number(body.page) || 1
 
       const result = await loadMediaItems(db, {
-        mediaTypeId: req.body.mediaTypeId,
+        mediaTypeId: body.mediaTypeId,
         ids,
-        filters: req.body.filters,
-        sortBy: req.body.sortBy,
-        direction: req.body.direction,
-        find_duplicates: req.body.find_duplicates,
-        duplicates_by: req.body.duplicates_by || 'filesize',
+        filters: body.filters,
+        sortBy: body.sortBy,
+        direction: body.direction,
+        find_duplicates: body.find_duplicates,
+        duplicates_by: body.duplicates_by || 'filesize',
         page,
         limit: limit > 0 ? limit : null,
-        includeNavigation: req.body.includeNavigation === true && !ids.length,
-        skipTotals: req.body.skipTotals === true,
+        includeNavigation: body.includeNavigation === true && !ids.length,
+        skipTotals: body.skipTotals === true,
       })
 
       res.status(201).send(result)
@@ -47,13 +51,14 @@ module.exports = function (db: ApiDb) {
 
   const getFilteredIds = async function (req: ApiRequest, res: ApiResponse) {
     try {
+      const body = getRequestBody<ItemsListRequest>(req)
       const result = await loadFilteredMediaIds(db, {
-        mediaTypeId: req.body.mediaTypeId,
-        filters: req.body.filters,
-        sortBy: req.body.sortBy,
-        direction: req.body.direction,
-        find_duplicates: req.body.find_duplicates,
-        duplicates_by: req.body.duplicates_by || 'filesize',
+        mediaTypeId: body.mediaTypeId,
+        filters: body.filters,
+        sortBy: body.sortBy,
+        direction: body.direction,
+        find_duplicates: body.find_duplicates,
+        duplicates_by: body.duplicates_by || 'filesize',
       })
 
       res.status(201).send(result)
@@ -78,8 +83,9 @@ module.exports = function (db: ApiDb) {
 
   const getThumbs = async function (req: ApiRequest, res: ApiResponse) {
     try {
-      const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : []
-      const mediaType = String(req.body.mediaType || 'videos')
+      const body = getRequestBody<MediaThumbsRequestPayload>(req)
+      const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []
+      const mediaType = String(body.mediaType || 'videos')
       const thumbs: AnyRecord = {}
       const basePath = path.join(dbPath, 'media', mediaType)
 
@@ -124,12 +130,13 @@ module.exports = function (db: ApiDb) {
 
   // Retrieve all Media from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.sequelize.query(req.body.query, {
+    const body = getRequestBody<SqlQueryPayload>(req)
+    db.sequelize.query(body.query, {
       raw: true
     }).then(async (data) => {
       const total = await db.Media.findAndCountAll({
         where: {
-          mediaTypeId: req.body.mediaTypeId,
+          mediaTypeId: body.mediaTypeId,
         },
         raw: true
       })
@@ -185,7 +192,8 @@ module.exports = function (db: ApiDb) {
 
   // Получаем все медиа подходящие под sql-запрос
   const rawQuery = function (req: ApiRequest, res: ApiResponse) {
-    db.sequelize.query(req.body.query)
+    const body = getRequestBody<SqlQueryPayload>(req)
+    db.sequelize.query(body.query)
       .then((data) => {
         res.status(201).send(data)
       }).catch((err: unknown) => {
@@ -197,16 +205,17 @@ module.exports = function (db: ApiDb) {
 
   // update file path, name, basename and ext by path
   const updatePath = function (req: ApiRequest, res: ApiResponse) {
+    const body = getRequestBody<MediaPathUpdatePayload>(req)
     const data = {
-      path: req.body.path,
-      basename: path.basename(req.body.path),
-      name: path.parse(req.body.path).name,
-      ext: path.extname(req.body.path),
+      path: body.path,
+      basename: path.basename(String(body.path ?? '')),
+      name: path.parse(String(body.path ?? '')).name,
+      ext: path.extname(String(body.path ?? '')),
     }
 
     db.Media.update(data, {
       where: {
-        id: req.body.id,
+        id: body.id,
       },
       silent: true,
     }).then((data) => {
@@ -220,8 +229,9 @@ module.exports = function (db: ApiDb) {
 
   // Update a Media by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    let silent = req.body.silent;
-    db.Media.update(req.body, {
+    const body = getRequestBody<EntityUpdatePayload>(req)
+    const silent = body.silent
+    db.Media.update(body, {
       where: {
         id: req.params.id,
       },
@@ -237,7 +247,8 @@ module.exports = function (db: ApiDb) {
 
   // Delete a media with the specified id in the request
   const deleteOne = async function (req: ApiRequest, res: ApiResponse) {
-    const id = req.body.id
+    const body = getRequestBody<DeleteEntityOnePayload>(req)
+    const id = body.id
 
     try {
       const media = await db.Media.findOne({
@@ -261,8 +272,8 @@ module.exports = function (db: ApiDb) {
 
       await deleteMediaGeneratedAssets(db, dbPath, media, mediaType)
 
-      if (req.body.with_file) {
-        const filePath = media.path || req.body.path
+      if (body.with_file) {
+        const filePath = media.path || body.path
 
         try {
           const deleted = await unlinkResolvedPath(filePath)

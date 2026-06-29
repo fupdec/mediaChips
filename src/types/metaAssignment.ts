@@ -1,23 +1,24 @@
 import type { AssignedMeta, Meta } from '@/types/stores'
 import type { MediaType } from '@/types/media'
+import type {
+  MetaInMediaTypeAssignmentRow,
+  MetaInMediaTypeRow as SharedMetaInMediaTypeRow,
+  PinnedChildMetaAssignmentRow,
+} from '@shared/entities/meta'
 
 export type MetaAssignmentMode = 'from-meta' | 'from-media-type'
 export type MetaAssignmentView = 'media' | 'tags'
 
-export interface MetaInMediaTypeAssignment extends AssignedMeta {
-  mediaTypeId: number
-  metaId?: number
+export type MetaInMediaTypeAssignment = MetaInMediaTypeAssignmentRow & {
+  mediaType?: MediaType
   meta?: Meta
 }
 
-export interface PinnedChildMetaAssignment extends AssignedMeta {
-  metaId?: number
-  pinnedMetaId: number
+export type PinnedChildMetaAssignment = PinnedChildMetaAssignmentRow & {
   meta?: Meta
 }
 
-export interface MetaInMediaTypeRow extends AssignedMeta {
-  metaId: number
+export type MetaInMediaTypeRow = SharedMetaInMediaTypeRow & {
   meta?: Meta
 }
 
@@ -39,4 +40,4 @@ export interface MediaTypePreviewField {
   active: boolean
 }
 
-export type { MediaType, Meta }
+export type { MediaType, Meta, AssignedMeta }

@@ -1,11 +1,6 @@
 import type { AssignedMeta } from '@/types/stores'
 import type { Tag } from '@/types/stores'
-
-interface ParsedTagValue {
-  tagId: number
-  metaId: number
-  mediaId: number
-}
+import type { ParsePathTagEntry } from '@shared/api/responses'
 
 const clean = (s: string) => String(s || '').replace(/[^a-zа-яё0-9]/giu, '').toLowerCase()
 
@@ -20,7 +15,7 @@ export function parseFilePath(
   filePath: string,
   mediaId: number,
   { tags = [], assigned = [] }: { tags?: Tag[]; assigned?: AssignedMeta[] } = {},
-): ParsedTagValue[] {
+): ParsePathTagEntry[] {
   const pathWithoutExt = filePath.substring(0, filePath.lastIndexOf('.'))
 
   const segments = pathWithoutExt.split(/[\/\\]/).filter(Boolean)
@@ -36,7 +31,7 @@ export function parseFilePath(
   }
 
   const parsed = assigned.filter((item) => item.meta?.parser)
-  const vals: ParsedTagValue[] = []
+  const vals: ParsePathTagEntry[] = []
 
   for (const meta of parsed) {
     const metaId = Number(meta.metaId)
@@ -47,7 +42,7 @@ export function parseFilePath(
 
         for (const str of strings) {
           if (str === clean(String(tag.name || ''))) return true
-          const synonyms = (tag as Tag & { synonyms?: string }).synonyms
+          const synonyms = tag.synonyms
           if (synonyms) {
             for (const syn of synonyms.split(',')) {
               if (str === clean(syn)) return true

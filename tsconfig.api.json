@@ -11,7 +11,11 @@
     "skipLibCheck": true,
     "declaration": false,
     "ignoreDeprecations": "6.0",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
   },
   "include": ["api/**/*.ts"]
 }

@@ -346,7 +346,7 @@ import {useI18n} from 'vue-i18n'
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import DuplicatePathRow from "@/components/dialogs/DuplicatePathRow.vue"
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -543,7 +543,7 @@ const deleteDuplicates = async (delete_type: DeleteDuplicateType) => {
         }
 
         if (delete_type === 'existing' && duplicate?.id) {
-          await apiClient.post('/api/media/updatePath', {
+          await typedApi.updateMediaPath({
             id: duplicate.id,
             path: dupe.path,
           })
@@ -587,7 +587,7 @@ const relinkMovedFiles = async () => {
       const duplicate = getDuplicateDetails(dupe.duplicate)
       if (!duplicate?.id || !dupe.path) continue
 
-      await apiClient.post('/api/media/updatePath', {
+      await typedApi.updateMediaPath({
         id: duplicate.id,
         path: dupe.path,
       })
@@ -650,7 +650,7 @@ const openProcessAction = (): NotificationAction => ({
 
 const fetchClipModelStatus = async () => {
   try {
-    const response = await apiClient.get<{ status?: string }>('/api/Task/clipModelStatus')
+    const response = await typedApi.getClipModelStatus()
     clipModelStatus.value = response.data?.status || 'unknown'
   } catch (error) {
     console.error('Error checking CLIP model status:', error)
@@ -663,7 +663,7 @@ const downloadClipModel = async () => {
   clipModelStatus.value = 'loading'
 
   try {
-    const response = await apiClient.post<{ status?: string }>('/api/Task/downloadClipModel')
+    const response = await typedApi.downloadClipModel()
     clipModelStatus.value = response.data?.status || 'downloaded'
     setNotification({
       type: 'success',

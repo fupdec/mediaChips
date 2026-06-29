@@ -5,35 +5,31 @@ import {useSettingsStore} from '@/stores/settings'
 import {useWatcherStore} from '@/stores/watcher'
 import {useI18n} from 'vue-i18n'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
-import type { Meta } from '@/types/stores'
+import type { WatcherFileChangeGroup, WatcherFilesEntry } from '@/types/watcher'
 
 const settings = useSettingsStore()
 const app = useAppStore()
 const watcherStore = useWatcherStore()
 const {t} = useI18n()
-interface WatcherFolderEntry {
-  folder: { id: number; name?: string; [key: string]: unknown }
-  files: Array<Record<string, unknown[]>>
-}
 
-const watcherFiles = computed(() => (watcherStore.files || []) as WatcherFolderEntry[])
+const watcherFiles = computed(() => watcherStore.files)
 const folderHovered = ref(false)
 const hiddenMetaMenu = ref(false)
 
 const mediaTypes = computed(() => app.mediaTypes.filter(i => !i.hidden))
 const mediaTypesHidden = computed(() => app.mediaTypes.filter(i => i.hidden))
 
-const meta = computed(() => (app.meta as Meta[]).filter(i => i.type === 'array' && !i.hidden))
-const hiddenMeta = computed(() => (app.meta as Meta[]).filter(i => i.type === 'array' && i.hidden))
+const meta = computed(() => app.meta.filter(i => i.type === 'array' && !i.hidden))
+const hiddenMeta = computed(() => app.meta.filter(i => i.type === 'array' && i.hidden))
 
-function openDialogFolder(folder: unknown) {
+function openDialogFolder(folder: WatcherFilesEntry) {
   watcherStore.folder = folder
   watcherStore.dialogFolder = true
 }
 
-const getBadgeVal = (files: Array<Record<string, unknown[]>>, type: string) => {
+const getBadgeVal = (files: WatcherFileChangeGroup[], field: 'new' | 'lost') => {
   let v = 0
-  for (const f of files) v += f[type]?.length ?? 0
+  for (const group of files) v += group[field]?.length ?? 0
   return v
 }
 </script>

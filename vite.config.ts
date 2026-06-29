@@ -31,7 +31,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@shared': path.resolve(__dirname, './shared'),
     },
+    extensions: ['.ts', '.tsx', '.mts', '.mjs', '.js', '.jsx', '.json'],
   },
 
   server: {
@@ -47,7 +49,7 @@ export default defineConfig({
   base: './',
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.{js,ts}'],
+    include: ['src/**/*.test.{js,ts}', 'shared/**/*.test.ts'],
   },
   build: {
     outDir: 'dist',

@@ -1,4 +1,5 @@
 import type { ApiDb, AnyRecord } from '../types/db'
+import type { ParsedHomeMediaResponse } from '@shared/schemas/home'
 
 const MEDIA_HOME_SELECT = `SELECT media.id,
   media.path,
@@ -83,7 +84,7 @@ async function getTopViewedMedia(db: ApiDb, limit = 12) {
   return rows.map(mapHomeItem)
 }
 
-async function getHomeMedia(db: ApiDb, limits: AnyRecord = {}) {
+async function getHomeMedia(db: ApiDb, limits: AnyRecord = {}): Promise<ParsedHomeMediaResponse> {
   const continueLimit = Math.min(Math.max(Number(limits.continue) || 12, 1), 24)
   const favoritesLimit = Math.min(Math.max(Number(limits.favorites) || 12, 1), 24)
   const topViewsLimit = Math.min(Math.max(Number(limits.topViews) || 12, 1), 24)
@@ -98,7 +99,7 @@ async function getHomeMedia(db: ApiDb, limits: AnyRecord = {}) {
     continueWatching,
     favorites,
     topViews,
-  }
+  } as ParsedHomeMediaResponse
 }
 
 module.exports = {

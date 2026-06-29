@@ -108,7 +108,7 @@ export function usePlayerTimeline({ emit }: UsePlayerTimelineOptions) {
   }
 
   const jumpToMark = (type: 'prev' | 'next') => {
-    const mark = findMarkToJump(player.value.marks as PlayerMark[], player.value.currentTime, type)
+    const mark = findMarkToJump(player.value.marks, player.value.currentTime, type)
     if (!mark) return
 
     jumpTo(mark.time)

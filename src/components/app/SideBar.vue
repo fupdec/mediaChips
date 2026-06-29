@@ -164,7 +164,7 @@
 import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import draggable from 'vuedraggable'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import orderBy from 'lodash/orderBy'
 import {useAppStore} from '@/stores/app'
 import {useWatcherStore} from '@/stores/watcher'
@@ -173,6 +173,7 @@ import {useI18n} from 'vue-i18n'
 import {useEventBus} from "@/utils/eventBus"
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import type { Meta } from '@/types/stores'
+import type { WatcherFileChangeGroup, WatcherFilesEntry } from '@/types/watcher'
 
 type MetaNavItem = Meta & { hidden?: boolean; order?: number }
 type MetaNavRow = MetaNavItem | { type: 'toggler'; id: string }
@@ -182,12 +183,7 @@ const folderHovered = ref(false)
 const meta_arr = ref<MetaNavRow[]>([])
 const drag = ref(false)
 
-interface WatcherFolderEntry {
-  folder: { id: number; name?: string; [key: string]: unknown }
-  files: Array<Record<string, unknown[]>>
-}
-
-const watcherFiles = computed(() => (watcherStore.files || []) as WatcherFolderEntry[])
+const watcherFiles = computed(() => watcherStore.files)
 
 const dragOptions = {
   animation: 200,
@@ -240,6 +236,10 @@ watch(metaDisordered, (v) => {
 })
 
 /* methods */
+function isMetaNavItem(item: MetaNavRow): item is MetaNavItem {
+  return item.type !== 'toggler'
+}
+
 async function updateMetaOrder() {
   drag.value = false
 
@@ -247,15 +247,14 @@ async function updateMetaOrder() {
 
   const payload = meta_arr.value
     .map((i, idx) => {
-      if (i.type === 'toggler') return null
+      if (!isMetaNavItem(i)) return null
 
-      const metaItem = i as MetaNavItem
-      let hidden = metaItem.hidden
+      let hidden = i.hidden
       if (indexToggler >= 0) {
         hidden = idx >= indexToggler
       }
       return {
-        id: metaItem.id,
+        id: i.id,
         order: idx,
         hidden,
       }
@@ -265,7 +264,7 @@ async function updateMetaOrder() {
   // send updates sequentially (original did it one-by-one)
   for (const p of payload) {
     try {
-      await apiClient.put(`/api/meta/${p.id}`, {
+      await typedApi.updateMeta(p.id, {
         order: p.order,
         hidden: p.hidden,
       })
@@ -277,16 +276,16 @@ async function updateMetaOrder() {
   eventBus.emit('getMeta')
 }
 
-function openDialogFolder(folder: unknown) {
+function openDialogFolder(folder: WatcherFilesEntry) {
   console.log('openDialogFolder', folder)
 
   watcherStore.folder = folder
   watcherStore.dialogFolder = true
 }
 
-function getBadgeVal(files: Array<Record<string, unknown[]>> = [], type = 'new') {
+function getBadgeVal(files: WatcherFileChangeGroup[] = [], field: 'new' | 'lost' = 'new') {
   let value = 0
-  for (const f of files) value += (f[type] || []).length
+  for (const group of files) value += group[field]?.length ?? 0
   return value
 }
 </script>

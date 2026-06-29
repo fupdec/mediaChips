@@ -1,4 +1,5 @@
 import type { ApiDb, AnyRecord, MediaLike, FilterLike, TagLike, MetaLike } from '../types/db'
+import type { ParsedHomeHealth } from '@shared/schemas/home'
 
 const fs = require('fs')
 const path = require('path')
@@ -75,7 +76,7 @@ async function getDuplicateCounts(db: ApiDb) {
   }
 }
 
-async function getHomeHealth(db: ApiDb) {
+async function getHomeHealth(db: ApiDb): Promise<ParsedHomeHealth> {
   const dbPath = db.path
   const [duplicates, contentHash, generatedImages, database] = await Promise.all([
     getDuplicateCounts(db),
@@ -89,7 +90,7 @@ async function getHomeHealth(db: ApiDb) {
     contentHash,
     generatedImages,
     database,
-  }
+  } as ParsedHomeHealth
 }
 
 module.exports = {

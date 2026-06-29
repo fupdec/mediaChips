@@ -126,7 +126,7 @@ import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify';
 import {storeToRefs} from 'pinia';
 import draggable from 'vuedraggable';
-import {apiClient} from '@/services/apiClient';
+import {typedApi} from '@/services/typedApi';
 import {getLocalImage} from '@/services/fileService';
 import {validateName} from '@/services/formatUtils';
 import {setNotification} from '@/services/notificationService';
@@ -137,15 +137,7 @@ import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue';
 import {sortBy} from 'lodash';
 import {buildM3uPlaylist, downloadTextFile, playlistExportFilename} from '@/utils/playlistExport';
 import type {Playlist} from '@/types/stores'
-
-interface PlaylistVideo {
-  mediaId: number
-  playlistId: number
-  order?: number
-  thumb?: string | null
-  medium?: { name?: string }
-  [key: string]: unknown
-}
+import type {PlaylistMediaLink} from '@shared/entities/playlist'
 
 interface DialogHeaderButton {
   icon?: string
@@ -181,7 +173,7 @@ const dialogLocal = ref(props.dialog);
 const dialogDeletePlaylist = ref(false);
 const valid = ref(false);
 const name = ref('');
-const videos = ref<PlaylistVideo[]>([]);
+const videos = ref<PlaylistMediaLink[]>([]);
 const is_thumbs_loaded = ref(false);
 const drag = ref(false);
 const form = ref<VFormInstance>(null);
@@ -241,7 +233,7 @@ const apply = async () => {
   if (!valid.value) return;
 
   try {
-    await apiClient.put(`/api/playlist/${props.playlist.id}`, {
+    await typedApi.updatePlaylist(props.playlist.id, {
       name: name.value,
     });
     emit("updatePlaylist");
@@ -314,9 +306,9 @@ const getVideos = async () => {
   if (!props.playlist) return
   is_thumbs_loaded.value = false;
   try {
-    const res = await apiClient.get(`/api/mediaInPlaylists/${props.playlist.id}`);
+    const res = await typedApi.getMediaInPlaylist(props.playlist.id);
 
-    videos.value = sortBy(res.data as PlaylistVideo[], "order");
+    videos.value = sortBy(res.data || [], "order");
 
     for (const video of videos.value) {
       const imgPath = path.join(
@@ -333,14 +325,12 @@ const getVideos = async () => {
   }
 };
 
-const removeVideo = async (video: PlaylistVideo) => {
+const removeVideo = async (video: PlaylistMediaLink) => {
   if (!props.playlist) return
   try {
-    await apiClient.delete('/api/mediaInPlaylists/', {
-      data: {
-        mediaId: video.mediaId,
-        playlistId: props.playlist.id,
-      },
+    await typedApi.deleteMediaInPlaylists({
+      mediaId: video.mediaId,
+      playlistId: props.playlist.id,
     });
     await getVideos();
   } catch (error) {
@@ -358,7 +348,7 @@ const reorderVideos = async () => {
   }));
 
   try {
-    await apiClient.post('/api/mediaInPlaylists/update', reorderedVideos);
+    await typedApi.updateMediaInPlaylistsOrder(reorderedVideos);
     emit("updatePlaylist");
   } catch (error) {
     console.error(error);

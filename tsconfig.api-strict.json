@@ -3,7 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
   },
-  "include": ["api/**/*.ts"]
+  "include": ["api/**/*.ts", "shared/**/*.ts"]
 }

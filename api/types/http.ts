@@ -9,6 +9,10 @@ export type ApiRequest = Request & {
 
 export type ApiResponse = Response
 
+export function getRequestBody<T = AnyRecord>(req: ApiRequest): T {
+  return req.body as T
+}
+
 export type ApiRequestHandler = (
   req: ApiRequest,
   res: ApiResponse,

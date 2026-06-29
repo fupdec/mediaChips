@@ -225,7 +225,7 @@
 import {ref, computed, onMounted, watch} from 'vue'
 import type { PropType } from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
@@ -355,9 +355,11 @@ const toggleActivation = async () => {
   emit('setActive', active.value)
 
   try {
-    await apiClient.put(`/api/FilterRow/${modelFilter.value.id}`, {
-      active: active.value,
-    })
+    if (modelFilter.value.id != null) {
+      await typedApi.updateFilterRow(modelFilter.value.id, {
+        active: active.value,
+      })
+    }
   } catch (error) {
     console.error('Error toggling filter activation:', error)
   }

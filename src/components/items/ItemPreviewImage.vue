@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import {ref, computed, watch, onMounted, onBeforeUnmount} from 'vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {loadImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
@@ -102,9 +102,7 @@ const stopThumbObserver = () => {
 }
 
 const regenerateThumb = async () => {
-  await apiClient.post('/api/Task/updateMediaInfo', {
-    id: props.media.id,
-  })
+  await typedApi.updateMediaInfo(props.media.id)
 }
 
 const loadThumb = async ({cacheBust = false} = {}) => {

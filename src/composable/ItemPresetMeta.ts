@@ -3,7 +3,7 @@ import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
 import {useItemsStore} from '@/stores/items'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {
   getCurrentMediaType,
   matchesMediaTypeFilter,
@@ -136,9 +136,8 @@ export function usePresetMeta(props: PresetMetaProps) {
     const mediaTypeId = ENV.value?.media_type_id || getDefaultMediaTypeId(appStore.mediaTypes)
     if (!mediaTypeId) return
 
-    const url = `/api/media/numberOfMediaWithTag?mediaTypeId=${mediaTypeId}&tagId=${props.item?.id}`
-    apiClient
-      .get<{ count: number }>(url)
+    typedApi
+      .getMediaCountWithTag(mediaTypeId, props.item?.id ?? 0)
       .then((res) => {
         numberOfMedia.value = res.data.count
       })

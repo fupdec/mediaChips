@@ -3,6 +3,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useWatcherStore } from '@/stores/watcher'
 import {getWatchedFoldersExtensions, type WatchedFolderEntry} from '@/services/watcherUtils'
 import type { WatcherWsPayload } from '@/types/itemsPage'
+import { isWatcherFilesMessage, parseWatcherInboundMessage } from '@/types/watcher'
 import _ from 'lodash'
 
 export function useWatcher(apiUrl: string) {
@@ -34,7 +35,7 @@ export function useWatcher(apiUrl: string) {
         isWsReady.value = true
         wsRetryCount.value = 0
 
-        const watchedFolders = watcherStore.folders.filter((x) => x.watch) as unknown as WatchedFolderEntry[]
+        const watchedFolders = watcherStore.folders.filter((folder) => folder.watch)
         const extensions = getWatchedFoldersExtensions(watchedFolders)
 
         if (watchedFolders.length > 0) {
@@ -55,12 +56,14 @@ export function useWatcher(apiUrl: string) {
       watcherStore.ws.onmessage = (msg: MessageEvent<string>) => {
         watcherStore.busy = false
         try {
-          const parsedMsg = JSON.parse(msg.data) as { type: string; data?: unknown }
+          const parsedMsg = parseWatcherInboundMessage(JSON.parse(msg.data))
           console.log('WebSocket message received:', parsedMsg.type)
 
           switch (parsedMsg.type) {
             case 'files':
-              watcherStore.files = _.uniqBy(parsedMsg.data as Array<{ 'folder.id'?: unknown }>, 'folder.id')
+              if (isWatcherFilesMessage(parsedMsg)) {
+                watcherStore.files = _.uniqBy(parsedMsg.data, (entry) => entry.folder.id)
+              }
               break
             case 'closed':
               console.log('WebSocket closed by server')
@@ -176,7 +179,7 @@ export function useWatcher(apiUrl: string) {
   watch(() => watcherStore.folders, (val) => {
     clearTimeout(foldersWatchTimeout)
     foldersWatchTimeout = setTimeout(() => {
-      const watched = val.filter(x => x.watch) as unknown as WatchedFolderEntry[]
+      const watched = val.filter((folder) => folder.watch)
       if (watched.length > 0) {
         updateWatcher(watched)
       }

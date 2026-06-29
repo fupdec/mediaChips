@@ -2,7 +2,7 @@ import {ref, computed, nextTick} from 'vue'
 import _ from 'lodash'
 import {useI18n} from 'vue-i18n'
 import {useItemsStore} from '@/stores/items'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {scrollMainTo, getMainScrollEl} from '@/utils/mainScroll'
 import {
   getDuplicatesGroupKey,
@@ -205,7 +205,7 @@ export function useItemsPage({
     if (ids && ids.length > 0) {
       query.filters = []
       try {
-        const res = await apiClient.post<MediaListResponse['data']>(url, query)
+        const res = await typedApi.postItemsList(url, query)
 
         for (const id of ids) {
           const item = res.data.items?.find((entry) => Number(entry.id) === Number(id))
@@ -233,7 +233,7 @@ export function useItemsPage({
     }
 
     const postListQuery = (payload: ItemsPageListQuery, signal: AbortSignal) =>
-      apiClient.post<MediaListResponse['data']>(url, payload, {signal})
+      typedApi.postItemsList(url, payload, {signal})
 
     try {
       let response = await postListQuery(query, abortController.signal)

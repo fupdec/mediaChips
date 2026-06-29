@@ -1,37 +1,29 @@
 import _ from 'lodash'
-import { apiClient } from '@/services/apiClient'
-import type { MediaType } from '@/types/media'
+import { typedApi } from '@/services/typedApi'
+import type { WatchedFolderLink } from '@shared/entities/watched-folder'
+import type { WatchedFolderEntry } from '@/services/watcherUtils'
 
-interface WatchedFolderLink {
-  folderId: number
-  mediaType: MediaType
-  watchedFolder: {
-    path: string
-    watch?: boolean
-    [key: string]: unknown
-  }
-}
-
-export async function getWatchedFolders() {
+export async function getWatchedFolders(): Promise<WatchedFolderEntry[]> {
   try {
-    const res = await apiClient.get<WatchedFolderLink[]>('/api/MediaTypesInWatchedFolders')
-    const watchedFolders = res.data
+    const res = await typedApi.getMediaTypesInWatchedFolders()
+    const watchedFolders: WatchedFolderLink[] = res.data
 
-    const types: Record<number, MediaType[]> = {}
+    const types: Record<number, WatchedFolderLink['mediaType'][]> = {}
 
     for (const i of watchedFolders) {
       const id = i.folderId
       if (!types[id]) types[id] = []
-      types[id].push(i.mediaType)
+      if (i.mediaType) types[id].push(i.mediaType)
     }
 
     const folders = _.uniqBy(watchedFolders, (i) => i.folderId)
 
-    return folders.map((i) => {
+    return folders.map((i): WatchedFolderEntry => {
       const folder = { ...i.watchedFolder }
       return {
         ...folder,
-        types: types[i.folderId],
+        path: String(folder.path ?? ''),
+        types: types[i.folderId] || [],
       }
     })
   } catch (e) {

@@ -5,13 +5,17 @@ import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import {getDuplicatesGroupKey} from '@/utils/mediaSortFilter'
 import {openSeparatePlayer, canOpenSeparatePlayer} from '@/utils/playerWindow'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {checkFileExists} from '@/services/fileService'
 import {getDateForDB} from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
 import {openPath} from '@/services/shellService'
 import type { FilterObject } from '@/types/common'
-import type { AssignedMeta, ItemsEnvironment, MediaItem, SavedFilter } from '@/types/stores'
+import type { EntityUpdatePayload } from '@shared/api/responses'
+import type { PlayableMedia } from '@shared/entities/media'
+import type { AssignedMeta, ItemsEnvironment, MediaItem, Meta, SavedFilter } from '@/types/stores'
+import type { ItemsPageStoreUpdates } from '@/types/itemsPage'
+import { ensureMediaItem } from '@/utils/mediaItem'
 import _ from 'lodash'
 
 const eventBus = useEventBus()
@@ -20,9 +24,18 @@ export const THUMB_BROADCAST_CHANNEL = 'mediachips-thumb-update'
 
 const sameItemId = (left: unknown, right: unknown) => Number(left) === Number(right)
 
-export const useItemsStore = defineStore('items', {
-  // Состояние (State)
-  state: () => ({
+function normalizeAssignedList(
+  assigned: AssignedMeta[] | Record<string, AssignedMeta> | unknown,
+): AssignedMeta[] {
+  if (Array.isArray(assigned)) return assigned
+  if (assigned && typeof assigned === 'object') {
+    return Object.values(assigned as Record<string, AssignedMeta>)
+  }
+  return []
+}
+
+function createItemsStoreState() {
+  return {
     type: '',
     environment: {
       media_type_id: null,
@@ -52,13 +65,20 @@ export const useItemsStore = defineStore('items', {
     savedFilter: {} as SavedFilter,
     filters: [] as FilterObject[],
     filters_saved: [] as SavedFilter[],
-    meta: {} as Record<string, unknown>,
+    meta: { id: 0 } as Meta,
     assigned: [] as AssignedMeta[],
     isFiltersLoaded: false,
     find_duplicates: false,
     thumbRefreshKeys: {} as Record<number, number>,
     thumbRegenerateKeys: {} as Record<number, number>,
-  }),
+  }
+}
+
+type ItemsStoreState = ReturnType<typeof createItemsStoreState>
+
+export const useItemsStore = defineStore('items', {
+  // Состояние (State)
+  state: () => createItemsStoreState(),
 
   // Геттеры (Getters) - опциональные, но полезные
   getters: {
@@ -110,23 +130,11 @@ export const useItemsStore = defineStore('items', {
     },
 
     // Геттер, который гарантированно возвращает массив
-    safeAssigned: (state) => {
-      if (Array.isArray(state.assigned)) {
-        return state.assigned;
-      }
-      if (state.assigned && typeof state.assigned === 'object') {
-        return Object.values(state.assigned);
-      }
-      return [];
-    },
+    safeAssigned: (state): AssignedMeta[] => normalizeAssignedList(state.assigned),
 
     // Отсортированный массив assigned
-    sortedAssigned: (state) => {
-      const assigned = Array.isArray(state.assigned)
-        ? state.assigned
-        : (state.assigned && typeof state.assigned === 'object'
-          ? Object.values(state.assigned)
-          : []) as AssignedMeta[]
+    sortedAssigned: (state): AssignedMeta[] => {
+      const assigned = normalizeAssignedList(state.assigned)
 
       return [...assigned].sort((a, b) => {
         const orderA = Number.isFinite(a?.order) ? Number(a.order) : 0
@@ -220,18 +228,18 @@ export const useItemsStore = defineStore('items', {
     },
 
     async playVideo({video, time, in_system, videos, trustPath = false}: {
-      video: MediaItem
+      video: PlayableMedia
       time?: number
       in_system?: boolean
-      videos?: MediaItem[]
+      videos?: PlayableMedia[]
       trustPath?: boolean
     }) {
       const settingsStore = useSettingsStore()
       const hasPlaylist = Boolean(videos?.length)
       let playlistVideos: MediaItem[] | undefined = hasPlaylist
-        ? videos!.map(item => toRaw(item) as MediaItem)
+        ? videos!.map((item) => ensureMediaItem(toRaw(item)))
         : undefined
-      let targetVideo = toRaw(video) as MediaItem
+      let targetVideo = ensureMediaItem(toRaw(video))
 
       if (hasPlaylist) {
         const playable = await this.findFirstPlayableVideo(playlistVideos || [])
@@ -318,7 +326,7 @@ export const useItemsStore = defineStore('items', {
         meta: 'Meta',
       }
       const model = apiModels[itemType] || 'Media'
-      const data: Record<string, unknown> = {
+      const data: EntityUpdatePayload = {
         views: (item.views || 0) + 1,
         silent: true,
       }
@@ -327,7 +335,7 @@ export const useItemsStore = defineStore('items', {
         data.viewedAt = getDateForDB()
       }
 
-      await apiClient.put(`/api/${model}/${item.id}`, data)
+      await typedApi.updateEntity(model, item.id, data)
 
       if (itemType === 'meta') {
         eventBus.emit('getMeta')
@@ -385,19 +393,22 @@ export const useItemsStore = defineStore('items', {
     },
 
     // Обновить одно свойство состояния
-    updateState({key, value}: { key: string; value: unknown }) {
+    updateState({key, value}: { key: keyof ItemsPageStoreUpdates; value: unknown }) {
       if (key in this.$state) {
-        (this as unknown as Record<string, unknown>)[key] = value
+        this.$patch((state) => {
+          (state as Record<string, unknown>)[key as string] = value
+        })
       } else {
         console.warn(`Key "${String(key)}" does not exist in items store`)
       }
     },
 
-    updateMultiple(updates: Record<string, unknown>) {
-      Object.entries(updates).forEach(([key, value]) => {
-        if (key in this.$state) {
-          (this as unknown as Record<string, unknown>)[key] = value
-        }
+    updateMultiple(updates: Partial<ItemsPageStoreUpdates>) {
+      this.$patch((state) => {
+        const record = state as Record<string, unknown>
+        Object.entries(updates).forEach(([key, value]) => {
+          if (key in state) record[key] = value
+        })
       })
     },
 
@@ -565,7 +576,7 @@ export const useItemsStore = defineStore('items', {
         const mediaTypeId = this.environment.media_type_id
         const mediaType = appStore.mediaTypes?.find((item) => item.id === mediaTypeId)
 
-        const response = await apiClient.post<{ ids?: number[] }>('/api/media/ids', {
+        const response = await typedApi.getMediaIds({
           mediaTypeId,
           filters: this.filters,
           sortBy: this.sortBy,
@@ -602,7 +613,7 @@ export const useItemsStore = defineStore('items', {
     },
 
     // Переключить режим выбора
-    toggleSelect(e: MouseEvent | null, item: MediaItem) {
+    toggleSelect(e: MouseEvent | null, item: { id: number }) {
       if (!this.isSelect) {
         this.toggleSelectMode()
       }
@@ -754,12 +765,16 @@ export const useItemsStore = defineStore('items', {
     },
 
     // Частичный сброс (только определенные поля)
-    resetPartial(fields: string[] = []) {
-      const initialState = this.$state as unknown as Record<string, unknown>
-      fields.forEach(field => {
-        if (field in initialState) {
-          (this as unknown as Record<string, unknown>)[field] = initialState[field]
-        }
+    resetPartial(fields: Array<keyof ItemsStoreState> = []) {
+      const initial = createItemsStoreState()
+      this.$patch((state) => {
+        const record = state as Record<string, unknown>
+        const initialRecord = initial as Record<string, unknown>
+        fields.forEach((field) => {
+          if (field in initialRecord) {
+            record[field as string] = _.cloneDeep(initialRecord[field as string])
+          }
+        })
       })
     }
   }

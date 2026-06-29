@@ -192,7 +192,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, nextTick} from 'vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useWatcherStore} from '@/stores/watcher'
@@ -207,6 +207,7 @@ import {getWatchedFolders as fetchWatchedFolders} from '@/services/watcherServic
 import {setNotification} from '@/services/notificationService'
 import type {VFormInstance} from '@/types/vue'
 import type {WatchedFolderEntry} from '@/services/watcherUtils'
+import type { WatchedFolderUpdatePayload } from '@shared/api/responses'
 
 interface FolderFormData {
   id: number | null
@@ -217,11 +218,6 @@ interface FolderFormData {
 
 interface OpenDialogResult {
   filePaths?: string[]
-}
-
-interface WatchedFolderUpdatePayload {
-  path: string
-  name: string
 }
 
 const appStore = useAppStore()
@@ -275,7 +271,7 @@ const getWatchedFolders = async () => {
 
 const updateWatchedFolder = async (id: number, data: WatchedFolderUpdatePayload) => {
   try {
-    const response = await apiClient.put(`/api/WatchedFolder/${id}`, data)
+    const response = await typedApi.updateWatchedFolder(id, data)
     return response.data
   } catch (error) {
     console.error('Error updating watched folder:', error)
@@ -285,7 +281,7 @@ const updateWatchedFolder = async (id: number, data: WatchedFolderUpdatePayload)
 
 const toggleFolderWatchStatus = async (id: number, watch: boolean) => {
   try {
-    const response = await apiClient.put(`/api/WatchedFolder/${id}`, {watch})
+    const response = await typedApi.updateWatchedFolder(id, {watch})
     return response.data
   } catch (error) {
     console.error('Error toggling folder watch:', error)
@@ -332,7 +328,7 @@ const addNewFolder = async () => {
 
   const folderName = folderData.value.name || folderData.value.path
 
-  await apiClient.post('/api/WatchedFolder', {
+  await typedApi.createWatchedFolder({
     folder: {
       path: folderData.value.path,
       name: folderName,
@@ -409,7 +405,7 @@ const removeFolder = async () => {
 
   watcherBusy.value = true
   try {
-    await apiClient.delete(`/api/WatchedFolder/${currentFolder.value.id}`)
+    await typedApi.deleteWatchedFolder(currentFolder.value.id)
     await getWatchedFolders()
     setNotification({
       type: 'success',

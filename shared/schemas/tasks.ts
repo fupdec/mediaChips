@@ -1,0 +1,75 @@
+import { z } from 'zod'
+import { MediaIdsResponseSchema } from './responses-schemas'
+import { MediaTypeSchema } from './entities'
+
+export const WatchedFolderSchema = z.object({
+  path: z.string().optional(),
+  name: z.string().optional(),
+  watch: z.boolean().optional(),
+}).passthrough()
+
+export const WatchedFolderLinkSchema = z.object({
+  folderId: z.number(),
+  mediaTypeId: z.number().optional(),
+  mediaType: MediaTypeSchema.optional(),
+  watchedFolder: WatchedFolderSchema.optional(),
+}).passthrough()
+
+export const DatabaseSizesResponseSchema = z.object({
+  sizes: z.record(z.string(), z.number()).optional(),
+}).passthrough()
+
+export const FileExistsResponseSchema = z.object({
+  exists: z.boolean().optional(),
+}).passthrough()
+
+export const ResolvePathResponseSchema = z.object({
+  exists: z.boolean().optional(),
+}).passthrough()
+
+export const FileListResponseSchema = z.array(z.string())
+
+export const FolderSizeResponseSchema = z.object({
+  size: z.number(),
+}).passthrough()
+
+export const ClipModelStatusSchema = z.object({
+  status: z.string().optional(),
+}).passthrough()
+
+export const BackupEntrySchema = z.object({
+  name: z.string().optional(),
+  path: z.string().optional(),
+  date: z.string().optional(),
+  size: z.union([z.number(), z.string()]).optional(),
+}).passthrough()
+
+export const MediaPathFileSchema = z.object({
+  id: z.number(),
+  path: z.string().optional(),
+}).passthrough()
+
+export const AddMediaResponseSchema = z.object({
+  id: z.number().optional(),
+  message: z.string().optional(),
+  duplicate: z.object({
+    parameter: z.string().optional(),
+    path: z.string().optional(),
+    id: z.number().optional(),
+  }).passthrough().optional(),
+}).passthrough()
+
+export const BackupListSchema = z.array(BackupEntrySchema)
+
+export { MediaIdsResponseSchema }
+
+export type ParsedFileExistsResponse = z.infer<typeof FileExistsResponseSchema>
+export type ParsedResolvePathResponse = z.infer<typeof ResolvePathResponseSchema>
+export type ParsedFolderSizeResponse = z.infer<typeof FolderSizeResponseSchema>
+export type ParsedClipModelStatus = z.infer<typeof ClipModelStatusSchema>
+export type ParsedBackupEntry = z.infer<typeof BackupEntrySchema>
+export type ParsedMediaPathFile = z.infer<typeof MediaPathFileSchema>
+export type ParsedAddMediaResponse = z.infer<typeof AddMediaResponseSchema>
+export type ParsedMediaIdsResponse = z.infer<typeof MediaIdsResponseSchema>
+export type ParsedWatchedFolderLink = z.infer<typeof WatchedFolderLinkSchema>
+export type ParsedDatabaseSizesResponse = z.infer<typeof DatabaseSizesResponseSchema>

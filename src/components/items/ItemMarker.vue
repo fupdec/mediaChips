@@ -96,7 +96,8 @@ import {useEventBus} from '@/utils/eventBus'
 import path from 'path-browserify'
 import {checkFileExists as checkPathExists, getLocalImage} from '@/services/fileService'
 import {getReadableDuration} from '@/services/formatUtils'
-import type {MarkItem, MediaItem} from '@/types/stores'
+import {toPlayableMediaItem} from '@/utils/mediaItem'
+import type {MarkItem} from '@/types/stores'
 
 interface ItemMarkerMedium {
   id?: number
@@ -236,7 +237,7 @@ const getImg = async () => {
 }
 
 const checkMarkFileExists = async () => {
-  const mediumPath = (props.mark.medium as MediaItem | undefined)?.path
+  const mediumPath = props.mark.medium?.path
   is_file_exists.value = mediumPath ? await checkPathExists(mediumPath) : false
 }
 
@@ -258,7 +259,7 @@ const playPreview = () => {
       // Сбрасываем ошибку воспроизведения
       playback_error.value = false
 
-      const medium = props.mark.medium as MediaItem | undefined
+      const medium = props.mark.medium
       const mediumId = medium?.id
       if (!mediumId) return
 
@@ -340,7 +341,7 @@ const stopPlayingPreview = () => {
 }
 
 const play = () => {
-  const videoItem = props.mark.medium as MediaItem | undefined
+  const videoItem = toPlayableMediaItem(props.mark.medium)
   if (!videoItem) return
 
   itemsStore.playVideo({

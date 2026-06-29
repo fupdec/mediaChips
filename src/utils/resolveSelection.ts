@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import { useItemsStore } from '@/stores/items'
 import type { MediaItem } from '@/types/stores'
 
@@ -8,7 +8,7 @@ export async function resolveSelectedMediaItems(ids: number[] = []): Promise<Med
   const missingIds = ids.filter((id) => !itemsById.has(id))
 
   if (missingIds.length) {
-    const response = await apiClient.post<{ items?: MediaItem[] }>('/api/media/basics', { ids: missingIds })
+    const response = await typedApi.getMediaBasics({ ids: missingIds })
     for (const entry of response.data.items || []) {
       itemsById.set(entry.id, entry)
     }

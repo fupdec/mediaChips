@@ -2,6 +2,7 @@ import type { TaskControllerShared, TagSuggestionItem } from '../../types/tasks'
 import type { AnyRecord } from '../../types/db'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
+import type { ParsePathTagEntry } from '@shared/api/responses'
 const {matchPathToTags} = require('../../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../../services/tagSuggester')
 
@@ -212,7 +213,7 @@ module.exports = function createTasksTaggingController(shared: TaskControllerSha
         tagId: i.tagId,
         metaId: i.metaId,
         mediaId: i.mediaId,
-      })))
+      })) as ParsePathTagEntry[])
     } catch (err) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while parsing tags."

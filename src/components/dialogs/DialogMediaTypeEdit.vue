@@ -82,7 +82,7 @@ import type {PropType} from 'vue'
 import type {VFormInstance} from '@/types/vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {validateName} from '@/services/formatUtils'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
@@ -189,7 +189,7 @@ async function apply() {
   if (!valid.value || !props.media) return
 
   try {
-    await apiClient.put(`/api/MediaType/${props.media.id}`, {
+    await typedApi.updateMediaType(props.media.id, {
       name: name.value,
       nameSingular: name.value, // или singular если он у вас есть
       icon: icon.value,

@@ -4,7 +4,7 @@ import {useI18n} from 'vue-i18n'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getFilterObject} from '@/services/formatUtils'
 import {getFilters as loadSavedFilterRows, getSavedFilters} from '@/services/filterService'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
@@ -37,7 +37,7 @@ export function useItemsPageInit({
   const apiUrl = computed(() => appStore.localhost)
 
   const updatePageSetting = async (data: PageSettingData): Promise<void> => {
-    await apiClient.put('/api/PageSetting', {
+    await typedApi.putPageSetting({
       data,
       query: {
         tagId: props.tagId,
@@ -68,17 +68,17 @@ export function useItemsPageInit({
   }
 
   const fetchMeta = async (): Promise<Meta> => {
-    const res = await apiClient.get<Meta>(`/api/meta/${props.metaId}`)
+    const res = await typedApi.getMetaById(Number(props.metaId))
     return _.cloneDeep(res.data)
   }
 
   const fetchMediaType = async (): Promise<MediaType> => {
-    const res = await apiClient.get<MediaType>(`/api/MediaType/${props.mediaTypeId}`)
+    const res = await typedApi.getMediaTypeById(Number(props.mediaTypeId))
     return res.data
   }
 
   const fetchSavedFilterBundle = async () => {
-    const res = await apiClient.post<Array<Record<string, unknown>>>('/api/SavedFilter', {
+    const res = await typedApi.postSavedFilterContext({
       name: null,
       mediaTypeId: ENV.value.media_type_id,
       metaId: ENV.value.meta_id,
@@ -86,7 +86,7 @@ export function useItemsPageInit({
       tabId: ENV.value.tab_id,
     })
 
-    const savedFilter = res.data?.[0] as SavedFilter | undefined
+    const savedFilter = res.data?.[0]
     if (_.isEmpty(savedFilter)) {
       return {filters: [] as FilterObject[], savedFilter: {} as SavedFilter}
     }
@@ -96,7 +96,7 @@ export function useItemsPageInit({
   }
 
   const fetchPageSettings = async () => {
-    const res = await apiClient.post<[PageSettingsRecord | null, boolean?]>('/api/PageSetting', {
+    const res = await typedApi.fetchPageSettings({
       tagId: props.tagId,
       mediaTypeId: props.mediaTypeId,
       metaId: props.metaId,
@@ -110,15 +110,15 @@ export function useItemsPageInit({
   }
 
   const fetchPinnedMeta = async (): Promise<AssignedMeta[]> => {
-    let url = '/api/'
-    if (props.items_type === 'media') {
-      url += `MetaInMediaType?mediaTypeId=${props.mediaTypeId}`
-    } else if (props.items_type === 'tag') {
-      url += `PinnedMeta?metaId=${props.metaId}`
+    if (props.items_type === 'media' && props.mediaTypeId) {
+      const res = await typedApi.getAssignedMetaForMediaType(props.mediaTypeId)
+      return res.data
     }
-
-    const res = await apiClient.get<AssignedMeta[]>(url)
-    return res.data
+    if (props.items_type === 'tag' && props.metaId) {
+      const res = await typedApi.getPinnedChildMeta(props.metaId)
+      return res.data
+    }
+    return []
   }
 
   const applyPageSettings = (pageSettings: PageSettingsRecord | null): Partial<ItemsPageStoreUpdates> => {

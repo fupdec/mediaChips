@@ -15,7 +15,7 @@ import { useAppStore } from '@/stores/app'
 import { useItemsStore } from '@/stores/items'
 
 import AppbarButton from '@/components/app/appbar/AppBarButton.vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getTabUrl} from '@/services/routeService'
 import {useEventBus} from '@/utils/eventBus'
 import type { TabLike } from '@/types/common'
@@ -38,7 +38,7 @@ const ENV = items.environment
 
 async function add() {
   try {
-    const { data } = await apiClient.post<TabLike>('/api/tab', {
+    const { data } = await typedApi.createTab({
       name: items.name,
       icon: items.icon,
       url: route.path,
@@ -48,7 +48,7 @@ async function add() {
     })
 
     // заменяет Vue.prototype.$getTabUrl
-    const url = getTabUrl(data)
+    const url = getTabUrl(data as TabLike)
 
     router.push(url)
 

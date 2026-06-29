@@ -84,7 +84,7 @@
 import { ref } from 'vue'
 import type { PropType } from 'vue'
 import type { VFormInstance } from '@/types/vue'
-import { apiClient } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 import {validateName} from '@/services/formatUtils'
 import DialogIcons from "@/components/dialogs/DialogIcons.vue";
 
@@ -127,7 +127,7 @@ async function addMeta() {
   }
 
   try {
-    await apiClient.post('/api/MediaType', {
+    await typedApi.createMediaType({
       name: name.value,
       nameSingular: singular.value,
       extensions: [...extensions.value].sort().join(','),

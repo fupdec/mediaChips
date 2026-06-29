@@ -1,10 +1,27 @@
 import type { ComputedRef, Ref } from 'vue'
 import type { AxiosResponse } from 'axios'
+import type {
+  GetItemsFromDbEvent,
+  ItemsPageListQuery,
+  MediaListResponseData,
+  PageSettingData,
+  PageSettingsRecord,
+  RemoveEntitiesEvent,
+} from '@shared/api/responses'
 import type { FilterObject } from '@/types/common'
 import type { MediaType } from '@/types/media'
-import type { AssignedMeta, MediaItem, Meta, SavedFilter } from '@/types/stores'
+import type { AssignedMeta, MediaItem, Meta, SavedFilter, Tag } from '@/types/stores'
 
 export type ItemsPageType = 'media' | 'tag'
+
+export type {
+  GetItemsFromDbEvent,
+  ItemsPageListQuery,
+  MediaListResponseData,
+  PageSettingData,
+  PageSettingsRecord,
+  RemoveEntitiesEvent,
+}
 
 export interface ItemsPageProps {
   items_type: ItemsPageType | string
@@ -20,54 +37,7 @@ export interface ItemsPageLoader {
   is_busy: boolean
 }
 
-export interface MediaListResponseData {
-  items?: MediaItem[]
-  totalFiltered?: number
-  totalFilesize?: number
-  total?: number
-  pages?: number
-  page?: number
-  navigation?: MediaItem[]
-}
-
 export type MediaListResponse = AxiosResponse<MediaListResponseData>
-
-export interface ItemsPageListQuery {
-  metaId?: number
-  mediaTypeId?: number
-  filters?: FilterObject[]
-  sortBy?: string
-  direction?: string
-  find_duplicates?: boolean
-  duplicates_by?: string
-  ids?: number[]
-  includeNavigation?: boolean
-  page?: number
-  limit?: number
-  skipTotals?: boolean
-}
-
-export interface PageSettingData {
-  page?: number
-  limit?: number
-  size?: number
-  view?: number | string
-  sortBy?: string
-  sortDir?: string
-  filterId?: number
-  query?: unknown
-}
-
-export interface PageSettingsRecord {
-  page?: number
-  limit?: number
-  size?: number
-  view?: number | string
-  sortBy?: string
-  sortDir?: string
-  filterId?: number
-  [key: string]: unknown
-}
 
 export interface ItemsPageInitDeps {
   disposeListFetching: () => void
@@ -110,16 +80,6 @@ export interface UseItemsPageEventsOptions {
   refreshScrollRoot: () => Element | null
 }
 
-export interface GetItemsFromDbEvent {
-  ids?: number[]
-  type: string
-}
-
-export interface RemoveEntitiesEvent {
-  ids: number[]
-  type: string
-}
-
 export interface InfiniteIntersectOptions {
   handler: (isIntersecting: boolean) => void
   options: {
@@ -141,7 +101,7 @@ export interface ItemContextMenuEntry {
 }
 
 export interface PresetMetaProps {
-  item: MediaItem
+  item: MediaItem | Tag
   type: ItemsPageType | string
   isShowAll?: boolean
 }

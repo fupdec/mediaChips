@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { apiClient } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 import { MARKS_PAGE_LIMIT } from '@/utils/markSort'
 import type { MarkFilterMeta, MarkItem } from '@/types/stores'
 
@@ -35,7 +35,7 @@ export const useMarksStore = defineStore('marks', {
     },
 
     async loadFilterMetas() {
-      const response = await apiClient.get<MarkFilterMeta[]>('/api/Mark/filter-metas')
+      const response = await typedApi.getMarkFilterMetas()
       this.filterMetas = response.data || []
 
       if (!this.selectedTypes.length) {
@@ -54,11 +54,7 @@ export const useMarksStore = defineStore('marks', {
       }
 
       try {
-        const response = await apiClient.post<{
-          items?: MarkItem[]
-          total?: number
-          totalFiltered?: number
-        }>('/api/Mark/items', {
+        const response = await typedApi.postMarkItems({
           types: this.selectedTypes,
           sortBy: this.sortBy,
           sortDir: this.sortDir,

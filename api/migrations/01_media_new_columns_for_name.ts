@@ -37,7 +37,10 @@ module.exports = {
             ),
           ]);
 
-          let media_all = await (queryInterface.sequelize.models as any).media.findAll({raw: true});
+          const mediaModel = (queryInterface.sequelize.models as AnyRecord).media as {
+            findAll: (options: { raw: boolean }) => Promise<AnyRecord[]>
+          }
+          let media_all = await mediaModel.findAll({raw: true});
 
           let media_modified = media_all.map((i: AnyRecord) => {
             let j: AnyRecord = {}

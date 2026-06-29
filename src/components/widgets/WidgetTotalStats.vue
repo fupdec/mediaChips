@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, watch, type Ref} from "vue"
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {gsap} from "gsap"
 import {useAppStore} from "@/stores/app"
@@ -83,8 +83,8 @@ const animatedFilesize = computed(() => tweenedFilesize.value.toFixed(2))
 async function getStats() {
   try {
     const [mediaRes, tagsRes] = await Promise.all([
-      apiClient.get<HomeMediaStatsResponse>('/api/media/get-stats'),
-      apiClient.get<HomeTagCountResponse>('/api/tag/count'),
+      typedApi.getMediaStats(),
+      typedApi.getTagCount(),
     ])
 
     numberFiles.value = mediaRes.data.total

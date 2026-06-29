@@ -6,6 +6,8 @@ import type {
   SavedFilterMediaOptions,
   TagsByRowIdMap,
 } from '../types/savedFilterMedia'
+import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
+import type { SavedFilterMediaResponse, SavedFilterSummaryResponse } from '@shared/api/responses'
 
 const {Op} = require('sequelize')
 const {parseCountries} = require('../utils/country')
@@ -117,7 +119,7 @@ async function getFilteredMediaForSavedFilter(
   db: ApiDb,
   savedFilterId: SavedFilterId,
   options: SavedFilterMediaOptions = {},
-) {
+): Promise<SavedFilterMediaResponse & { previewIds?: number[] }> {
   const {
     mediaTypeId = await getVideoMediaTypeId(db),
     sortBy = 'id',
@@ -156,7 +158,7 @@ async function getSavedFilterPlaylistSummary(
   db: ApiDb,
   savedFilterId: SavedFilterId,
   options: SavedFilterMediaOptions = {},
-) {
+): Promise<SavedFilterSummaryResponse> {
   const {
     mediaTypeId = await getVideoMediaTypeId(db),
     sortBy = 'id',
@@ -201,7 +203,7 @@ async function getDynamicPlaylistsBasic(db: ApiDb): Promise<SavedFilterBasic[]> 
   }))
 }
 
-async function getDynamicPlaylistsSummary(db: ApiDb) {
+async function getDynamicPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlaylistSummary[]> {
   const mediaTypeId = await getVideoMediaTypeId(db)
   if (!mediaTypeId) return []
 
@@ -241,14 +243,14 @@ async function getDynamicPlaylistsSummary(db: ApiDb) {
     }
   }))
 
-  return summaries
+  return summaries as unknown as ParsedDynamicPlaylistSummary[]
 }
 
 async function getFilteredMediaForPlayback(
   db: ApiDb,
   savedFilterId: SavedFilterId,
   options: SavedFilterMediaOptions = {},
-) {
+): Promise<SavedFilterMediaResponse> {
   const {
     mediaTypeId = await getVideoMediaTypeId(db),
     sortBy = 'id',

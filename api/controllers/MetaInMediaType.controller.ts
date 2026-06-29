@@ -1,10 +1,13 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import { getRequestBody } from '../types/http'
+import type { MetaAssignmentOrderPayload, PinMetaAssignmentPayload } from '@shared/api/payloads'
 module.exports = function (db: ApiDb) {
   // Add meta to media type
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.MetaInMediaType.create(req.body)
+    const body = getRequestBody<PinMetaAssignmentPayload>(req)
+    db.MetaInMediaType.create(body)
       .then((data) => {
         res.status(201).send(data)
       })
@@ -43,10 +46,11 @@ module.exports = function (db: ApiDb) {
 
   // Update a MetaInMediaType by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    db.MetaInMediaType.update(req.body.data, {
+    const body = getRequestBody<MetaAssignmentOrderPayload>(req)
+    db.MetaInMediaType.update(body.data, {
       where: {
-        metaId: req.body.metaId,
-        mediaTypeId: req.body.mediaTypeId
+        metaId: body.metaId,
+        mediaTypeId: body.mediaTypeId
       }
     }).then((data) => {
       res.status(201).send(data)

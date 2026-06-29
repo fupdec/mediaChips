@@ -6,6 +6,7 @@ import {useSettingsStore} from '@/stores/settings'
 import {useAppStore} from '@/stores/app'
 import {useI18n} from 'vue-i18n'
 import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {fetchTranscodeCacheStats} from '@/services/transcodeService'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
@@ -41,7 +42,7 @@ const clearTranscodeCache = async () => {
   clearingCache.value = true
 
   try {
-    const response = await apiClient.delete<TranscodeCacheStats>('/api/transcode/cache')
+    const response = await typedApi.clearTranscodeCache<TranscodeCacheStats>()
     cacheBytes.value = 0
     setNotification({
       type: 'success',

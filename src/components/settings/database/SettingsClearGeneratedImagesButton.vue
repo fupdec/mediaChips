@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
@@ -65,10 +65,7 @@ interface FolderSizeResponse {
 }
 
 const getFolderSize = async () => {
-  const {data} = await apiClient.post<FolderSizeResponse>(
-    '/api/task/getFolderSize',
-    {folder: props.imageType}
-  )
+  const {data} = await typedApi.getFolderSize({folder: props.imageType})
 
   const sizeMb = data.size / 1024 / 1024
   folderSize.value = `${sizeMb.toFixed(2)} MB`
@@ -78,7 +75,7 @@ const clearData = async () => {
   dialogsStore.process.show = true
   dialogsStore.process.show = false
 
-  await apiClient.post('/api/task/clearData', {
+  await typedApi.clearGeneratedData({
     imageType: props.imageType,
   })
 

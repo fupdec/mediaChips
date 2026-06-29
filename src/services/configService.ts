@@ -2,7 +2,7 @@ import axios from 'axios'
 import path from 'path-browserify'
 import { resolveApiBaseUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
-import { apiClient } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 
 interface AppConfigResponse {
   appVersion?: string
@@ -14,7 +14,7 @@ interface AppConfigResponse {
 }
 
 export async function updateConfig(data: Record<string, unknown>) {
-  return apiClient.post('/api/update-config', data)
+  return typedApi.updateConfig(data)
 }
 
 export async function initConfig() {

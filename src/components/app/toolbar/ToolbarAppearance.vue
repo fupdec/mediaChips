@@ -156,7 +156,7 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useToolbarStore} from '@/stores/toolbar'
 import {useEventBus} from '@/utils/eventBus'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 
 // Components
 import DialogHeader from '@/components/elements/DialogHeader.vue'
@@ -198,24 +198,25 @@ interface MetaVisibilityPayload {
   mediaTypeId?: number | null
 }
 
-const toggleMetaVisibility = async (metaItem: AssignedMeta & { show?: boolean; pinnedMetaId?: number; metaId?: number }) => {
+const toggleMetaVisibility = async (metaItem: AssignedMeta) => {
   try {
-    let urlPath = '/api/'
     const data: MetaVisibilityPayload = {
-      data: {show: !metaItem.show}
+      data: {show: !Boolean(metaItem.show)},
     }
 
     if (itemsStore.type === 'tag') {
-      urlPath += 'PinnedMeta'
-      data.metaId = ENV.value.meta_id
-      data.pinnedMetaId = metaItem.pinnedMetaId
+      await typedApi.updatePinnedMetaAssignment({
+        ...data,
+        metaId: ENV.value.meta_id,
+        pinnedMetaId: metaItem.pinnedMetaId,
+      })
     } else if (itemsStore.type === 'media') {
-      urlPath += 'MetaInMediaType'
-      data.metaId = metaItem.metaId
-      data.mediaTypeId = ENV.value.media_type_id
+      await typedApi.updateMetaInMediaTypeAssignment({
+        ...data,
+        metaId: metaItem.metaId,
+        mediaTypeId: ENV.value.media_type_id,
+      })
     }
-
-    await apiClient.put(urlPath, data)
 
     // Emit event or update store
     eventBus.emit('updateAssignedMeta')

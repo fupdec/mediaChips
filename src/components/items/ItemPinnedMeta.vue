@@ -176,7 +176,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import _ from 'lodash'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
@@ -185,7 +185,8 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
 
 import {useEventBus} from "@/utils/eventBus"
-import translate, {type Locale} from '@/utils/translate'
+import translate, {toLocale} from '@/utils/translate'
+import {toChipVariant, type ChipVariant} from '@/utils/chipVariant'
 import {useRouter} from "vue-router"
 import {usePresetMeta} from "@/composable/ItemPresetMeta"
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
@@ -197,18 +198,12 @@ import {
   sortPinnedAssignmentItems,
 } from '@/utils/pinnedMetaOrder'
 import type {ItemsPageType, ItemContextMenuEntry, PresetMetaProps} from '@/types/itemsPage'
+import type { ParsePathTagEntry, RemoveTagFromItemPayload } from '@shared/api/responses'
 import type {AssignedMeta, MediaItem, Meta, Tag, ItemTagRef, ItemValueRef} from '@/types/stores'
 
-type ChipVariant = 'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'
+type PinnedMetaAssignment = AssignedMeta
 
-interface PinnedMetaAssignment extends AssignedMeta {
-  metaId?: number
-  pinnedMetaId?: number
-  show?: number
-  order?: number
-}
-
-type TagWithMeta = Tag & { meta: Meta }
+type TagWithMeta = Tag & { meta: Meta; metaId: number }
 
 type ValueWithMeta = Meta & { value: unknown }
 
@@ -220,11 +215,7 @@ type PinnedFlatEntry =
   | { kind: 'tag'; metaId: number; data: TagWithMeta; name?: string; meta?: { name?: string } }
   | { kind: 'value'; metaId: number; data: ValueWithMeta; name?: string; meta?: { name?: string } }
 
-interface RemoveTagPayload {
-  tagId: number
-  mediaId?: number
-  parentTagId?: number
-}
+interface RemoveTagPayload extends RemoveTagFromItemPayload {}
 
 const router = useRouter()
 
@@ -246,7 +237,7 @@ const props = withDefaults(defineProps<{
 
 const presetMetaProps: PresetMetaProps = {
   type: props.type,
-  item: props.item as MediaItem,
+  item: props.item,
   isShowAll: props.isShowAll,
 }
 
@@ -267,16 +258,16 @@ const itemRating = computed((): number | undefined => {
   return typeof rating === 'number' ? rating : undefined
 })
 
-const defaultMetaChipVariant = computed((): ChipVariant | undefined => {
-  return settingsStore.default_meta_chip_variant as ChipVariant
-})
+const defaultMetaChipVariant = computed((): ChipVariant | undefined =>
+  toChipVariant(settingsStore.default_meta_chip_variant),
+)
 
-const getMetaChipVariant = (meta?: Meta): ChipVariant | undefined => {
-  return meta?.chipVariant as ChipVariant | undefined
-}
+const getMetaChipVariant = (meta?: Meta): ChipVariant | undefined =>
+  toChipVariant(meta?.chipVariant)
 
 const getMetaChipLabel = (meta?: Meta): boolean | undefined => {
-  return meta?.chipLabel as boolean | undefined
+  const label = meta?.chipLabel
+  return typeof label === 'boolean' ? label : undefined
 }
 
 const formatMetaValue = (value: unknown): string => String(value ?? '')
@@ -299,7 +290,7 @@ const assignmentRows = computed(() => {
   if (props.assignment?.length) {
     return sortPinnedAssignmentItems(props.assignment)
   }
-  return itemsStore.sortedAssigned as PinnedMetaAssignment[]
+  return itemsStore.sortedAssigned
 })
 
 const tagItems = computed((): TagWithMeta[] => {
@@ -310,10 +301,12 @@ const tagItems = computed((): TagWithMeta[] => {
       if (!i) return null
       const meta = metaStore.find(m => m.id === i.metaId)
       const tag = tagsStore.find(t => t.id === i.tagId)
-      return tag && meta ? {...tag, meta} : null
+      const metaId = i.metaId ?? tag?.metaId ?? meta?.id
+      if (!tag || !meta || metaId == null) return null
+      return {...tag, meta, metaId}
     })
     .filter((tag): tag is TagWithMeta => tag !== null && !!tag.meta && !!tag.id)
-    .filter(tag => checkShow(tag.metaId as number))
+    .filter(tag => checkShow(tag.metaId))
 
   if (result.length === 0) return []
 
@@ -363,13 +356,13 @@ const pinnedCategoriesComputed = computed((): PinnedCategory[] => {
   const categories: PinnedCategory[] = [
     ...tagGroups.value.map((items): PinnedCategory => ({
       kind: 'tags',
-      metaId: items[0].metaId as number,
-      items: items as TagWithMeta[],
+      metaId: items[0].metaId,
+      items,
     })),
     ...valueGroups.value.map((items): PinnedCategory => ({
       kind: 'values',
       metaId: items[0].id,
-      items: items as ValueWithMeta[],
+      items,
     })),
   ]
 
@@ -383,7 +376,7 @@ const pinnedCategoriesComputed = computed((): PinnedCategory[] => {
 
 const pinnedFlatComputed = computed((): PinnedFlatEntry[] => {
   const items: PinnedFlatEntry[] = [
-    ...tagItems.value.map((tag): PinnedFlatEntry => ({kind: 'tag', metaId: tag.metaId as number, data: tag})),
+    ...tagItems.value.map((tag): PinnedFlatEntry => ({kind: 'tag', metaId: tag.metaId, data: tag})),
     ...valueItems.value.map((value): PinnedFlatEntry => ({kind: 'value', metaId: value.id, data: value})),
   ]
 
@@ -399,7 +392,7 @@ const checkShow = (metaId: number): boolean => {
   if (props.tagPage) {
     return true
   }
-  const assigned = itemsStore.assigned as PinnedMetaAssignment[]
+  const assigned = itemsStore.safeAssigned
   let tagName: 'metaId' | 'pinnedMetaId' = 'metaId'
   if (itemsStore.type === 'tag') tagName = 'pinnedMetaId'
   const x = assigned.findIndex((i) => i[tagName] == metaId)
@@ -415,7 +408,7 @@ const getPath = (tag: TagWithMeta): string => {
 }
 
 const openNewTab = (tag: TagWithMeta): void => {
-  apiClient.post('/api/tab', {
+  typedApi.createTab({
     name: tag.name,
     icon: tag.meta.icon,
     url: '/tag',
@@ -443,7 +436,7 @@ const removeTag = (tag: TagWithMeta): void => {
     data.parentTagId = props.item.id
   } else return
 
-  apiClient.post(url, data)
+  typedApi.removeTagFromItem(props.type, data)
     .then(() => {
       itemsStore.removeTagFromItem({
         itemId: props.item.id,
@@ -483,7 +476,7 @@ const filterByTag = (tag: TagWithMeta): void => {
 const showMenu = (e: MouseEvent | KeyboardEvent, tag: TagWithMeta): void => {
   hideHoverImage()
 
-  const locale = settingsStore.locale as Locale
+  const locale = toLocale(settingsStore.locale)
   const t = (key: string, params: Record<string, string | number> = {}) => translate(key, params, locale)
   const clientX = e instanceof MouseEvent ? e.clientX : 0
   const clientY = e instanceof MouseEvent ? e.clientY : 0
@@ -494,7 +487,7 @@ const showMenu = (e: MouseEvent | KeyboardEvent, tag: TagWithMeta): void => {
       type: "item",
       icon: "pencil",
       action: () => {
-        const meta = appStore.getMetaById(tag.metaId as number)
+        const meta = appStore.getMetaById(tag.metaId)
         if (meta) dialogsStore.editTag(tag, meta)
       },
     }, {

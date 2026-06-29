@@ -148,7 +148,7 @@ import MetaSettingsRating from '@/components/dialogs/meta/MetaSettingsRating.vue
 import SettingsSection from '@/components/ui/SettingsSection.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import MetaTypes from '@/assets/MetaTypes'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {validateName} from '@/services/formatUtils'
 import {setNotification} from '@/services/notificationService'
 import type {Meta} from '@/types/stores'
@@ -271,7 +271,14 @@ const metaSettingsDefault = ref<MetaSettingsForm>({
 
 const metaSettings = ref<MetaSettingsForm>(_.cloneDeep(metaSettingsDefault.value))
 
-const metaSettingsAsMeta = computed((): Meta => metaSettings.value as Meta)
+function toMetaPreview(form: MetaSettingsForm): Meta {
+  return {
+    ...form,
+    id: form.id ?? 0,
+  }
+}
+
+const metaSettingsAsMeta = computed(() => toMetaPreview(metaSettings.value))
 
 // Keys для принудительного перерисовывания
 const metaKey = ref(0)
@@ -348,8 +355,8 @@ const sendForm = async () => {
 
   try {
     const response = props.editMode && props.meta?.id
-      ? await apiClient.put(`/api/Meta/${props.meta.id}`, metaSettings.value)
-      : await apiClient.post('/api/Meta', metaSettings.value)
+      ? await typedApi.updateMeta(props.meta.id, metaSettings.value)
+      : await typedApi.createMeta(metaSettings.value)
 
     if (response.data) {
       if (!props.editMode) {
@@ -406,7 +413,7 @@ const deleteMeta = async () => {
   if (!props.meta?.id) return
 
   try {
-    await apiClient.delete(`/api/Meta/${props.meta.id}`)
+    await typedApi.deleteMeta(props.meta.id)
 
     setNotification({
       type: 'success',

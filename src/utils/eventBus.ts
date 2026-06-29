@@ -1,23 +1,32 @@
 import mitt, { type Handler } from 'mitt'
+import type { EventBusEvent, EventBusMap } from '@shared/events/map'
 
-type EventBusEvents = Record<string, unknown>
+const emitter = mitt<EventBusMap>()
 
-const emitter = mitt<EventBusEvents>()
+type EventHandler<K extends EventBusEvent> = Handler<EventBusMap[K]>
 
 export const eventBus = {
-  $on: emitter.on.bind(emitter),
-  $off: emitter.off.bind(emitter),
-  $emit: emitter.emit.bind(emitter),
+  $on<K extends EventBusEvent>(event: K, handler: EventHandler<K>) {
+    emitter.on(event, handler)
+  },
 
-  $once(event: string, handler: Handler) {
-    const onceHandler: Handler = (...args) => {
+  $off<K extends EventBusEvent>(event: K, handler?: EventHandler<K>) {
+    emitter.off(event, handler)
+  },
+
+  $emit<K extends EventBusEvent>(event: K, payload?: EventBusMap[K]) {
+    emitter.emit(event, payload as EventBusMap[K])
+  },
+
+  $once<K extends EventBusEvent>(event: K, handler: EventHandler<K>) {
+    const onceHandler: EventHandler<K> = ((...args) => {
       handler(...args)
       this.$off(event, onceHandler)
-    }
+    }) as EventHandler<K>
     this.$on(event, onceHandler)
   },
 
-  clear(event?: string) {
+  clear(event?: EventBusEvent) {
     if (event) {
       emitter.all.delete(event)
     } else {
@@ -27,19 +36,19 @@ export const eventBus = {
 }
 
 export const useEventBus = () => {
-  const listeners: Array<{ event: string; handler: Handler }> = []
+  const listeners: Array<{ event: EventBusEvent; handler: Handler<unknown> }> = []
 
-  const on = (event: string, handler: Handler) => {
+  const on = <K extends EventBusEvent>(event: K, handler: EventHandler<K>) => {
     eventBus.$on(event, handler)
-    listeners.push({ event, handler })
+    listeners.push({ event, handler: handler as Handler<unknown> })
   }
 
-  const once = (event: string, handler: Handler) => {
+  const once = <K extends EventBusEvent>(event: K, handler: EventHandler<K>) => {
     eventBus.$once(event, handler)
-    listeners.push({ event, handler })
+    listeners.push({ event, handler: handler as Handler<unknown> })
   }
 
-  const off = (event: string, handler?: Handler) => {
+  const off = <K extends EventBusEvent>(event: K, handler?: EventHandler<K>) => {
     eventBus.$off(event, handler)
   }
 
@@ -47,7 +56,7 @@ export const useEventBus = () => {
 
   const clearAll = () => {
     listeners.forEach(({ event, handler }) => {
-      eventBus.$off(event, handler)
+      eventBus.$off(event, handler as EventHandler<typeof event>)
     })
     listeners.length = 0
   }
@@ -62,3 +71,5 @@ export const useEventBus = () => {
 }
 
 export default eventBus
+
+export type { EventBusEvent, EventBusMap }

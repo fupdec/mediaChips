@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import { useItemsStore } from '@/stores/items'
 import type {MediaItem, Tag} from '@/types/stores'
 
@@ -30,7 +30,7 @@ const itemsStore = useItemsStore()
 const setVal = async (val: boolean | number | null, key: string) => {
   const numVal = val ? 1 : 0
   try {
-    await apiClient.put(`/api/${props.type}/${props.item.id}`, {
+    await typedApi.updateEntity(props.type, props.item.id, {
       [key]: numVal,
     })
 

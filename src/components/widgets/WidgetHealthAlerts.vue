@@ -108,7 +108,7 @@
 import {computed, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useTasksStore} from '@/stores/tasks'
@@ -116,6 +116,7 @@ import {useEventBus} from '@/utils/eventBus'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import type { HealthAlertItem, HomeHealthData } from '@/types/widgets'
+import { emptyHomeHealthUi, toHomeHealthUi } from '@/types/widgets'
 
 const {t} = useI18n()
 const router = useRouter()
@@ -126,14 +127,7 @@ const eventBus = useEventBus()
 
 const checked = ref(false)
 const loading = ref(false)
-const emptyHealth = (): HomeHealthData => ({
-  duplicates: {byFilesize: 0, byContentHash: 0},
-  contentHash: {total: 0, pending: 0, hashed: 0},
-  generatedImages: {byType: {}, totalPending: 0},
-  database: {id: null, name: null, bytes: null},
-})
-
-const health = ref<HomeHealthData>(emptyHealth())
+const health = ref<HomeHealthData>(emptyHomeHealthUi())
 const missingCount = ref(0)
 
 const activeTasksCount = computed(() => tasksStore.list.length)
@@ -271,18 +265,12 @@ function openDuplicates() {
 }
 
 async function loadHealth() {
-  const response = await apiClient.get<Partial<HomeHealthData>>('/api/home/health')
-  health.value = {
-    ...emptyHealth(),
-    duplicates: response.data?.duplicates || {byFilesize: 0, byContentHash: 0},
-    contentHash: response.data?.contentHash || {total: 0, pending: 0, hashed: 0},
-    generatedImages: response.data?.generatedImages || {byType: {}, totalPending: 0},
-    database: response.data?.database || {id: null, name: null, bytes: null},
-  }
+  const response = await typedApi.getHomeHealth()
+  health.value = toHomeHealthUi(response.data)
 }
 
 async function loadMissingStatus() {
-  const response = await apiClient.get<{ missing?: number }>('/api/Task/missingMediaStatus')
+  const response = await typedApi.getMissingMediaStatus()
   missingCount.value = Number(response.data?.missing || 0)
 }
 
@@ -292,7 +280,7 @@ async function runCheck() {
   loading.value = true
   checked.value = false
   missingCount.value = 0
-  health.value = emptyHealth()
+  health.value = emptyHomeHealthUi()
 
   try {
     await Promise.all([

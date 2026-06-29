@@ -172,7 +172,7 @@ import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useRegistrationStore} from '@/stores/registration'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getLocalImage} from '@/services/fileService'
 import {checkColorForDarkText} from '@/services/formatUtils'
 import _ from 'lodash'
@@ -185,11 +185,10 @@ import {sortByMenuMediaTypeOrder} from '@/utils/mediaType'
 import {getUrlParam} from '@/services/routeService'
 import type { Meta, Tag, AssignedMeta } from '@/types/stores'
 import type { MediaType } from '@/types/media'
+import type { MetaInMediaTypeAssignment } from '@/types/metaAssignment'
+import type { TagInTagEntry, ValueInTagEntry } from '@shared/api/responses'
 
-interface PinnedMediaEntry {
-  mediaType: MediaType
-  [key: string]: unknown
-}
+type PinnedMediaTab = MetaInMediaTypeAssignment & { mediaType: MediaType }
 
 interface TagImages {
   main: string | null
@@ -231,7 +230,7 @@ const tags_filter = ref<Record<string, Tag[]>>({})
 const tags_filter_value = ref<number[]>([])
 const pinnedParentMeta = ref<Meta[]>([])
 const pinnedMeta = ref<AssignedMeta[]>([])
-const pinnedMedia = ref<PinnedMediaEntry[]>([])
+const pinnedMedia = ref<PinnedMediaTab[]>([])
 const values = ref<unknown[]>([])
 const completionStatus = ref(0)
 
@@ -312,7 +311,7 @@ const init = async () => {
 
 const getMeta = async () => {
   try {
-    const res = await apiClient.get<Meta>(`/api/meta/${ENV.value.meta_id}`)
+    const res = await typedApi.getMetaById(Number(ENV.value.meta_id))
     meta.value = res.data
   } catch (e) {
     console.log(e)
@@ -329,7 +328,7 @@ const getTag = async () => {
   }
 
   try {
-    const res = await apiClient.post<{ items: Tag[] }>('/api/tag/items', query)
+    const res = await typedApi.postTagItems(query)
     tag.value = res.data.items[0] || { id: 0, tags: [], values: [] }
   } catch (e) {
     console.log(e)
@@ -353,10 +352,11 @@ const getImages = async () => {
 
 const getPinnedMedia = async () => {
   try {
-    const res = await apiClient.get(
-      `/api/MetaInMediaType?metaId=${ENV.value.meta_id}`
+    const res = await typedApi.getAssignedMetaForMeta(Number(ENV.value.meta_id))
+    pinnedMedia.value = sortByMenuMediaTypeOrder(
+      (res.data || []).filter((item): item is PinnedMediaTab => Boolean(item.mediaType)),
+      appStore.mediaTypes,
     )
-    pinnedMedia.value = sortByMenuMediaTypeOrder(res.data as PinnedMediaEntry[] || [], appStore.mediaTypes)
   } catch (e) {
     console.log(e)
   }
@@ -364,8 +364,8 @@ const getPinnedMedia = async () => {
 
 const getPinnedParentMeta = async () => {
   try {
-    const res = await apiClient.get(`/api/PinnedMeta?pinnedMetaId=${ENV.value.meta_id}`)
-    let childMetas = (res.data as Array<{ metaId: number }>) || []
+    const res = await typedApi.getPinnedParentMeta(Number(ENV.value.meta_id))
+    let childMetas = res.data || []
     let metas = []
 
     for (let cm of childMetas) {
@@ -381,27 +381,27 @@ const getPinnedParentMeta = async () => {
 }
 
 const getCompletionStatus = async () => {
-  let tags: Array<{ metaId: number; tagId: number }> = []
-  let values: Array<{ metaId: number; value: unknown }> = []
+  let tags: TagInTagEntry[] = []
+  let values: ValueInTagEntry[] = []
   let pinned: AssignedMeta[] = []
 
   try {
-    const tagsRes = await apiClient.get(`/api/TagsInTag?tagId=${tag.value.id}`)
-    tags = (tagsRes.data as Array<{ metaId: number; tagId: number }>) || []
+    const tagsRes = await typedApi.getTagsInTag(tag.value.id)
+    tags = tagsRes.data || []
   } catch (e) {
     console.log(e)
   }
 
   try {
-    const valuesRes = await apiClient.get(`/api/ValuesInTag?tagId=${tag.value.id}`)
-    values = (valuesRes.data as Array<{ metaId: number; value: unknown }>) || []
+    const valuesRes = await typedApi.getValuesInTag(tag.value.id)
+    values = valuesRes.data || []
   } catch (e) {
     console.log(e)
   }
 
   try {
-    const pinnedRes = await apiClient.get(`/api/PinnedMeta?metaId=${meta.value.id}`)
-    pinned = (pinnedRes.data as AssignedMeta[]) || []
+    const pinnedRes = await typedApi.getPinnedChildMeta(meta.value.id)
+    pinned = pinnedRes.data || []
     pinnedMeta.value = pinned
   } catch (e) {
     console.log(e)
@@ -477,7 +477,7 @@ const editMetaTag = async () => {
 
 const getTagsInMedia = async () => {
   let query = {
-    mediaTypeId: ENV.value.media_type_id,
+    mediaTypeId: ENV.value.media_type_id ?? undefined,
     filters: _.cloneDeep(ITEMS.value.filters.filter(i => i.lock)),
     sortBy: 'createdAt',
     direction: 'asc',
@@ -486,11 +486,12 @@ const getTagsInMedia = async () => {
   }
 
   try {
-    const res = await apiClient.post<{ items: Array<{ tags?: Array<{ tagId: number }> }> }>('/api/media/items', query)
-    const medias = res.data.items
+    const res = await typedApi.postItemsList('/api/media/items', query)
+    const medias = res.data.items ?? []
     let tags: number[] = []
     for (const i of medias) {
-      tags = [...tags, ...(i.tags || []).map(t => t.tagId)]
+      const itemTags = Array.isArray(i.tags) ? i.tags : []
+      tags = [...tags, ...itemTags.map((t: { tagId: number }) => t.tagId)]
     }
     tags = _.uniq(tags)
     tags_filter.value = _.groupBy(appStore.tags.filter(i => tags.includes(i.id)), 'metaId')
@@ -516,15 +517,15 @@ const changeTab = async (tab_value: string | null) => {
   itemsStore.environment.meta_id = metaId
 
   try {
-    const filter = await apiClient.post<Array<{ id: number }>>('/api/SavedFilter', {
+    const filter = await typedApi.postSavedFilterContext({
       name: null,
       tagId: ENV.value.tag_id,
       mediaTypeId: mediaTypeId,
       metaId: metaId,
     })
 
-    await apiClient.post('/api/PageSetting', {
-      filterId: filter.data[0].id,
+    await typedApi.savePageSetting({
+      filterId: Number(filter.data[0]?.id),
       tagId: ENV.value.tag_id,
       mediaTypeId: mediaTypeId,
       metaId: metaId,

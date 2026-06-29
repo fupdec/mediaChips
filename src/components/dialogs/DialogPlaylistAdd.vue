@@ -39,7 +39,7 @@ import type {PropType} from 'vue';
 import type {VFormInstance} from '@/types/vue';
 import {useI18n} from 'vue-i18n';
 import {useDisplay} from 'vuetify';
-import {apiClient} from '@/services/apiClient';
+import {typedApi} from '@/services/typedApi';
 import {validateName} from '@/services/formatUtils';
 import {setNotification} from '@/services/notificationService';
 import DialogHeader from '@/components/elements/DialogHeader.vue';
@@ -94,7 +94,7 @@ const addPlaylist = async () => {
   if (!valid.value) return;
 
   try {
-    const res = await apiClient.post<{id?: number; name?: string}>('/api/playlist/', {
+    const res = await typedApi.createPlaylist({
       name: name.value,
     });
 
@@ -103,7 +103,7 @@ const addPlaylist = async () => {
 
     if (playlistId && props.mediaIds.length > 0) {
       for (const mediaId of props.mediaIds) {
-        await apiClient.post('/api/mediaInPlaylists/', {
+        await typedApi.addMediaToPlaylist({
           mediaId,
           playlistId,
         })

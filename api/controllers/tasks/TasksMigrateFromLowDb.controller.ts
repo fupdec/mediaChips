@@ -418,7 +418,8 @@ module.exports = function (db: ApiDb) {
       console.log('Current data in tables was cleared');
       // migration system
       const migrations_folder = path.join(__dirname, '../../migrations/')
-      let migrations_list = fs.readdirSync(migrations_folder);
+      let migrations_list = fs.readdirSync(migrations_folder)
+        .filter((fileName: string) => fileName.endsWith('.js'))
       migrations_list = migrations_list.sort().map((fileName: string) => {
         let file_path = path.join(migrations_folder, fileName);
         let functions = require(file_path);

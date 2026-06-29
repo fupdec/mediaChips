@@ -77,7 +77,7 @@ import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue'
 import type { PropType } from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import type { VForm } from 'vuetify/components'
 
 /* ---------------- COMPONENTS ---------------- */
@@ -180,7 +180,7 @@ async function add() {
   // отправляем на сервер только уникальные
   if (added.value.length > 0) {
     try {
-      await apiClient.post('/api/tag',
+      await typedApi.createTags(
         added.value.map(i => ({
           name: i,
           metaId

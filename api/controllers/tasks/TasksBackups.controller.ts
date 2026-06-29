@@ -2,6 +2,7 @@ import type { AnyRecord } from '../../types/db'
 import type { Express } from 'express'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
+import type { BackupEntry } from '@shared/api/responses'
 import type { ApiDb } from '../../types/db'
 const fs = require("fs")
 const path = require('path')
@@ -51,7 +52,7 @@ module.exports = function (app: Express, db: ApiDb) {
   };
 
   const getBackups = function (req: ApiRequest, res: ApiResponse) {
-    let backups: AnyRecord[] = []
+    const backups: BackupEntry[] = []
     if (!fs.existsSync(backupsPath)) {
       res.status(201).send(backups)
       return
@@ -60,7 +61,7 @@ module.exports = function (app: Express, db: ApiDb) {
       if (path.extname(file) !== '.zip') return false
       const pathToFile = path.join(backupsPath, file)
       const filestats = fs.statSync(pathToFile)
-      let info = {
+      let info: BackupEntry = {
         date: path.parse(file).name,
         size: (filestats.size / 1024 / 1024).toFixed(2)
       }

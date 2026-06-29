@@ -138,7 +138,7 @@
 import {ref, computed, onMounted, watch, nextTick, useAttrs} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import _ from 'lodash'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from "@/utils/eventBus"
@@ -299,9 +299,9 @@ const getTags = async () => {
   }
 
   try {
-    const res = await apiClient.post<TagFilterResponse>('/api/tag/filter', sets)
-    const tags = res.data.items
-    listTags.value = sortTags(tags)
+    const res = await typedApi.filterTags(sets)
+    const tags = res.data.items ?? []
+    listTags.value = sortTags(tags as TagListItem[])
   } catch (e) {
     listTags.value = []
     console.error(e)
@@ -312,7 +312,7 @@ const changeSortDir = async () => {
   const sortDir = meta.value.sortDir === 'asc' ? 'desc' : 'asc'
 
   try {
-    await apiClient.put(`/api/Meta/${meta.value.id}`, {
+    await typedApi.updateMeta(meta.value.id, {
       sortDir: sortDir,
     })
     await getMeta()
@@ -324,7 +324,7 @@ const changeSortDir = async () => {
 
 const changeSortBy = async (param: string) => {
   try {
-    await apiClient.put(`/api/Meta/${meta.value.id}`, {
+    await typedApi.updateMeta(meta.value.id, {
       sortBy: param,
     })
     await getMeta()
@@ -355,7 +355,7 @@ const create = async () => {
   if (isExists) return
 
   try {
-    const res = await apiClient.post<TagListItem[]>('/api/tag', [{
+    const res = await typedApi.createTags([{
       name: searchText,
       metaId: props.metaId,
     }])
@@ -457,7 +457,8 @@ const rules = () => {
 
 const getMeta = async () => {
   try {
-    const res = await apiClient.get<ArrayMeta>(`/api/meta/${props.metaId}`)
+    if (!props.metaId) return
+    const res = await typedApi.getMetaById(props.metaId)
     meta.value = res.data
   } catch (e) {
     console.error(e)

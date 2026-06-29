@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import ItemMarker from '@/components/items/ItemMarker.vue'
 import type { HomeMarkersResponse } from '@/types/widgets'
@@ -69,9 +69,7 @@ async function loadMarks() {
   loading.value = true
 
   try {
-    const response = await apiClient.get<HomeMarkersResponse>('/api/home/markers', {
-      params: {limit: props.limit},
-    })
+    const response = await typedApi.getHomeMarkers({limit: props.limit})
     marks.value = response.data?.marks || []
   } catch (error) {
     console.error(error)

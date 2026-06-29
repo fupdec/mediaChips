@@ -1,5 +1,5 @@
 import {computed} from 'vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
@@ -23,21 +23,13 @@ import {openPath} from '@/services/shellService'
 import {parseFilePath} from '@/services/pathTagParser'
 import translate, {type Locale} from '@/utils/translate'
 import {resolveSelectedMediaItems} from '@/utils/resolveSelection'
+import {isMediaPageItem, isTagPageItem, mediaPageItemPath, type PageItem} from '@/utils/pageItem'
+import type { DeleteEntityOnePayload, ParsePathTagEntry } from '@shared/api/responses'
 import type { ItemContextMenuEntry } from '@/types/itemsPage'
 import type { MediaItem, Meta, Playlist, Tag } from '@/types/stores'
 
-interface ParsePathTagEntry {
-  mediaId?: number
-  path?: string
-  [key: string]: unknown
-}
-
-interface DeleteItemPayload {
-  metaId?: number
+interface DeleteItemPayload extends DeleteEntityOnePayload {
   with_file: boolean
-  id: number
-  path?: string
-  type?: string
 }
 
 export interface ItemContextMenuOptions {
@@ -45,7 +37,7 @@ export interface ItemContextMenuOptions {
   x?: number
 }
 
-type ContextItem = MediaItem | Tag
+type ContextItem = PageItem
 
 export default function useItemContextMenu(
   item: ContextItem,
@@ -70,9 +62,8 @@ export default function useItemContextMenu(
   const x = options.x ?? 0
 
   const currentMediaType = computed(() => {
-    if (type === 'media') {
-      const mediaItem = item as MediaItem
-      return getCurrentMediaType(store.mediaTypes, mediaItem.mediaTypeId || itemsStore.environment?.media_type_id)
+    if (isMediaPageItem(item, type)) {
+      return getCurrentMediaType(store.mediaTypes, item.mediaTypeId || itemsStore.environment?.media_type_id)
     }
     return getCurrentMediaType(store.mediaTypes, itemsStore.environment?.media_type_id)
   })
@@ -197,7 +188,9 @@ export default function useItemContextMenu(
           icon: 'image-search',
           disabled: !is_file_exists,
           action: () => {
-            itemsStore.viewImage({image: item as MediaItem})
+            if (isMediaPageItem(item, type)) {
+              itemsStore.viewImage({image: item})
+            }
           },
         })
         contextMenu.push({
@@ -206,7 +199,7 @@ export default function useItemContextMenu(
           icon: 'file-image',
           disabled: !is_file_exists,
           action: () => {
-            openPath(String((item as MediaItem).path ?? ''))
+            openPath(mediaPageItemPath(item, type))
           },
         })
       }
@@ -218,7 +211,7 @@ export default function useItemContextMenu(
           icon: 'file-document-outline',
           disabled: !is_file_exists,
           action: () => {
-            openPath(String((item as MediaItem).path ?? ''))
+            openPath(mediaPageItemPath(item, type))
           },
         })
       }
@@ -230,7 +223,7 @@ export default function useItemContextMenu(
           icon: 'folder-open',
           disabled: !is_file_exists,
           action: () => {
-            openPath(String((item as MediaItem).path ?? ''), true)
+            openPath(mediaPageItemPath(item, type), true)
           },
         })
       }
@@ -313,25 +306,25 @@ export default function useItemContextMenu(
   }
 
   const editItem = (): void => {
-    if (type === 'media' || currentMediaType.value) {
-      dialogsStore.editMedia(item as MediaItem, currentMediaType.value)
-    } else if (type === 'tag' && meta) {
-      dialogsStore.editTag(item as Tag, meta)
+    if (isMediaPageItem(item, type)) {
+      dialogsStore.editMedia(item, currentMediaType.value)
+    } else if (isTagPageItem(item, type) && meta) {
+      dialogsStore.editTag(item, meta)
     }
   }
 
   const toggleSelect = (...args: unknown[]): void => {
-    itemsStore.toggleSelect(args[0] as MouseEvent, item as MediaItem)
+    itemsStore.toggleSelect(args[0] as MouseEvent, item)
   }
 
   const openNewTab = async (): Promise<void> => {
-    const tagItem = item as Tag
+    if (!isTagPageItem(item, type)) return
     try {
-      await apiClient.post('/api/tab', {
-        name: tagItem.name,
+      await typedApi.createTab({
+        name: item.name,
         icon: meta?.icon,
         url: '/tag',
-        tagId: tagItem.id,
+        tagId: item.id,
         metaId: meta?.id,
         mediaTypeId: getDefaultMediaTypeId(store.mediaTypes),
       })
@@ -345,14 +338,14 @@ export default function useItemContextMenu(
     let videos: MediaItem[] = []
     if (itemsStore.isSelect) {
       videos = await resolveSelectedMediaItems(itemsStore.selection)
-    } else {
-      videos.push(item as MediaItem)
+    } else if (isMediaPageItem(item, type)) {
+      videos.push(item)
     }
 
     let vals: ParsePathTagEntry[] = []
     let updated: number[] = []
     try {
-      const parseResponse = await apiClient.post<ParsePathTagEntry[]>('/api/Task/parsePathTags', {
+      const parseResponse = await typedApi.parsePathTags({
         paths: videos.map((entry) => ({path: entry.path, mediaId: entry.id})),
       })
       vals = parseResponse.data || []
@@ -362,7 +355,7 @@ export default function useItemContextMenu(
         const parsed = parseFilePath(String(video.path ?? ''), video.id, {
           tags: store.tags,
           assigned: itemsStore.assigned,
-        }) as unknown as ParsePathTagEntry[]
+        })
         vals = [...vals, ...parsed]
       }
     }
@@ -371,7 +364,7 @@ export default function useItemContextMenu(
 
     const added: number[] = []
     for (const val of vals) {
-      await apiClient.post<[unknown, boolean]>('/api/TagsInMedia/createOne', val)
+      await typedApi.createTagsInMediaOne(val)
         .then((res) => {
           if (res.data?.[1]) added.push(1)
         })
@@ -403,7 +396,7 @@ export default function useItemContextMenu(
 
     const updated: number[] = []
     for (const id of ids) {
-      await apiClient.post('/api/task/updateMediaInfo', {id})
+      await typedApi.updateMediaInfo(id)
         .then(() => {
           updated.push(id)
         })
@@ -443,7 +436,7 @@ export default function useItemContextMenu(
     operationsStore.moving.dialog = true
     operationsStore.moving.ids = ids
     operationsStore.moving.items = null
-    operationsStore.moving.folderPath = path.dirname(String((item as MediaItem).path ?? ''))
+    operationsStore.moving.folderPath = path.dirname(mediaPageItemPath(item, type))
     operationsStore.moving.callback = cb
   }
 
@@ -474,7 +467,7 @@ export default function useItemContextMenu(
 
     for (const data of arr) {
       try {
-        await apiClient.post('/api/mediaInPlaylists/', data)
+        await typedApi.addMediaToPlaylist(data)
       } catch (e) {
         console.error(e)
       }
@@ -509,19 +502,21 @@ export default function useItemContextMenu(
         deleted_items_names.push(String(found.name ?? ''))
 
         const itemData: DeleteItemPayload = {
-          metaId: type === 'tag' ? Number((found as Tag).metaId ?? meta?.id) : meta?.id,
           with_file: is_checked,
           id: found.id,
-          path: (found as MediaItem).path,
         }
 
-        if (type === 'media') {
-          const mediaType = getCurrentMediaType(store.mediaTypes, (found as MediaItem).mediaTypeId)
+        if (isTagPageItem(found, type)) {
+          itemData.metaId = Number(found.metaId ?? meta?.id)
+        } else if (isMediaPageItem(found, type)) {
+          itemData.metaId = meta?.id
+          itemData.path = found.path
+          const mediaType = getCurrentMediaType(store.mediaTypes, found.mediaTypeId)
           itemData.type = getMediaDeleteAssetFolder(mediaType) ?? undefined
         }
 
         try {
-          await apiClient.post(`/api/${type}/deleteOne`, itemData)
+          await typedApi.deleteEntityOne(type, itemData)
         } catch (e) {
           console.error(e)
         }
@@ -558,8 +553,9 @@ export default function useItemContextMenu(
   }
 
   const play = (in_system?: unknown): void => {
+    if (!isMediaPageItem(item, type)) return
     itemsStore.playVideo({
-      video: item as MediaItem,
+      video: item,
       in_system: Boolean(in_system),
     })
   }

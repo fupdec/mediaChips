@@ -1,6 +1,8 @@
 import type { ApiDb, AnyRecord } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import { getRequestBody } from '../types/http'
+import type { Meta, MetaWritePayload } from '@shared/entities/meta'
 import { paramString } from '../types/errors'
 const fs = require("fs")
 const path = require('path')
@@ -9,7 +11,8 @@ module.exports = function (db: ApiDb) {
   const metaFolder = path.join(db.path, 'meta')
   // Create and Save a new Meta
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.Meta.create(req.body, {
+    const body = getRequestBody<MetaWritePayload>(req)
+    db.Meta.create(body, {
         include: [db.PageSetting],
         raw: true
       })
@@ -70,7 +73,7 @@ module.exports = function (db: ApiDb) {
         },
       })
       .then((data) => {
-        res.status(201).send(data)
+        res.status(201).send(data as Meta | null)
       }).catch((err: unknown) => {
         res.status(500).send({
           message: apiErrorMessage(err) || "Some error occurred while performing query."
@@ -97,8 +100,9 @@ module.exports = function (db: ApiDb) {
 
   // Update a Meta by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
+    const body = getRequestBody<MetaWritePayload>(req)
     db.Meta
-      .update(req.body, {
+      .update(body, {
         where: {
           id: parseInt(paramString(req.params.id), 10)
         }

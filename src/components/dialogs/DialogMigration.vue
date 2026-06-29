@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import {ref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from "@/services/apiClient"
+import {typedApi} from "@/services/typedApi"
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useOperationsStore} from '@/stores/operations'
@@ -92,13 +92,13 @@ async function showDialogDeleteConfirmation() {
 
 async function cleanLowDb() {
   operationsStore.migrationLowDb.dialog = false
-  await apiClient.post("/api/Task/cleanLowDb")
+  await typedApi.cleanLowDb()
 }
 
 async function createBackupLowDb() {
   step.value = 2
   try {
-    const res = await apiClient.post<{ data?: string } | string>("/api/Task/createBackupLowDb", {
+    const res = await typedApi.createBackupLowDb({
       is_copy_backups: is_copy_backups.value,
     })
     const backupName = typeof res.data === 'string' ? res.data : res.data?.data
@@ -113,7 +113,7 @@ async function createBackupLowDb() {
 async function restoreBackup(backupName: string) {
   step.value = 3
 
-  await apiClient.post("/api/TasksBackups/restoreBackup", {
+  await typedApi.restoreBackup({
     name: backupName,
   })
 

@@ -1,4 +1,4 @@
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 
 interface PlaylistWithThumbs {
   previewIds?: Array<number | string>
@@ -21,10 +21,10 @@ export async function loadPlaylistThumbs(
   }
 
   try {
-    const response = await apiClient.post<{ thumbs?: Record<string, unknown> }>('/api/Media/thumbs', {
+    const response = await typedApi.postMediaThumbs({
       ids: previewIds,
       mediaType,
-    })
+    }, true)
     const thumbsById = response.data?.thumbs || {}
 
     for (const playlist of playlists) {

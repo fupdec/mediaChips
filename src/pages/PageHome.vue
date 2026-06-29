@@ -94,7 +94,7 @@
 
 <script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue"
-import {apiClient} from "@/services/apiClient"
+import {typedApi} from "@/services/typedApi"
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
@@ -138,18 +138,12 @@ async function loadHomeMedia() {
   }
 
   try {
-    const response = await apiClient.get('/api/home/media', {
-      params: {
-        continueLimit: limits.value.continue,
-        favoritesLimit: limits.value.favorites,
-        topViewsLimit: limits.value.topViews,
-      },
+    const response = await typedApi.getHomeMedia({
+      continueLimit: limits.value.continue,
+      favoritesLimit: limits.value.favorites,
+      topViewsLimit: limits.value.topViews,
     })
-    const data = response.data as {
-      continueWatching?: MediaItem[]
-      favorites?: MediaItem[]
-      topViews?: MediaItem[]
-    } || {}
+    const data = response.data
 
     continueWatching.value = data.continueWatching || []
     favorites.value = data.favorites || []

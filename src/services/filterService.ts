@@ -2,7 +2,7 @@ import _ from 'lodash'
 import { parseCountries } from '@/utils/country'
 import { parseExtList } from '@/utils/ext'
 import { useItemsStore } from '@/stores/items'
-import { apiClient } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 import type { FilterObject } from '@/types/common'
 import type { SavedFilter } from '@/types/stores'
 
@@ -27,10 +27,7 @@ export async function getFilters(savedFilterId: number | string) {
   }
 
   try {
-    const response = await apiClient.get<Array<{ filterRow?: FilterObject & Record<string, unknown> }>>(
-      `/api/FilterRowsInSavedFilter?filterId=${savedFilterId}`,
-    )
-
+    const response = await typedApi.getFilterRowsInSavedFilter(savedFilterId)
     const filters = response.data || []
 
     const processedFilters = await Promise.all(
@@ -52,16 +49,18 @@ export async function getFilters(savedFilterId: number | string) {
         }
 
         if (filterRow.type === 'array' && filterRow.param !== 'country' && filterRow.param !== 'ext') {
-          try {
-            const tagsResponse = await apiClient.get<Array<{ tagId: number }>>(
-              `/api/TagsInFilterRow?rowId=${filterRow.id}`,
-            )
-
-            const tags = tagsResponse.data || []
-            filterRow.val = tags.length > 0 ? tags.map((tag) => tag.tagId) : []
-          } catch (tagsError) {
-            console.error(`Ошибка при загрузке тегов для фильтра ${filterRow.id}:`, tagsError)
+          const filterRowId = filterRow.id
+          if (filterRowId == null) {
             filterRow.val = []
+          } else {
+            try {
+              const tagsResponse = await typedApi.getTagsInFilterRow(filterRowId)
+              const tags = tagsResponse.data || []
+              filterRow.val = tags.length > 0 ? tags.map((tag) => tag.tagId) : []
+            } catch (tagsError) {
+              console.error(`Ошибка при загрузке тегов для фильтра ${filterRowId}:`, tagsError)
+              filterRow.val = []
+            }
           }
         }
 
@@ -90,7 +89,7 @@ export async function getSavedFilters() {
   try {
     const ENV = itemsStore?.environment || {}
 
-    const response = await apiClient.post<SavedFilter[]>('/api/SavedFilter/findAll', {
+    const response = await typedApi.findSavedFilters({
       mediaTypeId: ENV.media_type_id || null,
       metaId: ENV.meta_id || null,
       tagId: ENV.tag_id || null,
@@ -102,7 +101,7 @@ export async function getSavedFilters() {
     }
 
     if (itemsStore?.filters_saved) {
-      const filterPromises = itemsStore.filters_saved.map(async (filter) => {
+      const filterPromises = itemsStore.filters_saved.map(async (filter: SavedFilter) => {
         filter.filters = await getFilters(filter.id as number)
         return filter
       })

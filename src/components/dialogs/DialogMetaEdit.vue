@@ -97,7 +97,7 @@ import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue'
 import MetaSettingsArray from '@/components/dialogs/meta/MetaSettingsArray.vue'
 import MetaSettingsRating from '@/components/dialogs/meta/MetaSettingsRating.vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {setNotification} from '@/services/notificationService'
 import type {Meta} from '@/types/stores'
 
@@ -228,7 +228,7 @@ const applyChanges = async () => {
       ...{isLink: isLink.value}
     }
 
-    await apiClient.put(`/api/Meta/${props.meta.id}`, metaData)
+    await typedApi.updateMeta(props.meta.id, metaData)
 
     setNotification({
       type: 'success',
@@ -267,9 +267,8 @@ const applyChanges = async () => {
 
 const getSettings = async () => {
   try {
-    const response = await apiClient.get(`/api/MetaSetting/${props.meta.id}`)
-    const settings = response.data as { isLink?: boolean }
-    isLink.value = settings.isLink || false
+    const response = await typedApi.getMetaSetting(props.meta.id)
+    isLink.value = response.data.isLink || false
   } catch (error) {
     console.error('Error fetching meta settings:', error)
   }

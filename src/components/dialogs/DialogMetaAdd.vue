@@ -110,7 +110,8 @@ import {useNotificationsStore} from '@/stores/notifications'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import DialogIcons from '@/components/dialogs/DialogIcons.vue'
 import MetaTypes from '@/assets/MetaTypes'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
+import type { MetaWritePayload } from '@shared/entities/meta'
 
 interface DialogHeaderButton {
   icon?: string
@@ -209,7 +210,7 @@ const addMeta = async () => {
   if (!formValid) return
 
   try {
-    const metaData: Record<string, unknown> = {
+    const metaData: MetaWritePayload = {
       type: metaType.value,
       name: name.value,
       nameSingular: metaType.value === 'array' ? (singular.value || name.value) : name.value,
@@ -227,7 +228,7 @@ const addMeta = async () => {
       }
     }
 
-    const response = await apiClient.post('/api/Meta', metaData)
+    const response = await typedApi.createMeta(metaData)
 
     if (response.data) {
       notificationsStore.setNotification({

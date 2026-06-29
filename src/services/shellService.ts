@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 import { setNotification } from '@/services/notificationService'
 
 interface AxiosLikeError {
@@ -8,7 +8,7 @@ interface AxiosLikeError {
 
 export async function openPath(entryPath: string, isDirectory?: boolean) {
   try {
-    return await apiClient.post('/api/Task/openPath', {
+    return await typedApi.openPath({
       path: entryPath,
       isDir: isDirectory,
     })

@@ -1,17 +1,10 @@
+export type { DatabaseSizesResponse, BackupEntry } from '@shared/api/responses'
+
 export type DatabaseEntry = {
   id: string
   name: string
   active: boolean
   createdAt: number
-}
-
-export type DatabaseSizesResponse = {
-  sizes?: Record<string, number>
-}
-
-export type BackupEntry = {
-  date: string
-  size: number
 }
 
 export type MissingMediaStatus = {

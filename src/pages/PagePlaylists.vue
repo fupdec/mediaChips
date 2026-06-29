@@ -144,7 +144,7 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {usePlayerStore} from '@/stores/player'
 import {useSettingsStore} from '@/stores/settings'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import DialogPlaylistAdd from "@/components/dialogs/DialogPlaylistAdd.vue"
 import DialogPlaylistEdit from "@/components/dialogs/DialogPlaylistEdit.vue"
 import DialogSmartPlaylistEdit from "@/components/dialogs/DialogSmartPlaylistEdit.vue"
@@ -156,16 +156,28 @@ import {setNotification} from '@/services/notificationService'
 import {getFilters} from '@/services/filterService'
 import {useEventBus} from '@/utils/eventBus'
 import {getErrorStatus} from '@/types/vue'
-import type { MediaItem, Playlist } from '@/types/stores'
+import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
+import type { SavedFilterBasic } from '@shared/entities/filter'
+import type { PagePlaylist } from '@/types/playlists'
+import type { MediaItem } from '@/types/stores'
 
-interface PagePlaylist extends Playlist {
-  name: string
-  media?: MediaItem[]
-  count?: number | null
-  countLoading?: boolean
-  previewIds?: number[]
-  thumbs?: string[]
-}
+const toPagePlaylistFromBasic = (playlist: SavedFilterBasic): PagePlaylist => ({
+  id: playlist.id,
+  name: playlist.name ?? '',
+  count: null,
+  countLoading: true,
+  previewIds: [],
+  thumbs: [],
+})
+
+const toPagePlaylistFromSummary = (playlist: ParsedDynamicPlaylistSummary): PagePlaylist => ({
+  id: playlist.id,
+  name: playlist.name ?? '',
+  count: Number(playlist.count) || 0,
+  countLoading: false,
+  previewIds: playlist.previewIds || [],
+  thumbs: [],
+})
 const appStore = useAppStore()
 const itemsStore = useItemsStore()
 const playerStore = usePlayerStore()
@@ -285,7 +297,7 @@ const playDynamic = async (playlist: PagePlaylist) => {
 
     if (firstId) {
       try {
-        const basicsRes = await apiClient.post<{ items?: MediaItem[] }>('/api/Media/basics', {
+        const basicsRes = await typedApi.getMediaBasics({
           ids: [firstId],
         })
         const firstVideo = basicsRes.data?.items?.[0]
@@ -298,9 +310,7 @@ const playDynamic = async (playlist: PagePlaylist) => {
       }
     }
 
-    const res = await apiClient.get<{ items?: MediaItem[]; count?: number }>(`/api/SavedFilter/${playlist.id}/media`, {
-      params: {mode: 'play'},
-    })
+    const res = await typedApi.getSavedFilterMedia(playlist.id, {mode: 'play'})
     const videos = (res.data?.items || []).map(enrichMediaItem)
     const videoCount = Number(res.data?.count ?? videos.length) || videos.length
 
@@ -353,7 +363,7 @@ const loadDynamicPlaylistSummaries = async () => {
 
   const applySummary = async (playlist: PagePlaylist) => {
     try {
-      const res = await apiClient.get<{ count?: number; previewIds?: number[] }>(`/api/SavedFilter/${playlist.id}/summary`)
+      const res = await typedApi.getSavedFilterSummary(playlist.id)
       playlist.count = Number(res.data?.count) || 0
       playlist.previewIds = res.data?.previewIds || []
       return
@@ -369,8 +379,8 @@ const loadDynamicPlaylistSummaries = async () => {
 
     try {
       if (!legacySummaries) {
-        const res = await apiClient.get('/api/SavedFilter/dynamicPlaylists')
-        legacySummaries = new Map((res.data as PagePlaylist[] || []).map((item) => [item.id, item]))
+        const res = await typedApi.getDynamicPlaylists()
+        legacySummaries = new Map((res.data || []).map((item) => [item.id, toPagePlaylistFromSummary(item)]))
       }
       const match = legacySummaries.get(playlist.id)
       playlist.count = Number(match?.count) || 0
@@ -401,25 +411,13 @@ const loadDynamicPlaylists = async () => {
   is_dynamic_thumbs_loaded.value = false
 
   try {
-    const res = await apiClient.get<PagePlaylist[]>('/api/SavedFilter/dynamicPlaylists/basic')
-    dynamicPlaylists.value = (res.data || []).map((playlist: PagePlaylist) => ({
-      ...playlist,
-      count: null,
-      countLoading: true,
-      previewIds: [],
-      thumbs: [],
-    }))
+    const res = await typedApi.getDynamicPlaylistsBasic()
+    dynamicPlaylists.value = (res.data || []).map(toPagePlaylistFromBasic)
   } catch (e: unknown) {
     if (getErrorStatus(e) === 404) {
       try {
-        const res = await apiClient.get<PagePlaylist[]>('/api/SavedFilter/dynamicPlaylists')
-        dynamicPlaylists.value = (res.data || []).map((playlist: PagePlaylist) => ({
-          ...playlist,
-          count: Number(playlist.count) || 0,
-          countLoading: false,
-          previewIds: playlist.previewIds || [],
-          thumbs: [],
-        }))
+        const res = await typedApi.getDynamicPlaylists()
+        dynamicPlaylists.value = (res.data || []).map(toPagePlaylistFromSummary)
         is_dynamic_loading.value = false
         if (!dynamicPlaylists.value.length) {
           is_dynamic_thumbs_loaded.value = true
@@ -451,9 +449,10 @@ const getPlaylists = async () => {
   is_thumbs_loaded.value = false
 
   try {
-    const res = await apiClient.get<PagePlaylist[]>('/api/Playlist/summary')
-    playlists.value = (res.data || []).map((playlist: PagePlaylist) => ({
+    const res = await typedApi.getPlaylistSummary()
+    playlists.value = (res.data || []).map((playlist) => ({
       ...playlist,
+      name: playlist.name ?? '',
       thumbs: [],
     }))
     is_manual_loaded.value = true
@@ -478,7 +477,7 @@ const deletePlaylist = async () => {
   if (!playlist_edit.value?.id) return
 
   try {
-    await apiClient.delete(`/api/playlist/${playlist_edit.value.id}`)
+    await typedApi.deletePlaylist(playlist_edit.value.id)
   } catch (e) {
     console.log(e)
   }
@@ -519,11 +518,11 @@ const deleteSmartPlaylist = async () => {
     const savedFilter = smart_playlist_edit.value
     const filters = await getFilters(savedFilter.id)
 
-    await apiClient.delete(`/api/SavedFilter/${savedFilter.id}`)
+    await typedApi.deleteSavedFilter(savedFilter.id)
 
     for (const row of filters) {
       if (row?.id) {
-        await apiClient.delete(`/api/FilterRow/${row.id}`)
+        await typedApi.deleteFilterRow(row.id)
       }
     }
   } catch (e) {

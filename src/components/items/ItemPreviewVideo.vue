@@ -190,7 +190,8 @@ import {useContextMenu} from '@/stores/contextMenu'
 import {useEventBus} from '@/utils/eventBus'
 import _ from 'lodash'
 import type {Handler} from 'mitt'
-import {apiClient} from '@/services/apiClient'
+import {apiClient, buildApiUrl} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {createThumb as createVideoThumb, getLocalImage} from '@/services/fileService'
 import {
   getReadableDuration,
@@ -201,7 +202,6 @@ import {setNotification} from '@/services/notificationService'
 import {setOption} from '@/services/settingsService'
 import {isLikelyBrowserDirectVideo} from '@/utils/transcodeCompatibility'
 import {usePlayerStore} from '@/stores/player'
-import {buildApiUrl} from '@/services/apiClient'
 import {getChunkStart} from '@/utils/liveStreamChunk'
 import {resolvePreviewVideoUrl, stopLiveTranscode} from '@/services/transcodeService'
 import type {MediaItem} from '@/types/stores'
@@ -478,7 +478,7 @@ const getImg = async ({bust = false, allowCreate = true} = {}) => {
 
 const createThumb = async (imgPath: string) => {
   try {
-    await apiClient.post('/api/Task/createThumbForVideo', {
+    await typedApi.taskCreateThumbForVideo({
       path: props.media.path,
       id: props.media.id,
     })

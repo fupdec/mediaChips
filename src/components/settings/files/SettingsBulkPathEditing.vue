@@ -84,7 +84,7 @@
                   >
                     <template #default="{ item }">
                       <div class="path-string"
-                        v-html="highlightPath(item.path)"/>
+                        v-html="highlightPath(item.path || '')"/>
                       <v-divider/>
                     </template>
                   </v-virtual-scroll>
@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import {apiClient} from "@/services/apiClient"
+import {typedApi} from "@/services/typedApi"
 import path from "path-browserify"
 import {ref, computed} from "vue"
 import {useI18n} from "vue-i18n"
@@ -115,11 +115,7 @@ import {useNotificationsStore} from "@/stores/notifications"
 import {useDisplay} from "vuetify"
 import DialogHeader from "@/components/elements/DialogHeader.vue"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
-
-interface MediaPathFile {
-  id: number
-  path: string
-}
+import type { MediaPathFile } from '@shared/api/responses'
 
 const store = useAppStore()
 const dialogsStore = useDialogsStore()
@@ -145,13 +141,13 @@ const buttons = computed(() => [
 
 const searchMedia = async () => {
   try {
-    const res = await apiClient.post<MediaPathFile[]>('/api/task/searchMediaByPath', {
+    const res = await typedApi.searchMediaByPath({
       query: query.value,
     })
 
     found.value = query.value
-    files.value = res.data.filter((i: MediaPathFile) =>
-      i.path.includes(query.value)
+    files.value = (res.data || []).filter((i) =>
+      (i.path || '').includes(query.value)
     )
   } catch (e) {
     console.error(e)
@@ -179,7 +175,8 @@ const replaceFiles = async () => {
   const repl = replacement.value
 
   const replaced = files.value.map((i) => {
-    const newPath = i.path.replace(str, repl)
+    const currentPath = i.path || ''
+    const newPath = currentPath.replace(str, repl)
     return {
       id: i.id,
       path: newPath,
@@ -192,7 +189,7 @@ const replaceFiles = async () => {
   dialogsStore.process.show = true
 
   try {
-    await apiClient.post('/api/task/updateMediaMultiple', {
+    await typedApi.updateMediaMultiple({
       mediaFiles: replaced,
     })
 

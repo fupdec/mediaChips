@@ -30,7 +30,6 @@ import {
 } from 'chart.js'
 import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
-import type { Tag } from '@/types/stores'
 
 ChartJS.register(
   Title,
@@ -64,7 +63,7 @@ const appStore = useAppStore()
 
 const chartOptions = ref<Record<string, unknown>>({})
 
-const tags = computed(() => appStore.tags as Tag[])
+const tags = computed(() => appStore.tags)
 
 const datasets = computed(() => {
   let labels: string[] = []

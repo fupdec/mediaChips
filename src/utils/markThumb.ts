@@ -1,5 +1,5 @@
 import path from 'path-browserify'
-import { apiClient } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 import { checkFileExists, createThumb, getLocalImage } from '@/services/fileService'
 export interface MarkThumbTarget {
   id?: number
@@ -80,7 +80,7 @@ export async function ensureMarkThumb({
 
   try {
     if (mediaId) {
-      await apiClient.post('/api/Task/createMarkThumbForMark', {
+      await typedApi.createMarkThumb({
         markId: mark.id,
         mediaId,
       })

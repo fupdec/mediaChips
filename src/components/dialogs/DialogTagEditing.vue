@@ -62,7 +62,7 @@ import {useSettingsStore} from '@/stores/settings'
 import {useAppStore} from '@/stores/app'
 import {useScraperStore} from "@/stores/scraper"
 import {useNotificationsStore} from "@/stores/notifications"
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getLocalImage} from '@/services/fileService'
 import {checkCurrentPage} from '@/services/routeService'
 import path from 'path-browserify'
@@ -112,8 +112,8 @@ const is_show_dialog_delete_confirm = ref(false)
 const editingComponent = ref<EditComponentInstance | null>(null)
 const currentIndex = shallowRef(0)
 
-const tag = computed(() => dialogsStore.tagEditing.tag as Tag | null)
-const meta = computed(() => dialogsStore.tagEditing.meta as Meta | null)
+const tag = computed(() => dialogsStore.tagEditing.tag)
+const meta = computed(() => dialogsStore.tagEditing.meta)
 
 const isTagPage = computed(() => checkCurrentPage(router.currentRoute.value, 'tag'))
 
@@ -207,7 +207,7 @@ const deleteTag = async () => {
   if (!tag.value || !meta.value) return
 
   try {
-    await apiClient.post('/api/tag/deleteOne', {
+    await typedApi.deleteEntityOne('tag', {
       metaId: meta.value.id,
       id: tag.value.id
     })

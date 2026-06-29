@@ -144,7 +144,7 @@ async function getData() {
       valueScraper: [found_cc.name],
       isTagExists: false,
       key: 'country',
-      meta: {id: 0, icon: 'flag'} as Meta,
+      meta: { id: 0, icon: 'flag' } satisfies Meta,
       isTransfered: false,
       isAlreadyContain: currentCountry.includes(found_cc.name),
     })

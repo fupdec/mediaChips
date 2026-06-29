@@ -1,20 +1,11 @@
 import type { ComputedRef, Ref } from 'vue'
 import type { MediaItem } from './stores'
+import type { MarkForVideo } from '@shared/api/responses'
 
-export interface PlayerMark {
-  id?: number
-  type: string
-  time: number
-  end?: number
-  meta?: { id?: number; icon?: string }
-  metaId?: number
+export type PlayerMark = MarkForVideo & {
+  thumb?: string
   'tag.icon'?: string
   'tag.color'?: string
-  tag?: { name?: string; color?: string }
-  thumb?: string
-  text?: string
-  name?: string
-  [key: string]: unknown
 }
 
 export type MarkDisplayVariant = 'list' | 'timeline'

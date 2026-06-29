@@ -1,6 +1,7 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 import { paramString } from '../types/errors'
 module.exports = function (db: ApiDb) {
   const {getManualPlaylistsSummary} = require('../services/playlistSummary')
@@ -34,7 +35,7 @@ module.exports = function (db: ApiDb) {
 
   const findSummary = async function (req: ApiRequest, res: ApiResponse) {
     try {
-      const data = await getManualPlaylistsSummary(db)
+      const data: ParsedDynamicPlaylistSummary[] = await getManualPlaylistsSummary(db)
       res.status(201).send(data)
     } catch (err) {
       res.status(500).send({

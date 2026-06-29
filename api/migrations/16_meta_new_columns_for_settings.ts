@@ -208,7 +208,10 @@ module.exports = {
             ),
           ]);
 
-          let meta_settings = await (queryInterface.sequelize.models as any).metaSetting.findAll({raw: true});
+          const metaSettingModel = (queryInterface.sequelize.models as AnyRecord).metaSetting as {
+            findAll: (options: { raw: boolean }) => Promise<AnyRecord[]>
+          }
+          let meta_settings = await metaSettingModel.findAll({raw: true});
 
           let values = ''
           for (let i = 0; i < meta_settings.length; i++) {

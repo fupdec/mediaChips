@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import {ref, computed, watch, defineAsyncComponent} from 'vue'
 import type {VFormInstance} from '@/types/vue'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useEventBus} from "@/utils/eventBus"
 import {validateName as validateNameFormat} from '@/services/formatUtils'
@@ -99,7 +99,7 @@ const save = async () => {
   }
 
   try {
-    await apiClient.put(`/api/tab/${dialog.value.tab.id}`, {
+    await typedApi.updateTab(Number(dialog.value.tab.id), {
       name: tabName.value,
       icon: icon.value,
     })

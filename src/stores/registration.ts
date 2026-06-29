@@ -6,6 +6,7 @@ import { useNotificationsStore } from '@/stores/notifications'
 import { resolveApiBaseUrl } from '@/utils/apiBaseUrl'
 import { setOption } from '@/services/settingsService'
 import { updateConfig } from '@/services/configService'
+import { parseLicenseActivateResponse, parseLicenseInfo } from '@/schemas/license'
 import type { LicenseInfo } from '@/types/stores'
 
 const LICENSE_API_BASE_URL = import.meta.env.VITE_LICENSE_API_URL || 'https://mediachips.app/wp-json/mediachips/v1/license'
@@ -160,7 +161,7 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
         license_code: licenseCode,
       })
 
-      return response.data as LicenseInfo
+      return parseLicenseInfo(response.data)
     },
 
     async activateLicense(licenseCode: string, fingerprint?: string) {
@@ -171,7 +172,7 @@ export const useRegistrationStore = defineStore('useRegistrationStore', {
         fingerprint: resolvedFingerprint,
       })
 
-      return response.data as { activated?: boolean; license?: LicenseInfo; message?: string }
+      return parseLicenseActivateResponse(response.data)
     },
 
     async deactivateLicense(licenseCode: string, fingerprint?: string) {

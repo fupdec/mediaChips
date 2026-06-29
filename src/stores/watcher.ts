@@ -1,15 +1,16 @@
 import { defineStore } from 'pinia'
 import _ from 'lodash'
 import type { WatchedFolderEntry } from '@/services/watcherUtils'
+import type { WatcherFilesEntry, WatcherFolderState } from '@/types/watcher'
 
 export const useWatcherStore = defineStore('watcher', {
   state: () => ({
     ws: null as WebSocket | null,
     busy: false,
     folders: [] as WatchedFolderEntry[],
-    files: [] as unknown[],
+    files: [] as WatcherFilesEntry[],
     dialogFolder: false,
-    folder: null as unknown,
+    folder: null as WatcherFolderState | null,
   }),
 
   getters: {

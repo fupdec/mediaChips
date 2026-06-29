@@ -165,29 +165,12 @@ import {useTasksStore} from '@/stores/tasks'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useNotificationsStore} from '@/stores/notifications'
 import {useEventBus} from '@/utils/eventBus'
-import {apiClient} from "@/services/apiClient"
+import {typedApi} from "@/services/typedApi"
 import useAppStore from "@/stores/app"
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getMediaDeleteAssetFolder, isManagedMediaType} from '@/utils/mediaType'
 import type {MediaType} from '@/types/media'
-
-interface WatcherFolderInfo {
-  id: number
-  name?: string
-  path?: string
-  [key: string]: unknown
-}
-
-interface WatcherFolderFileGroup {
-  type: MediaType
-  new: string[]
-  lost: Array<{ id: number; path: string; [key: string]: unknown }>
-}
-
-interface WatcherFolderState {
-  folder: WatcherFolderInfo
-  files: WatcherFolderFileGroup[]
-}
+import type { WatcherFileChangeGroup } from '@/types/watcher'
 
 const {xs} = useDisplay()
 const watcherStore = useWatcherStore()
@@ -197,7 +180,7 @@ const notificationStore = useNotificationsStore()
 const eventBus = useEventBus()
 const {t} = useI18n()
 
-const folderState = computed(() => watcherStore.folder as WatcherFolderState | null)
+const folderState = computed(() => watcherStore.folder)
 
 const panel = ref(0)
 
@@ -236,7 +219,7 @@ const addFiles = (files: string[], mediaTypeId: number) => {
 }
 
 const removeFiles = async (
-  lost: WatcherFolderFileGroup['lost'],
+  lost: WatcherFileChangeGroup['lost'],
   fileType: MediaType,
 ) => {
   dialogsStore.confirm.text = t('watcher.folder.delete_confirm')
@@ -252,16 +235,16 @@ const removeFiles = async (
       type: getMediaDeleteAssetFolder(fileType),
     }
 
-    const deletePromises = lost.map(async (item: WatcherFolderFileGroup['lost'][number]) => {
+    const deletePromises = lost.map(async (item) => {
       const deleteData = {...data, ...{id: item.id, path: item.path}}
 
-      return apiClient.post('/api/media/deleteOne', deleteData)
+      return typedApi.deleteMediaOne(deleteData)
     })
 
     await Promise.all(deletePromises)
 
     eventBus.emit("removeEntitiesFromState", {
-      ids: lost.map((i: WatcherFolderFileGroup['lost'][number]) => i.id),
+      ids: lost.map((i) => i.id),
       type: 'media',
     })
 

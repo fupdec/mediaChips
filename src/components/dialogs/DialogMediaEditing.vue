@@ -71,12 +71,13 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, defineAsyncComponent} from 'vue'
 import type {MediaItem} from '@/types/stores'
+import type {MediaType} from '@/types/media'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
 import {useAppStore} from '@/stores/app'
 import {useDialogsStore} from '@/stores/dialogs'
 import {useItemsStore} from '@/stores/items'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {getLocalImage} from '@/services/fileService'
 import EditPinnedMetaValues from "@/components/items/EditPinnedMetaValues.vue"
 import EditDialogMediaPanel from "@/components/items/EditDialogMediaPanel.vue"
@@ -104,11 +105,11 @@ interface EditComponentInstance {
   save?: () => void
 }
 
-const props = defineProps({
-  dialog: Boolean,
-  media: Object,
-  mediaType: Object,
-})
+const props = defineProps<{
+  dialog?: boolean
+  media?: MediaItem | null
+  mediaType?: MediaType | null
+}>()
 
 const {xs, xl} = useDisplay()
 const eventBus = useEventBus()
@@ -124,7 +125,7 @@ const cropperOps = ref({
   aspectRatio: 16 / 9,
 })
 
-const media = computed(() => (props.media || dialogsStore.mediaEditing.media) as MediaItem | null)
+const media = computed(() => props.media ?? dialogsStore.mediaEditing.media)
 
 const fileName = computed(() => {
   const filePath = media.value?.path || ''
@@ -227,7 +228,7 @@ function deleteMedia() {
   dialogsStore.confirm.text = t('media.delete_from_app_confirm')
   dialogsStore.confirm.action = async () => {
     const is_checked = dialogsStore.confirm.checkBox
-    await apiClient.post('/api/media/deleteOne', {
+    await typedApi.deleteMediaOne({
       type: getMediaDeleteAssetFolder(currentMediaType.value),
       id: currentMedia.id,
       with_file: is_checked,

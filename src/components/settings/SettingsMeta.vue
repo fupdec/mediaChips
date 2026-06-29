@@ -103,7 +103,7 @@ import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import _ from 'lodash'
 import MetaManager from '@/components/dialogs/DialogMetaManager.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
@@ -153,7 +153,7 @@ const getMeta = async (type?: string) => {
   try {
     initiated.value = false
 
-    const response = await apiClient.get<Meta[]>('/api/Meta')
+    const response = await typedApi.getMeta()
     meta.value = response.data
 
     if (type === 'array') {

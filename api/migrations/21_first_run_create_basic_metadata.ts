@@ -72,7 +72,7 @@ module.exports = {
       const filteredMetaData: AnyRecord = {};
       Object.keys(metaRecord).forEach((key: string) => {
         if (metaColumns[key] !== undefined) {
-          filteredMetaData[key] = (metaRecord as any)[key];
+          filteredMetaData[key] = (metaRecord as AnyRecord)[key];
         }
       });
 
@@ -139,7 +139,7 @@ module.exports = {
 
         Object.keys(metaInMediaTypesRecord).forEach((key: string) => {
           if (metaInMediaTypesColumns[key] !== undefined) {
-            filteredMetaInMediaTypesData[key] = (metaInMediaTypesRecord as any)[key];
+            filteredMetaInMediaTypesData[key] = (metaInMediaTypesRecord as AnyRecord)[key];
           }
         });
 

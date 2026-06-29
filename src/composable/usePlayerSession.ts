@@ -3,7 +3,8 @@ import type { Handler } from 'mitt'
 import {useI18n} from 'vue-i18n'
 import _ from 'lodash'
 import path from 'path-browserify'
-import {apiClient, buildApiUrl} from '@/services/apiClient'
+import { buildApiUrl } from '@/services/apiClient'
+import { typedApi } from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useDialogsStore} from '@/stores/dialogs'
@@ -338,7 +339,7 @@ export function usePlayerSession() {
   const addTagToMedia = async (tagId: number | string, metaId?: number | string) => {
     if (!video.value?.id) return
 
-    const response = await apiClient.post<unknown[]>('/api/TagsInMedia/createOne', {
+    const response = await typedApi.createTagsInMediaOne({
       mediaId: video.value.id,
       tagId,
       metaId: metaId ?? appStore.getTagById(Number(tagId))?.metaId,
@@ -374,7 +375,7 @@ export function usePlayerSession() {
     }
 
     try {
-      await apiClient.post('/api/mark', mark)
+      await typedApi.createMark(mark)
 
       if (mark.tagId) {
         await addTagToMedia(mark.tagId, Number(adding.meta?.id) || undefined)
@@ -403,7 +404,7 @@ export function usePlayerSession() {
   const removeMark = async (mark: PlayerMark) => {
     if (!mark.id) return
     try {
-      await apiClient.delete(`/api/mark/${mark.id}`)
+      await typedApi.deleteMark(mark.id)
       await getMarks(video.value)
     } catch (e) {
       console.log(e)

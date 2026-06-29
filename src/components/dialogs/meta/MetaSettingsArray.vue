@@ -263,7 +263,7 @@ import {ref, computed, onMounted, watch, nextTick} from 'vue'
 import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {isVideoMediaType, isImageMediaType, isAudioMediaType, isTextMediaType} from '@/utils/mediaType'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import SettingsSection from '@/components/ui/SettingsSection.vue'
 import ButtonDocumentation from '@/components/ui/ButtonDocumentation.vue'
@@ -290,14 +290,9 @@ interface MetaSettings {
   marks: boolean
 }
 
-interface MetaInMediaTypeItem {
-  mediaType?: MediaType
-}
-
 const toMediaType = (mediaType: MediaType | string | undefined): MediaType | undefined =>
   typeof mediaType === 'string' ? undefined : mediaType
 
-// Props
 const props = defineProps({
   meta: {
     type: Object as PropType<Meta>,
@@ -374,10 +369,8 @@ const generateRandomColor = () => {
 
 const checkPinnedMediaTypes = async () => {
   try {
-    const response = await apiClient.get(
-      `/api/MetaInMediaType?metaId=${props.meta.id}`
-    )
-    const pinnedMedia = (response.data || []) as MetaInMediaTypeItem[]
+    const response = await typedApi.getAssignedMetaForMeta(props.meta.id)
+    const pinnedMedia = response.data || []
 
     isPinnedToVideos.value = pinnedMedia.some((item) => isVideoMediaType(toMediaType(item.mediaType)))
     isPinnedForMediaParser.value = pinnedMedia.some((item) =>

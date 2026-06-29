@@ -3,7 +3,7 @@ import {useTasksStore} from '@/stores/tasks'
 import {useItemsStore} from '@/stores/items'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import type { MediaItem } from '@/types/stores'
 
 interface GeneratorState {
@@ -35,7 +35,7 @@ export default function useVideoImageGenerator() {
 
   const createVideoGrid = (input: string, output: string): Promise<unknown> => {
     return new Promise((resolve, reject) => {
-      apiClient.post('/api/Task/createGrid', {
+      typedApi.taskCreateGrid({
         input: input,
         output: output,
         width: 180,
@@ -53,7 +53,7 @@ export default function useVideoImageGenerator() {
 
   const createVideoTimeline = (video: MediaItem): Promise<unknown> => {
     return new Promise((resolve, reject) => {
-      apiClient.post('/api/Task/createTimeline', video)
+      typedApi.taskCreateTimeline({ id: video.id, path: video.path })
         .then((res) => {
           itemsStore.refreshThumb(video.id, {broadcast: false})
           resolve(res)

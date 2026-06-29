@@ -2,6 +2,7 @@ import type { TaskControllerShared } from '../../types/tasks'
 import type { AnyRecord } from '../../types/db'
 import { apiErrorMessage } from '../../types/errors'
 import type { ApiRequest, ApiResponse } from '../../types/http'
+import type { DatabaseSizesResponse } from '@shared/api/responses'
 const fs = require('fs')
 const path = require('path')
 const {rimraf} = require('rimraf')
@@ -49,12 +50,13 @@ module.exports = function createTasksDatabaseController(shared: TaskControllerSh
     }
 
     try {
-      const sizes: AnyRecord = {}
+      const sizes: DatabaseSizesResponse['sizes'] = {}
       await Promise.all(ids.map(async (id) => {
         const dbDir = path.join(db.path_databases, id)
-        sizes[id] = await getDirectorySize(dbDir)
+        sizes![id] = await getDirectorySize(dbDir)
       }))
-      res.status(201).send({sizes})
+      const payload: DatabaseSizesResponse = { sizes }
+      res.status(201).send(payload)
     } catch (err) {
       res.status(400).send({message: apiErrorMessage(err) || String(err)})
     }

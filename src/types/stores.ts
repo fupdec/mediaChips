@@ -1,89 +1,17 @@
-import type { FilterObject } from '@/types/common'
-import type { MediaType } from '@/types/media'
-
-export interface MediaItem {
-  id: number
-  name?: string
-  path?: string
-  mediaTypeId?: number
-  thumb?: string
-  views?: number
-  favorite?: boolean
-  duration?: number
-  time?: number
-  color?: string
-  bookmark?: string
-  synonyms?: string
-  values?: ItemValueRef[]
-  tags?: ItemTagRef[]
-  [key: string]: unknown
-}
-
-export interface Tag {
-  id: number
-  metaId?: number
-  name?: string
-  synonyms?: string
-  favorite?: boolean
-  color?: string
-  bookmark?: string
-  values?: ItemValueRef[]
-  tags?: ItemTagRef[]
-  [key: string]: unknown
-}
-
-export interface ItemTagRef {
-  tagId: number
-  metaId?: number
-}
-
-export interface ItemValueRef {
-  metaId: number
-  value: unknown
-}
-
-export interface Meta {
-  id: number
-  name?: string
-  parser?: boolean
-  icon?: string
-  chipVariant?: string
-  color?: boolean
-  rating?: boolean
-  favorite?: boolean
-  synonyms?: boolean
-  imageAspectRatio?: number
-  hidden?: boolean
-  order?: number
-  type?: string
-  [key: string]: unknown
-}
-
-export interface Tab {
-  id?: number | string
-  url?: string
-  [key: string]: unknown
-}
-
-export interface Playlist {
-  id: number
-  [key: string]: unknown
-}
-
-export interface AssignedMeta {
-  id?: number | string
-  order?: number
-  meta?: Meta
-  [key: string]: unknown
-}
-
-export interface SavedFilter {
-  id?: number
-  name?: string
-  filters?: FilterObject[]
-  savedAt?: string
-  [key: string]: unknown
-}
+import type { FilterObject } from '@shared/entities/filter'
+import type { MediaItem } from '@shared/entities/media'
+import type { MediaType } from '@shared/entities/media'
+export type {
+  MediaItem,
+  ItemTagRef,
+  ItemValueRef,
+  Tag,
+  Meta,
+  Tab,
+  Playlist,
+  AssignedMeta,
+  SavedFilter,
+} from '@shared/entities'
 
 export interface AppHoverState {
   show: boolean
@@ -119,10 +47,10 @@ export interface AppState {
   hover: AppHoverState
   media: unknown[]
   mediaTypes: MediaType[]
-  meta: Meta[]
-  tags: Tag[]
-  playlists: Playlist[]
-  tabs: Tab[]
+  meta: import('@shared/entities/meta').Meta[]
+  tags: import('@shared/entities/meta').Tag[]
+  playlists: import('@shared/entities/playlist').Playlist[]
+  tabs: import('@shared/entities/tab').Tab[]
   filters: {
     visible: boolean
     attached: boolean
@@ -148,10 +76,7 @@ export interface MarkItem {
   [key: string]: unknown
 }
 
-export interface MarkFilterMeta {
-  id: number
-  [key: string]: unknown
-}
+export type { MarkFilterMeta } from '@shared/entities/meta'
 
 export interface ContextMenuEntry {
   id?: string

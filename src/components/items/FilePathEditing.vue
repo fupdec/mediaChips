@@ -132,7 +132,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import type { PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import path from 'path-browserify'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import { useAppStore } from '@/stores/app'
 import { useOperationsStore } from '@/stores/operations'
 import { useItemsStore } from '@/stores/items'
@@ -262,7 +262,7 @@ const savePathToDb = async (filePath: string, { notify = true } = {}) => {
   const basename = path.basename(filePath)
 
   try {
-    await apiClient.post('/api/media/updatePath', {
+    await typedApi.updateMediaPath({
       id: props.media.id,
       path: filePath,
     })

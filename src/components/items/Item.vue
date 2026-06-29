@@ -131,8 +131,8 @@
       class="tag-chip-view"
       rounded="pill"
     >
-      <ItemPreviewTag v-if="type=='tag'"
-                      :tag="item as Tag"
+      <ItemPreviewTag v-if="tagItem"
+                      :tag="tagItem"
                       :meta="previewMeta"></ItemPreviewTag>
       <div @click="editItem"
            class="ml-2">{{ item.name }}
@@ -174,6 +174,8 @@ import {isAudioMediaType, isImageMediaType, isTextMediaType, isVideoMediaType} f
 import {checkFileExists as checkPathExists} from '@/services/fileService'
 import {hexToRgba} from '@/services/formatUtils'
 import {hideHoverImage, showHoverImage} from '@/services/hoverService'
+import {isMediaPageItem, isTagPageItem} from '@/utils/pageItem'
+import {toChipVariant} from '@/utils/chipVariant'
 import type {MediaType} from '@/types/media'
 import type {ContextMenuEntry, MediaItem, Meta, Tag} from '@/types/stores'
 
@@ -214,21 +216,26 @@ const isImageMedia = computed(() => isImageMediaType(props.mediaType ?? undefine
 const isAudioMedia = computed(() => isAudioMediaType(props.mediaType ?? undefined))
 const isTextMedia = computed(() => isTextMediaType(props.mediaType ?? undefined))
 
+const tagItem = computed((): Tag | null => (
+  isTagPageItem(props.item, props.type) ? props.item : null
+))
+
+const mediaItem = computed((): MediaItem | null => (
+  isMediaPageItem(props.item, props.type) ? props.item : null
+))
+
 const tagMetaId = computed((): number | null => {
-  if (props.type !== 'tag') return null
-  const metaId = (props.item as Tag).metaId
+  const metaId = tagItem.value?.metaId
   return typeof metaId === 'number' ? metaId : null
 })
 
 const previewMeta = computed((): Meta => props.meta ?? { id: 0 })
 
-type ChipVariant = 'text' | 'flat' | 'elevated' | 'outlined' | 'plain' | 'tonal'
+type ChipVariant = import('@/utils/chipVariant').ChipVariant
 
-const tagChipVariant = computed((): ChipVariant | undefined => {
-  const variant = props.meta?.chipVariant
-  if (!variant) return undefined
-  return variant as ChipVariant
-})
+const tagChipVariant = computed((): ChipVariant | undefined =>
+  toChipVariant(props.meta?.chipVariant),
+)
 
 const is_selected = computed(() => {
   return itemsStore.selection.includes(props.item.id)
@@ -273,10 +280,10 @@ const stopSmoothScroll = (event: MouseEvent) => {
 }
 
 const editItem = () => {
-  if (props.type === 'media' || props.mediaType) {
-    dialogsStore.editMedia(props.item as MediaItem, props.mediaType ?? undefined)
-  } else if (props.type === 'tag' && props.meta) {
-    dialogsStore.editTag(props.item as Tag, props.meta)
+  if (isMediaPageItem(props.item, props.type)) {
+    dialogsStore.editMedia(props.item, props.mediaType ?? undefined)
+  } else if (isTagPageItem(props.item, props.type) && props.meta) {
+    dialogsStore.editTag(props.item, props.meta)
   }
 }
 
@@ -306,18 +313,18 @@ const toggleSelect = (e: MouseEvent) => {
 }
 
 const checkVideoFileExists = async () => {
-  const mediaItem = props.item as MediaItem
-  is_file_exists.value = await checkPathExists(mediaItem.path ?? '')
+  if (!mediaItem.value) return
+  is_file_exists.value = await checkPathExists(mediaItem.value.path ?? '')
 }
 
 onMounted(() => {
-  if (props.type === 'media') {
+  if (mediaItem.value) {
     checkVideoFileExists()
   }
 })
 
-watch(() => (props.item as MediaItem).path, () => {
-  if (props.type === 'media') {
+watch(() => mediaItem.value?.path, () => {
+  if (mediaItem.value) {
     checkVideoFileExists()
   }
 })

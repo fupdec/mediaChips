@@ -1,10 +1,13 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+import { getRequestBody } from '../types/http'
+import type { MediaTypeWritePayload } from '@shared/api/payloads'
 import { paramString } from '../types/errors'
 module.exports = function (db: ApiDb) {
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.MediaType.create(req.body).then((data) => {
+    const body = getRequestBody<MediaTypeWritePayload>(req)
+    db.MediaType.create(body).then((data) => {
       res.status(201).send(data)
     }).catch((err: unknown) => {
       res.status(500).send({
@@ -46,8 +49,9 @@ module.exports = function (db: ApiDb) {
 
   // Update a Media by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
+    const body = getRequestBody<MediaTypeWritePayload>(req)
     db.MediaType
-      .update(req.body, {
+      .update(body, {
         where: {
           id: parseInt(paramString(req.params.id), 10)
         }

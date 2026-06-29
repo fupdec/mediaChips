@@ -30,7 +30,7 @@ export function usePlayerMarks({ emit }: UsePlayerMarksOptions) {
   const player = computed(() => playerStore)
   const assigned = computed(() => itemsStore.assigned.filter((i) => i.meta?.marks))
 
-  const marks = computed(() => filterMarksByTypes(playerStore.marks as PlayerMark[], marksType.value))
+  const marks = computed(() => filterMarksByTypes(playerStore.marks, marksType.value))
 
   const loadMarkThumb = async (mark: PlayerMark & { thumb?: string }) => {
     if (!appStore.mediaPath || mark.id == null) return
@@ -47,7 +47,7 @@ export function usePlayerMarks({ emit }: UsePlayerMarksOptions) {
 
     is_thumbs_loaded.value = false
 
-    for (const mark of playerStore.marks as PlayerMark[]) {
+    for (const mark of playerStore.marks) {
       await loadMarkThumb(mark)
     }
 
@@ -67,7 +67,7 @@ export function usePlayerMarks({ emit }: UsePlayerMarksOptions) {
   }
 
   const handleUpdateMarkImage = (id: unknown) => {
-    if ((player.value.marks as PlayerMark[]).some((i) => i.id === id)) {
+    if (player.value.marks.some((i) => i.id === id)) {
       getThumbs()
     }
   }
@@ -81,7 +81,7 @@ export function usePlayerMarks({ emit }: UsePlayerMarksOptions) {
   watch(() => playerStore.marks, (storeMarks) => {
     getThumbs()
 
-    ;(storeMarks as PlayerMark[]).forEach((mark) => {
+    storeMarks.forEach((mark) => {
       if (mark.type !== 'meta') return
       ensureMetaTypeSelected(mark.meta?.id ?? mark.metaId)
     })

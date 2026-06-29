@@ -4,7 +4,7 @@ import type { Handler } from 'mitt'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import _ from 'lodash'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {updateConfig} from '@/services/configService'
 import {getWatchedFolders} from '@/services/watcherService'
 import type { WatchedFolderEntry } from '@/services/watcherUtils'
@@ -20,8 +20,7 @@ import {useMediaAdding} from '@/composable/AddingMedia'
 import {useAppUpdater} from '@/composable/useAppUpdater'
 import {useAppTheme} from '@/composable/useAppTheme'
 import {useAppZoom} from '@/composable/useAppZoom'
-import type { Meta, Playlist, Tab, Tag } from '@/types/stores'
-import type { MediaType } from '@/types/media'
+import type { GetItemsFromDbEvent, RemoveEntitiesEvent } from '@/types/itemsPage'
 
 interface UseAppBootstrapOptions {
   isPlayerWindow: Ref<boolean>
@@ -59,7 +58,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
 
   async function initSettings(): Promise<void> {
     try {
-      const res = await apiClient.get<Array<{ option: string; value: string }>>('/api/Setting')
+      const res = await typedApi.getSettings()
       const sets = res.data.reduce<Record<string, string>>((a, i) => {
         a[i.option] = i.value
         return a
@@ -72,32 +71,41 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     }
   }
 
-  async function loadList(url: string, field: AppListField): Promise<void> {
+  async function loadList(field: AppListField): Promise<void> {
     try {
-      const res = await apiClient.get<MediaType[] | Tag[] | Meta[] | Tab[] | Playlist[]>(url)
       switch (field) {
-        case 'mediaTypes':
-          store.mediaTypes = res.data as MediaType[]
+        case 'mediaTypes': {
+          const res = await typedApi.getMediaTypes()
+          store.mediaTypes = res.data
           break
-        case 'tags':
-          store.tags = res.data as Tag[]
+        }
+        case 'tags': {
+          const res = await typedApi.getTags()
+          store.tags = res.data
           break
-        case 'meta':
-          store.meta = res.data as Meta[]
+        }
+        case 'meta': {
+          const res = await typedApi.getMeta()
+          store.meta = res.data
           break
-        case 'tabs':
-          store.tabs = res.data as Tab[]
+        }
+        case 'tabs': {
+          const res = await typedApi.getTabs()
+          store.tabs = res.data
           break
-        case 'playlists':
-          store.playlists = res.data as Playlist[]
+        }
+        case 'playlists': {
+          const res = await typedApi.getPlaylists()
+          store.playlists = res.data
           break
+        }
       }
     } catch {
     }
   }
 
   function handleUpdateWatcher(): void {
-    updateWatcher(watcherStore.folders as unknown as WatchedFolderEntry[])
+    updateWatcher(watcherStore.folders)
   }
 
   function applyLocale(): void {
@@ -110,7 +118,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   }
 
   async function getFolders(): Promise<void> {
-    watcherStore.folders = await getWatchedFolders() as typeof watcherStore.folders
+    watcherStore.folders = await getWatchedFolders()
   }
 
   async function getMachineId(): Promise<void> {
@@ -171,13 +179,13 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     if (!store.isElectron || !window.electronAPI?.on) return
 
     window.electronAPI.on('getItemsFromDb', (_event, data) => {
-      eventBus.emit('getItemsFromDb', data)
+      eventBus.emit('getItemsFromDb', data as GetItemsFromDbEvent)
     })
     window.electronAPI.on('updateVideoFrames', (_event, id) => {
       itemsStore.refreshThumb(id as number, {broadcast: false})
     })
     window.electronAPI.on('removeEntitiesFromState', (_event, data) => {
-      eventBus.emit('removeEntitiesFromState', data)
+      eventBus.emit('removeEntitiesFromState', data as RemoveEntitiesEvent)
     })
 
     window.addEventListener('resize', saveWindowSize)
@@ -190,25 +198,25 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   }
 
   function loadPlayerBackgroundData(): void {
-    void loadList('/api/mediaType', 'mediaTypes')
+    void loadList('mediaTypes')
     void getMachineId()
   }
 
   function bindMainAppEventBus(): void {
     eventBus.on('getMediaTypes', async () => {
-      await loadList('/api/mediaType', 'mediaTypes')
+      await loadList('mediaTypes')
     })
     eventBus.on('getTags', async () => {
-      await loadList('/api/tag', 'tags')
+      await loadList('tags')
     })
     eventBus.on('getMeta', async () => {
-      await loadList('/api/meta', 'meta')
+      await loadList('meta')
     })
     eventBus.on('getTabs', async () => {
-      await loadList('/api/tab', 'tabs')
+      await loadList('tabs')
     })
     eventBus.on('getPlaylists', async () => {
-      await loadList('/api/playlist', 'playlists')
+      await loadList('playlists')
     })
     eventBus.on('updatePage', () => ++upd.value)
 
@@ -281,11 +289,11 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     await getMachineId()
     await getFolders()
 
-    await loadList('/api/mediaType', 'mediaTypes')
-    await loadList('/api/tag', 'tags')
-    await loadList('/api/meta', 'meta')
-    await loadList('/api/tab', 'tabs')
-    await loadList('/api/playlist', 'playlists')
+    await loadList('mediaTypes')
+    await loadList('tags')
+    await loadList('meta')
+    await loadList('tabs')
+    await loadList('playlists')
 
     bindMainAppEventBus()
 

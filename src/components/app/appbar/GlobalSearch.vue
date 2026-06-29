@@ -3,7 +3,7 @@ import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {useHotkey} from 'vuetify'
 import {useI18n} from 'vue-i18n'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import _ from 'lodash'
 import {useEventBus} from '@/utils/eventBus'
 import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
@@ -15,10 +15,10 @@ import {getDefaultMediaTypeId, isAudioMediaType, isImageMediaType, isTextMediaTy
 import {highlightChars} from '@/services/formatUtils'
 import {hideHoverImage, showHoverImage} from '@/services/hoverService'
 import {openPath} from '@/services/shellService'
-import type { MediaItem, Meta } from '@/types/stores'
+import type { MediaItem, Meta, Tag } from '@/types/stores'
 
 interface SearchGroup {
-  data: MediaItem[]
+  data: Array<MediaItem | Tag>
   name?: string
   icon?: string
   mediaTypeId?: number
@@ -165,7 +165,7 @@ function buildMediaGroups(data: MediaItem[]) {
   }).filter(Boolean) as SearchGroup[]
 }
 
-function buildTagGroups(data: MediaItem[]) {
+function buildTagGroups(data: Tag[]) {
   const grouped = _.groupBy(data, 'metaId')
 
   return Object.keys(grouped).map(metaId => {
@@ -224,8 +224,7 @@ async function search() {
 
   try {
     const [mediaRes, tagRes] = await Promise.all([
-      apiClient.post(
-        '/api/media/search',
+      typedApi.searchMedia(
         {
           query: `
             SELECT media.*,
@@ -240,8 +239,7 @@ async function search() {
         },
         {signal},
       ),
-      apiClient.post(
-        '/api/tag/search',
+      typedApi.searchTags(
         {
           query: `
             SELECT *
@@ -257,8 +255,8 @@ async function search() {
 
     if (signal.aborted) return
 
-    const mediaGroups = buildMediaGroups((mediaRes.data as unknown[][])[0] as MediaItem[] || [])
-    const tagGroups = buildTagGroups((tagRes.data as unknown[][])[0] as MediaItem[] || [])
+    const mediaGroups = buildMediaGroups(mediaRes.data || [])
+    const tagGroups = buildTagGroups(tagRes.data || [])
     results.value = sortGroups([...mediaGroups, ...tagGroups])
   } catch (e: unknown) {
     const err = e as { code?: string; name?: string }

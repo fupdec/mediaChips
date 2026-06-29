@@ -318,7 +318,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch, reactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
@@ -327,7 +327,7 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useScraperStore} from '@/stores/scraper'
 import {useEventBus} from '@/utils/eventBus'
 import {parseCountries, serializeCountries} from '@/utils/country'
-import {apiClient} from '@/services/apiClient'
+import {typedApi} from '@/services/typedApi'
 import {createImage} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
 import _ from 'lodash'
@@ -343,6 +343,7 @@ import {sortPinnedAssignmentItems} from '@/utils/pinnedMetaOrder'
 import type {PresetMetaProps} from '@/types/itemsPage'
 import type { ScraperPinnedItem } from '@/types/scraper'
 import type {AssignedMeta, MediaItem, Meta, Tag} from '@/types/stores'
+import type { TagInTagEntry, ValueInTagEntry, EntityUpdatePayload } from '@shared/api/responses'
 import type {VFormInstance} from '@/types/vue'
 
 // Components
@@ -353,12 +354,7 @@ import ColorPicker from '@/components/elements/ColorPicker.vue'
 
 type EditLayout = 'default' | 'hero'
 
-interface PinnedMetaAssignment extends AssignedMeta {
-  metaId?: number
-  pinnedMetaId?: number
-  show?: number
-  order?: number
-}
+type PinnedMetaAssignment = AssignedMeta
 
 type MetaFieldValue = string | number | boolean | string[] | number[] | null | undefined
 
@@ -374,14 +370,8 @@ interface PinnedMetaValues {
   [key: string]: MetaFieldValue
 }
 
-interface TagInItemRow {
-  tagId: number
-  metaId: number
-}
-
-interface ValueInItemRow {
-  metaId: number
-  value: unknown
+interface EntityUpdateFormValues extends Omit<PinnedMetaValues, 'country'> {
+  country?: string[] | null
 }
 
 interface TagInTagPayload {
@@ -470,12 +460,16 @@ const old = ref<PinnedMetaValues>({})
 const assignedItems = ref<PinnedMetaAssignment[]>([])
 const metaInputRefs = ref<Record<string | number, MetaInputArrayInstance>>({})
 
-const presetMetaProps: PresetMetaProps = {
-  type: isTag.value ? 'tag' : 'media',
-  item: (currentItem.value ?? props.media ?? {id: 0}) as MediaItem,
+const presetMetaInput = reactive<PresetMetaProps>({
+  get type() {
+    return isTag.value ? 'tag' : 'media'
+  },
+  get item() {
+    return overviewItem.value
+  },
   isShowAll: true,
-}
-const {preset_meta} = usePresetMeta(presetMetaProps)
+})
+const {preset_meta} = usePresetMeta(presetMetaInput)
 
 const colorPicker = ref<{
   dialog: boolean
@@ -675,28 +669,28 @@ const getMetaValues = async () => {
   try {
     if (!currentItemId.value) return
 
-    let tags: TagInItemRow[] = []
-    let values: ValueInItemRow[] = []
+    let tags: TagInTagEntry[] = []
+    let values: ValueInTagEntry[] = []
 
     if (isTag.value && props.meta) {
-      const tagsResponse = await apiClient.get<TagInItemRow[]>(`/api/TagsInTag?tagId=${currentItemId.value}`)
+      const tagsResponse = await typedApi.getTagsInTag(currentItemId.value)
       tags = tagsResponse.data
 
-      const valuesResponse = await apiClient.get<ValueInItemRow[]>(`/api/ValuesInTag?tagId=${currentItemId.value}`)
+      const valuesResponse = await typedApi.getValuesInTag(currentItemId.value)
       values = valuesResponse.data
 
-      const pinnedResponse = await apiClient.get<PinnedMetaAssignment[]>(`/api/PinnedMeta?metaId=${props.meta.id}`)
+      const pinnedResponse = await typedApi.getPinnedChildMeta(props.meta.id)
       assignedItems.value = sortPinnedAssignmentItems(pinnedResponse.data)
       scraperStore.pinned = assignedItems.value as ScraperPinnedItem[]
 
     } else if (isMedia.value) {
-      const tagsResponse = await apiClient.get<TagInItemRow[]>(`/api/TagsInMedia?mediaId=${currentItemId.value}`)
+      const tagsResponse = await typedApi.getTagsInMedia(currentItemId.value)
       tags = tagsResponse.data
 
-      const valuesResponse = await apiClient.get<ValueInItemRow[]>(`/api/ValuesInMedia?mediaId=${currentItemId.value}`)
+      const valuesResponse = await typedApi.getValuesInMedia(currentItemId.value)
       values = valuesResponse.data
 
-      assignedItems.value = sortPinnedAssignmentItems((itemsStore.assigned || []) as PinnedMetaAssignment[])
+      assignedItems.value = sortPinnedAssignmentItems(itemsStore.safeAssigned)
     }
 
     for (const item of assignedItems.value) {
@@ -807,35 +801,30 @@ const save = async () => {
     }
   }
 
-  const updateData = _.cloneDeep(vals.value) as PinnedMetaValues
+  const { country, ...rest } = _.cloneDeep(vals.value) as EntityUpdateFormValues
+  const updateData: EntityUpdatePayload = rest
 
-  if (isTag.value && updateData.country && updateData.country.length) {
-    updateData.country = serializeCountries(updateData.country) as unknown as string[]
-  } else if (isTag.value) {
-    updateData.country = undefined
+  if (isTag.value) {
+    updateData.country = country?.length ? serializeCountries(country) : undefined
   }
 
   try {
     // Обновляем основной объект
     const endpoint = isTag.value ? 'tag' : 'media'
-    await apiClient.put(`/api/${endpoint}/${currentItemId.value}`, updateData)
+    await typedApi.updateEntity(endpoint, currentItemId.value!, updateData)
 
-    // Удаляем существующие теги
     const tagsEndpoint = isTag.value ? 'TagsInTag' : 'TagsInMedia'
-    await apiClient.delete(`/api/${tagsEndpoint}/${currentItemId.value}`)
+    await typedApi.deleteItemTags(tagsEndpoint, currentItemId.value!)
 
-    // Добавляем новые теги
     if (tags.length > 0) {
-      await apiClient.post(`/api/${tagsEndpoint}`, tags)
+      await typedApi.postItemTags(tagsEndpoint, tags)
     }
 
-    // Удаляем существующие значения
     const valuesEndpoint = isTag.value ? 'ValuesInTag' : 'ValuesInMedia'
-    await apiClient.delete(`/api/${valuesEndpoint}/${currentItemId.value}`)
+    await typedApi.deleteItemValues(valuesEndpoint, currentItemId.value!)
 
-    // Добавляем новые значения
     if (values.length > 0) {
-      await apiClient.post(`/api/${valuesEndpoint}`, values)
+      await typedApi.postItemValues(valuesEndpoint, values)
     }
 
     emit('close')
