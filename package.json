@@ -63,7 +63,7 @@
     "preserver": "npm run build:backend && npm run rebuild:node",
     "preserver-dev": "npm run build:backend && npm run rebuild:node",
     "predownload-parser-model": "npm run build:scripts",
-    "postinstall": "npm run rebuild:node && npm run build:artifacts"
+    "postinstall": "npm run rebuild:node && npm run rebuild:electron && npm run build:artifacts"
   },
   "main": "main.js",
   "overrides": {
