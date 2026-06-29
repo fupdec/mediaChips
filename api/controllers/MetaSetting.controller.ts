@@ -1,38 +1,32 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+
+const {createMetaSettingsRepository} = require('../db/repositories/metaSettings')
+
 module.exports = function (db: ApiDb) {
-  // Find a single MetaSetting with an id
+  const metaSettingsRepo = createMetaSettingsRepository(db.drizzle)
+
   const findOne = function (req: ApiRequest, res: ApiResponse) {
-    db.MetaSetting.findOne({
-      where: {
-        metaId: req.params.id
-      }
-    }).then(async (data) => {
+    try {
+      const data = metaSettingsRepo.findByMetaId(Number(req.params.id)) ?? null
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Update a MetaSetting by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    db.MetaSetting
-      .update(req.body, {
-        where: {
-          metaId: req.params.id
-        }
+    try {
+      metaSettingsRepo.updateByMetaId(Number(req.params.id), req.body)
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

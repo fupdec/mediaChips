@@ -5,6 +5,8 @@ import type { ApiRequest, ApiResponse } from '../../types/http'
 import type { ParsePathTagEntry } from '@shared/api/responses'
 const {matchPathToTags} = require('../../services/pathTagMatcher')
 const {suggestTagsFromMedia} = require('../../services/tagSuggester')
+const {createTagsRepository} = require('../../db/repositories/tags')
+const {createMetaRepository} = require('../../db/repositories/meta')
 
 module.exports = function createTasksTaggingController(shared: TaskControllerShared) {
   const {
@@ -123,9 +125,11 @@ module.exports = function createTasksTaggingController(shared: TaskControllerSha
       let processed = 0
       let frames = 0
       let suggestions: TagSuggestionItem[] = []
+      const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
+      const metaRepo = createMetaRepository(db.drizzle)
       const existingTags = req.body?.excludeExisting === false
         ? []
-        : await db.Tag.findAll({raw: true})
+        : tagsRepo.findAllRaw()
 
       writeEvent({
         type: 'progress',
@@ -194,9 +198,11 @@ module.exports = function createTasksTaggingController(shared: TaskControllerSha
     try {
       const paths = Array.isArray(req.body.paths) ? req.body.paths : []
       const settings = await getParserSettings(req.body.settings || {})
+      const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
+      const metaRepo = createMetaRepository(db.drizzle)
       const [tags, metas] = await Promise.all([
-        db.Tag.findAll({raw: true}),
-        db.Meta.findAll({raw: true}),
+        Promise.resolve(tagsRepo.findAllRaw()),
+        Promise.resolve(metaRepo.findAll()),
       ])
 
       let values: AnyRecord[] = []

@@ -1,83 +1,83 @@
-import type { ApiDb, AnyRecord } from '../types/db'
+import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { MetaAssignmentOrderPayload, PinMetaAssignmentPayload } from '@shared/api/payloads'
+
+const {createMetaInMediaTypesRepository} = require('../db/repositories/metaInMediaTypes')
+
+function parseOptionalInt(value: unknown): number | undefined {
+  if (value == null || value === '') return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 module.exports = function (db: ApiDb) {
-  // Add meta to media type
+  const metaInMediaTypesRepo = createMetaInMediaTypesRepository(db.drizzle)
+
   const create = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<PinMetaAssignmentPayload>(req)
-    db.MetaInMediaType.create(body)
-      .then((data) => {
-        res.status(201).send(data)
+    try {
+      const body = getRequestBody<PinMetaAssignmentPayload>(req)
+      const data = metaInMediaTypesRepo.create({
+        metaId: Number(body.metaId),
+        mediaTypeId: Number(body.mediaTypeId),
+        order: body.order == null ? null : Number(body.order),
       })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
+    }
   };
 
-  // Retrieve all MetaInMediaType from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    const where: AnyRecord = {}
-    let include
+    try {
+      const mediaTypeId = parseOptionalInt(req.query.mediaTypeId)
+      const metaId = parseOptionalInt(req.query.metaId)
+      const data = mediaTypeId != null
+        ? metaInMediaTypesRepo.findByMediaTypeId(mediaTypeId)
+        : metaId != null
+          ? metaInMediaTypesRepo.findByMetaId(metaId)
+          : []
 
-    if (req.query.mediaTypeId) {
-      where.mediaTypeId = req.query.mediaTypeId
-      include = [{model: db.Meta}]
-    } else if (req.query.metaId) {
-      where.metaId = req.query.metaId
-      include = [{model: db.MediaType}]
-    }
-
-    const query: AnyRecord = {where, order: [['order', 'ASC']]}
-    if (include) query.include = include
-
-    db.MetaInMediaType.findAll(query).then((data) => {
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       console.log(err)
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
-  // Update a MetaInMediaType by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<MetaAssignmentOrderPayload>(req)
-    db.MetaInMediaType.update(body.data, {
-      where: {
-        metaId: body.metaId,
-        mediaTypeId: body.mediaTypeId
-      }
-    }).then((data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
+    try {
+      const body = getRequestBody<MetaAssignmentOrderPayload>(req)
+      metaInMediaTypesRepo.update(
+        Number(body.metaId),
+        Number(body.mediaTypeId),
+        body.data,
+      )
+      res.status(201).send([1])
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Delete a meta from media type with the specified id in the request
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.MetaInMediaType
-      .destroy({
-        where: {
-          metaId: parseInt(String(req.query.metaId ?? ''), 10),
-          mediaTypeId: parseInt(String(req.query.mediaTypeId ?? ''), 10),
-        },
+    try {
+      metaInMediaTypesRepo.delete(
+        parseInt(String(req.query.metaId ?? ''), 10),
+        parseInt(String(req.query.mediaTypeId ?? ''), 10),
+      )
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

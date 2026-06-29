@@ -6,9 +6,18 @@ export {
   type DrizzleSchema,
 } from './client'
 export {
+  createMetaInMediaTypesRepository,
+  createMetaRepository,
+  createMetaSettingsRepository,
+  createPageSettingsRepository,
   createPinnedMetaRepository,
   createSettingsRepository,
+  createTagsInMediaRepository,
+  createTagsInTagRepository,
+  createTagsRepository,
   createTabsRepository,
+  createValuesInMediaRepository,
+  createValuesInTagRepository,
   createWatchedFoldersRepository,
 } from './repositories'
 export {applySqlitePragmas} from './pragmas'

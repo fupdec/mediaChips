@@ -1,102 +1,76 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+
+const {createTagsInTagRepository} = require('../db/repositories/tagsInTag')
+
 module.exports = function (db: ApiDb) {
-  // Create and Save a new TagsInTag
+  const tagsInTagRepo = createTagsInTagRepository(db.drizzle)
+
   const bulkCreate = function (req: ApiRequest, res: ApiResponse) {
-    db.TagsInTag.bulkCreate(req.body).then((data) => {
+    try {
+      const data = tagsInTagRepo.bulkCreate(req.body)
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
-  // Create and Save a new TagsInMedia
   const create = function (req: ApiRequest, res: ApiResponse) {
-    db.TagsInTag.findOrCreate({
-      where: req.body
-    }).then((data) => {
+    try {
+      const data = tagsInTagRepo.findOrCreate(req.body)
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
-  // Retrieve all TagsInTags from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.TagsInTag.findAll({
-      where: {
-        parentTagId: req.query.tagId
-      },
-      include: [{
-        model: db.Tag,
-        attributes: ['name', 'color', 'metaId'],
-        include: [{
-          model: db.Meta,
-          attributes: ['name', 'icon'],
-        }],
-      }],
-    }).then((data) => {
+    try {
+      const data = tagsInTagRepo.findAllByParentTagId(Number(req.query.tagId))
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
-  // Delete a TagsInTag with the specified id in the request
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.TagsInTag
-      .destroy({
-        where: {
-          parentTagId: req.params.id
-        }
+    try {
+      tagsInTagRepo.deleteByParentTagId(Number(req.params.id))
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // delete tag from tag
   const deleteFromTag = function (req: ApiRequest, res: ApiResponse) {
-    db.TagsInTag.destroy({
-      where: {
-        parentTagId: req.body.parentTagId,
-        tagId: req.body.tagId,
-      },
-    }).then(() => {
+    try {
+      tagsInTagRepo.deleteOne(Number(req.body.parentTagId), Number(req.body.tagId))
       res.sendStatus(201)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
-  // delete tag from tag
   const deleteAllTagsByMetaId = function (req: ApiRequest, res: ApiResponse) {
-    db.TagsInTag.destroy({
-      where: {
-        parentTagId: req.body.itemId,
-        metaId: req.body.metaId,
-      },
-    }).then(() => {
+    try {
+      tagsInTagRepo.deleteByParentTagAndMeta(Number(req.body.itemId), Number(req.body.metaId))
       res.sendStatus(201)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
   return {

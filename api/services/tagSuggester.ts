@@ -159,7 +159,7 @@ async function suggestTagsFromMedia(db: ApiDb, media: MediaLike[], settings: Any
   })
 
   if (settings.excludeExisting !== false) {
-    const tags = settings.tags || await db.Tag.findAll({raw: true})
+    const tags = settings.tags || require('../db/repositories/tags').createTagsRepository(db.drizzle, db.sqlite).findAllRaw()
     candidates = filterExistingTags(candidates, tags as TagLike[])
   }
 
