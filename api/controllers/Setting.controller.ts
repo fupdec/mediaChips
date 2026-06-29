@@ -1,37 +1,52 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+
+const {getAuthService} = require('../../app/server/authRegistry')
+const {applyLanAccessChange, isLanAccessEnvLocked} = require('../../app/server/lanAccess')
+
 module.exports = function (db: ApiDb) {
-  // Find a single option with a name in the request
-  const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.Setting.findAll({
-      raw: true
-    }).then(async (data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
+  const findAll = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const authService = getAuthService()
+      const data = await db.Setting.findAll({raw: true})
+      const settings = await authService.loadSecuritySettings()
+      const sanitized = authService.sanitizeSettingRows(
+        data,
+        settings.passwordProtection,
+        authService.isRequestAuthenticated(req),
+      )
+      res.status(201).send(sanitized)
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Find a single option with a name in the request
-  const findOne = function (req: ApiRequest, res: ApiResponse) {
-    db.Setting.findOne({
-      where: {
-        option: req.params.option
-      },
-      raw: true
-    }).then(async (data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
+  const findOne = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const authService = getAuthService()
+      const data = await db.Setting.findOne({
+        where: {
+          option: req.params.option
+        },
+        raw: true
+      })
+      const settings = await authService.loadSecuritySettings()
+      const sanitized = authService.sanitizeSettingRow(
+        data,
+        settings.passwordProtection,
+        authService.isRequestAuthenticated(req),
+      )
+      res.status(201).send(sanitized)
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Update a single option with a name and value in the request
   const update = async function (req: ApiRequest, res: ApiResponse) {
     if (!req.body) return res.sendStatus(400)
 
@@ -48,6 +63,21 @@ module.exports = function (db: ApiDb) {
 
       if (!created) {
         await setting.update({value: req.body.value})
+      }
+
+      if (req.params.option === 'phrase' || req.params.option === 'passwordProtection') {
+        getAuthService().invalidateSettingsCache()
+      }
+
+      if (req.params.option === 'allowLanAccess') {
+        if (isLanAccessEnvLocked()) {
+          return res.status(409).send({
+            message: 'LAN access is controlled by MEDIA_CHIPS_ALLOW_LAN environment variable',
+          })
+        }
+
+        const enabled = req.body.value === '1' || req.body.value === 1 || req.body.value === true
+        await applyLanAccessChange(enabled)
       }
 
       res.status(201).send([1])

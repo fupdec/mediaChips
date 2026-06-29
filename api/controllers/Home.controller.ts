@@ -5,6 +5,7 @@ const {getHomeMedia} = require('../services/homeMedia')
 const {getRandomMarks} = require('../services/homeMarkers')
 const {getHomeHealth} = require('../services/homeHealth')
 const {getHomeExtendedStats} = require('../services/homeExtendedStats')
+const {searchMediaByName, searchTagsByName} = require('../services/globalSearch')
 
 function parseLimit(value: unknown, fallback: number, max = 24) {
   return Math.min(Math.max(Number(value) || fallback, 1), max)
@@ -61,10 +62,36 @@ module.exports = (db: ApiDb) => {
     }
   }
 
+  const searchMedia = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const q = req.body?.q ?? req.body?.query
+      const items = await searchMediaByName(db, String(q || ''), req.body?.limit)
+      res.status(200).send({items})
+    } catch (err) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || 'Some error occurred while searching media.',
+      })
+    }
+  }
+
+  const searchTags = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const q = req.body?.q ?? req.body?.query
+      const items = await searchTagsByName(db, String(q || ''), req.body?.limit)
+      res.status(200).send({items})
+    } catch (err) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || 'Some error occurred while searching tags.',
+      })
+    }
+  }
+
   return {
     getMedia,
     getMarkers,
     getHealth,
     getExtendedStats,
+    searchMedia,
+    searchTags,
   }
 }

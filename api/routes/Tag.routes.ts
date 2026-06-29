@@ -7,9 +7,6 @@ module.exports = (app: Express, db: ApiDb) => {
   // Create a new Tag
   router.post("/", Tag.create);
 
-  // Retrieve all Tags that match the filter
-  router.post("/filter", Tag.findAll);
-
   // Retrieve tag count
   router.get("/count", Tag.getCount);
 
@@ -21,9 +18,6 @@ module.exports = (app: Express, db: ApiDb) => {
 
   // Retrieve all Tags by metaId
   router.post("/items", Tag.getAllForItems);
-
-  // Retrieve all Tags that with name
-  router.post("/search", Tag.rawQuery);
 
   // Update a Tag with id
   router.put("/:id", Tag.update);

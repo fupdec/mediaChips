@@ -37,6 +37,8 @@ const cn = {
     menu_help: '帮助',
     lock: '锁定',
     toggle_dev_tools: '开发者工具',
+    documentation: '文档',
+    send_feedback: '发送反馈',
   },
   aboutApp: {
     dialog_title: '关于 MediaChips',
@@ -483,6 +485,10 @@ const cn = {
   settings_labels: {
     general: {
       browser_access: '该应用可在同一网络中其他设备的浏览器中打开。',
+      browser_access_disabled: '已禁用局域网访问。仅本机可在浏览器中打开应用。',
+      allow_lan_access: '允许局域网访问',
+      allow_lan_access_hint: '启用后，同一 Wi‑Fi/局域网中的其他设备可通过下方地址在浏览器中打开应用。',
+      allow_lan_access_env_locked: '此选项由服务器上的 MEDIA_CHIPS_ALLOW_LAN 环境变量控制。',
       copy_link: '复制链接',
       exact_filtering: '输入时使用精确筛选',
       typing: '输入',

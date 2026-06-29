@@ -34,9 +34,11 @@ const ru = {
   },
   systemBar: {
     menu_app: 'Приложение',
-    menu_help: 'Справка',
+    menu_help: 'Помощь',
     lock: 'Заблокировать',
     toggle_dev_tools: 'Инструменты разработчика',
+    documentation: 'Документация',
+    send_feedback: 'Отправить отзыв',
   },
   aboutApp: {
     dialog_title: 'О MediaChips',
@@ -483,6 +485,10 @@ const ru = {
   settings_labels: {
     general: {
       browser_access: 'Приложение доступно для открытия в браузере на других устройствах в той же сети.',
+      browser_access_disabled: 'Доступ по локальной сети отключён. Приложение в браузере доступно только на этом компьютере.',
+      allow_lan_access: 'Разрешить доступ из локальной сети',
+      allow_lan_access_hint: 'Если включено, другие устройства в вашей Wi‑Fi/LAN-сети могут открыть приложение в браузере по адресу ниже.',
+      allow_lan_access_env_locked: 'Эта опция управляется переменной окружения MEDIA_CHIPS_ALLOW_LAN на сервере.',
       copy_link: 'Копировать ссылку',
       exact_filtering: 'Использовать точную фильтрацию при вводе',
       typing: 'Ввод',

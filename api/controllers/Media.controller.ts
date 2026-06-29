@@ -3,7 +3,7 @@ import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { ItemsListRequest, DeleteEntityOnePayload, EntityUpdatePayload } from '@shared/api/responses'
-import type { MediaPathUpdatePayload, MediaThumbsRequestPayload, SqlQueryPayload } from '@shared/api/payloads'
+import type { MediaPathUpdatePayload, MediaThumbsRequestPayload } from '@shared/api/payloads'
 const fs = require('fs')
 const path = require('path')
 const {
@@ -128,29 +128,6 @@ module.exports = function (db: ApiDb) {
     }
   }
 
-  // Retrieve all Media from the database.
-  const findAll = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<SqlQueryPayload>(req)
-    db.sequelize.query(body.query, {
-      raw: true
-    }).then(async (data) => {
-      const total = await db.Media.findAndCountAll({
-        where: {
-          mediaTypeId: body.mediaTypeId,
-        },
-        raw: true
-      })
-      res.status(201).send({
-        items: data[0],
-        total: total.count,
-      })
-    }).catch((err: unknown) => {
-      res.status(500).send({
-        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
-      })
-    })
-  };
-
   // get one Media by ID.
   const getOneById = function (req: ApiRequest, res: ApiResponse) {
     db.Media.findOne({
@@ -186,19 +163,6 @@ module.exports = function (db: ApiDb) {
     }).catch((err: unknown) => {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
-      })
-    })
-  };
-
-  // Получаем все медиа подходящие под sql-запрос
-  const rawQuery = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<SqlQueryPayload>(req)
-    db.sequelize.query(body.query)
-      .then((data) => {
-        res.status(201).send(data)
-      }).catch((err: unknown) => {
-      res.status(500).send({
-        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
     })
   };
@@ -295,9 +259,7 @@ module.exports = function (db: ApiDb) {
   };
 
   return {
-    findAll,
     numberOfMediaWithTag,
-    rawQuery,
     updatePath,
     update,
     deleteOne,

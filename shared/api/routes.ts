@@ -51,8 +51,11 @@ export const API_ROUTES = {
   tagCount: '/api/tag/count',
   homeMarkers: '/api/home/markers',
   homeHealth: '/api/home/health',
-  mediaSearch: '/api/media/search',
-  tagSearch: '/api/tag/search',
+  globalSearchMedia: '/api/home/search/media',
+  globalSearchTags: '/api/home/search/tags',
+  authStatus: '/api/auth/status',
+  authLogin: '/api/auth/login',
+  authLogout: '/api/auth/logout',
   mediaThumbs: '/api/media/thumbs',
   mediaThumbsCapital: '/api/Media/thumbs',
   markItems: '/api/Mark/items',
@@ -76,7 +79,6 @@ export const API_ROUTES = {
   taskMissingMediaStatus: '/api/Task/missingMediaStatus',
   taskClipModelStatus: '/api/Task/clipModelStatus',
   taskDownloadClipModel: '/api/Task/downloadClipModel',
-  tagFilter: '/api/tag/filter',
   mediaNumberOfMediaWithTag: '/api/media/numberOfMediaWithTag',
 } as const
 

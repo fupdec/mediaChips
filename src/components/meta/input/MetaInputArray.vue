@@ -285,21 +285,13 @@ const findTagName = (tagId: number | string) => {
 }
 
 const getTags = async () => {
-  const sets = {
-    metaId: props.metaId,
-    page: 0,
-    limit: -1,
-    sortBy: "name",
-    sortDir: "asc",
-    filters: [],
-    query: `SELECT *
-            FROM tags
-            WHERE metaId = ${props.metaId}
-            ORDER BY name ASC`
-  }
-
   try {
-    const res = await typedApi.filterTags(sets)
+    const res = await typedApi.postTagItems({
+      metaId: props.metaId,
+      filters: [],
+      sortBy: meta.value?.sortBy || 'name',
+      direction: meta.value?.sortDir || 'asc',
+    })
     const tags = res.data.items ?? []
     listTags.value = sortTags(tags as TagListItem[])
   } catch (e) {

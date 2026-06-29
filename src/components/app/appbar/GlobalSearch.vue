@@ -102,10 +102,6 @@ const status = computed(() => {
   return t('globalSearch.resultsCount', {count: totalResults.value})
 })
 
-function escapeLike(value: string) {
-  return value.replace(/'/g, "''")
-}
-
 function showSearch() {
   dialog.value = true
   query.value = ''
@@ -220,37 +216,10 @@ async function search() {
   results.value = []
   selectedIndex.value = -1
 
-  const escaped = escapeLike(q)
-
   try {
     const [mediaRes, tagRes] = await Promise.all([
-      typedApi.searchMedia(
-        {
-          query: `
-            SELECT media.*,
-              COALESCE(videoMetadata.width, imageMetadata.width) AS width,
-              COALESCE(videoMetadata.height, imageMetadata.height) AS height
-            FROM media
-            LEFT JOIN videoMetadata ON media.id = videoMetadata.mediaId
-            LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId
-            WHERE media.name LIKE '%${escaped}%'
-            LIMIT ${RESULT_LIMIT}
-          `,
-        },
-        {signal},
-      ),
-      typedApi.searchTags(
-        {
-          query: `
-            SELECT *
-            FROM tags
-            WHERE name LIKE '%${escaped}%'
-               OR synonyms LIKE '%${escaped}%'
-            LIMIT ${RESULT_LIMIT}
-          `,
-        },
-        {signal},
-      ),
+      typedApi.searchMedia({ q, limit: RESULT_LIMIT }, { signal }),
+      typedApi.searchTags({ q, limit: RESULT_LIMIT }, { signal }),
     ])
 
     if (signal.aborted) return

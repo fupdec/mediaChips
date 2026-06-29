@@ -1,9 +1,16 @@
 import type { NextFunction, Request, Response } from 'express'
 
+const {getBindHost, isLanAccessEnabled} = require('./lanAccess')
+
 const FIXED_PORT = 12321
-const LAN_ENABLED_VALUES = ['1', 'true', 'yes', 'on']
-const ALLOW_LAN = LAN_ENABLED_VALUES.includes(String(process.env.MEDIA_CHIPS_ALLOW_LAN || '').toLowerCase())
-const BIND_HOST = ALLOW_LAN ? '0.0.0.0' : '127.0.0.1'
+
+function getAllowLan(): boolean {
+  return isLanAccessEnabled()
+}
+
+function getBindHostForServer(): string {
+  return getBindHost()
+}
 
 function isLoopbackHost(hostname: string): boolean {
   return ['localhost', '127.0.0.1', '::1'].includes(hostname)
@@ -23,7 +30,7 @@ function isAllowedOrigin(origin: string | string[] | undefined): boolean {
     if (!['http:', 'https:'].includes(parsed.protocol)) return false
 
     const hostname = parsed.hostname.toLowerCase()
-    return isLoopbackHost(hostname) || (ALLOW_LAN && isPrivateIpv4(hostname))
+    return isLoopbackHost(hostname) || (getAllowLan() && isPrivateIpv4(hostname))
   } catch {
     return false
   }
@@ -55,8 +62,8 @@ function createCorsMiddleware() {
 
 export {
   FIXED_PORT,
-  ALLOW_LAN,
-  BIND_HOST,
+  getAllowLan,
+  getBindHostForServer,
   isLoopbackHost,
   isPrivateIpv4,
   isAllowedOrigin,
@@ -65,8 +72,8 @@ export {
 
 module.exports = {
   FIXED_PORT,
-  ALLOW_LAN,
-  BIND_HOST,
+  getAllowLan,
+  getBindHostForServer,
   isLoopbackHost,
   isPrivateIpv4,
   isAllowedOrigin,

@@ -1,14 +1,15 @@
-import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo, ServerInitResult } from '../types/server'
+import type { ServerConfig, ServerDatabaseEntry, NetworkIpInfo } from '../types/server'
 const fs = require('fs')
 const path = require('path')
 const os = require('os')
 const package_json = require('../../package.json')
-const {FIXED_PORT, ALLOW_LAN, BIND_HOST} = require('./constants')
+const {FIXED_PORT, getBindHostForServer} = require('./constants')
+const {getBestLocalIp, getAllIps} = require('./network')
+const {isLanAccessEnabled, syncNetworkConfig} = require('./lanAccess')
 import type { Express } from 'express'
 import type { Server } from 'http'
 import type { AddressInfo } from 'net'
 import { errnoCode, errorMessage } from '../types/websockets'
-const {getBestLocalIp, getAllIps} = require('./network')
 
 interface ServerStarterOptions {
   app: Express
@@ -42,7 +43,7 @@ function showSystemNotification(title: string, message: string) {
   }
 }
 
-function isPortInUse(port: number) {
+function isPortInUse(port: number, bindHost: string) {
   return new Promise((resolve) => {
     const net = require('net')
     const tester = net.createServer()
@@ -58,16 +59,97 @@ function isPortInUse(port: number) {
           resolve(false)
         }).close()
       })
-      .listen(port, BIND_HOST)
+      .listen(port, bindHost)
   })
 }
 
 function createServerStarter({app, config, configPath, databasesPath}: ServerStarterOptions) {
   let listener: Server | undefined
 
+  const writeRuntimeConfig = (actualPort: number) => {
+    syncNetworkConfig(config, isLanAccessEnabled(), {getBestLocalIp, getAllIps})
+    config.port = actualPort
+
+    const activeDb = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.active)
+    if (activeDb) {
+      config.path = path.join(databasesPath, activeDb.id)
+    }
+
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+    config.appVersion = package_json.version
+    process.server_config = config
+  }
+
+  const logServerStarted = (actualPort: number) => {
+    const bestIp = getBestLocalIp()
+    const lanEnabled = isLanAccessEnabled()
+
+    console.log('\x1b[32m%s\x1b[0m', '✅ Server started successfully!')
+    console.log('='.repeat(70))
+
+    console.log('\x1b[36m%s\x1b[0m', '📊 Server information:')
+    console.log('\x1b[36m%s\x1b[0m', `   • Host:            ${config.hostname}`)
+    console.log('\x1b[36m%s\x1b[0m', `   • Port:            ${actualPort}`)
+    console.log('\x1b[36m%s\x1b[0m', `   • Primary IP:      ${config.ip}`)
+    console.log('\x1b[36m%s\x1b[0m', `   • All IPs:         ${(config.ips ?? []).join(', ')}`)
+    console.log('\x1b[36m%s\x1b[0m', `   • Version:         ${package_json.version}`)
+
+    const activeDb = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.active)
+    if (activeDb) {
+      console.log('\x1b[36m%s\x1b[0m', `   • Active database: ${activeDb.name} (${activeDb.id})`)
+    }
+
+    console.log('\n\x1b[36m%s\x1b[0m', '🌐 Available addresses:')
+    console.log('\x1b[36m%s\x1b[0m', '   1. Local machine:')
+    console.log('\x1b[36m%s\x1b[0m', `      → http://localhost:${actualPort}`)
+    console.log('\x1b[36m%s\x1b[0m', `      → http://127.0.0.1:${actualPort}`)
+
+    if (lanEnabled && config.ips && config.ips.length > 0) {
+      console.log('\x1b[36m%s\x1b[0m', '   2. Local network:')
+      config.ips.forEach((ip: string, index: number) => {
+        const iface = getAllIps()[index]?.interface || 'interface'
+        console.log('\x1b[36m%s\x1b[0m', `      → http://${ip}:${actualPort} (${iface})`)
+      })
+    } else {
+      console.log('\x1b[36m%s\x1b[0m', '   2. Local network: disabled in app settings')
+    }
+
+    console.log('\n\x1b[36m%s\x1b[0m', '🔧 API Endpoints:')
+    console.log('\x1b[36m%s\x1b[0m', `   • Health check:   http://localhost:${actualPort}/api/health`)
+    console.log('\x1b[36m%s\x1b[0m', `   • Server config:  http://localhost:${actualPort}/api/config`)
+    console.log('\x1b[36m%s\x1b[0m', `   • Get file:       http://localhost:${actualPort}/api/get-file`)
+
+    console.log('\n\x1b[7m%s\x1b[0m', `✨ Open in browser: http://localhost:${actualPort}`)
+    console.log('='.repeat(70))
+  }
+
+  const attachListener = (bindHost: string, portToUse: number, verbose: boolean) => {
+    return new Promise<void>((resolve, reject) => {
+      listener = app.listen(portToUse, bindHost, () => {
+        const address = listener?.address()
+        const actualPort = typeof address === 'object' && address
+          ? (address as AddressInfo).port
+          : portToUse
+
+        writeRuntimeConfig(actualPort)
+        if (verbose) {
+          logServerStarted(actualPort)
+        } else {
+          console.log('\x1b[32m%s\x1b[0m', `✅ Network access updated (${bindHost}:${actualPort})`)
+        }
+        resolve()
+      })
+
+      listener.on('error', (err: unknown) => {
+        reject(err)
+      })
+    })
+  }
+
   const startServer = async () => {
     const portToUse = FIXED_PORT
-    const portBusy = await isPortInUse(portToUse)
+    const bindHost = getBindHostForServer()
+    const portBusy = await isPortInUse(portToUse, bindHost)
 
     if (portBusy) {
       const errorTitle = 'Application startup error'
@@ -79,69 +161,11 @@ function createServerStarter({app, config, configPath, databasesPath}: ServerSta
     }
 
     console.log('\n' + '='.repeat(70))
-    console.log('\x1b[33m%s\x1b[0m', `🚀 Starting server on ${BIND_HOST}:${portToUse}...`)
+    console.log('\x1b[33m%s\x1b[0m', `🚀 Starting server on ${bindHost}:${portToUse}...`)
 
-    listener = app.listen(portToUse, BIND_HOST, () => {
-      const address = listener?.address()
-      const actualPort = typeof address === 'object' && address
-        ? (address as AddressInfo).port
-        : portToUse
-
-      const bestIp = getBestLocalIp()
-      config.ip = ALLOW_LAN ? bestIp : 'localhost'
-      config.ips = ALLOW_LAN ? getAllIps().map((ip: NetworkIpInfo) => ip.address) : []
-      config.hostname = ALLOW_LAN ? os.hostname() : 'localhost'
-      config.port = actualPort
-
-      const activeDb = config.databases.find((dbEntry: ServerDatabaseEntry) => dbEntry.active)
-      if (activeDb) {
-        config.path = path.join(databasesPath, activeDb.id)
-      }
-
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
-
-      console.log('\x1b[32m%s\x1b[0m', '✅ Server started successfully!')
-      console.log('='.repeat(70))
-
-      console.log('\x1b[36m%s\x1b[0m', '📊 Server information:')
-      console.log('\x1b[36m%s\x1b[0m', `   • Host:            ${config.hostname}`)
-      console.log('\x1b[36m%s\x1b[0m', `   • Port:            ${actualPort}`)
-      console.log('\x1b[36m%s\x1b[0m', `   • Primary IP:      ${bestIp}`)
-      console.log('\x1b[36m%s\x1b[0m', `   • All IPs:         ${(config.ips ?? []).join(', ')}`)
-      console.log('\x1b[36m%s\x1b[0m', `   • Version:         ${package_json.version}`)
-
-      if (activeDb) {
-        console.log('\x1b[36m%s\x1b[0m', `   • Active database: ${activeDb.name} (${activeDb.id})`)
-      }
-
-      console.log('\n\x1b[36m%s\x1b[0m', '🌐 Available addresses:')
-      console.log('\x1b[36m%s\x1b[0m', '   1. Local machine:')
-      console.log('\x1b[36m%s\x1b[0m', `      → http://localhost:${actualPort}`)
-      console.log('\x1b[36m%s\x1b[0m', `      → http://127.0.0.1:${actualPort}`)
-
-      if (ALLOW_LAN && config.ips && config.ips.length > 0) {
-        console.log('\x1b[36m%s\x1b[0m', '   2. Local network:')
-        config.ips.forEach((ip: string, index: number) => {
-          const iface = getAllIps()[index]?.interface || 'interface'
-          console.log('\x1b[36m%s\x1b[0m', `      → http://${ip}:${actualPort} (${iface})`)
-        })
-      } else {
-        console.log('\x1b[36m%s\x1b[0m', '   2. Local network: disabled (set MEDIA_CHIPS_ALLOW_LAN=1 to enable)')
-      }
-
-      console.log('\n\x1b[36m%s\x1b[0m', '🔧 API Endpoints:')
-      console.log('\x1b[36m%s\x1b[0m', `   • Health check:   http://localhost:${actualPort}/api/health`)
-      console.log('\x1b[36m%s\x1b[0m', `   • Server config:  http://localhost:${actualPort}/api/config`)
-      console.log('\x1b[36m%s\x1b[0m', `   • Get file:       http://localhost:${actualPort}/api/get-file`)
-
-      console.log('\n\x1b[7m%s\x1b[0m', `✨ Open in browser: http://localhost:${actualPort}`)
-      console.log('='.repeat(70))
-
-      config.appVersion = package_json.version
-      process.server_config = config
-    })
-
-    listener.on('error', (err: unknown) => {
+    try {
+      await attachListener(bindHost, portToUse, true)
+    } catch (err: unknown) {
       if (errnoCode(err) === 'EADDRINUSE') {
         const errorTitle = 'Application startup error'
         const errorMessage = `Port ${portToUse} is already in use by another application.\n\nPlease close other applications using this port and restart the application.`
@@ -154,7 +178,21 @@ function createServerStarter({app, config, configPath, databasesPath}: ServerSta
         showSystemNotification('Server error', errorMessage(err))
         process.exit(1)
       }
-    })
+    }
+  }
+
+  const restartNetworkListener = async () => {
+    const portToUse = FIXED_PORT
+    const bindHost = getBindHostForServer()
+
+    if (listener) {
+      await new Promise<void>((resolve, reject) => {
+        listener!.close((err) => (err ? reject(err) : resolve()))
+      })
+      listener = undefined
+    }
+
+    await attachListener(bindHost, portToUse, false)
   }
 
   const bindShutdownHandler = () => {
@@ -173,6 +211,7 @@ function createServerStarter({app, config, configPath, databasesPath}: ServerSta
 
   return {
     startServer,
+    restartNetworkListener,
     bindShutdownHandler,
     getListener: () => listener,
   }

@@ -23,7 +23,6 @@ import type { RemoveTagFromItemPayload } from '@shared/api/responses'
 import type {
   CreateTagPayload,
   CreateTagsInMediaOnePayload,
-  FilterTagsPayload,
   MediaTypeWritePayload,
   MetaAssignmentOrderPayload,
   MetaAssignmentUpdatePayload,
@@ -40,7 +39,6 @@ import {
   parseMetaInMediaTypeRows,
   parsePinnedChildMetaAssignments,
   parsePinnedMetaLinks,
-  parseTagFilterResponse,
   parseTagInTagEntries,
   parseTagItemsResponse,
   parseMetaList,
@@ -207,13 +205,6 @@ export const metaApi = {
 
   postTagsInMedia(body: unknown[]) {
     return apiClient.post(API_ROUTES.tagsInMedia, body)
-  },
-
-  filterTags(body: FilterTagsPayload) {
-    return apiClient.post(API_ROUTES.tagFilter, body).then((res) => ({
-      ...res,
-      data: validated(parseTagFilterResponse, res.data),
-    }))
   },
 
   createTags(body: CreateTagPayload[]) {

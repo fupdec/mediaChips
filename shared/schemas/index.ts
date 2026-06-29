@@ -13,6 +13,8 @@ import {
 } from './entities'
 import {
   ExtendedStatsSchema,
+  GlobalSearchMediaResponseSchema,
+  GlobalSearchTagsResponseSchema,
   HomeHealthSchema,
   HomeMarkersSchema,
   HomeMediaResponseSchema,
@@ -24,6 +26,7 @@ import {
   SqlQueryTagResultSchema,
   SuggestTagsResponseSchema,
 } from './home'
+import { AuthLoginSchema, AuthStatusSchema } from './auth'
 import {
   BackupListSchema,
   ClipModelStatusSchema,
@@ -155,6 +158,22 @@ export function parseMediaThumbsResponse(data: unknown) {
 
 export function parseSuggestTagsResponse(data: unknown) {
   return SuggestTagsResponseSchema.parse(data)
+}
+
+export function parseAuthStatusResponse(data: unknown) {
+  return AuthStatusSchema.parse(data)
+}
+
+export function parseAuthLoginResponse(data: unknown) {
+  return AuthLoginSchema.parse(data)
+}
+
+export function parseGlobalSearchMediaResponse(data: unknown): MediaItem[] {
+  return GlobalSearchMediaResponseSchema.parse(data).items as MediaItem[]
+}
+
+export function parseGlobalSearchTagsResponse(data: unknown): Tag[] {
+  return GlobalSearchTagsResponseSchema.parse(data).items as Tag[]
 }
 
 export function parseSqlQueryMediaRows(data: unknown): MediaItem[] {

@@ -37,6 +37,8 @@ const es = {
     menu_help: 'Ayuda',
     lock: 'Bloquear',
     toggle_dev_tools: 'Herramientas de desarrollo',
+    documentation: 'Documentación',
+    send_feedback: 'Enviar comentarios',
   },
   aboutApp: {
     dialog_title: 'Acerca de MediaChips',
@@ -483,6 +485,10 @@ const es = {
   settings_labels: {
     general: {
       browser_access: 'La aplicación está disponible para abrirse en un navegador en otros dispositivos de la misma red.',
+      browser_access_disabled: 'El acceso en red local está desactivado. Solo este equipo puede abrir la aplicación en el navegador.',
+      allow_lan_access: 'Permitir acceso desde la red local',
+      allow_lan_access_hint: 'Si está activado, otros dispositivos en su Wi‑Fi o LAN pueden abrir la aplicación en el navegador con la dirección de abajo.',
+      allow_lan_access_env_locked: 'Esta opción está controlada por la variable de entorno MEDIA_CHIPS_ALLOW_LAN en el servidor.',
       copy_link: 'Copiar enlace',
       exact_filtering: 'Usar filtrado exacto al escribir',
       typing: 'Escritura',

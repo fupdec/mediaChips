@@ -8,6 +8,8 @@ module.exports = (app: Express, db: ApiDb) => {
   router.get('/markers', Home.getMarkers)
   router.get('/health', Home.getHealth)
   router.get('/extended-stats', Home.getExtendedStats)
+  router.post('/search/media', Home.searchMedia)
+  router.post('/search/tags', Home.searchTags)
 
   app.use('/api/home', router)
 }

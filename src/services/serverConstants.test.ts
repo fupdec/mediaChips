@@ -1,8 +1,8 @@
 import {describe, it, expect} from 'vitest'
 import {
-  ALLOW_LAN,
-  BIND_HOST,
   FIXED_PORT,
+  getAllowLan,
+  getBindHostForServer,
   isAllowedOrigin,
   isLoopbackHost,
   isPrivateIpv4,
@@ -31,7 +31,7 @@ describe('server constants', () => {
 
   it('exports fixed server port', () => {
     expect(FIXED_PORT).toBe(12321)
-    expect(typeof BIND_HOST).toBe('string')
-    expect(typeof ALLOW_LAN).toBe('boolean')
+    expect(typeof getBindHostForServer()).toBe('string')
+    expect(typeof getAllowLan()).toBe('boolean')
   })
 })

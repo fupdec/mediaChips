@@ -10,6 +10,8 @@ interface AppConfigResponse {
   databases?: unknown[]
   ip?: string
   port?: number | string
+  allowLanAccess?: boolean
+  allowLanAccessEnvLocked?: boolean
   [key: string]: unknown
 }
 
@@ -17,8 +19,32 @@ export async function updateConfig(data: Record<string, unknown>) {
   return typedApi.updateConfig(data)
 }
 
-export async function initConfig() {
+function applyConfigToStore(config: AppConfigResponse) {
   const store = useAppStore()
+  store.localhost = resolveApiBaseUrl(config)
+  store.appVersion = config.appVersion || store.appVersion
+  store.dbPath = config.path || ''
+  store.mediaPath = path.join(config.path || '', 'media')
+  store.databases = config.databases || []
+  store.config = config
+}
+
+export async function refreshServerConfig() {
+  const store = useAppStore()
+  const baseUrl = resolveApiBaseUrl(store.config) || store.localhost
+  if (!baseUrl) return null
+
+  const response = await fetch(`${baseUrl}/api/config`)
+  if (!response.ok) {
+    throw new Error('Failed to refresh server config')
+  }
+
+  const config = await response.json() as AppConfigResponse
+  applyConfigToStore(config)
+  return config
+}
+
+export async function initConfig() {
   let config: AppConfigResponse | null = null
 
   try {
@@ -28,19 +54,12 @@ export async function initConfig() {
     console.error(error)
   }
 
-  console.log(config)
-
   if (!config) {
     const remote = await axios.get<AppConfigResponse>(`${window.location.origin}/api/task/getConfig`)
     config = remote.data
   }
 
-  store.localhost = resolveApiBaseUrl(config)
-  store.appVersion = config.appVersion || store.appVersion
-  store.dbPath = config.path || ''
-  store.mediaPath = path.join(config.path || '', 'media')
-  store.databases = config.databases || []
-  store.config = config
+  applyConfigToStore(config)
 
   return config
 }

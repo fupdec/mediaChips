@@ -5,6 +5,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import _ from 'lodash'
 import {typedApi} from '@/services/typedApi'
+import {getAuthToken, clearAuthToken} from '@/services/authSession'
 import {updateConfig} from '@/services/configService'
 import {getWatchedFolders} from '@/services/watcherService'
 import type { WatchedFolderEntry } from '@/services/watcherUtils'
@@ -113,8 +114,44 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     document.documentElement.lang = settingsStore.locale
   }
 
-  function checkLogin(): void {
-    store.isLocked = settingsStore.passwordProtection == '1'
+  async function tryRestoreSession(): Promise<boolean> {
+    if (settingsStore.passwordProtection !== '1') {
+      store.isLocked = false
+      return true
+    }
+
+    if (!getAuthToken()) {
+      store.isLocked = true
+      return false
+    }
+
+    try {
+      const res = await typedApi.getAuthStatus()
+      if (res.data.authenticated) {
+        store.isLocked = false
+        return true
+      }
+      clearAuthToken()
+    } catch {
+      clearAuthToken()
+    }
+
+    store.isLocked = true
+    return false
+  }
+
+  async function loadMainAppData(): Promise<void> {
+    await initSettings()
+    await getMachineId()
+    await getFolders()
+
+    await Promise.all([
+      loadList('mediaTypes'),
+      loadList('tags'),
+      loadList('meta'),
+      loadList('tabs'),
+      loadList('playlists'),
+    ])
   }
 
   async function getFolders(): Promise<void> {
@@ -151,7 +188,17 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     dialogsStore.showAbout()
   }
 
+  const handleShowDocumentation = (): void => {
+    eventBus.emit('showDocumentation', 'app')
+  }
+
+  const handleShowFeedback = (): void => {
+    dialogsStore.feedback = true
+  }
+
   const handleLockApp = (): void => {
+    clearAuthToken()
+    void typedApi.logout().catch(() => {})
     store.isLocked = true
   }
 
@@ -171,6 +218,8 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
   }
 
   let unsubscribeAboutApp: (() => void) | void | undefined
+  let unsubscribeShowDocumentation: (() => void) | void | undefined
+  let unsubscribeShowFeedback: (() => void) | void | undefined
   let unsubscribeLockApp: (() => void) | void | undefined
   let unsubscribeZoomChanged: (() => void) | void | undefined
   let thumbBroadcastChannel: BroadcastChannel | null = null
@@ -272,7 +321,8 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
 
     applyTheme()
     applyLocale()
-    checkLogin()
+
+    const authenticated = await tryRestoreSession()
 
     if (appZoom) {
       await appZoom.initFromSettings()
@@ -287,17 +337,16 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     }
 
     await getMachineId()
-    await getFolders()
 
-    await Promise.all([
-      loadList('mediaTypes'),
-      loadList('tags'),
-      loadList('meta'),
-      loadList('tabs'),
-      loadList('playlists'),
-    ])
+    if (authenticated) {
+      await loadMainAppData()
+    }
 
     bindMainAppEventBus()
+
+    eventBus.on('app:authenticated', () => {
+      void loadMainAppData().then(() => markAppReady())
+    })
 
     if (typeof BroadcastChannel !== 'undefined') {
       thumbBroadcastChannel = new BroadcastChannel(THUMB_BROADCAST_CHANNEL)
@@ -305,12 +354,16 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     }
 
     await nextTick()
-    await markAppReady()
+    if (authenticated) {
+      await markAppReady()
+    }
 
     if (store.isElectron) {
       setupPlayerElectronListeners()
 
       unsubscribeAboutApp = window.electronAPI?.on?.('aboutApp', handleAboutApp)
+      unsubscribeShowDocumentation = window.electronAPI?.on?.('showDocumentation', handleShowDocumentation)
+      unsubscribeShowFeedback = window.electronAPI?.on?.('showFeedback', handleShowFeedback)
       unsubscribeLockApp = window.electronAPI?.on?.('lockApp', handleLockApp)
     }
   }
@@ -334,6 +387,8 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     thumbBroadcastChannel = null
     window.removeEventListener('resize', saveWindowSize)
     unsubscribeAboutApp?.()
+    unsubscribeShowDocumentation?.()
+    unsubscribeShowFeedback?.()
     unsubscribeLockApp?.()
     unsubscribeZoomChanged?.()
 

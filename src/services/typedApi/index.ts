@@ -1,4 +1,5 @@
 import { bootstrapApi } from './bootstrap'
+import { authApi } from './auth'
 import { homeApi } from './home'
 import { mediaApi } from './media'
 import { metaApi } from './meta'
@@ -7,6 +8,7 @@ import { tasksApi } from './tasks'
 
 export const typedApi = {
   ...bootstrapApi,
+  ...authApi,
   ...homeApi,
   ...pagesApi,
   ...mediaApi,

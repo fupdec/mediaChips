@@ -1,6 +1,8 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { useAppStore } from '@/stores/app'
+import { useSettingsStore } from '@/stores/settings'
 import { resolveApiBaseUrl } from '@/utils/apiBaseUrl'
+import { clearAuthToken, getAuthToken } from '@/services/authSession'
 import type { AppState } from '@/types/stores'
 
 type AppStoreLike = Pick<AppState, 'config' | 'localhost'>
@@ -28,18 +30,47 @@ function resolveRequestConfig(
   urlOrConfig: string | AxiosRequestConfig,
   config: AxiosRequestConfig = {},
 ): AxiosRequestConfig {
+  const token = getAuthToken()
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
+
   if (typeof urlOrConfig === 'string') {
     return {
       ...config,
+      headers: {
+        ...authHeaders,
+        ...config.headers,
+      },
       url: withBaseUrl(urlOrConfig, config),
     }
   }
 
   return {
     ...urlOrConfig,
+    headers: {
+      ...authHeaders,
+      ...urlOrConfig.headers,
+    },
     url: withBaseUrl(urlOrConfig.url || '', urlOrConfig),
   }
 }
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      clearAuthToken()
+      try {
+        const settingsStore = useSettingsStore()
+        if (settingsStore.passwordProtection === '1') {
+          useAppStore().isLocked = true
+        }
+      } catch {
+        // stores may be unavailable during early bootstrap
+      }
+    }
+    return Promise.reject(error)
+  },
+)
 
 export const apiClient = {
   request<T = unknown>(

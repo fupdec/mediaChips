@@ -11,6 +11,7 @@ const path = require('path')
 const fs = require('fs')
 const package_json = require('../../package.json')
 const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
+const {isLanAccessEnabled, isLanAccessEnvLocked} = require('./lanAccess')
 const {isLoopbackHost} = require('./constants')
 const {isClientAbortError, safeJsonError} = require('./fileResolver')
 const {streamVideoFile} = require('../../api/services/transcode/streamVideoFile')
@@ -108,6 +109,8 @@ function registerBuiltinRoutes({
         wsUrl: `ws://${frontendIp}:${config.port}`,
         detectedAt: new Date().toISOString(),
       },
+      allowLanAccess: isLanAccessEnabled(),
+      allowLanAccessEnvLocked: isLanAccessEnvLocked(),
     }
 
     res.json(responseConfig)

@@ -187,18 +187,12 @@ describe('typedApi', () => {
     expect(setting.data.isLink).toBe(true)
     expect(setting.data.ratingMax).toBe(10)
 
-    mockPost.mockResolvedValueOnce(mockAxiosResponse([
-      [{ id: 1, name: 'clip.mp4', mediaTypeId: 2 }],
-      {},
-    ]))
-    const media = await typedApi.searchMedia({ query: 'SELECT * FROM media' })
+    mockPost.mockResolvedValueOnce(mockAxiosResponse({ items: [{ id: 1, name: 'clip.mp4', mediaTypeId: 2 }] }))
+    const media = await typedApi.searchMedia({ q: 'clip' })
     expect(media.data[0]?.name).toBe('clip.mp4')
 
-    mockPost.mockResolvedValueOnce(mockAxiosResponse([
-      [{ id: 3, name: 'Actor', metaId: 1 }],
-      {},
-    ]))
-    const tags = await typedApi.searchTags({ query: 'SELECT * FROM tags' })
+    mockPost.mockResolvedValueOnce(mockAxiosResponse({ items: [{ id: 3, name: 'Actor', metaId: 1 }] }))
+    const tags = await typedApi.searchTags({ q: 'Actor' })
     expect(tags.data[0]?.metaId).toBe(1)
   })
 })

@@ -96,6 +96,14 @@ export const SqlQueryTagResultSchema = z.tuple([
   z.unknown(),
 ])
 
+export const GlobalSearchMediaResponseSchema = z.object({
+  items: z.array(MediaItemSchema),
+})
+
+export const GlobalSearchTagsResponseSchema = z.object({
+  items: z.array(TagSchema),
+})
+
 export type ParsedHomeMediaStats = z.infer<typeof HomeMediaStatsSchema>
 export type ParsedHomeTagCount = z.infer<typeof HomeTagCountSchema>
 export type ParsedExtendedStatsByType = z.infer<typeof ExtendedStatsByTypeSchema>

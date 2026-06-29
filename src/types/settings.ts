@@ -55,6 +55,7 @@ export type RelinkMissingMediaResponse = {
 }
 
 export type SettingsState = {
+  allowLanAccess: string
   passwordProtection: string
   phrase: string
   passwordHint: string
@@ -135,6 +136,7 @@ export type SettingsState = {
 }
 
 export const defaultSettingsState = (): SettingsState => ({
+  allowLanAccess: '1',
   passwordProtection: '0',
   phrase: '',
   passwordHint: '',

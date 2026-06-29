@@ -5,10 +5,18 @@ const {getBestLocalIp, getAllIps} = require('./server/network')
 const {initializeServerConfig} = require('./server/serverConfig')
 const {setupDatabase, warmupEmbeddingModel} = require('./server/database')
 const {createExpressApp, setupStaticApp} = require('./server/createApp')
+const {initAuthService} = require('./server/authRegistry')
+const {createAuthMiddleware, registerAuthRoutes} = require('./server/auth')
 const {registerApiRoutes} = require('./server/registerRoutes')
 const {createFileResolver} = require('./server/fileResolver')
 const {registerBuiltinRoutes} = require('./server/builtinRoutes')
 const {createServerStarter} = require('./server/startup')
+const {
+  initLanAccess,
+  registerServerNetworkDeps,
+  syncNetworkConfig,
+  isLanAccessEnabled,
+} = require('./server/lanAccess')
 
 const {config, configPath, databasesPath} = initializeServerConfig({
   getBestLocalIp,
@@ -20,6 +28,10 @@ const {db} = setupDatabase({databasesPath, dbConfig})
 warmupEmbeddingModel(db)
 
 const {app, router} = createExpressApp()
+const authService = initAuthService(db)
+app.use(createAuthMiddleware(authService))
+registerAuthRoutes(app, authService)
+
 const routeLoadErrors = registerApiRoutes(app, db)
 
 const {resolveFilePath, getStreamContentType} = createFileResolver({config, databasesPath})
@@ -52,15 +64,33 @@ try {
   console.log('\x1b[33m%s\x1b[0m', '⚠️ WebSocket module not found:', err instanceof Error ? apiErrorMessage(err) : String(err))
 }
 
-const {startServer, bindShutdownHandler, getListener} = createServerStarter({
+const {startServer, restartNetworkListener, bindShutdownHandler, getListener} = createServerStarter({
   app,
   config,
   configPath,
   databasesPath,
 })
 
-bindShutdownHandler()
-startServer()
+async function bootstrapServer() {
+  await initLanAccess(db, {getBestLocalIp, getAllIps})
+  syncNetworkConfig(config, isLanAccessEnabled(), {getBestLocalIp, getAllIps})
+
+  registerServerNetworkDeps({
+    config,
+    configPath,
+    getBestLocalIp,
+    getAllIps,
+    restartListener: restartNetworkListener,
+  })
+
+  bindShutdownHandler()
+  await startServer()
+}
+
+bootstrapServer().catch((err: unknown) => {
+  console.error('Failed to start server:', err instanceof Error ? apiErrorMessage(err) : String(err))
+  process.exit(1)
+})
 
 global.serverConfig = config
 global.serverApp = app

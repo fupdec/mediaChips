@@ -1,4 +1,8 @@
-const Settings = [{
+const Settings = [  {
+    "option": "allowLanAccess",
+    "value": 1
+  },
+  {
     "option": "passwordProtection",
     "value": 0
   },

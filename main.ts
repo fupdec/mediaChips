@@ -21,7 +21,6 @@ if (!gotTheLock) {
 const os = require('os')
 const fs = require('fs')
 const path = require('path')
-process.env.MEDIA_CHIPS_ALLOW_LAN = process.env.MEDIA_CHIPS_ALLOW_LAN || '1'
 
 if (process.platform === 'win32') {
   const disableGpu = ['1', 'true', 'yes', 'on'].includes(

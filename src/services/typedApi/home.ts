@@ -4,6 +4,8 @@ import type { HomeMediaResponse } from '@shared/api/responses'
 import type { AxiosRequestConfig } from 'axios'
 import {
   parseExtendedStats,
+  parseGlobalSearchMediaResponse,
+  parseGlobalSearchTagsResponse,
   parseHomeHealth,
   parseHomeMarkers,
   parseHomeMediaResponse,
@@ -11,8 +13,6 @@ import {
   parseHomeTagCount,
   parseMediaThumbsResponse,
   parseMissingMediaStatus,
-  parseSqlQueryMediaRows,
-  parseSqlQueryTagRows,
   parseSuggestTagsResponse,
 } from '@shared/schemas'
 import { validated } from './validate'
@@ -67,17 +67,17 @@ export const homeApi = {
     }))
   },
 
-  searchMedia(body: Record<string, unknown>, config?: AxiosRequestConfig) {
-    return apiClient.post(API_ROUTES.mediaSearch, body, config).then((res) => ({
+  searchMedia(body: { q: string; limit?: number }, config?: AxiosRequestConfig) {
+    return apiClient.post(API_ROUTES.globalSearchMedia, body, config).then((res) => ({
       ...res,
-      data: validated(parseSqlQueryMediaRows, res.data),
+      data: validated(parseGlobalSearchMediaResponse, res.data),
     }))
   },
 
-  searchTags(body: Record<string, unknown>, config?: AxiosRequestConfig) {
-    return apiClient.post(API_ROUTES.tagSearch, body, config).then((res) => ({
+  searchTags(body: { q: string; limit?: number }, config?: AxiosRequestConfig) {
+    return apiClient.post(API_ROUTES.globalSearchTags, body, config).then((res) => ({
       ...res,
-      data: validated(parseSqlQueryTagRows, res.data),
+      data: validated(parseGlobalSearchTagsResponse, res.data),
     }))
   },
 

@@ -3,7 +3,7 @@ import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { DeleteEntityOnePayload, EntityUpdatePayload } from '@shared/api/responses'
-import type { CreateTagPayload, SqlQueryPayload, TagItemsListRequest } from '@shared/api/payloads'
+import type { CreateTagPayload, TagItemsListRequest } from '@shared/api/payloads'
 const {parseItemsFromDb, filterItems} = require('../../app/tasks/items.js')
 const {
   deleteMarkGeneratedAsset,
@@ -78,30 +78,6 @@ module.exports = function (db: ApiDb) {
     })
   };
 
-  // Retrieve all Tag from the database.
-  const findAll = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<SqlQueryPayload>(req)
-    db.sequelize.query(body.query, {
-      raw: true
-    }).then(async (data) => {
-      const total = await db.Tag.findAndCountAll({
-        where: {
-          metaId: body.metaId,
-        },
-        raw: true
-      })
-
-      res.status(201).send({
-        items: data[0],
-        total: total.count,
-      })
-    }).catch((err: unknown) => {
-      res.status(500).send({
-        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
-      })
-    })
-  };
-
   // Find a single Tag with an id
   const findOne = function (req: ApiRequest, res: ApiResponse) {
     db.Tag.findOne({
@@ -135,19 +111,6 @@ module.exports = function (db: ApiDb) {
     }).then((data) => {
       res.status(201).send(data)
     }).catch((err: unknown) => {
-      res.status(500).send({
-        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
-      })
-    })
-  };
-
-  // Retrieve all Tag from the database.
-  const rawQuery = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<SqlQueryPayload>(req)
-    db.sequelize.query(body.query)
-      .then((data) => {
-        res.status(201).send(data)
-      }).catch((err: unknown) => {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
@@ -222,9 +185,7 @@ module.exports = function (db: ApiDb) {
     getCount,
     getAllForItems,
     getAll,
-    findAll,
     findOne,
-    rawQuery,
     update,
     deleteOne,
   }

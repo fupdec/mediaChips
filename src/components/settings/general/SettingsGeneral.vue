@@ -1,16 +1,22 @@
 <template>
   <div class="mx-4">
-    <!-- INFO ALERT -->
     <v-alert
-      type="info"
+      :type="SETTINGS.allowLanAccess === '1' ? 'info' : 'warning'"
       variant="tonal"
       density="compact"
       class="text-body-2 mb-8"
       rounded="xl"
     >
-      <div>{{ t('settings_labels.general.browser_access') }}</div>
+      <div>
+        {{
+          SETTINGS.allowLanAccess === '1'
+            ? t('settings_labels.general.browser_access')
+            : t('settings_labels.general.browser_access_disabled')
+        }}
+      </div>
 
       <v-btn
+        v-if="SETTINGS.allowLanAccess === '1'"
         @click="copy"
         color="info"
         :title="t('settings_labels.general.copy_link')"
@@ -24,6 +30,14 @@
         <b>{{ frontendUrl }}</b>
       </v-btn>
     </v-alert>
+
+    <settings-switch
+      option="allowLanAccess"
+      :title="t('settings_labels.general.allow_lan_access')"
+      :hint="lanAccessHint"
+      :disabled="lanAccessEnvLocked"
+      @update="refreshNetworkConfig"
+    />
 
     <settings-locale></settings-locale>
 
@@ -53,37 +67,15 @@
       :title="t('settings_labels.general.count_views')"
       :hint="t('settings_labels.general.count_views_hint')"
     ></settings-switch>
-
-    <!-- EXPERIMENTAL FEATURES CHECKBOX (закомментирован) -->
-    <!--
-    <v-checkbox
-      v-model="SETTINGS.experimentalFeaturesModel"
-      @update:modelValue="val => setOption(val, 'experimentalFeaturesModel')"
-      color="primary"
-      false-value="0"
-      true-value="1"
-      class="mt-0"
-      hide-details
-      inset
-    >
-      <template v-slot:label>
-        <div class="d-flex flex-column ml-2">
-          <div class="text-primary">Experimental features</div>
-          <div class="text-caption mt-1">
-            Features that do not work or are in the early stages of development
-          </div>
-        </div>
-      </template>
-    </v-checkbox>
-    -->
   </div>
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useSettingsStore} from '@/stores/settings'
+import {refreshServerConfig} from '@/services/configService'
 
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue";
 import SettingsLocale from "@/components/settings/general/SettingsLocale.vue";
@@ -92,18 +84,34 @@ const {t} = useI18n({useScope: 'global'})
 
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
+const lanAccessEnvLocked = ref(false)
 
 const SETTINGS = computed(() => settingsStore)
 const frontendUrl = computed(() => appStore.localhost)
+const lanAccessHint = computed(() =>
+  lanAccessEnvLocked.value
+    ? t('settings_labels.general.allow_lan_access_env_locked')
+    : t('settings_labels.general.allow_lan_access_hint'),
+)
 
 const copy = async () => {
   try {
     await navigator.clipboard.writeText(frontendUrl.value)
-    console.log('Link copied to clipboard')
   } catch (err) {
     console.error('Failed to copy link:', err)
   }
 }
+
+async function refreshNetworkConfig() {
+  try {
+    const config = await refreshServerConfig()
+    lanAccessEnvLocked.value = config?.allowLanAccessEnvLocked === true
+  } catch (error) {
+    console.error('Failed to refresh server config after LAN toggle:', error)
+  }
+}
+
+void refreshNetworkConfig()
 </script>
 
 <style lang="scss" scoped>

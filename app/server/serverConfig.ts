@@ -3,7 +3,7 @@ import { apiErrorMessage, apiErrorStack } from '../../api/types/errors'
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
-const {FIXED_PORT, ALLOW_LAN} = require('./constants')
+const {FIXED_PORT} = require('./constants')
 
 function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
   let app_folder
@@ -59,9 +59,9 @@ function initializeServerConfig({getBestLocalIp, getAllIps}: NetworkHelpers) {
   const allIpsInfo = getAllIps()
   const bestIp = getBestLocalIp()
 
-  config.ip = ALLOW_LAN ? bestIp : 'localhost'
-  config.ips = ALLOW_LAN ? allIpsInfo.map((ip: NetworkIpInfo) => ip.address) : []
-  config.hostname = ALLOW_LAN ? os.hostname() : 'localhost'
+  config.ip = bestIp
+  config.ips = allIpsInfo.map((ip: NetworkIpInfo) => ip.address)
+  config.hostname = os.hostname()
   config.port = FIXED_PORT
 
   const activeDb = config.databases.find((db: ServerDatabaseEntry) => db.active)

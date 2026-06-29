@@ -63,6 +63,9 @@ import {ref, computed} from 'vue';
 import {useI18n} from 'vue-i18n'
 import DialogHeader from "@/components/elements/DialogHeader.vue";
 import {useSettingsStore} from '@/stores/settings';
+import {typedApi} from '@/services/typedApi';
+import {setAuthToken} from '@/services/authSession';
+import {useEventBus} from '@/utils/eventBus';
 
 // Props
 const props = defineProps({
@@ -78,11 +81,13 @@ const emit = defineEmits(['update:modelValue', 'success']);
 // Pinia store
 const settingsStore = useSettingsStore();
 const {t} = useI18n()
+const eventBus = useEventBus()
 
 // Reactive data
 const password = ref('');
 const showPassword = ref(false);
 const error = ref(false);
+const loading = ref(false);
 const buttons = computed(() => [
   {
     icon: "close",
@@ -104,11 +109,19 @@ const buttons = computed(() => [
 ]);
 
 // Methods
-const logIn = () => {
-  // Используем computed property или напрямую из store
-  error.value = settingsStore.phrase !== password.value;
-  if (!error.value) {
-    emit('success');
+const logIn = async () => {
+  loading.value = true
+  error.value = false
+
+  try {
+    const res = await typedApi.login(password.value)
+    setAuthToken(res.data.token)
+    emit('success')
+    eventBus.emit('app:authenticated')
+  } catch {
+    error.value = true
+  } finally {
+    loading.value = false
   }
 };
 

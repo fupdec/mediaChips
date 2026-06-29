@@ -4,9 +4,6 @@ module.exports = (app: Express, db: ApiDb) => {
   const Media = require("../controllers/Media.controller")(db);
   const router = require("express").Router();
 
-  // Retrieve all Media
-  router.post("/filter", Media.findAll);
-
   // Retrieve a single Media with id
   router.get("/numberOfMediaWithTag", Media.numberOfMediaWithTag);
 
@@ -24,9 +21,6 @@ module.exports = (app: Express, db: ApiDb) => {
 
   // get all media
   router.get("/get-stats", Media.getStats);
-
-  // Retrieve all media that with name
-  router.post("/search", Media.rawQuery);
 
   // update file path, name, basename and ext by path
   router.post("/updatePath", Media.updatePath);
