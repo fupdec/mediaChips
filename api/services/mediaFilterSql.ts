@@ -8,6 +8,9 @@ import type {
 
 const {resolveMetaId} = require('../utils/metaId')
 const {normalizeExt, parseExtList} = require('../utils/ext')
+const {COUNTRY_DELIMITER} = require('../utils/country')
+
+const COUNTRY_DELIMITER_SQL = `char(${COUNTRY_DELIMITER.charCodeAt(0)})`
 
 const MEDIA_COLUMNS = new Set([
   'rating',
@@ -157,7 +160,8 @@ function buildStringComparison(columnExpr: string, cond: FilterCondition, val: u
     return `(${columnExpr} IS NOT NULL AND ${columnExpr} != '')`
   }
   if (cond === 'regex') {
-    return null
+    const patternKey = nextParam(String(val ?? ''))
+    return `regexp(${patternKey}, ${columnExpr})`
   }
 
   const normalized = String(val || '').toLowerCase().trim()
@@ -216,6 +220,93 @@ function isTagArrayFilter(filter: FilterLike) {
     && filter.param !== 'country'
     && filter.param !== 'ext'
     && resolveMetaId(filter.param) !== null
+}
+
+function buildTagCountryMatchSql(tagAlias: string, countryKey: string) {
+  const countryColumn = `${tagAlias}.country`
+
+  return `(
+    ${countryColumn} = ${countryKey}
+    OR ${countryColumn} LIKE ${countryKey} || ${COUNTRY_DELIMITER_SQL} || '%'
+    OR ${countryColumn} LIKE '%' || ${COUNTRY_DELIMITER_SQL} || ${countryKey} || ${COUNTRY_DELIMITER_SQL} || '%'
+    OR ${countryColumn} LIKE '%' || ${COUNTRY_DELIMITER_SQL} || ${countryKey}
+    OR ${countryColumn} LIKE ${countryKey} || ',%'
+    OR ${countryColumn} LIKE '%,' || ${countryKey} || ',%'
+    OR ${countryColumn} LIKE '%,' || ${countryKey}
+  )`
+}
+
+function buildCountryArrayClause(filter: FilterLike, nextParam: SqlParamBinder) {
+  const {cond, val} = filter
+  const countries = Array.isArray(val)
+    ? val.filter((entry: unknown) => entry !== null && entry !== undefined && entry !== '')
+    : []
+
+  const countryExistsSql = `EXISTS (
+    SELECT 1 FROM tagsInMedia tim
+    INNER JOIN tags t ON t.id = tim.tagId
+    WHERE tim.mediaId = media.id
+      AND t.country IS NOT NULL
+      AND t.country != ''
+  )`
+
+  if (cond === 'is null') {
+    return `NOT ${countryExistsSql}`
+  }
+
+  if (cond === 'not null') {
+    return countryExistsSql
+  }
+
+  if (!countries.length) {
+    if (cond === 'not in') return '1 = 1'
+    if (cond === 'not in all') {
+      return countryExistsSql
+    }
+    return '0 = 1'
+  }
+
+  const countryMatchClauses = countries.map((country: unknown) => {
+    const countryKey = nextParam(String(country))
+    return buildTagCountryMatchSql('t', countryKey)
+  })
+
+  const countryMatchAnySql = `EXISTS (
+    SELECT 1 FROM tagsInMedia tim
+    INNER JOIN tags t ON t.id = tim.tagId
+    WHERE tim.mediaId = media.id
+      AND (${countryMatchClauses.join(' OR ')})
+  )`
+
+  if (cond === 'in') {
+    return countryMatchAnySql
+  }
+
+  if (cond === 'not in') {
+    return `NOT ${countryMatchAnySql}`
+  }
+
+  if (cond === 'in all') {
+    return countryMatchClauses.map((clause) => `EXISTS (
+      SELECT 1 FROM tagsInMedia tim
+      INNER JOIN tags t ON t.id = tim.tagId
+      WHERE tim.mediaId = media.id
+        AND (${clause})
+    )`).join(' AND ')
+  }
+
+  if (cond === 'not in all') {
+    const matchAllSql = countryMatchClauses.map((clause) => `EXISTS (
+      SELECT 1 FROM tagsInMedia tim
+      INNER JOIN tags t ON t.id = tim.tagId
+      WHERE tim.mediaId = media.id
+        AND (${clause})
+    )`).join(' AND ')
+
+    return `NOT (${matchAllSql})`
+  }
+
+  return null
 }
 
 function buildExtArrayClause(filter: FilterLike, nextParam: SqlParamBinder) {
@@ -369,7 +460,7 @@ function buildFilterClause(filter: FilterLike, nextParam: SqlParamBinder) {
   const metaId = resolveMetaId(param)
 
   if (type === 'array' || type === 'select') {
-    if (param === 'country') return null
+    if (param === 'country') return buildCountryArrayClause(filter, nextParam)
     if (param === 'ext') return buildExtArrayClause(filter, nextParam)
     if (metaId === null) return null
     return buildTagArrayClause(metaId, filter, nextParam)
@@ -415,12 +506,9 @@ function buildFilterClause(filter: FilterLike, nextParam: SqlParamBinder) {
 
 function canUseSqlMediaFilters(options: MediaFilterOptions = {}) {
   if (options.find_duplicates) return false
-  if (options.sortBy === 'shuffle') return false
 
   const filters = normalizeActiveFilters(options.filters)
   for (const filter of filters) {
-    if (filter.type === 'string' && filter.cond === 'regex') return false
-    if (filter.param === 'country') return false
     if (canUseTagArrayJoin(filter)) {
       if (!buildTagArrayJoin(filter, 'tf0', () => ':p0')) return false
       continue
@@ -520,6 +608,7 @@ LEFT JOIN imageMetadata ON media.id = imageMetadata.mediaId`
 }
 
 function getSortExpression(sortBy: string) {
+  if (sortBy === 'shuffle') return 'RANDOM()'
   return SORT_COLUMNS[sortBy as keyof typeof SORT_COLUMNS] || SORT_COLUMNS.id
 }
 
@@ -533,6 +622,25 @@ function getNavigationSelect() {
 
 module.exports = {
   buildMediaFilterQuery,
+  buildCountryArrayClause,
+  buildTagCountryMatchSql,
+  buildStringComparison,
+  canUseSqlMediaFilters,
+  filterRequiresMetadataJoin,
+  getMediaFromClause,
+  getMediaFromJoin,
+  getNavigationSelect,
+  getSortExpression,
+  normalizeActiveFilters,
+  requiresMetadataJoinForFilters,
+  requiresMetadataJoinForSort,
+}
+
+export {
+  buildMediaFilterQuery,
+  buildCountryArrayClause,
+  buildTagCountryMatchSql,
+  buildStringComparison,
   canUseSqlMediaFilters,
   filterRequiresMetadataJoin,
   getMediaFromClause,

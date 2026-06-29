@@ -181,6 +181,16 @@ class Database {
         verbose: verboseLogger || undefined,
       })
 
+      this._db.function('regexp', { deterministic: true, varargs: false }, (pattern: unknown, value: unknown) => {
+        if (value == null || pattern == null) return 0
+
+        try {
+          return new RegExp(String(pattern), 'i').test(String(value)) ? 1 : 0
+        } catch {
+          return 0
+        }
+      })
+
       if (callback) {
         process.nextTick(() => callback(null))
       }
