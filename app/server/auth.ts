@@ -1,5 +1,6 @@
 import type { ApiDb } from '../../api/types/db'
 import type { Express, Request, Response, NextFunction } from 'express'
+const {createSettingsRepository} = require('../../api/db/repositories/settings')
 
 const crypto = require('crypto')
 
@@ -36,7 +37,7 @@ function createAuthService(db: ApiDb) {
       return settingsCache.settings
     }
 
-    const rows = (await db.Setting.findAll({raw: true})) as unknown as SettingRow[]
+    const rows = createSettingsRepository(db.drizzle).findAll() as SettingRow[]
     const map = Object.fromEntries(rows.map((row) => [row.option, row.value]))
     const settings = {
       passwordProtection: map.passwordProtection === '1',

@@ -17,9 +17,9 @@ const fse = require("fs-extra")
 const path = require('path')
 const { rimraf } = require("rimraf")
 const StreamZip = require('node-stream-zip')
-const {Umzug, SequelizeStorage} = require("umzug");
 const _ = require("lodash");
 const { serializeCountries } = require('../../utils/country')
+const {resetDatabaseAndRunMigrations} = require('../../db/migrationRunner')
 
 module.exports = function (db: ApiDb) {
   const dbPath = db.path
@@ -405,32 +405,10 @@ module.exports = function (db: ApiDb) {
     console.log('\x1b[36m%s\x1b[0m', 'Object prepared successfully.', 'color: #bada55');
 
     // очищаем таблицы новой БД
-    await db.sequelize.sync({
-      force: true
-    }).then(async () => {
-      console.log('Current data in tables was cleared');
-      // migration system
-      const migrations_folder = path.join(__dirname, '../../migrations/')
-      let migrations_list = fs.readdirSync(migrations_folder)
-        .filter((fileName: string) => fileName.endsWith('.js'))
-      migrations_list = migrations_list.sort().map((fileName: string) => {
-        let file_path = path.join(migrations_folder, fileName);
-        let functions = require(file_path);
-        return {...{name: fileName}, ...functions};
-      });
-
-      const umzug = new Umzug({
-        migrations: migrations_list,
-        context: db.sequelize.getQueryInterface(),
-        storage: new SequelizeStorage({
-          sequelize: db.sequelize
-        }),
-        // logger: console,
-      });
-
-      await umzug.up();
-      console.log('\x1b[36m%s\x1b[0m', 'Migrations applied.', 'color: #bada55');
-    })
+    const dbSqlitePath = path.join(dbPath!, 'db.sqlite')
+    await resetDatabaseAndRunMigrations(dbSqlitePath)
+    console.log('Current data in tables was cleared')
+    console.log('\x1b[36m%s\x1b[0m', 'Migrations applied.', 'color: #bada55');
 
     const {importLowDbData} = require('../../services/lowDbImport')
 

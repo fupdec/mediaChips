@@ -50,5 +50,20 @@ export function createSettingsRepository(db: DrizzleClient) {
         this.upsertByOption(item.option, item.value)
       }
     },
+
+    findOrCreateByOption(option: string, value: unknown): {row: SettingRow; created: boolean} {
+      const existing = this.findByOption(option)
+      if (existing) {
+        return {row: existing, created: false}
+      }
+
+      this.upsertByOption(option, value)
+      const row = this.findByOption(option)
+      if (!row) {
+        throw new Error(`Failed to create setting: ${option}`)
+      }
+
+      return {row, created: true}
+    },
   }
 }

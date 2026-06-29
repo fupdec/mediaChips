@@ -8,7 +8,7 @@ import type {
   PreparedMoveItem,
   PreparedRenameItem,
 } from '../types/moveFile'
-
+const {createMediaRepository} = require('../../api/db/repositories/media')
 const fs = require('fs').promises
 const fssync = require('fs')
 const path = require('path')
@@ -158,7 +158,7 @@ async function prepareMoveItems(db: ApiDb, items: MoveItemInput[]): Promise<Prep
   let bytesNeedingCopy = 0
 
   for (const item of items) {
-    const media = await db.Media.findOne({ where: { id: item.id } })
+    const media = createMediaRepository(db.drizzle).findById(Number(item.id))
     if (!media) {
       prepared.push({
         id: item.id,
@@ -167,7 +167,7 @@ async function prepareMoveItems(db: ApiDb, items: MoveItemInput[]): Promise<Prep
       continue
     }
 
-    const oldPath = String(media.dataValues?.path ?? media.path ?? '')
+    const oldPath = String(media.path ?? '')
     const fileName = path.basename(oldPath)
     const newPath = path.join(item.folder, fileName)
 

@@ -1,4 +1,5 @@
 import type { ApiDb, MediaLike } from '../../api/types/db'
+const {createMediaRepository} = require('../../api/db/repositories/media')
 import type {
   WatchedFolderEntry,
   WatchedMediaTypeEntry,
@@ -139,11 +140,7 @@ async function loadMediaForTypes(db: ApiDb, typeIds: Array<number | string>): Pr
     return []
   }
 
-  return db.Media.findAll({
-    where: {mediaTypeId: uniqueIds},
-    attributes: ['id', 'path', 'mediaTypeId'],
-    raw: true,
-  }) as Promise<MediaLike[]>
+  return createMediaRepository(db.drizzle).findByMediaTypeIds(uniqueIds) as MediaLike[]
 }
 
 class WatcherSyncEngine {

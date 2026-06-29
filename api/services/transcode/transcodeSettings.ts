@@ -9,26 +9,18 @@ type TranscodeSettings = Record<TranscodeSettingKey, string>
 
 interface TranscodeDb {
   drizzle?: import('../../db/client').DrizzleClient
-  Setting?: {
-    findAll(options: {where: {option: TranscodeSettingKey[]}; raw: true}): Promise<Array<{option: string; value: unknown}>>
-  }
 }
 
 async function getTranscodeSettings(db: TranscodeDb | null | undefined): Promise<TranscodeSettings> {
   const settings: TranscodeSettings = {...DEFAULTS}
 
-  if (!db?.drizzle && !db?.Setting) {
+  if (!db?.drizzle) {
     return settings
   }
 
   try {
-    const rows = db.drizzle
-      ? require('../../db/repositories/settings').createSettingsRepository(db.drizzle)
-        .findByOptions(Object.keys(DEFAULTS))
-      : await db.Setting!.findAll({
-        where: {option: Object.keys(DEFAULTS) as TranscodeSettingKey[]},
-        raw: true,
-      })
+    const rows = require('../../db/repositories/settings').createSettingsRepository(db.drizzle)
+      .findByOptions(Object.keys(DEFAULTS))
 
     for (const row of rows) {
       const key = row.option as TranscodeSettingKey

@@ -41,8 +41,6 @@ const resolveGeneratedFolderPath = (dbPath: string, folderKey: string) => {
 
 module.exports = function createTaskControllerShared(db: ApiDb) {
   const dbPath = db.path
-  const Op = db.Sequelize.Op
-  const Sequelize = db.Sequelize
 
   const withTimeout = (promise: Promise<unknown>, ms: number, label: string) => Promise.race([
     promise,
@@ -123,8 +121,6 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
   return {
     db,
     dbPath,
-    Op,
-    Sequelize,
     withTimeout,
     createStreamAbortSignal,
     getParserSettings,

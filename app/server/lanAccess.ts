@@ -1,6 +1,6 @@
 import type { ApiDb } from '../../api/types/db'
 import type { ServerConfig, NetworkIpInfo } from '../types/server'
-
+const {createSettingsRepository} = require('../../api/db/repositories/settings')
 const fs = require('fs')
 const os = require('os')
 
@@ -74,10 +74,8 @@ async function initLanAccess(db: ApiDb, helpers: NetworkHelpers) {
 
   envLocked = false
 
-  const [setting] = await db.Setting.findOrCreate({
-    where: {option: 'allowLanAccess'},
-    defaults: {option: 'allowLanAccess', value: '1'},
-  })
+  const settingsRepo = createSettingsRepository(db.drizzle)
+  const {row: setting} = settingsRepo.findOrCreateByOption('allowLanAccess', '1')
 
   lanEnabled = parseBooleanSetting(setting.value, true)
   return lanEnabled

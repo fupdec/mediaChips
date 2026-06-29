@@ -1,9 +1,10 @@
 import type { ApiDb } from '../../api/types/db'
 import type { ServerDatabaseEntry } from '../types/server'
-import { apiErrorMessage, apiErrorStack } from '../../api/types/errors'
+import { apiErrorMessage } from '../../api/types/errors'
 const path = require('path')
-const fs = require('fs')
-const {Umzug, SequelizeStorage} = require('umzug')
+const {createDrizzleClient, smokeTestDrizzle} = require('../../api/db')
+const createApiDb = require('../../api')
+const {bootstrapDatabase} = require('../../api/db/migrationRunner')
 
 function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbConfig: ServerDatabaseEntry | undefined }) {
   if (!dbConfig) {
@@ -14,79 +15,29 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
   console.log('\x1b[36m%s\x1b[0m', `Connecting to database: ${dbConfig.name} (${dbConfig.id})`)
 
   const dbPath = path.join(databasesPath, dbConfig.id, 'db.sqlite')
-  const {createDrizzleClient, smokeTestDrizzle} = require('../../api/db')
   const drizzleConnection = createDrizzleClient(dbPath)
 
-  const Sequelize = require('sequelize')
-  const sqlite3 = require('../../api/utils/sqlite3-compat')
-  const sequelize = new Sequelize({
-    storage: dbPath,
-    dialect: 'sqlite',
-    dialectModule: sqlite3,
-    dialectOptions: {
-      multipleStatements: true,
-    },
-    logging: false,
-  })
+  const db = createApiDb({
+    drizzleConnection,
+    config: dbConfig,
+    path: path.join(databasesPath, dbConfig.id),
+    path_databases: databasesPath,
+  }) as ApiDb
 
-  const db = require('../../api')(sequelize) as ApiDb
-  db.config = dbConfig
-  db.path_databases = databasesPath
-  db.path = path.join(databasesPath, db.config.id)
-  db.drizzle = drizzleConnection.drizzle
-  db.sqlite = drizzleConnection.sqlite
+  console.log('\x1b[36m%s\x1b[0m', '✅ Database connection successful')
+  console.log('\x1b[36m%s\x1b[0m', `Database ID: ${db.config?.id}`)
 
-  try {
-    sequelize.authenticate()
-    console.log('\x1b[36m%s\x1b[0m', '✅ Database connection successful')
-    console.log('\x1b[36m%s\x1b[0m', `Database ID: ${db.config.id}`)
-  } catch (e: unknown) {
-    console.log('\x1b[31m%s\x1b[0m', '❌ Database connection error: ', e)
-  }
-
-  sequelize.sync().then(async () => {
+  bootstrapDatabase(dbPath).then(() => {
     console.log('\x1b[36m%s\x1b[0m', '✅ Database synchronized')
+    console.log('\x1b[32m%s\x1b[0m', '✅ Migrations applied')
 
-    try {
-      const migrations_folder = path.join(__dirname, '../../api/migrations/')
-      if (fs.existsSync(migrations_folder)) {
-        let migrations_list = fs.readdirSync(migrations_folder)
-          .filter((file: unknown) => typeof file === 'string' && file.endsWith('.js'))
-        migrations_list = migrations_list.sort().map((i: unknown) => {
-          const file_path = path.join(migrations_folder, i)
-          const functions = require(file_path)
-          return {...{name: i}, ...functions}
-        })
-
-        const umzug = new Umzug({
-          migrations: migrations_list,
-          context: sequelize.getQueryInterface(),
-          storage: new SequelizeStorage({
-            sequelize,
-          }),
-          logger: console,
-        })
-
-        await umzug.up()
-        console.log('\x1b[32m%s\x1b[0m', '✅ Migrations applied')
-      }
-
-      await sequelize.query('PRAGMA foreign_keys = ON')
-      await sequelize.query('PRAGMA journal_mode = WAL')
-      await sequelize.query('PRAGMA synchronous = NORMAL')
-      await sequelize.query('PRAGMA temp_store = MEMORY')
-      await sequelize.query('PRAGMA cache_size = -64000')
-
-      const mediaCount = smokeTestDrizzle(db.drizzle)
-      console.log('\x1b[32m%s\x1b[0m', `✅ Drizzle connected (${mediaCount} media rows)`)
-    } catch (migrationError: unknown) {
-      console.log('\x1b[33m%s\x1b[0m', '⚠️ Migration error:', migrationError instanceof Error ? migrationError.message : String(migrationError))
-    }
+    const mediaCount = smokeTestDrizzle(db.drizzle)
+    console.log('\x1b[32m%s\x1b[0m', `✅ Drizzle connected (${mediaCount} media rows)`)
   }).catch((err: unknown) => {
-    console.log('\x1b[33m%s\x1b[0m', '⚠️ Database sync error:', err instanceof Error ? apiErrorMessage(err) : String(err))
+    console.log('\x1b[33m%s\x1b[0m', '⚠️ Database bootstrap error:', err instanceof Error ? apiErrorMessage(err) : String(err))
   })
 
-  return {sequelize, db, drizzleConnection}
+  return {db, drizzleConnection}
 }
 
 function warmupEmbeddingModel(db: ApiDb) {

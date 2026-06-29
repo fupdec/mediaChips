@@ -48,6 +48,15 @@ export function createMediaRepository(db: DrizzleClient) {
       return db.select().from(media).where(where).all()
     },
 
+    findByMediaTypeIds(typeIds: number[]): MediaRow[] {
+      if (!typeIds.length) return []
+
+      return db.select()
+        .from(media)
+        .where(inArray(media.mediaTypeId, typeIds))
+        .all()
+    },
+
     findByMediaType(
       mediaTypeId: number,
       options: {limit?: number; orderByCreatedDesc?: boolean} = {},

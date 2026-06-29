@@ -33,6 +33,7 @@ export {
   createWatchedFoldersRepository,
 } from './repositories'
 export {applySqlitePragmas} from './pragmas'
+export {bootstrapDatabase, resetDatabaseAndRunMigrations} from './migrationRunner'
 export {smokeTestDrizzle} from './smoke'
 export {bindNamedParameters, queryAll, queryAllAsync, queryGet} from './utils/rawQuery'
 export * as schema from './schema'

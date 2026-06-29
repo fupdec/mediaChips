@@ -1,7 +1,6 @@
 import type { VideoImagesGenerationStatus } from './videoImagesGeneration'
 import type { AnyRecord, ApiDb } from './db'
 import type { ApiRequest, ApiResponse } from './http'
-import type { SequelizeModule } from './db'
 
 export interface ParserSettings {
   useML: boolean
@@ -85,8 +84,6 @@ export interface FfprobeInfo {
 export interface TaskControllerShared {
   db: ApiDb
   dbPath: string | undefined
-  Op: SequelizeModule['Op']
-  Sequelize: SequelizeModule
   withTimeout: (promise: Promise<unknown>, ms: number, label: string) => Promise<unknown>
   createStreamAbortSignal: (req: ApiRequest, res: ApiResponse) => () => boolean
   getParserSettings: (overrides?: Record<string, unknown>) => Promise<ParserSettings>

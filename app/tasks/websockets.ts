@@ -14,6 +14,7 @@ import type {
 import { errorMessage, asMoveError } from '../types/websockets'
 import type { Request } from 'express'
 import type { Express } from 'express'
+const {createMediaRepository} = require('../../api/db/repositories/media')
 const path = require("path");
 const chokidar = require("chokidar");
 const {WatcherSyncEngine} = require('./watcherSync');
@@ -449,7 +450,7 @@ module.exports = function (app: Express, db: ApiDb) {
           bytesCopied += item.size
 
           try {
-            await db.Media.update({ path: item.newPath }, { where: { id: item.id } })
+            createMediaRepository(db.drizzle).updateById(item.id, {path: item.newPath})
           } catch (dbError: unknown) {
             try {
               await moveFile(item.newPath, item.oldPath)

@@ -1,6 +1,6 @@
 import type { MigrationContext } from '../types/sequelize'
 import type { AnyRecord } from '../types/db'
-import type { SequelizeQueryInterface } from '../types/db'
+import type { SequelizeQueryInterface } from '../types/sequelize'
 
 async function addIndexIfMissing(queryInterface: SequelizeQueryInterface, table: string, fields: unknown, name: string) {
   const indexes = await queryInterface.showIndex(table)

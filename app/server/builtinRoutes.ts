@@ -9,6 +9,7 @@ import type {
 import type { ServerDatabaseEntry } from '../types/server'
 const path = require('path')
 const fs = require('fs')
+const {createMediaRepository} = require('../../api/db/repositories/media')
 const package_json = require('../../package.json')
 const {normalizeMediaPath} = require('../../api/utils/normalizeUserPath')
 const {isLanAccessEnabled, isLanAccessEnvLocked} = require('./lanAccess')
@@ -22,20 +23,17 @@ function resolveMediaVideoPath(
   resolveFilePath: ResolveFilePathFn,
   mediaId: string | number,
 ): Promise<FileResolverResult> {
-  return db.Media.findOne({
-    where: {id: mediaId},
-  }).then((video: MediaLike | null) => {
-    if (!video || !video.path) {
-      return {error: {status: 404, body: {message: 'Video not found in database'}}}
-    }
+  const video = createMediaRepository(db.drizzle).findById(Number(mediaId)) as MediaLike | undefined
+  if (!video || !video.path) {
+    return Promise.resolve({error: {status: 404, body: {message: 'Video not found in database'}}})
+  }
 
-    const videoPath = resolveFilePath(video.path)
-    if (!videoPath || !fs.existsSync(videoPath)) {
-      return {error: {status: 404, body: {message: "Video file doesn't exist"}}}
-    }
+  const videoPath = resolveFilePath(video.path)
+  if (!videoPath || !fs.existsSync(videoPath)) {
+    return Promise.resolve({error: {status: 404, body: {message: "Video file doesn't exist"}}})
+  }
 
-    return {video, videoPath}
-  })
+  return Promise.resolve({video, videoPath})
 }
 
 function registerBuiltinRoutes({
