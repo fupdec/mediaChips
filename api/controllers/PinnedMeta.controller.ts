@@ -1,97 +1,94 @@
-import type { ApiDb, AnyRecord } from '../types/db'
+import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import { getRequestBody } from '../types/http'
 import type { MetaAssignmentOrderPayload, PinChildMetaPayload } from '@shared/api/payloads'
 import { paramString } from '../types/errors'
+
+const {createPinnedMetaRepository} = require('../db/repositories/pinnedMeta')
+
+function parseOptionalInt(value: unknown): number | undefined {
+  if (value == null || value === '') return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 module.exports = function (db: ApiDb) {
-  // Create and Save a new PinnedMeta
+  const pinnedMetaRepo = createPinnedMetaRepository(db.drizzle)
+
   const create = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<PinChildMetaPayload>(req)
-    db.PinnedMeta.create(body)
-      .then((data) => {
-        res.status(201).send(data)
+    try {
+      const body = getRequestBody<PinChildMetaPayload>(req)
+      const data = pinnedMetaRepo.create({
+        metaId: Number(body.metaId),
+        pinnedMetaId: Number(body.pinnedMetaId),
+        order: body.order == null ? null : Number(body.order),
       })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
+    }
   };
 
-  // Retrieve all PinnedMetas from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    let where: AnyRecord = {}
-    if (req.query.metaId) where.metaId = req.query.metaId
-    if (req.query.pinnedMetaId) where.pinnedMetaId = req.query.pinnedMetaId
-
-    db.PinnedMeta.findAll({
-      where: where,
-      include: [{
-        model: db.Meta,
-      }],
-      order: [['order', 'ASC']],
-    }).then(async (data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
-      res.status(500).send({
-        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
-      })
-    })
-  };
-
-  // получить мета по ID прикрепленной меты
-  const findAllByPinnedMetaId = function (req: ApiRequest, res: ApiResponse) {
-    db.PinnedMeta.findAll({
-      where: {
-        pinnedMetaId: req.query.metaId
-      },
-      include: [{
-        model: db.Meta,
-      }],
-    }).then(async (data) => {
-      res.status(201).send(data)
-    }).catch((err: unknown) => {
-      res.status(500).send({
-        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
-      })
-    })
-  };
-
-  // Update a PinnedMeta by the id in the request
-  const update = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<MetaAssignmentOrderPayload>(req)
-    db.PinnedMeta.update(body.data, {
-      where: {
-        metaId: body.metaId,
-        pinnedMetaId: body.pinnedMetaId
+    try {
+      const filters = {
+        metaId: parseOptionalInt(req.query.metaId),
+        pinnedMetaId: parseOptionalInt(req.query.pinnedMetaId),
       }
-    }).then((data) => {
+      const data = pinnedMetaRepo.findAll(filters)
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while retrieving media."
       })
-    })
+    }
   };
 
-  // Delete a PinnedMeta with the specified id in the request
+  const findAllByPinnedMetaId = function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const pinnedMetaId = parseOptionalInt(req.query.metaId)
+      const data = pinnedMetaId == null
+        ? []
+        : pinnedMetaRepo.findAllByPinnedMetaId(pinnedMetaId)
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
+      })
+    }
+  };
+
+  const update = function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const body = getRequestBody<MetaAssignmentOrderPayload>(req)
+      pinnedMetaRepo.update(
+        Number(body.metaId),
+        Number(body.pinnedMetaId),
+        body.data,
+      )
+      res.status(201).send([1])
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while retrieving media."
+      })
+    }
+  };
+
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.PinnedMeta
-      .destroy({
-        where: {
-          pinnedMetaId: parseInt(paramString(req.params.id), 10),
-          metaId: parseInt(String(req.query.metaId ?? ''), 10)
-        },
+    try {
+      pinnedMetaRepo.delete(
+        parseInt(paramString(req.params.id), 10),
+        parseInt(String(req.query.metaId ?? ''), 10),
+      )
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

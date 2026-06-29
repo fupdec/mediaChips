@@ -84,10 +84,8 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
 
   const getParserSettings = async (overrides: AnyRecord = {}) => {
     const options = Object.keys(parserSettingDefaults)
-    const rows = await db.Setting.findAll({
-      where: {option: options},
-      raw: true,
-    })
+    const {createSettingsRepository} = require('../../db/repositories/settings')
+    const rows = createSettingsRepository(db.drizzle).findByOptions(options)
 
     const settings: Record<string, boolean | number> = {...parserSettingDefaults}
     for (const row of rows) {

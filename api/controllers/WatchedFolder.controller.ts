@@ -1,85 +1,51 @@
 import type { ApiDb } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
+
+const {createWatchedFoldersRepository} = require('../db/repositories/watchedFolders')
+
 module.exports = function (db: ApiDb) {
-  // Create and Save a new Folder
+  const watchedFoldersRepo = createWatchedFoldersRepository(db.drizzle)
+
   const create = async function (req: ApiRequest, res: ApiResponse) {
-    const {
-      folder,
-      types
-    } = req.body
+    try {
+      const {
+        folder,
+        types,
+      } = req.body
 
-    const [folderRow, isCreated] = await db.WatchedFolder.findOrCreate({
-      where: {
-        path: folder.path,
-      },
-      defaults: {
-        name: folder.name
-      },
-    })
-
-    if (!isCreated) {
-      db.WatchedFolder
-        .update({
-          name: folder.name
-        }, {
-          where: {
-            id: folderRow.id
-          }
-        })
-    }
-
-    await db.MediaTypesInWatchedFolders.destroy({
-      where: {
-        folderId: folderRow.id
-      }
-    })
-
-    for (let i of types) {
-      await db.MediaTypesInWatchedFolders.findOrCreate({
-        where: {
-          folderId: folderRow.id,
-          mediaTypeId: i,
-        }
+      watchedFoldersRepo.upsertFolderWithTypes(
+        folder,
+        Array.isArray(types) ? types.map((type: unknown) => Number(type)) : [],
+      )
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
     }
-    res.sendStatus(201)
   };
 
-  // Update a Folder by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    db.WatchedFolder
-      .update(req.body, {
-        where: {
-          id: req.params.id
-        }
+    try {
+      watchedFoldersRepo.updateById(Number(req.params.id), req.body)
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // Delete a Folder with the specified id in the request
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.WatchedFolder
-      .destroy({
-        where: {
-          id: req.params.id
-        }
+    try {
+      watchedFoldersRepo.deleteById(Number(req.params.id))
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

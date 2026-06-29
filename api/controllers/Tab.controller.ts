@@ -4,66 +4,55 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 import type { TabCreatePayload, TabUpdatePayload } from '@shared/api/payloads'
 import { getRequestBody } from '../types/http'
 
+const {createTabsRepository} = require('../db/repositories/tabs')
+
 module.exports = function (db: ApiDb) {
-  // Create and Save a new Tab
+  const tabsRepo = createTabsRepository(db.drizzle)
+
   const create = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<TabCreatePayload>(req)
-    db.Tab.create(body).then((data) => {
+    try {
+      const body = getRequestBody<TabCreatePayload>(req)
+      const data = tabsRepo.create(body)
       res.status(201).send(data)
-    }).catch((err: unknown) => {
+    } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-    })
+    }
   };
 
-  // Retrieve all Tabs from the database.
   const findAll = function (req: ApiRequest, res: ApiResponse) {
-    db.Tab.findAll()
-      .then((data) => {
-        res.status(201).send(data)
-      }).catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
+    try {
+      const data = tabsRepo.findAll()
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
+    }
   }
 
-  // Update a Tab by the id in the request
   const update = function (req: ApiRequest, res: ApiResponse) {
-    const body = getRequestBody<TabUpdatePayload>(req)
-    db.Tab
-      .update(body, {
-        where: {
-          id: req.params.id
-        }
+    try {
+      const body = getRequestBody<TabUpdatePayload>(req)
+      tabsRepo.updateById(Number(req.params.id), body)
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
-  // Delete a Tab with the specified id in the request
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
-    db.Tab
-      .destroy({
-        where: {
-          id: req.params.id
-        }
+    try {
+      tabsRepo.deleteById(Number(req.params.id))
+      res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
       })
-      .then(() => {
-        res.sendStatus(201)
-      })
-      .catch((err: unknown) => {
-        res.status(500).send({
-          message: apiErrorMessage(err) || "Some error occurred while performing query."
-        })
-      })
+    }
   };
 
   return {

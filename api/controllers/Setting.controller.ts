@@ -4,12 +4,15 @@ import type { ApiRequest, ApiResponse } from '../types/http'
 
 const {getAuthService} = require('../../app/server/authRegistry')
 const {applyLanAccessChange, isLanAccessEnvLocked} = require('../../app/server/lanAccess')
+const {createSettingsRepository} = require('../db/repositories/settings')
 
 module.exports = function (db: ApiDb) {
+  const settingsRepo = createSettingsRepository(db.drizzle)
+
   const findAll = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const authService = getAuthService()
-      const data = await db.Setting.findAll({raw: true})
+      const data = settingsRepo.findAll()
       const settings = await authService.loadSecuritySettings()
       const sanitized = authService.sanitizeSettingRows(
         data,
@@ -27,12 +30,7 @@ module.exports = function (db: ApiDb) {
   const findOne = async function (req: ApiRequest, res: ApiResponse) {
     try {
       const authService = getAuthService()
-      const data = await db.Setting.findOne({
-        where: {
-          option: req.params.option
-        },
-        raw: true
-      })
+      const data = settingsRepo.findByOption(req.params.option)
       const settings = await authService.loadSecuritySettings()
       const sanitized = authService.sanitizeSettingRow(
         data,
@@ -51,19 +49,7 @@ module.exports = function (db: ApiDb) {
     if (!req.body) return res.sendStatus(400)
 
     try {
-      const [setting, created] = await db.Setting.findOrCreate({
-        where: {
-          option: req.params.option
-        },
-        defaults: {
-          option: req.params.option,
-          value: req.body.value
-        },
-      })
-
-      if (!created) {
-        await setting.update({value: req.body.value})
-      }
+      settingsRepo.upsertByOption(req.params.option, req.body.value)
 
       if (req.params.option === 'phrase' || req.params.option === 'passwordProtection') {
         getAuthService().invalidateSettingsCache()

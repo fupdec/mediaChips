@@ -1,2 +1,6 @@
 export {media} from './media'
+export {meta} from './meta'
+export {pinnedMetas} from './pinnedMeta'
 export {settings} from './settings'
+export {tabs} from './tabs'
+export {mediaTypesInWatchedFolders, watchedFolders} from './watchedFolders'
