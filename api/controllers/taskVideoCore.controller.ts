@@ -13,6 +13,10 @@ const {
   getVideoImagesGenerationStatus,
   iterateVideoImagesGeneration,
 } = require('../services/videoImagesGeneration')
+const {
+  getImageThumbsGenerationStatus,
+  iterateImageThumbsGeneration,
+} = require('../services/imageThumbsGeneration')
 
 module.exports = function taskVideoCoreController(db: ApiDb) {
   const getDbPath = () => db.path!
@@ -131,6 +135,47 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
     }
   }
 
+  const imageThumbsGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
+    try {
+      const status = await getImageThumbsGenerationStatus(db, getDbPath())
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || 'Some error occurred while checking image thumbnails generation status.',
+      })
+    }
+  }
+
+  const streamImageThumbsGeneration = async (req: ApiRequest, res: ApiResponse) => {
+    const {getImageMetadata, createImageThumb} = require('../services/imageMedia')
+    const writeEvent = (event: Record<string, unknown>) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const shouldStop = createStreamAbortSignal(req, res)
+
+      for await (const event of iterateImageThumbsGeneration(db, getDbPath(), {getImageMetadata, createImageThumb}, {
+        shouldStop,
+        force: String(req.query.force || '').toLowerCase() === 'true',
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: apiErrorMessage(err) || 'Some error occurred while generating image thumbnails.',
+      })
+      res.end()
+    }
+  }
+
   const videoImagesGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
       const status = await getVideoImagesGenerationStatus(db, getDbPath())
@@ -177,6 +222,8 @@ module.exports = function taskVideoCoreController(db: ApiDb) {
     getConfig,
     getMachineId,
     createTimeline,
+    imageThumbsGenerationStatus,
+    streamImageThumbsGeneration,
     videoImagesGenerationStatus,
     streamVideoImagesGeneration,
   }

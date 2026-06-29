@@ -27,11 +27,8 @@
       </v-btn>
     </div>
 
-    <v-spacer class="my-6"></v-spacer>
-
-    <div v-if="!meta.length" class="layout-img">
-      <v-img src="/images/no-data.svg" max-height="40vh" class="my-4" contain></v-img>
-      <div class="text-medium-emphasis">{{ t('meta.dialogs.meta_missing_add_first') }}</div>
+    <div v-if="!meta.length" class="meta-empty text-medium-emphasis mt-3">
+      {{ t('meta.dialogs.meta_missing_add_first') }}
     </div>
 
     <div v-if="initiated && meta.length" class="d-flex align-center flex-wrap ga-4 mb-2">
@@ -83,9 +80,9 @@
       </v-chip-group>
     </v-card>
 
-    <div v-if="meta.length && isSearchEmpty" class="layout-img">
-      <v-img src="/images/filters/filters-no-results-meta.svg" max-height="40vh" class="my-4" contain></v-img>
-      <div class="text-medium-emphasis">{{ t('meta.dialogs.no_meta_found') }}</div>
+    <div v-if="meta.length && isSearchEmpty" class="meta-empty text-medium-emphasis mt-4">
+      <v-img src="/images/filters/filters-no-results-meta.svg" max-height="120" class="mb-2" contain></v-img>
+      <div>{{ t('meta.dialogs.no_meta_found') }}</div>
     </div>
 
     <MetaManager
@@ -193,12 +190,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.layout-img {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
+.meta-empty {
   text-align: center;
 }
 

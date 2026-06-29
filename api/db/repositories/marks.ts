@@ -57,6 +57,11 @@ export function createMarksRepository(db: DrizzleClient) {
       return db.select({id: marks.id}).from(marks).all()
     },
 
+    countAll(): number {
+      const row = db.select({count: count()}).from(marks).get()
+      return Number(row?.count ?? 0)
+    },
+
     findNextWithMediaAfterId(lastId: number) {
       const row = db.select()
         .from(marks)

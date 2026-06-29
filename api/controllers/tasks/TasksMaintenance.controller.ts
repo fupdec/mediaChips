@@ -11,14 +11,19 @@ const {
   getMissingMediaStatus,
   iterateMissingMediaSearch,
 } = require('../../services/missingMediaFinder')
+const {
+  getImageThumbsGenerationStatus,
+  iterateImageThumbsGeneration,
+} = require('../../services/imageThumbsGeneration')
 const {createMediaRepository} = require('../../db/repositories/media')
 
 module.exports = function createTasksMaintenanceController(shared: TaskControllerShared) {
   const {
     db,
-    dbPath,
+    getDbPath,
     createStreamAbortSignal,
     getVideoImagesGeneration,
+    getImageMedia,
   } = shared
 
   const mediaRepo = createMediaRepository(db.drizzle)
@@ -34,9 +39,49 @@ module.exports = function createTasksMaintenanceController(shared: TaskControlle
     }
   }
 
+  const imageThumbsGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
+    try {
+      const status = await getImageThumbsGenerationStatus(db, getDbPath())
+      res.status(201).send(status)
+    } catch (err) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || 'Some error occurred while checking image thumbnails generation status.',
+      })
+    }
+  }
+
+  const streamImageThumbsGeneration = async (req: ApiRequest, res: ApiResponse) => {
+    const writeEvent = (event: Record<string, unknown>) => {
+      res.write(`${JSON.stringify(event)}\n`)
+    }
+
+    try {
+      res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('X-Accel-Buffering', 'no')
+
+      const shouldStop = createStreamAbortSignal(req, res)
+
+      for await (const event of iterateImageThumbsGeneration(db, getDbPath(), getImageMedia(), {
+        shouldStop,
+        force: String(req.query.force || '').toLowerCase() === 'true',
+      })) {
+        writeEvent(event)
+      }
+
+      res.end()
+    } catch (err) {
+      writeEvent({
+        type: 'error',
+        message: apiErrorMessage(err) || 'Some error occurred while generating image thumbnails.',
+      })
+      res.end()
+    }
+  }
+
   const videoImagesGenerationStatus = async (req: ApiRequest, res: ApiResponse) => {
     try {
-      const status = await getVideoImagesGeneration().getVideoImagesGenerationStatus(db, dbPath)
+      const status = await getVideoImagesGeneration().getVideoImagesGenerationStatus(db, getDbPath())
       res.status(201).send(status)
     } catch (err) {
       res.status(500).send({
@@ -58,7 +103,7 @@ module.exports = function createTasksMaintenanceController(shared: TaskControlle
 
       const shouldStop = createStreamAbortSignal(req, res)
 
-      for await (const event of getVideoImagesGeneration().iterateVideoImagesGeneration(db, dbPath, imageType, {
+      for await (const event of getVideoImagesGeneration().iterateVideoImagesGeneration(db, getDbPath(), imageType, {
         shouldStop,
         force: String(req.query.force || '').toLowerCase() === 'true',
       })) {
@@ -183,6 +228,8 @@ module.exports = function createTasksMaintenanceController(shared: TaskControlle
   return {
     contentHashBackfillStatus,
     streamContentHashBackfill,
+    imageThumbsGenerationStatus,
+    streamImageThumbsGeneration,
     videoImagesGenerationStatus,
     streamVideoImagesGeneration,
     missingMediaStatus,

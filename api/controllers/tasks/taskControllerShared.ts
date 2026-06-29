@@ -121,6 +121,9 @@ module.exports = function createTaskControllerShared(db: ApiDb) {
   return {
     db,
     getDbPath,
+    get dbPath() {
+      return getDbPath()
+    },
     withTimeout,
     createStreamAbortSignal,
     getParserSettings,

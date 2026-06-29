@@ -68,8 +68,72 @@ export function repairSchemaColumns(sqlite: Database.Database): string[] {
   return repaired
 }
 
+const MISSING_TABLE_DDL: Record<string, string> = {
+  imageMetadata: `CREATE TABLE "imageMetadata" (
+    "mediaId" integer PRIMARY KEY NOT NULL,
+    "width" integer DEFAULT 0,
+    "height" integer DEFAULT 0,
+    "orientation" integer DEFAULT 1
+  )`,
+  pinnedMetas: `CREATE TABLE "pinnedMetas" (
+    "metaId" integer NOT NULL,
+    "pinnedMetaId" integer NOT NULL,
+    "scraper" text,
+    "show" integer DEFAULT true,
+    "order" integer,
+    PRIMARY KEY("metaId", "pinnedMetaId")
+  )`,
+}
+
+function createTableIfMissing(sqlite: Database.Database, tableName: string): boolean {
+  if (hasTable(sqlite, tableName)) {
+    return false
+  }
+
+  const ddl = MISSING_TABLE_DDL[tableName]
+  if (!ddl) {
+    return false
+  }
+
+  sqlite.exec(ddl)
+  return true
+}
+
+function migrateLegacyPinnedMetaTable(sqlite: Database.Database): boolean {
+  if (!hasTable(sqlite, 'pinnedMeta') || !hasTable(sqlite, 'pinnedMetas')) {
+    return false
+  }
+
+  const result = sqlite.prepare(`
+    INSERT OR IGNORE INTO pinnedMetas (metaId, pinnedMetaId, scraper, show, "order")
+    SELECT metaId, pinnedMetaId, scraper, show, "order"
+    FROM pinnedMeta
+    WHERE metaId IS NOT NULL AND pinnedMetaId IS NOT NULL
+  `).run()
+
+  return Number(result.changes) > 0
+}
+
+export function repairMissingTables(sqlite: Database.Database): string[] {
+  const repaired: string[] = []
+
+  for (const tableName of Object.keys(MISSING_TABLE_DDL)) {
+    if (createTableIfMissing(sqlite, tableName)) {
+      repaired.push(tableName)
+    }
+  }
+
+  if (migrateLegacyPinnedMetaTable(sqlite)) {
+    repaired.push('pinnedMeta→pinnedMetas')
+  }
+
+  return repaired
+}
+
 module.exports = {
   repairSchemaColumns,
+  repairMissingTables,
   hasColumn,
   addColumnIfMissing,
+  hasTable,
 }

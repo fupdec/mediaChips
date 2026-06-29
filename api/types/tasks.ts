@@ -83,6 +83,7 @@ export interface FfprobeInfo {
 
 export interface TaskControllerShared {
   db: ApiDb
+  getDbPath: () => string | undefined
   dbPath: string | undefined
   withTimeout: (promise: Promise<unknown>, ms: number, label: string) => Promise<unknown>
   createStreamAbortSignal: (req: ApiRequest, res: ApiResponse) => () => boolean

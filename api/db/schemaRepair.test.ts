@@ -3,7 +3,7 @@ import Database from 'better-sqlite3'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import { repairSchemaColumns } from './schemaRepair'
+import { repairSchemaColumns, repairMissingTables } from './schemaRepair'
 
 describe('schemaRepair', () => {
   let tempDir: string
@@ -36,5 +36,28 @@ describe('schemaRepair', () => {
     expect(repaired).toContain('meta.views')
     const columns = sqlite.pragma('table_info(meta)') as Array<{name: string}>
     expect(columns.some((column) => column.name === 'views')).toBe(true)
+  })
+
+  it('creates imageMetadata and migrates legacy pinnedMeta into pinnedMetas', () => {
+    sqlite.exec(`
+      CREATE TABLE pinnedMeta (
+        scraper text,
+        show integer DEFAULT 1,
+        "order" integer,
+        metaId integer,
+        pinnedMetaId integer
+      );
+      INSERT INTO pinnedMeta (metaId, pinnedMetaId, scraper, show, "order")
+      VALUES (1, 2, 'test', 1, 3);
+    `)
+
+    const repaired = repairMissingTables(sqlite)
+
+    expect(repaired).toContain('imageMetadata')
+    expect(repaired).toContain('pinnedMetas')
+    expect(repaired).toContain('pinnedMeta→pinnedMetas')
+
+    const pinnedRows = sqlite.prepare('SELECT metaId, pinnedMetaId, scraper FROM pinnedMetas').all()
+    expect(pinnedRows).toEqual([{metaId: 1, pinnedMetaId: 2, scraper: 'test'}])
   })
 })
