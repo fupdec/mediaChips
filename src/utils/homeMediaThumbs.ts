@@ -1,5 +1,5 @@
-import {typedApi} from '@/services/typedApi'
 import { getMediaDeleteAssetFolder } from '@/utils/mediaType'
+import { loadMediaThumbUrl } from '@/utils/mediaThumbLoader'
 import type { MediaType } from '@/types/media'
 
 interface HomeMediaItem {
@@ -16,32 +16,12 @@ function getThumbMediaType(mediaTypes: MediaType[], mediaTypeId: number | undefi
 export async function loadHomeMediaThumbs(
   items: HomeMediaItem[],
   mediaTypes: MediaType[],
+  mediaPath: string,
 ): Promise<void> {
-  if (!items?.length) return
+  if (!items?.length || !mediaPath) return
 
-  const idsByFolder = new Map<string, number[]>()
-
-  for (const item of items) {
+  await Promise.all(items.map(async (item) => {
     const folder = getThumbMediaType(mediaTypes, item.mediaTypeId)
-    if (!idsByFolder.has(folder)) idsByFolder.set(folder, [])
-    idsByFolder.get(folder)!.push(item.id)
-  }
-
-  const thumbsById: Record<number, string> = {}
-
-  await Promise.all([...idsByFolder.entries()].map(async ([mediaType, ids]) => {
-    try {
-      const response = await typedApi.postMediaThumbs({
-        ids,
-        mediaType,
-      })
-      Object.assign(thumbsById, response.data?.thumbs || {})
-    } catch (error) {
-      console.log('Error loading home media thumbs:', error)
-    }
+    item.thumb = await loadMediaThumbUrl(mediaPath, folder, item.id)
   }))
-
-  for (const item of items) {
-    item.thumb = thumbsById[item.id] || null
-  }
 }

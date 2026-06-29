@@ -398,7 +398,7 @@ const loadDynamicPlaylistSummaries = async () => {
   }))
 
   try {
-    await loadPlaylistThumbs(dynamicPlaylists.value)
+    await loadPlaylistThumbs(dynamicPlaylists.value, { mediaPath: appStore.mediaPath })
   } catch (e) {
     console.log('Error loading dynamic playlist thumbs:', e)
   } finally {
@@ -424,7 +424,7 @@ const loadDynamicPlaylists = async () => {
           return
         }
         try {
-          await loadPlaylistThumbs(dynamicPlaylists.value)
+          await loadPlaylistThumbs(dynamicPlaylists.value, { mediaPath: appStore.mediaPath })
         } catch (thumbError) {
           console.log('Error loading dynamic playlist thumbs:', thumbError)
         } finally {
@@ -457,7 +457,7 @@ const getPlaylists = async () => {
     }))
     is_manual_loaded.value = true
     is_thumbs_loaded.value = true
-    loadPlaylistThumbs(playlists.value)
+    loadPlaylistThumbs(playlists.value, { mediaPath: appStore.mediaPath })
   } catch (e) {
     console.log('Error loading playlists:', e)
     playlists.value = []

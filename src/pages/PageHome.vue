@@ -155,7 +155,7 @@ async function loadHomeMedia() {
       ...topViews.value,
     ]
 
-    await loadHomeMediaThumbs(allItems, store.mediaTypes)
+    await loadHomeMediaThumbs(allItems, store.mediaTypes, store.mediaPath)
   } catch (error) {
     console.error(error)
   }

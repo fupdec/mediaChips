@@ -289,11 +289,13 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     await getMachineId()
     await getFolders()
 
-    await loadList('mediaTypes')
-    await loadList('tags')
-    await loadList('meta')
-    await loadList('tabs')
-    await loadList('playlists')
+    await Promise.all([
+      loadList('mediaTypes'),
+      loadList('tags'),
+      loadList('meta'),
+      loadList('tabs'),
+      loadList('playlists'),
+    ])
 
     bindMainAppEventBus()
 

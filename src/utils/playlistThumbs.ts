@@ -1,4 +1,4 @@
-import {typedApi} from '@/services/typedApi'
+import { loadMediaThumbUrls } from '@/utils/mediaThumbLoader'
 
 interface PlaylistWithThumbs {
   previewIds?: Array<number | string>
@@ -7,7 +7,7 @@ interface PlaylistWithThumbs {
 
 export async function loadPlaylistThumbs(
   playlists: PlaylistWithThumbs[],
-  { mediaType = 'videos' }: { mediaType?: string } = {},
+  { mediaType = 'videos', mediaPath = '' }: { mediaType?: string; mediaPath?: string } = {},
 ): Promise<void> {
   const previewIds = [...new Set(
     playlists.flatMap((playlist) => (playlist.previewIds || []).slice(0, 4)),
@@ -20,12 +20,15 @@ export async function loadPlaylistThumbs(
     return
   }
 
+  if (!mediaPath) {
+    for (const playlist of playlists) {
+      playlist.thumbs = []
+    }
+    return
+  }
+
   try {
-    const response = await typedApi.postMediaThumbs({
-      ids: previewIds,
-      mediaType,
-    }, true)
-    const thumbsById = response.data?.thumbs || {}
+    const thumbsById = await loadMediaThumbUrls(mediaPath, mediaType, previewIds)
 
     for (const playlist of playlists) {
       playlist.thumbs = (playlist.previewIds || [])
