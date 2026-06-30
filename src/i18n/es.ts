@@ -424,6 +424,9 @@ const es = {
     smart_playlist_filters: 'Filtros guardados',
     smart_playlist_filters_hint: 'Los chips rellenos son condiciones activas que definen esta lista inteligente. Los contorneados están guardados pero inactivos.',
     delete_smart_playlist_confirm: '¿Eliminar esta lista inteligente?\nEl filtro guardado se eliminará.',
+    no_smart_playlists_hint_before: 'Aún no hay listas inteligentes. Puede crearlas guardando filtros en la página de ',
+    no_smart_playlists_video_page: 'archivos de video',
+    no_smart_playlists_hint_after: ' — abra el panel de filtros, defina las condiciones y haga clic en Guardar.',
   },
   markers: {
     no_markers_add_first: 'No hay marcadores. Agréguelos primero en el reproductor de la aplicación.',
@@ -1261,6 +1264,7 @@ const es = {
       open_external: 'Abrir en aplicación externa',
       close: 'Cerrar visor',
       loading_full: 'Cargando resolución completa…',
+      loading_more: 'Cargando más imágenes…',
       rotate_left: 'Girar a la izquierda',
       rotate_right: 'Girar a la derecha',
       flip_horizontal: 'Voltear horizontalmente',

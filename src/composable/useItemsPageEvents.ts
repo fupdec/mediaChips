@@ -40,6 +40,7 @@ export function useItemsPageEvents({
   disposeListFetching,
   maybeLoadMoreIfNearBottom,
   refreshScrollRoot,
+  loadNextInfinitePage,
 }: UseItemsPageEventsOptions) {
   const itemsStore = useItemsStore()
   const appStore = useAppStore()
@@ -186,6 +187,17 @@ export function useItemsPageEvents({
     }
   }
 
+  const loadMoreForViewer = async (): Promise<boolean> => {
+    if (!is_infinite_scroll.value) return false
+    if (props.items_type !== 'media') return false
+    if (!isImageMediaType(mediaType.value)) return false
+    if (ITEMS.value.itemsOnPage.length >= ITEMS.value.totalFiltered) return false
+
+    const previousCount = ITEMS.value.itemsOnPage.length
+    await loadNextInfinitePage()
+    return ITEMS.value.itemsOnPage.length > previousCount
+  }
+
   const eventHandlers: Array<[string, Handler]> = [
     ['getItemsFromDb', handleGetItemsFromDb],
     ['setItemsFilters', handleSetItemsFilters],
@@ -232,9 +244,11 @@ export function useItemsPageEvents({
     }
 
     bindMediaInfiniteScroll()
+    itemsStore.registerViewerLoadMoreHandler(loadMoreForViewer)
   })
 
   onBeforeUnmount(() => {
+    itemsStore.registerViewerLoadMoreHandler(null)
     pageInitialized.value = false
     disposeListFetching()
     unbindMediaInfiniteScroll()

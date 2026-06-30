@@ -528,5 +528,6 @@ export function useItemsPage({
     unbindMediaInfiniteScroll,
     maybeLoadMoreIfNearBottom,
     refreshScrollRoot,
+    loadNextInfinitePage,
   }
 }

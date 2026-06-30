@@ -1,37 +1,81 @@
 .dialog-image-viewer {
+  margin: 24px;
+  width: min(1800px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
+}
+
+.v-dialog--fullscreen .dialog-image-viewer {
   margin: 0;
-  max-width: 100vw;
-  max-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .image-viewer {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 90vh;
+  height: min(90vh, calc(100vh - 48px));
   background: #111;
   color: #fff;
   border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
 
   &.fullscreen {
     height: 100vh;
     border-radius: 0;
+    box-shadow: none;
+  }
+
+  &__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 4;
+    opacity: 0.92;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
   &__toolbar {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 12px 56px 12px 16px;
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(10px);
     z-index: 2;
+    flex-wrap: wrap;
+  }
+
+  &__toolbar-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  &__group {
+    flex-wrap: nowrap;
+  }
+
+  &__zoom-label {
+    min-width: 58px;
+    letter-spacing: 0.02em;
+    font-size: 0.82rem;
+    font-weight: 600;
   }
 
   &__title {
     min-width: 0;
-    max-width: 40%;
+    max-width: min(40%, 420px);
   }
 
   &__name {
@@ -55,12 +99,53 @@
     justify-content: center;
     overflow: hidden;
     cursor: grab;
-    background: #000;
+    background:
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.04) 0, transparent 55%),
+      #000;
     user-select: none;
 
     &:active {
       cursor: grabbing;
     }
+  }
+
+  &__nav {
+    position: absolute;
+    top: 50%;
+    z-index: 3;
+    transform: translateY(-50%);
+    opacity: 0.75;
+    background: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &--prev {
+      left: 12px;
+    }
+
+    &--next {
+      right: 12px;
+    }
+  }
+
+  &__loading-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
   }
 
   &__image {
@@ -70,6 +155,41 @@
     transform-origin: center center;
     will-change: transform;
     pointer-events: none;
+    transition: opacity 0.2s ease;
+
+    &--loading {
+      opacity: 0.88;
+    }
+  }
+
+  &__dock {
+    position: absolute;
+    left: 50%;
+    bottom: 56px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transform: translateX(-50%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  &__dock-zoom {
+    min-width: 52px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  &__dock-divider {
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
+    background: rgba(255, 255, 255, 0.18);
   }
 
   &__error {
@@ -90,4 +210,30 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  &__playlist-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+}
+
+.image-viewer-fade-enter-active,
+.image-viewer-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.image-viewer-fade-enter-from,
+.image-viewer-fade-leave-to {
+  opacity: 0;
 }

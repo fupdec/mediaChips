@@ -78,6 +78,7 @@ export interface UseItemsPageEventsOptions {
   disposeListFetching: () => void
   maybeLoadMoreIfNearBottom: () => void
   refreshScrollRoot: () => Element | null
+  loadNextInfinitePage: () => Promise<void>
 }
 
 export interface InfiniteIntersectOptions {

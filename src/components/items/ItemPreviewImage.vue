@@ -1,6 +1,7 @@
 <template>
   <div
     ref="containerRef"
+    class="image-preview-wrap"
     :class="{ 'no-file': !isFileExists }"
   >
     <v-responsive
@@ -15,17 +16,16 @@
         :aspect-ratio="aspectRatio"
         class="thumb"
         contain
+        @load="onThumbLoad"
       />
-
-      <div v-if="resolutionLabel" class="resolution">
-        <div :class="quality.toLowerCase()" class="text">
-          {{ quality }}
-        </div>
-        <div class="value">
-          {{ resolutionLabel }}
-        </div>
-      </div>
     </v-responsive>
+
+    <div
+      v-if="showResolution"
+      class="image-resolution"
+    >
+      {{ resolutionLabel }}
+    </div>
   </div>
 </template>
 
@@ -36,10 +36,6 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {loadImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
 import {getMediaAspectRatio} from '@/utils/gridLayout'
-import {
-  getReadableVideoHeight,
-  getReadableVideoQuality,
-} from '@/services/formatUtils'
 import type {MediaItem} from '@/types/stores'
 
 const props = defineProps<{
@@ -52,6 +48,8 @@ const itemsStore = useItemsStore()
 
 const containerRef = ref<HTMLElement | null>(null)
 const thumb = ref<string | null>(null)
+const detectedWidth = ref(0)
+const detectedHeight = ref(0)
 const isMounted = ref(false)
 let thumbObjectUrl: string | null = null
 let thumbObserver: IntersectionObserver | null = null
@@ -79,23 +77,53 @@ const aspectRatio = computed(() =>
   getMediaAspectRatio(props.media)
 )
 
-const quality = computed(() =>
-  getReadableVideoQuality(
-    Number(props.media?.width) || 0,
-    Number(props.media?.height) || 0,
-  )
+const mediaWidth = computed(() =>
+  Number(props.media?.width) || detectedWidth.value || 0
 )
 
-const resolutionLabel = computed(() => {
-  const width = Number(props.media?.width) || 0
-  const height = Number(props.media?.height) || 0
-  if (!width || !height) return ''
-  return getReadableVideoHeight(width, height)
-})
+const mediaHeight = computed(() =>
+  Number(props.media?.height) || detectedHeight.value || 0
+)
+
+const resolutionLabel = computed(() =>
+  `${mediaWidth.value}x${mediaHeight.value}`
+)
+
+const showResolution = computed(() =>
+  mediaWidth.value > 0 && mediaHeight.value > 0
+)
+
+const onThumbLoad = () => {
+  if (Number(props.media?.width) > 0 && Number(props.media?.height) > 0) return
+  if (thumb.value) probeImageDimensions(thumb.value)
+}
 
 const clearThumbUrl = () => {
   revokeImageObjectUrl(thumbObjectUrl)
   thumbObjectUrl = null
+}
+
+const probeImageDimensions = (src: string) => {
+  if (Number(props.media?.width) > 0 && Number(props.media?.height) > 0) return
+
+  const img = new Image()
+  img.onload = () => {
+    if (!isMounted.value) return
+    if (!img.naturalWidth || !img.naturalHeight) return
+    detectedWidth.value = img.naturalWidth
+    detectedHeight.value = img.naturalHeight
+  }
+  img.src = src
+}
+
+const ensureDimensions = async () => {
+  if (Number(props.media?.width) > 0 && Number(props.media?.height) > 0) return
+  if (!props.media?.id || !props.isFileExists) return
+
+  const src = await loadImageDisplayUrl(props.media, store.mediaPath)
+  if (src && !src.includes('unavailable.png')) {
+    probeImageDimensions(src)
+  }
 }
 
 const stopThumbObserver = () => {
@@ -124,6 +152,7 @@ const loadThumb = async ({cacheBust = false} = {}) => {
   if (src) {
     thumbObjectUrl = src.startsWith('blob:') ? src : null
     thumb.value = src
+    probeImageDimensions(src)
     return
   }
 
@@ -138,6 +167,7 @@ const loadThumb = async ({cacheBust = false} = {}) => {
       if (regenerated) {
         thumbObjectUrl = regenerated.startsWith('blob:') ? regenerated : null
         thumb.value = regenerated
+        probeImageDimensions(regenerated)
       }
     } catch (error) {
       console.error('Image thumbnail regeneration failed:', error)
@@ -171,6 +201,7 @@ const openViewer = () => {
 
 onMounted(() => {
   isMounted.value = true
+  void ensureDimensions()
   scheduleThumbLoad()
 })
 
@@ -184,6 +215,8 @@ watch(
   () => [props.media?.id, props.isFileExists],
   () => {
     thumb.value = null
+    detectedWidth.value = 0
+    detectedHeight.value = 0
     scheduleThumbLoad()
   }
 )

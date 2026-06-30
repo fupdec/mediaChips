@@ -424,6 +424,9 @@ const cn = {
     smart_playlist_filters: '已保存筛选',
     smart_playlist_filters_hint: '实心芯片为定义此智能播放列表的活动条件。轮廓芯片已保存但当前未启用。',
     delete_smart_playlist_confirm: '删除此智能播放列表？\n已保存的筛选将被移除。',
+    no_smart_playlists_hint_before: '尚无智能播放列表。您可以在',
+    no_smart_playlists_video_page: '视频文件页面',
+    no_smart_playlists_hint_after: '通过保存筛选来创建：打开筛选面板，设置条件后点击保存。',
   },
   markers: {
     no_markers_add_first: '没有标记。请先在应用播放器中添加。',
@@ -1261,6 +1264,7 @@ const cn = {
       open_external: '在外部应用中打开',
       close: '关闭查看器',
       loading_full: '正在加载完整分辨率…',
+      loading_more: '正在加载更多图片…',
       rotate_left: '向左旋转',
       rotate_right: '向右旋转',
       flip_horizontal: '水平翻转',

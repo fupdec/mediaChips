@@ -301,6 +301,7 @@ const {
   unbindMediaInfiniteScroll,
   maybeLoadMoreIfNearBottom,
   refreshScrollRoot,
+  loadNextInfinitePage,
 } = useItemsPage({
   props,
   mediaType,
@@ -334,6 +335,7 @@ const {pageInitialized} = useItemsPageEvents({
   disposeListFetching,
   maybeLoadMoreIfNearBottom,
   refreshScrollRoot,
+  loadNextInfinitePage,
 })
 
 // Компьютеды

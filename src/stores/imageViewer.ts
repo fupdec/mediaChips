@@ -13,7 +13,11 @@ export const useImageViewerStore = defineStore('imageViewer', {
     scale: 1,
     translateX: 0,
     translateY: 0,
+    rotation: 0,
+    flipH: false,
+    flipY: false,
     loading: false,
+    loadingPlaylist: false,
     src: null as string | null,
     isFileExists: true,
   }),
@@ -37,9 +41,21 @@ export const useImageViewerStore = defineStore('imageViewer', {
     hasNext(state): boolean {
       return state.index < state.imageIds.length - 1
     },
+    hasNextOrMore(state): boolean {
+      if (state.index < state.imageIds.length - 1) return true
+
+      const itemsStore = useItemsStore()
+      return itemsStore.canLoadMoreForViewer
+    },
     counter(state): string {
       if (!state.imageIds.length) return ''
-      return `${state.index + 1} / ${state.imageIds.length}`
+
+      const itemsStore = useItemsStore()
+      const total = itemsStore.canLoadMoreForViewer
+        ? itemsStore.totalFiltered
+        : state.imageIds.length
+
+      return `${state.index + 1} / ${total}`
     },
   },
 
@@ -79,6 +95,7 @@ export const useImageViewerStore = defineStore('imageViewer', {
       this.previewSrc = null
       this.index = 0
       this.loading = false
+      this.loadingPlaylist = false
       this.src = null
       this.isFileExists = true
       this.resetTransform()
@@ -88,6 +105,25 @@ export const useImageViewerStore = defineStore('imageViewer', {
       this.scale = 1
       this.translateX = 0
       this.translateY = 0
+      this.rotation = 0
+      this.flipH = false
+      this.flipY = false
+    },
+
+    rotateLeft() {
+      this.rotation = (this.rotation - 90 + 360) % 360
+    },
+
+    rotateRight() {
+      this.rotation = (this.rotation + 90) % 360
+    },
+
+    toggleFlipHorizontal() {
+      this.flipH = !this.flipH
+    },
+
+    toggleFlipVertical() {
+      this.flipY = !this.flipY
     },
 
     setSrc(src: string | null) {
@@ -96,6 +132,10 @@ export const useImageViewerStore = defineStore('imageViewer', {
 
     setLoading(loading: boolean) {
       this.loading = loading
+    },
+
+    setLoadingPlaylist(loading: boolean) {
+      this.loadingPlaylist = loading
     },
 
     setFileExists(exists: boolean) {

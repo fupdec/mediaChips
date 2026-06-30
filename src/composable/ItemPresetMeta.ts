@@ -127,6 +127,10 @@ export function usePresetMeta(props: PresetMetaProps) {
         return matchesMediaTypeFilter(param, currentMediaType)
       })
     }).filter((i) => {
+      if (i.name === 'resolution') {
+        return Number(item.width) > 0 && Number(item.height) > 0
+      }
+      if (i.value != null && i.value !== '') return true
       const value = item[i.name]
       return value !== '' && value !== null && value !== undefined
     })

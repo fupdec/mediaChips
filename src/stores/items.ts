@@ -71,6 +71,7 @@ function createItemsStoreState() {
     find_duplicates: false,
     thumbRefreshKeys: {} as Record<number, number>,
     thumbRegenerateKeys: {} as Record<number, number>,
+    viewerLoadMoreHandler: null as (() => Promise<boolean>) | null,
   }
 }
 
@@ -105,6 +106,13 @@ export const useItemsStore = defineStore('items', {
     // Проверить, выбраны ли все отфильтрованные элементы
     isAllFilteredSelected: (state) => {
       return state.totalFiltered > 0 && state.selection.length === state.totalFiltered
+    },
+
+    canLoadMoreForViewer(state): boolean {
+      return state.limit === 101
+        && state.itemsOnPage.length > 0
+        && state.itemsOnPage.length < state.totalFiltered
+        && state.viewerLoadMoreHandler != null
     },
 
     // Получить активные фильтры
@@ -206,6 +214,15 @@ export const useItemsStore = defineStore('items', {
       }
 
       return ids.length ? ids : [image.id]
+    },
+
+    registerViewerLoadMoreHandler(handler: (() => Promise<boolean>) | null) {
+      this.viewerLoadMoreHandler = handler
+    },
+
+    async loadMoreForViewer(): Promise<boolean> {
+      if (!this.viewerLoadMoreHandler) return false
+      return this.viewerLoadMoreHandler()
     },
 
     resolveMediaById(id: number): MediaItem | null {

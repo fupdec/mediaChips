@@ -424,6 +424,9 @@ const en = {
     smart_playlist_filters: 'Saved filters',
     smart_playlist_filters_hint: 'Filled chips are active conditions that define this smart playlist. Outlined chips are saved but currently inactive.',
     delete_smart_playlist_confirm: 'Delete this smart playlist?\nThe saved filter will be removed.',
+    no_smart_playlists_hint_before: 'No smart playlists yet. Create them by saving filters on the ',
+    no_smart_playlists_video_page: 'video files page',
+    no_smart_playlists_hint_after: ' — open the filter panel, set your conditions, and click Save.',
   },
   markers: {
     no_markers_add_first: 'There are no markers. Please add them first in application player.',
@@ -1261,6 +1264,7 @@ const en = {
       open_external: 'Open in external app',
       close: 'Close viewer',
       loading_full: 'Loading full resolution…',
+      loading_more: 'Loading more images…',
       rotate_left: 'Rotate left',
       rotate_right: 'Rotate right',
       flip_horizontal: 'Flip horizontally',
