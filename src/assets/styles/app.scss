@@ -433,14 +433,30 @@ header {
   .v-chip {
     margin: 2px !important;
   }
+  &__header {
+    padding: 6px 0 6px 6px;
+    min-height: 40px;
+  }
+  &__title_block {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  &__actions {
+    margin-left: 8px;
+    gap: 0;
+  }
+  &__body {
+    padding: 0 6px 6px;
+  }
   &__title {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 160px;
+    min-width: 0;
+    flex: 1 1 auto;
   }
   &__cond {
-    flex: 0 auto;
+    flex: 0 0 auto;
     .v-select__selections {
       justify-content: center;
       input {
@@ -453,6 +469,22 @@ header {
     }
     .v-icon {
       font-size: 14px;
+    }
+  }
+  &__switch {
+    flex-shrink: 0;
+    margin-inline: 10px;
+
+    &.v-input {
+      flex: none;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    :deep(.v-selection-control) {
+      min-height: auto;
     }
   }
 }

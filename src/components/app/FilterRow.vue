@@ -11,37 +11,37 @@
     ></v-btn>
 
     <v-card
-      class="mb-4 pa-1 rounded-xl filter"
+      class="mb-4 rounded-xl filter"
       :class="{ active: active, removed: removed, disabled: isDisabled }"
       :disabled="isDisabled"
       :variant="filter.active ? 'text' : 'plain'"
     >
-      <div class="d-flex align-center justify-space-between">
-        <v-btn
-          @click="toggleRemoved"
-          color="error"
-          class="mr-2"
-          icon
-          size="small"
-          :title="removed ? t('common.restore') : t('common.remove')"
-          :variant="removed?'text':'plain'"
-        >
-          <v-icon v-if="removed"
-            size="20"
-            color="error">mdi-close-circle
-          </v-icon>
-          <v-icon v-else
-            size="20"
-            color="grey">mdi-close
-          </v-icon>
-        </v-btn>
+      <div class="d-flex align-center justify-space-between filter__header">
+        <div class="d-flex align-center min-width-0 filter__title_block">
+          <v-btn
+            @click="toggleRemoved"
+            color="error"
+            class="mr-2 flex-shrink-0"
+            icon
+            size="small"
+            :title="removed ? t('common.restore') : t('common.remove')"
+            :variant="removed?'text':'plain'"
+          >
+            <v-icon v-if="removed"
+              size="20"
+              color="error">mdi-close-circle
+            </v-icon>
+            <v-icon v-else
+              size="20"
+              color="grey">mdi-close
+            </v-icon>
+          </v-btn>
 
-        <div class="d-flex align-center filter__title_block">
-          <v-icon size="small"
-            start>mdi-{{ icon }}
-          </v-icon>
-          <div class="text-body-2 filter__title">{{ title }}</div>
+          <v-icon size="small" class="flex-shrink-0">mdi-{{ icon }}</v-icon>
+          <div class="text-body-2 filter__title ml-1">{{ title }}</div>
+        </div>
 
+        <div class="d-flex align-center flex-shrink-0 filter__actions">
           <v-select
             v-if="filter.active"
             @update:model-value="setCondition"
@@ -49,7 +49,7 @@
             :items="getListCond(filter.type)"
             :rules="[(v) => !!v || t('validation.condition_required')]"
             item-value="cond"
-            class="filter__cond ml-2 mt-0 pt-0"
+            class="filter__cond mt-0 pt-0"
             :title="getConditionTitle(filter.type, condition)"
             hide-details
             density="compact"
@@ -75,26 +75,21 @@
               </v-list-item>
             </template>
           </v-select>
-        </div>
 
-        <v-btn @click="toggleActivation"
-          :variant="active?'text':'plain'"
-          :title="t('actions.activate')"
-          color="success"
-          class="ml-2"
-          icon
-          size="small">
-          <v-icon v-if="active"
-            size="20">mdi-checkbox-marked-circle
-          </v-icon>
-          <v-icon v-else
-            size="20"
-            color="grey">mdi-circle-outline
-          </v-icon>
-        </v-btn>
+          <v-switch
+            :model-value="active"
+            @update:model-value="setActiveValue"
+            :disabled="isDisabled"
+            color="success"
+            density="compact"
+            hide-details
+            inset
+            class="filter__switch"
+          />
+        </div>
       </div>
 
-      <div v-if="active">
+      <div v-if="active" class="filter__body">
         <v-text-field
           v-if="is_value_required && (filter.type === 'string' || filter.type === null)"
           v-model="filterValue"
@@ -349,15 +344,15 @@ const validate = () => {
   }
 }
 
-const toggleActivation = async () => {
-  if (active.value == null) active.value = false
-  active.value = !active.value
-  emit('setActive', active.value)
+const setActiveValue = async (value: boolean | null) => {
+  const next = value ?? false
+  active.value = next
+  emit('setActive', next)
 
   try {
     if (modelFilter.value.id != null) {
       await typedApi.updateFilterRow(modelFilter.value.id, {
-        active: active.value,
+        active: next,
       })
     }
   } catch (error) {

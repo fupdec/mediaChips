@@ -663,7 +663,8 @@ watch(currentMediaType, () => {
 .filters-list {
   overflow-y: auto;
   min-height: 0;
-  padding: 0 8px;
+  padding: 0 12px 0 8px;
+  scrollbar-gutter: stable;
   .v-form:last-of-type {
     .filter {
       margin-bottom: 0 !important;
