@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="rootRef">
     <!-- GRID VIEW -->
     <div v-if="Number(ITEMS.view) === 1">
       <v-img
@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, onMounted, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import CountryFlag from 'vue-country-flag-next'
 import { parseCountries, getCountryCode } from '@/utils/country'
@@ -74,6 +74,12 @@ import { useItemsStore } from '@/stores/items'
 import {getDefaultMediaTypeId} from '@/utils/mediaType'
 import {getLocalImage} from '@/services/fileService'
 import {hideHoverImage} from '@/services/hoverService'
+import { useLazyInView } from '@/composable/useLazyInView'
+import {
+  getCachedThumb,
+  setCachedThumb,
+  tagThumbKey,
+} from '@/utils/thumbDisplayCache'
 import type {Meta, Tag} from '@/types/stores'
 
 type TagImageType = 'main' | 'alt' | 'custom1' | 'custom2' | 'avatar'
@@ -89,6 +95,8 @@ const props = withDefaults(defineProps<{
 const appStore = useAppStore()
 const itemsStore = useItemsStore()
 const router = useRouter()
+const rootRef = ref<HTMLElement | null>(null)
+const { wasInView } = useLazyInView(rootRef, { rootMargin: '320px 0px' })
 
 const images = reactive<Record<TagImageType, string | null>>({
   main: null,
@@ -108,29 +116,51 @@ const avatar = computed(() =>
   images.avatar || images.main
 )
 
-const getImages = async () => {
-  let imageTypes: TagImageType[] = ['main', 'alt', 'custom1', 'custom2']
-
+function getImageTypes(): TagImageType[] {
   if (Number(ITEMS.value.view) === 2) {
-    imageTypes = ['avatar', 'main']
+    return ['avatar', 'main']
   }
+  return ['main', 'alt', 'custom1', 'custom2']
+}
 
-  for (const type of imageTypes) {
+const applyCachedImages = () => {
+  for (const type of getImageTypes()) {
+    const cached = getCachedThumb(tagThumbKey(props.meta.id, props.tag.id, type))
+    if (cached) {
+      images[type] = cached.includes('unavailable.png') ? null : cached
+    }
+  }
+}
+
+const getImages = async () => {
+  const imageTypes = getImageTypes()
+
+  await Promise.all(imageTypes.map(async (type) => {
+    if (images[type]) return
+
+    const cacheKey = tagThumbKey(props.meta.id, props.tag.id, type)
+    const cached = getCachedThumb(cacheKey)
+    if (cached) {
+      images[type] = cached.includes('unavailable.png') ? null : cached
+      return
+    }
+
     const imgPath = path.join(
       appStore.dbPath,
       'meta',
       String(props.meta.id),
-      `${props.tag.id}_${type}.jpg`
+      `${props.tag.id}_${type}.jpg`,
     )
 
     const src = await getLocalImage(imgPath)
+    setCachedThumb(cacheKey, src)
 
     if (type !== 'main' && src.includes('unavailable.png')) {
       images[type] = null
     } else {
       images[type] = src
     }
-  }
+  }))
 }
 
 const openTagPage = () => {
@@ -147,14 +177,21 @@ const openTagPage = () => {
 
 const getFlag = (name: string) => getCountryCode(name)
 
-onMounted(getImages)
+watch(wasInView, (visible) => {
+  if (!visible) return
+  applyCachedImages()
+  void getImages()
+}, { immediate: true })
 
 watch(
   () => props.upd,
   (arr) => {
     if (arr.includes(props.tag.id)) {
-      getImages()
+      for (const type of getImageTypes()) {
+        images[type] = null
+      }
+      void getImages()
     }
-  }
+  },
 )
 </script>

@@ -272,6 +272,12 @@ export interface MediaThumbsRequestPayload {
   mediaType?: string
 }
 
+export interface TagThumbsRequestPayload {
+  metaId: number
+  ids?: Array<number | string>
+  types?: string[]
+}
+
 export interface SqlQueryPayload {
   query: string
   mediaTypeId?: number

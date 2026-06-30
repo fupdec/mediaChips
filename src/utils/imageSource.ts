@@ -1,5 +1,6 @@
 import path from 'path-browserify'
 import { getLocalImage } from '@/services/fileService'
+import { getCachedThumb, mediaThumbKey } from '@/utils/thumbDisplayCache'
 
 interface MediaWithPath {
   id?: number
@@ -14,6 +15,11 @@ export async function loadImageDisplayUrl(
   { preferFull = false, cacheBust = false } = {},
 ): Promise<string | null> {
   if (!media?.id) return null
+
+  if (!cacheBust) {
+    const cached = getCachedThumb(mediaThumbKey('images', media.id))
+    if (!isUnavailable(cached)) return cached ?? null
+  }
 
   const thumbPath = path.join(mediaPath, 'images/thumbs', `${media.id}.jpg`)
 

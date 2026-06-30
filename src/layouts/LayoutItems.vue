@@ -58,29 +58,14 @@
       @jump="jumpToPage"
     />
 
-    <ItemsVirtualGrid
-      v-if="pageInitialized && ITEMS.itemsOnPage.length && useVirtualGrid"
-      :items="ITEMS.itemsOnPage"
-      :items-type="listItemType"
-      :meta="meta"
-      :media-type="mediaType"
-      :reg="reg"
-      :size="ITEMS.size"
-      :view="ITEMS.view"
-      :gap-size="SETTINGS.gapSize"
-      :grid-classes="itemsGridClasses"
-      :image-grid="isImageGrid"
-      :wide-image="isWideImage"
-      :line-grid="isLineGrid"
-      :chips-grid="isChipsGrid"
-    />
-
     <div
-      v-else-if="pageInitialized && ITEMS.itemsOnPage.length"
+      v-if="pageInitialized && ITEMS.itemsOnPage.length"
       :class="itemsGridClasses"
+      class="items-page-grid"
     >
       <Item
         v-for="(i, x) in ITEMS.itemsOnPage"
+        v-memo="[i.id, i.rating, i.favorite, i.views, i.name, ITEMS.size, ITEMS.view, listItemType]"
         :key="String(i.id)"
         :type="listItemType"
         :item="i"
@@ -201,7 +186,6 @@ import type {Meta} from '@/types/stores'
 
 // Компоненты
 import Item from '@/components/items/Item.vue'
-import ItemsVirtualGrid from '@/components/items/ItemsVirtualGrid.vue'
 import Filters from '@/components/app/Filters.vue'
 import SavedFilters from '@/components/elements/FiltersSaved.vue'
 import FiltersChips from '@/components/elements/FiltersChips.vue'
@@ -216,7 +200,7 @@ import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {isVideoMediaType, isImageMediaType} from '@/utils/mediaType'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
-import {shouldUseVirtualGrid} from '@/utils/gridLayout'
+import {useItemsThumbPrefetch} from '@/composable/useItemsThumbPrefetch'
 
 // Пропсы
 const props = defineProps<ItemsPageProps>()
@@ -343,13 +327,6 @@ const itemsGridClasses = computed(() => [
   {'wide-image': isWideImage.value},
   {'image-grid': isImageGrid.value},
 ])
-const useVirtualGrid = computed(() =>
-  shouldUseVirtualGrid(
-    ITEMS.value.itemsOnPage.length,
-    is_infinite_scroll.value,
-    listItemType.value,
-  ),
-)
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
 const ENV = computed(() => ITEMS.value.environment)
@@ -357,6 +334,13 @@ const ENV = computed(() => ITEMS.value.environment)
 const listItemType = computed((): ItemsPageType =>
   props.items_type === 'tag' ? 'tag' : 'media',
 )
+
+useItemsThumbPrefetch({
+  items: computed(() => ITEMS.value.itemsOnPage),
+  itemsType: listItemType,
+  mediaType,
+  metaId: computed(() => props.metaId),
+})
 
 const jumpPageForPagination = computed({
   get: (): number | undefined => paginationJumpPage.value ?? undefined,
@@ -458,6 +442,11 @@ defineEmits<{
 </script>
 
 <style lang="scss">
+.items-page-grid :deep(.item) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+
 .infinite-loader-full-height {
   text-align: center;
   padding: 24px 0;

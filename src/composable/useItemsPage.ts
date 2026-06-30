@@ -15,6 +15,7 @@ import type {
   MediaListResponse,
   UseItemsPageOptions,
 } from '@/types/itemsPage'
+import {trimInfiniteScrollItems} from '@shared/listPagination'
 
 export const INFINITE_PAGE_SIZE = 25
 
@@ -141,9 +142,13 @@ export function useItemsPage({
       pages.value = response.data.pages || 1
     }
 
-    const nextItems = append
+    let nextItems = append
       ? _.uniqBy([...ITEMS.value.itemsOnPage, ...pageItems], 'id')
       : pageItems
+
+    if (is_infinite_scroll.value) {
+      nextItems = trimInfiniteScrollItems(nextItems)
+    }
 
     itemsStore.updateMultiple({
       entities: nextItems,
@@ -371,7 +376,9 @@ export function useItemsPage({
     const new_items_on_page = items.slice(start, end)
 
     const items_concat = is_infinite_scroll.value
-      ? _.uniqBy([...ITEMS.value.itemsOnPage, ...new_items_on_page], 'id')
+      ? trimInfiniteScrollItems(
+        _.uniqBy([...ITEMS.value.itemsOnPage, ...new_items_on_page], 'id'),
+      )
       : new_items_on_page
 
     itemsStore.updateState({key: 'itemsOnPage', value: items_concat})

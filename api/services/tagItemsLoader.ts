@@ -2,6 +2,14 @@ import type { ApiDb, FilterLike } from '../types/db'
 import type { DbItemRow } from '../../app/types/items'
 import { parseItemsFromDb, filterItems } from '../../app/tasks/items'
 import { createTagsRepository } from '../db/repositories/tags'
+import { queryAllAsync } from '../db/utils/rawQuery'
+import {
+  buildTagIdSelect,
+  getTagFilterSqlFallbackReason,
+  getTagFromClause,
+  getTagSortExpression,
+  resolveTagFilterQuery,
+} from './tagFilterSql'
 import {
   resolvePageLimit,
   shouldPaginateMediaList,
@@ -20,7 +28,137 @@ export interface TagLoadOptions {
   skipTotals?: boolean
 }
 
-export function loadTagItems(db: ApiDb, options: TagLoadOptions) {
+function shouldLogLegacyTagLoader() {
+  return process.env.NODE_ENV !== 'production'
+    || process.env.MEDIA_CHIPS_LOG_LEGACY_TAG_LOADER === '1'
+}
+
+function warnLegacyTagLoader(reason: string, options: TagLoadOptions = {} as TagLoadOptions) {
+  if (!shouldLogLegacyTagLoader()) return
+
+  console.warn(
+    '[tagItemsLoader] Using legacy JS filter path:',
+    reason,
+    `(metaId=${options.metaId ?? 'none'}, sortBy=${options.sortBy ?? 'id'})`,
+  )
+}
+
+function buildFilteredCountSql(fromClause: string, whereClause: string, needsDistinct: boolean) {
+  if (!needsDistinct) {
+    return `SELECT COUNT(*) AS totalFiltered
+      ${fromClause}
+      ${whereClause}`
+  }
+
+  return `SELECT COUNT(*) AS totalFiltered
+    FROM (
+      SELECT DISTINCT tags.id
+      ${fromClause}
+      ${whereClause}
+    )`
+}
+
+function orderRowsByIds<T extends { id: unknown }>(rows: T[], ids: number[]): T[] {
+  const rowsById = new Map(rows.map((row) => [Number(row.id), row]))
+  return ids.map((id) => rowsById.get(id)).filter((row): row is T => row != null)
+}
+
+async function loadTagItemsSql(db: ApiDb, options: TagLoadOptions) {
+  const {
+    metaId,
+    ids = [],
+    filters = [],
+    sortBy = 'id',
+    direction = 'desc',
+    page = 1,
+    limit = null,
+    skipTotals = false,
+  } = options
+
+  const filterQuery = resolveTagFilterQuery({metaId, ids, filters})
+  if (!filterQuery.ok) {
+    return loadTagItemsLegacy(db, options, filterQuery.reason)
+  }
+
+  const {whereSql, joinSql = '', needsDistinct = false, replacements} = filterQuery
+  const whereClause = `WHERE ${whereSql}`
+  const fromClause = getTagFromClause(joinSql)
+  const sortExpr = getTagSortExpression(sortBy)
+  const sortDir = direction === 'asc' ? 'ASC' : 'DESC'
+  const idSelect = buildTagIdSelect(needsDistinct)
+
+  const pageLimit = resolvePageLimit(limit)
+  const shouldPaginate = shouldPaginateMediaList({ids, limit})
+  const safePage = Math.max(1, Number(page) || 1)
+  const queryReplacements = {...replacements}
+
+  let idQuery = `${idSelect}
+    ${fromClause}
+    ${whereClause}
+    ORDER BY ${sortExpr} ${sortDir}`
+
+  if (shouldPaginate && pageLimit != null) {
+    queryReplacements.limit = pageLimit
+    queryReplacements.offset = (safePage - 1) * pageLimit
+    idQuery += ' LIMIT :limit OFFSET :offset'
+  }
+
+  const queries = [queryAllAsync<{id: number}>(db, idQuery, queryReplacements)]
+
+  if (!skipTotals) {
+    queries.push(
+      queryAllAsync(db, buildFilteredCountSql(fromClause, whereClause, needsDistinct), replacements),
+      queryAllAsync(db, `SELECT COUNT(*) AS totalUnfiltered
+         FROM tags
+         WHERE tags.metaId = :metaId`, {metaId}),
+    )
+  }
+
+  const results = await Promise.all(queries)
+  const idRows = results[0]
+  const pageIds = idRows.map((row) => Number(row.id))
+
+  let totalUnfiltered: number | null = null
+  let totalFiltered: number | null = null
+
+  if (!skipTotals) {
+    const totals = results[1][0] || {}
+    const unfiltered = results[2][0] || {}
+    totalUnfiltered = Number(unfiltered.totalUnfiltered) || 0
+    totalFiltered = Number(totals.totalFiltered) || 0
+  }
+
+  const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
+  const rawRows = pageIds.length
+    ? tagsRepo.getItemsForMeta(metaId, pageIds) as DbItemRow[]
+    : []
+  const orderedRows = orderRowsByIds(rawRows, pageIds)
+  const items = parseItemsFromDb(orderedRows)
+
+  const result: Record<string, unknown> = {
+    items,
+    total: totalUnfiltered,
+    totalFiltered,
+    page: shouldPaginate ? safePage : 1,
+    limit: shouldPaginate ? pageLimit : (totalFiltered ?? items.length),
+  }
+
+  if (!skipTotals && shouldPaginate && totalFiltered != null && pageLimit != null) {
+    result.pages = Math.max(1, Math.ceil(totalFiltered / pageLimit))
+  }
+
+  return result
+}
+
+function loadTagItemsLegacy(
+  db: ApiDb,
+  options: TagLoadOptions,
+  fallbackReason?: string,
+) {
+  if (fallbackReason) {
+    warnLegacyTagLoader(fallbackReason, options)
+  }
+
   const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
   const {
     metaId,
@@ -67,4 +205,25 @@ export function loadTagItems(db: ApiDb, options: TagLoadOptions) {
   }
 
   return result
+}
+
+async function loadTagItems(db: ApiDb, options: TagLoadOptions) {
+  const fallbackReason = getTagFilterSqlFallbackReason({
+    metaId: options.metaId,
+    ids: options.ids,
+    filters: options.filters,
+    find_duplicates: options.find_duplicates,
+  })
+
+  if (fallbackReason) {
+    return loadTagItemsLegacy(db, options, fallbackReason)
+  }
+
+  return loadTagItemsSql(db, options)
+}
+
+export {
+  loadTagItems,
+  loadTagItemsLegacy,
+  loadTagItemsSql,
 }

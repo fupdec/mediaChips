@@ -25,6 +25,7 @@ import {
   SqlQueryMediaResultSchema,
   SqlQueryTagResultSchema,
   SuggestTagsResponseSchema,
+  TagThumbsResponseSchema,
 } from './home'
 import { AuthLoginSchema, AuthStatusSchema } from './auth'
 import {
@@ -154,6 +155,10 @@ export function parseMissingMediaStatus(data: unknown) {
 
 export function parseMediaThumbsResponse(data: unknown) {
   return MediaThumbsResponseSchema.parse(data)
+}
+
+export function parseTagThumbsResponse(data: unknown) {
+  return TagThumbsResponseSchema.parse(data)
 }
 
 export function parseSuggestTagsResponse(data: unknown) {

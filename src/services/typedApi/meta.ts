@@ -46,6 +46,7 @@ import {
   parsePathTagEntries,
   parseTags,
   parseTagsInMediaCreateOne,
+  parseTagThumbsResponse,
   parseValueInTagEntries,
 } from '@shared/schemas'
 import { validated } from './validate'
@@ -267,5 +268,12 @@ export const metaApi = {
 
   updateMediaType(id: number, data: MediaTypeWritePayload) {
     return apiClient.put(apiMediaType(id), data)
+  },
+
+  postTagThumbs(body: Record<string, unknown>) {
+    return apiClient.post(API_ROUTES.tagThumbs, body).then((res) => ({
+      ...res,
+      data: validated(parseTagThumbsResponse, res.data),
+    }))
   },
 }

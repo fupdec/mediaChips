@@ -23,6 +23,7 @@
       :hover="true"
     >
       <div class="item_preview">
+        <template v-if="wasInView">
         <ItemPreviewVideo
           v-if="type === 'media' && isVideoMedia"
           @update-big-preview="(val) => big_preview = val"
@@ -63,6 +64,7 @@
         <div v-if="!reg && x > 14"
              class="reg-block"
              v-html="'App not registered'"/>
+        </template>
       </div>
 
       <v-progress-linear
@@ -132,7 +134,7 @@
       class="tag-chip-view"
       rounded="pill"
     >
-      <ItemPreviewTag v-if="tagItem"
+      <ItemPreviewTag v-if="tagItem && wasInView"
                       :tag="tagItem"
                       :meta="previewMeta"></ItemPreviewTag>
       <div @click="editItem"

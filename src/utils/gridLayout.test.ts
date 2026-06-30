@@ -8,15 +8,12 @@ import {
 } from '@/utils/gridLayout'
 
 describe('shouldUseVirtualGrid', () => {
-  it('enables virtual grid only for infinite-scroll media with enough items', () => {
+  it('is disabled while lists use server pagination and lazy previews', () => {
     expect(shouldUseVirtualGrid(VIRTUAL_GRID_THRESHOLD - 1, true)).toBe(false)
-    expect(shouldUseVirtualGrid(VIRTUAL_GRID_THRESHOLD, true)).toBe(true)
-    expect(shouldUseVirtualGrid(100, true)).toBe(true)
-    expect(shouldUseVirtualGrid(100, false)).toBe(false)
-  })
-
-  it('keeps tag lists on the regular grid', () => {
+    expect(shouldUseVirtualGrid(VIRTUAL_GRID_THRESHOLD, true)).toBe(false)
+    expect(shouldUseVirtualGrid(100, true, 'media')).toBe(false)
     expect(shouldUseVirtualGrid(100, true, 'tag')).toBe(false)
+    expect(shouldUseVirtualGrid(100, false)).toBe(false)
   })
 })
 

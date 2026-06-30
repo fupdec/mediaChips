@@ -43,6 +43,12 @@ export const MediaThumbsRequestSchema = z.object({
   mediaType: z.string().optional(),
 }).passthrough()
 
+export const TagThumbsRequestSchema = z.object({
+  metaId: z.union([z.number(), z.string()]),
+  ids: z.array(z.union([z.number(), z.string()])).optional(),
+  types: z.array(z.string()).optional(),
+}).passthrough()
+
 export const MediaPathUpdateRequestSchema = z.object({
   id: z.union([z.number(), z.string()]),
   path: z.string().min(1),

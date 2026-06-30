@@ -17,6 +17,10 @@ import {
   loadFilteredMediaIds,
   loadMediaBasicsByIds,
 } from '../services/mediaItemsLoader'
+import {
+  mapWithConcurrency,
+  readFirstExistingImageDataUrl,
+} from '../services/thumbEncoding'
 
 export default function (db: ApiDb) {
   const mediaRepo = createMediaRepository(db.drizzle)
@@ -89,17 +93,18 @@ export default function (db: ApiDb) {
       const body = getRequestBody<MediaThumbsRequestPayload>(req)
       const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []
       const mediaType = String(body.mediaType || 'videos')
-      const thumbs: Record<string, string> = {}
       const basePath = path.join(getDbPath(), 'media', mediaType)
 
-      for (const id of ids) {
-        for (const folder of ['thumbs', 'grids']) {
-          const filePath = path.join(basePath, folder, `${id}.jpg`)
-          if (!fs.existsSync(filePath)) continue
+      const entries = await mapWithConcurrency(ids, 8, async (id) => {
+        const dataUrl = await readFirstExistingImageDataUrl(basePath, id, ['thumbs', 'grids'])
+        return dataUrl ? [String(id), dataUrl] as const : null
+      })
 
-          const buffer = fs.readFileSync(filePath)
-          thumbs[id] = `data:image/jpeg;base64,${buffer.toString('base64')}`
-          break
+      const thumbs: Record<string, string> = {}
+      for (const entry of entries) {
+        if (entry) {
+          const [id, dataUrl] = entry
+          thumbs[id] = dataUrl
         }
       }
 

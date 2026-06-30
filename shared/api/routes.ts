@@ -59,6 +59,7 @@ export const API_ROUTES = {
   authLogout: '/api/auth/logout',
   mediaThumbs: '/api/media/thumbs',
   mediaThumbsCapital: '/api/Media/thumbs',
+  tagThumbs: '/api/tag/thumbs',
   markItems: '/api/Mark/items',
   markFilterMetas: '/api/Mark/filter-metas',
   bulkMetaApply: '/api/bulk-meta/apply',

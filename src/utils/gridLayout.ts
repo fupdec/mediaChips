@@ -115,14 +115,13 @@ export function estimateRowHeight(options: GridLayoutOptions = {}): number {
 }
 
 export function shouldUseVirtualGrid(
-  itemCount: number,
-  isInfiniteScroll: boolean,
-  itemsType: 'media' | 'tag' = 'media',
+  _itemCount: number,
+  _isInfiniteScroll: boolean,
+  _itemsType: 'media' | 'tag' = 'media',
 ): boolean {
-  // Tag cards use per-meta aspect ratios and chip rows are much shorter than media cards,
-  // so fixed row-height virtualization causes visible jumpiness.
-  if (itemsType === 'tag') return false
-  return Boolean(isInfiniteScroll && itemCount >= VIRTUAL_GRID_THRESHOLD)
+  // Server pagination + lazy item previews replaced row-height virtualization,
+  // which caused empty gaps and jumpy scroll for both media and tag grids.
+  return false
 }
 
 export function getLayoutTopInScroll(

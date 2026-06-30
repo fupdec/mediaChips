@@ -4,7 +4,8 @@ import {
   resolvePageLimit,
   shouldPaginateMediaList,
   slicePage,
-} from './mediaItemsPagination'
+  trimInfiniteScrollItems,
+} from '../../shared/listPagination'
 
 describe('mediaItemsPagination', () => {
   it('returns null for missing or non-positive limits', () => {
@@ -36,5 +37,13 @@ describe('mediaItemsPagination', () => {
     expect(slicePage(items, 1, 25)).toHaveLength(25)
     expect(slicePage(items, 2, 25)).toEqual([26, 27, 28, 29, 30])
     expect(slicePage(items, 1, 101)).toHaveLength(INFINITE_SCROLL_PAGE_SIZE)
+  })
+
+  it('trims infinite-scroll items to the most recent window', () => {
+    const items = Array.from({ length: 250 }, (_, index) => index + 1)
+
+    expect(trimInfiniteScrollItems(items)).toHaveLength(200)
+    expect(trimInfiniteScrollItems(items)[0]).toBe(51)
+    expect(trimInfiniteScrollItems(items)[199]).toBe(250)
   })
 })

@@ -191,6 +191,7 @@ import type {Handler} from 'mitt'
 import {buildApiUrl} from '@/services/apiClient'
 import {typedApi} from '@/services/typedApi'
 import {createThumb as createVideoThumb, getLocalImage} from '@/services/fileService'
+import {getCachedThumb, mediaThumbKey, setCachedThumb} from '@/utils/thumbDisplayCache'
 import {
   getReadableDuration,
   getReadableVideoHeight,
@@ -251,6 +252,8 @@ const playbackError = ref(false)
 const isSettingThumb = ref(false)
 const isCreatingThumb = ref(false)
 const thumbCreateAttempted = ref(false)
+const thumbLoadStarted = ref(false)
+let thumbObserver: IntersectionObserver | null = null
 const bigPreviewMenuActive = ref(false)
 const isMounted = ref(false)
 
@@ -442,6 +445,18 @@ const maybeCreateMissingThumb = async (imgPath: string) => {
 const getImg = async ({bust = false, allowCreate = true} = {}) => {
   if (!isMounted.value || !props.media?.id) return
 
+  if (!bust) {
+    const cached = getCachedThumb(mediaThumbKey('videos', props.media.id))
+    if (cached && !isThumbUnavailable(cached)) {
+      const previous = thumb.value
+      thumb.value = cached
+      if (previous?.startsWith?.('blob:') && previous !== cached) {
+        URL.revokeObjectURL(previous)
+      }
+      return
+    }
+  }
+
   const getThumb = async (videos_folder: string) => {
     const imgPath = path.join(
       store.mediaPath,
@@ -449,6 +464,9 @@ const getImg = async ({bust = false, allowCreate = true} = {}) => {
       props.media.id + ".jpg"
     )
     await loadThumb(imgPath, {bust})
+    if (thumb.value && !isThumbUnavailable(thumb.value)) {
+      setCachedThumb(mediaThumbKey('videos', props.media.id), thumb.value)
+    }
     return imgPath
   }
 
@@ -943,10 +961,36 @@ const handleUpdateVideoFrames: Handler = (event) => {
   }
 }
 
+const stopThumbObserver = () => {
+  thumbObserver?.disconnect()
+  thumbObserver = null
+}
+
+const scheduleThumbLoad = () => {
+  stopThumbObserver()
+  thumbLoadStarted.value = false
+
+  const el = getPreviewEl()
+  if (!el) return
+
+  thumbObserver = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return
+    if (thumbLoadStarted.value) return
+    thumbLoadStarted.value = true
+    stopThumbObserver()
+    void getImg()
+  }, {
+    rootMargin: '320px 0px',
+  })
+
+  thumbObserver.observe(el)
+}
+
 // init
 onMounted(async () => {
   isMounted.value = true
-  await getImg()
+  await nextTick()
+  scheduleThumbLoad()
 
   if (!isMounted.value) return
 
@@ -959,6 +1003,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   isMounted.value = false
+  stopThumbObserver()
   stopPlayingPreview({force: true})
   eventBus.off('updateVideoFrames', handleUpdateVideoFrames)
 

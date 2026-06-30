@@ -2,7 +2,7 @@ import type { ApiDb, FilterLike } from '../types/db'
 import { apiErrorMessage } from '../types/errors'
 import type { ApiRequest, ApiResponse } from '../types/http'
 import type { DeleteEntityOnePayload, EntityUpdatePayload } from '@shared/api/responses'
-import type { CreateTagPayload, TagItemsListRequest } from '@shared/api/payloads'
+import type { CreateTagPayload, TagItemsListRequest, TagThumbsRequestPayload } from '@shared/api/payloads'
 import { getRequestBody } from '../types/http'
 import { createTagsRepository, type TagInsert } from '../db/repositories/tags'
 import { createMarksRepository } from '../db/repositories/marks'
@@ -11,6 +11,11 @@ import {
   deleteTagGeneratedAssets,
 } from '../services/localAssetCleanup'
 import { loadTagItems } from '../services/tagItemsLoader'
+import {
+  mapWithConcurrency,
+  readImageAsDataUrl,
+} from '../services/thumbEncoding'
+import path from 'path'
 
 export default function (db: ApiDb) {
   const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
@@ -33,7 +38,7 @@ export default function (db: ApiDb) {
     try {
       const limit = Number(body.limit)
       const page = Number(body.page) || 1
-      const result = loadTagItems(db, {
+      const result = await loadTagItems(db, {
         metaId,
         ids,
         filters: (body.filters ?? []) as unknown as FilterLike[],
@@ -149,10 +154,57 @@ export default function (db: ApiDb) {
     }
   };
 
+  const getThumbs = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const body = getRequestBody<TagThumbsRequestPayload>(req)
+      const metaId = Number(body.metaId)
+      if (!Number.isFinite(metaId)) {
+        return res.status(400).send({message: 'metaId is required'})
+      }
+
+      const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []
+      const types = Array.isArray(body.types) && body.types.length
+        ? body.types
+        : ['main', 'avatar', 'alt', 'custom1', 'custom2']
+      const metaDir = path.join(getDbPath(), 'meta', String(metaId))
+
+      const entries = await mapWithConcurrency(ids, 6, async (id) => {
+        const tagThumbs: Record<string, string> = {}
+
+        await Promise.all(types.map(async (type) => {
+          const filePath = path.join(metaDir, `${id}_${type}.jpg`)
+          const dataUrl = await readImageAsDataUrl(filePath)
+          if (dataUrl) {
+            tagThumbs[type] = dataUrl
+          }
+        }))
+
+        return Object.keys(tagThumbs).length
+          ? [String(id), tagThumbs] as const
+          : null
+      })
+
+      const thumbs: Record<string, Record<string, string>> = {}
+      for (const entry of entries) {
+        if (entry) {
+          const [id, tagThumbs] = entry
+          thumbs[id] = tagThumbs
+        }
+      }
+
+      res.status(200).send({thumbs})
+    } catch (err) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || 'Some error occurred while retrieving tag thumbnails.',
+      })
+    }
+  }
+
   return {
     create,
     getCount,
     getAllForItems,
+    getThumbs,
     getAll,
     findOne,
     update,

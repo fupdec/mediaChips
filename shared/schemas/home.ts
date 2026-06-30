@@ -81,6 +81,13 @@ export const MediaThumbsResponseSchema = z.object({
   thumbs: z.record(z.union([z.string(), z.number()]), z.unknown()).optional(),
 }).passthrough()
 
+export const TagThumbsResponseSchema = z.object({
+  thumbs: z.record(
+    z.union([z.string(), z.number()]),
+    z.record(z.string(), z.string()),
+  ).optional(),
+}).passthrough()
+
 export const SuggestTagsResponseSchema = z.object({
   suggestions: z.array(z.object({ word: z.string().optional() }).passthrough()).optional(),
 }).passthrough()

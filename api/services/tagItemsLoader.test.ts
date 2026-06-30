@@ -1,11 +1,24 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 const getItemsForMeta = vi.fn()
+const queryAllAsync = vi.fn()
 
 vi.mock('../db/repositories/tags', () => ({
   createTagsRepository: () => ({
     getItemsForMeta,
   }),
+}))
+
+vi.mock('../db/utils/rawQuery', () => ({
+  queryAllAsync: (...args: unknown[]) => queryAllAsync(...args),
+}))
+
+vi.mock('./tagFilterSql', () => ({
+  getTagFilterSqlFallbackReason: () => 'test legacy path',
+  resolveTagFilterQuery: vi.fn(),
+  getTagFromClause: () => 'FROM tags',
+  getTagSortExpression: () => 'tags.id',
+  buildTagIdSelect: () => 'SELECT tags.id',
 }))
 
 vi.mock('../../app/tasks/items', () => ({
@@ -24,12 +37,12 @@ describe('loadTagItems', () => {
     vi.clearAllMocks()
   })
 
-  it('paginates tag items when page and limit are provided', () => {
+  it('paginates tag items when page and limit are provided', async () => {
     getItemsForMeta.mockReturnValue(
       Array.from({length: 30}, (_, index) => ({id: index + 1, metaId: 17})),
     )
 
-    const result = loadTagItems({} as never, {
+    const result = await loadTagItems({} as never, {
       metaId: 17,
       page: 2,
       limit: 10,
@@ -45,12 +58,12 @@ describe('loadTagItems', () => {
     expect(result.pages).toBe(3)
   })
 
-  it('maps infinite-scroll limit to page size 25', () => {
+  it('maps infinite-scroll limit to page size 25', async () => {
     getItemsForMeta.mockReturnValue(
       Array.from({length: 60}, (_, index) => ({id: index + 1, metaId: 17})),
     )
 
-    const result = loadTagItems({} as never, {
+    const result = await loadTagItems({} as never, {
       metaId: 17,
       page: 1,
       limit: 101,
@@ -61,13 +74,13 @@ describe('loadTagItems', () => {
     expect(result.pages).toBe(3)
   })
 
-  it('returns all matches when specific ids are requested', () => {
+  it('returns all matches when specific ids are requested', async () => {
     getItemsForMeta.mockReturnValue([
       {id: 5, metaId: 17},
       {id: 9, metaId: 17},
     ])
 
-    const result = loadTagItems({} as never, {
+    const result = await loadTagItems({} as never, {
       metaId: 17,
       ids: [5, 9],
       page: 1,
@@ -81,12 +94,12 @@ describe('loadTagItems', () => {
     expect(result.pages).toBeUndefined()
   })
 
-  it('omits page count when skipTotals is true', () => {
+  it('omits page count when skipTotals is true', async () => {
     getItemsForMeta.mockReturnValue(
       Array.from({length: 40}, (_, index) => ({id: index + 1, metaId: 17})),
     )
 
-    const result = loadTagItems({} as never, {
+    const result = await loadTagItems({} as never, {
       metaId: 17,
       page: 2,
       limit: 25,
