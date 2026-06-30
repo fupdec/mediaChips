@@ -106,12 +106,7 @@ export function useItemsPageEvents({
       limit: val,
     })
 
-    if (props.items_type === 'media') {
-      void getItemsFromDb()
-      return
-    }
-
-    getEntitiesOnPage()
+    void getItemsFromDb()
   }
 
   const handleRemoveEntitiesFromState: Handler = (event) => {
@@ -120,7 +115,7 @@ export function useItemsPageEvents({
     const {ids, type} = payload
     if (type !== props.items_type) return
 
-    if (props.items_type === 'media') {
+    if (props.items_type === 'media' || props.items_type === 'tag') {
       for (const id of ids) {
         itemsStore.removeItem(id)
       }
@@ -219,7 +214,7 @@ export function useItemsPageEvents({
     itemsStore.updateState({key: 'isSelect', value: false})
     itemsStore.updateState({key: 'selection', value: []})
 
-    if (props.items_type === 'media' && ITEMS.value.limit === 101) {
+    if (ITEMS.value.limit === 101) {
       itemsStore.updateState({key: 'page', value: 1})
     }
 
@@ -231,7 +226,7 @@ export function useItemsPageEvents({
 
     refreshScrollRoot()
 
-    if (props.items_type === 'media' && is_infinite_scroll.value) {
+    if (is_infinite_scroll.value) {
       await nextTick()
       maybeLoadMoreIfNearBottom()
     }

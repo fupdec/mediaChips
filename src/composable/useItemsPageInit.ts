@@ -131,7 +131,7 @@ export function useItemsPageInit({
       let value = pageSettings[i]
       if (value === undefined || value === null) continue
 
-      if (i === 'page' && props.items_type === 'media' && Number(pageSettings.limit) === 101) {
+      if (i === 'page' && Number(pageSettings.limit) === 101) {
         value = 1
       }
 
@@ -209,12 +209,17 @@ export function useItemsPageInit({
       isFiltersLoaded: false,
     }
 
-    if (props.items_type === 'media') {
+    if (props.items_type === 'media' || props.items_type === 'tag') {
       Object.assign(storeUpdates, {
         itemsOnPage: [],
         entities: [],
-        navigationItems: [],
         totalFiltered: 0,
+      })
+    }
+
+    if (props.items_type === 'media') {
+      Object.assign(storeUpdates, {
+        navigationItems: [],
       })
     }
 

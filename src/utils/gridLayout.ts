@@ -114,7 +114,14 @@ export function estimateRowHeight(options: GridLayoutOptions = {}): number {
   return colWidth * aspect + description + gap.y
 }
 
-export function shouldUseVirtualGrid(itemCount: number, isInfiniteScroll: boolean): boolean {
+export function shouldUseVirtualGrid(
+  itemCount: number,
+  isInfiniteScroll: boolean,
+  itemsType: 'media' | 'tag' = 'media',
+): boolean {
+  // Tag cards use per-meta aspect ratios and chip rows are much shorter than media cards,
+  // so fixed row-height virtualization causes visible jumpiness.
+  if (itemsType === 'tag') return false
   return Boolean(isInfiniteScroll && itemCount >= VIRTUAL_GRID_THRESHOLD)
 }
 

@@ -1,0 +1,99 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+const getItemsForMeta = vi.fn()
+
+vi.mock('../db/repositories/tags', () => ({
+  createTagsRepository: () => ({
+    getItemsForMeta,
+  }),
+}))
+
+vi.mock('../../app/tasks/items', () => ({
+  parseItemsFromDb: (rows: unknown[]) => rows,
+  filterItems: (
+    _filters: unknown[],
+    _type: string,
+    items: Array<{ id: number }>,
+  ) => items,
+}))
+
+import { loadTagItems } from './tagItemsLoader'
+
+describe('loadTagItems', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('paginates tag items when page and limit are provided', () => {
+    getItemsForMeta.mockReturnValue(
+      Array.from({length: 30}, (_, index) => ({id: index + 1, metaId: 17})),
+    )
+
+    const result = loadTagItems({} as never, {
+      metaId: 17,
+      page: 2,
+      limit: 10,
+    })
+
+    expect(getItemsForMeta).toHaveBeenCalledWith(17, [])
+    expect(result.items).toHaveLength(10)
+    expect((result.items as Array<{ id: number }>)[0].id).toBe(11)
+    expect(result.total).toBe(30)
+    expect(result.totalFiltered).toBe(30)
+    expect(result.page).toBe(2)
+    expect(result.limit).toBe(10)
+    expect(result.pages).toBe(3)
+  })
+
+  it('maps infinite-scroll limit to page size 25', () => {
+    getItemsForMeta.mockReturnValue(
+      Array.from({length: 60}, (_, index) => ({id: index + 1, metaId: 17})),
+    )
+
+    const result = loadTagItems({} as never, {
+      metaId: 17,
+      page: 1,
+      limit: 101,
+    })
+
+    expect(result.items).toHaveLength(25)
+    expect(result.limit).toBe(25)
+    expect(result.pages).toBe(3)
+  })
+
+  it('returns all matches when specific ids are requested', () => {
+    getItemsForMeta.mockReturnValue([
+      {id: 5, metaId: 17},
+      {id: 9, metaId: 17},
+    ])
+
+    const result = loadTagItems({} as never, {
+      metaId: 17,
+      ids: [5, 9],
+      page: 1,
+      limit: 10,
+    })
+
+    expect(getItemsForMeta).toHaveBeenCalledWith(17, [5, 9])
+    expect(result.items).toHaveLength(2)
+    expect(result.page).toBe(1)
+    expect(result.limit).toBe(2)
+    expect(result.pages).toBeUndefined()
+  })
+
+  it('omits page count when skipTotals is true', () => {
+    getItemsForMeta.mockReturnValue(
+      Array.from({length: 40}, (_, index) => ({id: index + 1, metaId: 17})),
+    )
+
+    const result = loadTagItems({} as never, {
+      metaId: 17,
+      page: 2,
+      limit: 25,
+      skipTotals: true,
+    })
+
+    expect(result.items).toHaveLength(15)
+    expect(result.pages).toBeUndefined()
+  })
+})

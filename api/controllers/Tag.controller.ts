@@ -10,8 +10,7 @@ import {
   deleteMarkGeneratedAsset,
   deleteTagGeneratedAssets,
 } from '../services/localAssetCleanup'
-import { parseItemsFromDb, filterItems } from '../../app/tasks/items'
-import type { DbItemRow } from '../../app/types/items'
+import { loadTagItems } from '../services/tagItemsLoader'
 
 export default function (db: ApiDb) {
   const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
@@ -32,17 +31,20 @@ export default function (db: ApiDb) {
       : []
 
     try {
-      const data = tagsRepo.getItemsForMeta(metaId, ids)
-      const items_all = parseItemsFromDb(data as DbItemRow[])
-      const items_filtered = filterItems(
-        (body.filters ?? []) as unknown as FilterLike[],
-        'tags',
-        items_all,
-        body.sortBy ?? 'id',
-        body.direction ?? 'desc',
-        body.find_duplicates ?? false,
-      )
-      res.status(201).send({items: items_filtered, total: items_all.length})
+      const limit = Number(body.limit)
+      const page = Number(body.page) || 1
+      const result = loadTagItems(db, {
+        metaId,
+        ids,
+        filters: (body.filters ?? []) as unknown as FilterLike[],
+        sortBy: body.sortBy ?? 'id',
+        direction: body.direction ?? 'desc',
+        find_duplicates: body.find_duplicates ?? false,
+        page,
+        limit: limit > 0 ? limit : null,
+        skipTotals: body.skipTotals === true,
+      })
+      res.status(201).send(result)
     } catch (err) {
       console.log(err)
 

@@ -152,7 +152,6 @@
 
     <div
       v-if="pageInitialized && ITEMS.itemsOnPage.length && is_infinite_scroll && ITEMS.itemsOnPage.length < ITEMS.totalFiltered"
-      :class="{ 'infinite-loader': is_not_full_height && items_type !== 'media' }"
       class="infinite-loader-full-height"
     >
       <Loading v-if="isLoadingMore" />
@@ -265,7 +264,6 @@ const {
   pages,
   loader,
   isLoadingMore,
-  is_not_full_height,
   is_infinite_scroll,
   showPagination,
   paginationPage,
@@ -346,7 +344,11 @@ const itemsGridClasses = computed(() => [
   {'image-grid': isImageGrid.value},
 ])
 const useVirtualGrid = computed(() =>
-  shouldUseVirtualGrid(ITEMS.value.itemsOnPage.length, is_infinite_scroll.value),
+  shouldUseVirtualGrid(
+    ITEMS.value.itemsOnPage.length,
+    is_infinite_scroll.value,
+    listItemType.value,
+  ),
 )
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
@@ -456,14 +458,6 @@ defineEmits<{
 </script>
 
 <style lang="scss">
-.infinite-loader {
-  min-height: calc(100vh - 124px);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-}
-
 .infinite-loader-full-height {
   text-align: center;
   padding: 24px 0;

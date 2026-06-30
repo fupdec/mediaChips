@@ -46,7 +46,6 @@ export function useItemsPage({
     timeout: 0,
     is_busy: false,
   })
-  const is_not_full_height = ref(false)
   const isLoadingMore = ref(false)
   const scrollRoot = ref<HTMLElement | null>(null)
 
@@ -86,9 +85,10 @@ export function useItemsPage({
     })
     total.value = 0
     totalInDb.value = 0
+    pages.value = 0
   }
 
-  const applyMediaListResponse = (
+  const applyListResponse = (
     response: MediaListResponse,
     {append = false, requestedPage = 1}: {append?: boolean; requestedPage?: number} = {},
   ): boolean => {
@@ -181,7 +181,7 @@ export function useItemsPage({
 
     query.ids = ids || []
 
-    const appendMediaPage = props.items_type === 'media'
+    const appendListPage = (props.items_type === 'media' || props.items_type === 'tag')
       && is_infinite_scroll.value
       && ITEMS.value.page > 1
       && ITEMS.value.itemsOnPage.length > 0
@@ -189,9 +189,12 @@ export function useItemsPage({
 
     if (props.items_type === 'media') {
       query.includeNavigation = false
+    }
+
+    if (props.items_type === 'media' || props.items_type === 'tag') {
       const pageLimit = is_infinite_scroll.value ? INFINITE_PAGE_SIZE : ITEMS.value.limit
 
-      if (is_infinite_scroll.value && !appendMediaPage && (!ids || !ids.length)) {
+      if (is_infinite_scroll.value && !appendListPage && (!ids || !ids.length)) {
         itemsStore.updateState({key: 'page', value: 1})
         query.page = 1
       } else {
@@ -199,7 +202,7 @@ export function useItemsPage({
       }
 
       query.limit = pageLimit
-      query.skipTotals = appendMediaPage
+      query.skipTotals = appendListPage
     }
 
     if (ids && ids.length > 0) {
@@ -226,7 +229,7 @@ export function useItemsPage({
     const abortController = new AbortController()
     listAbortController = abortController
 
-    if (!appendMediaPage) {
+    if (!appendListPage) {
       itemsStore.updateState({key: 'isFiltersLoaded', value: false})
       loader.value.is_busy = true
       loader.value.show = false
@@ -235,6 +238,52 @@ export function useItemsPage({
     const postListQuery = (payload: ItemsPageListQuery, signal: AbortSignal) =>
       typedApi.postItemsList(url, payload, {signal})
 
+    const finishListResponse = async (
+      response: MediaListResponse,
+      {
+        append = false,
+        requestedPage = 1,
+      }: {append?: boolean; requestedPage?: number} = {},
+    ): Promise<boolean> => {
+      const previousCount = append ? ITEMS.value.itemsOnPage.length : 0
+      let applied = applyListResponse(response, {append, requestedPage})
+
+      if (
+        !applied
+        && !append
+        && requestedPage === 1
+      ) {
+        return false
+      }
+
+      if (!applied) {
+        return false
+      }
+
+      if (response.data.page != null) {
+        itemsStore.updateState({key: 'page', value: response.data.page})
+      }
+
+      if (append && response.data.items?.length === 0) {
+        itemsStore.updateState({
+          key: 'totalFiltered',
+          value: ITEMS.value.itemsOnPage.length,
+        })
+        total.value = ITEMS.value.itemsOnPage.length
+      } else if (append && ITEMS.value.itemsOnPage.length === previousCount) {
+        itemsStore.updateState({
+          key: 'totalFiltered',
+          value: ITEMS.value.itemsOnPage.length,
+        })
+        total.value = ITEMS.value.itemsOnPage.length
+      } else if (append || is_infinite_scroll.value) {
+        await nextTick()
+        maybeLoadMoreIfNearBottom()
+      }
+
+      return true
+    }
+
     try {
       let response = await postListQuery(query, abortController.signal)
 
@@ -242,23 +291,22 @@ export function useItemsPage({
         return
       }
 
-      if (!appendMediaPage) {
+      if (!appendListPage) {
         clearTimeout(loader.value.timeout as ReturnType<typeof setTimeout>)
         loader.value.timeout = setTimeout(() => {
           loader.value.show = true
         }, 500)
       }
 
-      if (props.items_type === 'media') {
-        const previousCount = appendMediaPage ? ITEMS.value.itemsOnPage.length : 0
-        let applied = applyMediaListResponse(response, {
-          append: appendMediaPage,
+      if (props.items_type === 'media' || props.items_type === 'tag') {
+        let applied = await finishListResponse(response, {
+          append: appendListPage,
           requestedPage: query.page,
         })
 
         if (
           !applied
-          && !appendMediaPage
+          && !appendListPage
           && query.page === 1
           && requestSeq === listFetchSeq
         ) {
@@ -266,7 +314,7 @@ export function useItemsPage({
           itemsStore.updateState({key: 'page', value: 1})
           response = await postListQuery(query, abortController.signal)
           if (requestSeq === listFetchSeq) {
-            applied = applyMediaListResponse(response, {
+            applied = await finishListResponse(response, {
               append: false,
               requestedPage: 1,
             })
@@ -276,43 +324,6 @@ export function useItemsPage({
         if (!applied && requestSeq === listFetchSeq) {
           return
         }
-
-        if (response.data.page != null) {
-          itemsStore.updateState({key: 'page', value: response.data.page})
-        }
-
-        if (appendMediaPage && response.data.items?.length === 0) {
-          itemsStore.updateState({
-            key: 'totalFiltered',
-            value: ITEMS.value.itemsOnPage.length,
-          })
-          total.value = ITEMS.value.itemsOnPage.length
-        } else if (appendMediaPage && ITEMS.value.itemsOnPage.length === previousCount) {
-          itemsStore.updateState({
-            key: 'totalFiltered',
-            value: ITEMS.value.itemsOnPage.length,
-          })
-          total.value = ITEMS.value.itemsOnPage.length
-        } else if (appendMediaPage) {
-          await nextTick()
-          maybeLoadMoreIfNearBottom()
-        } else if (is_infinite_scroll.value) {
-          await nextTick()
-          maybeLoadMoreIfNearBottom()
-        }
-      } else {
-        itemsStore.updateState({
-          key: 'entities',
-          value: response.data.items || [],
-        })
-        totalInDb.value = response.data.total || 0
-        itemsStore.updateState({key: 'itemsOnPage', value: []})
-
-        if (is_infinite_scroll.value) {
-          itemsStore.updateState({key: 'page', value: 1})
-        }
-
-        getEntitiesOnPage()
       }
     } catch (error) {
       if (isAbortError(error) || requestSeq !== listFetchSeq) {
@@ -325,12 +336,8 @@ export function useItemsPage({
         window.showNotification(t('notifications_text.server_error_logs'), 'error')
       }
 
-      if (props.items_type === 'media') {
+      if (props.items_type === 'media' || props.items_type === 'tag') {
         resetMediaListState()
-      } else {
-        itemsStore.updateState({key: 'entities', value: []})
-        totalInDb.value = 0
-        getEntitiesOnPage()
       }
 
       throw error
@@ -346,10 +353,6 @@ export function useItemsPage({
       itemsStore.removeItem(id)
       totalInDb.value -= 1
     }
-
-    const container_height = container.value?.clientHeight || 100
-    const difference_height = window.screen.height - container_height + 48
-    is_not_full_height.value = difference_height > 0
 
     const items = ITEMS.value.entities
     total.value = items.length
@@ -381,16 +384,14 @@ export function useItemsPage({
 
   const changePage = (val: number): void => {
     itemsStore.updateState({key: 'page', value: val})
+    void updatePageSetting({page: val})
 
-    if (props.items_type === 'media') {
-      void updatePageSetting({page: val})
+    if (props.items_type === 'media' || props.items_type === 'tag') {
       void getItemsFromDb()
       scrollTop()
       return
     }
 
-    getEntitiesOnPage()
-    void updatePageSetting({page: val})
     scrollTop()
   }
 
@@ -422,19 +423,11 @@ export function useItemsPage({
 
     isLoadingMore.value = true
     try {
-      if (props.items_type === 'media') {
-        itemsStore.updateState({
-          key: 'page',
-          value: getNextInfiniteMediaPage(ITEMS.value.itemsOnPage.length),
-        })
-        await getItemsFromDb()
-      } else {
-        itemsStore.updateState({
-          key: 'page',
-          value: ITEMS.value.page + 1,
-        })
-        getEntitiesOnPage()
-      }
+      itemsStore.updateState({
+        key: 'page',
+        value: getNextInfiniteMediaPage(ITEMS.value.itemsOnPage.length),
+      })
+      await getItemsFromDb()
     } finally {
       isLoadingMore.value = false
     }
@@ -472,8 +465,8 @@ export function useItemsPage({
     },
   }))
 
-  const onMediaInfiniteScroll = _.throttle(() => {
-    if (!is_infinite_scroll.value || props.items_type !== 'media') return
+  const onInfiniteScroll = _.throttle(() => {
+    if (!is_infinite_scroll.value) return
     const el = getMainScrollEl()
     if (!el) return
 
@@ -484,17 +477,17 @@ export function useItemsPage({
 
   const bindMediaInfiniteScroll = (): void => {
     unbindMediaInfiniteScroll()
-    if (!is_infinite_scroll.value || props.items_type !== 'media') return
+    if (!is_infinite_scroll.value) return
     mediaScrollEl = refreshScrollRoot() as HTMLElement | null
-    mediaScrollEl?.addEventListener('scroll', onMediaInfiniteScroll, {passive: true})
+    mediaScrollEl?.addEventListener('scroll', onInfiniteScroll, {passive: true})
   }
 
   const unbindMediaInfiniteScroll = (): void => {
     if (mediaScrollEl) {
-      mediaScrollEl.removeEventListener('scroll', onMediaInfiniteScroll)
+      mediaScrollEl.removeEventListener('scroll', onInfiniteScroll)
       mediaScrollEl = null
     }
-    onMediaInfiniteScroll.cancel()
+    onInfiniteScroll.cancel()
   }
 
   const disposeListFetching = (): void => {
@@ -508,7 +501,6 @@ export function useItemsPage({
     pages,
     loader,
     isLoadingMore,
-    is_not_full_height,
     scrollRoot,
     is_infinite_scroll,
     showPagination,
