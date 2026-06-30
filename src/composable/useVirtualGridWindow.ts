@@ -18,6 +18,8 @@ interface LayoutOptions {
   wideImage: boolean
   lineGrid: boolean
   chipsGrid: boolean
+  imageAspectRatio?: number
+  lockRowHeight?: boolean
 }
 
 interface VirtualGridRow {
@@ -54,6 +56,7 @@ export function useVirtualGridWindow(
     wideImage: layoutOptions.value.wideImage,
     lineGrid: layoutOptions.value.lineGrid,
     chipsGrid: layoutOptions.value.chipsGrid,
+    imageAspectRatio: layoutOptions.value.imageAspectRatio,
     containerWidth: layoutRef.value?.clientWidth || 0,
     columnCount: columnCount.value,
   })
@@ -81,6 +84,8 @@ export function useVirtualGridWindow(
   }
 
   const measureVisibleRows = () => {
+    if (layoutOptions.value.lockRowHeight) return
+
     const layoutEl = layoutRef.value
     if (!layoutEl) return
 

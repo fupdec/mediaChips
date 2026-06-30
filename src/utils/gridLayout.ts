@@ -35,6 +35,7 @@ export interface GridLayoutOptions {
   containerWidth?: number
   gapSize?: string
   columnCount?: number
+  imageAspectRatio?: number
 }
 
 export function getMinColumnWidth(options: GridLayoutOptions = {}): number {
@@ -108,20 +109,23 @@ export function estimateRowHeight(options: GridLayoutOptions = {}): number {
 
   const gapX = gap.x
   const colWidth = (containerWidth - gapX * (columnCount - 1)) / columnCount
-  const aspect = options.imageGrid ? 2 : 9 / 16
+  const aspect = options.imageGrid
+    ? 2
+    : (options.imageAspectRatio && options.imageAspectRatio > 0
+      ? options.imageAspectRatio
+      : 9 / 16)
   const description = DESCRIPTION_HEIGHT[size] || DESCRIPTION_HEIGHT[3]
 
   return colWidth * aspect + description + gap.y
 }
 
 export function shouldUseVirtualGrid(
-  _itemCount: number,
-  _isInfiniteScroll: boolean,
-  _itemsType: 'media' | 'tag' = 'media',
+  itemCount: number,
+  isInfiniteScroll: boolean,
+  itemsType: 'media' | 'tag' = 'media',
 ): boolean {
-  // Server pagination + lazy item previews replaced row-height virtualization,
-  // which caused empty gaps and jumpy scroll for both media and tag grids.
-  return false
+  if (itemsType !== 'tag') return false
+  return Boolean(isInfiniteScroll && itemCount >= VIRTUAL_GRID_THRESHOLD)
 }
 
 export function getLayoutTopInScroll(

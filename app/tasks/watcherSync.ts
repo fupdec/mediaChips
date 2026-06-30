@@ -133,13 +133,29 @@ function buildReport(folderState: FolderSyncState): WatcherFolderReport {
   }
 }
 
-async function loadMediaForTypes(db: ApiDb, typeIds: Array<number | string>): Promise<MediaLike[]> {
+function mapMediaRowsToDbEntries(
+  mediaRows: MediaLike[],
+  folderPath: string,
+  mediaTypeId: number | string,
+): WatcherFileEntry[] {
+  return mediaRows
+    .filter((row) => Number(row.mediaTypeId) === Number(mediaTypeId))
+    .filter((row) => row.path && isPathInsideFolder(String(row.path), folderPath))
+    .map((row) => ({path: normalizeMediaPath(String(row.path)), id: row.id}))
+}
+
+async function loadMediaForFolder(
+  db: ApiDb,
+  folderPath: string,
+  typeIds: Array<number | string>,
+): Promise<MediaLike[]> {
   const uniqueIds = [...new Set(typeIds.map((id) => Number(id)).filter((id) => Number.isFinite(id)))]
   if (!uniqueIds.length) {
     return []
   }
 
-  return createMediaRepository(db.drizzle).findByMediaTypeIds(uniqueIds) as MediaLike[]
+  return createMediaRepository(db.drizzle)
+    .findPathEntriesByMediaTypeIdsUnderFolder(uniqueIds, folderPath) as MediaLike[]
 }
 
 class WatcherSyncEngine {
@@ -174,11 +190,10 @@ class WatcherSyncEngine {
   async fullSync(folders: WatchedFolderEntry[]): Promise<WatcherFolderReport[]> {
     this.setFolders(folders)
 
-    const typeIds = folders.flatMap((folder) => (folder.types || []).map((type) => type.id))
-    const mediaRows = await loadMediaForTypes(this.db, typeIds)
-
     for (const folderState of this.folderStates) {
       const folderPath = folderState.folder.path
+      const folderTypeIds = folderState.types.map((typeState) => typeState.type.id)
+      const mediaRows = await loadMediaForFolder(this.db, folderPath, folderTypeIds)
       const unionExtensions = getUnionExtensions(folderState.folder.types || [])
       const filesInFolder = unionExtensions.length
         ? await findFilesRecursive(folderPath, unionExtensions)
@@ -188,10 +203,11 @@ class WatcherSyncEngine {
         typeState.fsPaths = sortPaths(
           filesInFolder.filter((filePath) => fileMatchesExtensions(filePath, typeState.extensions)),
         )
-        typeState.dbEntries = mediaRows
-          .filter((row) => Number(row.mediaTypeId) === Number(typeState.type.id))
-          .filter((row) => row.path && isPathInsideFolder(String(row.path), folderPath))
-          .map((row) => ({path: normalizeMediaPath(String(row.path)), id: row.id}))
+        typeState.dbEntries = mapMediaRowsToDbEntries(
+          mediaRows,
+          folderPath,
+          typeState.type.id,
+        )
         recomputeDiff(typeState)
       }
     }
@@ -200,19 +216,17 @@ class WatcherSyncEngine {
   }
 
   async refreshDbPaths(): Promise<WatcherFolderReport[]> {
-    const typeIds = this.folderStates.flatMap((folderState) =>
-      folderState.types.map((typeState) => typeState.type.id),
-    )
-    const mediaRows = await loadMediaForTypes(this.db, typeIds)
-
     for (const folderState of this.folderStates) {
       const folderPath = folderState.folder.path
+      const folderTypeIds = folderState.types.map((typeState) => typeState.type.id)
+      const mediaRows = await loadMediaForFolder(this.db, folderPath, folderTypeIds)
 
       for (const typeState of folderState.types) {
-        typeState.dbEntries = mediaRows
-          .filter((row) => Number(row.mediaTypeId) === Number(typeState.type.id))
-          .filter((row) => row.path && isPathInsideFolder(String(row.path), folderPath))
-          .map((row) => ({path: normalizeMediaPath(String(row.path)), id: row.id}))
+        typeState.dbEntries = mapMediaRowsToDbEntries(
+          mediaRows,
+          folderPath,
+          typeState.type.id,
+        )
         recomputeDiff(typeState)
       }
     }
@@ -290,6 +304,8 @@ class WatcherSyncEngine {
 
 export {
   WatcherSyncEngine,
+  loadMediaForFolder,
+  mapMediaRowsToDbEntries,
   parseExtensions,
   fileMatchesExtensions,
 }

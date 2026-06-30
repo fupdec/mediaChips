@@ -10,7 +10,6 @@ import {
 } from '../../api/db'
 import { bootstrapDatabase } from '../../api/db/migrationRunner'
 import { saveConfigFile } from './configFile'
-import { loadModel } from '../../api/services/embeddingModel'
 
 type TranscodeManagerLike = {
   stopAllLiveStreams(): void
@@ -38,16 +37,6 @@ function removeSqliteFiles(dbFilePath: string) {
   }
 }
 
-function warmupEmbeddingModel(db: ApiDb) {
-  try {
-    loadModel(db).catch((err: unknown) => {
-      console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup skipped:', err instanceof Error ? apiErrorMessage(err) : String(err))
-    })
-  } catch (err: unknown) {
-    console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup unavailable:', err instanceof Error ? apiErrorMessage(err) : String(err))
-  }
-}
-
 export function createDatabaseManager(deps: DatabaseManagerDeps) {
   async function applyConnection(dbConfig: ServerDatabaseEntry) {
     const folderPath = path.join(deps.databasesPath, dbConfig.id)
@@ -68,7 +57,6 @@ export function createDatabaseManager(deps: DatabaseManagerDeps) {
     await bootstrapDatabase(dbFilePath)
 
     deps.onDatabaseChanged?.()
-    warmupEmbeddingModel(deps.db)
     deps.transcodeManager?.clearCacheForActiveDb()
 
     console.log('\x1b[32m%s\x1b[0m', `✅ Database reconnected: ${dbConfig.name}`)
@@ -116,4 +104,3 @@ export function createDatabaseManager(deps: DatabaseManagerDeps) {
 }
 
 export type DatabaseManager = ReturnType<typeof createDatabaseManager>
-

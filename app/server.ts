@@ -3,7 +3,7 @@ import type { TranscodeManager } from './types/builtinRoutes'
 import { apiErrorMessage } from '../api/types/errors'
 import { getBestLocalIp, getAllIps } from './server/network'
 import { initializeServerConfig } from './server/serverConfig'
-import { setupDatabase, warmupEmbeddingModel } from './server/database'
+import { setupDatabase } from './server/database'
 import { createExpressApp, setupStaticApp } from './server/createApp'
 import { initAuthService, getAuthService } from './server/authRegistry'
 import { createAuthMiddleware, registerAuthRoutes } from './server/auth'
@@ -31,7 +31,6 @@ const {config, configPath, databasesPath} = initializeServerConfig(networkHelper
 
 const dbConfig = config.databases.find((i: ServerDatabaseEntry) => i.active)
 const {db} = setupDatabase({databasesPath, dbConfig})
-warmupEmbeddingModel(db)
 
 const {app, router} = createExpressApp()
 const authService = initAuthService(db)

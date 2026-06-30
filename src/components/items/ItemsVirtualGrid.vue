@@ -54,6 +54,7 @@ const props = withDefaults(defineProps<{
   wideImage?: boolean
   lineGrid?: boolean
   chipsGrid?: boolean
+  imageAspectRatio?: number
 }>(), {
   items: () => [],
   itemsType: 'media',
@@ -80,6 +81,8 @@ const layoutOptions = computed(() => ({
   wideImage: props.wideImage ?? false,
   lineGrid: props.lineGrid ?? false,
   chipsGrid: props.chipsGrid ?? false,
+  imageAspectRatio: props.imageAspectRatio,
+  lockRowHeight: props.itemsType === 'tag',
 }))
 
 const {
@@ -96,7 +99,7 @@ const {
 
 .items-virtual-grid :deep(.item) {
   content-visibility: auto;
-  contain-intrinsic-size: auto 280px;
+  contain-intrinsic-size: auto 180px;
 }
 
 .virtual-grid-spacer {

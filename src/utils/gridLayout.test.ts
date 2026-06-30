@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   chunkIntoRows,
+  estimateRowHeight,
   getColumnCount,
   getMinColumnWidth,
   shouldUseVirtualGrid,
@@ -8,12 +9,12 @@ import {
 } from '@/utils/gridLayout'
 
 describe('shouldUseVirtualGrid', () => {
-  it('is disabled while lists use server pagination and lazy previews', () => {
-    expect(shouldUseVirtualGrid(VIRTUAL_GRID_THRESHOLD - 1, true)).toBe(false)
-    expect(shouldUseVirtualGrid(VIRTUAL_GRID_THRESHOLD, true)).toBe(false)
+  it('enables virtual grid only for infinite-scroll tag lists with enough items', () => {
+    expect(shouldUseVirtualGrid(VIRTUAL_GRID_THRESHOLD - 1, true, 'tag')).toBe(false)
+    expect(shouldUseVirtualGrid(VIRTUAL_GRID_THRESHOLD, true, 'tag')).toBe(true)
+    expect(shouldUseVirtualGrid(100, true, 'tag')).toBe(true)
     expect(shouldUseVirtualGrid(100, true, 'media')).toBe(false)
-    expect(shouldUseVirtualGrid(100, true, 'tag')).toBe(false)
-    expect(shouldUseVirtualGrid(100, false)).toBe(false)
+    expect(shouldUseVirtualGrid(100, false, 'tag')).toBe(false)
   })
 })
 
@@ -40,5 +41,24 @@ describe('getColumnCount', () => {
     const columns = getColumnCount(1200, minWidth, 20)
 
     expect(columns).toBeGreaterThan(1)
+  })
+})
+
+describe('estimateRowHeight', () => {
+  it('uses meta image aspect ratio for tag card grids', () => {
+    const defaultHeight = estimateRowHeight({
+      size: 3,
+      containerWidth: 1200,
+      columnCount: 4,
+      imageAspectRatio: 1,
+    })
+    const wideHeight = estimateRowHeight({
+      size: 3,
+      containerWidth: 1200,
+      columnCount: 4,
+      imageAspectRatio: 2,
+    })
+
+    expect(wideHeight).toBeGreaterThan(defaultHeight)
   })
 })

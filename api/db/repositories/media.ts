@@ -1,13 +1,15 @@
-import { and, asc, count, desc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, inArray, isNull, like, or, sql } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { media } from '../schema/media'
 import { tagsInMedia } from '../schema/tagsInMedia'
 import { nowIso } from '../utils/timestamps'
 import { queryGet } from '../utils/rawQuery'
 import type { ApiDb } from '../../types/db'
+import { buildFolderPathLikePatterns } from '../../utils/watcherFolderPaths'
 
 export type MediaRow = typeof media.$inferSelect
 export type MediaInsert = typeof media.$inferInsert
+export type MediaPathEntry = Pick<MediaRow, 'id' | 'path' | 'mediaTypeId'>
 
 const MEDIA_MUTABLE_COLUMNS = new Set([
   'path', 'basename', 'name', 'ext', 'filesize', 'contentHash', 'rating', 'favorite',
@@ -54,6 +56,45 @@ export function createMediaRepository(db: DrizzleClient) {
       return db.select()
         .from(media)
         .where(inArray(media.mediaTypeId, typeIds))
+        .all()
+    },
+
+    findPathEntriesByMediaTypeIds(typeIds: number[]): MediaPathEntry[] {
+      if (!typeIds.length) return []
+
+      return db.select({
+        id: media.id,
+        path: media.path,
+        mediaTypeId: media.mediaTypeId,
+      })
+        .from(media)
+        .where(inArray(media.mediaTypeId, typeIds))
+        .all()
+    },
+
+    findPathEntriesByMediaTypeIdsUnderFolder(
+      typeIds: number[],
+      folderPath: string,
+    ): MediaPathEntry[] {
+      if (!typeIds.length) return []
+
+      const patterns = buildFolderPathLikePatterns(folderPath)
+      if (!patterns.length) {
+        return this.findPathEntriesByMediaTypeIds(typeIds)
+      }
+
+      const pathConditions = patterns.map((pattern) => like(media.path, pattern))
+
+      return db.select({
+        id: media.id,
+        path: media.path,
+        mediaTypeId: media.mediaTypeId,
+      })
+        .from(media)
+        .where(and(
+          inArray(media.mediaTypeId, typeIds),
+          or(...pathConditions),
+        ))
         .all()
     },
 

@@ -5,7 +5,6 @@ import path from 'path'
 import { createDrizzleClient, smokeTestDrizzle } from '../../api/db'
 import { bootstrapDatabase } from '../../api/db/migrationRunner'
 import { createApiDb } from '../../api/createApiDb'
-import { loadModel } from '../../api/services/embeddingModel'
 
 function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbConfig: ServerDatabaseEntry | undefined }) {
   if (!dbConfig) {
@@ -41,14 +40,4 @@ function setupDatabase({databasesPath, dbConfig}: { databasesPath: string; dbCon
   return {db, drizzleConnection}
 }
 
-function warmupEmbeddingModel(db: ApiDb) {
-  try {
-    loadModel(db).catch((err: unknown) => {
-      console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup skipped:', err instanceof Error ? apiErrorMessage(err) : String(err))
-    })
-  } catch (err: unknown) {
-    console.log('\x1b[33m%s\x1b[0m', '⚠️ Parser model warmup unavailable:', err instanceof Error ? apiErrorMessage(err) : String(err))
-  }
-}
-
-export { setupDatabase, warmupEmbeddingModel }
+export { setupDatabase }
