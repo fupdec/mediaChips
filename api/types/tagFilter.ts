@@ -1,5 +1,5 @@
 import type { FilterLike, AnyRecord } from './db'
-import type { MediaFilterQueryResult, SqlParamBinder } from './mediaFilter'
+import type { MediaFilterQueryResult, SqlParamBinder, FilterCondition } from './mediaFilter'
 
 export interface TagFilterOptions {
   metaId?: number | string
@@ -11,4 +11,4 @@ export interface TagFilterOptions {
 
 export type TagFilterQueryResult = MediaFilterQueryResult
 
-export type { SqlParamBinder, AnyRecord }
+export type { SqlParamBinder, AnyRecord, FilterCondition }

@@ -4,7 +4,7 @@ import { useWatcherStore } from '@/stores/watcher'
 import {getWatchedFoldersExtensions, type WatchedFolderEntry} from '@/services/watcherUtils'
 import type { WatcherWsPayload } from '@/types/itemsPage'
 import { isWatcherFilesMessage, parseWatcherInboundMessage } from '@/types/watcher'
-import _ from 'lodash'
+import uniqBy from 'lodash/uniqBy'
 
 export function useWatcher(apiUrl: string) {
   const settingsStore = useSettingsStore()
@@ -62,7 +62,7 @@ export function useWatcher(apiUrl: string) {
           switch (parsedMsg.type) {
             case 'files':
               if (isWatcherFilesMessage(parsedMsg)) {
-                watcherStore.files = _.uniqBy(parsedMsg.data, (entry) => entry.folder.id)
+                watcherStore.files = uniqBy(parsedMsg.data, (entry) => entry.folder.id)
               }
               break
             case 'closed':

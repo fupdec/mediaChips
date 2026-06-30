@@ -34,6 +34,7 @@ import {
   parseSavedFilterBasicList,
   parsePlaylistMediaLinks,
   parseSavedFilterMediaResponse,
+  parseSavedFilterFindOrCreateHydrated,
   parseSavedFilters,
   parseSavedFilterSummaryResponse,
   parseTagsInFilterRow,
@@ -56,9 +57,9 @@ export const pagesApi = {
   },
 
   postSavedFilterContext(body: SavedFilterFindAllRequest & { name: null }) {
-    return apiClient.post(API_ROUTES.savedFilter, body).then((res) => ({
+    return apiClient.post(API_ROUTES.savedFilterFindOrCreateHydrated, body).then((res) => ({
       ...res,
-      data: validated(parseSavedFilters, res.data),
+      data: validated(parseSavedFilterFindOrCreateHydrated, res.data),
     }))
   },
 
@@ -82,6 +83,13 @@ export const pagesApi = {
 
   findSavedFilters(body: SavedFilterFindAllRequest) {
     return apiClient.post(API_ROUTES.savedFilterFindAll, body).then((res) => ({
+      ...res,
+      data: validated(parseSavedFilters, res.data),
+    }))
+  },
+
+  findSavedFiltersHydrated(body: SavedFilterFindAllRequest) {
+    return apiClient.post(API_ROUTES.savedFilterFindAllHydrated, body).then((res) => ({
       ...res,
       data: validated(parseSavedFilters, res.data),
     }))

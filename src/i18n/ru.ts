@@ -116,6 +116,7 @@ const ru = {
     noResult: 'Ничего не найдено',
     showMore: 'Показать ещё ({count})',
     resultsCount: 'Найдено: {count}',
+    viaSynonym: 'син.',
     hintEsc: 'закрыть',
     hintArrows: 'навигация',
     hintEnter: 'открыть',
@@ -394,6 +395,7 @@ const ru = {
       card: 'Карточка',
       timeline: 'Таймлайн',
       chip: 'Чип',
+      masonry: 'Мозаика',
     },
   },
   playlists: {
@@ -1257,6 +1259,12 @@ const ru = {
       fit: 'Вписать в экран',
       fullscreen: 'Полный экран',
       open_external: 'Открыть во внешнем приложении',
+      close: 'Закрыть просмотр',
+      loading_full: 'Загрузка в полном разрешении…',
+      rotate_left: 'Повернуть влево',
+      rotate_right: 'Повернуть вправо',
+      flip_horizontal: 'Отразить по горизонтали',
+      flip_vertical: 'Отразить по вертикали',
     },
   },
   notifications_text: {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   parseDynamicPlaylistSummaries,
+  parseSavedFilterFindOrCreateHydrated,
   parseSavedFilterMediaResponse,
   parseSavedFilters,
   parseSavedFilterSummaryResponse,
@@ -12,6 +13,28 @@ describe('filter schemas', () => {
       { id: 1, name: 'Favorites', filters: [] },
     ])
     expect(filters[0]?.name).toBe('Favorites')
+  })
+
+  it('parses saved filter find-or-create hydrated tuple', () => {
+    const [savedFilter, created] = parseSavedFilterFindOrCreateHydrated([
+      {
+        id: 3,
+        filters: [{
+          id: 1,
+          param: 'rating',
+          type: 'rating',
+          cond: '>',
+          val: 5,
+          active: true,
+          lock: false,
+          note: '',
+        }],
+      },
+      false,
+    ])
+    expect(savedFilter.id).toBe(3)
+    expect(savedFilter.filters).toHaveLength(1)
+    expect(created).toBe(false)
   })
 
   it('parses dynamic playlist summaries', () => {

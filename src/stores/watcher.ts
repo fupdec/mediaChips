@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import _ from 'lodash'
 import type { WatchedFolderEntry } from '@/services/watcherUtils'
 import type { WatcherFilesEntry, WatcherFolderState } from '@/types/watcher'
 

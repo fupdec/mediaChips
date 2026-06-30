@@ -116,6 +116,7 @@ const en = {
     noResult: 'Nothing found',
     showMore: 'Show more ({count})',
     resultsCount: '{count} found',
+    viaSynonym: 'syn.',
     hintEsc: 'close',
     hintArrows: 'navigate',
     hintEnter: 'open',
@@ -394,6 +395,7 @@ const en = {
       card: 'Card',
       timeline: 'Timeline',
       chip: 'Chip',
+      masonry: 'Masonry',
     },
   },
   playlists: {
@@ -1257,6 +1259,12 @@ const en = {
       fit: 'Fit to screen',
       fullscreen: 'Fullscreen',
       open_external: 'Open in external app',
+      close: 'Close viewer',
+      loading_full: 'Loading full resolution…',
+      rotate_left: 'Rotate left',
+      rotate_right: 'Rotate right',
+      flip_horizontal: 'Flip horizontally',
+      flip_vertical: 'Flip vertically',
     },
   },
   notifications_text: {

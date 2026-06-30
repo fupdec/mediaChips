@@ -21,7 +21,6 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, watch} from 'vue'
 import {typedApi} from '@/services/typedApi'
-import _ from 'lodash'
 import {useAppStore} from '@/stores/app'
 import type {RatingMeta} from '@/types/metaInput'
 import type {Meta} from '@/types/stores'

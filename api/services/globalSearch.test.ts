@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import Database from 'better-sqlite3'
 import type { ApiDb } from '../types/db'
 import { ensureSearchFtsIndex } from '../db/searchFts'
-import { searchMediaByName, searchTagsByName } from './globalSearch'
+import { searchMediaByName, searchTagsByName, searchGlobal } from './globalSearch'
 
 function createSearchTestDb() {
   const sqlite = new Database(':memory:')
@@ -46,7 +46,10 @@ function createSearchTestDb() {
 
     INSERT INTO tags (name, synonyms, metaId, createdAt, updatedAt) VALUES
       ('Actor', 'Performer', 1, '2024-01-01', '2024-01-01'),
-      ('Director', NULL, 1, '2024-01-01', '2024-01-01');
+      ('Director', NULL, 1, '2024-01-01', '2024-01-01'),
+      ('YasmiButt', 'anal, gape', 2, '2024-01-01', '2024-01-01'),
+      ('Anal Gape', NULL, 3, '2024-01-01', '2024-01-01'),
+      ('Lana Analise', NULL, 2, '2024-01-01', '2024-01-01');
   `)
 
   ensureSearchFtsIndex(sqlite)
@@ -69,15 +72,69 @@ describe('globalSearch FTS', () => {
     }
   })
 
-  it('finds tags by name or synonyms using FTS', async () => {
+  it('finds tags by name using FTS', async () => {
     const { sqlite, db } = createSearchTestDb()
 
     try {
-      const byName = await searchTagsByName(db, 'act', 10) as Array<{ name?: string }>
+      const byName = await searchTagsByName(db, 'act', 10) as Array<{ name?: string; matchSource?: string }>
       expect(byName.some((tag) => tag.name === 'Actor')).toBe(true)
+      expect(byName.find((tag) => tag.name === 'Actor')?.matchSource).toBe('name')
 
-      const bySynonym = await searchTagsByName(db, 'perform', 10) as Array<{ name?: string }>
+      const bySynonym = await searchTagsByName(db, 'perform', 10) as Array<{
+        name?: string
+        matchSource?: string
+        matchedSynonyms?: string[]
+      }>
       expect(bySynonym.some((tag) => tag.name === 'Actor')).toBe(true)
+      expect(bySynonym.find((tag) => tag.name === 'Actor')?.matchSource).toBe('synonym')
+      expect(bySynonym.find((tag) => tag.name === 'Actor')?.matchedSynonyms).toContain('Performer')
+    } finally {
+      sqlite.close()
+    }
+  })
+
+  it('matches tags by synonyms while rejecting incidental name prefixes', async () => {
+    const { sqlite, db } = createSearchTestDb()
+
+    try {
+      const results = await searchTagsByName(db, 'anal', 10) as Array<{
+        name?: string
+        matchSource?: string
+        matchedSynonyms?: string[]
+      }>
+      const names = results.map((tag) => tag.name)
+
+      expect(names).toContain('Anal Gape')
+      expect(names).toContain('YasmiButt')
+      expect(names).not.toContain('Lana Analise')
+
+      const yasmi = results.find((tag) => tag.name === 'YasmiButt')
+      expect(yasmi?.matchSource).toBe('synonym')
+      expect(yasmi?.matchedSynonyms).toContain('anal')
+    } finally {
+      sqlite.close()
+    }
+  })
+
+  it('returns slim media fields only', async () => {
+    const { sqlite, db } = createSearchTestDb()
+
+    try {
+      const results = await searchMediaByName(db, 'act', 10) as Array<Record<string, unknown>>
+      expect(results).toHaveLength(1)
+      expect(Object.keys(results[0]).sort()).toEqual(['height', 'id', 'mediaTypeId', 'name', 'path', 'width'])
+    } finally {
+      sqlite.close()
+    }
+  })
+
+  it('combines media and tag search', async () => {
+    const { sqlite, db } = createSearchTestDb()
+
+    try {
+      const results = await searchGlobal(db, 'act', 10)
+      expect(results.media).toHaveLength(1)
+      expect(results.tags.some((tag) => tag.name === 'Actor')).toBe(true)
     } finally {
       sqlite.close()
     }

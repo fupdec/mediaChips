@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import _ from 'lodash'
+import orderBy from 'lodash/orderBy'
 import { searchScraperPerformers } from '@/services/scraperApi'
 import type { ScraperPerformer, ScraperTransferField, ScraperPinnedItem } from '@/types/scraper'
 
@@ -28,7 +28,7 @@ export const useScraperStore = defineStore('useScraperStore', {
       const slug = query.toLowerCase().replaceAll(' ', '-')
       const matched = result.data?.find((performer: ScraperPerformer) => performer.slug === slug)
       if (matched) return matched
-      const sorted = _.orderBy(result.data || [], (performer: ScraperPerformer) => performer.posters?.length || 0, 'desc')
+      const sorted = orderBy(result.data || [], (performer: ScraperPerformer) => performer.posters?.length || 0, 'desc')
       return sorted[0] || null
     },
     async updateInfoOfPerformer(_params: { metaId?: number; pinnedMetaId?: number } = {}) {

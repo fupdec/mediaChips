@@ -58,8 +58,23 @@
       @jump="jumpToPage"
     />
 
+    <ItemsMasonryGrid
+      v-if="pageInitialized && ITEMS.itemsOnPage.length && isMasonryGrid"
+      :items="ITEMS.itemsOnPage"
+      :items-type="listItemType"
+      :meta="meta"
+      :media-type="mediaType"
+      :reg="reg"
+      :size="ITEMS.size"
+      :view="ITEMS.view"
+      :gap-size="SETTINGS.gapSize"
+      :grid-classes="itemsGridClasses"
+      :virtual="useVirtualMasonry"
+      class="items-page-grid"
+    />
+
     <ItemsVirtualGrid
-      v-if="pageInitialized && ITEMS.itemsOnPage.length && useVirtualGrid"
+      v-else-if="pageInitialized && ITEMS.itemsOnPage.length && useVirtualGrid"
       :items="ITEMS.itemsOnPage"
       :items-type="listItemType"
       :meta="meta"
@@ -206,6 +221,7 @@ import type {Meta} from '@/types/stores'
 // Компоненты
 import Item from '@/components/items/Item.vue'
 import ItemsVirtualGrid from '@/components/items/ItemsVirtualGrid.vue'
+import ItemsMasonryGrid from '@/components/items/ItemsMasonryGrid.vue'
 import Filters from '@/components/app/Filters.vue'
 import SavedFilters from '@/components/elements/FiltersSaved.vue'
 import FiltersChips from '@/components/elements/FiltersChips.vue'
@@ -221,7 +237,7 @@ import {isVideoMediaType, isImageMediaType} from '@/utils/mediaType'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 import {useItemsThumbPrefetch} from '@/composable/useItemsThumbPrefetch'
-import {shouldUseVirtualGrid} from '@/utils/gridLayout'
+import {shouldUseVirtualGrid, shouldUseVirtualMasonry} from '@/utils/gridLayout'
 
 // Пропсы
 const props = defineProps<ItemsPageProps>()
@@ -332,6 +348,9 @@ const activeFilters = computed(() => {
 const isImageGrid = computed(() =>
   props.items_type === 'media' && mediaType.value?.type === 'image' && ITEMS.value.view == 1
 )
+const isMasonryGrid = computed(() =>
+  props.items_type === 'media' && mediaType.value?.type === 'image' && ITEMS.value.view == 3
+)
 const isWideImage = computed(() =>
   props.items_type === 'media' && isVideoMediaType(mediaType.value) && ITEMS.value.view == 2
 )
@@ -353,6 +372,13 @@ const useVirtualGrid = computed(() =>
     listItemType.value,
   ),
 )
+const useVirtualMasonry = computed(() =>
+  shouldUseVirtualMasonry(
+    ITEMS.value.itemsOnPage.length,
+    is_infinite_scroll.value,
+    listItemType.value,
+  ),
+)
 const itemsGridClasses = computed(() => [
   `item__size-${ITEMS.value.size}`,
   `gap-size-${SETTINGS.value.gapSize}`,
@@ -361,6 +387,7 @@ const itemsGridClasses = computed(() => [
   {'line-grid': isLineGrid.value},
   {'wide-image': isWideImage.value},
   {'image-grid': isImageGrid.value},
+  {'masonry-grid': isMasonryGrid.value},
 ])
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
@@ -461,6 +488,7 @@ const catchDrop = (e: DragEvent) => {
   startDroppedMediaAdding({
     paths,
     mediaTypeId: props.mediaTypeId,
+    mediaTypes: appStore.mediaTypes,
     tasksStore: tasksStore as Parameters<typeof startDroppedMediaAdding>[0]['tasksStore'],
     eventBus,
   })

@@ -5,6 +5,7 @@ import express from 'express'
 import { validateBody, validateQuery } from '../middleware/validateBody'
 import {
   PathPayloadSchema,
+  CheckFilesPayloadSchema,
   AddMediaRequestSchema,
   ParsePathTagsRequestSchema,
   RenameFileRequestSchema,
@@ -75,6 +76,7 @@ export default function registerRoutes(app: Express, db: ApiDb) {
   }
 
   register('post', '/checkFileExists', 'checkFileExists', validateBody(PathPayloadSchema))
+  register('post', '/checkFilesExists', 'checkFilesExists', validateBody(CheckFilesPayloadSchema))
   register('post', '/renameFile', 'renameFile', validateBody(RenameFileRequestSchema))
   register('post', '/openPath', 'openPath', validateBody(OpenPathRequestSchema))
   register('post', '/getFileList', 'getFileList', validateBody(GetFileListRequestSchema))

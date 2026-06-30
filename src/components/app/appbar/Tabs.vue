@@ -51,7 +51,7 @@ import {useDialogsStore} from '@/stores/dialogs'
 import {useRouter, useRoute} from 'vue-router'
 import draggable from 'vuedraggable'
 import {typedApi} from '@/services/typedApi'
-import _ from 'lodash'
+import orderBy from 'lodash/orderBy'
 import {useEventBus} from '@/utils/eventBus'
 import {useI18n} from 'vue-i18n'
 import {getTabUrl} from '@/services/routeService'
@@ -80,14 +80,14 @@ const dragOptions = {
 }
 
 onMounted(() => {
-  tabs.value = _.orderBy([...tabsStore.value], "order");
+  tabs.value = orderBy([...tabsStore.value], "order");
   active.value = route.query.tabId ?? null
 })
 
 watch(
   () => tabsStore.value,
   (val) => {
-    tabs.value = _.orderBy([...tabsStore.value], "order");
+    tabs.value = orderBy([...tabsStore.value], "order");
   }
 )
 

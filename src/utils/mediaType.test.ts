@@ -14,6 +14,9 @@ import {
   matchesMediaTypeFilter,
   getMenuOrderedMediaTypes,
   sortByMenuMediaTypeOrder,
+  parseMediaTypeExtensions,
+  buildExtensionPathRegex,
+  inferMediaTypeFromPaths,
 } from '@/utils/mediaType'
 import type { MediaType } from '@/types/media'
 
@@ -88,5 +91,21 @@ describe('mediaType', () => {
     ]
 
     expect(sortByMenuMediaTypeOrder(items, sampleMediaTypes).map(item => item.id)).toEqual(['b', 'a'])
+  })
+
+  it('parses media type extensions and builds path regex', () => {
+    expect(parseMediaTypeExtensions(' jpg, jpeg ,png ')).toEqual(['jpg', 'jpeg', 'png'])
+    expect(buildExtensionPathRegex('jpg, jpeg,png')).toBe('.jpg$|.jpeg$|.png$')
+  })
+
+  it('infers media type from file paths', () => {
+    const mediaTypes: MediaType[] = [
+      { id: 1, type: 'image', name: 'Images', extensions: 'jpg,png' },
+      { id: 2, type: 'video', name: 'Videos', extensions: 'mp4,mkv' },
+    ]
+
+    expect(inferMediaTypeFromPaths(['/photos/a.jpg', '/photos/b.png'], mediaTypes)?.id).toBe(1)
+    expect(inferMediaTypeFromPaths(['/clips/movie.mp4'], mediaTypes)?.id).toBe(2)
+    expect(inferMediaTypeFromPaths(['/docs/readme.txt'], mediaTypes)).toBeNull()
   })
 })

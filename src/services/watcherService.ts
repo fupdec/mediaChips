@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import uniqBy from 'lodash/uniqBy'
 import { typedApi } from '@/services/typedApi'
 import type { WatchedFolderLink } from '@shared/entities/watched-folder'
 import type { WatchedFolderEntry } from '@/services/watcherUtils'
@@ -16,7 +16,7 @@ export async function getWatchedFolders(): Promise<WatchedFolderEntry[]> {
       if (i.mediaType) types[id].push(i.mediaType)
     }
 
-    const folders = _.uniqBy(watchedFolders, (i) => i.folderId)
+    const folders = uniqBy(watchedFolders, (i) => i.folderId)
 
     return folders.map((i): WatchedFolderEntry => {
       const folder = { ...i.watchedFolder }

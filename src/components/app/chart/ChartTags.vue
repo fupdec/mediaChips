@@ -28,7 +28,8 @@ import {
   CategoryScale,
   PointElement,
 } from 'chart.js'
-import _ from 'lodash'
+import sortBy from 'lodash/sortBy'
+import groupBy from 'lodash/groupBy'
 import {useAppStore} from '@/stores/app'
 
 ChartJS.register(
@@ -70,7 +71,7 @@ const datasets = computed(() => {
 
   const getDataset = (param: 'createdAt' | 'updatedAt', color: string) => {
     const dates = tags.value.map((i) => new Date(String(i[param])))
-    const sortedDates = _.sortBy(dates, (date) => date.getTime())
+    const sortedDates = sortBy(dates, (date) => date.getTime())
     const start = sortedDates[0]
     const end = sortedDates[sortedDates.length - 1]
 
@@ -83,7 +84,7 @@ const datasets = computed(() => {
     }
 
     const dateStrings = sortedDates.map((date) => date.toLocaleDateString())
-    const grouped = _.groupBy(dateStrings)
+    const grouped = groupBy(dateStrings)
 
     const days = getDaysArray(start, end)
     const res = days.map((day) => grouped[day] ? grouped[day].length : null)

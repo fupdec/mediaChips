@@ -1,5 +1,7 @@
 import {ref, computed, nextTick} from 'vue'
-import _ from 'lodash'
+import uniqBy from 'lodash/uniqBy'
+import cloneDeep from 'lodash/cloneDeep'
+import throttle from 'lodash/throttle'
 import {useI18n} from 'vue-i18n'
 import {useItemsStore} from '@/stores/items'
 import {typedApi} from '@/services/typedApi'
@@ -143,7 +145,7 @@ export function useItemsPage({
     }
 
     let nextItems = append
-      ? _.uniqBy([...ITEMS.value.itemsOnPage, ...pageItems], 'id')
+      ? uniqBy([...ITEMS.value.itemsOnPage, ...pageItems], 'id')
       : pageItems
 
     if (is_infinite_scroll.value) {
@@ -170,7 +172,7 @@ export function useItemsPage({
       query.mediaTypeId = props.mediaTypeId
     }
 
-    query.filters = _.cloneDeep(ITEMS.value.filters || [])
+    query.filters = cloneDeep(ITEMS.value.filters || [])
     query.sortBy = normalizeSortBy(
       ITEMS.value.sortBy || 'id',
       props.items_type,
@@ -377,7 +379,7 @@ export function useItemsPage({
 
     const items_concat = is_infinite_scroll.value
       ? trimInfiniteScrollItems(
-        _.uniqBy([...ITEMS.value.itemsOnPage, ...new_items_on_page], 'id'),
+        uniqBy([...ITEMS.value.itemsOnPage, ...new_items_on_page], 'id'),
       )
       : new_items_on_page
 
@@ -472,7 +474,7 @@ export function useItemsPage({
     },
   }))
 
-  const onInfiniteScroll = _.throttle(() => {
+  const onInfiniteScroll = throttle(() => {
     if (!is_infinite_scroll.value) return
     const el = getMainScrollEl()
     if (!el) return

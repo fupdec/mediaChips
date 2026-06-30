@@ -6,6 +6,7 @@ import {
   parseExtendedStats,
   parseGlobalSearchMediaResponse,
   parseGlobalSearchTagsResponse,
+  parseGlobalSearchResponse,
   parseHomeHealth,
   parseHomeMarkers,
   parseHomeMediaResponse,
@@ -64,6 +65,13 @@ export const homeApi = {
     return apiClient.get(API_ROUTES.taskMissingMediaStatus).then((res) => ({
       ...res,
       data: validated(parseMissingMediaStatus, res.data),
+    }))
+  },
+
+  searchGlobal(body: { q: string; limit?: number }, config?: AxiosRequestConfig) {
+    return apiClient.post(API_ROUTES.globalSearch, body, config).then((res) => ({
+      ...res,
+      data: validated(parseGlobalSearchResponse, res.data),
     }))
   },
 

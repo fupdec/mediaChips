@@ -186,7 +186,7 @@ import {useSettingsStore} from '@/stores/settings'
 import {useTasksStore} from '@/stores/tasks'
 import {useContextMenu} from '@/stores/contextMenu'
 import {useEventBus} from '@/utils/eventBus'
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
 import type {Handler} from 'mitt'
 import {buildApiUrl} from '@/services/apiClient'
 import {typedApi} from '@/services/typedApi'
@@ -621,7 +621,7 @@ const handleVideoLoaded = () => {
   playbackError.value = false
 }
 
-const changePreviewTime = _.debounce((e: MouseEvent) => {
+const changePreviewTime = debounce((e: MouseEvent) => {
   if (!props.isFileExists || playbackError.value || shouldBlockVideoPreview.value) return
   if (SETTINGS.value.videoPreviewHover !== "video") return
 

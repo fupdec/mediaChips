@@ -3,7 +3,8 @@ import type { Ref } from 'vue'
 import type { Handler } from 'mitt'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import _ from 'lodash'
+import {loadLocale} from '@/i18n/loadLocale'
+import debounce from 'lodash/debounce'
 import {typedApi} from '@/services/typedApi'
 import {getAuthToken, clearAuthToken} from '@/services/authSession'
 import {updateConfig} from '@/services/configService'
@@ -124,7 +125,8 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     updateWatcher(watcherStore.folders)
   }
 
-  function applyLocale(): void {
+  async function applyLocale(): Promise<void> {
+    await loadLocale(settingsStore.locale)
     locale.value = settingsStore.locale
     document.documentElement.lang = settingsStore.locale
   }
@@ -188,7 +190,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     })
   }
 
-  const saveWindowSize = _.debounce(() => {
+  const saveWindowSize = debounce(() => {
     const app_window = isPlayerWindow.value ? 'player' : 'win'
     const data = {
       [app_window]: {
@@ -354,9 +356,9 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     notifyPlayerReady()
 
     const settingsPromise = initSettings()
-      .then(() => {
+      .then(async () => {
         applyTheme()
-        applyLocale()
+        await applyLocale()
       })
       .catch(() => {
         store.isServerError = true
@@ -379,7 +381,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
     }
 
     applyTheme()
-    applyLocale()
+    await applyLocale()
 
     const authenticated = await tryRestoreSession()
 

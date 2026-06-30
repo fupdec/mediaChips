@@ -17,8 +17,16 @@ import {
   requiresMetadataJoinForSort,
   resolveMediaFilterQuery,
 } from './mediaFilterSql'
+import {
+  buildFilteredTotalsCacheKey,
+  getCachedFilteredTotals,
+  getCachedUnfilteredTotal,
+  setCachedFilteredTotals,
+  setCachedUnfilteredTotal,
+} from './mediaListTotalsCache'
 
 import { filterItems } from '../../app/tasks/items'
+import { runFilterItemsAsync } from './filterItemsWorkerRunner'
 import {
   resolvePageLimit,
   shouldPaginateMediaList,
@@ -221,21 +229,15 @@ async function loadMediaItemsLegacy(
   await attachMediaRelations(db, items, mediaTypeId, ids)
 
   const totalUnfiltered = items.length
-  const filtered = filterItems(
+  const { items: filtered, totalFiltered, totalFilesize } = await runFilterItemsAsync({
     filters,
-    'media',
-    items as ParsedItem[],
+    itemType: 'media',
+    items: items as ParsedItem[],
     sortBy,
     direction,
     find_duplicates,
     duplicates_by,
-  )
-
-  const totalFiltered = filtered.length
-  const totalFilesize = filtered.reduce(
-    (sum: number, item: LoadedMediaItem) => sum + (Number(item.filesize) || 0),
-    0,
-  )
+  })
 
   const pageLimit = resolvePageLimit(limit)
   const shouldPaginate = shouldPaginateMediaList({ ids, limit })
@@ -309,28 +311,49 @@ async function loadMediaItemsSql(db: ApiDb, options: MediaLoadOptions = {}) {
 
   const queries = [queryAllAsync(db, idQuery, queryReplacements)]
 
+  const totalsCacheKey = buildFilteredTotalsCacheKey({
+    mediaTypeId,
+    filters,
+    find_duplicates: options.find_duplicates,
+    duplicates_by: options.duplicates_by,
+  })
+
+  let totalUnfiltered: number | null = null
+  let totalFiltered: number | null = null
+  let totalFilesize: number | null = null
+
   if (!skipTotals) {
-    queries.push(
-      queryAllAsync(db, buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct), replacements),
-      queryAllAsync(db, `SELECT COUNT(*) AS totalUnfiltered
-         FROM media
-         WHERE media.mediaTypeId = :mediaTypeId`, {mediaTypeId}),
-    )
+    const cachedFilteredTotals = getCachedFilteredTotals(totalsCacheKey)
+    const cachedUnfilteredTotal = getCachedUnfilteredTotal(mediaTypeId as number | string)
+
+    if (cachedFilteredTotals && cachedUnfilteredTotal != null) {
+      totalUnfiltered = cachedUnfilteredTotal
+      totalFiltered = cachedFilteredTotals.totalFiltered
+      totalFilesize = cachedFilteredTotals.totalFilesize
+    } else {
+      queries.push(
+        queryAllAsync(db, buildFilteredTotalsSql(fromForCount, whereClause, needsDistinct), replacements),
+        queryAllAsync(db, `SELECT COUNT(*) AS totalUnfiltered
+           FROM media
+           WHERE media.mediaTypeId = :mediaTypeId`, {mediaTypeId}),
+      )
+    }
   }
 
   const results = await Promise.all(queries)
   const idRows = results[0]
 
-  let totalUnfiltered = null
-  let totalFiltered = null
-  let totalFilesize = null
-
-  if (!skipTotals) {
-    const totals = results[1][0] || {}
-    const unfiltered = results[2][0] || {}
+  if (!skipTotals && totalFiltered == null) {
+    const totals = results[1]?.[0] || {}
+    const unfiltered = results[2]?.[0] || {}
     totalUnfiltered = Number(unfiltered.totalUnfiltered) || 0
     totalFiltered = Number(totals.totalFiltered) || 0
     totalFilesize = Number(totals.totalFilesize) || 0
+    setCachedFilteredTotals(totalsCacheKey, {
+      totalFiltered,
+      totalFilesize,
+    })
+    setCachedUnfilteredTotal(mediaTypeId as number | string, totalUnfiltered)
   }
 
   const pageIds: MediaId[] = idRows.map((row: AnyRecord) => row.id as MediaId)

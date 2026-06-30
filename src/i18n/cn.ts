@@ -116,6 +116,7 @@ const cn = {
     noResult: '未找到结果',
     showMore: '显示更多 ({count})',
     resultsCount: '找到 {count} 条',
+    viaSynonym: '同义词',
     hintEsc: '关闭',
     hintArrows: '导航',
     hintEnter: '打开',
@@ -394,6 +395,7 @@ const cn = {
       card: '卡片',
       timeline: '时间轴',
       chip: '标签块',
+      masonry: '瀑布流',
     },
   },
   playlists: {
@@ -1257,6 +1259,12 @@ const cn = {
       fit: '适应屏幕',
       fullscreen: '全屏',
       open_external: '在外部应用中打开',
+      close: '关闭查看器',
+      loading_full: '正在加载完整分辨率…',
+      rotate_left: '向左旋转',
+      rotate_right: '向右旋转',
+      flip_horizontal: '水平翻转',
+      flip_vertical: '垂直翻转',
     },
   },
   notifications_text: {

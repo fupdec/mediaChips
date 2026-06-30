@@ -1,7 +1,7 @@
 import {ref, computed, onMounted, onBeforeUnmount, watch, nextTick, type InjectionKey} from 'vue'
 import type { Handler } from 'mitt'
 import {useI18n} from 'vue-i18n'
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
 import path from 'path-browserify'
 import { buildApiUrl } from '@/services/apiClient'
 import { typedApi } from '@/services/typedApi'
@@ -317,7 +317,7 @@ export function usePlayerSession() {
     controls.value?.togglePause?.()
   }
 
-  const moveOverPlayer = _.debounce((e) => {
+  const moveOverPlayer = debounce((e) => {
     if (!playerStore.active) return
     if (!e.movementX && !e.movementY) return
     showControls()

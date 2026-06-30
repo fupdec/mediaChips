@@ -1,5 +1,5 @@
 import { watch, type ComputedRef, type Ref } from 'vue'
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
 import { useAppStore } from '@/stores/app'
 import { useItemsStore } from '@/stores/items'
 import { getMediaDeleteAssetFolder } from '@/utils/mediaType'
@@ -60,7 +60,7 @@ export function useItemsThumbPrefetch({
     }
   }
 
-  const debouncedPrefetch = _.debounce(() => {
+  const debouncedPrefetch = debounce(() => {
     void prefetch()
   }, 40)
 

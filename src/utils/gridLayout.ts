@@ -22,6 +22,8 @@ export const VIRTUAL_GRID_THRESHOLD = 48
 
 export const VIRTUAL_ROW_BUFFER = 2
 
+export const VIRTUAL_MASONRY_BUFFER = 500
+
 export function getGridGap(gapSize = 'xs'): { x: number; y: number } {
   return GAP_SIZE[gapSize] || GAP_SIZE.xs
 }
@@ -76,6 +78,142 @@ export interface GridRow<T> {
   items: T[]
 }
 
+export interface MasonryItemPosition<T> {
+  item: T
+  index: number
+  column: number
+  top: number
+  height: number
+}
+
+export interface MasonryLayout<T> {
+  positions: MasonryItemPosition<T>[]
+  columnCount: number
+  columnWidth: number
+  gapX: number
+  gapY: number
+  totalHeight: number
+}
+
+export function getMasonryColumnLeft(
+  column: number,
+  colWidth: number,
+  gapX: number,
+): number {
+  return column * (colWidth + gapX)
+}
+
+export function buildMasonryLayout<T>(
+  items: T[],
+  columnCount: number,
+  colWidth: number,
+  gapX: number,
+  gapY: number,
+  getItemHeight: (item: T, colWidth: number) => number,
+): MasonryLayout<T> {
+  const cols = Math.max(1, columnCount)
+  const positions: MasonryItemPosition<T>[] = []
+  const colHeights = new Array<number>(cols).fill(0)
+
+  items.forEach((item, index) => {
+    const height = getItemHeight(item, colWidth)
+    let shortest = 0
+
+    for (let col = 1; col < cols; col += 1) {
+      if (colHeights[col] < colHeights[shortest]) {
+        shortest = col
+      }
+    }
+
+    const top = colHeights[shortest]
+    positions.push({ item, index, column: shortest, top, height })
+    colHeights[shortest] = top + height + gapY
+  })
+
+  const tallestColumn = colHeights.length ? Math.max(...colHeights) : 0
+  const totalHeight = positions.length ? Math.max(0, tallestColumn - gapY) : 0
+
+  return {
+    positions,
+    columnCount: cols,
+    columnWidth: colWidth,
+    gapX,
+    gapY,
+    totalHeight,
+  }
+}
+
+export function findVisibleMasonryItems<T>(
+  positions: MasonryItemPosition<T>[],
+  visibleStart: number,
+  visibleEnd: number,
+  buffer = VIRTUAL_MASONRY_BUFFER,
+): MasonryItemPosition<T>[] {
+  const start = visibleStart - buffer
+  const end = visibleEnd + buffer
+
+  return positions.filter((pos) => pos.top + pos.height > start && pos.top < end)
+}
+
+export function getMediaAspectRatio(
+  media: { width?: number | null; height?: number | null },
+  fallback = 1,
+): number {
+  const width = Number(media?.width) || 0
+  const height = Number(media?.height) || 0
+
+  if (width > 0 && height > 0) {
+    return width / height
+  }
+
+  return fallback
+}
+
+export function estimateMasonryItemHeight(
+  media: { width?: number | null; height?: number | null },
+  colWidth: number,
+): number {
+  const aspect = getMediaAspectRatio(media)
+  return colWidth / aspect
+}
+
+export interface MasonryPlacement<T> {
+  item: T
+  index: number
+}
+
+export interface MasonryColumn<T> {
+  items: MasonryPlacement<T>[]
+}
+
+export function packMasonryColumns<T>(
+  items: T[],
+  columnCount: number,
+  getItemHeight: (item: T, colWidth: number) => number,
+  colWidth: number,
+  gapY = 0,
+): MasonryColumn<T>[] {
+  const layout = buildMasonryLayout(
+    items,
+    columnCount,
+    colWidth,
+    0,
+    gapY,
+    getItemHeight,
+  )
+  const cols = Math.max(1, columnCount)
+  const columns: MasonryColumn<T>[] = Array.from({ length: cols }, () => ({ items: [] }))
+
+  layout.positions.forEach((position) => {
+    columns[position.column].items.push({
+      item: position.item,
+      index: position.index,
+    })
+  })
+
+  return columns
+}
+
 export function chunkIntoRows<T>(items: T[], columnCount: number): GridRow<T>[] {
   const rows: GridRow<T>[] = []
   const cols = Math.max(1, columnCount)
@@ -110,23 +248,24 @@ export function estimateRowHeight(options: GridLayoutOptions = {}): number {
   const gapX = gap.x
   const colWidth = (containerWidth - gapX * (columnCount - 1)) / columnCount
   const aspect = options.imageGrid
-    ? 2
+    ? 1
     : (options.imageAspectRatio && options.imageAspectRatio > 0
       ? options.imageAspectRatio
       : 9 / 16)
   const description = DESCRIPTION_HEIGHT[size] || DESCRIPTION_HEIGHT[3]
 
-  return colWidth * aspect + description + gap.y
+  return colWidth / aspect + description + gap.y
 }
 
 export function shouldUseVirtualGrid(
   itemCount: number,
   isInfiniteScroll: boolean,
-  itemsType: 'media' | 'tag' = 'media',
+  _itemsType: 'media' | 'tag' = 'media',
 ): boolean {
-  if (itemsType !== 'tag') return false
   return Boolean(isInfiniteScroll && itemCount >= VIRTUAL_GRID_THRESHOLD)
 }
+
+export const shouldUseVirtualMasonry = shouldUseVirtualGrid
 
 export function getLayoutTopInScroll(
   layoutEl: Element | null | undefined,

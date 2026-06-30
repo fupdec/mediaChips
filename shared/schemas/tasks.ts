@@ -23,6 +23,14 @@ export const FileExistsResponseSchema = z.object({
   exists: z.boolean().optional(),
 }).passthrough()
 
+export const CheckFilesRequestSchema = z.object({
+  paths: z.array(z.string().min(1)).min(1).max(100),
+})
+
+export const CheckFilesResponseSchema = z.object({
+  results: z.record(z.string(), z.boolean()),
+})
+
 export const ResolvePathResponseSchema = z.object({
   exists: z.boolean().optional(),
 }).passthrough()

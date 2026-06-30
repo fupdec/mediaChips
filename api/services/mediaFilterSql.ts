@@ -163,6 +163,15 @@ function buildStringComparison(columnExpr: string, cond: FilterCondition, val: u
     return `regexp(${patternKey}, ${columnExpr})`
   }
 
+  if (cond === 'equal' || cond === '=') {
+    const valueKey = nextParam(String(val ?? ''))
+    return `LOWER(${columnExpr}) = LOWER(${valueKey})`
+  }
+  if (cond === 'not equal' || cond === '!==') {
+    const valueKey = nextParam(String(val ?? ''))
+    return `(${columnExpr} IS NULL OR LOWER(${columnExpr}) != LOWER(${valueKey}))`
+  }
+
   const normalized = String(val || '').toLowerCase().trim()
   const patternKey = nextParam(`%${normalized}%`)
 

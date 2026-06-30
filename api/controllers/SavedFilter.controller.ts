@@ -9,9 +9,12 @@ import {
   getDynamicPlaylistsBasic,
   getDynamicPlaylistsSummary,
   getSavedFilterPlaylistSummary,
+  getSavedFiltersHydrated,
+  findOrCreateSavedFilterHydrated,
   getFilteredMediaForPlayback,
   getFilteredMediaForSavedFilter,
 } from '../services/savedFilterMedia'
+import { invalidateMediaDerivedCaches } from '../services/mediaCacheInvalidation'
 
 export default function (db: ApiDb) {
   const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
@@ -34,6 +37,7 @@ export default function (db: ApiDb) {
         })()
 
       res.status(201).send(result)
+      invalidateMediaDerivedCaches()
     } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
@@ -66,6 +70,7 @@ export default function (db: ApiDb) {
   const update = function (req: ApiRequest, res: ApiResponse) {
     try {
       savedFiltersRepo.updateById(Number(req.params.id), req.body)
+      invalidateMediaDerivedCaches()
       res.sendStatus(201)
     } catch (err: unknown) {
       res.status(500).send({
@@ -77,7 +82,38 @@ export default function (db: ApiDb) {
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     try {
       savedFiltersRepo.deleteById(Number(req.params.id))
+      invalidateMediaDerivedCaches()
       res.sendStatus(201)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
+      })
+    }
+  };
+
+  const findAllHydrated = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const data = await getSavedFiltersHydrated(db, req.body || {})
+      res.status(201).send(data)
+    } catch (err: unknown) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || "Some error occurred while performing query."
+      })
+    }
+  };
+
+  const findOrCreateHydrated = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const payload = {
+        name: req.body.name ?? null,
+        mediaTypeId: req.body.mediaTypeId ?? null,
+        metaId: req.body.metaId ?? null,
+        tagId: req.body.tagId ?? null,
+        tabId: req.body.tabId ?? null,
+      }
+
+      const { savedFilter, created } = await findOrCreateSavedFilterHydrated(db, payload)
+      res.status(201).send([savedFilter, created])
     } catch (err: unknown) {
       res.status(500).send({
         message: apiErrorMessage(err) || "Some error occurred while performing query."
@@ -144,6 +180,8 @@ export default function (db: ApiDb) {
     create,
     findOne,
     findAll,
+    findAllHydrated,
+    findOrCreateHydrated,
     update,
     deleteOne,
     dynamicPlaylistsBasic,

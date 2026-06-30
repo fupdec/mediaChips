@@ -4,7 +4,8 @@ import {useRouter} from 'vue-router'
 import {useHotkey} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {typedApi} from '@/services/typedApi'
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
+import groupBy from 'lodash/groupBy'
 import {useEventBus} from '@/utils/eventBus'
 import AppBarButton from '@/components/app/appbar/AppBarButton.vue'
 import {useAppStore} from '@/stores/app'
@@ -17,8 +18,13 @@ import {hideHoverImage, showHoverImage} from '@/services/hoverService'
 import {openPath} from '@/services/shellService'
 import type { MediaItem, Meta, Tag } from '@/types/stores'
 
+type GlobalSearchTag = Tag & {
+  matchSource?: 'name' | 'synonym' | 'both'
+  matchedSynonyms?: string[]
+}
+
 interface SearchGroup {
-  data: Array<MediaItem | Tag>
+  data: Array<MediaItem | GlobalSearchTag>
   name?: string
   icon?: string
   mediaTypeId?: number
@@ -58,7 +64,7 @@ const selectedIndex = ref(-1)
 
 let abortController: AbortController | null = null
 let pendingNavigation: (() => void) | null = null
-const RESULT_LIMIT = 200
+const RESULT_LIMIT = 50
 const GROUP_PREVIEW_LIMIT = 20
 const ROW_HEIGHT = 30
 const RESULTS_MAX_HEIGHT = 480
@@ -177,7 +183,7 @@ function onDialogClose() {
 }
 
 function buildMediaGroups(data: MediaItem[]) {
-  const grouped = _.groupBy(data, 'mediaTypeId')
+  const grouped = groupBy(data, 'mediaTypeId')
 
   return Object.keys(grouped).map(id => {
     const type = mediaTypes.value.find(item => item.id === Number(id))
@@ -194,8 +200,8 @@ function buildMediaGroups(data: MediaItem[]) {
   }).filter(Boolean) as SearchGroup[]
 }
 
-function buildTagGroups(data: Tag[]) {
-  const grouped = _.groupBy(data, 'metaId')
+function buildTagGroups(data: GlobalSearchTag[]) {
+  const grouped = groupBy(data, 'metaId')
 
   return Object.keys(grouped).map(metaId => {
     const m = meta.value.find(item => item.id === Number(metaId))
@@ -251,15 +257,12 @@ async function search() {
   selectedIndex.value = -1
 
   try {
-    const [mediaRes, tagRes] = await Promise.all([
-      typedApi.searchMedia({ q, limit: RESULT_LIMIT }, { signal }),
-      typedApi.searchTags({ q, limit: RESULT_LIMIT }, { signal }),
-    ])
+    const searchRes = await typedApi.searchGlobal({ q, limit: RESULT_LIMIT }, { signal })
 
     if (signal.aborted) return
 
-    const mediaGroups = buildMediaGroups(mediaRes.data || [])
-    const tagGroups = buildTagGroups(tagRes.data || [])
+    const mediaGroups = buildMediaGroups(searchRes.data.media || [])
+    const tagGroups = buildTagGroups(searchRes.data.tags || [])
     results.value = sortGroups([...mediaGroups, ...tagGroups])
   } catch (e: unknown) {
     const err = e as { code?: string; name?: string }
@@ -270,7 +273,7 @@ async function search() {
   }
 }
 
-const runSearch = _.debounce(search, 250)
+const runSearch = debounce(search, 250)
 
 function onQueryInput() {
   if (!query.value.trim()) {
@@ -414,6 +417,22 @@ function showResultHover(event: MouseEvent, row: FlatResultRow) {
   showHoverImage(event, (row.item.metaId as number) ?? null, row.item.id, 'tag')
 }
 
+function getMatchedSynonymsText(item: GlobalSearchTag): string {
+  if (item.matchedSynonyms?.length) {
+    return item.matchedSynonyms.join(', ')
+  }
+  if (item.matchSource === 'synonym' && item.synonyms) {
+    return item.synonyms
+  }
+  return ''
+}
+
+function shouldShowMatchedSynonyms(item: MediaItem | GlobalSearchTag, isMedia: boolean): boolean {
+  if (isMedia) return false
+  const tag = item as GlobalSearchTag
+  return tag.matchSource === 'synonym' || tag.matchSource === 'both'
+}
+
 function getNameHighlighted(text: string) {
   return highlightChars(text, query.value.trim(), true)
 }
@@ -545,10 +564,12 @@ function getNameHighlighted(text: string) {
               <div class="global-search__item-title">
                 <span v-html="getNameHighlighted(row.item.name ?? '')"/>
                 <span
-                  v-if="!row.group.is_media && row.item.synonyms"
-                  class="text-medium-emphasis ml-1"
-                  v-html="'; ' + getNameHighlighted(row.item.synonyms)"
-                />
+                  v-if="shouldShowMatchedSynonyms(row.item, row.group.is_media)"
+                  class="global-search__synonyms text-medium-emphasis ml-1"
+                >
+                  <span class="global-search__synonyms-label">{{ t('globalSearch.viaSynonym') }}</span>
+                  <span v-html="getNameHighlighted(getMatchedSynonymsText(row.item as GlobalSearchTag))"/>
+                </span>
               </div>
             </div>
           </template>
@@ -645,6 +666,11 @@ function getNameHighlighted(text: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.global-search__synonyms-label {
+  opacity: 0.72;
+  margin-right: 0.25rem;
 }
 
 .global-search__footer {

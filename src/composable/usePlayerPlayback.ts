@@ -1,5 +1,6 @@
 import {nextTick} from 'vue'
-import _ from 'lodash'
+import findIndex from 'lodash/findIndex'
+import debounce from 'lodash/debounce'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
@@ -71,7 +72,7 @@ export async function resolvePlayableVideo(
   const candidates = []
 
   if (playlist.length > 0) {
-    const foundIndex = _.findIndex(playlist, (item) => item.id == initialVideo.id)
+    const foundIndex = findIndex(playlist, (item) => item.id == initialVideo.id)
 
     if (foundIndex >= 0) {
       for (let offset = 0; offset < playlist.length; offset++) {
@@ -95,7 +96,7 @@ export async function resolvePlayableVideo(
 
   if (initialVideo?.id) {
     const index = playlist.length > 0
-      ? Math.max(0, _.findIndex(playlist, (item) => item.id == initialVideo.id))
+      ? Math.max(0, findIndex(playlist, (item) => item.id == initialVideo.id))
       : 0
     return {video: initialVideo, index}
   }
@@ -384,7 +385,7 @@ export function usePlayerPlayback({
     return seekGeneration === liveStreamSeekGeneration
   }
 
-  const maybeAdvanceLiveStreamChunk = _.debounce(async () => {
+  const maybeAdvanceLiveStreamChunk = debounce(async () => {
     if (!playerStore.usesLiveTranscode || !playerStore.player || !playerStore.active || isAdvancingChunk) {
       return
     }
@@ -403,7 +404,7 @@ export function usePlayerPlayback({
     await switchLiveStreamChunk(nextStart)
   }, 200)
 
-  const seekLiveStream = _.debounce(async (time: number) => {
+  const seekLiveStream = debounce(async (time: number) => {
     if (!currentLiveMediaId || !playerStore.player || !playerStore.active || !playerStore.usesLiveTranscode) {
       return
     }

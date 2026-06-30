@@ -5,7 +5,7 @@ import { getHomeMedia } from '../services/homeMedia'
 import { getRandomMarks } from '../services/homeMarkers'
 import { getHomeHealth } from '../services/homeHealth'
 import { getHomeExtendedStats } from '../services/homeExtendedStats'
-import { searchMediaByName, searchTagsByName } from '../services/globalSearch'
+import { searchMediaByName, searchTagsByName, searchGlobal } from '../services/globalSearch'
 
 function parseLimit(value: unknown, fallback: number, max = 24) {
   return Math.min(Math.max(Number(value) || fallback, 1), max)
@@ -86,6 +86,18 @@ export default (db: ApiDb) => {
     }
   }
 
+  const searchGlobalHandler = async function (req: ApiRequest, res: ApiResponse) {
+    try {
+      const q = req.body?.q ?? req.body?.query
+      const data = await searchGlobal(db, String(q || ''), req.body?.limit)
+      res.status(200).send(data)
+    } catch (err) {
+      res.status(500).send({
+        message: apiErrorMessage(err) || 'Some error occurred while searching.',
+      })
+    }
+  }
+
   return {
     getMedia,
     getMarkers,
@@ -93,5 +105,6 @@ export default (db: ApiDb) => {
     getExtendedStats,
     searchMedia,
     searchTags,
+    searchGlobal: searchGlobalHandler,
   }
 }

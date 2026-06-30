@@ -15,6 +15,7 @@ import {
   ExtendedStatsSchema,
   GlobalSearchMediaResponseSchema,
   GlobalSearchTagsResponseSchema,
+  GlobalSearchResponseSchema,
   HomeHealthSchema,
   HomeMarkersSchema,
   HomeMediaResponseSchema,
@@ -33,6 +34,7 @@ import {
   ClipModelStatusSchema,
   DatabaseSizesResponseSchema,
   FileExistsResponseSchema,
+  CheckFilesResponseSchema,
   FileListResponseSchema,
   FolderSizeResponseSchema,
   MediaIdsResponseSchema,
@@ -45,6 +47,7 @@ import {
   DynamicPlaylistSummarySchema,
   FilterRowInSavedFilterSchema,
   SavedFilterBasicSchema,
+  SavedFilterFindOrCreateHydratedSchema,
   SavedFilterMediaResponseSchema,
   SavedFilterSchema,
   SavedFilterSummaryResponseSchema,
@@ -181,6 +184,10 @@ export function parseGlobalSearchTagsResponse(data: unknown): Tag[] {
   return GlobalSearchTagsResponseSchema.parse(data).items as Tag[]
 }
 
+export function parseGlobalSearchResponse(data: unknown) {
+  return GlobalSearchResponseSchema.parse(data)
+}
+
 export function parseSqlQueryMediaRows(data: unknown): MediaItem[] {
   return SqlQueryMediaResultSchema.parse(data)[0] as MediaItem[]
 }
@@ -191,6 +198,10 @@ export function parseSqlQueryTagRows(data: unknown): Tag[] {
 
 export function parseFileExistsResponse(data: unknown) {
   return FileExistsResponseSchema.parse(data)
+}
+
+export function parseCheckFilesResponse(data: unknown) {
+  return CheckFilesResponseSchema.parse(data)
 }
 
 export function parseResolvePathResponse(data: unknown) {
@@ -227,6 +238,12 @@ export function parseAddMediaResponse(data: unknown): AddMediaResponse {
 
 export function parseSavedFilters(data: unknown): SavedFilter[] {
   return z.array(SavedFilterSchema).parse(data) as SavedFilter[]
+}
+
+export function parseSavedFilterFindOrCreateHydrated(
+  data: unknown,
+): [SavedFilter, boolean] {
+  return SavedFilterFindOrCreateHydratedSchema.parse(data) as [SavedFilter, boolean]
 }
 
 export function parseDynamicPlaylistSummaries(data: unknown) {
@@ -398,6 +415,7 @@ export {
   ClipModelStatusSchema,
   DatabaseSizesResponseSchema,
   FileExistsResponseSchema,
+  CheckFilesResponseSchema,
   FileListResponseSchema,
   FolderSizeResponseSchema,
   MediaIdsResponseSchema,
@@ -411,6 +429,7 @@ export {
   DynamicPlaylistSummarySchema,
   FilterRowInSavedFilterSchema,
   SavedFilterBasicSchema,
+  SavedFilterFindOrCreateHydratedSchema,
   SavedFilterMediaResponseSchema,
   SavedFilterSchema,
   SavedFilterSummaryResponseSchema,

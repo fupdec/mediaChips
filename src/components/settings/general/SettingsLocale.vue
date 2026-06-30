@@ -47,6 +47,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {loadLocale} from '@/i18n/loadLocale'
 import CountryFlag from 'vue-country-flag-next'
 import {useSettingsStore} from '@/stores/settings'
 import {setOption} from '@/services/settingsService'
@@ -89,7 +90,8 @@ const selectedLocale = computed((): LocaleEntry =>
   locales.find(i => i.code === settingsStore.locale) ?? locales[0],
 )
 
-const changeLanguage = (langCode: string) => {
+const changeLanguage = async (langCode: string) => {
+  await loadLocale(langCode)
   locale.value = langCode
 
   setOption(langCode, "locale")

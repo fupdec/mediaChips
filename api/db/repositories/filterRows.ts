@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
 import { filterRows } from '../schema/filterRows'
 import { nowIso } from '../utils/timestamps'
@@ -24,6 +24,11 @@ export function createFilterRowsRepository(db: DrizzleClient) {
   return {
     findById(id: number): FilterRowRecord | undefined {
       return db.select().from(filterRows).where(eq(filterRows.id, id)).get()
+    },
+
+    findByIds(ids: number[]): FilterRowRecord[] {
+      if (!ids.length) return []
+      return db.select().from(filterRows).where(inArray(filterRows.id, ids)).all()
     },
 
     create(data: Record<string, unknown>): FilterRowRecord {

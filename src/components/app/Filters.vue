@@ -188,7 +188,7 @@
 import {ref, computed, watch, onMounted, onUnmounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import {typedApi} from '@/services/typedApi'
 import {getSavedFilters} from '@/services/filterService'
 import {
@@ -287,8 +287,8 @@ const duplicatesButtonLabel = computed(() => {
 })
 
 const is_filters_changed = computed(() => {
-  const a = _.cloneDeep(filtersPreviousState.value).sort()
-  const b = _.cloneDeep(filters.value).sort()
+  const a = cloneDeep(filtersPreviousState.value).sort()
+  const b = cloneDeep(filters.value).sort()
   return JSON.stringify(a) !== JSON.stringify(b)
 })
 
@@ -376,11 +376,11 @@ const init = () => {
 
   listBy.value = listByArray
   filters.value = sanitizeFiltersForMediaType(
-    _.cloneDeep(ITEMS.value.filters),
+    cloneDeep(ITEMS.value.filters),
     ITEMS.value.type,
     currentMediaType.value
   )
-  filtersPreviousState.value = _.cloneDeep(filters.value)
+  filtersPreviousState.value = cloneDeep(filters.value)
 }
 
 const add = (params: FilterListParam[]) => {
@@ -440,7 +440,7 @@ const deactivateAll = (state?: boolean) => {
   const updatedFilters = filters.value.map(i =>
     i.lock ? i : {...i, active: is_active}
   )
-  filters.value = _.cloneDeep(updatedFilters)
+  filters.value = cloneDeep(updatedFilters)
   updKey.value += Date.now()
 }
 
@@ -483,12 +483,12 @@ const apply = async () => {
     }
   }
 
-  itemsStore.updateState({key: "filters", value: _.cloneDeep(filters.value)})
+  itemsStore.updateState({key: "filters", value: cloneDeep(filters.value)})
   eventBus.emit('setItemsFilters', {filters: filters.value})
 }
 
 const addFilterRows = async (filterId: number | null | undefined, isSavedFilter = false) => {
-  const filterRows = _.cloneDeep(filters.value.filter(i => !i.lock && !i.removed))
+  const filterRows = cloneDeep(filters.value.filter(i => !i.lock && !i.removed))
   for (let f of filterRows) {
     if (isSavedFilter) f.id = null
     try {
@@ -540,7 +540,7 @@ const save = async () => {
 const loadSavedFilter = (loadedFilters: FilterObject[]) => {
   dialogLoad.value = false
   removeAll()
-  let old_filters = _.cloneDeep(filters.value.filter(i => !i.lock))
+  let old_filters = cloneDeep(filters.value.filter(i => !i.lock))
   filters.value = [...loadedFilters, ...old_filters]
   updKey.value += Date.now()
 }
@@ -613,8 +613,8 @@ onUnmounted(() => {
 
 // Watchers
 watch(() => itemsStore.filters, (val) => {
-  filters.value = _.cloneDeep(val)
-  filtersPreviousState.value = _.cloneDeep(val)
+  filters.value = cloneDeep(val)
+  filtersPreviousState.value = cloneDeep(val)
   updKey.value += Date.now()
 }, {deep: true})
 

@@ -1,5 +1,7 @@
 import type Database from 'better-sqlite3'
 
+const FTS_BACKFILL_BATCH_SIZE = 2000
+
 function hasTable(sqlite: Database.Database, tableName: string): boolean {
   const row = sqlite.prepare(
     `SELECT name FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1`,
@@ -8,15 +10,66 @@ function hasTable(sqlite: Database.Database, tableName: string): boolean {
   return Boolean(row)
 }
 
+function backfillMediaFts(sqlite: Database.Database) {
+  const insert = sqlite.prepare(`INSERT INTO media_fts(rowid, name) VALUES (?, ?)`)
+  const selectBatch = sqlite.prepare(`
+    SELECT id, COALESCE(name, '') AS name
+    FROM media
+    WHERE id > ?
+    ORDER BY id
+    LIMIT ?
+  `)
+
+  let lastId = 0
+  while (true) {
+    const rows = selectBatch.all(lastId, FTS_BACKFILL_BATCH_SIZE) as Array<{id: number; name: string}>
+    if (!rows.length) break
+
+    const backfill = sqlite.transaction((batch: Array<{id: number; name: string}>) => {
+      for (const row of batch) {
+        insert.run(row.id, row.name)
+      }
+    })
+    backfill(rows)
+    lastId = rows[rows.length - 1].id
+  }
+}
+
+function backfillTagsFts(sqlite: Database.Database) {
+  const insert = sqlite.prepare(`INSERT INTO tags_fts(rowid, name, synonyms) VALUES (?, ?, ?)`)
+  const selectBatch = sqlite.prepare(`
+    SELECT id, COALESCE(name, '') AS name, COALESCE(synonyms, '') AS synonyms
+    FROM tags
+    WHERE id > ?
+    ORDER BY id
+    LIMIT ?
+  `)
+
+  let lastId = 0
+  while (true) {
+    const rows = selectBatch.all(lastId, FTS_BACKFILL_BATCH_SIZE) as Array<{
+      id: number
+      name: string
+      synonyms: string
+    }>
+    if (!rows.length) break
+
+    const backfill = sqlite.transaction((batch: Array<{id: number; name: string; synonyms: string}>) => {
+      for (const row of batch) {
+        insert.run(row.id, row.name, row.synonyms)
+      }
+    })
+    backfill(rows)
+    lastId = rows[rows.length - 1].id
+  }
+}
+
 function createMediaFts(sqlite: Database.Database) {
   sqlite.exec(`
     CREATE VIRTUAL TABLE media_fts USING fts5(
       name,
       tokenize='unicode61 remove_diacritics 2'
     );
-
-    INSERT INTO media_fts(rowid, name)
-    SELECT id, COALESCE(name, '') FROM media;
 
     CREATE TRIGGER IF NOT EXISTS media_fts_insert AFTER INSERT ON media BEGIN
       INSERT INTO media_fts(rowid, name) VALUES (new.id, COALESCE(new.name, ''));
@@ -33,6 +86,7 @@ function createMediaFts(sqlite: Database.Database) {
       INSERT INTO media_fts(rowid, name) VALUES (new.id, COALESCE(new.name, ''));
     END;
   `)
+  backfillMediaFts(sqlite)
 }
 
 function createTagsFts(sqlite: Database.Database) {
@@ -42,9 +96,6 @@ function createTagsFts(sqlite: Database.Database) {
       synonyms,
       tokenize='unicode61 remove_diacritics 2'
     );
-
-    INSERT INTO tags_fts(rowid, name, synonyms)
-    SELECT id, COALESCE(name, ''), COALESCE(synonyms, '') FROM tags;
 
     CREATE TRIGGER IF NOT EXISTS tags_fts_insert AFTER INSERT ON tags BEGIN
       INSERT INTO tags_fts(rowid, name, synonyms)
@@ -63,6 +114,7 @@ function createTagsFts(sqlite: Database.Database) {
       VALUES (new.id, COALESCE(new.name, ''), COALESCE(new.synonyms, ''));
     END;
   `)
+  backfillTagsFts(sqlite)
 }
 
 export function ensureSearchFtsIndex(sqlite: Database.Database): string[] {

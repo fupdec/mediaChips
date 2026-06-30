@@ -330,7 +330,8 @@ import {parseCountries, serializeCountries} from '@/utils/country'
 import {typedApi} from '@/services/typedApi'
 import {createImage} from '@/services/fileService'
 import {setNotification} from '@/services/notificationService'
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import isEqual from 'lodash/isEqual'
 import path from 'path-browserify'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -643,15 +644,15 @@ const equalOld = (metaId: string | number, metaType?: string) => {
   const oldVal = old.value[metaId]
 
   if (metaType === 'array') {
-    const valCopy = _.cloneDeep(val) as unknown[] || []
-    const oldCopy = _.cloneDeep(oldVal) as unknown[] || []
-    return _.isEqual(valCopy.sort(), oldCopy.sort())
+    const valCopy = cloneDeep(val) as unknown[] || []
+    const oldCopy = cloneDeep(oldVal) as unknown[] || []
+    return isEqual(valCopy.sort(), oldCopy.sort())
   }
   return val === oldVal
 }
 
 const restore = (key: string | number) => {
-  vals.value[key] = _.cloneDeep(old.value[key])
+  vals.value[key] = cloneDeep(old.value[key])
 }
 
 const onMediaPathUpdate = (updatedMedia: MediaItem) => {
@@ -726,7 +727,7 @@ const getMetaValues = async () => {
       setVal(parsedTags[metaId], resolveItemKey(metaId))
     }
 
-    old.value = _.cloneDeep(vals.value)
+    old.value = cloneDeep(vals.value)
 
     if (isTag.value) {
       scraperStore.currentValues = vals.value
@@ -801,7 +802,7 @@ const save = async () => {
     }
   }
 
-  const { country, ...rest } = _.cloneDeep(vals.value) as EntityUpdateFormValues
+  const { country, ...rest } = cloneDeep(vals.value) as EntityUpdateFormValues
   const updateData: EntityUpdatePayload = rest
 
   if (isTag.value) {
@@ -886,7 +887,7 @@ const transferScrapedInfo = async () => {
           const tag = tags.find((i) => i.name === field.valueScraper)
 
           if (tag) {
-            const arr = _.cloneDeep(vals.value[metaId] || []) as number[]
+            const arr = cloneDeep(vals.value[metaId] || []) as number[]
 
             if (!arr.includes(tag.id)) {
               arr.push(tag.id)

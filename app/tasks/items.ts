@@ -1,6 +1,12 @@
 // app/tasks/items.js - исправленный ES модуль
 
-import _ from "lodash";
+import findIndex from 'lodash/findIndex'
+import uniqBy from 'lodash/uniqBy'
+import isNumber from 'lodash/isNumber'
+import isEmpty from 'lodash/isEmpty'
+import groupBy from 'lodash/groupBy'
+import shuffle from 'lodash/shuffle'
+import orderBy from 'lodash/orderBy'
 import type { DbItemRow, ParsedItem, ParsedItemTags } from '../types/items'
 import type { FilterLike } from '../../api/types/db'
 import FilterCols from '../configs/filter-cols'
@@ -49,13 +55,13 @@ const parseItemsFromDb = (items: DbItemRow[]) => {
     delete item.tag_tags;
     delete item.tag_values;
 
-    const index = _.findIndex(parsed, {id: item.id});
+    const index = findIndex(parsed, {id: item.id});
     if (index > -1) {
       const existing = parsed[index]
       let tags = [...existing.tags, ...parsedData.tags]
       let values = [...existing.values, ...parsedData.values]
-      tags = _.uniqBy(tags, 'tagId')
-      values = _.uniqBy(values, 'metaId')
+      tags = uniqBy(tags, 'tagId')
+      values = uniqBy(values, 'metaId')
       const replaced: ParsedItem = {...existing, tags, values}
       parsed.splice(index, 1, replaced);
     } else {
@@ -120,7 +126,7 @@ const filterItems = (
   const isFilterByVideo = filters.some((i: FilterLike) => (
     i.param != null && mediaMetadataCols.includes(String(i.param))
   ))
-  const isFilterByMetaValue = filters.some((i: FilterLike) => i.type !== 'array' && _.isNumber(i.param))
+  const isFilterByMetaValue = filters.some((i: FilterLike) => i.type !== 'array' && isNumber(i.param))
   const isFilterTypeArray = filters.some((i: FilterLike) => i.type === 'array')
   const array_count = 0; // для подсчета фильтров с типом массив
 
@@ -198,7 +204,7 @@ const filterItems = (
       } else if (type === 'array' || type === 'select') {
         let tags: Array<number | string> = []
         if (by === 'country') {
-          if (!_.isEmpty(item.country)) {
+          if (!isEmpty(item.country)) {
             tags = parseCountries(String(item.country))
           }
         } else if (by === 'ext') {
@@ -214,18 +220,18 @@ const filterItems = (
         const filterValues = Array.isArray(val) ? val : []
 
         if (cond === 'is null') { // пусто
-          is_match = _.isEmpty(tags);
+          is_match = isEmpty(tags);
         } else if (cond === 'not null') { // не пусто
-          is_match = !_.isEmpty(tags);
+          is_match = !isEmpty(tags);
         } else if (cond === 'not in') {
           is_match = !tags.some((tagId) => filterValues.includes(tagId))
         } else if (cond === 'not in all') { // исключая все
           if (!filterValues.length) {
-            is_match = !_.isEmpty(tags);
+            is_match = !isEmpty(tags);
           } else {
             is_match = !filterValues.every((entry) => tags.includes(entry))
           }
-        } else if (!_.isEmpty(filterValues) && !_.isEmpty(tags)) { // если есть значения
+        } else if (!isEmpty(filterValues) && !isEmpty(tags)) { // если есть значения
           if (cond === 'in') { // включая один из
             is_match = tags.some((tagId) => filterValues.includes(tagId))
           } else if (cond === 'in all') { // включая все
@@ -242,7 +248,7 @@ const filterItems = (
 
   if (find_duplicates) {
     const groupKey = duplicates_by === 'path' ? 'path' : 'filesize'
-    const grouped_items = _.groupBy(result, groupKey);
+    const grouped_items = groupBy(result, groupKey);
     let items_dups: ParsedItem[] = []
     for (const key in grouped_items) {
       if (grouped_items[key].length > 1) {
@@ -255,9 +261,9 @@ const filterItems = (
   }
 
   if (sortBy === 'shuffle') {
-    result = _.shuffle(result);
+    result = shuffle(result);
   } else {
-    result = _.orderBy(result, [sortBy], [direction as 'asc' | 'desc']);
+    result = orderBy(result, [sortBy], [direction as 'asc' | 'desc']);
   }
 
   return result;

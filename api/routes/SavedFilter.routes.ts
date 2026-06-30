@@ -24,6 +24,10 @@ export default function registerRoutes(app: Express, db: ApiDb) {
   // Retrieve all SavedFilter with params
   router.post("/findAll", SavedFilter.findAll);
 
+  router.post("/findAllHydrated", SavedFilter.findAllHydrated);
+
+  router.post("/findOrCreateHydrated", SavedFilter.findOrCreateHydrated);
+
   // Update a SavedFilter with id
   router.put("/:id", SavedFilter.update);
 

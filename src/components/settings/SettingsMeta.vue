@@ -103,7 +103,7 @@ import {useI18n} from 'vue-i18n'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from '@/utils/eventBus'
 import {typedApi} from '@/services/typedApi'
-import _ from 'lodash'
+import isEmpty from 'lodash/isEmpty'
 import MetaManager from '@/components/dialogs/DialogMetaManager.vue'
 import SettingsCategoryDivider from '@/components/ui/SettingsCategoryDivider.vue'
 import {getMetaSortOptions, groupMetaByType, META_SORT_MODES, type MetaSortMode} from '@/utils/metaSort'
@@ -146,7 +146,7 @@ const setSortMode = (value: MetaSortMode) => {
   setOption(value, 'meta_sort_mode')
 }
 
-const isSearchEmpty = computed(() => _.isEmpty(filteredMeta.value))
+const isSearchEmpty = computed(() => isEmpty(filteredMeta.value))
 
 const getMeta = async (type?: string) => {
   try {

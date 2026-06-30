@@ -73,7 +73,8 @@
 import { ref, computed } from 'vue'
 import type { PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
-import _ from 'lodash'
+import orderBy from 'lodash/orderBy'
+import groupBy from 'lodash/groupBy'
 import { foundByChars, highlightChars } from '@/services/formatUtils'
 import { getIconDataType } from '@/services/metaTypeUtils'
 import {useSettingsStore} from '@/stores/settings'
@@ -120,8 +121,8 @@ const filtersGrouped = computed((): FilterGroupedItem[] => {
   const params = props.params.filter((i: FilterListParam) =>
    is_default ? getFilterText(i).toLowerCase().indexOf(search.value.toLowerCase()) > -1 : foundByChars(getFilterText(i), search.value)
 )
-  const ordered = _.orderBy(params, [(i: FilterListParam) => getGroupText(i.group), (i: FilterListParam) => getFilterText(i)])
-  const grouped = _.groupBy(ordered, 'group')
+  const ordered = orderBy(params, [(i: FilterListParam) => getGroupText(i.group), (i: FilterListParam) => getFilterText(i)])
+  const grouped = groupBy(ordered, 'group')
 
   const result: FilterGroupedItem[] = []
 

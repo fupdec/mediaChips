@@ -69,7 +69,7 @@ import {useI18n} from "vue-i18n"
 import {useAppStore} from "@/stores/app"
 import {useSettingsStore} from "@/stores/settings"
 import {typedApi} from "@/services/typedApi"
-import _ from "lodash"
+import sortBy from 'lodash/sortBy'
 import ButtonDocumentation from "@/components/ui/ButtonDocumentation.vue"
 import SettingsCategoryDivider from "@/components/ui/SettingsCategoryDivider.vue"
 import SettingsSwitch from "@/components/ui/SettingsSwitch.vue"
@@ -89,7 +89,7 @@ const selected_meta = ref<Meta | undefined>(undefined)
 
 const meta_tags = computed(() => {
   const metas = store.meta?.filter(i => i.type === "array") || []
-  return _.sortBy(metas, "name")
+  return sortBy(metas, "name")
 })
 
 async function updateSettings(meta: Meta | null | undefined) {

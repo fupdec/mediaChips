@@ -1,12 +1,30 @@
+const DEFAULT_MAX_ENTRIES = 1500
+
 const cache = new Map<string, string>()
+let maxEntries = DEFAULT_MAX_ENTRIES
+
+function touch(key: string, url: string): void {
+  cache.delete(key)
+  cache.set(key, url)
+}
+
+function evictOldest(): void {
+  if (cache.size <= maxEntries) return
+  const oldestKey = cache.keys().next().value
+  if (oldestKey !== undefined) cache.delete(oldestKey)
+}
 
 export function getCachedThumb(key: string): string | undefined {
-  return cache.get(key)
+  const url = cache.get(key)
+  if (url === undefined) return undefined
+  touch(key, url)
+  return url
 }
 
 export function setCachedThumb(key: string, url: string | null | undefined): void {
   if (!url || url.includes('unavailable.png')) return
-  cache.set(key, url)
+  touch(key, url)
+  evictOldest()
 }
 
 export function setCachedMediaThumbs(
@@ -27,6 +45,10 @@ export function setCachedTagThumbs(
       setCachedThumb(tagThumbKey(metaId, tagId, type), url)
     }
   }
+}
+
+export function clearThumbDisplayCache(): void {
+  cache.clear()
 }
 
 export function mediaThumbKey(folder: string, id: number | string): string {

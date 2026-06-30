@@ -3,9 +3,13 @@ import { normalizePastedFilePath } from '@/utils/filePathInput'
 import { getApiBaseUrl } from '@/services/apiClient'
 import { typedApi } from '@/services/typedApi'
 import { checkFileExistsElectron, isElectron } from '@/services/electronBridge'
+import { queueFileExistenceCheck } from '@/utils/fileExistenceBatcher'
 
 const NEGATIVE_CACHE_TTL_MS = 60_000
+const POSITIVE_CACHE_TTL_MS = 5 * 60_000
+
 const negativeCache = new Map<string, number>()
+const positiveCache = new Map<string, number>()
 
 function getUnavailableVolumeRoot(filePath: string) {
   if (!isElectron()) return null
@@ -27,8 +31,47 @@ function getCachedNegativeResult(filePath: string) {
   return false
 }
 
+function getCachedPositiveResult(filePath: string) {
+  const expiresAt = positiveCache.get(filePath)
+  if (!expiresAt) return null
+  if (Date.now() >= expiresAt) {
+    positiveCache.delete(filePath)
+    return null
+  }
+  return true
+}
+
 function rememberNegativeResult(filePath: string) {
   negativeCache.set(filePath, Date.now() + NEGATIVE_CACHE_TTL_MS)
+  positiveCache.delete(filePath)
+}
+
+function rememberPositiveResult(filePath: string) {
+  positiveCache.set(filePath, Date.now() + POSITIVE_CACHE_TTL_MS)
+  negativeCache.delete(filePath)
+}
+
+async function checkFileExistsRemote(filePath: string) {
+  if (!getApiBaseUrl()) return false
+
+  try {
+    const response = await typedApi.checkFileExists(filePath)
+    const exists = response.data?.exists === true
+    if (exists) rememberPositiveResult(filePath)
+    else rememberNegativeResult(filePath)
+    return exists
+  } catch {}
+
+  try {
+    const response = await typedApi.resolvePath(filePath)
+    const exists = Boolean(response.data?.exists)
+    if (exists) rememberPositiveResult(filePath)
+    else rememberNegativeResult(filePath)
+    return exists
+  } catch {
+    rememberNegativeResult(filePath)
+    return false
+  }
 }
 
 export async function checkFileExists(filePath: string) {
@@ -38,6 +81,9 @@ export async function checkFileExists(filePath: string) {
 
   const cachedNegative = getCachedNegativeResult(filePath)
   if (cachedNegative === false) return false
+
+  const cachedPositive = getCachedPositiveResult(filePath)
+  if (cachedPositive === true) return true
 
   const volumeRoot = getUnavailableVolumeRoot(filePath)
   if (volumeRoot && volumeRoot !== filePath) {
@@ -50,27 +96,20 @@ export async function checkFileExists(filePath: string) {
 
   const electronResult = await checkFileExistsElectron(filePath)
   if (electronResult !== null) {
-    if (!electronResult) rememberNegativeResult(filePath)
+    if (electronResult) rememberPositiveResult(filePath)
+    else rememberNegativeResult(filePath)
     return electronResult
   }
 
   if (!getApiBaseUrl()) return false
 
   try {
-    const response = await typedApi.checkFileExists(filePath)
-    const exists = response.data?.exists === true
-    if (!exists) rememberNegativeResult(filePath)
-    return exists
-  } catch {}
-
-  try {
-    const response = await typedApi.resolvePath(filePath)
-    const exists = Boolean(response.data?.exists)
-    if (!exists) rememberNegativeResult(filePath)
+    const exists = await queueFileExistenceCheck(filePath)
+    if (exists) rememberPositiveResult(filePath)
+    else rememberNegativeResult(filePath)
     return exists
   } catch {
-    rememberNegativeResult(filePath)
-    return false
+    return checkFileExistsRemote(filePath)
   }
 }
 

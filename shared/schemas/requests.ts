@@ -89,6 +89,10 @@ export const PathPayloadSchema = z.object({
   path: z.string().min(1),
 })
 
+export const CheckFilesPayloadSchema = z.object({
+  paths: z.array(z.string().min(1)).min(1).max(100),
+})
+
 export const AddMediaRequestSchema = z.object({
   path: z.string().min(1),
   type: z.union([z.string(), z.number(), z.record(z.unknown())]).optional(),

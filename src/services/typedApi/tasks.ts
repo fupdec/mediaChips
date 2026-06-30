@@ -40,6 +40,7 @@ import {
   parseClipModelStatus,
   parseDatabaseSizesResponse,
   parseFileExistsResponse,
+  parseCheckFilesResponse,
   parseFileListResponse,
   parseFolderSizeResponse,
   parseMediaPathSearchResults,
@@ -50,6 +51,7 @@ import {
 import {
   AddMediaRequestSchema,
   DatabaseSizesRequestSchema,
+  CheckFilesPayloadSchema,
   PathPayloadSchema,
 } from '@shared/schemas/requests'
 import { validated, validateRequest } from './validate'
@@ -60,6 +62,14 @@ export const tasksApi = {
     return apiClient.post(API_ROUTES.taskCheckFileExists, body).then((res) => ({
       ...res,
       data: validated(parseFileExistsResponse, res.data),
+    }))
+  },
+
+  checkFilesExist(paths: string[]) {
+    const body = validateRequest(CheckFilesPayloadSchema, { paths })
+    return apiClient.post(API_ROUTES.taskCheckFilesExists, body).then((res) => ({
+      ...res,
+      data: validated(parseCheckFilesResponse, res.data),
     }))
   },
 

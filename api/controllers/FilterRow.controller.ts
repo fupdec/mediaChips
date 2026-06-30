@@ -8,6 +8,7 @@ import { createTagsInFilterRowsRepository } from '../db/repositories/tagsInFilte
 import { serializeCountries } from '../utils/country'
 import { normalizeMetaIdParam, resolveMetaId } from '../utils/metaId'
 import { serializeExtList } from '../utils/ext'
+import { invalidateMediaDerivedCaches } from '../services/mediaCacheInvalidation'
 
 export default function (db: ApiDb) {
   const filterRowsRepo = createFilterRowsRepository(db.drizzle)
@@ -76,6 +77,7 @@ export default function (db: ApiDb) {
       }
 
       res.status(201).send(filterRow)
+      invalidateMediaDerivedCaches()
     } catch (err) {
       console.log(err)
       res.status(500).send({
@@ -98,6 +100,7 @@ export default function (db: ApiDb) {
   const update = function (req: ApiRequest, res: ApiResponse) {
     try {
       filterRowsRepo.updateById(Number(req.params.id), req.body)
+      invalidateMediaDerivedCaches()
       res.sendStatus(201)
     } catch (err: unknown) {
       res.status(500).send({
@@ -109,6 +112,7 @@ export default function (db: ApiDb) {
   const deleteOne = function (req: ApiRequest, res: ApiResponse) {
     try {
       filterRowsRepo.deleteById(Number(req.params.id))
+      invalidateMediaDerivedCaches()
       res.sendStatus(201)
     } catch (err: unknown) {
       res.status(500).send({

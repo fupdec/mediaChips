@@ -139,7 +139,8 @@ import {ref, computed, onMounted, watch, nextTick, useAttrs} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {typedApi} from '@/services/typedApi'
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import orderBy from 'lodash/orderBy'
 import {useSettingsStore} from '@/stores/settings'
 import {useEventBus} from "@/utils/eventBus"
 import {
@@ -219,7 +220,7 @@ interface TagFilterItem {
 }
 
 const filterTags = (title: string, queryText: string, tagObj: TagFilterItem) => {
-  const tag = _.cloneDeep(tagObj.raw);
+  const tag = cloneDeep(tagObj.raw);
   const query = queryText.toLowerCase();
 
   const is_default = settingsStore.typingFiltersDefault == "1";
@@ -330,8 +331,8 @@ const sortTags = (tags: TagListItem[]) => {
   const sortByParam = meta.value?.sortBy || 'createdAt'
   const sortDir = (meta.value?.sortDir || 'asc') as 'asc' | 'desc'
 
-  const sorted = _.orderBy(tags, ['name'], ['asc'])
-  return _.orderBy(sorted, [sortByParam], [sortDir])
+  const sorted = orderBy(tags, ['name'], ['asc'])
+  return orderBy(sorted, [sortByParam], [sortDir])
 }
 
 const create = async () => {

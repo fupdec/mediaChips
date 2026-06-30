@@ -17,6 +17,7 @@ import {
   loadFilteredMediaIds,
   loadMediaBasicsByIds,
 } from '../services/mediaItemsLoader'
+import { invalidateMediaDerivedCaches } from '../services/mediaCacheInvalidation'
 import {
   mapWithConcurrency,
   readFirstExistingImageDataUrl,
@@ -159,6 +160,7 @@ export default function (db: ApiDb) {
       }
 
       mediaRepo.updateById(Number(body.id), data, {silent: true})
+      invalidateMediaDerivedCaches()
       res.status(201).send([1])
     } catch (err: unknown) {
       res.status(500).send({
@@ -171,6 +173,7 @@ export default function (db: ApiDb) {
     try {
       const body = getRequestBody<EntityUpdatePayload>(req)
       mediaRepo.updateById(Number(req.params.id), body, {silent: Boolean(body.silent)})
+      invalidateMediaDerivedCaches()
       res.status(201).send([1])
     } catch (err: unknown) {
       res.status(500).send({
@@ -212,6 +215,7 @@ export default function (db: ApiDb) {
       }
 
       mediaRepo.deleteById(Number(id))
+      invalidateMediaDerivedCaches()
       res.sendStatus(201)
     } catch (err) {
       res.status(500).send({

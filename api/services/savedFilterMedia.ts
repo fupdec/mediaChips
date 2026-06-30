@@ -13,6 +13,10 @@ import { parseCountries } from '../utils/country'
 import { normalizeMetaIdParam } from '../utils/metaId'
 import { parseExtList } from '../utils/ext'
 import {
+  getCachedDynamicPlaylistsSummary,
+  setCachedDynamicPlaylistsSummary,
+} from './dynamicPlaylistsSummaryCache'
+import {
   loadFilteredMediaIds,
   loadMediaPlaylistItems,
   getFilteredMediaSummary,
@@ -70,14 +74,16 @@ async function loadSavedFilterRowsBatch(db: ApiDb, savedFilterIds: SavedFilterId
 
   const links = filterRowsInSavedFiltersRepo.findByFilterIds(savedFilterIds.map((id) => Number(id)))
 
-  const rowIds: number[] = []
+  const rowIds = [...new Set(links.map((link) => Number(link.rowId)))]
+  const filterRows = filterRowsRepo.findByIds(rowIds)
+  const filterRowsById = new Map(filterRows.map((row) => [Number(row.id), row]))
+
   const linkEntries: Array<{ filterId: SavedFilterId; filterRow: FilterLike }> = []
 
   for (const link of links) {
-    const filterRow = filterRowsRepo.findById(link.rowId)
+    const filterRow = filterRowsById.get(Number(link.rowId))
     if (!filterRow) continue
 
-    rowIds.push(Number(filterRow.id))
     linkEntries.push({
       filterId: link.filterId as SavedFilterId,
       filterRow: filterRow as FilterLike,
@@ -178,6 +184,48 @@ async function getSavedFilterPlaylistSummary(
   }) as Promise<SavedFilterSummaryResponse>
 }
 
+async function getSavedFiltersHydrated(db: ApiDb, filters: Record<string, unknown> = {}) {
+  const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
+  const rows = savedFiltersRepo.findAllNamed(filters)
+  if (!rows.length) return []
+
+  const filtersBySavedFilterId = await loadSavedFilterRowsBatch(
+    db,
+    rows.map((savedFilter) => savedFilter.id as SavedFilterId),
+  )
+
+  return rows.map((savedFilter) => ({
+    ...savedFilter,
+    filters: filtersBySavedFilterId.get(Number(savedFilter.id)) || [],
+  }))
+}
+
+async function findOrCreateSavedFilterHydrated(
+  db: ApiDb,
+  payload: {
+    name?: string | null
+    mediaTypeId?: number | null
+    metaId?: number | null
+    tagId?: number | null
+    tabId?: number | null
+  } = {},
+) {
+  const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
+  const { row, created } = payload.name
+    ? { row: savedFiltersRepo.create(payload), created: true }
+    : savedFiltersRepo.findOrCreate(payload)
+
+  const filtersBySavedFilterId = await loadSavedFilterRowsBatch(db, [row.id as SavedFilterId])
+
+  return {
+    savedFilter: {
+      ...row,
+      filters: filtersBySavedFilterId.get(Number(row.id)) || [],
+    },
+    created,
+  }
+}
+
 async function getDynamicPlaylistsBasic(db: ApiDb): Promise<SavedFilterBasic[]> {
   const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
   const mediaTypeId = await getVideoMediaTypeId(db)
@@ -193,6 +241,9 @@ async function getDynamicPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlayl
   const savedFiltersRepo = createSavedFiltersRepository(db.drizzle)
   const mediaTypeId = await getVideoMediaTypeId(db)
   if (!mediaTypeId) return []
+
+  const cached = getCachedDynamicPlaylistsSummary(Number(mediaTypeId))
+  if (cached) return cached as ParsedDynamicPlaylistSummary[]
 
   const savedFilters = savedFiltersRepo.findDynamicPlaylistsFull(mediaTypeId)
 
@@ -223,6 +274,7 @@ async function getDynamicPlaylistsSummary(db: ApiDb): Promise<ParsedDynamicPlayl
     }
   }))
 
+  setCachedDynamicPlaylistsSummary(Number(mediaTypeId), summaries)
   return summaries as unknown as ParsedDynamicPlaylistSummary[]
 }
 
@@ -263,6 +315,8 @@ export {
   getDynamicPlaylistsBasic,
   getDynamicPlaylistsSummary,
   getSavedFilterPlaylistSummary,
+  getSavedFiltersHydrated,
+  findOrCreateSavedFilterHydrated,
   getFilteredMediaForPlayback,
   getFilteredMediaForSavedFilter,
   getVideoMediaTypeId,

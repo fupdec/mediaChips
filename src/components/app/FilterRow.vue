@@ -221,7 +221,7 @@ import {ref, computed, onMounted, watch} from 'vue'
 import type { PropType } from 'vue'
 import {useI18n} from 'vue-i18n'
 import {typedApi} from '@/services/typedApi'
-import _ from 'lodash'
+import find from 'lodash/find'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import type { FilterObject, FilterListParam } from '@/types/common'
@@ -298,7 +298,7 @@ const extensionOptions = computed(() =>
 
 // Methods
 const getParamData = (data: string | number | null) => {
-  const param = _.find(props.listBy, (i) => {
+  const param = find(props.listBy, (i) => {
     if (typeof i.param === 'string') {
       return i.param === data
     } else {

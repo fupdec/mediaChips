@@ -5,6 +5,7 @@ import path from 'path'
 import { exec } from 'child_process'
 import { readdir, lstat } from 'fs/promises'
 import { resolveExistingPath } from '../../services/contentHash'
+import { checkFilesExist } from '../../services/checkFilesExist'
 import { normalizeMediaPath } from '../../utils/normalizeUserPath'
 import { unlinkResolvedPath } from '../../services/localAssetCleanup'
 import {
@@ -18,6 +19,12 @@ export default function createTasksFileController(shared: TaskControllerShared) 
     const filePath = normalizeMediaPath(req.body.path)
     const resolved = filePath ? await resolveExistingPath(filePath) : null
     res.status(200).json({ exists: Boolean(resolved) })
+  }
+
+  const checkFilesExists = async function (req: ApiRequest, res: ApiResponse) {
+    const paths = Array.isArray(req.body.paths) ? req.body.paths : []
+    const results = await checkFilesExist(paths)
+    res.status(200).json({ results })
   }
 
   const renameFile = async function (req: ApiRequest, res: ApiResponse) {
@@ -183,6 +190,7 @@ export default function createTasksFileController(shared: TaskControllerShared) 
 
   return {
     checkFileExists,
+    checkFilesExists,
     renameFile,
     openPath,
     getFileList,

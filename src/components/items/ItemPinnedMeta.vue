@@ -175,7 +175,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import _ from 'lodash'
+import groupBy from 'lodash/groupBy'
 import {typedApi} from '@/services/typedApi'
 
 import {useAppStore} from '@/stores/app'
@@ -319,7 +319,7 @@ const tagItems = computed((): TagWithMeta[] => {
 })
 
 const tagGroups = computed(() =>
-  groupByPinnedAssignmentOrder(_.groupBy(tagItems.value, 'metaId'), assignmentRows.value, {
+  groupByPinnedAssignmentOrder(groupBy(tagItems.value, 'metaId'), assignmentRows.value, {
     usePinnedMetaId: usePinnedMetaIdKey.value,
   }),
 )
@@ -347,7 +347,7 @@ const valueItems = computed((): ValueWithMeta[] => {
 })
 
 const valueGroups = computed(() =>
-  groupByPinnedAssignmentOrder(_.groupBy(valueItems.value, 'id'), assignmentRows.value, {
+  groupByPinnedAssignmentOrder(groupBy(valueItems.value, 'id'), assignmentRows.value, {
     usePinnedMetaId: usePinnedMetaIdKey.value,
   }),
 )

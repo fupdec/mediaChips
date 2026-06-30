@@ -11,6 +11,12 @@ import {useEventBus} from '@/utils/eventBus'
 import type { ParsePathTagEntry } from '@shared/api/responses'
 import type { MediaType } from '@/types/media'
 import type { AddedMediaEntry } from '@/stores/tasks'
+import {
+  buildExtensionPathRegex,
+  getDefaultMediaTypeId,
+  inferMediaTypeFromPaths,
+  parseMediaTypeExtensions,
+} from '@/utils/mediaType'
 
 interface TagInMediaCreateResponse extends Array<unknown> {
   1?: boolean
@@ -25,15 +31,42 @@ interface SuggestTagsResponse {
 }
 
 const filterPathsByExtensions = (paths: string[], extensions: string): string[] => {
-  const allowed = extensions
-    .split(',')
-    .map((ext: string) => ext.trim().toLowerCase())
-    .filter(Boolean)
+  const allowed = parseMediaTypeExtensions(extensions)
 
   return paths.filter((filePath: string) => {
     const ext = String(filePath).split('.').pop()?.toLowerCase()
     return ext && allowed.includes(ext)
   })
+}
+
+const resolveMediaTypeForAdding = (
+  mediaTypes: MediaType[],
+  {
+    mediaTypeId,
+    paths,
+    directFiles,
+    skipFileScan,
+  }: {
+    mediaTypeId: number | null | undefined
+    paths: string[]
+    directFiles: string[]
+    skipFileScan: boolean
+  },
+): MediaType | null => {
+  const explicitId = mediaTypeId == null ? null : Number(mediaTypeId)
+  if (explicitId) {
+    const explicitType = mediaTypes.find((item) => item.id === explicitId)
+    if (explicitType) return explicitType
+  }
+
+  const pathsToInfer = skipFileScan && directFiles.length ? directFiles : paths
+  const inferredType = inferMediaTypeFromPaths(pathsToInfer, mediaTypes)
+  if (inferredType) return inferredType
+
+  const fallbackId = getDefaultMediaTypeId(mediaTypes)
+  return fallbackId == null
+    ? null
+    : mediaTypes.find((item) => item.id === fallbackId) || null
 }
 
 let addMediaInProgress = false
@@ -130,8 +163,13 @@ export const useMediaAdding = () => {
     const taskId = await tasksStore.setTask(taskData)
     let keepTaskAfterComplete = false
 
-    const mediaTypeId = task.value.media_type_id || ENV.value.media_type_id
-    const mediaType = mediaTypes.value.find((i) => i.id === Number(mediaTypeId))
+    const pathsForType = transformTextToArray(task.value.paths)
+    const mediaType = resolveMediaTypeForAdding(mediaTypes.value, {
+      mediaTypeId: task.value.media_type_id || ENV.value.media_type_id,
+      paths: pathsForType,
+      directFiles,
+      skipFileScan,
+    })
 
     if (!mediaType) {
       console.error('Media type not found')
@@ -149,10 +187,9 @@ export const useMediaAdding = () => {
     task.value.addedMediaType = mediaType.type ?? null
 
     const extensions = mediaType.extensions ?? ''
-    const regex = '.' + extensions.split(',').join('$|.') + '$'
-    const regexString = JSON.stringify(regex)
+    const regexString = JSON.stringify(buildExtensionPathRegex(extensions))
 
-    const paths = transformTextToArray(task.value.paths)
+    const paths = pathsForType
     const excluded = transformTextToArray(task.value.excluded)
 
     let files: string[] = []

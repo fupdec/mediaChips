@@ -116,6 +116,7 @@ const es = {
     noResult: 'No se encontró nada',
     showMore: 'Mostrar más ({count})',
     resultsCount: '{count} encontrados',
+    viaSynonym: 'sin.',
     hintEsc: 'cerrar',
     hintArrows: 'navegar',
     hintEnter: 'abrir',
@@ -394,6 +395,7 @@ const es = {
       card: 'Tarjeta',
       timeline: 'Línea de tiempo',
       chip: 'Chip',
+      masonry: 'Mosaico',
     },
   },
   playlists: {
@@ -1257,6 +1259,12 @@ const es = {
       fit: 'Ajustar a pantalla',
       fullscreen: 'Pantalla completa',
       open_external: 'Abrir en aplicación externa',
+      close: 'Cerrar visor',
+      loading_full: 'Cargando resolución completa…',
+      rotate_left: 'Girar a la izquierda',
+      rotate_right: 'Girar a la derecha',
+      flip_horizontal: 'Voltear horizontalmente',
+      flip_vertical: 'Voltear verticalmente',
     },
   },
   notifications_text: {

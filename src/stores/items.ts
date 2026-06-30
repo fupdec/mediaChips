@@ -16,7 +16,7 @@ import type { PlayableMedia } from '@shared/entities/media'
 import type { AssignedMeta, ItemsEnvironment, MediaItem, Meta, SavedFilter } from '@/types/stores'
 import type { ItemsPageStoreUpdates } from '@/types/itemsPage'
 import { ensureMediaItem } from '@/utils/mediaItem'
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 
 const eventBus = useEventBus()
 
@@ -772,7 +772,7 @@ export const useItemsStore = defineStore('items', {
         const initialRecord = initial as Record<string, unknown>
         fields.forEach((field) => {
           if (field in initialRecord) {
-            record[field as string] = _.cloneDeep(initialRecord[field as string])
+            record[field as string] = cloneDeep(initialRecord[field as string])
           }
         })
       })

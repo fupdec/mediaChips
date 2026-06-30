@@ -9,7 +9,7 @@ import {
   getTimelinePercents,
   shouldShowTranscodeTimeline,
 } from '@/utils/playerBuffer'
-import _ from 'lodash'
+import orderBy from 'lodash/orderBy'
 import type { PlayerMark } from '@/types/player'
 
 export function findMarkToJump(
@@ -18,7 +18,7 @@ export function findMarkToJump(
   type: 'prev' | 'next',
 ): PlayerMark | null {
   const ordered = type === 'prev'
-    ? _.orderBy(marks, 'time', ['desc'])
+    ? orderBy(marks, 'time', ['desc'])
     : marks
 
   const threshold = type === 'prev' ? currentTime - 5 : currentTime

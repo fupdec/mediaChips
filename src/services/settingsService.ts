@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
 import { useSettingsStore } from '@/stores/settings'
 import { typedApi } from '@/services/typedApi'
 import type { SettingsState } from '@/types/settings'
@@ -7,7 +7,7 @@ export async function getOption(option: keyof SettingsState | string) {
   return typedApi.getSetting(String(option))
 }
 
-export const setOption = _.debounce(async function setOption(
+export const setOption = debounce(async function setOption(
   value: SettingsState[keyof SettingsState],
   option: keyof SettingsState,
 ) {

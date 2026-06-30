@@ -19,6 +19,7 @@ import {
 } from './server/lanAccess'
 import { createDatabaseManager } from './server/databaseManager'
 import { initDatabaseManager } from './server/databaseRegistry'
+import { invalidateMediaDerivedCaches } from '../api/services/mediaCacheInvalidation'
 import { createTranscodeManager } from '../api/services/transcode/transcodeService'
 import registerWebSockets from './tasks/websockets'
 
@@ -54,6 +55,7 @@ const databaseManager = createDatabaseManager({
   databasesPath,
   transcodeManager,
   onDatabaseChanged: () => {
+    invalidateMediaDerivedCaches()
     try {
       getAuthService().invalidateSettingsCache()
     } catch {

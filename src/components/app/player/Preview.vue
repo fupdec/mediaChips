@@ -38,7 +38,7 @@
 import {ref, computed, watch, onBeforeUnmount} from 'vue'
 import {usePlayerStore} from '@/stores/player'
 import {getReadableDuration} from '@/services/formatUtils'
-import _ from 'lodash'
+import throttle from 'lodash/throttle'
 
 const SEEK_MIN_DELTA = 0.25
 
@@ -66,7 +66,7 @@ const formattedTime = computed(() => {
   return getReadableDuration(time)
 })
 
-const throttledSeek = _.throttle((time: number) => {
+const throttledSeek = throttle((time: number) => {
   const video = preview.value
   if (!video || !Number.isFinite(time)) return
   if (Math.abs(video.currentTime - time) < SEEK_MIN_DELTA) return

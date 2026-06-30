@@ -5,6 +5,8 @@ import { useAppStore } from '@/stores/app'
 import { typedApi } from '@/services/typedApi'
 import { destroySeparatePlayerWindow } from '@/utils/playerWindow'
 import eventBus from '@/utils/eventBus'
+import {clearThumbDisplayCache} from '@/utils/thumbDisplayCache'
+import {clearFileExistenceBatchQueue} from '@/utils/fileExistenceBatcher'
 
 interface AppConfigResponse {
   appVersion?: string
@@ -67,6 +69,8 @@ export async function initConfig() {
 }
 
 export async function reloadApplicationAfterDatabaseChange() {
+  clearThumbDisplayCache()
+  clearFileExistenceBatchQueue()
   await destroySeparatePlayerWindow()
   await refreshServerConfig()
   eventBus.$emit('app:database-changed')

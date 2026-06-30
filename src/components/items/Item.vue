@@ -16,7 +16,7 @@
     class="item"
   >
     <v-card
-      v-if="itemsStore.view == 1 || (itemsStore.view == 2 && type === 'media' && isVideoMedia)"
+      v-if="itemsStore.view == 1 || (itemsStore.view == 2 && type === 'media' && isVideoMedia) || (itemsStore.view == 3 && type === 'media' && isImageMedia)"
       class="item_wrapper"
       :color="card_color"
       variant="flat"
@@ -72,9 +72,12 @@
         :value="(Number(item.time || 0) / Number(item.duration)) * 100"
       />
 
-      <div @click="editItem"
-           v-ripple="{ class: `text-primary` }"
-           class="description">
+      <div
+        v-if="!(type === 'media' && isImageMedia && itemsStore.view == 3)"
+        @click="editItem"
+        v-ripple="{ class: `text-primary` }"
+        class="description"
+      >
         <div v-if="settingsStore.ratingAndFavoriteInCard == '1' && (is_rating_active || is_favorite_active)"
              @click.stop
              class="rating-favorite-in-description">

@@ -831,6 +831,7 @@
 
 .image-grid {
   &.card-grid {
+    align-items: start;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 
@@ -848,6 +849,20 @@
 
   &.item__size-6 {
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+}
+
+.item-media.item-view-3 {
+  .item_wrapper {
+    overflow: hidden;
+  }
+
+  .item-menu-btn {
+    opacity: 0.85;
+  }
+
+  .description {
+    display: none;
   }
 }
 

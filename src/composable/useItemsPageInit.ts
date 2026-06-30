@@ -1,12 +1,13 @@
 import {ref, computed} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import isEmpty from 'lodash/isEmpty'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {typedApi} from '@/services/typedApi'
 import {getFilterObject} from '@/services/formatUtils'
-import {getFilters as loadSavedFilterRows, getSavedFilters} from '@/services/filterService'
+import {getSavedFilters} from '@/services/filterService'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {normalizeSortBy} from '@/utils/mediaSortFilter'
 import type { FilterObject } from '@/types/common'
@@ -69,7 +70,7 @@ export function useItemsPageInit({
 
   const fetchMeta = async (): Promise<Meta> => {
     const res = await typedApi.getMetaById(Number(props.metaId))
-    return _.cloneDeep(res.data)
+    return cloneDeep(res.data)
   }
 
   const fetchMediaType = async (): Promise<MediaType> => {
@@ -86,13 +87,15 @@ export function useItemsPageInit({
       tabId: ENV.value.tab_id,
     })
 
-    const savedFilter = res.data?.[0]
-    if (_.isEmpty(savedFilter)) {
+    const [savedFilter] = res.data
+    if (isEmpty(savedFilter)) {
       return {filters: [] as FilterObject[], savedFilter: {} as SavedFilter}
     }
 
-    const filters = await loadSavedFilterRows(savedFilter.id!)
-    return {filters, savedFilter}
+    return {
+      filters: savedFilter.filters || [],
+      savedFilter,
+    }
   }
 
   const fetchPageSettings = async () => {

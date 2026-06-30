@@ -1,6 +1,7 @@
 import type { ApiDb, FilterLike } from '../types/db'
 import type { DbItemRow } from '../../app/types/items'
-import { parseItemsFromDb, filterItems } from '../../app/tasks/items'
+import { parseItemsFromDb } from '../../app/tasks/items'
+import { runFilterItemsAsync } from './filterItemsWorkerRunner'
 import { createTagsRepository } from '../db/repositories/tags'
 import { queryAllAsync } from '../db/utils/rawQuery'
 import {
@@ -58,9 +59,9 @@ function buildFilteredCountSql(fromClause: string, whereClause: string, needsDis
     )`
 }
 
-function orderRowsByIds<T extends { id: unknown }>(rows: T[], ids: number[]): T[] {
+function orderRowsByIds(rows: DbItemRow[], ids: number[]): DbItemRow[] {
   const rowsById = new Map(rows.map((row) => [Number(row.id), row]))
-  return ids.map((id) => rowsById.get(id)).filter((row): row is T => row != null)
+  return ids.map((id) => rowsById.get(id)).filter((row): row is DbItemRow => row != null)
 }
 
 async function loadTagItemsSql(db: ApiDb, options: TagLoadOptions) {
@@ -103,29 +104,21 @@ async function loadTagItemsSql(db: ApiDb, options: TagLoadOptions) {
     idQuery += ' LIMIT :limit OFFSET :offset'
   }
 
-  const queries = [queryAllAsync<{id: number}>(db, idQuery, queryReplacements)]
-
-  if (!skipTotals) {
-    queries.push(
-      queryAllAsync(db, buildFilteredCountSql(fromClause, whereClause, needsDistinct), replacements),
-      queryAllAsync(db, `SELECT COUNT(*) AS totalUnfiltered
-         FROM tags
-         WHERE tags.metaId = :metaId`, {metaId}),
-    )
-  }
-
-  const results = await Promise.all(queries)
-  const idRows = results[0]
+  const idRows = await queryAllAsync<{id: number}>(db, idQuery, queryReplacements)
   const pageIds = idRows.map((row) => Number(row.id))
 
   let totalUnfiltered: number | null = null
   let totalFiltered: number | null = null
 
   if (!skipTotals) {
-    const totals = results[1][0] || {}
-    const unfiltered = results[2][0] || {}
-    totalUnfiltered = Number(unfiltered.totalUnfiltered) || 0
-    totalFiltered = Number(totals.totalFiltered) || 0
+    const [totalsRows, unfilteredRows] = await Promise.all([
+      queryAllAsync<{totalFiltered: number}>(db, buildFilteredCountSql(fromClause, whereClause, needsDistinct), replacements),
+      queryAllAsync<{totalUnfiltered: number}>(db, `SELECT COUNT(*) AS totalUnfiltered
+         FROM tags
+         WHERE tags.metaId = :metaId`, {metaId}),
+    ])
+    totalFiltered = Number(totalsRows[0]?.totalFiltered) || 0
+    totalUnfiltered = Number(unfilteredRows[0]?.totalUnfiltered) || 0
   }
 
   const tagsRepo = createTagsRepository(db.drizzle, db.sqlite)
@@ -150,7 +143,7 @@ async function loadTagItemsSql(db: ApiDb, options: TagLoadOptions) {
   return result
 }
 
-function loadTagItemsLegacy(
+async function loadTagItemsLegacy(
   db: ApiDb,
   options: TagLoadOptions,
   fallbackReason?: string,
@@ -174,17 +167,16 @@ function loadTagItemsLegacy(
 
   const data = tagsRepo.getItemsForMeta(metaId, ids)
   const itemsAll = parseItemsFromDb(data as DbItemRow[])
-  const itemsFiltered = filterItems(
+  const { items: itemsFiltered, totalFiltered } = await runFilterItemsAsync({
     filters,
-    'tags',
-    itemsAll,
+    itemType: 'tags',
+    items: itemsAll,
     sortBy,
     direction,
     find_duplicates,
-  )
+  })
 
   const totalUnfiltered = itemsAll.length
-  const totalFiltered = itemsFiltered.length
   const pageLimit = resolvePageLimit(limit)
   const shouldPaginate = shouldPaginateMediaList({ids, limit})
   const safePage = Math.max(1, Number(page) || 1)

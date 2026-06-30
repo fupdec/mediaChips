@@ -1,5 +1,7 @@
 import { normalizePastedFilePath } from '@/utils/filePathInput'
 import type { EventBusEvent, EventBusMap } from '@shared/events/map'
+import type { MediaType } from '@/types/media'
+import { inferMediaTypeFromPaths } from '@/utils/mediaType'
 
 interface EventBusLike {
   emit: <K extends EventBusEvent>(event: K, payload?: EventBusMap[K]) => void
@@ -77,17 +79,26 @@ interface MediaAddingStore {
 export function startDroppedMediaAdding({
   paths,
   mediaTypeId,
+  mediaTypes,
   tasksStore,
   eventBus,
 }: {
   paths: string[]
-  mediaTypeId: number | string
+  mediaTypeId?: number | string | null
+  mediaTypes?: MediaType[] | null
   tasksStore: MediaAddingStore
   eventBus: EventBusLike
 }): boolean {
-  if (!paths.length || !mediaTypeId) return false
+  if (!paths.length) return false
 
-  tasksStore.mediaAdding.media_type_id = Number(mediaTypeId)
+  const resolvedMediaTypeId = Number(
+    mediaTypeId
+    ?? inferMediaTypeFromPaths(paths, mediaTypes)?.id,
+  )
+
+  if (!resolvedMediaTypeId) return false
+
+  tasksStore.mediaAdding.media_type_id = resolvedMediaTypeId
   tasksStore.mediaAdding.directFiles = []
   tasksStore.mediaAdding.skipFileScan = false
   tasksStore.mediaAdding.paths = paths.join('\n')

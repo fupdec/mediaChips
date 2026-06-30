@@ -103,7 +103,8 @@ import {ref, computed} from 'vue'
 import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useDisplay} from 'vuetify'
-import _ from 'lodash'
+import orderBy from 'lodash/orderBy'
+import groupBy from 'lodash/groupBy'
 import DialogHeader from '@/components/elements/DialogHeader.vue'
 import {highlightChars} from '@/services/formatUtils'
 import {getIconDataType} from '@/services/metaTypeUtils'
@@ -168,8 +169,8 @@ const groups = computed(() => {
     return item
   })
 
-  params = _.orderBy(params, ["text", "group"])
-  return _.groupBy(params, "group") as Record<string, FilterParamWithMeta[]>
+  params = orderBy(params, ["text", "group"])
+  return groupBy(params, "group") as Record<string, FilterParamWithMeta[]>
 })
 
 // Methods

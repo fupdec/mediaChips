@@ -1,50 +1,38 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import PageHome from '@/pages/PageHome.vue'
-import PageItems from '@/pages/PageItems.vue'
-import PagePlaylists from '@/pages/PagePlaylists.vue'
-import PageMarkers from '@/pages/PageMarkers.vue'
-import PageTag from '@/pages/PageTag.vue'
-import PageSettings from '@/pages/PageSettings.vue'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
-    component: PageHome,
+    component: () => import('@/pages/PageHome.vue'),
   },
   {
     path: '/media',
     alias: '/meta',
     name: 'Items',
-    component: PageItems,
+    component: () => import('@/pages/PageItems.vue'),
   },
   {
     path: '/playlists',
     name: 'Playlists',
-    component: PagePlaylists,
+    component: () => import('@/pages/PagePlaylists.vue'),
   },
   {
     path: '/markers',
     name: 'Markers',
-    component: PageMarkers,
+    component: () => import('@/pages/PageMarkers.vue'),
   },
   {
     path: '/tag',
     name: 'Tag',
-    component: PageTag,
+    component: () => import('@/pages/PageTag.vue'),
   },
   {
     path: '/settings',
     name: 'Settings',
-    component: PageSettings,
+    component: () => import('@/pages/PageSettings.vue'),
   },
 ]
-
-routes.forEach(r => {
-  if (!r.component) {
-    console.error('❌ Маршрут без компонента:', r.path)
-  }
-})
 
 export default createRouter({
   history: createWebHistory(),

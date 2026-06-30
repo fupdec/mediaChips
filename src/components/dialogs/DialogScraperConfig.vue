@@ -117,7 +117,8 @@ import {useDisplay} from 'vuetify'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {typedApi} from '@/services/typedApi'
-import {cloneDeep, sortBy} from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import sortBy from 'lodash/sortBy'
 import {getIconDataType} from '@/services/metaTypeUtils'
 import DialogHeader from "@/components/elements/DialogHeader.vue";
 import ScraperFields from "@/assets/ScraperFields";

@@ -38,6 +38,11 @@ export const SavedFilterBasicSchema = z.object({
   name: z.string().nullable().optional(),
 }).passthrough()
 
+export const SavedFilterFindOrCreateHydratedSchema = z.tuple([
+  SavedFilterSchema,
+  z.boolean(),
+])
+
 export type ParsedSavedFilter = z.infer<typeof SavedFilterSchema>
 export type ParsedDynamicPlaylistSummary = z.infer<typeof DynamicPlaylistSummarySchema>
 export type ParsedSavedFilterMediaResponse = z.infer<typeof SavedFilterMediaResponseSchema>

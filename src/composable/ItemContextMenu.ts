@@ -244,41 +244,46 @@ export default function useItemContextMenu(
         action: organizeFolderByTag,
       })
 
-      const getMediaIdsForPlaylist = (): number[] => {
-        if (itemsStore.isSelect) return [...itemsStore.selection]
-        return [item.id]
-      }
+      const isPlaylistMedia = isVideoMediaType(currentMediaType.value)
+        || isAudioMediaType(currentMediaType.value)
 
-      const menuPlaylists: ItemContextMenuEntry[] = [
-        {
-          name: t('playlists.create_playlist'),
-          type: 'item',
+      if (isPlaylistMedia) {
+        const getMediaIdsForPlaylist = (): number[] => {
+          if (itemsStore.isSelect) return [...itemsStore.selection]
+          return [item.id]
+        }
+
+        const menuPlaylists: ItemContextMenuEntry[] = [
+          {
+            name: t('playlists.create_playlist'),
+            type: 'item',
+            icon: 'playlist-plus',
+            action: () => {
+              dialogsStore.createPlaylistForMedia(getMediaIdsForPlaylist())
+            },
+          },
+        ]
+
+        if ((playlistsStore || []).length > 0) {
+          menuPlaylists.push({type: 'divider'})
+          menuPlaylists.push(...(playlistsStore || []).map((playlist: Playlist) => ({
+            name: String(playlist.name ?? ''),
+            type: 'item',
+            icon: 'plus',
+            action: async () => {
+              await addMediaToPlaylist(item.id, playlist.id)
+            },
+          })))
+        }
+
+        contextMenu.push({
+          name: t('playlists.add_to_playlist'),
+          type: 'menu',
           icon: 'playlist-plus',
-          action: () => {
-            dialogsStore.createPlaylistForMedia(getMediaIdsForPlaylist())
-          },
-        },
-      ]
-
-      if ((playlistsStore || []).length > 0) {
-        menuPlaylists.push({type: 'divider'})
-        menuPlaylists.push(...(playlistsStore || []).map((playlist: Playlist) => ({
-          name: String(playlist.name ?? ''),
-          type: 'item',
-          icon: 'plus',
-          action: async () => {
-            await addMediaToPlaylist(item.id, playlist.id)
-          },
-        })))
+          menu: menuPlaylists,
+          disabled: itemsStore.isSelect && itemsStore.selection.length === 0,
+        })
       }
-
-      contextMenu.push({
-        name: t('playlists.add_to_playlist'),
-        type: 'menu',
-        icon: 'playlist-plus',
-        menu: menuPlaylists,
-        disabled: itemsStore.isSelect && itemsStore.selection.length === 0,
-      })
 
       contextMenu.push({type: 'divider'})
     }

@@ -175,7 +175,9 @@ import {useRegistrationStore} from '@/stores/registration'
 import {typedApi} from '@/services/typedApi'
 import {getLocalImage} from '@/services/fileService'
 import {checkColorForDarkText} from '@/services/formatUtils'
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import uniq from 'lodash/uniq'
+import groupBy from 'lodash/groupBy'
 import ItemPinnedMeta from '@/components/items/ItemPinnedMeta.vue'
 import {useEventBus} from '@/utils/eventBus'
 import path from 'path-browserify';
@@ -439,7 +441,7 @@ const getCompletionStatus = async () => {
   for (const i in pi) setValByKey(pi[i], i)
 
   const completed: number[] = []
-  for (const m of _.cloneDeep(pinned)) {
+  for (const m of cloneDeep(pinned)) {
     const val = vals[m.pinnedMetaId as number]
     if (val === undefined || val === null) completed.push(0)
     else if (typeof val == "boolean") completed.push(1)
@@ -478,7 +480,7 @@ const editMetaTag = async () => {
 const getTagsInMedia = async () => {
   let query = {
     mediaTypeId: ENV.value.media_type_id ?? undefined,
-    filters: _.cloneDeep(ITEMS.value.filters.filter(i => i.lock)),
+    filters: cloneDeep(ITEMS.value.filters.filter(i => i.lock)),
     sortBy: 'createdAt',
     direction: 'asc',
     find_duplicates: false,
@@ -493,8 +495,8 @@ const getTagsInMedia = async () => {
       const itemTags = Array.isArray(i.tags) ? i.tags : []
       tags = [...tags, ...itemTags.map((t: { tagId: number }) => t.tagId)]
     }
-    tags = _.uniq(tags)
-    tags_filter.value = _.groupBy(appStore.tags.filter(i => tags.includes(i.id)), 'metaId')
+    tags = uniq(tags)
+    tags_filter.value = groupBy(appStore.tags.filter(i => tags.includes(i.id)), 'metaId')
   } catch (e) {
     console.log(e)
   }

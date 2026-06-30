@@ -101,6 +101,17 @@ describe('buildMediaFilterQuery', () => {
 
     expect(result.reason).toContain('param=unknownField')
   })
+
+  it('supports exact string match conditions', () => {
+    const result = buildMediaFilterQuery([
+      { active: true, param: 'name', type: 'string', cond: 'equal', val: 'Alpha' },
+    ], { mediaTypeId: 1 })
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.whereSql).toContain('LOWER(media.name) = LOWER')
+  })
 })
 
 describe('resolveMediaFilterQuery', () => {

@@ -103,12 +103,35 @@ export const SqlQueryTagResultSchema = z.tuple([
   z.unknown(),
 ])
 
+export const GlobalSearchMediaItemSchema = z.object({
+  id: z.number(),
+  name: z.string().nullable().optional(),
+  mediaTypeId: z.number().optional(),
+  path: z.string().optional(),
+  width: z.number().nullable().optional(),
+  height: z.number().nullable().optional(),
+})
+
+export const GlobalSearchTagItemSchema = z.object({
+  id: z.number(),
+  name: z.string().nullable().optional(),
+  metaId: z.number().nullable().optional(),
+  synonyms: z.string().nullable().optional(),
+  matchSource: z.enum(['name', 'synonym', 'both']).optional(),
+  matchedSynonyms: z.array(z.string()).optional(),
+})
+
 export const GlobalSearchMediaResponseSchema = z.object({
-  items: z.array(MediaItemSchema),
+  items: z.array(GlobalSearchMediaItemSchema),
 })
 
 export const GlobalSearchTagsResponseSchema = z.object({
-  items: z.array(TagSchema),
+  items: z.array(GlobalSearchTagItemSchema),
+})
+
+export const GlobalSearchResponseSchema = z.object({
+  media: z.array(GlobalSearchMediaItemSchema),
+  tags: z.array(GlobalSearchTagItemSchema),
 })
 
 export type ParsedHomeMediaStats = z.infer<typeof HomeMediaStatsSchema>

@@ -2,71 +2,23 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from '@/App.vue'
 import router from '@/router'
-
-// Internationalization
-import { createI18n } from 'vue-i18n'
-import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
-import { en, es, zhHans, ru } from 'vuetify/locale'
-
-// Custom translations
-import en_custom from '@/i18n/en'
-import cn_custom from '@/i18n/cn'
-import es_custom from '@/i18n/es'
-import ru_custom from '@/i18n/ru'
-
-// ============ I18N SETUP ============
-const messages = {
-  en: {
-    $vuetify: {
-      ...en,
-    },
-    ...en_custom
-  },
-  cn: {
-    $vuetify: {
-      ...zhHans,
-    },
-    ...cn_custom,
-  },
-  es: {
-    $vuetify: {
-      ...es,
-    },
-    ...es_custom,
-  },
-  ru: {
-    $vuetify: {
-      ...ru,
-    },
-    ...ru_custom,
-  }
-}
-
-const i18n = createI18n({
-  legacy: false,
-  locale: 'en',
-  fallbackLocale: 'en',
-  messages,
-  silentTranslationWarn: true,
-  missingWarn: false,
-  fallbackWarn: false
-})
+import { i18n, loadLocale, registerVuetifyForLocales } from '@/i18n/loadLocale'
 
 // ============ VUETIFY SETUP ============
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
+import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
 import { useI18n } from 'vue-i18n'
+import { en } from 'vuetify/locale'
+import en_custom from '@/i18n/en'
 
 const vuetify = createVuetify({
   locale: {
     adapter: createVueI18nAdapter({ i18n, useI18n }),
     messages: {
       en: { ...en, ...en_custom },
-      cn: { ...zhHans, ...cn_custom },
-      es: { ...es, ...es_custom },
-      ru: { ...ru, ...ru_custom }
-    }
+    },
   },
 
   defaults: {
@@ -115,6 +67,8 @@ const vuetify = createVuetify({
     },
   },
 } as Parameters<typeof createVuetify>[0])
+
+registerVuetifyForLocales(vuetify)
 
 // ============ GLOBAL EVENTS ============
 import eventBus from '@/utils/eventBus'

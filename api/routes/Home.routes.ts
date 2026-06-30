@@ -20,6 +20,7 @@ export default function registerRoutes(app: Express, db: ApiDb) {
   router.get('/markers', validateQuery(HomeMarkersQuerySchema), Home.getMarkers)
   router.get('/health', Home.getHealth)
   router.get('/extended-stats', Home.getExtendedStats)
+  router.post('/search', validateBody(GlobalSearchRequestSchema), Home.searchGlobal)
   router.post('/search/media', validateBody(GlobalSearchRequestSchema), Home.searchMedia)
   router.post('/search/tags', validateBody(GlobalSearchRequestSchema), Home.searchTags)
 

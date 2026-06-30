@@ -66,6 +66,51 @@ export const getDefaultMediaTypeId = (mediaTypes: MediaType[] | null | undefined
   return videoType?.id ?? mediaTypes?.[0]?.id ?? null
 }
 
+export const parseMediaTypeExtensions = (extensions: string | null | undefined): string[] =>
+  String(extensions || '')
+    .split(',')
+    .map((ext) => ext.trim().toLowerCase())
+    .filter(Boolean)
+
+export const buildExtensionPathRegex = (extensions: string | null | undefined): string => {
+  const parts = parseMediaTypeExtensions(extensions)
+  if (!parts.length) return '$^'
+  return `.${parts.join('$|.')}$`
+}
+
+export const inferMediaTypeFromPaths = (
+  paths: string[],
+  mediaTypes: MediaType[] | null | undefined,
+): MediaType | null => {
+  const candidates = (mediaTypes || []).filter((item) => !item.hidden)
+  if (!candidates.length || !paths.length) return null
+
+  const matchCounts = new Map<number, number>()
+
+  for (const filePath of paths) {
+    const ext = String(filePath).split('.').pop()?.toLowerCase()
+    if (!ext) continue
+
+    for (const mediaType of candidates) {
+      if (!parseMediaTypeExtensions(mediaType.extensions).includes(ext)) continue
+      matchCounts.set(mediaType.id, (matchCounts.get(mediaType.id) || 0) + 1)
+    }
+  }
+
+  if (!matchCounts.size) return null
+
+  let bestId = 0
+  let bestCount = 0
+  for (const [id, count] of matchCounts) {
+    if (count > bestCount) {
+      bestCount = count
+      bestId = id
+    }
+  }
+
+  return candidates.find((item) => item.id === bestId) || null
+}
+
 export const getMediaDeleteAssetFolder = (mediaType: MediaType | null | undefined): string | null => {
   const key = getMediaTypeKey(mediaType)
   if (key === MEDIA_TYPE_VIDEO) return 'videos'

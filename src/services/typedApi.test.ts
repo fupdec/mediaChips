@@ -188,26 +188,30 @@ describe('typedApi', () => {
     expect(setting.data.ratingMax).toBe(10)
 
     mockPost.mockResolvedValueOnce(mockAxiosResponse({
-      items: [{ id: 1, name: 'clip.mp4', mediaTypeId: 2, favorite: 0 }],
+      items: [{ id: 1, name: 'clip.mp4', mediaTypeId: 2, path: '/clip.mp4' }],
     }))
     const media = await typedApi.searchMedia({ q: 'clip' })
     expect(media.data[0]?.name).toBe('clip.mp4')
-    expect(media.data[0]?.favorite).toBe(false)
+    expect(media.data[0]?.mediaTypeId).toBe(2)
 
     mockPost.mockResolvedValueOnce(mockAxiosResponse({
       items: [{
         id: 3,
         name: 'Actor',
         metaId: 1,
-        favorite: 0,
-        synonyms: null,
-        color: null,
-        bookmark: null,
       }],
     }))
     const tags = await typedApi.searchTags({ q: 'Actor' })
     expect(tags.data[0]?.metaId).toBe(1)
     expect(tags.data[0]?.name).toBe('Actor')
+
+    mockPost.mockResolvedValueOnce(mockAxiosResponse({
+      media: [{ id: 1, name: 'clip.mp4', mediaTypeId: 2, path: '/clip.mp4' }],
+      tags: [{ id: 3, name: 'Actor', metaId: 1 }],
+    }))
+    const combined = await typedApi.searchGlobal({ q: 'clip' })
+    expect(combined.data.media[0]?.name).toBe('clip.mp4')
+    expect(combined.data.tags[0]?.name).toBe('Actor')
   })
 
   it('validates video playable info', async () => {

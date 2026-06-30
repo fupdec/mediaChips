@@ -4,7 +4,7 @@
     :class="{ 'no-file': !isFileExists }"
   >
     <v-responsive
-      v-if="isViewCard || isViewTimeline"
+      v-if="showsPreview"
       v-ripple="{ class: 'text-primary' }"
       :aspect-ratio="aspectRatio"
       class="image-preview-container"
@@ -14,7 +14,7 @@
         :src="thumb || undefined"
         :aspect-ratio="aspectRatio"
         class="thumb"
-        cover
+        contain
       />
 
       <div v-if="resolutionLabel" class="resolution">
@@ -35,6 +35,7 @@ import {typedApi} from '@/services/typedApi'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {loadImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
+import {getMediaAspectRatio} from '@/utils/gridLayout'
 import {
   getReadableVideoHeight,
   getReadableVideoQuality,
@@ -66,16 +67,17 @@ const isViewTimeline = computed(() =>
   Number(ITEMS.value.view) === 2
 )
 
-const aspectRatio = computed(() => {
-  const width = Number(props.media?.width) || 0
-  const height = Number(props.media?.height) || 0
+const isViewMasonry = computed(() =>
+  Number(ITEMS.value.view) === 3
+)
 
-  if (width > 0 && height > 0) {
-    return Math.min(Math.max(width / height, 0.5), 2)
-  }
+const showsPreview = computed(() =>
+  isViewCard.value || isViewTimeline.value || isViewMasonry.value
+)
 
-  return 1
-})
+const aspectRatio = computed(() =>
+  getMediaAspectRatio(props.media)
+)
 
 const quality = computed(() =>
   getReadableVideoQuality(

@@ -18,6 +18,7 @@ import { isClientAbortError, safeJsonError } from './fileResolver'
 import { streamVideoFile } from '../../api/services/transcode/streamVideoFile'
 import { parseMaxHeightOverride } from '../../api/services/transcode/transcodeSettings'
 import { getDatabaseManager } from './databaseRegistry'
+import { checkFilesExist } from '../../api/services/checkFilesExist'
 import packageJson from '../../package.json'
 
 function resolveMediaVideoPath(
@@ -231,6 +232,24 @@ function registerBuiltinRoutes({
     res.json({
       exists: !!resolvedPath,
     })
+  })
+
+  app.post('/api/check-files', async (req: ApiRequest, res: ApiResponse) => {
+    const paths = Array.isArray(req.body.paths) ? req.body.paths : []
+
+    if (!paths.length) {
+      return res.json({results: {}})
+    }
+
+    try {
+      const results = await checkFilesExist(paths)
+      res.json({results})
+    } catch (err: unknown) {
+      safeJsonError(res, req, 500, {
+        error: 'Batch file check failed',
+        details: err instanceof Error ? err.message : String(err),
+      })
+    }
   })
 
   app.post('/api/switch-database', async (req: ApiRequest, res: ApiResponse) => {

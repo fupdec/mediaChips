@@ -134,7 +134,7 @@ import path from 'path-browserify';
 import {useAppStore} from '@/stores/app';
 import DialogHeader from '@/components/elements/DialogHeader.vue';
 import DialogDeleteConfirm from '@/components/dialogs/DialogDeleteConfirm.vue';
-import {sortBy} from 'lodash';
+import sortBy from 'lodash/sortBy';
 import {buildM3uPlaylist, downloadTextFile, playlistExportFilename} from '@/utils/playlistExport';
 import type {Playlist} from '@/types/stores'
 import type {PlaylistMediaLink} from '@shared/entities/playlist'

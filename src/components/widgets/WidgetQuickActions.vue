@@ -72,8 +72,9 @@ import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAppStore} from '@/stores/app'
 import {useTasksStore} from '@/stores/tasks'
+import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
-import {getDefaultMediaTypeId} from '@/utils/mediaType'
+import {getDefaultMediaTypeId, inferMediaTypeFromPaths} from '@/utils/mediaType'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import {getMetaName} from '@/utils/metaI18n'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
@@ -83,6 +84,7 @@ import {setNotification} from '@/services/notificationService'
 const {t} = useI18n()
 const appStore = useAppStore()
 const tasksStore = useTasksStore()
+const itemsStore = useItemsStore()
 const eventBus = useEventBus()
 
 const addDialogOpen = ref(false)
@@ -98,7 +100,7 @@ const visibleMetas = computed(() =>
 )
 
 function openAddDialog() {
-  tasksStore.mediaAdding.media_type_id = getDefaultMediaTypeId(appStore.mediaTypes) ?? null
+  tasksStore.mediaAdding.media_type_id = itemsStore.environment?.media_type_id ?? null
   addDialogOpen.value = true
 }
 
@@ -134,8 +136,11 @@ function onDrop(event: DragEvent) {
 
   if (!appStore.isElectron) return
 
-  const mediaTypeId = getDefaultMediaTypeId(appStore.mediaTypes)
   const paths = collectDroppedPaths(event)
+  const inferredType = inferMediaTypeFromPaths(paths, appStore.mediaTypes)
+  const mediaTypeId = inferredType?.id
+    ?? itemsStore.environment?.media_type_id
+    ?? getDefaultMediaTypeId(appStore.mediaTypes)
 
   if (!paths.length || mediaTypeId == null) {
     setNotification({
@@ -149,6 +154,7 @@ function onDrop(event: DragEvent) {
   startDroppedMediaAdding({
     paths,
     mediaTypeId,
+    mediaTypes: appStore.mediaTypes,
     tasksStore,
     eventBus,
   })

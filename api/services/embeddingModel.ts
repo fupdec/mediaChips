@@ -13,6 +13,17 @@ let extractor: FeatureExtractionModel | null = null
 let loadingPromise: Promise<FeatureExtractionModel> | null = null
 let lastError: Error | null = null
 const textEmbeddingCache = new Map<string, EmbeddingVector>()
+const MAX_TEXT_EMBEDDING_CACHE_ENTRIES = 500
+
+function rememberEmbedding(text: string, embedding: EmbeddingVector) {
+  if (textEmbeddingCache.has(text)) {
+    textEmbeddingCache.delete(text)
+  }
+  textEmbeddingCache.set(text, embedding)
+  if (textEmbeddingCache.size <= MAX_TEXT_EMBEDDING_CACHE_ENTRIES) return
+  const oldestKey = textEmbeddingCache.keys().next().value
+  if (oldestKey !== undefined) textEmbeddingCache.delete(oldestKey)
+}
 
 function getModelsRoot(db: ApiDb) {
   if (process.resourcesPath) {
@@ -82,7 +93,11 @@ async function loadModel(db: ApiDb): Promise<FeatureExtractionModel> {
 
 async function embedText(db: ApiDb, text: unknown): Promise<EmbeddingVector> {
   const normalized = String(text || '').trim().toLowerCase()
-  if (textEmbeddingCache.has(normalized)) return textEmbeddingCache.get(normalized)!
+  if (textEmbeddingCache.has(normalized)) {
+    const cached = textEmbeddingCache.get(normalized)!
+    rememberEmbedding(normalized, cached)
+    return cached
+  }
 
   const model = await loadModel(db)
   const output = await model(normalized, {
@@ -91,7 +106,7 @@ async function embedText(db: ApiDb, text: unknown): Promise<EmbeddingVector> {
   })
 
   const embedding = Array.from(output.data)
-  textEmbeddingCache.set(normalized, embedding)
+  rememberEmbedding(normalized, embedding)
   return embedding
 }
 
