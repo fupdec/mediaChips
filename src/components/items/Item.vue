@@ -67,6 +67,47 @@
         </template>
       </div>
 
+      <div
+        v-if="isMasonryImage && wasInView"
+        class="masonry-meta-overlay"
+        @click.stop="editItem"
+      >
+        <div
+          v-if="settingsStore.ratingAndFavoriteInCard == '1' && (is_rating_active || is_favorite_active)"
+          class="masonry-meta-overlay__rating"
+          @click.stop
+        >
+          <div class="masonry-meta-overlay__rating-left">
+            <ItemRating
+              v-if="is_rating_active"
+              :item="item"
+              :type="type"
+            />
+          </div>
+          <div class="masonry-meta-overlay__rating-right">
+            <ItemFavorite
+              v-if="is_favorite_active"
+              :item="item"
+              :type="type"
+            />
+          </div>
+        </div>
+
+        <div
+          class="masonry-meta-overlay__title"
+          :title="item.name"
+        >
+          {{ item.name }}
+        </div>
+
+        <ItemPinnedMeta
+          :item="item"
+          :tags="item.tags"
+          :values="item.values"
+          :type="type"
+        />
+      </div>
+
       <v-progress-linear
         v-if="type === 'media' && (isVideoMedia || isAudioMedia) && item.duration"
         :value="(Number(item.time || 0) / Number(item.duration)) * 100"
@@ -89,7 +130,10 @@
                         :item="item"
                         :type="type"></ItemFavorite>
         </div>
-        <div class="item-title">
+        <div
+          v-if="!(itemsStore.view == 2 && type === 'media' && isVideoMedia)"
+          class="item-title"
+        >
           <span v-text="item.name"
                 :title="item.name"/>
         </div>
@@ -224,6 +268,12 @@ const isVideoMedia = computed(() => isVideoMediaType(props.mediaType ?? undefine
 const isImageMedia = computed(() => isImageMediaType(props.mediaType ?? undefined))
 const isAudioMedia = computed(() => isAudioMediaType(props.mediaType ?? undefined))
 const isTextMedia = computed(() => isTextMediaType(props.mediaType ?? undefined))
+
+const isMasonryImage = computed(() =>
+  props.type === 'media'
+  && isImageMedia.value
+  && Number(itemsStore.view) === 3
+)
 
 const tagItem = computed((): Tag | null => (
   isTagPageItem(props.item, props.type) ? props.item : null

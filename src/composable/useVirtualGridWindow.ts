@@ -3,10 +3,9 @@ import { getMainScrollEl } from '@/utils/mainScroll'
 import {
   chunkIntoRows,
   estimateRowHeight,
-  getColumnCount,
   getGridGap,
+  getLayoutMetrics,
   getLayoutTopInScroll,
-  getMinColumnWidth,
   VIRTUAL_ROW_BUFFER,
 } from '@/utils/gridLayout'
 import type { MediaItem } from '@/types/stores'
@@ -67,14 +66,9 @@ export function useVirtualGridWindow(
 
     const options = getOptions()
     const gap = getGridGap(options.gapSize)
-    const minColumnWidth = getMinColumnWidth(options)
+    const metrics = getLayoutMetrics(layoutEl.clientWidth, options)
 
-    columnCount.value = getColumnCount(
-      layoutEl.clientWidth,
-      minColumnWidth,
-      gap.x,
-      options,
-    )
+    columnCount.value = metrics.columnCount
 
     rowHeight.value = estimateRowHeight({
       ...options,
@@ -92,13 +86,15 @@ export function useVirtualGridWindow(
     const rowEls = layoutEl.querySelectorAll('.virtual-grid-row')
     if (!rowEls.length) return
 
+    const gapY = getGridGap(layoutOptions.value.gapSize).y
     let maxHeight = 0
     rowEls.forEach((rowEl) => {
       maxHeight = Math.max(maxHeight, (rowEl as HTMLElement).offsetHeight)
     })
 
-    if (maxHeight > 0 && Math.abs(maxHeight - rowHeight.value) > 6) {
-      rowHeight.value = maxHeight
+    const rowStride = maxHeight + gapY
+    if (maxHeight > 0 && Math.abs(rowStride - rowHeight.value) > 6) {
+      rowHeight.value = rowStride
       updateWindow(false)
     }
   }

@@ -2,7 +2,7 @@
   <div
     ref="layoutRef"
     :class="[gridClasses, { 'items-masonry-grid--virtual': virtual }]"
-    :style="virtual ? undefined : gridStyle"
+    :style="rootStyle"
     class="items-masonry-grid masonry-grid"
   >
     <div
@@ -54,13 +54,16 @@
 <script setup lang="ts">
 import {computed, ref, onMounted, onBeforeUnmount, type HTMLAttributes} from 'vue'
 import Item from '@/components/items/Item.vue'
+import {useResponsiveGridLayout} from '@/composable/useResponsiveGridLayout'
 import {useVirtualMasonryWindow} from '@/composable/useVirtualMasonryWindow'
 import {
   estimateMasonryItemHeight,
-  getColumnCount,
+  getDistributedCardWidth,
   getGridGap,
-  getMinColumnWidth,
+  getLayoutMetrics,
+  getTargetCardWidth,
   packMasonryColumns,
+  type GridLayoutOptions,
 } from '@/utils/gridLayout'
 import type {MediaType} from '@/types/media'
 import type {MediaItem, Meta} from '@/types/stores'
@@ -75,6 +78,7 @@ const props = withDefaults(defineProps<{
   view?: number | string
   gapSize?: string
   gridClasses?: HTMLAttributes['class']
+  gridLayoutOptions?: GridLayoutOptions
   virtual?: boolean
 }>(), {
   items: () => [],
@@ -86,6 +90,7 @@ const props = withDefaults(defineProps<{
   view: 3,
   gapSize: 'default',
   gridClasses: undefined,
+  gridLayoutOptions: undefined,
   virtual: false,
 })
 
@@ -94,6 +99,16 @@ const containerWidth = ref(0)
 const columnCount = ref(1)
 const itemsSource = computed(() => props.items)
 const virtualEnabled = computed(() => props.virtual)
+
+const resolvedLayoutOptions = computed<GridLayoutOptions>(() => ({
+  size: Number(props.size),
+  gapSize: props.gapSize ?? 'xs',
+  imageGrid: true,
+  containerWidth: containerWidth.value,
+  ...props.gridLayoutOptions,
+}))
+
+const { gridStyle } = useResponsiveGridLayout(layoutRef, resolvedLayoutOptions)
 
 const layoutOptions = computed(() => ({
   size: Number(props.size),
@@ -109,13 +124,21 @@ const {
 const gap = computed(() => getGridGap(props.gapSize ?? 'xs'))
 
 const colWidth = computed(() => {
-  const cols = columnCount.value
   const width = containerWidth.value
-  const gapX = gap.value.x
+  const options = {
+    size: Number(props.size),
+    gapSize: props.gapSize ?? 'xs',
+    imageGrid: true,
+  }
 
-  if (!width || cols < 1) return 200
+  if (!width) return getTargetCardWidth(options)
 
-  return (width - gapX * (cols - 1)) / cols
+  return getDistributedCardWidth(width, options)
+})
+
+const effectiveColumnCount = computed(() => {
+  const count = props.items?.length || 0
+  return Math.min(columnCount.value, Math.max(1, count))
 })
 
 const columns = computed(() => {
@@ -126,15 +149,16 @@ const columns = computed(() => {
 
   return packMasonryColumns(
     items,
-    columnCount.value,
+    effectiveColumnCount.value,
     (item) => estimateMasonryItemHeight(item, width),
     width,
     gap.value.y,
   )
 })
 
-const gridStyle = computed(() => ({
-  columnGap: `${gap.value.x}px`,
+const rootStyle = computed(() => ({
+  ...gridStyle.value,
+  ...(props.virtual ? {} : { columnGap: `${gap.value.x}px` }),
 }))
 
 const columnStyle = computed(() => ({
@@ -155,15 +179,9 @@ const measureLayout = () => {
     imageGrid: true,
     containerWidth: layoutEl.clientWidth,
   }
-  const gapX = getGridGap(options.gapSize).x
-  const minColumnWidth = getMinColumnWidth(options)
+  const metrics = getLayoutMetrics(layoutEl.clientWidth, options)
 
-  columnCount.value = getColumnCount(
-    layoutEl.clientWidth,
-    minColumnWidth,
-    gapX,
-    options,
-  )
+  columnCount.value = metrics.columnCount
 }
 
 onMounted(() => {
@@ -206,13 +224,19 @@ onBeforeUnmount(() => {
 }
 
 .masonry-column {
-  flex: 1 1 0;
+  flex: 0 0 var(--card-width, 220px);
+  width: var(--card-width, 220px);
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-.items-masonry-grid :deep(.item) {
+.items-masonry-grid :deep(.item.item-media.item-view-3) {
+  content-visibility: visible;
+  contain-intrinsic-size: unset;
+}
+
+.items-masonry-grid :deep(.item:not(.item-view-3)) {
   content-visibility: auto;
   contain-intrinsic-size: auto 180px;
 }

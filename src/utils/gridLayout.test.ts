@@ -6,8 +6,11 @@ import {
   estimateMasonryItemHeight,
   findVisibleMasonryItems,
   getColumnCount,
+  getDistributedCardWidth,
+  getGridLayoutStyle,
+  getLayoutMetrics,
   getMediaAspectRatio,
-  getMinColumnWidth,
+  getTargetCardWidth,
   packMasonryColumns,
   shouldUseVirtualGrid,
   shouldUseVirtualMasonry,
@@ -52,10 +55,72 @@ describe('getColumnCount', () => {
   })
 
   it('derives column count from container width', () => {
-    const minWidth = getMinColumnWidth({ size: 3 })
-    const columns = getColumnCount(1200, minWidth, 20)
+    const cardWidth = getTargetCardWidth({ size: 3 })
+    const columns = getColumnCount(1200, cardWidth, 20)
 
     expect(columns).toBeGreaterThan(1)
+  })
+})
+
+describe('getTargetCardWidth', () => {
+  it('gives each neighboring size a distinct card width', () => {
+    expect(getTargetCardWidth({ size: 2 })).toBeLessThan(getTargetCardWidth({ size: 3 }))
+    expect(getTargetCardWidth({ size: 4 })).toBeLessThan(getTargetCardWidth({ size: 5 }))
+    expect(getTargetCardWidth({ size: 4, imageGrid: true })).not.toBe(
+      getTargetCardWidth({ size: 5, imageGrid: true }),
+    )
+  })
+})
+
+describe('getDistributedCardWidth', () => {
+  it('fills the container for a full row', () => {
+    const containerWidth = 1200
+    const options = { size: 3, gapSize: 'm' }
+    const gap = 20
+    const target = getTargetCardWidth(options)
+    const cols = getColumnCount(containerWidth, target, gap, options)
+    const width = getDistributedCardWidth(containerWidth, options)
+
+    expect(width * cols + gap * (cols - 1)).toBeCloseTo(containerWidth)
+    expect(width).toBeGreaterThan(target)
+  })
+
+  it('returns target width without container width', () => {
+    expect(getGridLayoutStyle({ size: 3 })['--card-width']).toBe('255px')
+  })
+
+  it('keeps L and XL distinct at common container widths', () => {
+    const widths = [900, 1100, 1300, 1500, 1800]
+
+    for (const containerWidth of widths) {
+      const mediaL = getLayoutMetrics(containerWidth, { size: 4, gapSize: 'm' })
+      const mediaXl = getLayoutMetrics(containerWidth, { size: 5, gapSize: 'm' })
+      expect(mediaXl.cardWidth).toBeGreaterThan(mediaL.cardWidth)
+      expect(mediaXl.columnCount).toBeLessThan(mediaL.columnCount)
+
+      const imageL = getLayoutMetrics(containerWidth, { size: 4, imageGrid: true, gapSize: 'm' })
+      const imageXl = getLayoutMetrics(containerWidth, { size: 5, imageGrid: true, gapSize: 'm' })
+      expect(imageXl.cardWidth).toBeGreaterThan(imageL.cardWidth)
+      expect(imageXl.columnCount).toBeLessThan(imageL.columnCount)
+    }
+  })
+})
+
+describe('getGridLayoutStyle', () => {
+  it('exposes distributed card width when container width is known', () => {
+    const style = getGridLayoutStyle({ size: 3, gapSize: 'm', containerWidth: 1200 })
+
+    expect(style['--card-width']).not.toBe('255px')
+    expect(style['--grid-gap-x']).toBe('20px')
+    expect(style['--grid-gap-y']).toBe('25px')
+  })
+
+  it('omits card width only for chip layout', () => {
+    expect(getGridLayoutStyle({ chipsGrid: true })['--card-width']).toBeUndefined()
+  })
+
+  it('exposes full width for line layout', () => {
+    expect(getGridLayoutStyle({ lineGrid: true, containerWidth: 1200 })['--card-width']).toBe('1200px')
   })
 })
 
@@ -63,35 +128,34 @@ describe('estimateRowHeight', () => {
   it('uses meta image aspect ratio for tag card grids', () => {
     const defaultHeight = estimateRowHeight({
       size: 3,
-      containerWidth: 1200,
-      columnCount: 4,
       imageAspectRatio: 1,
     })
     const wideHeight = estimateRowHeight({
       size: 3,
-      containerWidth: 1200,
-      columnCount: 4,
       imageAspectRatio: 2,
     })
 
     expect(wideHeight).toBeLessThan(defaultHeight)
   })
 
-  it('uses square estimate for image grids', () => {
+  it('uses narrower image cards with the same 16:9 preview aspect', () => {
     const imageHeight = estimateRowHeight({
       size: 3,
-      containerWidth: 1200,
-      columnCount: 4,
       imageGrid: true,
     })
-    const tagHeight = estimateRowHeight({
+    const videoHeight = estimateRowHeight({
       size: 3,
-      containerWidth: 1200,
-      columnCount: 4,
-      imageAspectRatio: 1,
     })
 
-    expect(imageHeight).toBe(tagHeight)
+    expect(imageHeight).toBeGreaterThan(0)
+    expect(videoHeight).toBeGreaterThan(imageHeight)
+  })
+
+  it('scales row height with card size', () => {
+    const medium = estimateRowHeight({ size: 3, containerWidth: 1200 })
+    const large = estimateRowHeight({ size: 5, containerWidth: 1200 })
+
+    expect(large).toBeGreaterThan(medium)
   })
 })
 

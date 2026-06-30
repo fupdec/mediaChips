@@ -12,10 +12,9 @@ import {
   buildMasonryLayout,
   estimateMasonryItemHeight,
   findVisibleMasonryItems,
-  getColumnCount,
   getGridGap,
+  getLayoutMetrics,
   getLayoutTopInScroll,
-  getMinColumnWidth,
   type MasonryItemPosition,
   type MasonryLayout,
 } from '@/utils/gridLayout'
@@ -56,20 +55,10 @@ export function useVirtualMasonryWindow(
 
     const options = getLayoutOptions()
     const nextGap = getGridGap(options.gapSize)
-    const minColumnWidth = getMinColumnWidth(options)
+    const metrics = getLayoutMetrics(layoutEl.clientWidth, options)
 
-    columnCount.value = getColumnCount(
-      layoutEl.clientWidth,
-      minColumnWidth,
-      nextGap.x,
-      options,
-    )
-
-    const width = layoutEl.clientWidth
-    const cols = columnCount.value
-    columnWidth.value = cols > 0
-      ? (width - nextGap.x * (cols - 1)) / cols
-      : width
+    columnCount.value = metrics.columnCount
+    columnWidth.value = metrics.cardWidth
     gap.value = nextGap
   }
 
@@ -86,7 +75,7 @@ export function useVirtualMasonryWindow(
 
     masonryLayout.value = buildMasonryLayout(
       items,
-      columnCount.value,
+      Math.min(columnCount.value, Math.max(1, items.length)),
       columnWidth.value,
       gap.value.x,
       gap.value.y,

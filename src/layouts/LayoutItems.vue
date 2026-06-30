@@ -69,6 +69,7 @@
       :view="ITEMS.view"
       :gap-size="SETTINGS.gapSize"
       :grid-classes="itemsGridClasses"
+      :grid-layout-options="itemsGridLayoutOptions"
       :virtual="useVirtualMasonry"
       class="items-page-grid"
     />
@@ -84,6 +85,7 @@
       :view="ITEMS.view"
       :gap-size="SETTINGS.gapSize"
       :grid-classes="itemsGridClasses"
+      :grid-layout-options="itemsGridLayoutOptions"
       :image-grid="isImageGrid"
       :wide-image="isWideImage"
       :line-grid="isLineGrid"
@@ -94,7 +96,9 @@
 
     <div
       v-else-if="pageInitialized && ITEMS.itemsOnPage.length"
+      ref="itemsGridRef"
       :class="itemsGridClasses"
+      :style="itemsGridStyle"
       class="items-page-grid"
     >
       <Item
@@ -237,6 +241,7 @@ import {isVideoMediaType, isImageMediaType} from '@/utils/mediaType'
 import {getReadableFileSize} from '@/services/formatUtils'
 import {collectDroppedPaths, startDroppedMediaAdding} from '@/utils/mediaDrop'
 import {useItemsThumbPrefetch} from '@/composable/useItemsThumbPrefetch'
+import {useResponsiveGridLayout} from '@/composable/useResponsiveGridLayout'
 import {shouldUseVirtualGrid, shouldUseVirtualMasonry} from '@/utils/gridLayout'
 
 // Пропсы
@@ -265,6 +270,7 @@ const meta = ref<Meta | null>(null)
 const dropzone = ref(false)
 const dropzoneDragDepth = ref(0)
 const container = ref<HTMLElement | null>(null)
+const itemsGridRef = ref<HTMLElement | null>(null)
 
 const {
   isFiltersReady,
@@ -391,6 +397,16 @@ const itemsGridClasses = computed(() => [
   {'image-grid': isImageGrid.value},
   {'masonry-grid': isMasonryGrid.value},
 ])
+const itemsGridLayoutOptions = computed(() => ({
+  size: ITEMS.value.size,
+  gapSize: SETTINGS.value.gapSize,
+  imageGrid: isImageGrid.value || isMasonryGrid.value,
+  wideImage: isWideImage.value,
+  lineGrid: isLineGrid.value,
+  chipsGrid: isChipsGrid.value,
+  imageAspectRatio: tagImageAspectRatio.value,
+}))
+const { gridStyle: itemsGridStyle } = useResponsiveGridLayout(itemsGridRef, itemsGridLayoutOptions)
 const reg = computed(() => registrationStore.reg)
 const isElectron = computed(() => appStore.isElectron)
 const ENV = computed(() => ITEMS.value.environment)

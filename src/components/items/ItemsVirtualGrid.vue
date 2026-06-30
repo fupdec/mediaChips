@@ -1,5 +1,5 @@
 <template>
-  <div ref="layoutRef" class="items-virtual-grid">
+  <div ref="layoutRef" class="items-virtual-grid" :style="gridStyle">
     <div
       class="virtual-grid-spacer"
       :style="{ height: `${topSpacer}px` }"
@@ -36,7 +36,9 @@
 <script setup lang="ts">
 import {computed, ref, type HTMLAttributes} from 'vue'
 import Item from '@/components/items/Item.vue'
+import {useResponsiveGridLayout} from '@/composable/useResponsiveGridLayout'
 import {useVirtualGridWindow} from '@/composable/useVirtualGridWindow'
+import type {GridLayoutOptions} from '@/utils/gridLayout'
 import type {MediaType} from '@/types/media'
 import type {MediaItem, Meta} from '@/types/stores'
 
@@ -50,6 +52,7 @@ const props = withDefaults(defineProps<{
   view?: number | string
   gapSize?: string
   gridClasses?: HTMLAttributes['class']
+  gridLayoutOptions?: GridLayoutOptions
   imageGrid?: boolean
   wideImage?: boolean
   lineGrid?: boolean
@@ -65,6 +68,7 @@ const props = withDefaults(defineProps<{
   view: 1,
   gapSize: 'default',
   gridClasses: undefined,
+  gridLayoutOptions: undefined,
   imageGrid: false,
   wideImage: false,
   lineGrid: false,
@@ -73,6 +77,19 @@ const props = withDefaults(defineProps<{
 
 const layoutRef = ref<HTMLElement | null>(null)
 const itemsSource = computed(() => props.items)
+
+const resolvedLayoutOptions = computed<GridLayoutOptions>(() => ({
+  size: Number(props.size),
+  gapSize: props.gapSize ?? 'default',
+  imageGrid: props.imageGrid ?? false,
+  wideImage: props.wideImage ?? false,
+  lineGrid: props.lineGrid ?? false,
+  chipsGrid: props.chipsGrid ?? false,
+  imageAspectRatio: props.imageAspectRatio,
+  ...props.gridLayoutOptions,
+}))
+
+const { gridStyle } = useResponsiveGridLayout(layoutRef, resolvedLayoutOptions)
 
 const layoutOptions = computed(() => ({
   size: Number(props.size),

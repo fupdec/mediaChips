@@ -148,12 +148,20 @@
           <v-sheet>{{ t('media.preview.frames_in_progress') }}</v-sheet>
         </div>
 
-        <div class="resolution">
-          <div :class="quality.toLowerCase()"
-            class="text">
-            {{ quality }}
+        <div class="story-header">
+          <div class="resolution">
+            <div :class="quality.toLowerCase()"
+              class="text">
+              {{ quality }}
+            </div>
+            <div class="value">{{ height }}</div>
           </div>
-          <div class="value">{{ height }}</div>
+          <div
+            class="story-title"
+            :title="media.name"
+          >
+            {{ media.name }}
+          </div>
         </div>
 
         <div

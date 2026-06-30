@@ -1,10 +1,12 @@
-const CARD_GRID_MIN: Record<string, Record<number, number>> = {
-  default: { 1: 150, 2: 200, 3: 250, 4: 300, 5: 350, 6: 450 },
-  image: { 1: 140, 2: 220, 3: 220, 4: 280, 5: 320, 6: 400 },
-  wide: { 1: 200, 2: 250, 3: 300, 4: 350, 5: 400, 6: 500 },
+/** Fixed card widths per size (XS=1 … XXL=6). Single source of truth for layout. */
+export const CARD_WIDTH: Record<string, Record<number, number>> = {
+  default: { 1: 150, 2: 200, 3: 255, 4: 315, 5: 405, 6: 520 },
+  image: { 1: 140, 2: 185, 3: 235, 4: 305, 5: 390, 6: 490 },
+  wide: { 1: 200, 2: 255, 3: 315, 4: 395, 5: 485, 6: 600 },
 }
 
-const CHIP_MIN: Record<number, number> = { 1: 80, 2: 100, 3: 110, 4: 120, 5: 140, 6: 160 }
+/** Approximate chip width for virtual row chunking in tag chip view. */
+const CHIP_WIDTH: Record<number, number> = { 1: 80, 2: 100, 3: 120, 4: 150, 5: 180, 6: 220 }
 
 const GAP_SIZE: Record<string, { x: number; y: number }> = {
   xs: { x: 10, y: 15 },
@@ -40,36 +42,129 @@ export interface GridLayoutOptions {
   imageAspectRatio?: number
 }
 
-export function getMinColumnWidth(options: GridLayoutOptions = {}): number {
+export function getTargetCardWidth(options: GridLayoutOptions = {}): number {
   const size = Number(options.size) || 3
 
   if (options.lineGrid) return options.containerWidth || 1200
 
   if (options.chipsGrid) {
-    return CHIP_MIN[size] || CHIP_MIN[3]
+    return CHIP_WIDTH[size] || CHIP_WIDTH[3]
   }
 
   if (options.imageGrid) {
-    return CARD_GRID_MIN.image[size] || CARD_GRID_MIN.image[3]
+    return CARD_WIDTH.image[size] || CARD_WIDTH.image[3]
   }
 
   if (options.wideImage) {
-    return CARD_GRID_MIN.wide[size] || CARD_GRID_MIN.wide[3]
+    return CARD_WIDTH.wide[size] || CARD_WIDTH.wide[3]
   }
 
-  return CARD_GRID_MIN.default[size] || CARD_GRID_MIN.default[3]
+  return CARD_WIDTH.default[size] || CARD_WIDTH.default[3]
+}
+
+/** @deprecated Use getTargetCardWidth */
+export const getMinColumnWidth = getTargetCardWidth
+
+export interface LayoutMetrics {
+  columnCount: number
+  cardWidth: number
+}
+
+function getColumnCountFromTarget(
+  containerWidth: number,
+  targetWidth: number,
+  gapX: number,
+): number {
+  if (!containerWidth || !targetWidth) return 1
+
+  return Math.max(1, Math.floor((containerWidth + gapX) / (targetWidth + gapX)))
+}
+
+export function getLayoutMetrics(
+  containerWidth: number,
+  options: GridLayoutOptions = {},
+): LayoutMetrics {
+  if (options.lineGrid) {
+    return {
+      columnCount: 1,
+      cardWidth: containerWidth || getTargetCardWidth(options),
+    }
+  }
+
+  if (options.chipsGrid) {
+    const target = getTargetCardWidth(options)
+    const gapX = getGridGap(options.gapSize).x
+    return {
+      columnCount: getColumnCountFromTarget(containerWidth, target, gapX),
+      cardWidth: target,
+    }
+  }
+
+  const gap = getGridGap(options.gapSize)
+  const target = getTargetCardWidth(options)
+  let columnCount = getColumnCountFromTarget(containerWidth, target, gap.x)
+
+  const size = Number(options.size) || 3
+  if (size > 1) {
+    const prevMetrics = getLayoutMetrics(containerWidth, { ...options, size: size - 1 })
+    if (columnCount >= prevMetrics.columnCount) {
+      columnCount = Math.max(1, prevMetrics.columnCount - 1)
+    }
+  }
+
+  const cardWidth = containerWidth && columnCount > 0
+    ? (containerWidth - gap.x * (columnCount - 1)) / columnCount
+    : target
+
+  return { columnCount, cardWidth }
 }
 
 export function getColumnCount(
   containerWidth: number,
-  minColumnWidth: number,
+  cardWidth: number,
   gapX: number,
   options: GridLayoutOptions = {},
 ): number {
   if (options.lineGrid) return 1
-  if (!containerWidth || !minColumnWidth) return 1
 
-  return Math.max(1, Math.floor((containerWidth + gapX) / (minColumnWidth + gapX)))
+  return getLayoutMetrics(containerWidth, {
+    ...options,
+    containerWidth,
+  }).columnCount
+}
+
+/** Card width that fills the row while column count follows the target size. */
+export function getDistributedCardWidth(
+  containerWidth: number,
+  options: GridLayoutOptions = {},
+): number {
+  if (options.lineGrid || options.chipsGrid) {
+    return getTargetCardWidth(options)
+  }
+
+  return getLayoutMetrics(containerWidth, options).cardWidth
+}
+
+export function getGridLayoutStyle(options: GridLayoutOptions = {}): Record<string, string> {
+  const gap = getGridGap(options.gapSize)
+  const style: Record<string, string> = {
+    '--grid-gap-x': `${gap.x}px`,
+    '--grid-gap-y': `${gap.y}px`,
+  }
+
+  if (!options.chipsGrid) {
+    let cardWidth: number
+    if (options.lineGrid) {
+      cardWidth = options.containerWidth || getTargetCardWidth(options)
+    } else if (options.containerWidth) {
+      cardWidth = getDistributedCardWidth(options.containerWidth, options)
+    } else {
+      cardWidth = getTargetCardWidth(options)
+    }
+    style['--card-width'] = `${cardWidth}px`
+  }
+
+  return style
 }
 
 export interface GridRow<T> {
@@ -232,8 +327,6 @@ export function chunkIntoRows<T>(items: T[], columnCount: number): GridRow<T>[] 
 export function estimateRowHeight(options: GridLayoutOptions = {}): number {
   const size = Number(options.size) || 3
   const gap = getGridGap(options.gapSize)
-  const columnCount = Math.max(1, options.columnCount || 1)
-  const containerWidth = options.containerWidth || 1200
 
   if (options.lineGrid) {
     return (LINE_ROW_HEIGHT[size] || LINE_ROW_HEIGHT[3]) + gap.y
@@ -245,16 +338,15 @@ export function estimateRowHeight(options: GridLayoutOptions = {}): number {
     return height + gap.y + 10
   }
 
-  const gapX = gap.x
-  const colWidth = (containerWidth - gapX * (columnCount - 1)) / columnCount
-  const aspect = options.imageGrid
-    ? 1
-    : (options.imageAspectRatio && options.imageAspectRatio > 0
-      ? options.imageAspectRatio
-      : 9 / 16)
+  const cardWidth = options.containerWidth
+    ? getDistributedCardWidth(options.containerWidth, options)
+    : getTargetCardWidth(options)
+  const aspect = options.imageAspectRatio && options.imageAspectRatio > 0
+    ? options.imageAspectRatio
+    : 16 / 9
   const description = DESCRIPTION_HEIGHT[size] || DESCRIPTION_HEIGHT[3]
 
-  return colWidth / aspect + description + gap.y
+  return cardWidth / aspect + description + gap.y
 }
 
 export function shouldUseVirtualGrid(

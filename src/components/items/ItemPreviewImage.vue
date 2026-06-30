@@ -7,13 +7,13 @@
     <v-responsive
       v-if="showsPreview"
       v-ripple="{ class: 'text-primary' }"
-      :aspect-ratio="aspectRatio"
+      :aspect-ratio="previewAspectRatio"
       class="image-preview-container"
       @click.stop="openViewer"
     >
       <v-img
         :src="thumb || undefined"
-        :aspect-ratio="aspectRatio"
+        :aspect-ratio="previewAspectRatio"
         class="thumb"
         contain
         @load="onThumbLoad"
@@ -76,8 +76,8 @@ const showsPreview = computed(() =>
   isViewCard.value || isViewTimeline.value || isViewMasonry.value
 )
 
-const aspectRatio = computed(() =>
-  getMediaAspectRatio(props.media)
+const previewAspectRatio = computed(() =>
+  isViewCard.value ? 16 / 9 : getMediaAspectRatio(props.media)
 )
 
 const mediaWidth = computed(() =>
