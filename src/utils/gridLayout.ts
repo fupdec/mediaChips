@@ -22,7 +22,7 @@ export const VIRTUAL_GRID_THRESHOLD = 48
 
 export const VIRTUAL_ROW_BUFFER = 2
 
-export const VIRTUAL_MASONRY_BUFFER = 500
+export const VIRTUAL_MASONRY_BUFFER = 600
 
 export function getGridGap(gapSize = 'xs'): { x: number; y: number } {
   return GAP_SIZE[gapSize] || GAP_SIZE.xs

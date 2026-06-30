@@ -1,6 +1,6 @@
 import path from 'path-browserify'
 import { getLocalImage } from '@/services/fileService'
-import { getCachedThumb, mediaThumbKey } from '@/utils/thumbDisplayCache'
+import { getCachedThumb, mediaThumbKey, isPersistentThumbUrl, setCachedThumb } from '@/utils/thumbDisplayCache'
 
 interface MediaWithPath {
   id?: number
@@ -8,6 +8,11 @@ interface MediaWithPath {
 }
 
 const isUnavailable = (src: string | null | undefined): boolean => !src || src.includes('unavailable.png')
+
+const rememberImageThumb = (mediaId: number | string, src: string | null | undefined) => {
+  if (!isPersistentThumbUrl(src)) return
+  setCachedThumb(mediaThumbKey('images', mediaId), src)
+}
 
 export async function loadImageDisplayUrl(
   media: MediaWithPath | null | undefined,
@@ -18,22 +23,31 @@ export async function loadImageDisplayUrl(
 
   if (!cacheBust) {
     const cached = getCachedThumb(mediaThumbKey('images', media.id))
-    if (!isUnavailable(cached)) return cached ?? null
+    if (isPersistentThumbUrl(cached)) return cached!
   }
 
   const thumbPath = path.join(mediaPath, 'images/thumbs', `${media.id}.jpg`)
 
   if (preferFull && media.path) {
     const full = await getLocalImage(media.path, true, cacheBust)
-    if (!isUnavailable(full)) return full
+    if (!isUnavailable(full)) {
+      rememberImageThumb(media.id, full)
+      return full
+    }
   }
 
   const thumb = await getLocalImage(thumbPath, false, cacheBust)
-  if (!isUnavailable(thumb)) return thumb
+  if (!isUnavailable(thumb)) {
+    rememberImageThumb(media.id, thumb)
+    return thumb
+  }
 
   if (media.path) {
     const full = await getLocalImage(media.path, true, cacheBust)
-    if (!isUnavailable(full)) return full
+    if (!isUnavailable(full)) {
+      rememberImageThumb(media.id, full)
+      return full
+    }
   }
 
   return null

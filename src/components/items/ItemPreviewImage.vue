@@ -17,6 +17,7 @@
         class="thumb"
         contain
         @load="onThumbLoad"
+        @error="onThumbError"
       />
     </v-responsive>
 
@@ -36,6 +37,7 @@ import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {loadImageDisplayUrl, revokeImageObjectUrl} from '@/utils/imageSource'
 import {getMediaAspectRatio} from '@/utils/gridLayout'
+import {getCachedThumb, isPersistentThumbUrl, mediaThumbKey} from '@/utils/thumbDisplayCache'
 import type {MediaItem} from '@/types/stores'
 
 const props = defineProps<{
@@ -54,6 +56,7 @@ const isMounted = ref(false)
 let thumbObjectUrl: string | null = null
 let thumbObserver: IntersectionObserver | null = null
 let thumbLoadStarted = false
+let thumbErrorRetried = false
 
 const ITEMS = computed(() => itemsStore)
 
@@ -94,8 +97,18 @@ const showResolution = computed(() =>
 )
 
 const onThumbLoad = () => {
+  thumbErrorRetried = false
   if (Number(props.media?.width) > 0 && Number(props.media?.height) > 0) return
   if (thumb.value) probeImageDimensions(thumb.value)
+}
+
+const onThumbError = () => {
+  if (thumbErrorRetried) return
+  thumbErrorRetried = true
+  thumb.value = null
+  clearThumbUrl()
+  thumbLoadStarted = false
+  void loadThumb({cacheBust: true})
 }
 
 const clearThumbUrl = () => {
@@ -116,14 +129,15 @@ const probeImageDimensions = (src: string) => {
   img.src = src
 }
 
-const ensureDimensions = async () => {
-  if (Number(props.media?.width) > 0 && Number(props.media?.height) > 0) return
-  if (!props.media?.id || !props.isFileExists) return
+const applyCachedThumb = (): boolean => {
+  if (!props.media?.id) return false
 
-  const src = await loadImageDisplayUrl(props.media, store.mediaPath)
-  if (src && !src.includes('unavailable.png')) {
-    probeImageDimensions(src)
-  }
+  const cached = getCachedThumb(mediaThumbKey('images', props.media.id))
+  if (!isPersistentThumbUrl(cached)) return false
+
+  thumbObjectUrl = null
+  thumb.value = cached!
+  return true
 }
 
 const stopThumbObserver = () => {
@@ -178,6 +192,7 @@ const loadThumb = async ({cacheBust = false} = {}) => {
 const scheduleThumbLoad = () => {
   stopThumbObserver()
   thumbLoadStarted = false
+  thumbErrorRetried = false
 
   if (!containerRef.value || !props.isFileExists) return
 
@@ -185,10 +200,16 @@ const scheduleThumbLoad = () => {
     if (!entries.some((entry) => entry.isIntersecting)) return
     void loadThumb()
   }, {
-    rootMargin: '300px 0px',
+    rootMargin: '250px 0px',
   })
 
   thumbObserver.observe(containerRef.value)
+}
+
+const requestThumb = () => {
+  if (!props.isFileExists) return
+  if (applyCachedThumb()) return
+  scheduleThumbLoad()
 }
 
 const openViewer = () => {
@@ -201,8 +222,7 @@ const openViewer = () => {
 
 onMounted(() => {
   isMounted.value = true
-  void ensureDimensions()
-  scheduleThumbLoad()
+  requestThumb()
 })
 
 onBeforeUnmount(() => {
@@ -217,7 +237,7 @@ watch(
     thumb.value = null
     detectedWidth.value = 0
     detectedHeight.value = 0
-    scheduleThumbLoad()
+    requestThumb()
   }
 )
 
@@ -226,6 +246,7 @@ watch(() => itemsStore.thumbRefreshKeys[Number(props.media?.id)], (version) => {
   thumb.value = null
   clearThumbUrl()
   thumbLoadStarted = false
+  thumbErrorRetried = false
   void loadThumb({cacheBust: true})
 })
 </script>

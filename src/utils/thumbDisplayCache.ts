@@ -21,9 +21,16 @@ export function getCachedThumb(key: string): string | undefined {
   return url
 }
 
+const isUnavailable = (src: string | null | undefined): boolean => !src || src.includes('unavailable.png')
+
+export function isPersistentThumbUrl(url: string | null | undefined): boolean {
+  if (isUnavailable(url)) return false
+  return !String(url).startsWith('blob:')
+}
+
 export function setCachedThumb(key: string, url: string | null | undefined): void {
-  if (!url || url.includes('unavailable.png')) return
-  touch(key, url)
+  if (!isPersistentThumbUrl(url)) return
+  touch(key, url!)
   evictOldest()
 }
 

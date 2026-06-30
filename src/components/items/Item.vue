@@ -218,7 +218,7 @@ const contextMenu = computed(() => contextMenuStore)
 const is_file_exists = ref(false)
 const big_preview = ref(false)
 const itemRootRef = ref<HTMLElement | null>(null)
-const { wasInView } = useLazyInView(itemRootRef, { rootMargin: '240px 0px' })
+const { wasInView } = useLazyInView(itemRootRef, { rootMargin: '320px 0px' })
 
 const isVideoMedia = computed(() => isVideoMediaType(props.mediaType ?? undefined))
 const isImageMedia = computed(() => isImageMediaType(props.mediaType ?? undefined))

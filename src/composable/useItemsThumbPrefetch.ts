@@ -62,7 +62,7 @@ export function useItemsThumbPrefetch({
 
   const debouncedPrefetch = debounce(() => {
     void prefetch()
-  }, 40)
+  }, 40, { leading: true, trailing: false })
 
   watch(
     () => [

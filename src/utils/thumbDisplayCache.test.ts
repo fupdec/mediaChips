@@ -30,6 +30,12 @@ describe('thumbDisplayCache', () => {
     expect(getCachedThumb(mediaThumbKey('videos', 1500))).toBe('thumb-1500')
   })
 
+  it('ignores blob URLs that would be revoked later', () => {
+    clearThumbDisplayCache()
+    setCachedThumb('blob', 'blob:http://localhost/abc')
+    expect(getCachedThumb('blob')).toBeUndefined()
+  })
+
   it('clears all cached entries', () => {
     clearThumbDisplayCache()
     setCachedThumb('x', 'thumb-x')
