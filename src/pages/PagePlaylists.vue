@@ -16,14 +16,37 @@
       </v-btn>
     </div>
 
-    <section
-      v-if="is_dynamic_loading || dynamicPlaylists.length"
-      class="smart-playlists-section"
-    >
+    <section class="smart-playlists-section">
       <div class="section-title text-h5 mb-4 d-flex align-center">
         <v-icon start>mdi-filter-variant</v-icon>
         {{ t('playlists.dynamic_playlists') }}
       </div>
+
+      <v-alert
+        v-if="!is_dynamic_loading && !dynamicPlaylists.length"
+        type="info"
+        variant="tonal"
+        density="compact"
+        rounded="xl"
+        class="mb-4"
+        icon="mdi-information-outline"
+      >
+        {{ t('playlists.no_smart_playlists_hint_before') }}
+        <router-link
+          v-if="videoPageUrl"
+          :to="videoPageUrl"
+          class="smart-playlists-video-link font-weight-bold text-decoration-none"
+        >
+          <v-icon
+            :icon="videoPageIcon"
+            size="16"
+            class="smart-playlists-video-link__icon"
+          />
+          {{ videoPageLabel }}
+        </router-link>
+        <span v-else class="font-weight-bold">{{ videoPageLabel }}</span>
+        {{ t('playlists.no_smart_playlists_hint_after') }}
+      </v-alert>
 
       <div
         v-if="is_dynamic_loading"
@@ -156,6 +179,8 @@ import {setNotification} from '@/services/notificationService'
 import {getFilters} from '@/services/filterService'
 import {useEventBus} from '@/utils/eventBus'
 import {getErrorStatus} from '@/types/vue'
+import {getDefaultMediaTypeId, isVideoMediaType} from '@/utils/mediaType'
+import {getMediaTypeName} from '@/utils/mediaTypeI18n'
 import type { ParsedDynamicPlaylistSummary } from '@shared/schemas/filters'
 import type { SavedFilterBasic } from '@shared/entities/filter'
 import type { PagePlaylist } from '@/types/playlists'
@@ -201,6 +226,23 @@ const playlist_edit = ref<PagePlaylist | null>(null)
 const smart_playlist_edit = ref<PagePlaylist | null>(null)
 
 const apiUrl = computed(() => appStore.localhost)
+
+const videoMediaType = computed(() => appStore.mediaTypes?.find(isVideoMediaType) ?? null)
+
+const videoPageUrl = computed(() => {
+  const mediaTypeId = videoMediaType.value?.id ?? getDefaultMediaTypeId(appStore.mediaTypes)
+  return mediaTypeId ? `/media?mediaTypeId=${mediaTypeId}` : null
+})
+
+const videoPageLabel = computed(() => {
+  if (videoMediaType.value) return getMediaTypeName(videoMediaType.value, t)
+  return t('playlists.no_smart_playlists_video_page')
+})
+
+const videoPageIcon = computed(() => {
+  const icon = videoMediaType.value?.icon
+  return icon ? `mdi-${icon}` : 'mdi-video'
+})
 
 const dynamicCardsPerRow = computed(() => {
   if (width.value >= 1900) return 5
@@ -561,5 +603,22 @@ onMounted(() => {
 
 .smart-playlists-section {
   margin-bottom: 48px;
+}
+
+.smart-playlists-video-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+
+  &:hover,
+  &:visited,
+  &:active {
+    color: inherit;
+  }
+
+  &__icon {
+    color: inherit;
+  }
 }
 </style>
