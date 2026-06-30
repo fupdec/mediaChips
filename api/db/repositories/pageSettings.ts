@@ -1,5 +1,6 @@
 import { and, eq, isNull, type SQL } from 'drizzle-orm'
 import type { DrizzleClient } from '../client'
+import { mediaTypes } from '../schema/mediaTypes'
 import { pageSettings } from '../schema/pageSettings'
 
 const PAGE_SETTING_COLUMNS = {
@@ -32,6 +33,25 @@ function buildWhere(criteria: Record<string, unknown>): SQL | undefined {
   return conditions.length === 1 ? conditions[0] : and(...conditions)
 }
 
+function resolveDefaultView(
+  db: DrizzleClient,
+  criteria: Record<string, unknown>,
+): number {
+  if (criteria.view != null) {
+    return Number(criteria.view) || 1
+  }
+
+  const mediaTypeId = criteria.mediaTypeId
+  if (mediaTypeId == null) return 1
+
+  const mediaType = db.select({ type: mediaTypes.type })
+    .from(mediaTypes)
+    .where(eq(mediaTypes.id, Number(mediaTypeId)))
+    .get()
+
+  return String(mediaType?.type || '').toLowerCase() === 'image' ? 3 : 1
+}
+
 export function createPageSettingsRepository(db: DrizzleClient) {
   return {
     findOne(criteria: Record<string, unknown>) {
@@ -45,7 +65,10 @@ export function createPageSettingsRepository(db: DrizzleClient) {
       if (existing) return [existing, false] as const
 
       const created = db.insert(pageSettings)
-        .values(criteria as typeof pageSettings.$inferInsert)
+        .values({
+          ...(criteria as typeof pageSettings.$inferInsert),
+          view: resolveDefaultView(db, criteria),
+        })
         .returning()
         .get()
 

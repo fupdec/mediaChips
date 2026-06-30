@@ -519,7 +519,7 @@ defineEmits<{
 </script>
 
 <style lang="scss">
-.items-page-grid :deep(.item) {
+.items-page-grid:not(.items-virtual-grid) :deep(.item) {
   content-visibility: auto;
   contain-intrinsic-size: auto 280px;
 }

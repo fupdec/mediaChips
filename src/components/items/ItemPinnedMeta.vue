@@ -166,7 +166,7 @@
         <v-chip
           v-else
           :prepend-icon="`mdi-${entry.data.icon}`"
-          :text="entry.data.name"
+          :text="formatMetaValue(entry.data.value)"
         ></v-chip>
       </template>
     </div>

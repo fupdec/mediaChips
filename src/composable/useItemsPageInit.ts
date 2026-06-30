@@ -9,6 +9,7 @@ import {typedApi} from '@/services/typedApi'
 import {getFilterObject} from '@/services/formatUtils'
 import {getSavedFilters} from '@/services/filterService'
 import {getMediaTypeName} from '@/utils/mediaTypeI18n'
+import {isImageMediaType} from '@/utils/mediaType'
 import {normalizeSortBy} from '@/utils/mediaSortFilter'
 import type { FilterObject } from '@/types/common'
 import type { MediaType } from '@/types/media'
@@ -273,6 +274,14 @@ export function useItemsPageInit({
 
     const {settings: pageSettings, shouldLinkFilter} = await fetchPageSettings()
     Object.assign(storeUpdates, applyPageSettings(pageSettings))
+
+    if (
+      props.items_type === 'media' &&
+      isImageMediaType(mediaType.value) &&
+      storeUpdates.view == null
+    ) {
+      storeUpdates.view = 3
+    }
 
     const assigned = await fetchPinnedMeta()
     storeUpdates.assigned = assigned

@@ -114,11 +114,6 @@ const {
   width: 100%;
 }
 
-.items-virtual-grid :deep(.item) {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 180px;
-}
-
 .virtual-grid-spacer {
   width: 100%;
   pointer-events: none;

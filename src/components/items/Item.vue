@@ -122,13 +122,16 @@
         <div v-if="settingsStore.ratingAndFavoriteInCard == '1' && (is_rating_active || is_favorite_active)"
              @click.stop
              class="rating-favorite-in-description">
-          <ItemRating v-if="is_rating_active"
-                      :item="item"
-                      :type="type"></ItemRating>
-          <div v-else></div>
-          <ItemFavorite v-if="is_favorite_active"
+          <div class="rating-favorite-in-description__left">
+            <ItemRating v-if="is_rating_active"
                         :item="item"
-                        :type="type"></ItemFavorite>
+                        :type="type"></ItemRating>
+          </div>
+          <div class="rating-favorite-in-description__right">
+            <ItemFavorite v-if="is_favorite_active"
+                          :item="item"
+                          :type="type"></ItemFavorite>
+          </div>
         </div>
         <div
           v-if="!(itemsStore.view == 2 && type === 'media' && isVideoMedia)"
