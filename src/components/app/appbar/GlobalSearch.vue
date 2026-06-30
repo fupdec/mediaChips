@@ -29,7 +29,8 @@ interface SearchGroup {
 
 type FlatResultRow =
   | { kind: 'header'; group: SearchGroup; id: string }
-  | { kind: 'item'; group: SearchGroup; item: MediaItem; id: string }
+  | { kind: 'item'; group: SearchGroup; item: MediaItem | Tag; id: string }
+  | { kind: 'show-more'; group: SearchGroup; hiddenCount: number; id: string }
 
 const {t} = useI18n()
 const eventBus = useEventBus()
@@ -50,12 +51,15 @@ const dialog = ref(false)
 const query = ref('')
 const loading = ref(false)
 const results = ref<SearchGroup[]>([])
+const expandedGroupIds = ref<Set<string>>(new Set())
 const searchField = ref<{ focus: () => void } | null>(null)
 const resultsScroller = ref<{ scrollToIndex: (index: number) => void } | null>(null)
 const selectedIndex = ref(-1)
 
 let abortController: AbortController | null = null
+let pendingNavigation: (() => void) | null = null
 const RESULT_LIMIT = 200
+const GROUP_PREVIEW_LIMIT = 20
 const ROW_HEIGHT = 30
 const RESULTS_MAX_HEIGHT = 480
 
@@ -69,12 +73,26 @@ const flatResults = computed((): FlatResultRow[] => {
   for (const group of results.value) {
     flat.push({kind: 'header', group, id: `h-${group.group_id}`})
 
-    for (const item of group.data) {
+    const isExpanded = expandedGroupIds.value.has(group.group_id)
+    const visibleItems = isExpanded || group.data.length <= GROUP_PREVIEW_LIMIT
+      ? group.data
+      : group.data.slice(0, GROUP_PREVIEW_LIMIT)
+
+    for (const item of visibleItems) {
       flat.push({
         kind: 'item',
         group,
         item,
         id: `${group.group_id}-${item.id}`,
+      })
+    }
+
+    if (!isExpanded && group.data.length > GROUP_PREVIEW_LIMIT) {
+      flat.push({
+        kind: 'show-more',
+        group,
+        hiddenCount: group.data.length - GROUP_PREVIEW_LIMIT,
+        id: `more-${group.group_id}`,
       })
     }
   }
@@ -89,7 +107,7 @@ const resultsScrollHeight = computed(() => {
 
 const navigableIndices = computed(() =>
   flatResults.value.reduce<number[]>((indices, row, index) => {
-    if (row.kind === 'item') indices.push(index)
+    if (row.kind === 'item' || row.kind === 'show-more') indices.push(index)
     return indices
   }, []),
 )
@@ -125,22 +143,37 @@ async function focusSearchField() {
   setTimeout(() => searchField.value?.focus(), 50)
 }
 
+function resetExpandedGroups() {
+  expandedGroupIds.value = new Set()
+}
+
+function expandGroup(groupId: string) {
+  if (expandedGroupIds.value.has(groupId)) return
+  expandedGroupIds.value = new Set([...expandedGroupIds.value, groupId])
+}
+
 function resetState() {
   abortController?.abort()
   runSearch.cancel()
   query.value = ''
   results.value = []
+  resetExpandedGroups()
   loading.value = false
   selectedIndex.value = -1
 }
 
-function hide() {
+function closeThenNavigate(action: () => void) {
+  hideHoverImage()
+  pendingNavigation = action
   dialog.value = false
-  resetState()
 }
 
 function onDialogClose() {
   resetState()
+  const action = pendingNavigation
+  pendingNavigation = null
+  if (!action) return
+  nextTick(() => action())
 }
 
 function buildMediaGroups(data: MediaItem[]) {
@@ -181,7 +214,7 @@ function buildTagGroups(data: Tag[]) {
 
 function sortGroups(groups: SearchGroup[]) {
   return groups.sort((a, b) => {
-    if (a.is_media !== b.is_media) return a.is_media ? -1 : 1
+    if (a.is_media !== b.is_media) return a.is_media ? 1 : -1
 
     if (a.is_media) {
       const ai = mediaTypes.value.findIndex(item => item.id === a.mediaTypeId)
@@ -203,7 +236,7 @@ async function search() {
     return
   }
 
-  if (!mediaTypes.value.length || !meta.value.length) {
+  if (!mediaTypes.value.length) {
     loading.value = false
     return
   }
@@ -214,6 +247,7 @@ async function search() {
 
   loading.value = true
   results.value = []
+  resetExpandedGroups()
   selectedIndex.value = -1
 
   try {
@@ -243,6 +277,7 @@ function onQueryInput() {
     abortController?.abort()
     runSearch.cancel()
     results.value = []
+    resetExpandedGroups()
     loading.value = false
     selectedIndex.value = -1
     return
@@ -263,35 +298,37 @@ function openGroup(group: SearchGroup) {
 }
 
 function openMedia(media: MediaItem, mediaTypeId?: number) {
-  const type = mediaTypes.value.find(item => item.id === Number(mediaTypeId || media.mediaTypeId))
+  closeThenNavigate(() => {
+    const type = mediaTypes.value.find(item => item.id === Number(mediaTypeId || media.mediaTypeId))
 
-  if (isImageMediaType(type)) {
-    itemsStore.viewImage({image: media})
-  } else if (isVideoMediaType(type) || isAudioMediaType(type)) {
-    itemsStore.playVideo({video: media})
-  } else if (isTextMediaType(type) && media.path) {
-    openPath(media.path)
-  } else {
-    router.push(`/media?mediaTypeId=${mediaTypeId || media.mediaTypeId}`)
-  }
-
-  hide()
+    if (isImageMediaType(type)) {
+      itemsStore.viewImage({image: media})
+    } else if (isVideoMediaType(type) || isAudioMediaType(type)) {
+      itemsStore.playVideo({video: media})
+    } else if (isTextMediaType(type) && media.path) {
+      openPath(media.path)
+    } else {
+      router.push(`/media?mediaTypeId=${mediaTypeId || media.mediaTypeId}`)
+    }
+  })
 }
 
 function openMeta(metaId?: number) {
-  router.push(`/meta?metaId=${metaId}`)
-  hide()
+  closeThenNavigate(() => {
+    router.push(`/meta?metaId=${metaId}`)
+  })
 }
 
 function openMediaPage(mediaTypeId?: number) {
-  router.push(`/media?mediaTypeId=${mediaTypeId}`)
-  hide()
+  closeThenNavigate(() => {
+    router.push(`/media?mediaTypeId=${mediaTypeId}`)
+  })
 }
 
-function openTag(tag: MediaItem) {
-  hideHoverImage()
-  router.push(`/tag?metaId=${tag.metaId}&tagId=${tag.id}&mediaTypeId=${getDefaultMediaTypeId(mediaTypes.value)}`)
-  hide()
+function openTag(tag: Tag) {
+  closeThenNavigate(() => {
+    router.push(`/tag?metaId=${tag.metaId}&tagId=${tag.id}&mediaTypeId=${getDefaultMediaTypeId(mediaTypes.value)}`)
+  })
 }
 
 function openFirstResult() {
@@ -304,13 +341,18 @@ function openFirstResult() {
 
 function openSelectedResult() {
   const row = flatResults.value[selectedIndex.value]
-  if (!row || row.kind !== 'item') {
+  if (!row || row.kind === 'header') {
     openFirstResult()
     return
   }
 
-  if (row.group.is_media) openMedia(row.item, row.group.mediaTypeId)
-  else openTag(row.item)
+  if (row.kind === 'show-more') {
+    expandGroup(row.group.group_id)
+    return
+  }
+
+  if (row.group.is_media) openMedia(row.item as MediaItem, row.group.mediaTypeId)
+  else openTag(row.item as Tag)
 }
 
 function scrollSelectedIntoView() {
@@ -353,7 +395,7 @@ function onSearchKeydown(e: KeyboardEvent) {
 }
 
 function onItemMouseenter(row: FlatResultRow, index: number) {
-  if (row.kind !== 'item') return
+  if (row.kind === 'header') return
   selectedIndex.value = index
 }
 
@@ -476,6 +518,17 @@ function getNameHighlighted(text: string) {
             </div>
 
             <div
+              v-else-if="row.kind === 'show-more'"
+              class="global-search__show-more d-flex align-center px-3 text-caption"
+              :class="{'global-search__item--active': index === selectedIndex}"
+              @mouseenter="onItemMouseenter(row, index)"
+              @click.stop="expandGroup(row.group.group_id)"
+            >
+              <v-icon size="14" class="text-medium-emphasis mr-2">mdi-dots-horizontal</v-icon>
+              <span>{{ t('globalSearch.showMore', {count: row.hiddenCount}) }}</span>
+            </div>
+
+            <div
               v-else
               class="global-search__item d-flex align-center px-3 text-caption"
               :class="{'global-search__item--active': index === selectedIndex}"
@@ -573,6 +626,18 @@ function getNameHighlighted(text: string) {
 
 .global-search__item--active:hover {
   background: rgba(var(--v-theme-primary), 0.14);
+}
+
+.global-search__show-more {
+  height: 30px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: rgb(var(--v-theme-primary));
+  transition: background-color 0.15s ease;
+}
+
+.global-search__show-more:hover {
+  background: rgba(var(--v-theme-primary), 0.06);
 }
 
 .global-search__item-title {

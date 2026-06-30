@@ -114,7 +114,7 @@ const es = {
     startTyping: 'Empieza a escribir para ver el resultado...',
     loading: 'Cargando...',
     noResult: 'No se encontró nada',
-    showMore: 'Mostrar más...',
+    showMore: 'Mostrar más ({count})',
     resultsCount: '{count} encontrados',
     hintEsc: 'cerrar',
     hintArrows: 'navegar',

@@ -15,6 +15,26 @@ describe('shared schemas', () => {
     expect(result).toEqual([{ id: 1, type: 'video', name: 'Videos' }])
   })
 
+  it('parses sqlite-style tag rows with null text fields', () => {
+    expect(parseTags([{
+      id: 2,
+      name: 'Tag',
+      metaId: 1,
+      favorite: 0,
+      synonyms: null,
+      color: null,
+      bookmark: null,
+    }])).toEqual([{
+      id: 2,
+      name: 'Tag',
+      metaId: 1,
+      favorite: false,
+      synonyms: null,
+      color: null,
+      bookmark: null,
+    }])
+  })
+
   it('parses tags and meta lists', () => {
     expect(parseTags([{ id: 2, name: 'Tag' }])).toEqual([{ id: 2, name: 'Tag' }])
     expect(parseMetaList([{ id: 3, name: 'Meta', type: 'array' }])).toEqual([

@@ -114,7 +114,7 @@ const ru = {
     startTyping: 'Начните вводить текст чтобы увидеть результат...',
     loading: 'Загрузка...',
     noResult: 'Ничего не найдено',
-    showMore: 'Показать еще...',
+    showMore: 'Показать ещё ({count})',
     resultsCount: 'Найдено: {count}',
     hintEsc: 'закрыть',
     hintArrows: 'навигация',

@@ -114,7 +114,7 @@ const en = {
     startTyping: 'Start typing to see the result...',
     loading: 'Loading...',
     noResult: 'Nothing found',
-    showMore: 'Show more...',
+    showMore: 'Show more ({count})',
     resultsCount: '{count} found',
     hintEsc: 'close',
     hintArrows: 'navigate',

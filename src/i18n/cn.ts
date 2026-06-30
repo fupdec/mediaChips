@@ -114,7 +114,7 @@ const cn = {
     startTyping: '开始输入以查看结果...',
     loading: '加载中...',
     noResult: '未找到结果',
-    showMore: '显示更多...',
+    showMore: '显示更多 ({count})',
     resultsCount: '找到 {count} 条',
     hintEsc: '关闭',
     hintArrows: '导航',

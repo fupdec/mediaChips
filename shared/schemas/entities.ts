@@ -17,12 +17,12 @@ export const MediaTypeSchema = z.object({
 
 export const TagSchema = z.object({
   id: z.number(),
-  metaId: z.number().optional(),
-  name: z.string().optional(),
-  synonyms: z.string().optional(),
-  favorite: z.boolean().optional(),
-  color: z.string().optional(),
-  bookmark: z.string().optional(),
+  metaId: z.number().nullable().optional(),
+  name: z.string().nullable().optional(),
+  synonyms: z.string().nullable().optional(),
+  favorite: optionalCoercedBooleanSchema,
+  color: z.string().nullable().optional(),
+  bookmark: z.string().nullable().optional(),
 }).passthrough()
 
 export const MetaSchema = z.object({
@@ -33,7 +33,7 @@ export const MetaSchema = z.object({
   chipVariant: z.string().optional(),
   color: z.boolean().optional(),
   rating: z.boolean().optional(),
-  favorite: z.boolean().optional(),
+  favorite: optionalCoercedBooleanSchema,
   synonyms: z.boolean().optional(),
   imageAspectRatio: z.number().optional(),
   hidden: z.boolean().optional(),
@@ -77,7 +77,7 @@ export const MediaItemSchema = z.object({
   mediaTypeId: z.number().optional(),
   thumb: z.string().optional(),
   views: z.number().optional(),
-  favorite: z.boolean().optional(),
+  favorite: optionalCoercedBooleanSchema,
   duration: z.number().optional(),
   time: z.number().optional(),
 }).passthrough()
