@@ -1,9 +1,11 @@
 import {computed, watch, onMounted, onBeforeUnmount, nextTick, ref} from 'vue'
 import type { Handler } from 'mitt'
 import {useRouter} from 'vue-router'
+import cloneDeep from 'lodash/cloneDeep'
 import {useAppStore} from '@/stores/app'
 import {useItemsStore} from '@/stores/items'
 import {useEventBus} from '@/utils/eventBus'
+import {typedApi} from '@/services/typedApi'
 import {
   getDefaultMediaTypeId,
   isAudioMediaType,
@@ -163,6 +165,19 @@ export function useItemsPageEvents({
     await getPinnedMeta()
   }
 
+  const handleGetMeta: Handler = () => {
+    if (props.items_type !== 'tag' || !props.metaId) return
+
+    void typedApi.getMetaById(Number(props.metaId))
+      .then((res) => {
+        meta.value = cloneDeep(res.data)
+        itemsStore.updateState({key: 'meta', value: res.data})
+      })
+      .catch((error) => {
+        console.error('Failed to refresh meta:', error)
+      })
+  }
+
   const handleOpenRandomItem: Handler = (event) => {
     const id = Number(event)
     const navigationPool = ITEMS.value.navigationItems.length
@@ -207,6 +222,7 @@ export function useItemsPageEvents({
     ['setItemsSortBy', handleSetItemsSortBy],
     ['setItemsView', handleSetItemsView],
     ['updateAssignedMeta', handleUpdateAssignedMeta],
+    ['getMeta', handleGetMeta],
     ['openRandomItem', handleOpenRandomItem],
   ]
 

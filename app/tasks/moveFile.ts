@@ -184,19 +184,6 @@ async function prepareMoveItems(db: ApiDb, items: MoveItemInput[]): Promise<Prep
       continue
     }
 
-    const destExists = await fs.stat(newPath).catch(() => null)
-    if (destExists) {
-      prepared.push({
-        id: item.id,
-        fileName,
-        folder: item.folder,
-        oldPath,
-        newPath,
-        error: { code: ERROR_CODES.EXISTS, message: 'Destination file already exists' },
-      })
-      continue
-    }
-
     if (path.resolve(oldPath) === path.resolve(newPath)) {
       prepared.push({
         id: item.id,
@@ -206,6 +193,19 @@ async function prepareMoveItems(db: ApiDb, items: MoveItemInput[]): Promise<Prep
         newPath,
         skip: true,
         size: sourceExists.size,
+      })
+      continue
+    }
+
+    const destExists = await fs.stat(newPath).catch(() => null)
+    if (destExists) {
+      prepared.push({
+        id: item.id,
+        fileName,
+        folder: item.folder,
+        oldPath,
+        newPath,
+        error: { code: ERROR_CODES.EXISTS, message: 'Destination file already exists' },
       })
       continue
     }
@@ -282,17 +282,6 @@ async function prepareRename(oldPath: string, newPath: string): Promise<Prepared
     }
   }
 
-  const destExists = await fs.stat(newPath).catch(() => null)
-  if (destExists) {
-    return {
-      oldPath,
-      newPath,
-      fileName,
-      folder,
-      error: { code: ERROR_CODES.EXISTS, message: 'Destination file already exists' },
-    }
-  }
-
   if (path.resolve(oldPath) === path.resolve(newPath)) {
     return {
       oldPath,
@@ -301,6 +290,17 @@ async function prepareRename(oldPath: string, newPath: string): Promise<Prepared
       folder,
       skip: true,
       size: sourceExists.size,
+    }
+  }
+
+  const destExists = await fs.stat(newPath).catch(() => null)
+  if (destExists) {
+    return {
+      oldPath,
+      newPath,
+      fileName,
+      folder,
+      error: { code: ERROR_CODES.EXISTS, message: 'Destination file already exists' },
     }
   }
 

@@ -1,6 +1,5 @@
 import type { Express, Request, Response, NextFunction } from 'express'
 import path from 'path'
-import fs from 'fs'
 import history from 'connect-history-api-fallback'
 import express from 'express'
 import { normalizeApiPath } from '../../api/utils/normalizeApiPath'
@@ -73,6 +72,7 @@ function setupStaticApp(app: Express) {
 
   app.use(express.static(src))
   app.use(spaHistory)
+  app.use(express.static(src))
 }
 
 export { createExpressApp, setupStaticApp }

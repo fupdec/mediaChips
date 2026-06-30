@@ -28,6 +28,7 @@ body {
   overflow: hidden !important;
   --app-content-offset-top: 48px;
   --app-content-offset-bottom: 0px;
+  --app-bottom-bar-height: 56px;
 
   &.added-top-tabs {
     --app-content-offset-top: calc(48px + 28px);
@@ -42,7 +43,7 @@ body {
   }
 
   &.has-bottom-bar {
-    --app-content-offset-bottom: 56px;
+    --app-content-offset-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
@@ -67,6 +68,10 @@ body {
 
 .main-scroll-inner {
   padding-top: var(--app-content-offset-top);
+}
+
+.app-main-layout.has-bottom-bar .main-scroll-inner {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .main-scroll--settings {

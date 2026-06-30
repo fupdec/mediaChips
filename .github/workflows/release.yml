@@ -19,13 +19,13 @@ jobs:
         include:
           - os: windows-latest
             name: Windows
-            script: dist:win:ci
+            script: dist:win
           - os: macos-latest
             name: macOS
-            script: dist:mac:ci
+            script: dist:mac
           - os: ubuntu-latest
             name: Linux
-            script: dist:linux:ci
+            script: dist:linux
 
     steps:
       - name: Checkout

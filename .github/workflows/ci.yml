@@ -31,19 +31,43 @@ jobs:
         run: npm ci
 
       - name: Type-check
-        run: npm run type-check
+        run: |
+          npx vue-tsc --noEmit
+          npx tsc -p tsconfig.shared.json
+          npx tsc -p tsconfig.node.json --noEmit
+          npx tsc -p tsconfig.electron-strict.json
+          npx tsc -p tsconfig.main-strict.json
+          npx tsc -p tsconfig.app-strict.json
+          npx tsc -p tsconfig.api-strict.json
+          npx tsc -p tsconfig.scripts.json --noEmit
 
       - name: Lint
-        run: npm run lint
+        run: npx eslint .
 
       - name: Build backend and Electron artifacts
-        run: npm run build:artifacts
+        run: node scripts/compile.mjs artifacts
 
-      - name: Test
-        run: npm test
+      - name: Test with coverage
+        run: npx vitest run --coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
 
       - name: Build frontend
-        run: npm run build
+        run: npm run build:app
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E smoke tests
+        run: npm run test:e2e
+        env:
+          CI: true
+          SKIP_E2E_BUILD: 1
 
       - name: Build unpacked Linux app
         run: npm run pack

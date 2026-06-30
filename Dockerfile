@@ -1,34 +1,48 @@
-FROM node:18-alpine
+FROM node:22-alpine AS builder
 
-# Установка зависимостей для медиаобработки
 RUN apk add --no-cache \
     ffmpeg \
     python3 \
     make \
-    g++
+    g++ \
+    rsync
 
 WORKDIR /app
 
-# Копируем package.json отдельно для кеширования
 COPY package*.json ./
+RUN npm ci --ignore-scripts
 
-# Устанавливаем зависимости
-RUN npm ci --only=production
-
-# Копируем исходный код
 COPY . .
 
-# Создаем необходимые директории
-RUN mkdir -p /app/app_storage /app/public
+RUN node scripts/compile.mjs backend \
+    && npm rebuild better-sqlite3 \
+    && npx vite build
 
-# Создаем не-root пользователя для безопасности
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 -G nodejs
-RUN chown -R nodejs:nodejs /app
+FROM node:22-alpine AS runner
+
+RUN apk add --no-cache ffmpeg
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --omit=dev --ignore-scripts \
+    && npm rebuild better-sqlite3
+
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/api ./api
+COPY --from=builder /app/shared ./shared
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
+
+RUN mkdir -p /app/app_storage \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nodejs -u 1001 -G nodejs \
+    && chown -R nodejs:nodejs /app
+
 USER nodejs
 
-# Фиксированный порт из твоего сервера
 EXPOSE 12321
 
-# Запуск сервера
-CMD ["node", "server.js"]
+ENV NODE_ENV=production
+
+CMD ["node", "app/server.js"]

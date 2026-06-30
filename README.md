@@ -111,8 +111,9 @@ For macOS installation notes (Gatekeeper / quarantine), see [INSTALLATION.md](./
 git clone https://github.com/fupdec/mediaChips.git
 cd mediaChips
 npm install
-npm run download-parser-model   # optional: ML path tag parser model
 ```
+
+The ML path tag parser model is downloaded automatically when building distribution packages. For local development it is optional — run `node scripts/compile.mjs scripts && node .scripts-build/download-parser-model.js` if you use path-based tag suggestions.
 
 ### Production
 
@@ -133,7 +134,7 @@ npm run server
 To expose the server on your LAN:
 
 ```bash
-npm run server-lan
+npm run server:lan
 ```
 
 ### Development
@@ -155,7 +156,7 @@ npm run server
 4. Run the backend with auto-restart:
 
 ```bash
-npm run server-dev
+npm run server:dev
 ```
 
 5. In a second terminal, run the Vite dev server for hot reload:
@@ -178,9 +179,9 @@ npm run electron
 | Command | Description |
 |---------|-------------|
 | `npm run pack` | Build unpacked app (`release/`) |
-| `npm run dist` | Build installers (NSIS / AppImage / DMG + ZIP) |
+| `npm run dist` | Build installers for the current platform |
+| `npm run dist:win` / `dist:mac` / `dist:linux` | Build installers for a specific platform |
 | `npm run portable` | Windows portable build |
-| `npm run dist:publish` | Build frontend and publish all installers to GitHub Releases |
 
 Build artifacts are written to the `release/` directory.
 
@@ -226,16 +227,13 @@ No extra GitHub secrets are required: the workflow uses the built-in `GITHUB_TOK
 |--------|-------------|
 | `dev` | Vite dev server with hot reload |
 | `build` | Compile frontend to `dist/` |
-| `preview` | Preview production build |
-| `server` | Start Express server / app backend |
-| `server-dev` | Start server with nodemon (auto-restart) |
-| `server-lan` | Start server bound to `0.0.0.0` for LAN access |
-| `electron` | Run the Electron desktop shell |
-| `download-parser-model` | Download ML model for path tag suggestions |
+| `server` | Start Express backend |
+| `server:lan` | Start backend on `0.0.0.0` for LAN access |
+| `server:dev` | Start backend with nodemon (auto-restart on TS changes) |
+| `electron` | Run the Electron desktop shell (Vite + hot reload) |
 | `pack` | Electron-builder — unpacked output |
-| `dist` | Electron-builder — full installers |
-| `dist:publish` | Build frontend + publish all platforms to GitHub Releases |
-| `dist:win` / `dist:mac` / `dist:linux` | Publish a single platform (used in CI) |
+| `dist` | Electron-builder — installers for the current platform |
+| `dist:win` / `dist:mac` / `dist:linux` | Electron-builder — installers for one platform |
 | `portable` | Electron-builder — Windows portable |
 
 ---
@@ -264,14 +262,14 @@ scripts/        Build and utility scripts
 
 Модуль нативный и собирается под **один** runtime за раз:
 
-| Задача | Команда |
-|--------|---------|
-| `npm run server` / `server-dev` | `rebuild:node` — автоматически через `preserver` / `postinstall` |
-| `npm run electron` | `rebuild:electron` — автоматически через `preelectron` |
+| Задача | Что происходит |
+|--------|----------------|
+| `npm run server` / `server:dev` | `better-sqlite3` пересобирается под Node при `postinstall` и перед запуском |
+| `npm run electron` | `better-sqlite3` пересобирается под Electron через `scripts/ensure-electron-native.mjs` |
 
-Если после `npm install` видите `NODE_MODULE_VERSION` mismatch — пересоберите вручную: `npm run rebuild:electron` или `npm run rebuild:node`.
+Если после `npm install` видите `NODE_MODULE_VERSION` mismatch — выполните `npm rebuild better-sqlite3` или `node scripts/ensure-electron-native.mjs --force`.
 
-На macOS 15+ (особенно macOS 26) Electron может падать с `CODESIGNING / Invalid Page` при загрузке `better-sqlite3`: `electron-rebuild` оставляет `linker-signed` бинарник, который AMFI отклоняет. `rebuild:electron` после сборки автоматически переподписывает `.node` файлы ad-hoc (`codesign --sign -`). Если запускали `electron-rebuild` вручную — выполните `node scripts/sign-native-modules.js`.
+На macOS 15+ (особенно macOS 26) Electron может падать с `CODESIGNING / Invalid Page` при загрузке `better-sqlite3`: `electron-rebuild` оставляет `linker-signed` бинарник, который AMFI отклоняет. `scripts/ensure-electron-native.mjs` после сборки автоматически переподписывает `.node` файлы ad-hoc (`codesign --sign -`). Если запускали `electron-rebuild` вручную — выполните `node scripts/sign-native-modules.mjs`.
 
 `electron-builder` при `pack`/`dist` пересобирает нативные модули сам; в CI отдельный `electron-rebuild` не нужен.
 

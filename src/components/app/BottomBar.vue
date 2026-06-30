@@ -36,6 +36,7 @@ const getBadgeVal = (files: WatcherFileChangeGroup[], field: 'new' | 'lost') => 
 
 <template>
   <v-bottom-navigation
+    app
     :active="true"
     mode="shift"
     density="comfortable"
@@ -240,12 +241,15 @@ const getBadgeVal = (files: WatcherFileChangeGroup[], field: 'new' | 'lost') => 
 <style
   lang="scss">
 .bottom-menu {
-  height: 56px;
+  --bottom-bar-height: 56px;
+  height: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px));
   width: 100%;
   max-width: 100vw;
   display: flex;
   background-color: rgba(var(--v-theme-background), 0.85);
   backdrop-filter: blur(25px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 1004;
 }
 
 .bottom-menu .v-bottom-navigation__content {

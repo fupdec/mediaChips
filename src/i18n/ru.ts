@@ -76,6 +76,8 @@ const ru = {
   aboutApp: {
     dialog_title: 'О MediaChips',
     version: 'MediaChips v{version}-beta',
+    beta_notice: 'Это beta-версия. Сообщайте об ошибках и предложениях до выхода stable v0.14.0 на',
+    report_issues: 'GitHub Issues',
     contributors: 'от сообщества MediaChips',
     version_history: 'История версий',
     website: 'Сайт',

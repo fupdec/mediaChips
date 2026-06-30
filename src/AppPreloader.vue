@@ -17,8 +17,7 @@
 
       <AppBar/>
 
-      <!--TODO пофиксить отображение на телефоне-->
-      <BottomBar v-if="settingsStore.bottomBar === '1' || mobile"/>
+      <BottomBar v-if="useBottomBar"/>
       <SideBar v-else/>
     </template>
 
@@ -43,10 +42,6 @@
         >
           <router-view />
 
-          <div
-            v-if="(settingsStore.bottomBar == '1' || mobile) && !isSettingsPage"
-            class="py-6"
-          ></div>
         </div>
       </div>
 
@@ -76,7 +71,7 @@
 <script setup lang="ts">
 import {computed, defineAsyncComponent} from 'vue'
 import {useRoute} from 'vue-router'
-import {useDisplay} from 'vuetify'
+import {useNavigationLayout} from '@/composable/useNavigationLayout'
 import {useAppStore} from '@/stores/app'
 import {usePlayerStore} from '@/stores/player'
 import {useSettingsStore} from '@/stores/settings'
@@ -104,7 +99,7 @@ const store = useAppStore()
 const player = usePlayerStore()
 const contextMenuStore = useContextMenu()
 const route = useRoute()
-const {mobile} = useDisplay()
+const {useBottomBar} = useNavigationLayout()
 
 const {isElectron, isMac, isWin} = useAppPlatform()
 const isPlayerWindow = computed(() => isStandalonePlayerRoute(route))
@@ -118,7 +113,7 @@ const addedTopClasses = computed(() => ({
 
 const mainLayoutClasses = computed(() => ({
   ...addedTopClasses.value,
-  'has-bottom-bar': settingsStore.bottomBar === '1' || mobile.value,
+  'has-bottom-bar': useBottomBar.value,
 }))
 
 const isSettingsPage = computed(() => route.path === '/settings')

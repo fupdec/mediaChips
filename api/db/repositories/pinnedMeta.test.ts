@@ -1,45 +1,41 @@
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { applySqlitePragmas } from '../pragmas'
+import { runDrizzleMigrations } from '../drizzleMigrations'
 import { createPinnedMetaRepository } from './pinnedMeta'
 import * as schema from '../schema'
 
 function createTestDb() {
-  const sqlite = new Database(':memory:')
+  const dbPath = path.join(
+    os.tmpdir(),
+    `mediachips-pinned-meta-${Date.now()}-${Math.random()}.sqlite`,
+  )
+  runDrizzleMigrations(dbPath)
+
+  const sqlite = new Database(dbPath)
   applySqlitePragmas(sqlite)
-  sqlite.exec(`
-    CREATE TABLE meta (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type TEXT,
-      name TEXT,
-      icon TEXT,
-      createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
-    );
-    CREATE TABLE pinnedMetas (
-      metaId INTEGER NOT NULL,
-      pinnedMetaId INTEGER NOT NULL,
-      scraper TEXT,
-      show INTEGER DEFAULT 1,
-      "order" INTEGER,
-      PRIMARY KEY(metaId, pinnedMetaId)
-    );
-  `)
+
   return {
     sqlite,
     drizzle: drizzle(sqlite, {schema}),
+    dbPath,
   }
 }
 
 describe('pinnedMeta repository', () => {
   let sqlite: Database.Database
   let db: ReturnType<typeof createTestDb>['drizzle']
+  let dbPath: string
 
   beforeEach(() => {
     const testDb = createTestDb()
     sqlite = testDb.sqlite
     db = testDb.drizzle
+    dbPath = testDb.dbPath
 
     const now = new Date().toISOString()
     sqlite.exec(`
@@ -55,6 +51,7 @@ describe('pinnedMeta repository', () => {
 
   afterEach(() => {
     sqlite.close()
+    fs.rmSync(dbPath, {force: true})
   })
 
   it('joins child meta fields when loading pinned children for a tag category', () => {

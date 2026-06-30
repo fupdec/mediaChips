@@ -383,15 +383,10 @@ const sendForm = async () => {
 }
 
 const updateMetaSettings = (newSettings: Partial<MetaSettingsForm>) => {
-  console.log('updateMetaSettings called with:', newSettings)
-
-  // Объединяем с текущими настройками
   metaSettings.value = {
     ...metaSettings.value,
     ...newSettings
   }
-
-  console.log('Meta settings after update:', metaSettings.value)
 }
 
 const closeDialog = () => {
@@ -442,8 +437,6 @@ const getHint = () => {
 watch(() => props.dialog, (newVal) => {
   internalDialog.value = newVal
   initButtons()
-
-  console.log('Dialog state changed:', newVal, 'editMode:', props.editMode)
 
   metaSettings.value = cloneDeep(metaSettingsDefault.value)
 

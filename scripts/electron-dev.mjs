@@ -123,24 +123,28 @@ function resolveIncrementalBuildScripts(changedPaths) {
   const sequential = []
   const parallel = []
 
-  if (groups.has('shared')) sequential.push('build:shared')
-  if (groups.has('main')) parallel.push('build:main')
-  if (groups.has('electron')) parallel.push('build:electron')
-  if (groups.has('app')) parallel.push('build:app')
-  if (groups.has('api')) parallel.push('build:api')
+  if (groups.has('shared')) sequential.push('shared')
+  if (groups.has('main')) parallel.push('main')
+  if (groups.has('electron')) parallel.push('electron')
+  if (groups.has('app')) parallel.push('app')
+  if (groups.has('api')) parallel.push('api')
 
   return {sequential, parallel}
 }
 
-function runBuildScripts(scripts) {
-  if (!scripts.length) return
+function runCompileTarget(target) {
+  runSync('node', ['scripts/compile.mjs', target])
+}
 
-  if (scripts.length === 1) {
-    runSync('npm', ['run', scripts[0]])
+function runCompileParallel(targets) {
+  if (!targets.length) return
+
+  if (targets.length === 1) {
+    runCompileTarget(targets[0])
     return
   }
 
-  runSync('node', ['scripts/parallel-npm.mjs', ...scripts])
+  runSync('node', ['scripts/compile.mjs', '--parallel', ...targets])
 }
 
 async function rebuildBackend(changedPaths = []) {
@@ -152,8 +156,8 @@ async function rebuildBackend(changedPaths = []) {
     const {sequential, parallel} = changedPaths.length
       ? resolveIncrementalBuildScripts(changedPaths)
       : {
-        sequential: ['build:shared'],
-        parallel: ['build:electron', 'build:main', 'build:app', 'build:api'],
+        sequential: ['shared'],
+        parallel: ['electron', 'main', 'app', 'api'],
       }
 
     const label = changedPaths.length
@@ -164,10 +168,10 @@ async function rebuildBackend(changedPaths = []) {
     killProcess(electronProc)
     await new Promise((resolve) => setTimeout(resolve, 300))
 
-    for (const script of sequential) {
-      runSync('npm', ['run', script])
+    for (const target of sequential) {
+      runCompileTarget(target)
     }
-    runBuildScripts(parallel)
+    runCompileParallel(parallel)
 
     if (!shuttingDown) {
       console.log('[electron-dev] restarting electron...')
@@ -221,7 +225,7 @@ function cleanup(code = 0) {
 
 async function main() {
   console.log('[electron-dev] initial backend build...')
-  runSync('npm', ['run', 'build:electron-artifacts'])
+  runSync('node', ['scripts/compile.mjs', 'electron-artifacts'])
   runSync('node', ['scripts/ensure-electron-native.mjs'])
 
   console.log(`[electron-dev] starting Vite on port ${vitePort}...`)

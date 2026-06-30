@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useTheme } from 'vuetify'
 import { useSettingsStore } from '@/stores/settings'
-import { isRealWinElectron } from '@/utils/debugWinElectronUi'
+import { isRealWinElectron } from '@/utils/electronUi'
 import {
   addTransparencyToGradient,
   checkColorForDarkText,

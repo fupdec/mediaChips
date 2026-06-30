@@ -76,6 +76,8 @@ const cn = {
   aboutApp: {
     dialog_title: '关于 MediaChips',
     version: 'MediaChips v{version}-beta',
+    beta_notice: '这是 beta 版本。在 stable v0.14.0 发布前，请在以下页面报告问题和反馈：',
+    report_issues: 'GitHub Issues',
     contributors: 'MediaChips 贡献者',
     version_history: '版本历史',
     website: '网站',

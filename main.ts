@@ -52,9 +52,7 @@ if (process.platform === 'win32') {
 }
 
 const isWindows = os.type() === 'Windows_NT'
-// TEMP: match src/utils/debugWinElectronUi.js — remove when done debugging header UI
-const TEMP_FORCE_WIN_ELECTRON_UI = false
-const useWinElectronFrame = isWindows || TEMP_FORCE_WIN_ELECTRON_UI
+const useWinElectronFrame = isWindows
 
 let win: BrowserWindowInstance | null = null
 let loading: BrowserWindowInstance | null = null

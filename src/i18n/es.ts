@@ -76,6 +76,8 @@ const es = {
   aboutApp: {
     dialog_title: 'Acerca de MediaChips',
     version: 'MediaChips v{version}-beta',
+    beta_notice: 'Esta es una versión beta. Informa errores y comentarios antes del lanzamiento estable v0.14.0 en',
+    report_issues: 'GitHub Issues',
     contributors: 'por los colaboradores de MediaChips',
     version_history: 'Historial de versiones',
     website: 'Sitio web',

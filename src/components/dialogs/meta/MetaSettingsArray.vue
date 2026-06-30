@@ -151,7 +151,7 @@
       <v-chip-group column>
         <v-chip
           v-for="variant in chipVariants"
-          :key="chipKey"
+          :key="variant"
           @click="settings.chipVariant = variant"
           :label="settings.chipLabel"
           :variant="variant"
@@ -338,23 +338,39 @@ const chipVariants: ChipVariant[] = [
 
 const isPinnedToVideos = ref(false)
 const isPinnedForMediaParser = ref(false)
-const chipKey = ref(0)
 const randomColor = ref('#000000')
 
-// Methods
+const BOOLEAN_SETTING_KEYS = new Set<keyof MetaSettings>([
+  'hidden',
+  'parser',
+  'chipLabel',
+  'color',
+  'favorite',
+  'rating',
+  'synonyms',
+  'bookmark',
+  'country',
+  'career',
+  'scraper',
+  'nested',
+  'marks',
+])
+
 const initSettings = () => {
   if (!props.meta) return
 
-  // Копируем настройки из meta, сохраняя значения по умолчанию
-  (Object.keys(settings.value) as Array<keyof MetaSettings>).forEach((key) => {
-    if (key in props.meta && props.meta[key] !== undefined) {
-      const nextValue = props.meta[key]
-      settings.value = {
-        ...settings.value,
-        [key]: nextValue,
-      }
-    }
-  })
+  const nextSettings = {...settings.value}
+
+  for (const key of Object.keys(nextSettings) as Array<keyof MetaSettings>) {
+    const value = props.meta[key]
+    if (value === undefined) continue
+
+    ;(nextSettings as Record<string, unknown>)[key] = BOOLEAN_SETTING_KEYS.has(key)
+      ? Boolean(value)
+      : value
+  }
+
+  settings.value = nextSettings
 }
 
 const generateRandomColor = () => {
@@ -402,11 +418,11 @@ onMounted(() => {
 })
 
 // Watchers
-watch(settings, (мф) => {
+watch(settings, () => {
   emit('update', settings.value)
 }, {deep: true})
 
-watch(() => props.meta, () => {
+watch(() => props.meta?.id, () => {
   initSettings()
   checkPinnedMediaTypes()
 }, {immediate: true})

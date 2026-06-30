@@ -1,6 +1,10 @@
 .DS_Store
 node_modules
 /dist
+/coverage
+/test-results
+/playwright-report
+/playwright/.cache
 /.shared-build
 /.electron-build
 /.app-build

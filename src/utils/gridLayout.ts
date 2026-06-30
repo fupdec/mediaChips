@@ -62,9 +62,6 @@ export function getTargetCardWidth(options: GridLayoutOptions = {}): number {
   return CARD_WIDTH.default[size] || CARD_WIDTH.default[3]
 }
 
-/** @deprecated Use getTargetCardWidth */
-export const getMinColumnWidth = getTargetCardWidth
-
 export interface LayoutMetrics {
   columnCount: number
   cardWidth: number
