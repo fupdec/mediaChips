@@ -442,13 +442,13 @@ const loadCurrentImage = async () => {
   } catch (error) {
     console.error('Failed to load full image for viewer:', error)
   } finally {
-    if (token !== loadToken) return
+    if (token === loadToken) {
+      viewer.setFileExists(await existsPromise)
+      viewer.setLoading(false)
 
-    viewer.setFileExists(await existsPromise)
-    viewer.setLoading(false)
-
-    if (!displaySrc.value && viewer.active) {
-      loadFailed.value = true
+      if (!displaySrc.value && viewer.active) {
+        loadFailed.value = true
+      }
     }
   }
 }
