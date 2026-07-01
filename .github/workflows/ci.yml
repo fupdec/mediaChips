@@ -47,6 +47,9 @@ jobs:
       - name: Build backend and Electron artifacts
         run: node scripts/compile.mjs artifacts
 
+      - name: Build frontend
+        run: npm run build:app
+
       - name: Test with coverage
         run: |
           npm rebuild better-sqlite3
