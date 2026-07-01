@@ -62,9 +62,6 @@ jobs:
           path: coverage/
           retention-days: 14
 
-      - name: Build frontend
-        run: npm run build:app
-
       - name: Install Playwright browser
         run: npx playwright install chromium --with-deps
 
