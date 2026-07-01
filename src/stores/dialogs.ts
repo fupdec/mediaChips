@@ -36,6 +36,7 @@ export const useDialogsStore = defineStore('useDialogsStore', {
     process: { show: false, text: null as string | null },
     tabEditing: { show: false, tab: null as Tab | null },
     about: { show: false },
+    onboarding: { show: false },
     scraperConfig: { show: false },
     scraper: { show: false, images: [] as string[] },
     scraperMultiple: { show: false, performers: [] as ScraperMultiplePerformer[], progress: 0 },

@@ -21,6 +21,7 @@
       @success="appStore.isLocked = false"
     />
 
+    <DialogOnboarding v-if="dialogsStore.onboarding.show"/>
     <DialogDocumentation v-show="dialogsStore.documentation"/>
     <DialogFeedback v-if="dialogsStore.feedback"/>
     <DialogFindInPage v-if="dialogsStore.findInPage.show"/>
@@ -121,6 +122,9 @@ import {useI18n} from 'vue-i18n'
 // Async components
 const DialogLogin = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogLogin.vue')
+)
+const DialogOnboarding = defineAsyncComponent(() =>
+  import('@/components/dialogs/DialogOnboarding.vue')
 )
 const DialogDocumentation = defineAsyncComponent(() =>
   import('@/components/dialogs/DialogDocumentation.vue')

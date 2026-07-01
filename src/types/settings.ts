@@ -115,6 +115,7 @@ export type SettingsState = {
   big_video_preview_delay: string
   show_salutation: string
   show_ip_at_home_screen: string
+  onboardingCompleted: string
   home_widgets_config: string
   show_alert_new_tool_words: string
   show_default_meta_outlined: string
@@ -196,6 +197,7 @@ export const defaultSettingsState = (): SettingsState => ({
   big_video_preview_delay: '2000',
   show_salutation: '1',
   show_ip_at_home_screen: '1',
+  onboardingCompleted: '0',
   home_widgets_config: '',
   show_alert_new_tool_words: '1',
   show_default_meta_outlined: '1',

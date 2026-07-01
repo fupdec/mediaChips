@@ -400,6 +400,34 @@ const cn = {
       masonry: '瀑布流',
     },
   },
+  onboarding: {
+    title: '入门指南',
+    step_counter: '第 {current} 步，共 {total} 步',
+    skip: '跳过',
+    back: '上一步',
+    next: '下一步',
+    finish: '开始使用',
+    open_settings: '打开设置',
+    open_library: '打开媒体库',
+    steps: {
+      welcome: {
+        title: '欢迎使用 MediaChips',
+        body: '本简短指南可帮助您设置媒体库。可随时从主页重新打开文档。',
+      },
+      library: {
+        title: '设置元数据字段',
+        body: '打开设置 → 库，创建元数据字段。至少添加一个标签类型字段，并将其固定到媒体类型。',
+      },
+      media: {
+        title: '添加文件',
+        body: '打开视频库并添加文件或文件夹。监视文件夹可在设置 → 文件中配置。',
+      },
+      done: {
+        title: '准备就绪',
+        body: '使用筛选器、已保存标签页和主页小组件来整理收藏。祝您使用愉快！',
+      },
+    },
+  },
   playlists: {
     new_playlist: '新播放列表',
     playlist_name: '播放列表名称',

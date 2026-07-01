@@ -400,6 +400,34 @@ const en = {
       masonry: 'Masonry',
     },
   },
+  onboarding: {
+    title: 'Getting started',
+    step_counter: 'Step {current} of {total}',
+    skip: 'Skip',
+    back: 'Back',
+    next: 'Next',
+    finish: 'Get started',
+    open_settings: 'Open settings',
+    open_library: 'Open library',
+    steps: {
+      welcome: {
+        title: 'Welcome to MediaChips',
+        body: 'This short guide helps you set up your library. You can reopen documentation anytime from the home screen.',
+      },
+      library: {
+        title: 'Set up metadata fields',
+        body: 'Open Settings → Library to create metadata fields. Add at least one Tags field if you want tag categories, then pin fields to your media types.',
+      },
+      media: {
+        title: 'Add your files',
+        body: 'Open your video library and add files or folders. You can also configure watched folders in Settings → Files.',
+      },
+      done: {
+        title: 'You are ready',
+        body: 'Use filters, saved tabs, and home widgets to organize your collection. Enjoy your library!',
+      },
+    },
+  },
   playlists: {
     new_playlist: 'New playlist',
     playlist_name: 'Playlist name',

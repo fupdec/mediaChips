@@ -20,6 +20,7 @@ import {useEventBus} from '@/utils/eventBus'
 import {useWatcher} from '@/composable/Watcher'
 import {useMediaAdding} from '@/composable/AddingMedia'
 import {useAppUpdater} from '@/composable/useAppUpdater'
+import {openOnboardingIfNeeded} from '@/composable/useOnboarding'
 import {useAppTheme} from '@/composable/useAppTheme'
 import {useAppZoom} from '@/composable/useAppZoom'
 import {useSystemMenuActions} from '@/composable/useSystemMenuActions'
@@ -354,6 +355,7 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
 
     store.is_app_ready = true
     runAutoRegistration()
+    openOnboardingIfNeeded(isPlayerWindow.value)
   }
 
   async function bootstrapPlayerWindow(): Promise<void> {

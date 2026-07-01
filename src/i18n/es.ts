@@ -400,6 +400,34 @@ const es = {
       masonry: 'Mosaico',
     },
   },
+  onboarding: {
+    title: 'Primeros pasos',
+    step_counter: 'Paso {current} de {total}',
+    skip: 'Omitir',
+    back: 'Atrás',
+    next: 'Siguiente',
+    finish: 'Empezar',
+    open_settings: 'Abrir ajustes',
+    open_library: 'Abrir biblioteca',
+    steps: {
+      welcome: {
+        title: 'Bienvenido a MediaChips',
+        body: 'Esta guía breve le ayuda a configurar su biblioteca. Puede volver a abrir la documentación desde la pantalla de inicio.',
+      },
+      library: {
+        title: 'Configure los campos de metadatos',
+        body: 'Abra Ajustes → Biblioteca para crear campos. Añada al menos un campo de Etiquetas y fíjelos a sus tipos de medio.',
+      },
+      media: {
+        title: 'Añada sus archivos',
+        body: 'Abra su biblioteca de vídeo y añada archivos o carpetas. Las carpetas vigiladas se configuran en Ajustes → Archivos.',
+      },
+      done: {
+        title: 'Todo listo',
+        body: 'Use filtros, pestañas guardadas y widgets de inicio para organizar su colección. ¡Disfrute de su biblioteca!',
+      },
+    },
+  },
   playlists: {
     new_playlist: 'Nueva lista de reproducción',
     playlist_name: 'Nombre de la lista de reproducción',
