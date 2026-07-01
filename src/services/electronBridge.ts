@@ -15,7 +15,7 @@ export function getElectronAPI(): ElectronBridgeAPI | undefined {
 
 export function getElectronOperable(): ElectronOperableAPI | undefined {
   if (typeof window === 'undefined') return undefined
-  return window.$electronOperable ?? window.operableAPI
+  return (window.$electronOperable ?? window.operableAPI) as ElectronOperableAPI | undefined
 }
 
 export async function checkFileExistsElectron(filePath: string): Promise<boolean | null> {

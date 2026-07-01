@@ -32,10 +32,16 @@ export interface HomeHealthImageThumbsUi {
   pending: number
 }
 
+export interface HomeHealthGeneratedTypeUi {
+  total?: number
+  generated?: number
+  pending?: number
+}
+
 export interface HomeHealthDataUi {
   duplicates: { byFilesize: number; byContentHash: number }
   contentHash: { total: number; pending: number; hashed: number }
-  generatedImages: { byType: Record<string, unknown>; totalPending: number }
+  generatedImages: { byType: Record<string, HomeHealthGeneratedTypeUi>; totalPending: number }
   imageThumbs: HomeHealthImageThumbsUi
   database: { id: number | null; name: string | null; bytes: number | null }
 }
@@ -58,7 +64,10 @@ export function toHomeHealthUi(data: ParsedHomeHealth): HomeHealthDataUi {
   return {
     duplicates: data.duplicates ?? { byFilesize: 0, byContentHash: 0 },
     contentHash: data.contentHash ?? { total: 0, pending: 0, hashed: 0 },
-    generatedImages: data.generatedImages ?? { byType: {}, totalPending: 0 },
+    generatedImages: {
+      byType: (data.generatedImages?.byType ?? {}) as Record<string, HomeHealthGeneratedTypeUi>,
+      totalPending: data.generatedImages?.totalPending ?? 0,
+    },
     imageThumbs: data.imageThumbs ?? { total: 0, generated: 0, pending: 0 },
     database: data.database ?? { id: null, name: null, bytes: null },
   }

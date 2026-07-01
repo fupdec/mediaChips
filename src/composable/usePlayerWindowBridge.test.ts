@@ -2,6 +2,11 @@ import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {ref} from 'vue'
 import {usePlayerWindowBridge} from '@/composable/usePlayerWindowBridge'
 import type { MediaItem } from '@/types/stores'
+import type { ElectronBridgeAPI } from '@shared/electron/ipc'
+
+function mockElectronApi(partial: Partial<ElectronBridgeAPI>): ElectronBridgeAPI {
+  return partial as ElectronBridgeAPI
+}
 
 const routeRef = ref<{ query: Record<string, string> }>({query: {}})
 const appState = {app_title: 'MediaChips Test'}
@@ -54,7 +59,7 @@ describe('usePlayerWindowBridge', () => {
 
   it('detects standalone player route in electron', () => {
     routeRef.value = {query: {player: 'true'}}
-    window.electronAPI = {send: vi.fn()}
+    window.electronAPI = mockElectronApi({send: vi.fn()})
 
     const {isPlayerWindow} = usePlayerWindowBridge()
     expect(isPlayerWindow.value).toBe(true)
@@ -69,7 +74,7 @@ describe('usePlayerWindowBridge', () => {
 
   it('updates document title in standalone mode', () => {
     routeRef.value = {query: {player: 'true'}}
-    window.electronAPI = {send: vi.fn()}
+    window.electronAPI = mockElectronApi({send: vi.fn()})
 
     const {updatePlayerWindowTitle, resetPlayerWindowTitle} = usePlayerWindowBridge()
     updatePlayerWindowTitle({id: 1, name: 'clip.mp4'} as MediaItem)
@@ -95,7 +100,7 @@ describe('usePlayerWindowBridge', () => {
   it('sends getItemsFromDb through electron in standalone mode', () => {
     routeRef.value = {query: {player: 'true'}}
     const send = vi.fn()
-    window.electronAPI = {send}
+    window.electronAPI = mockElectronApi({send})
 
     const {updateItemVideo} = usePlayerWindowBridge()
     updateItemVideo(7)
@@ -109,12 +114,13 @@ describe('usePlayerWindowBridge', () => {
 
   it('attaches electron play and stop handlers', () => {
     const listeners = new Map<string, (...args: unknown[]) => void>()
-    window.electronAPI = {
+    window.electronAPI = mockElectronApi({
       on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
         listeners.set(event, handler)
+        return () => {}
       }),
       removeListener: vi.fn(),
-    }
+    })
 
     const onPlayVideo = vi.fn()
     const onStopPlaying = vi.fn()
@@ -138,7 +144,7 @@ describe('usePlayerWindowBridge', () => {
 
   it('exits electron fullscreen on macOS when needed', () => {
     window.os = 'darwin'
-    window.electronAPI = {send: vi.fn()}
+    window.electronAPI = mockElectronApi({send: vi.fn()})
     vi.stubGlobal('navigator', {platform: 'MacIntel'})
 
     const {exitElectronFullscreenIfNeeded} = usePlayerWindowBridge()

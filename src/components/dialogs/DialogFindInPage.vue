@@ -101,7 +101,7 @@ async function findNext() {
   if (!text || !window.electronAPI?.invoke) return
 
   const result = await window.electronAPI.invoke('findInPage', {
-    text,
+    query: text,
     forward: true,
     findNext: totalMatches.value > 0,
   }) as { activeMatchOrdinal?: number; matches?: number } | null

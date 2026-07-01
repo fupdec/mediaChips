@@ -98,7 +98,14 @@ export function useAppBootstrap({isPlayerWindow, appZoom}: UseAppBootstrapOption
         }
         case 'tags': {
           const res = await typedApi.getTags()
-          store.tags = res.data
+          store.tags = res.data.map((tag) => ({
+            ...tag,
+            metaId: tag.metaId ?? undefined,
+            name: tag.name ?? undefined,
+            synonyms: tag.synonyms ?? undefined,
+            color: tag.color ?? undefined,
+            bookmark: tag.bookmark ?? undefined,
+          }))
           break
         }
         case 'meta': {

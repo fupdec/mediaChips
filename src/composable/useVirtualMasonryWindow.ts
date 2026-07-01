@@ -81,7 +81,7 @@ export function useVirtualMasonryWindow(
       gap.value.y,
       estimateMasonryItemHeight,
     )
-    totalHeight.value = masonryLayout.value.totalHeight
+    totalHeight.value = masonryLayout.value?.totalHeight ?? 0
   }
 
   const updateWindow = () => {

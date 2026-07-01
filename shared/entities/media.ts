@@ -42,6 +42,8 @@ export interface MediaItem {
   name?: string
   path?: string
   mediaTypeId?: number
+  width?: number | null
+  height?: number | null
   thumb?: string
   views?: number
   favorite?: boolean

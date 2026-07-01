@@ -1,11 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
+import type { ElectronBridgeAPI } from '@shared/electron/ipc'
 import {
   isStandalonePlayerRoute,
   openSeparatePlayer,
   canOpenSeparatePlayer,
   destroySeparatePlayerWindow,
 } from '@/utils/playerWindow'
+
+function mockElectronApi(partial: Partial<ElectronBridgeAPI>): ElectronBridgeAPI {
+  return partial as ElectronBridgeAPI
+}
 
 describe('playerWindow', () => {
   const originalElectronApi = window.electronAPI
@@ -28,7 +33,7 @@ describe('playerWindow', () => {
     })
 
     it('returns true in electron when player query is set', () => {
-      window.electronAPI = { send: vi.fn() }
+      window.electronAPI = mockElectronApi({ send: vi.fn() })
       expect(isStandalonePlayerRoute({ query: { player: 'true' } })).toBe(true)
     })
 
@@ -44,10 +49,10 @@ describe('playerWindow', () => {
 
     it('sends open-player through electron', () => {
       const payload = { video: { id: 1 }, videos: [], time: 0 }
-      window.electronAPI = { send: vi.fn() }
+      window.electronAPI = mockElectronApi({ send: vi.fn() })
 
       expect(openSeparatePlayer(payload)).toBe(true)
-      expect(window.electronAPI.send).toHaveBeenCalledWith('open-player', payload)
+      expect(window.electronAPI!.send).toHaveBeenCalledWith('open-player', payload)
     })
   })
 
@@ -57,7 +62,7 @@ describe('playerWindow', () => {
     })
 
     it('is true in electron', () => {
-      window.electronAPI = { send: vi.fn() }
+      window.electronAPI = mockElectronApi({ send: vi.fn() })
       expect(canOpenSeparatePlayer()).toBe(true)
     })
   })
@@ -69,7 +74,7 @@ describe('playerWindow', () => {
 
     it('invokes destroyPlayer in electron', async () => {
       const invoke = vi.fn().mockResolvedValue(undefined)
-      window.electronAPI = { invoke }
+      window.electronAPI = mockElectronApi({ invoke })
 
       await destroySeparatePlayerWindow()
 

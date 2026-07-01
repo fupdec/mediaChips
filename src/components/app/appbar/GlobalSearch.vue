@@ -182,6 +182,40 @@ function onDialogClose() {
   nextTick(() => action())
 }
 
+function normalizeSearchMedia(
+  items: Array<{
+    id: number
+    name?: string | null
+    path?: string
+    mediaTypeId?: number
+    width?: number | null
+    height?: number | null
+  }>,
+): MediaItem[] {
+  return items.map((item) => ({
+    ...item,
+    name: item.name ?? undefined,
+  }))
+}
+
+function normalizeSearchTags(
+  items: Array<{
+    id: number
+    name?: string | null
+    synonyms?: string | null
+    metaId?: number | null
+    matchSource?: 'name' | 'synonym' | 'both'
+    matchedSynonyms?: string[]
+  }>,
+): GlobalSearchTag[] {
+  return items.map((item) => ({
+    ...item,
+    name: item.name ?? undefined,
+    synonyms: item.synonyms ?? undefined,
+    metaId: item.metaId ?? undefined,
+  }))
+}
+
 function buildMediaGroups(data: MediaItem[]) {
   const grouped = groupBy(data, 'mediaTypeId')
 
@@ -261,8 +295,8 @@ async function search() {
 
     if (signal.aborted) return
 
-    const mediaGroups = buildMediaGroups(searchRes.data.media || [])
-    const tagGroups = buildTagGroups(searchRes.data.tags || [])
+    const mediaGroups = buildMediaGroups(normalizeSearchMedia(searchRes.data.media || []))
+    const tagGroups = buildTagGroups(normalizeSearchTags(searchRes.data.tags || []))
     results.value = sortGroups([...mediaGroups, ...tagGroups])
   } catch (e: unknown) {
     const err = e as { code?: string; name?: string }

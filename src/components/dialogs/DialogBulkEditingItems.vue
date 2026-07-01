@@ -406,6 +406,8 @@ const save = async () => {
 
   if (!selected_items_ids.length || saving.value) return
 
+  if (items_type !== 'media' && items_type !== 'tag') return
+
   const changes = pinnedFields.value
     .map((field) => ({
       metaId: field.key,
@@ -417,7 +419,7 @@ const save = async () => {
 
   const presetChanges = presetFields.value
     .map((field) => ({
-      field: field.key,
+      field: String(field.key),
       editType: edits.value[field.key] || 0,
       value: values.value[field.key],
     }))

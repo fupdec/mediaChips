@@ -1,9 +1,9 @@
+import type { UpdaterState } from '@shared/electron/ipc'
 import { ref, readonly } from 'vue'
 import { useAppStore } from '@/stores/app'
 
-export interface UpdaterStatus {
-  state: string
-  [key: string]: unknown
+type UpdaterStatus = UpdaterState & {
+  manualCheck?: boolean
 }
 
 const status = ref<UpdaterStatus>({ state: 'idle' })
