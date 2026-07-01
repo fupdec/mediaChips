@@ -48,7 +48,9 @@ jobs:
         run: node scripts/compile.mjs artifacts
 
       - name: Test with coverage
-        run: npx vitest run --coverage
+        run: |
+          npm rebuild better-sqlite3
+          npx vitest run --coverage
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
